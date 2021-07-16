@@ -131,7 +131,7 @@
             "id": "migration-angularjs"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -481,6 +481,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "angular/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -1089,6 +1094,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Using NgRx",
             "id": "misc-ngrx"
           },
@@ -1287,7 +1297,7 @@
             "id": "migration-cra"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -1637,6 +1647,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "react/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -2230,6 +2245,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
             "file": "react/guides/adding-assets"
@@ -2268,6 +2288,11 @@
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
+          },
+          {
+            "name": "Using Tailwind CSS in React",
+            "id": "using-tailwind-css-in-react",
+            "file": "react/guides/using-tailwind-css-in-react"
           }
         ]
       },
@@ -2402,7 +2427,7 @@
             "file": "shared/migration/overview"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -2752,6 +2777,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "node/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -3337,6 +3367,11 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
+          {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
           {
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",

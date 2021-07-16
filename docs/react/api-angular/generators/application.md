@@ -50,6 +50,12 @@ Possible values: `protractor`, `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests.
 
+### host
+
+Type: `string`
+
+The name of the host application that the remote application will be consumed by.
+
 ### inlineStyle
 
 Alias(es): s
@@ -94,7 +100,7 @@ Default: `remote`
 
 Type: `string`
 
-Possible values: `shell`, `remote`
+Possible values: `host`, `remote`
 
 Type of application to generate the Module Federation configuration for.
 
@@ -122,7 +128,7 @@ The prefix to apply to generated selectors.
 
 Type: `array`
 
-A list of remote application names that the shell application should consume.
+A list of remote application names that the host application should consume.
 
 ### routing
 

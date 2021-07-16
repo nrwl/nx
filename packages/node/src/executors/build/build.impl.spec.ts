@@ -17,10 +17,10 @@ describe('Node Build Executor', () => {
 
   beforeEach(async () => {
     jest
-      .spyOn(projectGraph, 'createProjectGraph')
-      .mockReturnValue({} as ProjectGraph);
+      .spyOn(projectGraph, 'createProjectGraphAsync')
+      .mockReturnValue(Promise.resolve({} as ProjectGraph));
 
-    (<any>runWebpack).mockReturnValue(of([]));
+    (<any>runWebpack).mockReturnValue(of({ hasErrors: () => false }));
     context = {
       root: '/root',
       cwd: '/root',
@@ -50,7 +50,7 @@ describe('Node Build Executor', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('should call webpack', async () => {
-    await buildExecutor(options, context);
+    await buildExecutor(options, context).next();
 
     expect(runWebpack).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -71,7 +71,10 @@ describe('Node Build Executor', () => {
         () => (options) => ({ ...options, prop: 'my-val' }),
         { virtual: true }
       );
-      await buildExecutor({ ...options, webpackConfig: 'config.js' }, context);
+      await buildExecutor(
+        { ...options, webpackConfig: 'config.js' },
+        context
+      ).next();
 
       expect(runWebpack).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -104,7 +107,7 @@ describe('Node Build Executor', () => {
       await buildExecutor(
         { ...options, webpackConfig: ['config1.js', 'config2.js'] },
         context
-      );
+      ).next();
 
       expect(runWebpack).toHaveBeenCalledWith(
         expect.objectContaining({

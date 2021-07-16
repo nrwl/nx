@@ -1,5 +1,4 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from '../schema';
 
 import { joinPathFragments } from '@nrwl/devkit';
 

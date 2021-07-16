@@ -19,6 +19,11 @@
       "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
       "schema": "./src/builders/webpack-browser/schema.json",
       "description": "Builds a browser application with support for incremental builds and custom webpack configuration."
+    },
+    "webpack-server": {
+      "implementation": "./src/builders/webpack-server/webpack-server.impl",
+      "schema": "./src/builders/webpack-server/schema.json",
+      "description": "Serves a browser application with support for a custom webpack configuration."
     }
   },
   "builders": {
@@ -41,6 +46,11 @@
       "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
       "schema": "./src/builders/webpack-browser/schema.json",
       "description": "Builds a browser application with support for incremental builds and custom webpack configuration."
+    },
+    "webpack-server": {
+      "implementation": "./src/builders/webpack-server/webpack-server.impl",
+      "schema": "./src/builders/webpack-server/schema.json",
+      "description": "Serves a browser application with support for a custom webpack configuration."
     }
   }
 }

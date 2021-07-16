@@ -41,7 +41,7 @@ describe('Gatsby Applications', () => {
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 300000);
+  }, 600000);
 
   it('should support styled-jsx', async () => {
     const appName = uniq('app');

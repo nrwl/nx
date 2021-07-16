@@ -18,11 +18,11 @@ describe('Init MFE', () => {
   });
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should create webpack configs correctly',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
         appName: app,
@@ -42,11 +42,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'create bootstrap file with the contents of main.ts',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ARRANGE
       const mainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
 
@@ -69,11 +69,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should alter main.ts to import the bootstrap file dynamically',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ARRANGE
       const mainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
 
@@ -94,11 +94,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
-    'should change the build target and set correct path to webpack config',
-    async (app, type: 'shell' | 'remote') => {
+    'should change the build and serve target and set correct path to webpack config',
+    async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
         appName: app,
@@ -106,8 +106,9 @@ describe('Init MFE', () => {
       });
 
       // ASSERT
-      const { build } = readProjectConfiguration(host, app).targets;
+      const { build, serve } = readProjectConfiguration(host, app).targets;
 
+      expect(serve.executor).toEqual('@nrwl/angular:webpack-server');
       expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
         `apps/${app}/webpack.config.js`
@@ -116,11 +117,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should install @angular-architects/module-federation in the monorepo',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
         appName: app,
@@ -136,11 +137,11 @@ describe('Init MFE', () => {
     }
   );
 
-  it('should add the remote config to the shell when --remotes flag supplied', async () => {
+  it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(host, {
       appName: 'app1',
-      mfeType: 'shell',
+      mfeType: 'host',
       remotes: ['remote1'],
     });
 
@@ -151,11 +152,11 @@ describe('Init MFE', () => {
       '"remote1": "remote1@http://localhost:4200/remoteEntry.js"'
     );
   });
-  it('should update the implicit dependencies of the shell when --remotes flag supplied', async () => {
+  it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(host, {
       appName: 'app1',
-      mfeType: 'shell',
+      mfeType: 'host',
       remotes: ['remote1'],
     });
 
@@ -163,5 +164,55 @@ describe('Init MFE', () => {
     const nxJson: NxJsonConfiguration = readJson(host, 'nx.json');
 
     expect(nxJson.projects['app1'].implicitDependencies).toContain('remote1');
+  });
+
+  it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
+    // ARRANGE
+    await setupMfe(host, {
+      appName: 'app1',
+      mfeType: 'host',
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      host: 'app1',
+    });
+
+    // ASSERT
+    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
+    expect(hostWebpackConfig).toMatchSnapshot();
+  });
+
+  it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
+    // ARRANGE
+    await applicationGenerator(host, {
+      name: 'remote2',
+    });
+
+    await setupMfe(host, {
+      appName: 'app1',
+      mfeType: 'host',
+    });
+
+    await setupMfe(host, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4201,
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'remote2',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4202,
+    });
+
+    // ASSERT
+    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
+    expect(hostWebpackConfig).toMatchSnapshot();
   });
 });

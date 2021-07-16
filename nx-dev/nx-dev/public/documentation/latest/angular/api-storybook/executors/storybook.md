@@ -2,9 +2,19 @@
 
 Serve Storybook
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it.
 
-## Properties
+## Options
+
+### uiFramework (_**required**_) (**hidden**)
+
+Default: `@storybook/angular`
+
+Type: `string`
+
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
+
+Storybook framework npm package
 
 ### docsMode
 
@@ -69,16 +79,6 @@ SSL key to use for serving HTTPS.
 Type: `array`
 
 Directory where to load static files from, array of strings
-
-### uiFramework (**hidden**)
-
-Default: `@storybook/angular`
-
-Type: `string`
-
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
-
-Storybook framework npm package
 
 ### watch
 

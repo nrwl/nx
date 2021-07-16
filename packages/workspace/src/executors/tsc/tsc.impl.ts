@@ -1,8 +1,11 @@
-import { ExecutorContext, normalizePath } from '@nrwl/devkit';
+import { ExecutorContext, logger, normalizePath } from '@nrwl/devkit';
 import { basename, dirname, join, relative } from 'path';
 import { copyAssets } from '../../utilities/assets';
 import { readJsonFile, writeJsonFile } from '../../utilities/fileutils';
-import { compileTypeScript } from '../../utilities/typescript/compilation';
+import {
+  compileTypeScript,
+  TypescriptWatchChangeEvent,
+} from '../../utilities/typescript/compilation';
 import { TypeScriptExecutorOptions } from './schema';
 
 export async function tscExecutor(

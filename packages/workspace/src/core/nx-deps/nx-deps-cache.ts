@@ -1,8 +1,10 @@
 import { FileData, filesChanged } from '../file-utils';
 import type {
+  NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
@@ -23,7 +25,9 @@ import {
 
 export interface ProjectGraphCache {
   version: string;
-  rootFiles: FileData[];
+  deps: Record<string, string>;
+  pathMappings: Record<string, any>;
+  nxJsonPlugins: { name: string; version: string }[];
   nodes: Record<string, ProjectGraphNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
@@ -74,68 +78,125 @@ export function readCache(): false | ProjectGraphCache {
 }
 
 export function writeCache(
-  rootFiles: FileData[],
+  packageJsonDeps: Record<string, string>,
+  nxJson: NxJsonConfiguration,
+  tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
   projectGraph: ProjectGraph
 ): void {
   performance.mark('write cache:start');
-  writeJsonFile(nxDepsPath, {
-    version: '2.0',
-    rootFiles,
+  const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
+    name: p,
+    version: packageJsonDeps[p],
+  }));
+  const newValue: ProjectGraphCache = {
+    version: '3.0',
+    deps: packageJsonDeps,
+    pathMappings: tsConfig.compilerOptions.paths,
+    nxJsonPlugins,
     nodes: projectGraph.nodes,
     dependencies: projectGraph.dependencies,
-  });
+  };
+  writeJsonFile(nxDepsPath, newValue);
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }
 
-export function differentFromCache(
-  fileMap: ProjectFileMap,
-  c: ProjectGraphCache
-): {
-  noDifference: boolean;
-  filesDifferentFromCache: ProjectFileMap;
-  partiallyConstructedProjectGraph?: ProjectGraph;
-} {
-  const currentProjects = Object.keys(fileMap)
-    .sort()
-    .filter((name) => fileMap[name].length > 0);
-  const previousProjects = Object.keys(c.nodes)
-    .sort()
-    .filter((name) => c.nodes[name].data.files.length > 0);
-
-  // Projects changed -> compute entire graph
-  if (
-    currentProjects.length !== previousProjects.length ||
-    currentProjects.some((val, idx) => val !== previousProjects[idx])
-  ) {
-    return {
-      filesDifferentFromCache: fileMap,
-      partiallyConstructedProjectGraph: null,
-      noDifference: false,
-    };
+export function shouldRecomputeWholeGraph(
+  cache: ProjectGraphCache,
+  packageJsonDeps: Record<string, string>,
+  workspaceJson: WorkspaceJsonConfiguration,
+  nxJson: NxJsonConfiguration,
+  tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
+): boolean {
+  if (cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']) {
+    return true;
   }
 
-  // Projects are same -> compute projects with file changes
+  // we have a cached project that is no longer present
+  if (
+    Object.keys(cache.nodes).some(
+      (p) =>
+        cache.nodes[p].type != 'app' &&
+        cache.nodes[p].type != 'lib' &&
+        !workspaceJson.projects[p]
+    )
+  ) {
+    return true;
+  }
+
+  // a path mapping for an existing project has changed
+  if (
+    Object.keys(cache.pathMappings).some(
+      (t) =>
+        JSON.stringify(cache.pathMappings[t]) !=
+        JSON.stringify(tsConfig.compilerOptions.paths[t])
+    )
+  ) {
+    return true;
+  }
+
+  // a new plugin has been added
+  if ((nxJson.plugins || []).length !== cache.nxJsonPlugins.length) return true;
+
+  // a plugin has changed
+  if (
+    (nxJson.plugins || []).some((t) => {
+      const matchingPlugin = cache.nxJsonPlugins.find((p) => p.name === t);
+      if (!matchingPlugin) return true;
+      return matchingPlugin.version !== packageJsonDeps[t];
+    })
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/*
+This can only be invoked when the list of projects is either the same
+or new projects have been added, so every project in the cache has a corresponding
+project in fileMap
+*/
+export function extractCachedPartOfProjectGraph(
+  fileMap: ProjectFileMap,
+  nxJson: NxJsonConfiguration,
+  c: ProjectGraphCache
+): {
+  filesDifferentFromCache: ProjectFileMap;
+  cachedPartOfProjectGraph: ProjectGraph;
+} {
+  const currentProjects = Object.keys(fileMap).filter(
+    (name) => fileMap[name].length > 0
+  );
+
   const filesDifferentFromCache: ProjectFileMap = {};
+  // Re-compute nodes and dependencies for projects whose files changed
   currentProjects.forEach((p) => {
-    if (filesChanged(c.nodes[p].data.files, fileMap[p])) {
+    if (!c.nodes[p] || filesChanged(c.nodes[p].data.files, fileMap[p])) {
       filesDifferentFromCache[p] = fileMap[p];
+      delete c.dependencies[p];
+      delete c.nodes[p];
     }
   });
 
-  // Re-compute nodes and dependencies for each project in file map.
-  Object.keys(filesDifferentFromCache).forEach((key) => {
-    delete c.dependencies[key];
+  // Re-compute nodes and dependencies for projects whose implicit deps changed
+  Object.keys(nxJson.projects || {}).forEach((p) => {
+    if (
+      nxJson.projects[p]?.implicitDependencies &&
+      JSON.stringify(c.nodes[p].data.implicitDependencies) !==
+        JSON.stringify(nxJson.projects[p].implicitDependencies)
+    ) {
+      filesDifferentFromCache[p] = fileMap[p];
+      delete c.dependencies[p];
+      delete c.nodes[p];
+    }
   });
-
-  const partiallyConstructedProjectGraph = {
-    nodes: c.nodes,
-    dependencies: c.dependencies,
-  };
 
   return {
     filesDifferentFromCache,
-    partiallyConstructedProjectGraph,
-    noDifference: Object.keys(filesDifferentFromCache).length === 0,
+    cachedPartOfProjectGraph: {
+      nodes: c.nodes,
+      dependencies: c.dependencies,
+    },
   };
 }

@@ -13,7 +13,7 @@ import {
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { joinPathFragments } from '@nrwl/devkit';
 import { join } from 'path';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
 import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
@@ -80,28 +80,32 @@ function run(
   options: BrowserBuilderSchema,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const projGraph = createProjectGraph();
+  return from(createProjectGraphAsync()).pipe(
+    switchMap((projGraph) => {
+      const { target, dependencies } = calculateProjectDependencies(
+        projGraph,
+        context
+      );
 
-  const { target, dependencies } = calculateProjectDependencies(
-    projGraph,
-    context
-  );
+      options.tsConfig = createTmpTsConfig(
+        join(context.workspaceRoot, options.tsConfig),
+        context.workspaceRoot,
+        target.data.root,
+        dependencies
+      );
 
-  options.tsConfig = createTmpTsConfig(
-    join(context.workspaceRoot, options.tsConfig),
-    context.workspaceRoot,
-    target.data.root,
-    dependencies
-  );
-
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap((result) => {
-      if (result) {
-        return buildApp(options, context);
-      } else {
-        // just pass on the result
-        return of({ success: false });
-      }
+      return of(
+        checkDependentProjectsHaveBeenBuilt(context, dependencies)
+      ).pipe(
+        switchMap((result) => {
+          if (result) {
+            return buildApp(options, context);
+          } else {
+            // just pass on the result
+            return of({ success: false });
+          }
+        })
+      );
     })
   );
 }

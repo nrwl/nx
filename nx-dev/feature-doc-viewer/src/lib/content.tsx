@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import autolinkHeadings from 'rehype-autolink-headings';
+import Image from 'next/image';
 import gfm from 'remark-gfm';
 import slug from 'rehype-slug';
 import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
@@ -13,13 +14,19 @@ import { CodeBlock } from './code-block';
 export interface ContentProps {
   document: DocumentData;
   flavor: string;
+  flavorList: string[];
   version: string;
+  versionList: string[];
 }
 
 interface ComponentsConfig {
   readonly code: { callback: (command: string) => void };
 }
+
 const components: any = (config: ComponentsConfig) => ({
+  p({ children }) {
+    return <div className={'mb-5'}>{children}</div>;
+  },
   code({ node, inline, className, children, ...props }) {
     const language = /language-(\w+)/.exec(className || '')?.[1];
     return !inline && language ? (
@@ -58,8 +65,10 @@ export function Content(props: ContentProps) {
         ]}
         children={props.document.content}
         transformLinkUri={transformLinkPath({
-          flavor: props.flavor,
+          framework: props.flavor,
+          frameworkList: props.flavorList,
           version: props.version,
+          versionList: props.versionList,
         })}
         transformImageUri={transformImagePath({
           version: props.version,
@@ -80,6 +89,7 @@ export function Content(props: ContentProps) {
     </div>
   );
 }
+
 function createAnchorContent(node) {
   node.properties.className = ['group'];
   return {

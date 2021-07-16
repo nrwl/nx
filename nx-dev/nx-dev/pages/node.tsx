@@ -239,7 +239,7 @@ export function Node() {
                     building Node applications.
                   </p>
                   <div className="inline-flex rounded-md shadow">
-                    <Link href="/latest/node/getting-started/getting-started">
+                    <Link href="/latest/node/getting-started/intro">
                       <a className="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
                         Nx Node Doc
                       </a>

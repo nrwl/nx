@@ -2,7 +2,7 @@ import { extname } from 'path';
 import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createProjectGraph } from '../project-graph';
+import { createProjectGraphAsync } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
 import { FileData, WholeFileChange } from '../file-utils';
 import type { NxJsonConfiguration } from '@nrwl/devkit';
@@ -135,8 +135,8 @@ describe('project graph', () => {
     vol.fromJSON(filesJson, '/root');
   });
 
-  it('should create nodes and dependencies with workspace projects', () => {
-    const graph = createProjectGraph();
+  it('should create nodes and dependencies with workspace projects', async () => {
+    const graph = await createProjectGraphAsync();
     const affected = filterAffected(graph, [
       {
         file: 'something-for-api.txt',
@@ -163,11 +163,6 @@ describe('project graph', () => {
           type: 'app',
           data: expect.anything(),
         },
-        'demo-e2e': {
-          name: 'demo-e2e',
-          type: 'e2e',
-          data: expect.anything(),
-        },
         ui: {
           name: 'ui',
           type: 'lib',
@@ -175,13 +170,6 @@ describe('project graph', () => {
         },
       },
       dependencies: {
-        'demo-e2e': [
-          {
-            type: 'implicit',
-            source: 'demo-e2e',
-            target: 'demo',
-          },
-        ],
         demo: [
           {
             type: 'static',
@@ -200,8 +188,8 @@ describe('project graph', () => {
     });
   });
 
-  it('should create nodes and dependencies with npm packages', () => {
-    const graph = createProjectGraph();
+  it('should create nodes and dependencies with npm packages', async () => {
+    const graph = await createProjectGraphAsync();
     const updatedPackageJson = {
       ...packageJson,
       dependencies: {
@@ -240,21 +228,9 @@ describe('project graph', () => {
           type: 'app',
           data: expect.anything(),
         },
-        'demo-e2e': {
-          name: 'demo-e2e',
-          type: 'e2e',
-          data: expect.anything(),
-        },
       },
       dependencies: {
         'npm:happy-nrwl': [],
-        'demo-e2e': [
-          {
-            type: 'implicit',
-            source: 'demo-e2e',
-            target: 'demo',
-          },
-        ],
         demo: [
           {
             type: 'static',
@@ -268,8 +244,8 @@ describe('project graph', () => {
     });
   });
 
-  it('should support implicit JSON file dependencies (some projects)', () => {
-    const graph = createProjectGraph();
+  it('should support implicit JSON file dependencies (some projects)', async () => {
+    const graph = await createProjectGraphAsync();
     const updatedPackageJson = {
       ...packageJson,
       scripts: {
@@ -286,11 +262,11 @@ describe('project graph', () => {
       },
     ]);
 
-    expect(Object.keys(affected.nodes)).toEqual(['demo', 'demo-e2e', 'api']);
+    expect(Object.keys(affected.nodes)).toEqual(['demo', 'api']);
   });
 
-  it('should support implicit JSON file dependencies (all projects)', () => {
-    const graph = createProjectGraph();
+  it('should support implicit JSON file dependencies (all projects)', async () => {
+    const graph = await createProjectGraphAsync();
     const updatedPackageJson = {
       ...packageJson,
       devDependencies: {

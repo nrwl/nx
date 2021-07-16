@@ -3,7 +3,7 @@ import * as path from 'path';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utilities/fileutils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
 } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
@@ -21,13 +21,13 @@ import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
-export function format(
+export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
-): void {
+): Promise<void> {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
   const workspaceJsonPath = workspaceConfigName(appRootPath);
-  const patterns = getPatterns({ ...args, ...nxArgs } as any).map(
+  const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     (p) => `"${p}"`
   );
 
@@ -49,9 +49,9 @@ export function format(
   }
 }
 
-function getPatterns(
+async function getPatterns(
   args: NxArgs & { libsAndApps: boolean; _: string[] }
-): string[] {
+): Promise<string[]> {
   const supportedExtensions = prettier
     .getSupportInfo()
     .languages.flatMap((language) => language.extensions)
@@ -74,18 +74,18 @@ function getPatterns(
     );
 
     return args.libsAndApps
-      ? getPatternsFromApps(patterns, matchAllPattern)
+      ? await getPatternsFromApps(patterns, matchAllPattern)
       : patterns;
   } catch {
     return allFilesPattern;
   }
 }
 
-function getPatternsFromApps(
+async function getPatternsFromApps(
   affectedFiles: string[],
   matchAllPattern: string
-): string[] {
-  const graph = onlyWorkspaceProjects(createProjectGraph());
+): Promise<string[]> {
+  const graph = onlyWorkspaceProjects(await createProjectGraphAsync());
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)

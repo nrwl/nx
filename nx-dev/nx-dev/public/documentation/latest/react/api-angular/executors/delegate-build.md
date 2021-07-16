@@ -2,24 +2,24 @@
 
 Delegates the build to a different target while supporting incremental builds.
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Properties
+## Options
 
-### buildTarget
+### buildTarget (_**required**_)
 
 Type: `string`
 
-Build target used for building the app after its dependencies have been built.
+Build target used for building the application after its dependencies have been built.
 
-### outputPath
+### outputPath (_**required**_)
 
 Type: `string`
 
 The full path for the output directory, relative to the workspace root.
 
-### tsConfig
+### tsConfig (_**required**_)
 
 Type: `string`
 
@@ -31,4 +31,4 @@ Default: `false`
 
 Type: `boolean`
 
-Run build when files change.
+Whether to run a build when any file changes.

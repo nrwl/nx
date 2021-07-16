@@ -12,7 +12,7 @@ import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -29,7 +29,7 @@ export default async function exportExecutor(
 ) {
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
-    const projGraph = createProjectGraph();
+    const projGraph = await createProjectGraphAsync();
     const result = calculateProjectDependencies(
       projGraph,
       context.root,

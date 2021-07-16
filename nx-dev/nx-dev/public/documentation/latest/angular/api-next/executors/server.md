@@ -2,9 +2,9 @@
 
 Serve a Next.js app
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it.
 
-## Properties
+## Options
 
 ### buildLibsFromSource
 

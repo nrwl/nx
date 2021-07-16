@@ -15,6 +15,7 @@
     "@angular-devkit",
     "@angular-eslint/",
     "@schematics",
+    "@phenomnomnominal/tsquery",
     "ignore",
     "jasmine-marbles",
     "rxjs-for-await",

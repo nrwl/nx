@@ -6,13 +6,10 @@ import {
   isExpressionStatement,
   SyntaxKind,
 } from 'typescript';
-import {
-  applyChangesToString,
-  ChangeType,
-  Tree,
-  stripJsonComments,
-} from '@nrwl/devkit';
+import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import { Config } from '@jest/types';
+import { createContext, runInContext } from 'vm';
+import { dirname, join } from 'path';
 
 function makeTextToInsert(
   value: unknown,
@@ -33,18 +30,6 @@ function findPropertyAssignment(
 
     return propNameText === propertyName;
   }) as ts.PropertyAssignment | undefined;
-}
-
-export function getJsonObject(object: string) {
-  const value = stripJsonComments(object);
-  // react babel-jest has __dirname in the config.
-  // Put a temp variable in the anon function so that it doesnt fail.
-  // Migration script has a catch handler to give instructions on how to update the jest config if this fails.
-  return Function(`
-  "use strict";
-  let __dirname = '';
-  return (${value});
- `)();
 }
 
 export function addOrUpdateProperty(
@@ -235,6 +220,23 @@ export function jestConfigObject(
   host: Tree,
   path: string
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
-  const jestConfigAst = jestConfigObjectAst(host.read(path, 'utf-8'));
-  return getJsonObject(jestConfigAst.getText());
+  const __filename = join(host.root, path);
+  const contents = host.read(path, 'utf-8');
+  let module = { exports: {} };
+
+  // Run the contents of the file with some stuff from this current context
+  // The module.exports will be mutated by the contents of the file...
+  runInContext(
+    contents,
+    createContext({
+      module,
+      require,
+      process,
+      __filename,
+      __dirname: dirname(__filename),
+    })
+  );
+
+  // TODO: jest actually allows defining configs with async functions... we should be able to read that...
+  return module.exports;
 }

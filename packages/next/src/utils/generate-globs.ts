@@ -5,14 +5,14 @@ import { resolve } from 'path';
 
 /**
  * Use createGlobPatterns instead
- * @deprecated Use createGlobPatterns instead
+ * @deprecated Use createGlobPatternsForDependencies instead
  */
 export function createGlobPatternsOfDependentProjects(
   projectName: string,
   fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx'
 ): string[] {
   logger.warn(
-    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatterns(__filename)" instead`
+    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nrwl/next/tailwind" instead`
   );
 
   try {

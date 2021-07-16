@@ -1,3 +1,4 @@
+import { join } from 'path';
 import {
   DocumentMetadata,
   DocumentsApi,
@@ -37,8 +38,14 @@ export function loadVersionsData(): VersionMetadata[] {
   return versions;
 }
 
-export const documentsApi = new DocumentsApi(
-  loadVersionsData(),
-  loadDocumentsData()
-);
+export const documentsApi = new DocumentsApi({
+  previewRoot: join(process.env.NX_WORKSPACE_ROOT, 'docs'),
+  archiveRoot: join(
+    process.env.NX_WORKSPACE_ROOT,
+    'nx-dev/nx-dev/public/documentation'
+  ),
+  documentsMap: loadDocumentsData(),
+  versions: loadVersionsData(),
+});
+
 export const menuApi = new MenuApi(documentsApi);

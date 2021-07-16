@@ -11,12 +11,14 @@ import {
  * @param path - path to the jest config file
  * @param propertyName - Property to update. Can be dot delimited to access deeply nested properties
  * @param value
+ * @param options - set `valueAsString` option to true if the `value` being passed represents a string of the code that should be associated with the `propertyName`
  */
 export function addPropertyToJestConfig(
   host: Tree,
   path: string,
   propertyName: string,
-  value: unknown
+  value: unknown,
+  options: { valueAsString: boolean } = { valueAsString: false }
 ) {
   if (!host.exists(path)) {
     throw new Error(`Cannot find '${path}' in your workspace.`);
@@ -28,7 +30,7 @@ export function addPropertyToJestConfig(
       host,
       configObject,
       properties,
-      JSON.stringify(value),
+      options.valueAsString ? value : JSON.stringify(value),
       path
     );
   } catch (e) {
@@ -82,4 +84,16 @@ export function removePropertyFromJestConfig(
     );
     console.log(`Please manually update ${path}`);
   }
+}
+
+export function addImportStatementToJestConfig(
+  host: Tree,
+  path: string,
+  importStatement: string
+) {
+  const currentContents = host.read(path, 'utf-8');
+  const newContents = `${importStatement}
+  
+${currentContents}`;
+  host.write(path, newContents);
 }

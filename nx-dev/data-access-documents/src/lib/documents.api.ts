@@ -1,11 +1,7 @@
 import { readFileSync } from 'fs';
 import { join, relative } from 'path';
 import matter from 'gray-matter';
-import {
-  archiveRootPath,
-  extractTitle,
-  previewRootPath,
-} from './documents.utils';
+import { extractTitle } from './documents.utils';
 import {
   DocumentData,
   DocumentMetadata,
@@ -24,16 +20,20 @@ export const flavorList: {
 
 export class DocumentsApi {
   constructor(
-    private readonly versions: VersionMetadata[],
-    private readonly documentsMap: Map<string, DocumentMetadata[]>
+    private readonly options: {
+      previewRoot: string;
+      archiveRoot: string;
+      versions: VersionMetadata[];
+      documentsMap: Map<string, DocumentMetadata[]>;
+    }
   ) {}
 
   getDefaultVersion(): VersionMetadata {
-    return this.versions.find((v) => v.default);
+    return this.options.versions.find((v) => v.default);
   }
 
   getVersions(): VersionMetadata[] {
-    return this.versions;
+    return this.options.versions;
   }
 
   getDocument(
@@ -52,7 +52,9 @@ export class DocumentsApi {
 
     return {
       filePath: relative(
-        versionId === 'preview' ? previewRootPath : archiveRootPath,
+        versionId === 'preview'
+          ? this.options.previewRoot
+          : this.options.archiveRoot,
         docPath
       ),
       data: file.data,
@@ -62,7 +64,7 @@ export class DocumentsApi {
   }
 
   getDocuments(version: string) {
-    const docs = this.documentsMap.get(version);
+    const docs = this.options.documentsMap.get(version);
     if (docs) {
       return docs;
     } else {
@@ -106,13 +108,13 @@ export class DocumentsApi {
 
   getDocumentsRoot(version: string): string {
     if (version === 'preview') {
-      return previewRootPath;
+      return this.options.previewRoot;
     }
 
     if (version === 'latest' || version === 'previous') {
       return join(
-        archiveRootPath,
-        this.versions.find((x) => x.id === version).path
+        this.options.archiveRoot,
+        this.options.versions.find((x) => x.id === version).path
       );
     }
 

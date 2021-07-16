@@ -14,7 +14,15 @@
       "runner": "@nrwl/nx-cloud",
       "options": {
         "accessToken": "YzVhYjFiNzAtYTYxZS00OWM3LTlkOGYtZjRmOGRlNDY4MTJhfHJlYWQtd3JpdGU=",
-        "cacheableOperations": ["build", "build-base", "test", "lint", "e2e"],
+        "cacheableOperations": [
+          "build",
+          "build-base",
+          "test",
+          "lint",
+          "e2e",
+          "copy-preview",
+          "sitemap"
+        ],
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
         "runtimeCacheInputs": [
@@ -43,118 +51,5 @@
     "libsDir": "",
     "appsDir": ""
   },
-  "projects": {
-    "angular": {
-      "implicitDependencies": ["workspace", "cypress", "jest"]
-    },
-    "cli": {
-      "implicitDependencies": ["workspace"]
-    },
-    "create-nx-plugin": {
-      "implicitDependencies": ["nx-plugin"]
-    },
-    "create-nx-workspace": {
-      "implicitDependencies": ["workspace"]
-    },
-    "cypress": {},
-    "dep-graph-dep-graph": {
-      "tags": ["core"]
-    },
-    "dep-graph-dep-graph-e2e": {
-      "implicitDependencies": ["dep-graph-dep-graph"]
-    },
-    "devkit": {},
-    "docs": {
-      "tags": ["scope:nx-dev"]
-    },
-    "e2e-angular": {
-      "implicitDependencies": ["angular"]
-    },
-    "e2e-cli": {
-      "implicitDependencies": ["cli"]
-    },
-    "e2e-cypress": {
-      "implicitDependencies": ["cypress"]
-    },
-    "e2e-gatsby": {
-      "implicitDependencies": ["gatsby"]
-    },
-    "e2e-jest": {
-      "implicitDependencies": ["jest"]
-    },
-    "e2e-linter": {
-      "implicitDependencies": ["linter"]
-    },
-    "e2e-next": {
-      "implicitDependencies": ["next"]
-    },
-    "e2e-node": {
-      "implicitDependencies": ["node"]
-    },
-    "e2e-nx-plugin": {
-      "implicitDependencies": ["create-nx-plugin"]
-    },
-    "e2e-react": {
-      "implicitDependencies": ["react"]
-    },
-    "e2e-storybook": {
-      "implicitDependencies": ["storybook"]
-    },
-    "e2e-utils": {},
-    "e2e-web": {
-      "implicitDependencies": ["web"]
-    },
-    "e2e-workspace": {
-      "implicitDependencies": ["create-nx-workspace", "angular", "react"]
-    },
-    "eslint-plugin-nx": {},
-    "express": {
-      "implicitDependencies": ["node"]
-    },
-    "gatsby": {
-      "tags": []
-    },
-    "jest": {},
-    "linter": {
-      "implicitDependencies": ["eslint-plugin-nx"]
-    },
-    "nest": {
-      "implicitDependencies": ["node", "linter"]
-    },
-    "next": {},
-    "node": {},
-    "nx": {},
-    "nx-dev": {
-      "tags": ["scope:nx-dev", "type:app"],
-      "implicitDependencies": ["docs"]
-    },
-    "nx-dev-data-access-documents": {
-      "tags": ["scope:nx-dev", "type:data-access"]
-    },
-    "nx-dev-e2e": {
-      "tags": ["scope:nx-dev", "type:e2e"],
-      "implicitDependencies": ["nx-dev"]
-    },
-    "nx-dev-feature-analytics": {
-      "tags": ["scope:nx-dev", "type:feature"]
-    },
-    "nx-dev-feature-doc-viewer": {
-      "tags": ["scope:nx-dev", "type:feature"]
-    },
-    "nx-dev-feature-search": {
-      "tags": ["scope:nx-dev", "type:feature"]
-    },
-    "nx-dev-ui-common": {
-      "tags": ["scope:nx-dev", "type:ui"]
-    },
-    "nx-plugin": {},
-    "react": {},
-    "storybook": {},
-    "tao": {},
-    "typedoc-theme": {
-      "tags": []
-    },
-    "web": {},
-    "workspace": {}
-  }
+  "projects": {}
 }

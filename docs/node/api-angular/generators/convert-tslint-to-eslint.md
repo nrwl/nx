@@ -65,3 +65,11 @@ Default: `true`
 Type: `boolean`
 
 If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

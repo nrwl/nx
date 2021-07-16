@@ -2,7 +2,11 @@
 
 🔎 **Smart, Extensible Build Framework**
 
-### Distributed Graph-Based Task Execution and Computation Caching
+Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
+
+### Best-in-Class Support for Monorepos
+
+<strong>Nx</strong> provides distributed graph-based task execution and computation caching.
 
 <strong>Nx</strong> is smart. It analyzes your workspace and figures out what can be affected by every code change.
 That's why Nx doesn't rebuild and retest everything on every commit--<strong>it only rebuilds what is necessary</strong>

@@ -32,6 +32,11 @@
       "description": "If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration",
       "default": true,
       "x-prompt": "Would you like to remove TSLint and its related config if there are no TSLint projects remaining after this conversion?"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
     }
   },
   "required": ["project"]

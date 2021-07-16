@@ -14,7 +14,10 @@ export async function addLintingGenerator(
   addAngularEsLintDependencies(tree);
   createEsLintConfiguration(tree, options);
   addProjectLintTarget(tree, options);
-  await formatFiles(tree);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return installTask;
 }

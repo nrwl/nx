@@ -1,16 +1,16 @@
 import { ExecutorContext } from '@nrwl/devkit';
 
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { createPackageJson as generatePackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
 
 import { NextBuildBuilderOptions } from '../../../utils/types';
 
-export function createPackageJson(
+export async function createPackageJson(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
-  const depGraph = createProjectGraph();
+  const depGraph = await createProjectGraphAsync();
   const packageJson = generatePackageJson(context.projectName, depGraph, {
     root: context.root,
     projectRoot: context.workspace.projects[context.projectName].sourceRoot,

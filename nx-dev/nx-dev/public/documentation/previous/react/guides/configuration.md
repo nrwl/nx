@@ -285,6 +285,7 @@ Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx
 Tasks runners can accept different options. The following are the options supported by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
 - `cacheableOperations` defines the list of targets/operations that will be cached by Nx.
+- `strictlyOrderedTargets` defines the list of targets that need to be executed in the order defined by the dependency graph. Defaults to `['build']`
 - `parallel` defines whether to run targets in parallel
 - `maxParallel` defines the max number of processes used.
 - `captureStderr` defines whether the cache will capture stderr or just stdout

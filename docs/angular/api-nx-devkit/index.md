@@ -780,11 +780,12 @@ Example:
 
 **Returns:** _object_
 
-| Name       | Type     |
-| :--------- | :------- |
-| `appsDir`  | _string_ |
-| `libsDir`  | _string_ |
-| `npmScope` | _string_ |
+| Name                  | Type      |
+| :-------------------- | :-------- |
+| `appsDir`             | _string_  |
+| `libsDir`             | _string_  |
+| `npmScope`            | _string_  |
+| `standaloneAsDefault` | _boolean_ |
 
 ---
 

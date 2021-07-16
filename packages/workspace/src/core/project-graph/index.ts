@@ -1,4 +1,8 @@
-export { createProjectGraph, readCurrentProjectGraph } from './project-graph';
+export {
+  createProjectGraph,
+  createProjectGraphAsync,
+  readCurrentProjectGraph,
+} from './project-graph';
 export { BuildDependencies } from './build-dependencies';
 export { BuildNodes } from './build-nodes';
 export { ProjectGraphBuilder } from './project-graph-builder';

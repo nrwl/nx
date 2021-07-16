@@ -27,7 +27,7 @@ module.exports = {
       filename: "remoteEntry.js",
       exposes: {
         './Component': '<%= sourceRoot %>/src/app/app.component.ts',
-      },<% } %><% if(type === 'shell') { %>
+      },<% } %><% if(type === 'host') { %>
       remotes: {
       <% remotes.forEach(function(remote) { %>"<%= remote.remoteName %>": "<%= remote.remoteName %>@http://localhost:<%= remote.port %>/remoteEntry.js",<% }); %>
       },<% } %>

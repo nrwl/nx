@@ -33,7 +33,7 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('mypackage', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          mypackage: { version: '2.0.0', alwaysAddToPackageJson: false },
+          mypackage: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });
@@ -53,7 +53,7 @@ describe('Migration', () => {
                     child: { version: '2.0.0' },
                     newChild: {
                       version: '3.0.0',
-                      alwaysAddToPackageJson: true,
+                      addToPackageJson: 'devDependencies',
                     },
                   },
                 },
@@ -75,9 +75,49 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child: { version: '2.0.0', alwaysAddToPackageJson: false },
-          newChild: { version: '2.0.0', alwaysAddToPackageJson: true },
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child: { version: '2.0.0', addToPackageJson: false },
+          newChild: { version: '2.0.0', addToPackageJson: 'devDependencies' },
+        },
+      });
+    });
+
+    it('should support the deprecated "alwaysAddToPackageJson" option', async () => {
+      const migrator = new Migrator({
+        packageJson: {},
+        versions: () => '1.0.0',
+        fetch: (p, _v) => {
+          if (p === 'mypackage') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child1: { version: '3.0.0', alwaysAddToPackageJson: false },
+                    child2: { version: '3.0.0', alwaysAddToPackageJson: true },
+                  },
+                },
+              },
+            });
+          } else if (p === 'child1') {
+            return Promise.resolve({ version: '3.0.0' });
+          } else if (p === 'child2') {
+            return Promise.resolve({ version: '3.0.0' });
+          } else {
+            return Promise.resolve(null);
+          }
+        },
+        from: {},
+        to: {},
+      });
+
+      expect(await migrator.updatePackageJson('mypackage', '2.0.0')).toEqual({
+        migrations: [],
+        packageJson: {
+          mypackage: { version: '2.0.0', addToPackageJson: false },
+          child1: { version: '3.0.0', addToPackageJson: false },
+          child2: { version: '3.0.0', addToPackageJson: 'dependencies' },
         },
       });
     });
@@ -124,8 +164,8 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child: { version: '2.0.0', alwaysAddToPackageJson: false },
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });
@@ -186,10 +226,10 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child1: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child2: { version: '2.0.0', alwaysAddToPackageJson: false },
-          grandchild: { version: '4.0.0', alwaysAddToPackageJson: false },
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child1: { version: '2.0.0', addToPackageJson: false },
+          child2: { version: '2.0.0', addToPackageJson: false },
+          grandchild: { version: '4.0.0', addToPackageJson: false },
         },
       });
     });
@@ -236,8 +276,8 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child: { version: '2.0.0', alwaysAddToPackageJson: false },
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });
@@ -279,8 +319,8 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child1: { version: '2.0.0', alwaysAddToPackageJson: false },
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child1: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });
@@ -323,46 +363,28 @@ describe('Migration', () => {
       ).toEqual({
         migrations: [],
         packageJson: {
-          '@nrwl/workspace': {
-            version: '2.0.0',
-            alwaysAddToPackageJson: false,
-          },
-          '@nrwl/cli': {
-            version: '2.0.0',
-            alwaysAddToPackageJson: false,
-          },
-          '@nrwl/angular': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/cypress': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/devkit': {
-            alwaysAddToPackageJson: false,
-            version: '2.0.0',
-          },
+          '@nrwl/workspace': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/cli': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/angular': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/cypress': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/devkit': { addToPackageJson: false, version: '2.0.0' },
           '@nrwl/eslint-plugin-nx': {
             version: '2.0.0',
-            alwaysAddToPackageJson: false,
+            addToPackageJson: false,
           },
-          '@nrwl/express': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/gatsby': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/jest': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/linter': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/nest': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/next': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/node': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/nx-cloud': {
-            version: '2.0.0',
-            alwaysAddToPackageJson: false,
-          },
-          '@nrwl/nx-plugin': {
-            version: '2.0.0',
-            alwaysAddToPackageJson: false,
-          },
-          '@nrwl/react': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/storybook': {
-            version: '2.0.0',
-            alwaysAddToPackageJson: false,
-          },
-          '@nrwl/tao': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/web': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/express': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/gatsby': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/jest': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/linter': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/nest': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/next': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/node': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/nx-cloud': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/nx-plugin': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/react': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/storybook': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/tao': { version: '2.0.0', addToPackageJson: false },
+          '@nrwl/web': { version: '2.0.0', addToPackageJson: false },
         },
       });
     });
@@ -476,9 +498,9 @@ describe('Migration', () => {
           },
         ],
         packageJson: {
-          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child: { version: '2.0.0', alwaysAddToPackageJson: false },
-          newChild: { version: '3.0.0', alwaysAddToPackageJson: false },
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child: { version: '2.0.0', addToPackageJson: false },
+          newChild: { version: '3.0.0', addToPackageJson: false },
         },
       });
     });

@@ -9,6 +9,7 @@ export async function addMfe(host: Tree, options: NormalizedSchema) {
     mfeType: options.mfeType,
     port: options.port,
     remotes: options.remotes,
+    host: options.host,
     skipFormat: true,
   });
 }

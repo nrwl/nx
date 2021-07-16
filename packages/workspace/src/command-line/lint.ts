@@ -1,5 +1,5 @@
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
@@ -7,8 +7,8 @@ import { readWorkspaceFiles, workspaceLayout } from '../core/file-utils';
 import { output } from '../utilities/output';
 import * as path from 'path';
 
-export function workspaceLint(): void {
-  const graph = onlyWorkspaceProjects(createProjectGraph());
+export async function workspaceLint(): Promise<void> {
+  const graph = onlyWorkspaceProjects(await createProjectGraphAsync());
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
     graph,

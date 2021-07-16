@@ -652,9 +652,9 @@ describe('app', () => {
   });
 
   describe('--mfe', () => {
-    test.each(['shell', 'remote'])(
+    test.each(['host', 'remote'])(
       'should generate a Module Federation correctly for a each app',
-      async (type: 'shell' | 'remote') => {
+      async (type: 'host' | 'remote') => {
         await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
 
         expect(appTree.exists(`apps/my-app/webpack.config.js`)).toBeTruthy();
@@ -667,9 +667,9 @@ describe('app', () => {
       }
     );
 
-    test.each(['shell', 'remote'])(
+    test.each(['host', 'remote'])(
       'should update the builder to use webpack-browser',
-      async (type: 'shell' | 'remote') => {
+      async (type: 'host' | 'remote') => {
         await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
 
         const projectConfig = readProjectConfiguration(appTree, 'my-app');
@@ -679,6 +679,58 @@ describe('app', () => {
         );
       }
     );
+
+    it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
+      // ARRANGE
+      await generateApp(appTree, 'app1', {
+        mfe: true,
+        mfeType: 'host',
+      });
+
+      // ACT
+      await generateApp(appTree, 'remote1', {
+        mfe: true,
+        mfeType: 'remote',
+        host: 'app1',
+      });
+
+      // ASSERT
+      const hostWebpackConfig = appTree.read(
+        'apps/app1/webpack.config.js',
+        'utf-8'
+      );
+      expect(hostWebpackConfig).toMatchSnapshot();
+    });
+
+    it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
+      // ARRANGE
+      await generateApp(appTree, 'app1', {
+        mfe: true,
+        mfeType: 'host',
+      });
+
+      await generateApp(appTree, 'remote1', {
+        mfe: true,
+        mfeType: 'remote',
+        host: 'app1',
+        port: 4201,
+      });
+
+      // ACT
+      await generateApp(appTree, 'remote2', {
+        mfe: true,
+        mfeType: 'remote',
+        host: 'app1',
+        port: 4202,
+      });
+
+      // ASSERT
+      const hostWebpackConfig = appTree.read(
+        'apps/app1/webpack.config.js',
+        'utf-8'
+      );
+      expect(hostWebpackConfig).toMatchSnapshot();
+    });
   });
 });
 

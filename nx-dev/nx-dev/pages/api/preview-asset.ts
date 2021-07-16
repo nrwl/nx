@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { join } from 'path';
-
 import * as send from 'send';
 
-// Repeated here since `data-access-documents` isn't available at runtime.
-const previewRootPath = join(process.env.WORKSPACE_ROOT, 'docs');
+// nx-ignore-next-line
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+
+// This is only guaranteed during local dev since Vercel will not contain the entire workspace during runtime
+const previewRootPath = join(appRootPath, 'docs');
 
 export default function (req: NextApiRequest, res: NextApiResponse) {
   return new Promise<void>((resolve) => {

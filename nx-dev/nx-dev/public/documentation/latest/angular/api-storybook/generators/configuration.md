@@ -24,6 +24,12 @@ nx g configuration ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Library or application name
+
 ### configureCypress
 
 Type: `boolean`
@@ -53,12 +59,6 @@ Type: `string`
 Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-Library or application name
 
 ### standaloneConfig
 

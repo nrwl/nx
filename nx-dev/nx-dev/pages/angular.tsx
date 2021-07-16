@@ -189,7 +189,7 @@ export function AngularPage() {
                   dependency graphs, and much, much more.
                 </p>
                 <div className="inline-flex">
-                  <Link href="/latest/anguar/tutorial/01-create-application">
+                  <Link href="/latest/angular/tutorial/01-create-application">
                     <a className="inline-flex items-center font-bold group">
                       <span className="group-hover:underline">
                         Nx Angular App Tutorial
@@ -230,9 +230,14 @@ export function AngularPage() {
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Distributed Graph-Based Task Executions and Computation
-                    Caching
+                    Best-in-Class Support for Monorepos
                   </h3>
+
+                  <p className="sm:text-lg mb-6">
+                    <span className="font-bold">Nx</span> provides distributed
+                    graph-based task execution and computation caching.
+                  </p>
+
                   <p className="sm:text-lg mb-6">
                     <span className="font-bold">Nx</span> is smart. It analyzes
                     your workspace and figures out what can be affected by every
@@ -246,7 +251,7 @@ export function AngularPage() {
                   <p className="sm:text-lg mb-6">
                     <span className="font-bold">Nx</span> partitions commands
                     into a graph of smaller tasks. Nx then runs those tasks in
-                    parallel, and
+                    parallel, and{' '}
                     <span className="font-bold">
                       it can even distribute them across many machines without
                       any configuration
@@ -424,7 +429,7 @@ export function AngularPage() {
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link href="/latest/angular/getting-started/getting-started">
+                  <Link href="/latest/angular/getting-started/intro">
                     <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
                       Get started with Angular
                     </a>

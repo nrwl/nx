@@ -9,14 +9,14 @@ export const NX_ERROR = chalk.inverse(chalk.bold(chalk.red(' ERROR ')));
 export const logger = {
   warn: (s) => console.warn(chalk.bold(chalk.yellow(s))),
   error: (s) => {
-    if (s.startsWith('NX ')) {
+    if (typeof s === 'string' && s.startsWith('NX ')) {
       console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`);
     } else {
       console.error(chalk.bold(chalk.red(s)));
     }
   },
   info: (s) => {
-    if (s.startsWith('NX ')) {
+    if (typeof s === 'string' && s.startsWith('NX ')) {
       console.info(`\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`);
     } else {
       console.info(chalk.white(s));

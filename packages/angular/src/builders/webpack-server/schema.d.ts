@@ -1,0 +1,32 @@
+export interface Schema {
+  browserTarget: string;
+  port: number;
+  host: string;
+  proxyConfig?: string;
+  ssl: boolean;
+  sslKey?: string;
+  sslCert?: string;
+  headers?: Record<string, string>;
+  open: boolean;
+  verbose?: boolean;
+  liveReload: boolean;
+  publicHost?: string;
+  allowedHosts?: string[];
+  servePath?: string;
+  disableHostCheck?: boolean;
+  hmr?: boolean;
+  watch?: boolean;
+  hmrWarning?: boolean;
+  servePathDefaultWarning?: boolean;
+  optimization?: boolean | { scripts: boolean; styles: boolean };
+  aot?: boolean;
+  sourceMap?:
+    | boolean
+    | { scripts: boolean; styles: boolean; hidden: boolean; vendor: boolean };
+  vendorChunk?: boolean;
+  commonChunk?: boolean;
+  baseHref?: string;
+  deployUrl?: string;
+  progress?: boolean;
+  poll?: number;
+}

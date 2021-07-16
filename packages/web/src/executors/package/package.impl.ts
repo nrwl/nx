@@ -22,7 +22,7 @@ import { catchError, concatMap, last, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -52,13 +52,13 @@ const outputConfigs: OutputConfig[] = [
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
-export default function run(
+export default async function* run(
   rawOptions: PackageBuilderOptions,
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
   const sourceRoot = project.sourceRoot;
-  const projGraph = createProjectGraph();
+  const projGraph = await createProjectGraphAsync();
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
     context.root,
@@ -96,7 +96,7 @@ export default function run(
 
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
-    return eachValueFrom(
+    return yield* eachValueFrom(
       new Observable<{ success: boolean }>((obs) => {
         watcher.on('event', (data) => {
           if (data.code === 'START') {

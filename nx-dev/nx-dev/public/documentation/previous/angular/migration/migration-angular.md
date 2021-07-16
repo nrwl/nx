@@ -174,7 +174,7 @@ Your application code is self-contained within the `src` folder of your Angular 
 
 Verify your app runs correctly by running:
 
-```bash
+```sh
 ng serve <app name>
 ```
 
@@ -184,7 +184,7 @@ Nx uses Jest by default. If you have any custom Jest configuration, you need to 
 
 Verify your tests run correctly by running:
 
-```bash
+```sh
 ng test <app name>
 ```
 
@@ -258,7 +258,7 @@ If you are using `Karma` for unit testing:
 
 Verify your tests run correctly by running:
 
-```bash
+```sh
 ng test <app name>
 ```
 
@@ -266,7 +266,7 @@ ng test <app name>
 
 Nx uses Cypress by default. If you are already using Cypress, copy your E2E setup files into the `apps/<app name>-e2e` folder and verify your tests still run correctly by running:
 
-```bash
+```sh
 ng e2e <app name>-e2e
 ```
 
@@ -350,7 +350,7 @@ Update the `apps/<app name>/tsconfig.json` to extend the root `tsconfig.json`:
 
 Verify your E2E tests run correctly by running:
 
-```bash
+```sh
 ng e2e <app name>-e2e
 ```
 
@@ -362,13 +362,13 @@ For lint rules, migrate your existing rules into the root `tslint.json` file.
 
 Verify your lint checks run correctly by running:
 
-```bash
+```sh
 npm run lint
 ```
 
 OR
 
-```bash
+```sh
 yarn lint
 ```
 

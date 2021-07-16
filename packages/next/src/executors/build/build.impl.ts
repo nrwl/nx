@@ -11,7 +11,7 @@ import { NextBuildBuilderOptions } from '../../utils/types';
 import { createPackageJson } from './lib/create-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -32,7 +32,7 @@ export default async function buildExecutor(
   const root = resolve(context.root, options.root);
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const projGraph = createProjectGraph();
+    const projGraph = await createProjectGraphAsync();
     const result = calculateProjectDependencies(
       projGraph,
       context.root,
@@ -58,7 +58,7 @@ export default async function buildExecutor(
     mkdir(options.outputPath);
   }
 
-  createPackageJson(options, context);
+  await createPackageJson(options, context);
   createNextConfigFile(options, context);
 
   copySync(join(root, 'public'), join(options.outputPath, 'public'));

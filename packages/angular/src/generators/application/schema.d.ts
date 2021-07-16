@@ -21,7 +21,8 @@ export interface Schema {
   strict?: boolean;
   standaloneConfig?: boolean;
   mfe?: boolean;
-  mfeType?: 'shell' | 'remote';
+  mfeType?: 'host' | 'remote';
   remotes?: string[];
   port?: number;
+  host?: string;
 }

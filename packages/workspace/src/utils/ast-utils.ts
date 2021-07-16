@@ -363,7 +363,7 @@ export function readJsonInTree<T extends object = any>(
 
 // TODO(v13): remove this deprecated method
 /**
- * @deprecated This method is deprecated and is synonymous to {@link onlyWorkspaceProjects}({@link createProjectGraph}())
+ * @deprecated This method is deprecated and `{@link onlyWorkspaceProjects}(await {@link createProjectGraphAsync}())` should be used instead.
  * Method for utilizing the project graph in schematics
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
@@ -372,7 +372,7 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
 
 // TODO(v13): remove this deprecated method
 /**
- * @deprecated This method is deprecated and is synonymous to {@link createProjectGraph}()
+ * @deprecated This method is deprecated and `await {@link createProjectGraphAsync}()` should be used instead
  */
 export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   return createProjectGraph(undefined, undefined, undefined);

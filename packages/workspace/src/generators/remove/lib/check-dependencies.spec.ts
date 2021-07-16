@@ -11,7 +11,9 @@ import { DependencyType, ProjectGraph } from '../../../core/project-graph';
 let projectGraph: ProjectGraph;
 jest.mock('../../../core/project-graph', () => ({
   ...jest.requireActual('../../../core/project-graph'),
-  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => projectGraph),
 }));
 
 describe('checkDependencies', () => {
@@ -87,17 +89,12 @@ describe('checkDependencies', () => {
     });
 
     it('should fatally error if any dependent exists', async () => {
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).toThrow();
+      await expect(checkDependencies(tree, schema)).rejects.toThrow();
     });
 
     it('should not error if forceRemove is true', async () => {
       schema.forceRemove = true;
-
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).not.toThrow();
+      await expect(checkDependencies(tree, schema)).resolves.not.toThrow();
     });
   });
 
@@ -111,19 +108,14 @@ describe('checkDependencies', () => {
     });
 
     it('should fatally error if any dependent exists', async () => {
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).toThrow(
+      await expect(checkDependencies(tree, schema)).rejects.toThrow(
         `${schema.projectName} is still depended on by the following projects:\nmy-dependent`
       );
     });
 
     it('should not error if forceRemove is true', async () => {
       schema.forceRemove = true;
-
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).not.toThrow();
+      await expect(checkDependencies(tree, schema)).resolves.not.toThrow();
     });
   });
 
@@ -132,8 +124,6 @@ describe('checkDependencies', () => {
       nodes: projectGraph.nodes,
       dependencies: {},
     };
-    expect(() => {
-      checkDependencies(tree, schema);
-    }).not.toThrow();
+    await expect(checkDependencies(tree, schema)).resolves.not.toThrow();
   });
 });

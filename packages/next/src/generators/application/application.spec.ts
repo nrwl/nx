@@ -310,9 +310,14 @@ describe('app', () => {
         const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
           Object {
+            "env": Object {
+              "jest": true,
+            },
             "extends": Array [
-              "plugin:@nrwl/nx/react",
+              "plugin:@nrwl/nx/react-typescript",
               "../../.eslintrc.json",
+              "next",
+              "next/core-web-vitals",
             ],
             "ignorePatterns": Array [
               "!**/*",

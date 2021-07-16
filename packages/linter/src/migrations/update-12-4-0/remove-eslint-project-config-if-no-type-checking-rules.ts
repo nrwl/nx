@@ -24,6 +24,10 @@ function updateProjectESLintConfigs(host: Tree) {
 export default async function removeESLintProjectConfigIfNoTypeCheckingRules(
   host: Tree
 ) {
+  if (!host.exists('.eslintrc.json')) {
+    return;
+  }
+
   // If the root level config uses at least one rule requiring type-checking, do not migrate any project configs
   const rootESLintConfig = readJson(host, '.eslintrc.json');
   if (hasRulesRequiringTypeChecking(rootESLintConfig)) {
