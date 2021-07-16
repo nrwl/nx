@@ -24,12 +24,17 @@ export function generateWebpackConfig(
       If this was not the outcome you expected, you can discard the changes we have made, create a backup of your current webpack config, and run the command again.`
     );
   }
-  generateFiles(host, joinPathFragments(__dirname, '../files'), appRoot, {
-    tmpl: '',
-    type: options.mfeType,
-    name: options.appName,
-    remotes: remotesWithPorts ?? [],
-    sourceRoot: appRoot,
-    sharedLibraries: SHARED_SINGLETON_LIBRARIES,
-  });
+  generateFiles(
+    host,
+    joinPathFragments(__dirname, '../files/webpack'),
+    appRoot,
+    {
+      tmpl: '',
+      type: options.mfeType,
+      name: options.appName,
+      remotes: remotesWithPorts ?? [],
+      sourceRoot: appRoot,
+      sharedLibraries: SHARED_SINGLETON_LIBRARIES,
+    }
+  );
 }

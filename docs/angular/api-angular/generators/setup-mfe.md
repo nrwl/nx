@@ -58,6 +58,12 @@ Type: `array`
 
 A list of remote application names that the host application should consume.
 
+### routing
+
+Type: `boolean`
+
+Generate a routing setup to allow a host application to route to the remote application.
+
 ### skipFormat
 
 Type: `boolean`
