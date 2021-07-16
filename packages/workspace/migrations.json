@@ -894,6 +894,14 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.8",
+      "packages": {
+        "typescript": {
+          "version": "~4.3.5"
+        }
+      }
     }
   }
 }

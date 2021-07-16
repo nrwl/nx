@@ -10,7 +10,7 @@ import { libraryGenerator } from '../../library/library';
 import { DependencyType, ProjectGraph } from '../../../core/project-graph';
 let projectGraph: ProjectGraph;
 jest.mock('../../../core/project-graph', () => ({
-  ...jest.requireActual('../../../core/project-graph'),
+  ...jest.requireActual<any>('../../../core/project-graph'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
