@@ -610,9 +610,13 @@ export function getPackageManagerCommand({
 
   const publishedVersion = `9999.0.2`;
 
+  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+
   return {
     npm: {
-      createWorkspace: `npx create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `npx ${
+        +npmMajorVersion >= 7 ? '--yes' : ''
+      } create-nx-workspace@${publishedVersion}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
       addDev: `npm install --legacy-peer-deps -D`,
