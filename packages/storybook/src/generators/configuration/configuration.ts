@@ -128,7 +128,9 @@ function createProjectStorybookDir(
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
 
-  if (tree.exists(join(root, '.storybook'))) {
+  const storybookRoot = join(root, '.storybook');
+
+  if (tree.exists(storybookRoot)) {
     return;
   }
 

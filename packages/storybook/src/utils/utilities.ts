@@ -51,6 +51,7 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
 export type TsConfig = {
   extends: string;
   compilerOptions: CompilerOptions;
+  files?: string[];
   include?: string[];
   exclude?: string[];
   references?: Array<{ path: string }>;
