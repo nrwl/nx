@@ -243,6 +243,14 @@ function validateProperty(
         )}.`
       );
     }
+
+    if (schema.type === 'string' && schema.pattern) {
+      if (!new RegExp(schema.pattern).test(value)) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. '${value}' should match the pattern '${schema.pattern}'.`
+        );
+      }
+    }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
     value.forEach((valueInArray) =>
