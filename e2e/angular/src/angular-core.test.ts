@@ -195,7 +195,7 @@ describe('Angular Package', () => {
       path.normalize(`apps/${myapp}/src/app/inline-template.component.ts`)
     );
     expect(appLintStdOut).toContain(
-      `The selector should be prefixed by one of the prefixes`
+      `The selector should start with one of these prefixes`
     );
     expect(appLintStdOut).toContain(`7:18`);
   });
