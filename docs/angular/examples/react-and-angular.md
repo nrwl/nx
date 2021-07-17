@@ -19,11 +19,13 @@ npx --ignore-existing create-nx-workspace happynrwl --preset=empty
 An empty workspace does not have any capabilities to create applications. Add capabilities for Angular development via:
 
 First add @angular/cli using
+
 ```bash
 npm i -D @angular/cli
 ```
 
 Then run
+
 ```bash
 nx add @nrwl/angular
 ```
