@@ -3,6 +3,7 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   logger,
+  removeDependenciesFromPackageJson,
 } from '@nrwl/devkit';
 
 const webpack5Packages = {
@@ -19,6 +20,8 @@ const webpack5Packages = {
 
 export async function webMigrateToWebpack5Generator(tree: Tree, schema: {}) {
   logger.info(`NX Adding webpack 5 to workspace.`);
+  // Removing the packages ensures that the versions will be updated when adding them after
+  removeDependenciesFromPackageJson(tree, [], Object.keys(webpack5Packages));
   return addDependenciesToPackageJson(tree, {}, webpack5Packages);
 }
 
