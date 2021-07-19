@@ -22,9 +22,10 @@ function determineProjectsValue(uncoveredJestProjects: string[]): string {
   if (!uncoveredJestProjects.length) {
     return `getJestProjects()`;
   }
-  return `[...getJestProjects(), ${uncoveredJestProjects.map(
-    (projectName) => `'${projectName}', `
-  )}]`;
+  console.log(uncoveredJestProjects);
+  return `[...getJestProjects(), ${uncoveredJestProjects
+    .map((projectName) => `'${projectName}', `)
+    .join('')}]`;
 }
 
 function updateBaseJestConfig(
