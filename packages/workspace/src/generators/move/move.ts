@@ -24,6 +24,7 @@ import { updatePackageJson } from './lib/update-package-json';
 export async function moveGenerator(tree: Tree, schema: Schema) {
   const projectConfig = readProjectConfiguration(tree, schema.projectName);
   checkDestination(tree, schema, projectConfig);
+  moveProjectConfiguration(tree, schema, projectConfig);
   moveProject(tree, schema, projectConfig); // we MUST move the project first, if we don't we get a "This should never happen" error 🤦‍♀️
   updateImports(tree, schema, projectConfig);
   updateProjectRootFiles(tree, schema, projectConfig);
@@ -33,7 +34,6 @@ export async function moveGenerator(tree: Tree, schema: Schema) {
   updateEslintrcJson(tree, schema, projectConfig);
   updateReadme(tree, schema, projectConfig);
   updatePackageJson(tree, schema, projectConfig);
-  moveProjectConfiguration(tree, schema, projectConfig);
   updateBuildTargets(tree, schema);
   updateDefaultProject(tree, schema);
   updateImplicitDependencies(tree, schema);
