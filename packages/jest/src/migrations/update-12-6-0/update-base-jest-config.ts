@@ -22,7 +22,6 @@ function determineProjectsValue(uncoveredJestProjects: string[]): string {
   if (!uncoveredJestProjects.length) {
     return `getJestProjects()`;
   }
-  console.log(uncoveredJestProjects);
   return `[...getJestProjects(), ${uncoveredJestProjects
     .map((projectName) => `'${projectName}', `)
     .join('')}]`;
