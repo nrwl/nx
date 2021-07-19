@@ -394,7 +394,7 @@ Tasks runners can accept different options. The following are the options suppor
 - `maxParallel` defines the max number of processes used.
 - `captureStderr` defines whether the cache captures stderr or just stdout
 - `skipNxCache` defines whether the Nx Cache should be skipped. Defaults to `false`
-- `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
+- `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default. You can clear the cache directory by running `nx clear-cache`.
 - `encryptionKey` (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable.
 - `runtimeCacheInputs` defines the list of commands that are run by the runner to include into the computation hash value.
 

@@ -109,7 +109,7 @@ jest.mock('tslint-to-eslint-config', () => {
   return {
     // Since upgrading to (ts-)jest 26 this usage of this mock has caused issues...
     // @ts-ignore
-    ...jest.requireActual('tslint-to-eslint-config'),
+    ...jest.requireActual<any>('tslint-to-eslint-config'),
     findReportedConfiguration: jest.fn(mockFindReportedConfiguration),
   };
 });
@@ -123,7 +123,7 @@ jest.mock('fs', () => {
   return {
     // Since upgrading to (ts-)jest 26 this usage of this mock has caused issues...
     // @ts-ignore
-    ...jest.requireActual('fs'),
+    ...jest.requireActual<any>('fs'),
     writeFileSync: jest.fn(),
     mkdirSync: jest.fn(),
   };

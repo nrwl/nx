@@ -19,7 +19,6 @@ import {
 
 import { Schema } from './schema';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
   '--project and --all are mutually exclusive';

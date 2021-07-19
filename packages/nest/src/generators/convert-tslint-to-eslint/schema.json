@@ -32,6 +32,11 @@
       "type": "boolean",
       "default": true,
       "x-prompt": "Would you like to remove TSLint and its related config if there are no TSLint projects remaining after this conversion?"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
     }
   },
   "required": ["project"]

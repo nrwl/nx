@@ -730,13 +730,8 @@ async function runNxMigration(root: string, packageName: string, name: string) {
   flushChanges(root, changes);
 }
 
-function removeNxDepsIfCaseItsFormatChanged(root: string) {
-  removeSync(join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json'));
-}
-
 export async function migrate(root: string, args: string[], isVerbose = false) {
   return handleErrors(isVerbose, async () => {
-    removeNxDepsIfCaseItsFormatChanged(root);
     const opts = parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);

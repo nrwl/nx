@@ -4,18 +4,17 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 }));
 
 import { vol } from 'memfs';
-import {
-  AddProjectDependency,
-  ProjectGraphContext,
-  ProjectGraphNode,
-  DependencyType,
-} from '../project-graph-models';
+import { ProjectGraphNode, DependencyType } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
+import {
+  ProjectGraphBuilder,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 
 describe('explicit project dependencies', () => {
-  let ctx: ProjectGraphContext;
+  let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphNode>;
   let fsJson;
   beforeEach(() => {
@@ -111,10 +110,12 @@ describe('explicit project dependencies', () => {
     vol.fromJSON(fsJson, '/root');
 
     ctx = {
-      workspaceJson,
-      nxJson,
-      fileMap: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
-    };
+      workspace: {
+        ...workspaceJson,
+        ...nxJson,
+      } as any,
+      filesToProcess: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+    } as any;
 
     projects = {
       proj3a: {
@@ -122,7 +123,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: [],
+          files: [{ file: 'libs/proj3a/index.ts' }],
         },
       },
       proj2: {
@@ -130,7 +131,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: [],
+          files: [{ file: 'libs/proj2/index.ts' }],
         },
       },
       proj: {
@@ -138,7 +139,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [],
+          files: [{ file: 'libs/proj/index.ts' }],
         },
       },
       proj1234: {
@@ -146,7 +147,11 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: [],
+          files: [
+            { file: 'libs/proj1234/index.ts' },
+            { file: 'libs/proj1234/a.b.ts' },
+            { file: 'libs/proj1234/b.c.ts' },
+          ],
         },
       },
       proj123: {
@@ -154,7 +159,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: [],
+          files: [{ file: 'libs/proj123/index.ts' }],
         },
       },
       proj4ab: {
@@ -162,7 +167,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: [],
+          files: [{ file: 'libs/proj4ab/index.ts' }],
         },
       },
       'proj1234-child': {
@@ -170,34 +175,21 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: [],
+          files: [{ file: 'libs/proj1234-child/index.ts' }],
         },
       },
     };
   });
 
   it(`should add dependencies for projects based on file imports`, () => {
-    const dependencyMap = {};
-    const addDependency = jest
-      .fn<ReturnType<AddProjectDependency>, Parameters<AddProjectDependency>>()
-      .mockImplementation(
-        (type: DependencyType, source: string, target: string) => {
-          const depObj = {
-            type,
-            source,
-            target,
-          };
-          if (dependencyMap[source]) {
-            dependencyMap[source].push(depObj);
-          } else {
-            dependencyMap[source] = [depObj];
-          }
-        }
-      );
+    const builder = new ProjectGraphBuilder();
+    Object.values(projects).forEach((p) => {
+      builder.addNode(p);
+    });
 
-    buildExplicitTypeScriptDependencies(ctx, projects, addDependency);
+    buildExplicitTypeScriptDependencies(ctx, builder);
 
-    expect(dependencyMap).toEqual({
+    expect(builder.getUpdatedProjectGraph().dependencies).toEqual({
       proj1234: [
         {
           source: 'proj1234',
@@ -214,14 +206,19 @@ describe('explicit project dependencies', () => {
         {
           source: 'proj',
           target: 'proj3a',
-          type: DependencyType.dynamic,
+          type: DependencyType.static,
         },
         {
           source: 'proj',
           target: 'proj4ab',
-          type: DependencyType.dynamic,
+          type: DependencyType.static,
         },
       ],
+      proj123: [],
+      'proj1234-child': [],
+      proj2: [],
+      proj3a: [],
+      proj4ab: [],
     });
   });
 });

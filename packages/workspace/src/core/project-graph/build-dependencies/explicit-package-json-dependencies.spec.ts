@@ -1,13 +1,12 @@
 import { buildExplicitPackageJsonDependencies } from '@nrwl/workspace/src/core/project-graph/build-dependencies/explicit-package-json-dependencies';
 import { vol } from 'memfs';
-import {
-  AddProjectDependency,
-  DependencyType,
-  ProjectGraphContext,
-  ProjectGraphNode,
-} from '../project-graph-models';
+import { DependencyType, ProjectGraphNode } from '../project-graph-models';
 import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
+import {
+  ProjectGraphBuilder,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -15,7 +14,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 }));
 
 describe('explicit package json dependencies', () => {
-  let ctx: ProjectGraphContext;
+  let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphNode>;
   let fsJson;
   beforeEach(() => {
@@ -60,10 +59,12 @@ describe('explicit package json dependencies', () => {
     vol.fromJSON(fsJson, '/root');
 
     ctx = {
-      workspaceJson,
-      nxJson,
-      fileMap: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
-    };
+      workspace: {
+        workspaceJson,
+        nxJson,
+      },
+      filesToProcess: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+    } as any;
 
     projects = {
       proj: {
@@ -88,27 +89,14 @@ describe('explicit package json dependencies', () => {
   });
 
   it(`should add dependencies for projects based on deps in package.json`, () => {
-    const dependencyMap = {};
-    const addDependency = jest
-      .fn<ReturnType<AddProjectDependency>, Parameters<AddProjectDependency>>()
-      .mockImplementation(
-        (type: DependencyType, source: string, target: string) => {
-          const depObj = {
-            type,
-            source,
-            target,
-          };
-          if (dependencyMap[source]) {
-            dependencyMap[source].push(depObj);
-          } else {
-            dependencyMap[source] = [depObj];
-          }
-        }
-      );
+    const builder = new ProjectGraphBuilder();
+    Object.values(projects).forEach((p) => {
+      builder.addNode(p);
+    });
 
-    buildExplicitPackageJsonDependencies(ctx, projects, addDependency);
+    buildExplicitPackageJsonDependencies(ctx, builder);
 
-    expect(dependencyMap).toEqual({
+    expect(builder.getUpdatedProjectGraph().dependencies).toEqual({
       proj: [
         {
           source: 'proj',
@@ -121,6 +109,8 @@ describe('explicit package json dependencies', () => {
           type: DependencyType.static,
         },
       ],
+      proj2: [],
+      proj3: [],
     });
   });
 });

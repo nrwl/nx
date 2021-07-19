@@ -8,7 +8,7 @@ import { tscExecutor } from './tsc.impl';
 
 const defaultPackageJson = { name: 'workspacelib', version: '0.0.1' };
 jest.mock('../../utilities/fileutils', () => ({
-  ...jest.requireActual('../../utilities/fileutils'),
+  ...jest.requireActual<any>('../../utilities/fileutils'),
   writeJsonFile: jest.fn(),
   readJsonFile: jest.fn(() => ({ ...defaultPackageJson })),
 }));

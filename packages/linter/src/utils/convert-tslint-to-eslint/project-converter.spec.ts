@@ -22,7 +22,7 @@ jest.mock('./utils', () => {
   return {
     // Since upgrading to (ts-)jest 26 this usage of this mock has caused issues...
     // @ts-ignore
-    ...jest.requireActual('./utils'),
+    ...jest.requireActual<any>('./utils'),
     convertTSLintConfig: jest.fn(() => {
       return {
         convertedESLintConfig: {

@@ -1,5 +1,8 @@
-import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
 import { defaultFileRead } from '../../file-utils';
+import {
+  ProjectGraphBuilder,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 
 export function convertNpmScriptsToTargets(projectRoot: string) {
   try {
@@ -24,18 +27,15 @@ export function convertNpmScriptsToTargets(projectRoot: string) {
 }
 
 export function buildWorkspaceProjectNodes(
-  ctx: ProjectGraphContext,
-  addNode: AddProjectNode
+  ctx: ProjectGraphProcessorContext,
+  builder: ProjectGraphBuilder
 ) {
   const toAdd = [];
-
-  Object.keys(ctx.fileMap).forEach((key) => {
-    const p = ctx.workspaceJson.projects[key];
+  Object.keys(ctx.workspace.projects).forEach((key) => {
+    const p = ctx.workspace.projects[key];
     if (!p.targets) {
       p.targets = convertNpmScriptsToTargets(p.root);
     }
-
-    // TODO, types and projectType should allign
     const projectType =
       p.projectType === 'application'
         ? key.endsWith('-e2e')
@@ -43,8 +43,8 @@ export function buildWorkspaceProjectNodes(
           : 'app'
         : 'lib';
     const tags =
-      ctx.nxJson.projects && ctx.nxJson.projects[key]
-        ? ctx.nxJson.projects[key].tags || []
+      ctx.workspace.projects && ctx.workspace.projects[key]
+        ? ctx.workspace.projects[key].tags || []
         : [];
 
     toAdd.push({
@@ -66,7 +66,7 @@ export function buildWorkspaceProjectNodes(
   });
 
   toAdd.forEach((n) => {
-    addNode({
+    builder.addNode({
       name: n.name,
       type: n.type,
       data: n.data,

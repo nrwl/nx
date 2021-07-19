@@ -199,6 +199,7 @@ export const commandsObject = yargs
   )
   .command(require('./report').report)
   .command(require('./list').list)
+  .command(require('./clear-cache').clearCache)
   .command(
     'connect-to-nx-cloud',
     `Makes sure the workspace is connected to Nx Cloud`,

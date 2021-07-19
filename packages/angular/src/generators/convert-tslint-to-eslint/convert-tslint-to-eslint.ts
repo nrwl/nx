@@ -39,6 +39,7 @@ export async function conversionGenerator(
          * does and remove the config again if it doesn't, so that it is most efficient.
          */
         setParserOptionsProject: true,
+        skipFormat: options.skipFormat,
       });
     },
   });
@@ -103,6 +104,7 @@ export async function conversionGenerator(
          * step of this parent generator, if applicable
          */
         removeTSLintIfNoMoreTSLintTargets: false,
+        skipFormat: options.skipFormat,
       });
     } catch {
       logger.warn(
@@ -122,7 +124,9 @@ export async function conversionGenerator(
     uninstallTSLintTask = projectConverter.removeTSLintFromWorkspace();
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return async () => {
     await eslintInitInstallTask();
