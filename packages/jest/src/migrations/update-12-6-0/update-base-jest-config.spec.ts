@@ -50,4 +50,37 @@ describe('update 12.6.0', () => {
       "
     `);
   });
+
+  test('proper formatting with multiple uncovered jest projects', async () => {
+    mockGetJestProjects.mockImplementation(() => ['<rootDir>/test-2']);
+    tree.write(
+      'jest.config.js',
+      `
+module.exports = {
+  projects: [
+    '<rootDir>/test-1',
+    '<rootDir>/test-2',
+    '<rootDir>/test-3',
+    '<rootDir>/test-4',
+    '<rootDir>/test-5'
+  ]
+}`
+    );
+    await update(tree);
+    const result = tree.read('jest.config.js').toString();
+    expect(result).toMatchInlineSnapshot(`
+"const { getJestProjects } = require('@nrwl/jest');
+
+module.exports = {
+  projects: [
+    ...getJestProjects(),
+    '<rootDir>/test-1',
+    '<rootDir>/test-3',
+    '<rootDir>/test-4',
+    '<rootDir>/test-5',
+  ],
+};
+"
+`);
+  });
 });
