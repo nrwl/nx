@@ -120,7 +120,7 @@ describe('splitArgs', () => {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
         notNxArg: true,
-        _: ['sha1', 'sha2', '--override'],
+        _: ['affected', '--name', 'bob', 'sha1', 'sha2', '--override'],
         $0: '',
       },
       'affected'
@@ -134,6 +134,7 @@ describe('splitArgs', () => {
     expect(overrides).toEqual({
       notNxArg: true,
       override: true,
+      name: 'bob',
     });
   });
 
