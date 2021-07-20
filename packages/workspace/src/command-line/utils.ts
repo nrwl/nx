@@ -87,6 +87,9 @@ export function splitArgsIntoNxArgsAndOverrides(
       'strip-dashed': true,
     },
   });
+  // This removes the overrides from the nxArgs._
+  args._ = overrides._;
+
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
@@ -136,10 +139,10 @@ export function splitArgsIntoNxArgsAndOverrides(
       !nxArgs.base &&
       !nxArgs.head &&
       !nxArgs.all &&
-      args._.length >= 2
+      args._.length >= 3
     ) {
-      nxArgs.base = args._[0] as string;
-      nxArgs.head = args._[1] as string;
+      nxArgs.base = args._[1] as string;
+      nxArgs.head = args._[2] as string;
     }
 
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
