@@ -1,15 +1,15 @@
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
-import { readProjectConfiguration } from '@nrwl/devkit';
+import { readProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { ObjectLiteralExpression } from 'typescript';
 
 export function addRemoteToHost(host: Tree, options: Schema) {
   if (options.mfeType === 'remote' && options.host) {
-    const project = readProjectConfiguration(host, options.host);
+    const hostProject = readProjectConfiguration(host, options.host);
     const hostWebpackPath =
-      project.targets['build'].options.customWebpackConfig?.path;
+      hostProject.targets['build'].options.customWebpackConfig?.path;
 
     if (!hostWebpackPath || !host.exists(hostWebpackPath)) {
       throw new Error(
@@ -33,5 +33,16 @@ export function addRemoteToHost(host: Tree, options: Schema) {
     }/remoteEntry.js',${hostWebpackConfig.slice(endOfPropertiesPos)}`;
 
     host.write(hostWebpackPath, updatedConfig);
+
+    const declarationFilePath = joinPathFragments(
+      hostProject.sourceRoot,
+      'decl.d.ts'
+    );
+
+    const declarationFileContent =
+      (host.exists(declarationFilePath)
+        ? host.read(declarationFilePath, 'utf-8')
+        : '') + `\ndeclare module '${options.appName}/Module';`;
+    host.write(declarationFilePath, declarationFileContent);
   }
 }
