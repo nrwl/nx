@@ -1,4 +1,4 @@
-import { ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,

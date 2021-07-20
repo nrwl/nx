@@ -23,7 +23,7 @@ import { normalizePath } from '@nrwl/devkit';
 import {
   isNpmProject,
   ProjectType,
-  readCurrentProjectGraph,
+  readCachedProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
@@ -122,9 +122,16 @@ export default createESLintRule<Options, MessageIds>({
     if (!(global as any).projectGraph) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectGraph = mapProjectGraphFiles(
-        readCurrentProjectGraph()
-      );
+
+      /**
+       * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),
+       * the ProjectGraph may or may not exist by the time the lint rule is invoked for the first time.
+       */
+      try {
+        (global as any).projectGraph = mapProjectGraphFiles(
+          readCachedProjectGraph()
+        );
+      } catch {}
     }
 
     if (!(global as any).projectGraph) {

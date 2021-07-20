@@ -1,6 +1,6 @@
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { isAbsolute, relative } from 'path';
-import { createProjectGraph } from '../core/project-graph';
+import { relative } from 'path';
+import { readCachedProjectGraph } from '../core/project-graph';
 
 export function projectHasTarget(project: ProjectGraphNode, target: string) {
   return project.data && project.data.targets && project.data.targets[target];
@@ -20,7 +20,7 @@ export function projectHasTargetAndConfiguration(
 
 export function getSourceDirOfDependentProjects(
   projectName: string,
-  projectGraph = createProjectGraph()
+  projectGraph = readCachedProjectGraph()
 ): string[] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
@@ -41,7 +41,7 @@ export function getSourceDirOfDependentProjects(
  */
 export function getProjectNameFromDirPath(
   projRelativeDirPath: string,
-  projectGraph = createProjectGraph()
+  projectGraph = readCachedProjectGraph()
 ) {
   let parentNodeName = null;
   for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
@@ -70,7 +70,7 @@ export function getProjectNameFromDirPath(
  */
 function findAllProjectNodeDependencies(
   parentNodeName: string,
-  projectGraph = createProjectGraph()
+  projectGraph = readCachedProjectGraph()
 ): string[] {
   const dependencyNodeNames = new Set<string>();
 

@@ -5,7 +5,7 @@ import type { ProjectGraph } from '@nrwl/devkit';
 import {
   isNpmProject,
   ProjectType,
-  readCurrentProjectGraph,
+  readCachedProjectGraph,
 } from '../core/project-graph';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
@@ -44,9 +44,16 @@ export class Rule extends Lint.Rules.AbstractRule {
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectGraph = mapProjectGraphFiles(
-          readCurrentProjectGraph()
-        );
+
+        /**
+         * Because there are a number of ways in which the rule can be invoked (executor vs TSLint CLI vs IDE Plugin),
+         * the ProjectGraph may or may not exist by the time the lint rule is invoked for the first time.
+         */
+        try {
+          (global as any).projectGraph = mapProjectGraphFiles(
+            readCachedProjectGraph()
+          );
+        } catch {}
       }
       this.npmScope = (global as any).npmScope;
       this.projectGraph = (global as any).projectGraph as MappedProjectGraph;
