@@ -25,6 +25,11 @@ export interface RunCommandsBuilderOptions extends Json {
     | {
         command: string;
         forwardAllArgs?: boolean;
+        /**
+         * description was added to allow users to document their commands inline,
+         * it is not intended to be used as part of the execution of the command.
+         */
+        description?: string;
       }
     | string
   )[];
