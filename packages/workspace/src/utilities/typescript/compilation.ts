@@ -62,6 +62,7 @@ export function compileTypeScriptWatcher(
     await callback?.(a, b, c, d);
   };
 
+  ts.createWatchProgram(host);
   return new Promise(() => {});
 }
 
