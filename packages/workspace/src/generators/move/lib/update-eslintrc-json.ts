@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, relative } from 'path';
 import {
   offsetFromRoot,
   ProjectConfiguration,
@@ -16,8 +16,21 @@ interface PartialEsLintrcOverride {
 }
 
 interface PartialEsLintRcJson {
-  extends: string;
+  extends: string | string[];
   overrides?: PartialEsLintrcOverride[];
+}
+
+function offsetFilePath(
+  project: ProjectConfiguration,
+  pathToFile: string,
+  offset: string
+): string {
+  if (!pathToFile.startsWith('..')) {
+    // not a relative path
+    return pathToFile;
+  }
+  const pathFromRoot = join(project.root, pathToFile);
+  return join(offset, pathFromRoot);
 }
 
 /**
@@ -41,7 +54,17 @@ export function updateEslintrcJson(
   const offset = offsetFromRoot(destination);
 
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
-    eslintRcJson.extends = `${offset}.eslintrc.json`;
+    if (typeof eslintRcJson.extends === 'string') {
+      eslintRcJson.extends = offsetFilePath(
+        project,
+        eslintRcJson.extends,
+        offset
+      );
+    } else {
+      eslintRcJson.extends = eslintRcJson.extends.map((extend: string) =>
+        offsetFilePath(project, extend, offset)
+      );
+    }
 
     eslintRcJson.overrides?.forEach((o) => {
       if (o.parserOptions?.project) {
