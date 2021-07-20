@@ -62,7 +62,7 @@ describe('updateEslint', () => {
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
     ).toEqual(
       expect.objectContaining({
-        extends: '../../../.eslintrc.json',
+        extends: ['../../../.eslintrc.json'],
       })
     );
   });
