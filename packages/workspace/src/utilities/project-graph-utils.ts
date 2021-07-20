@@ -1,4 +1,4 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { normalizePath, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { relative } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 
@@ -45,10 +45,13 @@ export function getProjectNameFromDirPath(
 ) {
   let parentNodeName = null;
   for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
-    const relativePath = relative(node.data.root, projRelativeDirPath);
+    const normalizedRootPath = normalizePath(node.data.root);
+    const normalizedProjRelPath = normalizePath(projRelativeDirPath);
+
+    const relativePath = relative(normalizedRootPath, normalizedProjRelPath);
     const isMatch = relativePath && !relativePath.startsWith('..');
 
-    if (isMatch || node.data.root === projRelativeDirPath) {
+    if (isMatch || normalizedRootPath === normalizedProjRelPath) {
       parentNodeName = nodeName;
       break;
     }
