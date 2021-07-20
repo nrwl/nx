@@ -20,6 +20,10 @@
               "forwardAllArgs": {
                 "type": "boolean",
                 "description": "Whether arguments should be forwarded when interpolation is not present"
+              },
+              "description": {
+                "type": "string",
+                "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command"
               }
             },
             "additionalProperties": false,
