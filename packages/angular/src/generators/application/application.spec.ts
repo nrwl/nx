@@ -541,6 +541,23 @@ describe('app', () => {
           appTree.read('apps/my-app-e2e/src/app.po.ts', 'utf-8')
         ).toContain(`'proj-root header h1'`);
       });
+
+      it('should update E2E spec files to match the app name when generating within a directory', async () => {
+        await generateApp(appTree, 'myApp', {
+          e2eTestRunner: E2eTestRunner.Protractor,
+          directory: 'my-directory',
+        });
+
+        expect(
+          appTree.read(
+            'apps/my-directory/my-app-e2e/src/app.e2e-spec.ts',
+            'utf-8'
+          )
+        ).toContain(`'Welcome to my-directory-my-app!'`);
+        expect(
+          appTree.read('apps/my-directory/my-app-e2e/src/app.po.ts', 'utf-8')
+        ).toContain(`'proj-root header h1'`);
+      });
     });
 
     describe('none', () => {
