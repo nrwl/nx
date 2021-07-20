@@ -27,6 +27,13 @@ const binaryExts = new Set([
   // Java files
   '.jar',
   '.keystore',
+
+  // Font files
+  '.ttf',
+  '.otf',
+  '.woff',
+  '.woff2',
+  '.eot',
 ]);
 
 /**
