@@ -25,7 +25,7 @@ export async function addE2e(
   e2eProjectRoot: string
 ) {
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    await addProtractor(host, options, e2eProjectRoot);
+    await addProtractor(host, options);
   } else {
     removeScaffoldedE2e(host, options, e2eProjectRoot);
   }
