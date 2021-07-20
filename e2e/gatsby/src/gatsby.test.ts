@@ -57,6 +57,20 @@ describe('Gatsby Applications', () => {
     await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
   }, 300000);
 
+  it('should support scss', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/gatsby:app ${appName} --style scss`);
+
+    let result = runCLI(`build ${appName}`);
+    expect(result).toContain('Done building in');
+
+    result = runCLI(`lint ${appName}`);
+    expect(result).not.toMatch('Lint errors found in the listed files');
+
+    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+  }, 300000);
+
   it('should support --js option', async () => {
     const app = uniq('app');
     runCLI(`generate @nrwl/gatsby:app ${app} --js`);
