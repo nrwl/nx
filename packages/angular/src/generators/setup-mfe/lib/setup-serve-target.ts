@@ -14,14 +14,11 @@ export function setupServeTarget(host: Tree, options: Schema) {
     executor: '@nrwl/angular:webpack-server',
   };
 
-  if (options.mfeType === 'remote') {
-    const port = options.port ?? 4200;
-
+  if (options.mfeType === 'host') {
     appConfig.targets['mfe-serve'] = {
       executor: '@nrwl/workspace:run-commands',
       options: {
-        command: `nx serve ${options.appName}`,
-        port,
+        commands: [`nx serve ${options.appName}"`],
       },
     };
   }
