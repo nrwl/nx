@@ -19,6 +19,10 @@ import {
 } from 'typescript';
 import { join } from 'path';
 
+function isUsingUtilityFunction(host: Tree) {
+  return host.read('jest.config.js').toString().includes('getJestProjects()');
+}
+
 /**
  * Updates the root jest config projects array and removes the project.
  */
@@ -31,12 +35,13 @@ export function updateJestConfig(
 
   if (
     !tree.exists('jest.config.js') ||
-    !tree.exists(join(projectConfig.root, 'jest.config.js'))
+    !tree.exists(join(projectConfig.root, 'jest.config.js')) ||
+    isUsingUtilityFunction(tree)
   ) {
     return;
   }
 
-  const contents = tree.read('jest.config.js').toString();
+  const contents = tree.read('jest.config.js', 'utf-8');
   const sourceFile = createSourceFile(
     'jest.config.js',
     contents,
@@ -57,7 +62,8 @@ export function updateJestConfig(
       `Could not remove ${projectToRemove} from projects in /jest.config.js. Please remove ${projectToRemove} from your projects.`
     );
   }
-  const projectsArray = projectsAssignment.initializer as ArrayLiteralExpression;
+  const projectsArray =
+    projectsAssignment.initializer as ArrayLiteralExpression;
 
   const project = projectsArray.elements.find(
     (item) =>

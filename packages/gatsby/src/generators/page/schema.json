@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxReactApp",
+  "$id": "NxGatsbyReactPage",
   "title": "Create a React Page for Gatsby",
   "type": "object",
   "examples": [
@@ -65,6 +65,10 @@
           {
             "value": "@emotion/styled",
             "label": "emotion           [ https://emotion.sh            ]"
+          },
+          {
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
           },
           {
             "value": "none",

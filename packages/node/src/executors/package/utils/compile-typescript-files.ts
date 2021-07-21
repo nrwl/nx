@@ -1,67 +1,22 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import * as ts from 'typescript';
-
-import { NormalizedBuilderOptions } from './models';
-import { removeSync } from 'fs-extra';
-import { join } from 'path';
+import { ExecutorContext } from '@nrwl/devkit';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-
-async function createProgram(
-  tsconfig: ts.ParsedCommandLine,
-  context: ExecutorContext
-) {
-  const host = ts.createCompilerHost(tsconfig.options);
-  const program = ts.createProgram({
-    rootNames: tsconfig.fileNames,
-    options: tsconfig.options,
-    host,
-  });
-  logger.info(
-    `Compiling TypeScript files for library ${context.projectName}...`
-  );
-  const results = program.emit();
-  if (results.emitSkipped) {
-    const diagnostics = ts.formatDiagnosticsWithColorAndContext(
-      results.diagnostics,
-      {
-        getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
-        getNewLine: () => ts.sys.newLine,
-        getCanonicalFileName: (name) => name,
-      }
-    );
-    logger.error(diagnostics);
-    throw new Error(diagnostics);
-  } else {
-    logger.info(
-      `Done compiling TypeScript files for library ${context.projectName}`
-    );
-    return { success: true };
-  }
-}
-
-function createWatchProgram(tsconfig: ts.ParsedCommandLine) {
-  const host = ts.createWatchCompilerHost(
-    tsconfig.fileNames,
-    tsconfig.options,
-    ts.sys
-  );
-  ts.createWatchProgram(host);
-  return { success: true };
-}
+import {
+  compileTypeScript,
+  compileTypeScriptWatcher,
+} from '@nrwl/workspace/src/utilities/typescript/compilation';
+import { join } from 'path';
+import { NormalizedBuilderOptions } from './models';
 
 export default async function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
   context: ExecutorContext,
   libRoot: string,
-  projectDependencies: DependentBuildableProjectNode[]
+  projectDependencies: DependentBuildableProjectNode[],
+  postCompleteAction: () => void | Promise<void>
 ) {
-  if (options.deleteOutputPath) {
-    removeSync(options.normalizedOutputPath);
-  }
   let tsConfigPath = join(context.root, options.tsConfig);
   if (projectDependencies.length > 0) {
     tsConfigPath = createTmpTsConfig(
@@ -72,19 +27,26 @@ export default async function compileTypeScriptFiles(
     );
   }
 
-  const tsconfig = readTsConfig(tsConfigPath);
-  tsconfig.options.outDir = options.normalizedOutputPath;
-  tsconfig.options.noEmitOnError = true;
-
-  if (options.srcRootForCompilationRoot) {
-    tsconfig.options.rootDir = options.srcRootForCompilationRoot;
-  } else {
-    tsconfig.options.rootDir = libRoot;
-  }
+  const tcsOptions = {
+    outputPath: options.normalizedOutputPath,
+    projectName: context.projectName,
+    projectRoot: libRoot,
+    tsConfig: tsConfigPath,
+    deleteOutputPath: options.deleteOutputPath,
+    rootDir: options.srcRootForCompilationRoot,
+    watch: options.watch,
+  };
 
   if (options.watch) {
-    return createWatchProgram(tsconfig);
+    return compileTypeScriptWatcher(tcsOptions, async (d) => {
+      // Means tsc found 0 errors, in watch mode. https://github.com/microsoft/TypeScript/blob/main/src/compiler/diagnosticMessages.json
+      if (d.code === 6194) {
+        await postCompleteAction();
+      }
+    });
   } else {
-    return createProgram(tsconfig, context);
+    const result = compileTypeScript(tcsOptions);
+    await postCompleteAction();
+    return result;
   }
 }

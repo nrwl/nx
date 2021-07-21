@@ -2,20 +2,27 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  isNotWindows,
+  killPorts,
   newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCypressTests,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
+  beforeEach(() => newProject());
+
   it('should be able to generate a web app', async () => {
-    newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    checkFilesDoNotExist(`apps/${appName}/project.json`);
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -28,33 +35,54 @@ describe('Web Components Applications', () => {
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.js`
     );
+
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'class AppElement'
     );
+
     runCLI(`build ${appName} --prod --output-hashing none`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
+      `dist/apps/${appName}/runtime.esm.js`,
       `dist/apps/${appName}/polyfills.esm.js`,
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/styles.css`
     );
+
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       `<link rel="stylesheet" href="styles.css">`
     );
+
     const testResults = await runCLIAsync(`test ${appName}`);
+
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
+
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
+
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    const e2eResults = runCLI(`e2e ${appName}-e2e`);
-    expect(e2eResults).toContain('All specs passed!');
+    if (isNotWindows() && runCypressTests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
+      expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
+    }
+  }, 500000);
+
+  it('should be able to generate a web app with standaloneConfig', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config`
+    );
+
+    checkFilesExist(`apps/${appName}/project.json`);
+
+    const lintResults = runCLI(`lint ${appName}`);
+    expect(lintResults).toContain('All files pass linting.');
   }, 120000);
 
   it('should remove previous output before building', async () => {
-    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -87,27 +115,21 @@ describe('Web Components Applications', () => {
   }, 120000);
 
   it('should do another build if differential loading is needed', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
     updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
 
-    const output = runCLI(`build ${appName} --prod --outputHashing=none`);
+    runCLI(`build ${appName} --prod --outputHashing=none`);
+
     checkFilesExist(
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/main.es5.js`
     );
-
-    // Do not run type checking for legacy build
-    expect(
-      output.match(/Starting type checking service.../g) || []
-    ).toHaveLength(1);
   }, 120000);
 
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
-    newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -125,7 +147,7 @@ describe('Web Components Applications', () => {
         function sealed(target: any) {
           return target;
         }
-        
+
         @sealed
         class Foo {
           @enumerable(false) bar() {}
@@ -172,19 +194,39 @@ describe('CLI - Environment Variables', () => {
       'NX_WS_BASE=ws-base\nNX_SHARED_ENV=shared-in-workspace-base'
     );
     updateFile(
+      `.env.local`,
+      'NX_WS_ENV_LOCAL=ws-env-local\nNX_SHARED_ENV=shared-in-workspace-env-local'
+    );
+    updateFile(
       `.local.env`,
-      'NX_WS_LOCAL=ws-local\nNX_SHARED_ENV=shared-in-workspace-local'
+      'NX_WS_LOCAL_ENV=ws-local-env\nNX_SHARED_ENV=shared-in-workspace-local-env'
     );
     updateFile(
       `apps/${appName}/.env`,
       'NX_APP_BASE=app-base\nNX_SHARED_ENV=shared-in-app-base'
     );
     updateFile(
+      `apps/${appName}/.env.local`,
+      'NX_APP_ENV_LOCAL=app-env-local\nNX_SHARED_ENV=shared-in-app-env-local'
+    );
+    updateFile(
       `apps/${appName}/.local.env`,
-      'NX_APP_LOCAL=app-local\nNX_SHARED_ENV=shared-in-app-local'
+      'NX_APP_LOCAL_ENV=app-local-env\nNX_SHARED_ENV=shared-in-app-local-env'
     );
     const main = `apps/${appName}/src/main.ts`;
-    const newCode = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_LOCAL, process.env.NX_APP_BASE, process.env.NX_APP_LOCAL, process.env.NX_SHARED_ENV];`;
+    const newCode = `
+      const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];
+      const nodeEnv = process.env.NODE_ENV;
+      const nxBuild = process.env.NX_BUILD;
+      const nxApi = process.env.NX_API;
+      const nxWsBase = process.env.NX_WS_BASE;
+      const nxWsEnvLocal = process.env.NX_WS_ENV_LOCAL;
+      const nxWsLocalEnv = process.env.NX_WS_LOCAL_ENV;
+      const nxAppBase = process.env.NX_APP_BASE;
+      const nxAppEnvLocal = process.env.NX_APP_ENV_LOCAL;
+      const nxAppLocalEnv = process.env.NX_APP_LOCAL_ENV;
+      const nxSharedEnv = process.env.NX_SHARED_ENV;
+      `;
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -199,11 +241,15 @@ describe('CLI - Environment Variables', () => {
       'NX_APP_BASE=app2-base\nNX_SHARED_ENV=shared2-in-app-base'
     );
     updateFile(
+      `apps/${appName2}/.env.local`,
+      'NX_APP_ENV_LOCAL=app2-env-local\nNX_SHARED_ENV=shared2-in-app-env-local'
+    );
+    updateFile(
       `apps/${appName2}/.local.env`,
-      'NX_APP_LOCAL=app2-local\nNX_SHARED_ENV=shared2-in-app-local'
+      'NX_APP_LOCAL_ENV=app2-local-env\nNX_SHARED_ENV=shared2-in-app-local-env'
     );
     const main2 = `apps/${appName2}/src/main.ts`;
-    const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_LOCAL, process.env.NX_APP_BASE, process.env.NX_APP_LOCAL, process.env.NX_SHARED_ENV];`;
+    const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
 
     runCLI(`generate @nrwl/web:app ${appName2} --no-interactive`);
 
@@ -220,10 +266,10 @@ describe('CLI - Environment Variables', () => {
       },
     });
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'const envVars = ["test", "52", "QA", "ws-base", "ws-local", "app-base", "app-local", "shared-in-app-local"];'
+      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );
     expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
-      'const envVars = ["test", "52", "QA", "ws-base", "ws-local", "app2-base", "app2-local", "shared2-in-app-local"];'
+      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-env-local"];'
     );
   });
 });
@@ -305,5 +351,62 @@ describe('Build Options', () => {
     expect(styles).toContain(fooCssContent);
     expect(styles).not.toContain(barCssContent);
     expect(barStyles).toContain(barCssContent);
+  });
+});
+
+describe('index.html interpolation', () => {
+  test('should interpolate environment variables', () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    const srcPath = `apps/${appName}/src`;
+    const indexPath = `${srcPath}/index.html`;
+    const indexContent = `<!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>BestReactApp</title>
+        <base href="/" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <div>Nx Variable: %NX_VARIABLE%</div>
+        <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+        <div>Deploy Url: %DEPLOY_URL%</div>
+      </body>
+    </html>
+`;
+    const envFilePath = `apps/${appName}/.env`;
+    const envFileContents = `
+      NX_VARIABLE=foo
+      SOME_OTHER_VARIABLE=bar
+    }`;
+
+    createFile(envFilePath);
+
+    // createFile could not create a file with content
+    updateFile(envFilePath, envFileContents);
+    updateFile(indexPath, indexContent);
+
+    const workspacePath = `workspace.json`;
+    const workspaceConfig = readJson(workspacePath);
+    const buildOptions =
+      workspaceConfig.projects[appName].targets.build.options;
+    buildOptions.deployUrl = 'baz';
+
+    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+
+    runCLI(`build ${appName}`);
+
+    const distPath = `dist/apps/${appName}`;
+    const resultIndexContents = readFile(`${distPath}/index.html`);
+
+    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
+    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
+    expect(resultIndexContents).toMatch(/ <div>Nx Variable: foo<\/div>/);
   });
 });

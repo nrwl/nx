@@ -12,7 +12,7 @@ import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');
@@ -75,6 +75,18 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
+  it('should be able to create an gatsby workspace', () => {
+    const wsName = uniq('gatsby');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'next',
+      style: 'css',
+      appName,
+    });
+
+    expectNoAngularDevkit();
+  });
+
   it('should be able to create an web-components workspace', () => {
     const wsName = uniq('web-components');
     const appName = uniq('app');
@@ -105,6 +117,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an express workspace', () => {
@@ -115,6 +129,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create a workspace with a custom base branch and HEAD', () => {
@@ -146,11 +162,11 @@ describe('create-nx-workspace', () => {
   it('should handle spaces in workspace path', () => {
     const wsName = uniq('empty');
 
-    const tmpDir = `${e2eCwd}/with space`;
+    const tmpDir = `${e2eCwd}/${uniq('with space')}`;
 
-    mkdirSync(tmpDir);
+    mkdirSync(tmpDir, { recursive: true });
 
-    const command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
+    const command = `npx create-nx-workspace@${'9999.0.2'} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
     execSync(command, {
       cwd: tmpDir,
       stdio: [0, 1, 2],
@@ -163,6 +179,9 @@ describe('create-nx-workspace', () => {
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
+
     runCreateWorkspace(wsName, {
       preset: 'react',
       style: 'css',
@@ -177,6 +196,9 @@ describe('create-nx-workspace', () => {
   it('should store package manager preference for angular cli', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
+
     runCreateWorkspace(wsName, {
       preset: 'angular',
       appName,

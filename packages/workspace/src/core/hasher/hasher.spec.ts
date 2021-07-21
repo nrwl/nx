@@ -1,7 +1,6 @@
 import { Hasher } from './hasher';
-import { extractNameAndVersion } from '@nrwl/workspace/src/core/hasher/file-hasher';
+import fs = require('fs');
 
-const fs = require('fs');
 jest.mock('fs');
 
 describe('Hasher', () => {
@@ -24,11 +23,11 @@ describe('Hasher', () => {
     };
   }
 
-  it('should create project hash', async (done) => {
+  it('should create project hash', async () => {
     fs.readFileSync = (file) => {
       if (file === 'workspace.json') {
         return JSON.stringify({
-          projects: { proj: 'proj-from-workspace.json' },
+          projects: { proj: { root: 'proj-from-workspace.json' } },
         });
       }
       if (file === 'nx.json') {
@@ -60,15 +59,11 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'proj', target: 'build' },
-          id: 'proj-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proj', target: 'build' },
+      id: 'proj-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(hash.value).toContain('yarn.lock.hash'); //implicits
     expect(hash.value).toContain('file.hash'); //project files
@@ -79,8 +74,8 @@ describe('Hasher', () => {
     expect(hash.value).toContain('runtime456'); //target
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
-    expect(hash.details.sources).toEqual({
-      proj: '/file|file.hash|"proj-from-workspace.json"|"proj-from-nx.json"',
+    expect(hash.details.nodes).toEqual({
+      proj: '/file|file.hash|{"root":"proj-from-workspace.json"}|"proj-from-nx.json"',
     });
     expect(hash.details.implicitDeps).toEqual({
       'yarn.lock': 'yarn.lock.hash',
@@ -93,11 +88,9 @@ describe('Hasher', () => {
       'echo runtime123': 'runtime123',
       'echo runtime456': 'runtime456',
     });
-
-    done();
   });
 
-  it('should throw an error when failed to execute runtimeCacheInputs', async (done) => {
+  it('should throw an error when failed to execute runtimeCacheInputs', async () => {
     const hasher = new Hasher(
       {
         nodes: {
@@ -122,25 +115,24 @@ describe('Hasher', () => {
     );
 
     try {
-      await hasher.hashTasks([
-        {
-          target: { project: 'proj', target: 'build' },
-          id: 'proj-build',
-          overrides: {},
-        },
-      ]);
+      await hasher.hashTaskWithDepsAndContext({
+        target: { project: 'proj', target: 'build' },
+        id: 'proj-build',
+        overrides: {},
+      });
       fail('Should not be here');
     } catch (e) {
       expect(e.message).toContain(
         'Nx failed to execute runtimeCacheInputs defined in nx.json failed:'
       );
-      expect(e.message).toContain('boom:');
-      expect(e.message).toContain(' not found');
+      expect(e.message).toContain('boom');
+      expect(
+        e.message.includes(' not found') || e.message.includes('not recognized')
+      ).toBeTruthy();
     }
-    done();
   });
 
-  it('should hash projects with dependencies', async (done) => {
+  it('should hash projects with dependencies', async () => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -172,26 +164,20 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'parent', target: 'build' },
-          id: 'parent-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'parent', target: 'build' },
+      id: 'parent-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     // note that the parent hash is based on parent source files only!
-    expect(hash.details.sources).toEqual({
+    expect(hash.details.nodes).toEqual({
       parent: '/filea|a.hash|""|""',
       child: '/fileb|b.hash|""|""',
     });
-
-    done();
   });
 
-  it('should hash when circular dependencies', async (done) => {
+  it('should hash when circular dependencies', async () => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -224,15 +210,11 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const tasksHash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'proja', target: 'build' },
-          id: 'proja-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(tasksHash.value).toContain('yarn.lock.hash'); //implicits
     expect(tasksHash.value).toContain('a.hash'); //project files
@@ -240,20 +222,16 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('prop-value'); //overrides
     expect(tasksHash.value).toContain('proj'); //project
     expect(tasksHash.value).toContain('build'); //target
-    expect(tasksHash.details.sources).toEqual({
+    expect(tasksHash.details.nodes).toEqual({
       proja: '/filea|a.hash|""|""',
       projb: '/fileb|b.hash|""|""',
     });
 
-    const hashb = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'projb', target: 'build' },
-          id: 'projb-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hashb = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'projb', target: 'build' },
+      id: 'projb-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(hashb.value).toContain('yarn.lock.hash'); //implicits
     expect(hashb.value).toContain('a.hash'); //project files
@@ -261,15 +239,13 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('prop-value'); //overrides
     expect(hashb.value).toContain('proj'); //project
     expect(hashb.value).toContain('build'); //target
-    expect(hashb.details.sources).toEqual({
+    expect(hashb.details.nodes).toEqual({
       proja: '/filea|a.hash|""|""',
       projb: '/fileb|b.hash|""|""',
     });
-
-    done();
   });
 
-  it('should hash implicit deps', async (done) => {
+  it('should hash implicit deps', async () => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -307,32 +283,13 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const tasksHash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'proja', target: 'build' },
-          id: 'proja-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
-
-    done();
-  });
-
-  describe('extractNameAndVersion', () => {
-    it('should work', () => {
-      const nameAndVersion = extractNameAndVersion(`
-      {
-        "name": "myname",
-        "somethingElse": "123",
-        "version": "1.1.1"
-      }
-    `);
-      expect(nameAndVersion).toEqual(`myname1.1.1`);
-    });
   });
 });

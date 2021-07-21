@@ -20,21 +20,19 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
-    "@nrwl/node": "*",
+    "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@angular-devkit/architect": "~0.1102.0",
-    "@angular-devkit/core": "~11.2.0",
-    "@angular-devkit/schematics": "~11.2.0",
-    "fs-extra": "7.0.1",
+    "@nrwl/node": "*",
+    "fs-extra": "^9.1.0",
     "rxjs": "^6.5.4",
-    "yargs": "15.4.1",
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.0",
+    "yargs": "15.4.1"
   }
 }

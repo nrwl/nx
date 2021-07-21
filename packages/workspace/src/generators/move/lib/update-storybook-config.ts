@@ -2,7 +2,7 @@ import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 
 import * as path from 'path';
 
-import { appRootPath } from '../../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
 import { join } from 'path';
@@ -36,7 +36,7 @@ export function updateStorybookConfig(
 
   // Replace relative import path to root storybook folder for each file under project storybook
   for (const file of tree.children(storybookDir)) {
-    const oldContent = tree.read(join(storybookDir, file)).toString('utf-8');
+    const oldContent = tree.read(join(storybookDir, file), 'utf-8');
     const newContent = oldContent.replace(oldRelativeRoot, newRelativeRoot);
 
     tree.write(join(storybookDir, file), newContent);

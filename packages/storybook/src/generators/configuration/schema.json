@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "storybook-configure",
+  "$id": "NxStorybookConfigure",
   "type": "object",
   "properties": {
     "name": {
@@ -27,19 +27,20 @@
       "type": "string",
       "description": "A directory where the Cypress project will be placed. Added at root by default."
     },
-    "cypressName": {
-      "type": "string",
-      "description": "A custom name for the Cypress project. Inferred from 'name' by default."
-    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint", "tslint", "none"],
       "default": "eslint"
     },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
       "default": false
     }
   },

@@ -7,6 +7,7 @@ export function createAppJsx(name: string) {
     <div className="flex github-star-container">
       <a href="https://github.com/nrwl/nx" target="_blank" rel="noopener noreferrer"> If you like Nx, please give it a star:
         <div className="github-star-badge">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/star.svg" className="material-icons" alt="" />
             Star
         </div>

@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -9,8 +9,10 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
+  MappedProjectGraph,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -19,28 +21,26 @@ import {
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
-  createProjectGraph,
   isNpmProject,
-  ProjectGraph,
   ProjectType,
+  readCurrentProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
-import {
-  readNxJson,
-  readWorkspaceJson,
-} from '@nrwl/workspace/src/core/file-utils';
+import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
-import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
+import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 
 type Options = [
   {
     allow: string[];
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
+    allowCircularSelfDependency: boolean;
   }
 ];
 export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'
+  | 'noSelfCircularDependencies'
   | 'noCircularDependencies'
   | 'noImportsOfApps'
   | 'noImportsOfE2e'
@@ -65,6 +65,7 @@ export default createESLintRule<Options, MessageIds>({
         type: 'object',
         properties: {
           enforceBuildableLibDependency: { type: 'boolean' },
+          allowCircularSelfDependency: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -83,10 +84,11 @@ export default createESLintRule<Options, MessageIds>({
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}`,
+      noSelfCircularDependencies: `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "{{imp}}"`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
-        'Buildable libraries cannot import non-buildable libraries',
+        'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
@@ -97,9 +99,20 @@ export default createESLintRule<Options, MessageIds>({
       allow: [],
       depConstraints: [],
       enforceBuildableLibDependency: false,
+      allowCircularSelfDependency: false,
     },
   ],
-  create(context, [{ allow, depConstraints, enforceBuildableLibDependency }]) {
+  create(
+    context,
+    [
+      {
+        allow,
+        depConstraints,
+        enforceBuildableLibDependency,
+        allowCircularSelfDependency,
+      },
+    ]
+  ) {
     /**
      * Globally cached info about workspace
      */
@@ -109,7 +122,9 @@ export default createESLintRule<Options, MessageIds>({
     if (!(global as any).projectGraph) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectGraph = readCurrentProjectGraph();
+      (global as any).projectGraph = mapProjectGraphFiles(
+        readCurrentProjectGraph()
+      );
     }
 
     if (!(global as any).projectGraph) {
@@ -117,7 +132,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
-    const projectGraph = (global as any).projectGraph as ProjectGraph;
+    const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -127,7 +142,19 @@ export default createESLintRule<Options, MessageIds>({
     const targetProjectLocator = (global as any)
       .targetProjectLocator as TargetProjectLocator;
 
-    function run(node: TSESTree.ImportDeclaration | TSESTree.ImportExpression) {
+    function run(
+      node:
+        | TSESTree.ImportDeclaration
+        | TSESTree.ImportExpression
+        | TSESTree.ExportAllDeclaration
+        | TSESTree.ExportNamedDeclaration
+    ) {
+      // Ignoring ExportNamedDeclarations like:
+      // export class Foo {}
+      if (!node.source) {
+        return;
+      }
+
       // accept only literals because template literals have no value
       if (node.source.type !== AST_NODE_TYPES.Literal) {
         return;
@@ -135,23 +162,25 @@ export default createESLintRule<Options, MessageIds>({
 
       const imp = node.source.value as string;
 
-      const sourceFilePath = getSourceFilePath(
-        normalizePath(context.getFilename()),
-        projectPath
-      );
-
       // whitelisted import
       if (allow.some((a) => matchImportWithWildcard(a, imp))) {
         return;
       }
 
+      const sourceFilePath = getSourceFilePath(
+        context.getFilename(),
+        projectPath
+      );
+
       // check for relative and absolute imports
+      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       if (
         isRelativeImportIntoAnotherProject(
           imp,
           projectPath,
           projectGraph,
-          sourceFilePath
+          sourceFilePath,
+          sourceProject
         ) ||
         isAbsoluteImportIntoAnotherProject(imp)
       ) {
@@ -165,7 +194,6 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       const targetProject = findProjectUsingImport(
         projectGraph,
         targetProjectLocator,
@@ -181,6 +209,16 @@ export default createESLintRule<Options, MessageIds>({
 
       // same project => allow
       if (sourceProject === targetProject) {
+        // we only allow relative paths within the same project
+        if (!allowCircularSelfDependency && !isRelativePath(imp)) {
+          context.report({
+            node,
+            messageId: 'noSelfCircularDependencies',
+            data: {
+              imp,
+            },
+          });
+        }
         return;
       }
 
@@ -306,6 +344,12 @@ export default createESLintRule<Options, MessageIds>({
         run(node);
       },
       ImportExpression(node: TSESTree.ImportExpression) {
+        run(node);
+      },
+      ExportAllDeclaration(node: TSESTree.ExportAllDeclaration) {
+        run(node);
+      },
+      ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
         run(node);
       },
     };

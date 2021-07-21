@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import { getFileHashes } from './git-hasher';
 
 describe('git-hasher', () => {
-  let dir;
+  let dir: string;
   const warnSpy = jest.spyOn(console, 'warn');
 
   beforeEach(() => {

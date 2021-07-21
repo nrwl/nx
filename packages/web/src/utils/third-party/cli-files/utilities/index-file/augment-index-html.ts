@@ -7,7 +7,6 @@
  */
 
 import { createHash } from 'crypto';
-import { RawSource, ReplaceSource } from 'webpack-sources';
 
 const parse5 = require('parse5');
 
@@ -57,6 +56,9 @@ export interface FileInfo {
  * bundles for differential serving.
  */
 export function augmentIndexHtml(params: AugmentIndexHtmlOptions): string {
+  // TODO(jack): Remove this in Nx 13 and go back to proper types
+  const { webpackSources } = require('../../../../../webpack/entry');
+
   const {
     loadOutputFile,
     files,
@@ -136,8 +138,8 @@ export function augmentIndexHtml(params: AugmentIndexHtmlOptions): string {
   }
 
   // Inject into the html
-  const indexSource = new ReplaceSource(
-    new RawSource(params.inputContent),
+  const indexSource = new webpackSources.ReplaceSource(
+    new webpackSources.RawSource(params.inputContent),
     params.input
   );
 

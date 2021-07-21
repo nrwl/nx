@@ -53,6 +53,22 @@ describe('utils', () => {
         ).toEqual(['path/one', 'two']);
       });
 
+      it('should support nested interpolation based on options', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['path/{options.nested.myVar}', 'two'],
+              options: {
+                nested: {
+                  myVar: 'one',
+                },
+              },
+            })
+          )
+        ).toEqual(['path/one', 'two']);
+      });
+
       it('should support interpolation based on configuration-specific options', () => {
         expect(
           getOutputsForTargetAndConfiguration(

@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 
 export function decorateCli() {
   const path = 'node_modules/@angular/cli/lib/cli/index.js';
-  const angularCLIInit = readFileSync(path, 'utf-8').toString();
+  const angularCLIInit = readFileSync(path, 'utf-8');
   const start = angularCLIInit.indexOf(`(options) {`) + 11;
   const end = angularCLIInit.lastIndexOf(`}`) - 2;
 

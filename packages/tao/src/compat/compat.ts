@@ -17,11 +17,13 @@ if (!patched) {
   };
 
   try {
-    require('@angular-devkit/build-angular/src/utils/version').Version.assertCompatibleAngularVersion = () => {};
+    require('@angular-devkit/build-angular/src/utils/version').Version.assertCompatibleAngularVersion =
+      () => {};
   } catch (e) {}
 
   try {
-    require('@angular-devkit/build-angular/src/utils/version').assertCompatibleAngularVersion = () => {};
+    require('@angular-devkit/build-angular/src/utils/version').assertCompatibleAngularVersion =
+      () => {};
   } catch (e) {}
 
   patched = true;

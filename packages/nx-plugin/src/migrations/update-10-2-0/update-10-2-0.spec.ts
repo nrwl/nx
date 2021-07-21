@@ -1,6 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
+import { serializeJson } from '@nrwl/devkit';
+import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 
@@ -42,12 +43,12 @@ describe('update 10.2.0', () => {
     );
   });
 
-  it('should remove setupFile and tsconfig in test architect from workspace.json', async (done) => {
+  it('should remove setupFile and tsconfig in test architect from workspace.json', async () => {
     const result = await schematicRunner
       .runSchematicAsync('update-10.2.0', {}, initialTree)
       .toPromise();
 
-    const updatedWorkspace = JSON.parse(result.readContent('workspace.json'));
+    const updatedWorkspace = readJsonInTree(result, 'workspace.json');
     expect(
       updatedWorkspace.projects['my-plugin-e2e'].architect.e2e.options
     ).toEqual({
@@ -56,6 +57,5 @@ describe('update 10.2.0', () => {
       pluginOutputPath: expect.anything(),
       jestConfig: expect.anything(),
     });
-    done();
   });
 });

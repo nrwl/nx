@@ -34,9 +34,22 @@ export async function conversionGenerator(
         linter: 'eslint',
         projectName,
         projectRoot: projectConfig.root,
+        /**
+         * We set the parserOptions.project config just in case the converted config uses
+         * rules which require type-checking. Later in the conversion we check if it actually
+         * does and remove the config again if it doesn't, so that it is most efficient.
+         */
+        setParserOptionsProject: true,
       } as CypressProjectSchema);
     },
   });
+
+  /**
+   * If root eslint configuration already exists it will not be recreated
+   * but we also don't want to re-run the tslint config conversion
+   * as it was likely already done
+   */
+  const rootEslintConfigExists = host.exists('.eslintrc.json');
 
   /**
    * Create the standard (which is applicable to the current package) ESLint setup
@@ -48,7 +61,8 @@ export async function conversionGenerator(
    * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json.
    */
   const rootConfigInstallTask = await projectConverter.convertRootTSLintConfig(
-    (json) => removeCodelyzerRelatedRules(json)
+    (json) => removeCodelyzerRelatedRules(json),
+    rootEslintConfigExists
   );
 
   /**

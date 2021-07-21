@@ -1,7 +1,16 @@
-## Documentation
+## Documentation & Resources
 
-- [Nx Repo](https://github.com/nrwl/nx)
+Even though Nx isn't technology specific, we provide 3 separate flavours of the documentation site to it make it easier for you to get up and running. For every link below, you will be able to select whether you want your examples to be written in React, Node or Angular.
+
 - [Nx Documentation and Guides](https://nx.dev)
+- [Intro into Nx](https://nx.dev/getting-started/intro)
+- [Interactive Tutorial with Videos](https://nx.dev/tutorial/01-create-application)
+
+### Quick Start Videos
+
+- [Scale Your React Development with Nx](https://www.youtube.com/watch?v=sNz-4PUM0k8)
+- [Scale your Node Development with Nx](https://www.youtube.com/watch?v=iIh5h_G52kI)
+- [Modern Angular with Nx Dev Tools](https://www.youtube.com/watch?v=cXOkmOy-8dk)
 
 ### Courses
 
@@ -14,65 +23,37 @@
   <tr>
     <td>
       <a href="https://egghead.io/playlists/scale-react-development-with-nx-4038" target="_blank">
-      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px"></p>
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px" alt="Nx - Scale React Development with Nx video course"></p>
       </a>
     </td>
     <td>
       <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
-        <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350"></p>
+        <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350" alt="Nx Workspaces video course"></p>
       </a>
     </td>
     <td>  
       <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
-      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350"></p>
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350" alt="Nx Advanced Workspaces video course"></p>
       </a>
     </td>
   </tr>
 </table>
 
-### Nx Demo & Tutorial Videos
+### Videos, Blogs, Books, Examples
 
 - [Nx Dev Tools for Monorepos, In-Depth Explainer (React)](https://www.youtube.com/watch?v=jCf92IyR-GE)
 
 - [Nx Dev Tools for Monorepos, In-Depth Explainer (Angular)](https://youtu.be/h5FIGDn5YM0)
 
-- [Storybook Integration with Nx](https://youtu.be/sFpqyjT7u4s)
+- [Youtube Channel with Nx-Related Videos](https://www.youtube.com/playlist?list=PLakNactNC1dHHWx4JIORwfnEajRv6FG5m)
 
-- [Building Custom Plugins for Nx](https://youtu.be/XYO689PAhow)
-
-- [Improved Dependency Graph Visualization for Nx](https://youtu.be/cMZ-ReC-jWU)
-
-- [Group all your stories into a single viewable Storybook with Nx](https://youtu.be/c323HOuFKkA)
-
-- [Debug Nx with Node and VSCode](https://youtu.be/OGV4R0cPRPc)
-
-- [Debug your Jest tests in Nx with VSCode](https://youtu.be/9_lgM2nokLg)
-
-- [Nx Console - A Must-Have Visual Studio Code Extension for Angular Developers](https://youtu.be/IIetmfgozgI)
-
-- [Introducing Nx Cloud](https://youtu.be/pwG20nNTEQc)
-
-- [Setting up distributed caching using Nx Cloud, @nrwl/nx-cloud](https://youtu.be/w1-GiB74ddc)
-
-- [High Quality React apps with Nx & Cypress](https://youtu.be/mfJBLhjYMdo)
-
-### Books and Blogs
-
-- [Nx blog posts](https://blog.nrwl.io/nx/home)
+- [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
 - [Angular Enterprise Monorepo Patterns Book (free)](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
-- [High Quality React apps with Nx & Cypress](https://cypress.io/blog/2020/04/14/high-quality-react-apps-with-nx-cypress/) (April 2020)
+- [Nx Examples Repo](https://github.com/nrwl/nx-examples)
 
-- [Shell Library patterns with Nx and Monorepo Architectures](https://indepth.dev/the-shell-library-patterns-with-nx-and-monorepo-architectures/) (March 2020)
+# Engage with the Core Team and the Community
 
-- [Tiny Angular application projects in Nx workspaces](https://indepth.dev/tiny-angular-application-projects-in-nx-workspaces/#peer-reviewers--30/) (March 2020)
-
-### Additional Resources
-
-- [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
-
-- [xplat - Cross-platform tools for Nx workspaces](https://nstudio.io/xplat/)
-- [Nrwl Talks, Presentations, and Podcasts playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dHHWx4JIORwfnEajRv6FG5m)
-
-- [Nx Office Hours playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5)
+- [Nx Office Hours Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
+- [Follow Nx on Twitter](https://twitter.com/NxDevTools)

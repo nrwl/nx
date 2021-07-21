@@ -46,6 +46,12 @@ Run the target on all projects in the workspace
 
 This is the configuration to use when performing tasks on projects
 
+### exclude
+
+Default: ``
+
+Exclude certain projects from being processed
+
 ### help
 
 Show help

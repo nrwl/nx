@@ -6,7 +6,6 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import * as webpack from 'webpack';
 import { WebpackConfigOptions } from '../build-options';
 import {
   getSourceMapDevTool,
@@ -16,17 +15,15 @@ import {
 
 const SubresourceIntegrityPlugin = require('webpack-subresource-integrity');
 
-export function getBrowserConfig(
-  wco: WebpackConfigOptions
-): webpack.Configuration {
+export function getBrowserConfig(wco: WebpackConfigOptions) {
   const { buildOptions } = wco;
   const extraPlugins = [];
 
+  const { isWebpack5 } = require('../../../../../webpack/entry');
+
   let isEval = false;
-  const {
-    styles: stylesOptimization,
-    scripts: scriptsOptimization,
-  } = buildOptions.optimization;
+  const { styles: stylesOptimization, scripts: scriptsOptimization } =
+    buildOptions.optimization;
   const {
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,
@@ -114,28 +111,39 @@ export function getBrowserConfig(
             enforce: true,
             priority: 5,
           },
+          ...(isWebpack5
+            ? {
+                styles: {
+                  type: 'css/mini-extract',
+                  chunks: 'all',
+                },
+              }
+            : {}),
           vendors: false,
+          // TODO(jack): Support both 4 and 5
           vendor: !!buildOptions.vendorChunk && {
             name: 'vendor',
-            chunks: 'initial',
+            chunks: isWebpack5 ? (chunk) => chunk.name === 'main' : 'initial',
             enforce: true,
-            test: (
-              module: { nameForCondition?: Function },
-              chunks: Array<{ name: string }>
-            ) => {
-              const moduleName = module.nameForCondition
-                ? module.nameForCondition()
-                : '';
+            test: isWebpack5
+              ? /[\\/]node_modules[\\/]/
+              : (
+                  module: { nameForCondition?: Function },
+                  chunks: Array<{ name: string }>
+                ) => {
+                  const moduleName = module.nameForCondition
+                    ? module.nameForCondition()
+                    : '';
 
-              return (
-                /[\\/]node_modules[\\/]/.test(moduleName) &&
-                !chunks.some(
-                  ({ name }) =>
-                    isPolyfillsEntry(name) ||
-                    globalStylesBundleNames.includes(name)
-                )
-              );
-            },
+                  return (
+                    /[\\/]node_modules[\\/]/.test(moduleName) &&
+                    !chunks.some(
+                      ({ name }) =>
+                        isPolyfillsEntry(name) ||
+                        globalStylesBundleNames.includes(name)
+                    )
+                  );
+                },
           },
         },
       },

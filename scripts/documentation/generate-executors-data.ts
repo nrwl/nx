@@ -1,9 +1,9 @@
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { readFileSync } from 'fs';
+import { removeSync, readJsonSync } from 'fs-extra';
+import { join, relative } from 'path';
 import { parseJsonSchemaToOptions } from './json-parser';
 import { dedent } from 'tslint/lib/utils';
 import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
-import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import {
   htmlSelectorFormat,
   pathFormat,
@@ -13,6 +13,7 @@ import {
   generateJsonFile,
   generateMarkdownFile,
   sortAlphabeticallyFunction,
+  sortByBooleanFunction,
 } from './utils';
 import {
   Configuration,
@@ -20,6 +21,7 @@ import {
 } from './get-package-configurations';
 import { Framework } from './frameworks';
 import * as chalk from 'chalk';
+import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 
 /**
  * @WhatItDoes: Generates default documentation from the builders' schema.
@@ -28,41 +30,35 @@ import * as chalk from 'chalk';
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
-const registry = new CoreSchemaRegistry();
-registry.addFormat(pathFormat);
-registry.addFormat(htmlSelectorFormat);
+const flattener = createSchemaFlattener([pathFormat, htmlSelectorFormat]);
 
 function readExecutorsJson(root: string) {
-  try {
-    return fs.readJsonSync(path.join(root, 'builders.json')).builders;
-  } catch (e) {
-    return fs.readJsonSync(path.join(root, 'executors.json')).executors;
-  }
+  return readJsonSync(join(root, 'executors.json')).executors;
 }
 
 function generateSchematicList(
   config: Configuration,
-  registry: CoreSchemaRegistry
+  flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  fs.removeSync(config.builderOutput);
+  removeSync(config.builderOutput);
   const builderCollection = readExecutorsJson(config.root);
   return Object.keys(builderCollection).map((builderName) => {
-    const schemaPath = path.join(
+    const schemaPath = join(
       config.root,
       builderCollection[builderName]['schema']
     );
     let builder = {
       name: builderName,
       ...builderCollection[builderName],
-      rawSchema: fs.readJsonSync(schemaPath),
+      rawSchema: readJsonSync(schemaPath),
     };
     if (builder.rawSchema.examplesFile) {
-      builder.examplesFileFullPath = path.join(
+      builder.examplesFileFullPath = join(
         schemaPath.replace('schema.json', ''),
         builder.rawSchema.examplesFile
       );
     }
-    return parseJsonSchemaToOptions(registry, builder.rawSchema)
+    return parseJsonSchemaToOptions(flattener, builder.rawSchema)
       .then((options) => ({ ...builder, options }))
       .catch((error) =>
         console.error(`Can't parse schema option of ${builder.name}:\n${error}`)
@@ -81,7 +77,7 @@ function generateTemplate(
     # ${builder.name}
     ${builder.description}
 
-    Properties can be configured in ${filename} when defining the executor, or when invoking it.
+    Options can be configured in \`${filename}\` when defining the executor, or when invoking it.
     ${
       framework != 'angular'
         ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/nx-cli#running-tasks.`
@@ -91,18 +87,18 @@ function generateTemplate(
 
   if (builder.examplesFileFullPath) {
     template += `## Examples\n`;
-    let examples = fs
-      .readFileSync(builder.examplesFileFullPath)
+    let examples = readFileSync(builder.examplesFileFullPath)
       .toString()
       .replace(/<%= cli %>/gm, cliCommand);
     template += dedent`${examples}`;
   }
 
   if (Array.isArray(builder.options) && !!builder.options.length) {
-    template += '## Properties';
+    template += '## Options';
 
     builder.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .sort((a, b) => sortByBooleanFunction(a.required, b.required))
       .forEach((option) => {
         const enumStr = option.enum
           ? `Possible values: ${option.enum
@@ -172,12 +168,12 @@ export async function generateExecutorsDocumentation() {
           .filter((item) => item.hasBuilders)
           .map(async (config) => {
             const buildersList = await Promise.all(
-              generateSchematicList(config, registry)
+              generateSchematicList(config, flattener)
             );
 
-            const markdownList = buildersList.map((b) =>
-              generateTemplate(framework, b)
-            );
+            const markdownList = buildersList
+              .filter((b) => b != null && !b['hidden'])
+              .map((b) => generateTemplate(framework, b));
 
             await Promise.all(
               markdownList.map((template) =>
@@ -189,9 +185,9 @@ export async function generateExecutorsDocumentation() {
               ` - ${chalk.blue(
                 config.framework
               )} Documentation for ${chalk.magenta(
-                path.relative(process.cwd(), config.root)
+                relative(process.cwd(), config.root)
               )} generated at ${chalk.grey(
-                path.relative(process.cwd(), config.builderOutput)
+                relative(process.cwd(), config.builderOutput)
               )}`
             );
           })
@@ -207,7 +203,7 @@ export async function generateExecutorsDocumentation() {
         .map((item) => item.name);
 
       await generateJsonFile(
-        path.join(__dirname, '../../docs', framework, 'executors.json'),
+        join(__dirname, '../../docs', framework, 'executors.json'),
         builders
       );
 

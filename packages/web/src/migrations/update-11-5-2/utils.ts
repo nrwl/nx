@@ -1,6 +1,4 @@
-import { ProjectGraph } from '@nrwl/workspace';
-import { getProjects } from '@nrwl/devkit';
-import { DependencyType } from '@nrwl/workspace/src/core/project-graph';
+import { getProjects, ProjectGraph, DependencyType } from '@nrwl/devkit';
 
 const cache = new Map<string, boolean>();
 
@@ -9,7 +7,13 @@ export function hasDependentAppUsingWebBuild(
   reversedProjectGraph: ProjectGraph,
   projects: ReturnType<typeof getProjects>
 ) {
+  const seen = new Set<string>();
   function walk(currProject: string) {
+    if (seen.has(currProject)) {
+      return false;
+    }
+    seen.add(currProject);
+
     if (cache.has(currProject)) {
       return cache.get(currProject);
     }

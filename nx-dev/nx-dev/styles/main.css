@@ -1,0 +1,72 @@
+@tailwind base;
+
+/*! purgecss start ignore */
+@import 'nx-dev/feature-search/src/lib/algolia-search.global.css';
+@import 'highlight.js/styles/github-gist.css';
+/*! purgecss end ignore */
+
+@tailwind components;
+@tailwind utilities;
+
+/*! purgecss start ignore */
+@import './constellation-wobble.animation.css';
+/*! purgecss end ignore */
+
+svg {
+  shape-rendering: auto;
+  text-rendering: optimizeLegibility;
+}
+
+@font-face {
+  src: url('../public/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('../public/fonts/InputMono-Regular.woff') format('woff');
+  font-family: 'InputMono';
+  font-style: normal;
+  font-weight: normal;
+}
+.font-input-mono {
+  font-family: 'InputMono', monospace;
+}
+code,
+pre,
+.prose code,
+.prose pre {
+  font-family: 'InputMono', monospace;
+}
+
+/*
+  General CSS rules for markdown iframes and img
+ */
+iframe[src*='youtube'] {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.prose iframe,
+.prose img {
+  display: block;
+  margin: 1.7rem auto;
+}
+.prose iframe {
+  width: 100%;
+  max-width: 560px;
+}
+.prose img {
+  width: max-content;
+}
+
+/*
+  Code embed
+ */
+.prose pre {
+  background: inherit !important;
+  color: inherit !important;
+  border: 1px solid #e1e4e8;
+}
+
+/*
+  Headers
+ */
+
+.prose h5,
+.prose h6 {
+  font-weight: 600;
+}

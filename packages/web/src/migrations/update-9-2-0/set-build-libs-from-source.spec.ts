@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { readWorkspace } from '@nrwl/workspace';
+import { readWorkspace, updateJsonInTree } from '@nrwl/workspace';
 
 import * as path from 'path';
 
@@ -17,23 +17,25 @@ describe('set buildLibsFromSource to true', () => {
   });
 
   it(`should set buildLibsFromSource to true`, async () => {
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          demo: {
-            root: 'apps/demo',
-            sourceRoot: 'apps/demo/src',
-            architect: {
-              build: {
-                builder: '@nrwl/web:build',
-                options: {},
+    tree = await schematicRunner
+      .callRule(
+        updateJsonInTree('workspace.json', () => ({
+          projects: {
+            demo: {
+              root: 'apps/demo',
+              sourceRoot: 'apps/demo/src',
+              architect: {
+                build: {
+                  builder: '@nrwl/web:build',
+                  options: {},
+                },
               },
             },
           },
-        },
-      })
-    );
+        })),
+        tree
+      )
+      .toPromise();
 
     tree = await schematicRunner
       .runSchematicAsync('set-build-libs-from-source', {}, tree)

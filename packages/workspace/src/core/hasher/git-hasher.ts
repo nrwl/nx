@@ -79,7 +79,7 @@ function getGitHashForFiles(
         `Passed ${filesToHash.length} file paths to Git to hash, but received ${hashes.length} hashes.`
       );
     }
-    for (let i: number = 0; i < hashes.length; i++) {
+    for (let i = 0; i < hashes.length; i++) {
       const hash: string = hashes[i];
       const filePath: string = filesToHash[i];
       changes.set(filePath, hash);
@@ -94,9 +94,10 @@ function gitLsTree(path: string): Map<string, string> {
   );
 }
 
-function gitStatus(
-  path: string
-): { status: Map<string, string>; deletedFiles: string[] } {
+function gitStatus(path: string): {
+  status: Map<string, string>;
+  deletedFiles: string[];
+} {
   const deletedFiles: string[] = [];
   const filesToHash: string[] = [];
   parseGitStatus(path).forEach((changeType: string, filename: string) => {
@@ -130,7 +131,7 @@ function checkForDeletedFiles(
     try {
       statSync(join(path, f)).isFile();
       filesToHash.push(f);
-    } catch (err) {
+    } catch {
       console.warn(
         `Warning: Fell back to using 'fs' to identify ${f} as deleted. Please open an issue at https://github.com/nrwl/nx so we can investigate.`
       );

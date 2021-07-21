@@ -6,7 +6,7 @@ This project was generated using [Nx](https://nx.dev).
 
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
 
-🔎 **Powerful, Extensible Dev Tools**
+🔎 **Smart, Extensible Build Framework**
 
 ## Quick Start & Documentation
 
@@ -37,7 +37,7 @@ Below are our core plugins:
 - [Node](https://nodejs.org)
   - `ng add @nrwl/node`
 
-There are also many [community plugins](https://nx.dev/nx-community) you could add.
+There are also many [community plugins](https://nx.dev/community) you could add.
 
 ## Generate an application
 
@@ -98,7 +98,7 @@ This project was generated using [Nx](https://nx.dev).
 
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
 
-🔎 **Powerful, Extensible Dev Tools**
+🔎 **Smart, Extensible Build Framework**
 
 ## Adding capabilities to your workspace
 
@@ -121,7 +121,7 @@ Below are our core plugins:
 - [Node](https://nodejs.org)
   - `npm install --save-dev @nrwl/node`
 
-There are also many [community plugins](https://nx.dev/nx-community) you could add.
+There are also many [community plugins](https://nx.dev/community) you could add.
 
 ## Generate an application
 
@@ -175,7 +175,7 @@ Visit the [Nx Documentation](https://nx.dev) to learn more.
 
 ## ☁ Nx Cloud
 
-### Computation Memoization in the Cloud
+### Distributed Computation Caching & Distributed Task Execution
 
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-cloud-card.png"></p>
 

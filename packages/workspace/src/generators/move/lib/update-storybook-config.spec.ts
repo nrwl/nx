@@ -14,6 +14,7 @@ describe('updateStorybookConfig', () => {
   it('should handle storybook config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -38,6 +39,7 @@ describe('updateStorybookConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookMainPath, storybookMain);
@@ -51,7 +53,7 @@ describe('updateStorybookConfig', () => {
 
     updateStorybookConfig(tree, schema, projectConfig);
 
-    const storybookMainAfter = tree.read(storybookMainPath).toString();
+    const storybookMainAfter = tree.read(storybookMainPath, 'utf-8');
     expect(storybookMainAfter).toContain(
       `const rootMain = require('../../../../.storybook/main');`
     );
@@ -67,6 +69,7 @@ describe('updateStorybookConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
@@ -80,9 +83,10 @@ describe('updateStorybookConfig', () => {
 
     updateStorybookConfig(tree, schema, projectConfig);
 
-    const storybookWebpackConfigAfter = tree
-      .read(storybookWebpackConfigPath)
-      .toString();
+    const storybookWebpackConfigAfter = tree.read(
+      storybookWebpackConfigPath,
+      'utf-8'
+    );
     expect(storybookWebpackConfigAfter).toContain(
       `const rootWebpackConfig = require('../../../../.storybook/webpack.config');`
     );

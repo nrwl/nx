@@ -18,10 +18,8 @@ export interface CreateComponentStoriesFileSchema {
   componentPath: string;
 }
 
-export type KnobType = 'text' | 'boolean' | 'number' | 'select';
-
 // TODO: candidate to refactor with the angular component story
-export function getKnobDefaultValue(property: ts.SyntaxKind): string {
+export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   const typeNameToDefault: Record<number, any> = {
     [ts.SyntaxKind.StringKeyword]: "''",
     [ts.SyntaxKind.NumberKeyword]: 0,
@@ -38,11 +36,7 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
 
 export function createComponentStoriesFile(
   host: Tree,
-  {
-    // name,
-    project,
-    componentPath,
-  }: CreateComponentStoriesFileSchema
+  { project, componentPath }: CreateComponentStoriesFileSchema
 ) {
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
@@ -56,7 +50,8 @@ export function createComponentStoriesFile(
     ''
   );
 
-  const isPlainJs = componentFilePath.endsWith('.jsx');
+  const isPlainJs =
+    componentFilePath.endsWith('.jsx') || componentFilePath.endsWith('.js');
   let fileExt = 'tsx';
   if (componentFilePath.endsWith('.jsx')) {
     fileExt = 'jsx';
@@ -72,14 +67,14 @@ export function createComponentStoriesFile(
 
   const name = componentFileName;
 
-  const contents = host.read(componentFilePath);
-  if (!contents) {
+  const contents = host.read(componentFilePath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentFilePath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );
@@ -97,26 +92,31 @@ export function createComponentStoriesFile(
   let propsTypeName: string = null;
   let props: {
     name: string;
-    type: KnobType;
     defaultValue: any;
+  }[] = [];
+  let argTypes: {
+    name: string;
+    type: string;
+    actionText: string;
   }[] = [];
 
   if (propsInterface) {
     propsTypeName = propsInterface.name.text;
-
     props = propsInterface.members.map((member: ts.PropertySignature) => {
-      const initializerKindToKnobType: Record<number, KnobType> = {
-        [ts.SyntaxKind.StringKeyword]: 'text',
-        [ts.SyntaxKind.NumberKeyword]: 'number',
-        [ts.SyntaxKind.BooleanKeyword]: 'boolean',
-      };
-
-      return {
-        name: (member.name as ts.Identifier).text,
-        type: initializerKindToKnobType[member.type.kind],
-        defaultValue: getKnobDefaultValue(member.type.kind),
-      };
+      if (member.type.kind === ts.SyntaxKind.FunctionType) {
+        argTypes.push({
+          name: (member.name as ts.Identifier).text,
+          type: 'action',
+          actionText: `${(member.name as ts.Identifier).text} executed!`,
+        });
+      } else {
+        return {
+          name: (member.name as ts.Identifier).text,
+          defaultValue: getArgsDefaultValue(member.type.kind),
+        };
+      }
     });
+    props = props.filter((p) => p && p.defaultValue !== undefined);
   }
 
   generateFiles(
@@ -127,7 +127,7 @@ export function createComponentStoriesFile(
       componentFileName: name,
       propsTypeName,
       props,
-      usedKnobs: props.map((x) => x.type).join(', '),
+      argTypes,
       componentName: (cmpDeclaration as any).name.text,
       isPlainJs,
       fileExt,

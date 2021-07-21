@@ -1,18 +1,17 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectType,
-} from '../core/project-graph';
+import { ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
 import {
+  directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
+} from './fileutils';
 import { stripIndents } from '@nrwl/devkit';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
+import { output } from './output';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -109,6 +108,15 @@ function readTsConfigWithRemappedPaths(
     tsConfig,
     dependencies
   );
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    output.log({
+      title: 'TypeScript path mappings have been rewritten.',
+    });
+    console.log(
+      JSON.stringify(generatedTsConfig.compilerOptions.paths, null, 2)
+    );
+  }
   return generatedTsConfig;
 }
 
@@ -156,17 +164,7 @@ export function createTmpTsConfig(
     tmpTsConfigPath,
     dependencies
   );
-  process.on('exit', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-  });
-  process.on('SIGTERM', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-  process.on('SIGINT', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
+  process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }
@@ -218,9 +216,9 @@ export function findMissingBuildDependencies(
       return;
     }
 
-    const paths = dep.outputs.map((p) => join(root, p, 'package.json'));
+    const paths = dep.outputs.map((p) => join(root, p));
 
-    if (!paths.some(fileExists)) {
+    if (!paths.some(directoryExists)) {
       depLibsToBuildFirst.push(dep);
     }
   });
@@ -327,9 +325,8 @@ export function updateBuildableProjectPackageJsonDependencies(
 
           depVersion = entry.node.data.version;
 
-          packageJson[typeOfDependency][
-            entry.node.data.packageName
-          ] = depVersion;
+          packageJson[typeOfDependency][entry.node.data.packageName] =
+            depVersion;
         }
         updatePackageJson = true;
       } catch (e) {

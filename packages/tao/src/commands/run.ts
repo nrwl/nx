@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   combineOptionsForExecutor,
   convertToCamelCase,
@@ -8,6 +8,7 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import {
+  Executor,
   ExecutorContext,
   ProjectConfiguration,
   TargetConfiguration,
@@ -42,7 +43,7 @@ function parseRunOpts(
   defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
       alias: {
@@ -55,11 +56,8 @@ function parseRunOpts(
     throwInvalidInvocation();
   }
   // eslint-disable-next-line prefer-const
-  let [project, target, configuration]: [
-    string,
-    string,
-    string
-  ] = runOptions._[0].split(':');
+  let [project, target, configuration]: [string, string, string] =
+    runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
       `No project name specified. Using default project : ${chalk.bold(
@@ -131,19 +129,30 @@ async function iteratorToProcessStatusCode(
 ): Promise<number> {
   let success: boolean;
 
-  let prev: IteratorResult<{ success: boolean }>;
-  let current: IteratorResult<{ success: boolean }>;
-  do {
-    prev = current;
-    current = await i.next();
-  } while (!current.done);
+  // This is a workaround to fix an issue that only happens with
+  // the @angular-devkit/build-angular:browser builder. Starting
+  // on version 12.0.1, a SASS compilation implementation was
+  // introduced making use of workers and it's unref()-ing the worker
+  // too early, causing the process to exit early in environments
+  // like CI or when running Docker builds.
+  const keepProcessAliveInterval = setInterval(() => {}, 1000);
+  try {
+    let prev: IteratorResult<{ success: boolean }>;
+    let current: IteratorResult<{ success: boolean }>;
+    do {
+      prev = current;
+      current = await i.next();
+    } while (!current.done);
 
-  success =
-    current.value !== undefined || !prev
-      ? current.value.success
-      : prev.value.success;
+    success =
+      current.value !== undefined || !prev
+        ? current.value.success
+        : prev.value.success;
 
-  return success ? 0 : 1;
+    return success ? 0 : 1;
+  } finally {
+    clearInterval(keepProcessAliveInterval);
+  }
 }
 
 function createImplicitTargetConfig(
@@ -188,6 +197,9 @@ async function runExecutorInternal<T extends { success: boolean }>(
       `NX Cannot find target '${target}' for project '${project}'`
     );
   }
+
+  configuration = configuration ?? targetConfig.defaultConfiguration;
+
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,
@@ -209,7 +221,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   );
 
   if (ws.isNxExecutor(nodeModule, executor)) {
-    const implementation = implementationFactory();
+    const implementation = implementationFactory() as Executor<any>;
     const r = implementation(combinedOptions, {
       root,
       target: targetConfig,
@@ -231,13 +243,16 @@ async function runExecutorInternal<T extends { success: boolean }>(
     }
   } else {
     require('../compat/compat');
-    const observable = await (await import('./ngcli-adapter')).scheduleTarget(
+    const observable = await (
+      await import('./ngcli-adapter')
+    ).scheduleTarget(
       root,
       {
         project,
         target,
         configuration,
         runOptions: combinedOptions,
+        executor: targetConfig.executor,
       },
       isVerbose
     );

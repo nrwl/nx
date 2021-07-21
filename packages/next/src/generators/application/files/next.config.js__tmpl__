@@ -3,48 +3,74 @@ const withNx = require('@nrwl/next/plugins/with-nx');
 
 <% if (style === 'less') { %>
 const withLess = require('@zeit/next-less');
-module.exports = withLess(withNx({
+
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR 
+    // Set this to false if you do not want to use SVGR
     // See: https://github.com/gregberge/svgr
     svgr: true,
   },
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
-  cssModules: false
-}));
+  cssModules: false,
+  // @zeit/next-less does not support webpack 5
+  webpack5: false,
+};
+
+module.exports = withLess(withNx(nextConfig));
 <% } else if (style === 'styl') { %>
 const withStylus = require('@zeit/next-stylus');
-module.exports = withStylus(withNx({
+
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR 
+    // Set this to false if you do not want to use SVGR
     // See: https://github.com/gregberge/svgr
     svgr: true,
   },
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
-  cssModules: false
-}));
+  cssModules: false,
+  // @zeit/next-stylus does not support webpack 5
+  webpack5: false,
+};
+
+module.exports = withStylus(withNx(nextConfig));
 <% } else if (
   style === 'styled-components'
   ||style === '@emotion/styled'
   || style === 'styled-jsx'
   || style === 'none'
 ) { %>
-module.exports = withNx({
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR 
+    // Set this to false if you do not want to use SVGR
     // See: https://github.com/gregberge/svgr
     svgr: true,
   },
-});
+};
+
+module.exports = withNx(nextConfig);
 <% } else {
 // Defaults to CSS/SASS (which don't need plugin as of Next 9.3) %>
-module.exports = withNx({
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR 
+    // Set this to false if you do not want to use SVGR
     // See: https://github.com/gregberge/svgr
     svgr: true,
   },
-});
+};
+
+module.exports = withNx(nextConfig);
 <% } %>

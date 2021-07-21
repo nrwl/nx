@@ -111,7 +111,7 @@ describe('update 10.0.0', () => {
     );
   });
 
-  it('should remove setupFile and tsconfig in test architect from workspace.json', async (done) => {
+  it('should remove setupFile and tsconfig in test architect from workspace.json', async () => {
     const result = await schematicRunner
       .runSchematicAsync('update-10.0.0', {}, initialTree)
       .toPromise();
@@ -125,10 +125,9 @@ describe('update 10.0.0', () => {
       jestConfig: expect.anything(),
       passWithNoTests: expect.anything(),
     });
-    done();
   });
 
-  it('should update the jest.config files', async (done) => {
+  it('should update the jest.config files', async () => {
     await schematicRunner
       .runSchematicAsync('update-10.0.0', {}, initialTree)
       .toPromise();
@@ -163,7 +162,5 @@ describe('update 10.0.0', () => {
     const reactGlobals = reactJestObject.globals;
     expect(reactSetupFiles).toBeUndefined();
     expect(reactGlobals).toBeUndefined();
-
-    done();
   });
 });

@@ -1,5 +1,5 @@
 import { ESLint } from 'eslint';
-import { Schema } from '../schema';
+import type { Schema } from '../schema';
 
 export async function loadESLint() {
   let eslint;

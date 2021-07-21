@@ -1,19 +1,19 @@
+import type { ProjectGraph } from '@nrwl/devkit';
 import {
   DependencyType,
-  ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 import { TSESLint } from '@typescript-eslint/experimental-utils';
 import * as parser from '@typescript-eslint/parser';
 import { vol } from 'memfs';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
-import { readFileSync } from 'fs';
+import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../../workspace/src/utilities/app-root', () => ({
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 
@@ -73,7 +73,7 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
-describe('Enforce Module Boundaries', () => {
+describe('Enforce Module Boundaries (eslint)', () => {
   beforeEach(() => {
     vol.fromJSON(fileSys, '/root');
   });
@@ -714,7 +714,7 @@ describe('Enforce Module Boundaries', () => {
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
         import '@mycompany/myapp';
-        import('@mycompany/myappa');
+        import('@mycompany/myapp');
       `,
       {
         nodes: {
@@ -794,13 +794,137 @@ describe('Enforce Module Boundaries', () => {
     expect(failures[1].message).toEqual(message);
   });
 
+  it('should error when absolute path within project detected', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/mylib';
+        import('@mycompany/mylib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+
+    const message =
+      'Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "@mycompany/mylib"';
+    expect(failures.length).toEqual(2);
+    expect(failures[0].message).toEqual(message);
+    expect(failures[1].message).toEqual(message);
+  });
+
+  it('should ignore detected absolute path within project if allowCircularSelfDependency flag is set', () => {
+    const failures = runRule(
+      {
+        allowCircularSelfDependency: true,
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/mylib';
+        import('@mycompany/mylib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+
+    expect(failures.length).toBe(0);
+  });
+
   it('should error when circular dependency detected', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/anotherlib/src/main.ts`,
       `
         import '@mycompany/mylib';
-        import('@mycompany/mylibe');
+        import('@mycompany/mylib');
       `,
       {
         nodes: {
@@ -1038,7 +1162,7 @@ describe('Enforce Module Boundaries', () => {
       );
 
       const message =
-        'Buildable libraries cannot import non-buildable libraries';
+        'Buildable libraries cannot import or export from non-buildable libraries';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -1051,8 +1175,8 @@ describe('Enforce Module Boundaries', () => {
         },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
         `
-          import '@mycompany/nonBuildableLib';
-          import('@mycompany/nonBuildableLib');
+          import '@mycompany/anotherBuildableLib';
+          import('@mycompany/anotherBuildableLib');
         `,
         {
           nodes: {
@@ -1072,11 +1196,11 @@ describe('Enforce Module Boundaries', () => {
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
-            nonBuildableLib: {
-              name: 'nonBuildableLib',
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
               type: ProjectType.lib,
               data: {
-                root: 'libs/nonBuildableLib',
+                root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
                 architect: {
@@ -1085,7 +1209,7 @@ describe('Enforce Module Boundaries', () => {
                     builder: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
               },
             },
           },
@@ -1135,6 +1259,255 @@ describe('Enforce Module Boundaries', () => {
 
       expect(failures.length).toBe(0);
     });
+
+    it('should error when exporting all from a non-buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export * from '@nonBuildableScope/nonBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {
+                  build: {
+                    // defines a buildable lib
+                    executor: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      const message =
+        'Buildable libraries cannot import or export from non-buildable libraries';
+      expect(failures[0].message).toEqual(message);
+    });
+
+    it('should not error when exporting all from a buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export * from '@mycompany/anotherBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/anotherBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      expect(failures.length).toBe(0);
+    });
+
+    it('should error when exporting a named resource from a non-buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export { foo } from '@nonBuildableScope/nonBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {
+                  build: {
+                    // defines a buildable lib
+                    executor: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      const message =
+        'Buildable libraries cannot import or export from non-buildable libraries';
+      expect(failures[0].message).toEqual(message);
+    });
+
+    it('should not error when exporting a named resource from a buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export { foo } from '@mycompany/anotherBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/anotherBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      expect(failures.length).toBe(0);
+    });
+
+    it('should not error when in-line exporting a named resource', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export class Foo {};
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/anotherBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      expect(failures.length).toBe(0);
+    });
   });
 });
 
@@ -1164,7 +1537,7 @@ function runRule(
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).npmScope = 'mycompany';
-  (global as any).projectGraph = projectGraph;
+  (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes
   );

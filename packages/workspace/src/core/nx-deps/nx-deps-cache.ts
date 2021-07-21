@@ -1,20 +1,20 @@
 import { FileData, filesChanged } from '../file-utils';
-import {
+import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-} from '../project-graph';
+} from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { existsSync } from 'fs';
-import * as fsExtra from 'fs-extra';
+import { ensureDirSync } from 'fs-extra';
 import {
   directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
 } from '../../utilities/fileutils';
-import { ProjectFileMap } from '@nrwl/workspace/src/core/file-graph';
+import type { ProjectFileMap } from '../file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,
@@ -33,11 +33,12 @@ const nxDepsDir = cacheDirectory(
   readCacheDirectoryProperty(appRootPath)
 );
 const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
+
 export function readCache(): false | ProjectGraphCache {
   performance.mark('read cache:start');
   try {
     if (!existsSync(nxDepsDir)) {
-      fsExtra.ensureDirSync(nxDepsDir);
+      ensureDirSync(nxDepsDir);
     }
   } catch (e) {
     /*
@@ -95,7 +96,9 @@ export function differentFromCache(
   filesDifferentFromCache: ProjectFileMap;
   partiallyConstructedProjectGraph?: ProjectGraph;
 } {
-  const currentProjects = Object.keys(fileMap).sort();
+  const currentProjects = Object.keys(fileMap)
+    .sort()
+    .filter((name) => fileMap[name].length > 0);
   const previousProjects = Object.keys(c.nodes)
     .sort()
     .filter((name) => c.nodes[name].data.files.length > 0);

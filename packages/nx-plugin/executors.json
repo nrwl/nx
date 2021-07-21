@@ -1,0 +1,16 @@
+{
+  "builders": {
+    "e2e": {
+      "implementation": "./src/executors/e2e/compat",
+      "schema": "./src/executors/e2e/schema.json",
+      "description": "Creates and runs the e2e tests for an Nx Plugin."
+    }
+  },
+  "executors": {
+    "e2e": {
+      "implementation": "./src/executors/e2e/e2e.impl",
+      "schema": "./src/executors/e2e/schema.json",
+      "description": "Creates and runs the e2e tests for an Nx Plugin."
+    }
+  }
+}

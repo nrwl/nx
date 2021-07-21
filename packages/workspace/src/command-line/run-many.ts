@@ -1,20 +1,24 @@
 import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
+import type { NxArgs, RawNxArgs } from './utils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   isWorkspaceProject,
-  ProjectGraph,
-  ProjectGraphNode,
   withDeps,
 } from '../core/project-graph';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
+import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
+import { performance } from 'perf_hooks';
+import type { Environment } from '../core/shared-interfaces';
 
-export async function runMany(parsedArgs: yargs.Arguments) {
+export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
+  performance.mark('command-execution-begins');
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'run-many'
@@ -22,23 +26,19 @@ export async function runMany(parsedArgs: yargs.Arguments) {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
-  const projectMap: Record<string, ProjectGraphNode> = {};
-  projects.forEach((proj) => {
-    projectMap[proj.name] = proj;
-  });
-  const env = readEnvironment(nxArgs.target, projectMap);
-  const filteredProjects = Object.values(projects).filter(
-    (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
-  );
+  const projectsNotExcluded = applyExclude(projects, nxArgs);
+  const env = readEnvironment(nxArgs.target, projectsNotExcluded);
+  const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
+
   runCommand(
     filteredProjects,
     projectGraph,
     env,
     nxArgs,
     overrides,
-    new DefaultReporter(),
+    nxArgs.hideCachedOutput ? new EmptyReporter() : new DefaultReporter(),
     null
   );
 }
@@ -46,7 +46,10 @@ export async function runMany(parsedArgs: yargs.Arguments) {
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
   const allProjects = Object.values(projectGraph.nodes);
   if (nxArgs.all) {
-    return runnableForTarget(allProjects, nxArgs.target);
+    return runnableForTarget(allProjects, nxArgs.target).reduce(
+      (m, c) => ((m[c.name] = c), m),
+      {}
+    );
   } else {
     checkForInvalidProjects(nxArgs, allProjects);
     let selectedProjects = allProjects.filter(
@@ -57,8 +60,33 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
         withDeps(projectGraph, selectedProjects).nodes
       );
     }
-    return runnableForTarget(selectedProjects, nxArgs.target, true);
+    return runnableForTarget(selectedProjects, nxArgs.target, true).reduce(
+      (m, c) => ((m[c.name] = c), m),
+      {}
+    );
   }
+}
+
+function applyExclude(
+  projects: Record<string, ProjectGraphNode>,
+  nxArgs: NxArgs
+) {
+  return Object.keys(projects)
+    .filter((key) => !(nxArgs.exclude || []).includes(key))
+    .reduce((p, key) => {
+      p[key] = projects[key];
+      return p;
+    }, {} as Record<string, ProjectGraphNode>);
+}
+
+function applyOnlyFailed(
+  projectsNotExcluded: Record<string, ProjectGraphNode>,
+  nxArgs: NxArgs,
+  env: Environment
+) {
+  return Object.values(projectsNotExcluded).filter(
+    (n) => !nxArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+  );
 }
 
 function checkForInvalidProjects(

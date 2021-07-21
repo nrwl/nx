@@ -1,8 +1,10 @@
 import * as chalk from 'chalk';
-import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
-import { appRootPath } from '../utilities/app-root';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import {
+  detectPackageManager,
+  getPackageManagerVersion,
+  readJsonFile,
+} from '@nrwl/devkit';
 import { output } from '../utilities/output';
 
 export const packagesWeCareAbout = [
@@ -18,6 +20,7 @@ export const packagesWeCareAbout = [
   '@nrwl/nest',
   '@nrwl/next',
   '@nrwl/node',
+  '@nrwl/nx-cloud',
   '@nrwl/react',
   '@nrwl/schematics',
   '@nrwl/tao',
@@ -45,7 +48,7 @@ export const report = {
  */
 function reportHandler() {
   const pm = detectPackageManager();
-  const pmVersion = execSync(`${pm} --version`).toString('utf-8').trim();
+  const pmVersion = getPackageManagerVersion(pm);
 
   const bodyLines = [
     `Node : ${process.versions.node}`,
@@ -60,8 +63,7 @@ function reportHandler() {
       const packageJsonPath = require.resolve(`${p}/package.json`, {
         paths: [appRootPath],
       });
-      const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
-      status = packageJson.version;
+      status = readJsonFile(packageJsonPath).version;
     } catch {}
     bodyLines.push(`${chalk.green(p)} : ${chalk.bold(status)}`);
   });

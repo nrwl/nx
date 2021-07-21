@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import * as path from 'path';
-import { DependencyType } from '../project-graph-models';
+import { DependencyType } from '@nrwl/devkit';
 import { stripSourceCode } from '../../../utilities/strip-source-code';
 import { defaultFileRead } from '../../file-utils';
 

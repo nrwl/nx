@@ -1,403 +1,519 @@
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { ChildProcess, fork } from 'child_process';
-import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-import { ProjectGraph } from '../core/project-graph';
-import { appRootPath } from '../utilities/app-root';
-import { output } from '../utilities/output';
+import type { ProjectGraph, Task, TaskGraph } from '@nrwl/devkit';
+import { performance } from 'perf_hooks';
+import { writeFileSync } from 'fs';
+import { Hasher } from '../core/hasher/hasher';
+import { ForkedProcessTaskRunner } from './forked-process-task-runner';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { output, TaskCacheStatus } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { AffectedEventType, Task } from './tasks-runner';
-import { getOutputs, unparse } from './utils';
-import { performance } from 'perf_hooks';
+import { AffectedEventType } from './tasks-runner';
+import {
+  calculateReverseDeps,
+  getCommandArgsForTask,
+  getCustomHasher,
+  getExecutorForTask,
+  getOutputs,
+  removeTasksFromTaskGraph,
+} from './utils';
+import { Batch, TasksSchedule } from './tasks-schedule';
+
+type TaskStatus = 'success' | 'failure' | 'skipped' | 'cache';
 
 export class TaskOrchestrator {
-  workspaceRoot = appRootPath;
-  cache = new Cache(this.options);
+  private cache = new Cache(this.options);
+  private workspace = new Workspaces(appRootPath);
+  private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
+  private tasksSchedule = new TasksSchedule(
+    this.taskGraph,
+    this.workspace,
+    this.options
+  );
 
-  private processes: ChildProcess[] = [];
+  // region internal state
+  private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
+  timings: { [target: string]: { start: number; end: number } } = {};
+  private completedTasks: {
+    [id: string]: TaskStatus;
+  } = {};
+  private startedTasks = new Set<string>();
+  private waitingForTasks: Function[] = [];
+  // endregion internal state
 
   constructor(
+    private readonly hasher: Hasher,
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
-    private readonly options: DefaultTasksRunnerOptions
-  ) {
-    this.setupOnProcessExitListener();
-  }
+    private readonly taskGraph: TaskGraph,
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly hideCachedOutput: boolean
+  ) {}
 
-  async run(tasksInStage: Task[]) {
-    const { cached, rest } = await this.splitTasksIntoCachedAndNotCached(
-      tasksInStage
-    );
-
+  async run() {
+    // initial scheduling
+    this.tasksSchedule.scheduleNextTasks();
     performance.mark('task-execution-begins');
-    performance.measure(
-      'graph-creation',
-      'command-execution-begins',
-      'task-execution-begins'
-    );
-    performance.measure('nx-prep-work', 'init-local', 'task-execution-begins');
-    const r1 = await this.applyCachedResults(cached);
-    const r2 = await this.runRest(rest);
+
+    const threads = [];
+
+    // initial seeding of the queue
+    const maxParallel = this.options.parallel
+      ? this.options.maxParallel || 3
+      : 1;
+    for (let i = 0; i < maxParallel; ++i) {
+      threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
+    }
+    await Promise.all(threads);
+
     performance.mark('task-execution-ends');
     performance.measure(
       'command-execution',
       'task-execution-begins',
       'task-execution-ends'
     );
-
     this.cache.removeOldCacheRecords();
-    return [...r1, ...r2];
+
+    return this.covertCompletedTasksToOutputFormat();
   }
 
-  private async runRest(tasks: Task[]) {
-    const left = [...tasks];
-    const res = [];
+  private async executeNextBatchOfTasksUsingTaskSchedule() {
+    // completed all the tasks
+    if (!this.tasksSchedule.hasTasks()) {
+      return null;
+    }
 
-    const that = this;
+    const doNotSkipCache =
+      this.options.skipNxCache === false ||
+      this.options.skipNxCache === undefined;
 
-    function takeFromQueue() {
-      if (left.length > 0) {
-        const task = left.pop();
-        const p = that.pipeOutputCapture(task)
-          ? that.forkProcessPipeOutputCapture(task)
-          : that.forkProcessDirectOutputCapture(task);
-        return p
-          .then((code) => {
-            res.push({
-              task,
-              success: code === 0,
-              type: AffectedEventType.TaskComplete,
-            });
-          })
-          .then(takeFromQueue)
-          .catch(takeFromQueue);
-      } else {
-        return Promise.resolve(null);
+    const batch = this.tasksSchedule.nextBatch();
+    if (batch) {
+      await this.applyFromCacheOrRunBatch(doNotSkipCache, batch);
+
+      return this.executeNextBatchOfTasksUsingTaskSchedule();
+    }
+
+    const task = this.tasksSchedule.nextTask();
+    if (task) {
+      await this.applyFromCacheOrRunTask(doNotSkipCache, task);
+
+      return this.executeNextBatchOfTasksUsingTaskSchedule();
+    }
+
+    // block until some other task completes, then try again
+    return new Promise((res) => this.waitingForTasks.push(res)).then(() =>
+      this.executeNextBatchOfTasksUsingTaskSchedule()
+    );
+  }
+
+  // region Applying Cache
+  private async applyCachedResults(tasks: Task[]) {
+    const results: { task: Task; status: 'cache' }[] = [];
+    for (const task of tasks) {
+      if (!this.isCacheableTask(task)) {
+        continue;
+      }
+      const cachedResult = await this.cache.get(task);
+      if (cachedResult && cachedResult.code === 0) {
+        await this.applyCachedResult({
+          task,
+          cachedResult,
+        });
+        results.push({
+          task,
+          status: 'cache',
+        });
       }
     }
-
-    const wait = [];
-    // initial seeding
-    const maxParallel = this.options.parallel
-      ? this.options.maxParallel || 3
-      : 1;
-    for (let i = 0; i < maxParallel; ++i) {
-      wait.push(takeFromQueue());
-    }
-    await Promise.all(wait);
-    return res;
+    return results;
   }
 
-  private async splitTasksIntoCachedAndNotCached(
-    tasks: Task[]
-  ): Promise<{ cached: TaskWithCachedResult[]; rest: Task[] }> {
-    if (this.options.skipNxCache || this.options.skipNxCache === undefined) {
-      return { cached: [], rest: tasks };
-    } else {
-      const cached: TaskWithCachedResult[] = [];
-      const rest: Task[] = [];
+  private async applyCachedResult(t: TaskWithCachedResult) {
+    const outputs = getOutputs(this.projectGraph.nodes, t.task);
+    const shouldCopyOutputsFromCache = this.cache.shouldCopyOutputsFromCache(
+      t,
+      outputs
+    );
+    if (shouldCopyOutputsFromCache) {
+      this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
+    }
+    if (
+      (!this.initiatingProject ||
+        this.initiatingProject === t.task.target.project) &&
+      !this.hideCachedOutput
+    ) {
+      const args = getCommandArgsForTask(t.task);
+      output.logCommand(
+        `nx ${args.join(' ')}`,
+        shouldCopyOutputsFromCache
+          ? TaskCacheStatus.RetrievedFromCache
+          : TaskCacheStatus.MatchedExistingOutput
+      );
+      process.stdout.write(t.cachedResult.terminalOutput);
+    }
+
+    return {
+      task: t.task,
+      code: t.cachedResult.code,
+    };
+  }
+  // endregion Applying Cache
+
+  // region Batch
+  private async applyFromCacheOrRunBatch(
+    doNotSkipCache: boolean,
+    batch: Batch
+  ) {
+    const taskEntries = Object.entries(batch.taskGraph.tasks);
+    const tasks = taskEntries.map(([, task]) => task);
+
+    await this.preRunSteps(tasks);
+
+    let results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[] = doNotSkipCache ? await this.applyCachedResults(tasks) : [];
+
+    // Run tasks that were not cached
+    if (results.length !== taskEntries.length) {
+      const unrunTaskGraph = removeTasksFromTaskGraph(
+        batch.taskGraph,
+        results.map(({ task }) => task.id)
+      );
+
+      // cache prep
+      for (const task of Object.values(unrunTaskGraph.tasks)) {
+        const taskOutputs = getOutputs(this.projectGraph.nodes, task);
+        this.cache.removeRecordedOutputsHashes(taskOutputs);
+      }
+
+      const batchResults = await this.runBatch({
+        executorName: batch.executorName,
+        taskGraph: unrunTaskGraph,
+      });
+
+      results.push(...batchResults);
+    }
+
+    await this.postRunSteps(results);
+
+    const tasksCompleted = taskEntries.filter(
+      ([taskId]) => this.completedTasks[taskId]
+    );
+
+    // Batch is still not done, run it again
+    if (tasksCompleted.length !== taskEntries.length) {
+      await this.applyFromCacheOrRunBatch(doNotSkipCache, {
+        executorName: batch.executorName,
+        taskGraph: removeTasksFromTaskGraph(
+          batch.taskGraph,
+          tasksCompleted.map(([taskId]) => taskId)
+        ),
+      });
+    }
+  }
+
+  private async runBatch(batch: Batch) {
+    try {
+      const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
+        batch
+      );
+      const batchResultEntries = Object.entries(results);
+
+      // Hash tasks after the batch is done
+      // Tasks that are not at the root might need to be updated
       await Promise.all(
-        tasks.map(async (task) => {
-          const cachedResult = await this.cache.get(task);
-          if (cachedResult) {
-            cached.push({ task, cachedResult });
-          } else {
-            rest.push(task);
-          }
+        batchResultEntries.map(([taskId]) =>
+          this.hashTask(this.taskGraph.tasks[taskId])
+        )
+      );
+
+      return batchResultEntries.map(([taskId, result]) => ({
+        task: this.taskGraph.tasks[taskId],
+        status: (result.success ? 'success' : 'failure') as TaskStatus,
+        terminalOutput: result.terminalOutput,
+      }));
+    } catch (e) {
+      return batch.taskGraph.roots.map((rootTaskId) => ({
+        task: this.taskGraph.tasks[rootTaskId],
+        status: 'failure' as TaskStatus,
+      }));
+    }
+  }
+  // endregion Batch
+
+  // region Single Task
+  private async applyFromCacheOrRunTask(doNotSkipCache: boolean, task: Task) {
+    await this.preRunSteps([task]);
+
+    // hash the task here
+    let results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[] = doNotSkipCache ? await this.applyCachedResults([task]) : [];
+
+    // the task wasn't cached
+    if (results.length === 0) {
+      // cache prep
+      const taskOutputs = getOutputs(this.projectGraph.nodes, task);
+      this.cache.removeRecordedOutputsHashes(taskOutputs);
+
+      const { code, terminalOutput } = await this.runTaskInForkedProcess(task);
+
+      results.push({
+        task,
+        status: code === 0 ? 'success' : 'failure',
+        terminalOutput,
+      });
+    }
+    await this.postRunSteps(results);
+  }
+
+  private async runTaskInForkedProcess(task: Task) {
+    try {
+      // obtain metadata
+      const outputPath = this.cache.temporaryOutputPath(task);
+      const forwardOutput = this.shouldForwardOutput(task);
+      const pipeOutput = this.pipeOutputCapture(task);
+
+      // execution
+      const { code, terminalOutput } = pipeOutput
+        ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
+            task,
+            {
+              forwardOutput,
+            }
+          )
+        : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
+            task,
+            {
+              temporaryOutputPath: outputPath,
+              forwardOutput,
+            }
+          );
+
+      return {
+        code,
+        terminalOutput,
+      };
+    } catch (e) {
+      return {
+        code: 1,
+      };
+    }
+  }
+  // endregion Single Task
+
+  // region Lifecycle
+  private async preRunSteps(tasks: Task[]) {
+    // Hash the task before it is run
+    await Promise.all(tasks.map((task) => this.hashTask(task)));
+
+    // timings
+    for (const task of tasks) {
+      this.storeStartTime(task);
+    }
+
+    if ('startTasks' in this.options.lifeCycle) {
+      this.options.lifeCycle.startTasks(tasks);
+    } else {
+      for (const task of tasks) {
+        if (!this.startedTasks.has(task.id)) {
+          this.options.lifeCycle.startTask(task);
+          this.startedTasks.add(task.id);
+        }
+      }
+    }
+  }
+
+  private storeStartTime(t: Task) {
+    this.timings[`${t.target.project}:${t.target.target}`] = {
+      start: new Date().getTime(),
+      end: undefined,
+    };
+  }
+
+  private async postRunSteps(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[]
+  ) {
+    // post-run steps
+    for (const { task } of results) {
+      this.storeEndTime(task);
+    }
+
+    if ('endTasks' in this.options.lifeCycle) {
+      this.options.lifeCycle.endTasks(
+        results.map((result) => {
+          const code =
+            result.status === 'success' || result.status === 'cache' ? 0 : 1;
+          return {
+            task: result.task,
+            code,
+          };
         })
       );
-      return { cached, rest };
+    } else {
+      for (const { task, status } of results) {
+        const code = status === 'success' || status === 'cache' ? 0 : 1;
+        this.options.lifeCycle.endTask(task, code);
+      }
     }
+
+    // cache the results
+    await Promise.all(
+      results
+        .filter(({ status }) => status !== 'cache' && status !== 'skipped')
+        .map((result) => ({
+          ...result,
+          code:
+            result.status === 'cache' || result.status === 'success' ? 0 : 1,
+          outputs: getOutputs(this.projectGraph.nodes, result.task),
+        }))
+        .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
+        .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
+        .map(async ({ task, code, terminalOutput, outputs }) => {
+          await this.cache.put(task, terminalOutput, outputs, code);
+
+          this.cache.recordOutputsHash(outputs, task.hash);
+
+          if (terminalOutput) {
+            const outputPath = this.cache.temporaryOutputPath(task);
+            writeFileSync(outputPath, terminalOutput);
+          }
+        })
+    );
+
+    this.complete(
+      results.map(({ task, status }) => {
+        return {
+          taskId: task.id,
+          status,
+        };
+      })
+    );
+
+    this.tasksSchedule.scheduleNextTasks();
   }
 
-  private applyCachedResults(tasks: TaskWithCachedResult[]) {
-    tasks.forEach((t) => {
-      this.options.lifeCycle.startTask(t.task);
+  private complete(
+    taskResults: {
+      taskId: string;
+      status: TaskStatus;
+    }[]
+  ) {
+    this.tasksSchedule.complete(taskResults.map(({ taskId }) => taskId));
 
-      if (
-        !this.initiatingProject ||
-        this.initiatingProject === t.task.target.project
-      ) {
-        const args = this.getCommandArgs(t.task);
-        output.logCommand(`nx ${args.join(' ')}`, true);
-        process.stdout.write(t.cachedResult.terminalOutput);
+    for (const { taskId, status } of taskResults) {
+      if (this.completedTasks[taskId] === undefined) {
+        this.completedTasks[taskId] = status;
       }
 
-      const outputs = getOutputs(this.projectGraph.nodes, t.task);
-      this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
+      if (status === 'failure' || status === 'skipped') {
+        this.complete(
+          this.reverseTaskDeps[taskId].map((depTaskId) => ({
+            taskId: depTaskId,
+            status: 'skipped',
+          }))
+        );
+      }
+    }
+    this.waitingForTasks // release blocked threads
+      .forEach((f) => f(null));
+    this.waitingForTasks.length = 0;
+  }
 
-      this.options.lifeCycle.endTask(t.task, t.cachedResult.code);
-    });
+  private storeEndTime(t: Task) {
+    this.timings[
+      `${t.target.project}:${t.target.target}`
+    ].end = new Date().getTime();
+  }
+  //endregion Lifecycle
 
-    return tasks.reduce((m, t) => {
-      m.push({
-        task: t.task,
-        type: AffectedEventType.TaskCacheRead,
-        success: t.cachedResult.code === 0,
-      });
-      return m;
-    }, []);
+  // region utils
+
+  private async hashTask(task: Task) {
+    const customHasher = getCustomHasher(task, this.workspace);
+    const { value, details } = await (customHasher
+      ? customHasher(task, this.taskGraph, this.hasher)
+      : this.hasher.hashTaskWithDepsAndContext(task));
+    task.hash = value;
+    task.hashDetails = details;
   }
 
   private pipeOutputCapture(task: Task) {
     try {
-      const p = this.projectGraph.nodes[task.target.project];
-      const b = p.data.targets[task.target.target].executor;
-      const [nodeModule, executor] = b.split(':');
-
-      const w = new Workspaces(this.workspaceRoot);
-      const x = w.readExecutor(nodeModule, executor);
-      return x.schema.outputCapture === 'pipe';
+      return (
+        getExecutorForTask(task, this.workspace).schema.outputCapture === 'pipe'
+      );
     } catch (e) {
       return false;
     }
   }
 
-  private forkProcessPipeOutputCapture(task: Task) {
-    const taskOutputs = getOutputs(this.projectGraph.nodes, task);
-    const outputPath = this.cache.temporaryOutputPath(task);
-    return new Promise((res, rej) => {
-      try {
-        this.options.lifeCycle.startTask(task);
-        const forwardOutput = this.shouldForwardOutput(outputPath, task);
-        const env = this.envForForkedProcess(
-          task,
-          undefined,
-          forwardOutput,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR
-        );
-        const args = this.getCommandArgs(task);
-        const commandLine = `nx ${args.join(' ')}`;
-
-        if (forwardOutput) {
-          output.logCommand(commandLine);
-        }
-        const p = fork(this.getCommand(), args, {
-          stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-          env,
-        });
-        this.processes.push(p);
-        let out = [];
-        let outWithErr = [];
-        p.stdout.on('data', (chunk) => {
-          if (forwardOutput) {
-            process.stdout.write(chunk);
-          }
-          out.push(chunk.toString());
-          outWithErr.push(chunk.toString());
-        });
-        p.stderr.on('data', (chunk) => {
-          if (forwardOutput) {
-            process.stderr.write(chunk);
-          }
-          outWithErr.push(chunk.toString());
-        });
-
-        p.on('exit', (code) => {
-          if (code === null) code = 2;
-          // we didn't print any output as we were running the command
-          // print all the collected output|
-          if (!forwardOutput) {
-            output.logCommand(commandLine);
-            process.stdout.write(outWithErr.join(''));
-          }
-          if (outputPath) {
-            const terminalOutput = outWithErr.join('');
-            fs.writeFileSync(outputPath, terminalOutput);
-            if (this.shouldCacheTask(outputPath, code)) {
-              this.cache
-                .put(task, terminalOutput, taskOutputs, code)
-                .then(() => {
-                  this.options.lifeCycle.endTask(task, code);
-                  res(code);
-                })
-                .catch((e) => {
-                  rej(e);
-                });
-            } else {
-              this.options.lifeCycle.endTask(task, code);
-              res(code);
-            }
-          } else {
-            this.options.lifeCycle.endTask(task, code);
-            res(code);
-          }
-        });
-      } catch (e) {
-        console.error(e);
-        rej(e);
-      }
-    });
+  private shouldCacheTaskResult(task: Task, code: number) {
+    return (
+      this.isCacheableTask(task) &&
+      (process.env.NX_CACHE_FAILURES == 'true' ? true : code === 0)
+    );
   }
 
-  private forkProcessDirectOutputCapture(task: Task) {
-    const taskOutputs = getOutputs(this.projectGraph.nodes, task);
-    const outputPath = this.cache.temporaryOutputPath(task);
-    return new Promise((res, rej) => {
-      try {
-        this.options.lifeCycle.startTask(task);
-        const forwardOutput = this.shouldForwardOutput(outputPath, task);
-        const env = this.envForForkedProcess(
-          task,
-          outputPath,
-          forwardOutput,
-          undefined
-        );
-        const args = this.getCommandArgs(task);
-        const commandLine = `nx ${args.join(' ')}`;
-
-        if (forwardOutput) {
-          output.logCommand(commandLine);
-        }
-        const p = fork(this.getCommand(), args, {
-          stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env,
-        });
-        this.processes.push(p);
-        p.on('exit', (code) => {
-          if (code === null) code = 2;
-          // we didn't print any output as we were running the command
-          // print all the collected output
-          if (!forwardOutput) {
-            output.logCommand(commandLine);
-            const terminalOutput = this.readTerminalOutput(outputPath);
-            if (terminalOutput) {
-              process.stdout.write(terminalOutput);
-            } else {
-              console.error(
-                `Nx could not find process's output. Run the command without --parallel.`
-              );
-            }
-          }
-          // we don't have to worry about this statement. code === 0 guarantees the file is there.
-          if (this.shouldCacheTask(outputPath, code)) {
-            this.cache
-              .put(task, this.readTerminalOutput(outputPath), taskOutputs, code)
-              .then(() => {
-                this.options.lifeCycle.endTask(task, code);
-                res(code);
-              })
-              .catch((e) => {
-                rej(e);
-              });
-          } else {
-            this.options.lifeCycle.endTask(task, code);
-            res(code);
-          }
-        });
-      } catch (e) {
-        console.error(e);
-        rej(e);
-      }
-    });
-  }
-
-  private readTerminalOutput(outputPath: string) {
-    try {
-      return fs.readFileSync(outputPath).toString();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  private shouldCacheTask(outputPath: string | null, code: number) {
-    // TODO: vsavkin make caching failures the default in Nx 12.1
-    if (process.env.NX_CACHE_FAILURES == 'true') {
-      return outputPath;
-    } else {
-      return outputPath && code === 0;
-    }
-  }
-
-  private envForForkedProcess(
-    task: Task,
-    outputPath: string,
-    forwardOutput: boolean,
-    forceColor: string
-  ) {
-    const envsFromFiles = {
-      ...parseEnv('.env'),
-      ...parseEnv(
-        `${task.target.target === 'test' ? '.test.env' : '.local.env'}`
-      ),
-      ...parseEnv(`${task.projectRoot}/.env`),
-      ...parseEnv(
-        `${task.projectRoot}/${
-          task.target.target === 'test' ? '.test.env' : '.local.env'
-        }`
-      ),
-    };
-
-    const env: NodeJS.ProcessEnv = {
-      ...envsFromFiles,
-      FORCE_COLOR: forceColor,
-      ...process.env,
-      NX_TASK_HASH: task.hash,
-      NX_INVOKED_BY_RUNNER: 'true',
-      NX_WORKSPACE_ROOT: this.workspaceRoot,
-    };
-
-    if (outputPath) {
-      env.NX_TERMINAL_OUTPUT_PATH = outputPath;
-      if (this.options.captureStderr) {
-        env.NX_TERMINAL_CAPTURE_STDERR = 'true';
-      }
-      // TODO: remove this once we have a reasonable way to configure it
-      if (task.target.target === 'test') {
-        env.NX_TERMINAL_CAPTURE_STDERR = 'true';
-      }
-      if (forwardOutput) {
-        env.NX_FORWARD_OUTPUT = 'true';
-      }
-    }
-    return env;
-  }
-
-  private shouldForwardOutput(outputPath: string | undefined, task: Task) {
-    if (!outputPath) return true;
+  private shouldForwardOutput(task: Task) {
+    if (!this.isCacheableTask(task)) return true;
     if (!this.options.parallel) return true;
     if (task.target.project === this.initiatingProject) return true;
     return false;
   }
 
-  private getCommand() {
-    const cli = require.resolve(`@nrwl/cli/lib/run-cli.js`, {
-      paths: [this.workspaceRoot],
+  private isCacheableTask(task: Task) {
+    const cacheable =
+      this.options.cacheableOperations || this.options.cacheableTargets;
+    return (
+      cacheable &&
+      cacheable.indexOf(task.target.target) > -1 &&
+      !this.longRunningTask(task)
+    );
+  }
+
+  private longRunningTask(task: Task) {
+    return !!task.overrides['watch'];
+  }
+
+  private covertCompletedTasksToOutputFormat() {
+    return Object.keys(this.completedTasks).map((taskId) => {
+      const taskStatus = this.completedTasks[taskId];
+      if (taskStatus === 'cache') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskCacheRead,
+          success: true,
+        };
+      } else if (taskStatus === 'success') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskComplete,
+          success: true,
+        };
+      } else if (taskStatus === 'failure') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskComplete,
+          success: false,
+        };
+      } else if (taskStatus === 'skipped') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskDependencyFailed,
+          success: false,
+        };
+      }
     });
-    return `${cli}`;
   }
-
-  private getCommandArgs(task: Task) {
-    const args: string[] = unparse(task.overrides || {});
-
-    const config = task.target.configuration
-      ? `:${task.target.configuration}`
-      : '';
-
-    return [
-      'run',
-      `${task.target.project}:${task.target.target}${config}`,
-      ...args,
-    ];
-  }
-
-  private setupOnProcessExitListener() {
-    // Forward SIGINTs to all forked processes
-    process.addListener('SIGINT', () => {
-      this.processes.forEach((p) => {
-        p.kill('SIGINT');
-      });
-      process.exit();
-    });
-  }
-}
-
-function parseEnv(path: string) {
-  try {
-    const envContents = fs.readFileSync(path);
-    return dotenv.parse(envContents);
-  } catch (e) {}
+  // endregion utils
 }

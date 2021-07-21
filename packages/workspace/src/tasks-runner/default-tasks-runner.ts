@@ -1,15 +1,10 @@
 import { Observable } from 'rxjs';
-import {
-  AffectedEventType,
-  Task,
-  TaskCompleteEvent,
-  TasksRunner,
-} from './tasks-runner';
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
-import { TaskOrderer } from './task-orderer';
+import { TaskCompleteEvent, TasksRunner } from './tasks-runner';
+import type { ProjectGraph, NxJsonConfiguration, Task } from '@nrwl/devkit';
 import { TaskOrchestrator } from './task-orchestrator';
-import { getDefaultDependencyConfigs } from './utils';
+import { performance } from 'perf_hooks';
+import { TaskGraphCreator } from './task-graph-creator';
+import { Hasher } from '../core/hasher/hasher';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -17,15 +12,27 @@ export interface RemoteCache {
 }
 
 export interface LifeCycle {
+  scheduleTask?(task: Task): void;
+
   startTask(task: Task): void;
 
   endTask(task: Task, code: number): void;
+
+  startTasks?(task: Task[]): void;
+
+  endTasks?(taskResults: Array<{ task: Task; code: number }>): void;
 }
 
 class NoopLifeCycle implements LifeCycle {
+  scheduleTask(task: Task): void {}
+
   startTask(task: Task): void {}
 
   endTask(task: Task, code: number): void {}
+
+  startTasks(task: Task[]): void {}
+
+  endTasks(taskResults: Array<{ task: Task; code: number }>): void {}
 }
 
 export interface DefaultTasksRunnerOptions {
@@ -34,7 +41,6 @@ export interface DefaultTasksRunnerOptions {
   cacheableOperations?: string[];
   cacheableTargets?: string[];
   runtimeCacheInputs?: string[];
-  strictlyOrderedTargets?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;
@@ -49,7 +55,8 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
+    hideCachedOutput?: boolean;
   }
 ): Observable<TaskCompleteEvent> => {
   if (!options.lifeCycle) {
@@ -72,55 +79,60 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   });
 };
 
+function printTaskExecution(orchestrator: TaskOrchestrator) {
+  if (process.env.NX_PERF_LOGGING) {
+    console.log('Task Execution Timings:');
+    const timings = {};
+    Object.keys(orchestrator.timings).forEach((p) => {
+      const t = orchestrator.timings[p];
+      timings[p] = t.end ? t.end - t.start : null;
+    });
+    console.log(JSON.stringify(timings, null, 2));
+  }
+}
+
 async function runAllTasks(
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
   context: {
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
+    hideCachedOutput?: boolean;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
-  const defaultTargetDependencies = getDefaultDependencyConfigs(
-    context.nxJson,
-    options
-  );
-  const stages = new TaskOrderer(
+  const defaultTargetDependencies = context.nxJson.targetDependencies ?? {};
+
+  const taskGraphCreator = new TaskGraphCreator(
     context.projectGraph,
     defaultTargetDependencies
-  ).splitTasksIntoStages(tasks);
-
-  const orchestrator = new TaskOrchestrator(
-    context.initiatingProject,
-    context.projectGraph,
-    options
   );
 
-  const res = [];
-  for (let i = 0; i < stages.length; ++i) {
-    const tasksInStage = stages[i];
-    const statuses = await orchestrator.run(tasksInStage);
-    res.push(...statuses);
+  const taskGraph = taskGraphCreator.createTaskGraph(tasks);
 
-    // any task failed, we need to skip further stages
-    if (statuses.find((s) => !s.success)) {
-      res.push(...markStagesAsNotSuccessful(stages.splice(i + 1)));
-      return res;
-    }
-  }
+  performance.mark('task-graph-created');
+
+  performance.measure('nx-prep-work', 'init-local', 'task-graph-created');
+  performance.measure(
+    'graph-creation',
+    'command-execution-begins',
+    'task-graph-created'
+  );
+
+  const hasher = new Hasher(context.projectGraph, context.nxJson, options);
+
+  const orchestrator = new TaskOrchestrator(
+    hasher,
+    context.initiatingProject,
+    context.projectGraph,
+    taskGraph,
+    options,
+    context.hideCachedOutput
+  );
+
+  const res = await orchestrator.run();
+  printTaskExecution(orchestrator);
   return res;
-}
-
-function markStagesAsNotSuccessful(stages: Task[][]) {
-  return stages.reduce((m, c) => [...m, ...tasksToStatuses(c, false)], []);
-}
-
-function tasksToStatuses(tasks: Task[], success: boolean) {
-  return tasks.map((task) => ({
-    task,
-    type: AffectedEventType.TaskComplete,
-    success,
-  }));
 }
 
 export default defaultTasksRunner;

@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`angularStories generator: libraries Stories for non-empty Angular library should generate cypress spec files 1`] = `
+"describe('test-ui-lib', () => {
+  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isOn:false;'));
+  it('should render the component', () => {
+    cy.get('proj-test-button').should('exist');
+  });
+});"
+`;
+
+exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
+"import { moduleMetadata, Story, Meta } from '@storybook/angular';
+import { TestButtonComponent } from './test-button.component';
+
+export default {
+  title: 'TestButtonComponent',
+  component: TestButtonComponent,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+    })
+  ],
+} as Meta<TestButtonComponent>;
+
+const Template: Story<TestButtonComponent> = (args: TestButtonComponent) => ({
+  component: TestButtonComponent,
+  props: args,
+});
+
+
+export const Primary = Template.bind({});
+Primary.args = {
+    buttonType:  'button',
+    style:  'default',
+    age:  0,
+    isOn:  false,
+}"
+`;

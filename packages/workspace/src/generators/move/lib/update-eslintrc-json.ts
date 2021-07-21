@@ -2,7 +2,6 @@ import { join } from 'path';
 import {
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
@@ -10,8 +9,15 @@ import {
 import { Schema } from '../schema';
 import { getDestination } from './utils';
 
+interface PartialEsLintrcOverride {
+  parserOptions?: {
+    project?: [string];
+  };
+}
+
 interface PartialEsLintRcJson {
   extends: string;
+  overrides?: PartialEsLintrcOverride[];
 }
 
 /**
@@ -36,6 +42,12 @@ export function updateEslintrcJson(
 
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
     eslintRcJson.extends = `${offset}.eslintrc.json`;
+
+    eslintRcJson.overrides?.forEach((o) => {
+      if (o.parserOptions?.project) {
+        o.parserOptions.project = [`${destination}/tsconfig.*?.json`];
+      }
+    });
 
     return eslintRcJson;
   });

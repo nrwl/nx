@@ -16,7 +16,7 @@ describe('Command Runner Builder', () => {
   it('should run one command', async () => {
     const f = fileSync().name;
     const result = await runCommands({ command: `echo 1 >> ${f}` }, context);
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('1');
   });
 
@@ -26,7 +26,7 @@ describe('Command Runner Builder', () => {
       { command: `echo {args.key} >> ${f}`, args: '--key=123' },
       context
     );
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
   });
 
@@ -39,12 +39,12 @@ describe('Command Runner Builder', () => {
       },
       context
     );
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
   });
 
   it('should add all args to the command if no interpolation in the command', async () => {
-    const exec = spyOn(require('child_process'), 'execSync').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'execSync');
 
     await runCommands(
       {
@@ -63,7 +63,7 @@ describe('Command Runner Builder', () => {
   });
 
   it('should forward args by default when using commands (plural)', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'exec');
 
     await runCommands(
       {
@@ -82,7 +82,7 @@ describe('Command Runner Builder', () => {
   });
 
   it('should forward args when forwardAllArgs is set to true', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'exec');
 
     await runCommands(
       {
@@ -101,7 +101,7 @@ describe('Command Runner Builder', () => {
   });
 
   it('should not forward args when forwardAllArgs is set to false', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'exec');
 
     await runCommands(
       {
@@ -142,7 +142,7 @@ describe('Command Runner Builder', () => {
       },
       context
     );
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('12');
   });
 
@@ -162,10 +162,10 @@ describe('Command Runner Builder', () => {
       },
       context
     );
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     const contents = readFile(f);
-    expect(contents).toContain(1);
-    expect(contents).toContain(2);
+    expect(contents).toContain('1');
+    expect(contents).toContain('2');
   });
 
   describe('readyWhen', () => {
@@ -187,7 +187,7 @@ describe('Command Runner Builder', () => {
       }
     });
 
-    it('should return success true when the string specified is ready condition is found', async (done) => {
+    it('should return success true when the string specified is ready condition is found', async () => {
       const f = fileSync().name;
       const result = await runCommands(
         {
@@ -201,12 +201,11 @@ describe('Command Runner Builder', () => {
         },
         context
       );
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('');
 
       setTimeout(() => {
         expect(readFile(f)).toEqual('1');
-        done();
       }, 150);
     });
   });
@@ -229,7 +228,7 @@ describe('Command Runner Builder', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const exec = jest.spyOn(require('child_process'), 'exec');
       await runCommands(
         {
           commands: [
@@ -249,7 +248,7 @@ describe('Command Runner Builder', () => {
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const exec = jest.spyOn(require('child_process'), 'exec');
       await runCommands(
         {
           commands: [
@@ -287,7 +286,7 @@ describe('Command Runner Builder', () => {
         { root } as any
       );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(root);
     });
 
@@ -310,7 +309,7 @@ describe('Command Runner Builder', () => {
         { root } as any
       );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(childFolder);
     });
 
@@ -332,7 +331,7 @@ describe('Command Runner Builder', () => {
         { root } as any
       );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(childFolder);
     });
   });
@@ -364,7 +363,7 @@ describe('Command Runner Builder', () => {
         context
       );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('https://nrwl.io/');
     });
 
@@ -384,7 +383,7 @@ describe('Command Runner Builder', () => {
         context
       );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('https://nx.dev/');
     });
 

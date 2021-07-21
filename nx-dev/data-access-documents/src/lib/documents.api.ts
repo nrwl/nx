@@ -1,114 +1,145 @@
-import * as fs from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'fs';
+import { join, relative } from 'path';
 import matter from 'gray-matter';
-import * as marked from 'marked';
-import { archiveRootPath, previewRootPath } from './documents.utils';
+import { extractTitle } from './documents.utils';
 import {
   DocumentData,
-  DocumentMapItem,
-  ArchiveVersionData,
+  DocumentMetadata,
+  VersionMetadata,
 } from './documents.models';
-import { readJsonFile } from '@nrwl/workspace';
 
-export function getDocument(
-  version: string,
-  _segments: string | string[]
-): DocumentData {
-  const segments = Array.isArray(_segments) ? [..._segments] : [_segments];
-  const docPath = getFilePath(version, segments);
-  const file = matter(fs.readFileSync(docPath, 'utf8'));
+export const flavorList: {
+  label: string;
+  value: string;
+  default?: boolean;
+}[] = [
+  { label: 'Angular', value: 'angular' },
+  { label: 'React', value: 'react', default: true },
+  { label: 'Node', value: 'node' },
+];
 
-  return {
-    filePath: docPath,
-    data: file.data,
-    content: marked.parse(file.content),
-    excerpt: file.excerpt,
-  };
-}
-
-const mapCache = new Map<string, DocumentMapItem[]>();
-export function getDocuments(version: string) {
-  try {
-    let list = mapCache.get(version);
-    if (!list) {
-      list = readJsonFile(join(getDocumentsRoot(version), 'map.json'));
-      mapCache.set(version, list);
+export class DocumentsApi {
+  constructor(
+    private readonly options: {
+      previewRoot: string;
+      archiveRoot: string;
+      versions: VersionMetadata[];
+      documentsMap: Map<string, DocumentMetadata[]>;
     }
-    return list;
-  } catch {
-    throw new Error(`Cannot find map.json for ${version}`);
-  }
-}
+  ) {}
 
-export function getFilePath(version: string, segments: string[]): string {
-  let items = getDocuments(version);
-  let found;
-  for (const segment of segments) {
-    found = items.find((item) => item.id === segment);
-    if (found) {
-      items = found.itemList;
+  getDefaultVersion(): VersionMetadata {
+    return this.options.versions.find((v) => v.default);
+  }
+
+  getVersions(): VersionMetadata[] {
+    return this.options.versions;
+  }
+
+  getDocument(
+    versionId: string,
+    flavorId: string,
+    path: string[]
+  ): DocumentData {
+    const docPath = this.getFilePath(versionId, flavorId, path);
+    const originalContent = readFileSync(docPath, 'utf8');
+    const file = matter(originalContent);
+
+    // Set default title if not provided in front-matter section.
+    if (!file.data.title) {
+      file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
+    }
+
+    return {
+      filePath: relative(
+        versionId === 'preview'
+          ? this.options.previewRoot
+          : this.options.archiveRoot,
+        docPath
+      ),
+      data: file.data,
+      content: file.content,
+      excerpt: file.excerpt,
+    };
+  }
+
+  getDocuments(version: string) {
+    const docs = this.options.documentsMap.get(version);
+    if (docs) {
+      return docs;
     } else {
-      throw new Error(
-        `Cannot find document matching segments: ${segments.join(',')}`
+      throw new Error(`Cannot find documents for ${version}`);
+    }
+  }
+
+  getStaticDocumentPaths(version: string) {
+    const paths = [];
+    const defaultVersion = this.getDefaultVersion();
+
+    function recur(curr, acc) {
+      if (curr.itemList) {
+        curr.itemList.forEach((ii) => {
+          recur(ii, [...acc, curr.id]);
+        });
+      } else {
+        paths.push({
+          params: {
+            segments: [version, ...acc, curr.id],
+          },
+        });
+
+        // For generic paths such as `/getting-started/intro`, use the default version and react flavor.
+        if (version === defaultVersion.id && acc[0] === 'react') {
+          paths.push({
+            params: {
+              segments: [...acc.slice(1), curr.id],
+            },
+          });
+        }
+      }
+    }
+
+    this.getDocuments(version).forEach((item) => {
+      recur(item, []);
+    });
+
+    return paths;
+  }
+
+  getDocumentsRoot(version: string): string {
+    if (version === 'preview') {
+      return this.options.previewRoot;
+    }
+
+    if (version === 'latest' || version === 'previous') {
+      return join(
+        this.options.archiveRoot,
+        this.options.versions.find((x) => x.id === version).path
       );
     }
-  }
-  if (!found.file) {
-    throw new Error(
-      `Cannot find document matching segments: ${segments.join(',')}`
-    );
-  }
-  return join(getDocumentsRoot(version), `${found.file}.md`);
-}
 
-export function getStaticDocumentPaths(version: string) {
-  const paths = [];
+    throw new Error(`Cannot find root for ${version}`);
+  }
 
-  function recur(curr, acc) {
-    if (curr.file) {
-      paths.push({
-        params: {
-          version,
-          flavor: acc[0],
-          segments: acc.slice(2).concat(curr.id),
-        },
-      });
-      return;
+  private getFilePath(versionId, flavorId, path): string {
+    let items = this.getDocuments(versionId).find(
+      (item) => item.id === flavorId
+    )?.itemList;
+
+    if (!items) {
+      throw new Error(`Document not found`);
     }
-    if (curr.itemList) {
-      curr.itemList.forEach((ii) => {
-        recur(ii, [...acc, curr.id]);
-      });
+
+    let found;
+    for (const part of path) {
+      found = items.find((item) => item.id === part);
+      if (found) {
+        items = found.itemList;
+      } else {
+        throw new Error(`Document not found`);
+      }
     }
+    const file = found.file ?? [flavorId, ...path].join('/');
+    return join(this.getDocumentsRoot(versionId), `${file}.md`);
   }
-
-  getDocuments(version).forEach((item) => {
-    recur(item, [item.id]);
-  });
-
-  return paths;
-}
-
-const versionsData = readJsonFile(join(archiveRootPath, 'versions.json'));
-export function getDocumentsRoot(version: string): string {
-  if (version === 'preview') {
-    return previewRootPath;
-  }
-
-  if (version === 'latest' || version === 'previous') {
-    return join(
-      archiveRootPath,
-      versionsData.find((x) => x.id === version).path
-    );
-  }
-
-  throw new Error(`Cannot find root for ${version}`);
-}
-
-let versions: ArchiveVersionData[];
-export function getVersions(): ArchiveVersionData[] {
-  if (!versions) {
-    versions = readJsonFile(join(archiveRootPath, 'versions.json'));
-  }
-  return versions;
 }

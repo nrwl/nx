@@ -11,7 +11,6 @@
 import { basename } from 'path';
 import { normalizePath } from '@nrwl/devkit';
 import { ExtraEntryPoint, ExtraEntryPointClass } from '../../../browser/schema';
-import { SourceMapDevToolPlugin } from 'webpack';
 import { ScriptTarget } from 'typescript';
 
 export interface HashFormat {
@@ -87,7 +86,12 @@ export function getSourceMapDevTool(
   stylesSourceMap: boolean,
   hiddenSourceMap = false,
   vendorSourceMap = false
-): SourceMapDevToolPlugin {
+) {
+  // TODO(jack): Remove in Nx 13
+  const {
+    webpack: { SourceMapDevToolPlugin },
+  } = require('../../../../../webpack/entry');
+
   const include = [];
   if (scriptsSourceMap) {
     include.push(/js$/);

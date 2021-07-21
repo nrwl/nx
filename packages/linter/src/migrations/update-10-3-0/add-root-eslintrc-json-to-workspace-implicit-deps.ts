@@ -4,7 +4,7 @@ import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 function addRootESLintrcToImplicitDependencies(host: Tree) {
   return host.exists('nx.json')
     ? updateJsonInTree('nx.json', (json) => {
-        const implicitDependencies = json.implicitDependencies || {};
+        json.implicitDependencies ||= {};
         json.implicitDependencies['.eslintrc.json'] = '*';
         return json;
       })

@@ -50,11 +50,10 @@ const presetOptions: { name: Preset; message: string }[] = [
     message:
       'next.js           [a workspace with a single Next.js application]',
   },
-  // TODO: Re-enable when gatsby preset is implemented
-  // {
-  //   name: Preset.Gatsby,
-  //   message: 'gatsby            [a workspace with a single Gatsby application]',
-  // },
+  {
+    name: Preset.Gatsby,
+    message: 'gatsby            [a workspace with a single Gatsby application]',
+  },
   {
     name: Preset.Nest,
     message: 'nest              [a workspace with a single Nest application]',
@@ -98,7 +97,6 @@ const parsedArgs: any = yargsParser(process.argv.slice(2), {
     'preset',
     'appName',
     'style',
-    'linter',
     'defaultBase',
     'packageManager',
   ],
@@ -122,26 +120,32 @@ if (parsedArgs.help) {
 
 (async function main() {
   const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
-  const {
-    name,
-    cli,
-    preset,
-    appName,
-    style,
-    linter,
-    nxCloud,
-  } = await getConfiguration(parsedArgs);
+  const { name, cli, preset, appName, style, nxCloud } = await getConfiguration(
+    parsedArgs
+  );
 
-  const tmpDir = createSandbox(packageManager);
+  output.log({
+    title: 'Nx is creating your workspace.',
+    bodyLines: [
+      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
+      `Nx will run "${packageManager} install" several times. Please wait.`,
+    ],
+  });
+
+  const tmpDir = await createSandbox(packageManager);
+
   await createApp(tmpDir, name, packageManager, {
     ...parsedArgs,
     cli,
     preset,
     appName,
     style,
-    linter,
     nxCloud,
   });
+
+  if (nxCloud) {
+    await setupNxCloud(name, packageManager);
+  }
 
   showNxWarning(name);
   pointToTutorialAndCourse(preset);
@@ -173,10 +177,8 @@ function showHelp() {
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
     
-    style                     Default style option to be used when a non-empty preset is selected 
-                              options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")    
-                              
-    linter                    Default linter. Options: "eslint", "tslint".
+    style                     Default style option to be used when a non-empty preset is selected
+                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js, Gatsby
 
     interactive               Enable interactive mode when using presets (boolean)
 
@@ -195,7 +197,6 @@ async function getConfiguration(parsedArgs) {
     const appName = await determineAppName(preset, parsedArgs);
     const style = await determineStyle(preset, parsedArgs);
     const cli = await determineCli(preset, parsedArgs);
-    const linter = await determineLinter(preset, parsedArgs);
     const nxCloud = await askAboutNxCloud(parsedArgs);
 
     return {
@@ -204,7 +205,6 @@ async function getConfiguration(parsedArgs) {
       appName,
       style,
       cli,
-      linter,
       nxCloud,
     };
   } catch (e) {
@@ -344,25 +344,27 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     },
     {
       name: 'scss',
-      message: 'SASS(.scss)  [ http://sass-lang.com   ]',
-    },
-    {
-      name: 'styl',
-      message: 'Stylus(.styl)[ http://stylus-lang.com ]',
+      message: 'SASS(.scss)       [ http://sass-lang.com   ]',
     },
     {
       name: 'less',
-      message: 'LESS         [ http://lesscss.org     ]',
+      message: 'LESS              [ http://lesscss.org     ]',
     },
   ];
+
+  if (![Preset.Angular, Preset.AngularWithNest].includes(preset)) {
+    choices.push({
+      name: 'styl',
+      message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
+    });
+  }
 
   if (
     [
       Preset.ReactWithExpress,
       Preset.React,
       Preset.NextJs,
-      // TODO: Re-enable when gatsby preset is implemented
-      // Preset.Gatsby,
+      Preset.Gatsby,
     ].includes(preset)
   ) {
     choices.push(
@@ -416,83 +418,38 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function determineLinter(preset: Preset, parsedArgs: any) {
-  if (!parsedArgs.linter) {
-    if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
-      return enquirer
-        .prompt([
-          {
-            name: 'linter',
-            message: `Default linter                     `,
-            initial: 'eslint' as any,
-            type: 'select',
-            choices: [
-              {
-                name: 'eslint',
-                message: 'ESLint [ Modern linting tool ]',
-              },
-              {
-                name: 'tslint',
-                message: 'TSLint [ Used by Angular CLI. Deprecated. ]',
-              },
-            ],
-          },
-        ])
-        .then((a: { linter: string }) => a.linter);
-    } else {
-      return Promise.resolve('eslint');
-    }
-  } else {
-    if (parsedArgs.linter !== 'eslint' && parsedArgs.linter !== 'tslint') {
-      output.error({
-        title: 'Invalid linter',
-        bodyLines: [`It must be one of the following:`, '', 'eslint', 'tslint'],
-      });
-      process.exit(1);
-    } else {
-      return Promise.resolve(parsedArgs.linter);
-    }
-  }
-}
+async function createSandbox(packageManager: string) {
+  const installSpinner = ora(
+    `Installing dependencies with ${packageManager}`
+  ).start();
 
-function createSandbox(packageManager: string) {
-  output.log({
-    title: 'Nx is creating your workspace.',
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${packageManager} install" several times. Please wait.`,
-    ],
-  });
   const tmpDir = dirSync().name;
-  writeFileSync(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: {
-        '@nrwl/workspace': nxVersion,
-        '@nrwl/tao': cliVersion,
-        typescript: tsVersion,
-        prettier: prettierVersion,
-      },
-      license: 'MIT',
-    })
-  );
-
   try {
-    execSync(`${packageManager} install --silent`, {
-      cwd: tmpDir,
-      stdio: 'ignore',
+    writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        dependencies: {
+          '@nrwl/workspace': nxVersion,
+          '@nrwl/tao': cliVersion,
+          typescript: tsVersion,
+          prettier: prettierVersion,
+        },
+        license: 'MIT',
+      })
+    );
+
+    await execAndWait(`${packageManager} install --silent`, tmpDir);
+
+    installSpinner.succeed();
+  } catch (e) {
+    installSpinner.fail();
+    output.error({
+      title: `Nx failed to install dependencies`,
+      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
-  } catch (_) {
-    // Install failed so run again without --silent
-    try {
-      execSync(`${packageManager} install`, {
-        cwd: tmpDir,
-        stdio: [0, 1, 2],
-      });
-    } catch (e) {
-      // This will probably fail so we exit with the same status
-      process.exit(e.status);
-    }
+    process.exit(1);
+  } finally {
+    installSpinner.stop();
   }
 
   return tmpDir;
@@ -524,34 +481,51 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
-  const fullCommand = `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
-  const spinner = ora('Creating your workspace').start();
+  // For gatsby, when doing npm install, it does not require the flag --legacy-peer-deps
+  if (parsedArgs.preset === Preset.Gatsby && packageManager === 'npm') {
+    process.env.npm_config_legacy_peer_deps = 'false';
+  }
+  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
+
+  let workspaceSetupSpinner = ora('Creating your workspace').start();
 
   try {
+    const fullCommand = `${fullCommandWithoutWorkspaceRoot} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
     await execAndWait(fullCommand, tmpDir);
+
+    workspaceSetupSpinner.succeed('Nx has successfully created the workspace.');
   } catch (e) {
+    workspaceSetupSpinner.fail();
     output.error({
-      title:
-        'Something went wrong. Rerunning the command with verbose logging.',
+      title: `Nx failed to create a workspace.`,
+      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
-    execSync(fullCommand, {
-      stdio: [0, 1, 2],
-      cwd: tmpDir,
-    });
+    process.exit(1);
   } finally {
-    spinner.stop();
+    workspaceSetupSpinner.stop();
   }
+}
 
-  output.success({
-    title: 'Nx has successfully created the workspace.',
-  });
+async function setupNxCloud(name: string, packageManager: PackageManager) {
+  const nxCloudSpinner = ora(`Setting up NxCloud`).start();
+  try {
+    const pmc = getPackageManagerCommand(packageManager);
+    await execAndWait(
+      `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`,
+      path.join(process.cwd(), name)
+    );
+    nxCloudSpinner.succeed('NxCloud has been set up successfully');
+  } catch (e) {
+    nxCloudSpinner.fail();
 
-  if (parsedArgs.nxCloud) {
-    output.addVerticalSeparator();
-    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`, {
-      stdio: [0, 1, 2],
-      cwd: path.join(process.cwd(), name),
+    output.error({
+      title: `Nx failed to setup NxCloud`,
+      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
+
+    process.exit(1);
+  } finally {
+    nxCloudSpinner.stop();
   }
 }
 
@@ -559,7 +533,9 @@ function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
     exec(command, { cwd }, (error, stdout, stderr) => {
       if (error) {
-        rej();
+        const logFile = path.join(cwd, 'error.log');
+        writeFileSync(logFile, `${stdout}\n${stderr}`);
+        rej({ code: error.code, logFile });
       } else {
         res(null);
       }
@@ -578,8 +554,7 @@ async function askAboutNxCloud(parsedArgs: any) {
           choices: [
             {
               name: 'Yes',
-              hint:
-                'Faster builds, run details, Github integration. Learn more at https://nx.app',
+              hint: 'Faster builds, run details, Github integration. Learn more at https://nx.app',
             },
 
             {
@@ -601,8 +576,7 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
-      // TODO: Re-enable when gatsby preset is implemented
-      // case Preset.Gatsby:
+    case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
         title,

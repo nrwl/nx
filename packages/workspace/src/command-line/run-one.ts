@@ -1,7 +1,8 @@
 import { runCommand } from '../tasks-runner/run-command';
-import { createProjectGraph, ProjectGraph } from '../core/project-graph';
+import { createProjectGraphAsync } from '../core/project-graph';
+import type { ProjectGraph } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
-import { EmptyReporter } from '../tasks-runner/empty-reporter';
+import { RunOneReporter } from '../tasks-runner/run-one-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
@@ -12,7 +13,7 @@ export async function runOne(opts: {
   target: string;
   configuration: string;
   parsedArgs: any;
-}) {
+}): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure(
     'code-loading-and-file-hashing',
@@ -30,7 +31,7 @@ export async function runOne(opts: {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   const { projects, projectsMap } = getProjects(
     projectGraph,
     nxArgs.withDeps,
@@ -38,11 +39,7 @@ export async function runOne(opts: {
     opts.target
   );
   const env = readEnvironment(opts.target, projectsMap);
-  const reporter = nxArgs.withDeps
-    ? new (require(`../tasks-runner/run-one-reporter`).RunOneReporter)(
-        opts.project
-      )
-    : new EmptyReporter();
+  const reporter = new RunOneReporter(opts.project);
 
   runCommand(
     projects,
@@ -68,8 +65,9 @@ function getProjects(
 
   if (includeDeps) {
     const s = require(`../core/project-graph`);
-    const deps = s.onlyWorkspaceProjects(s.withDeps(projectGraph, projects))
-      .nodes;
+    const deps = s.onlyWorkspaceProjects(
+      s.withDeps(projectGraph, projects)
+    ).nodes;
     const projectsWithTarget = Object.values(deps).filter((p: any) =>
       projectHasTarget(p, target)
     );

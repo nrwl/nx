@@ -8,6 +8,11 @@ import {
   Tree,
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
+import {
+  createAppJsx,
+  createPageStyleContent,
+  createPageWrapperStyle,
+} from './create-application-files.helpers';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const isPnpm = host.exists('pnpm-lock.yaml');
@@ -17,6 +22,9 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     ...names(options.name),
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     tmpl: '',
+    appContent: createAppJsx(options.name),
+    pageWrapperStyle: createPageWrapperStyle(),
+    pageStyleContent: createPageStyleContent(),
   };
 
   generateFiles(
@@ -30,6 +38,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host.delete(
       `${options.projectRoot}/src/pages/index.module.${options.style}`
     );
+  }
+  if (options.style === 'none') {
+    host.delete(`${options.projectRoot}/src/pages/index.tsx`);
+    host.rename(
+      `${options.projectRoot}/src/pages/index.none.tsx`,
+      `${options.projectRoot}/src/pages/index.tsx`
+    );
+  } else {
+    host.delete(`${options.projectRoot}/src/pages/index.none.tsx`);
   }
   if (options.js) {
     toJS(host);

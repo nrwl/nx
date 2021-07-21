@@ -1,3 +1,5 @@
+process.env.SELECTED_CLI = 'angular';
+
 import {
   expectTestsPass,
   newProject,
@@ -11,7 +13,6 @@ import {
 
 describe('new config format', () => {
   beforeEach(() => newProject());
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should work', async () => {

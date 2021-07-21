@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   combineOptionsForGenerator,
   convertToCamelCase,
@@ -38,7 +38,7 @@ function parseGenerateOpts(
   defaultCollection: string | null
 ): GenerateOptions {
   const generatorOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive', 'defaults'],
       alias: {
         dryRun: 'dry-run',
@@ -162,11 +162,8 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      ws.readGenerator(opts.collectionName, opts.generatorName);
 
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
@@ -223,11 +220,8 @@ export async function generate(
       readDefaultCollection(workspaceDefinition)
     );
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (opts.help) {
       printGenHelp(opts, schema);

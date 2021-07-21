@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 const { Linter } = require('@nrwl/linter');
 
 export interface Schema {
@@ -16,4 +17,7 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   strict?: boolean;
   skipBabelrc?: boolean;
+  buildable?: boolean;
+  setParserOptionsProject?: boolean;
+  standaloneConfig?: boolean;
 }

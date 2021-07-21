@@ -1,13 +1,12 @@
 import { ExecutorContext } from '@nrwl/devkit';
 
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
-import * as webpack from 'webpack';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
@@ -28,10 +27,11 @@ export type NodeBuildEvent = {
   success: boolean;
 };
 
-export function buildExecutor(
+export async function* buildExecutor(
   rawOptions: BuildNodeBuilderOptions,
   context: ExecutorContext
 ) {
+  const { webpack } = require('../../webpack/entry');
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
 
   if (!sourceRoot) {
@@ -48,7 +48,7 @@ export function buildExecutor(
     sourceRoot,
     root
   );
-  const projGraph = createProjectGraph();
+  const projGraph = await createProjectGraphAsync();
   if (!options.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
       projGraph,
@@ -86,7 +86,7 @@ export function buildExecutor(
     });
   }, getNodeWebpackConfig(options));
 
-  return eachValueFrom(
+  return yield* eachValueFrom(
     runWebpack(config, webpack).pipe(
       tap((stats) => {
         console.info(stats.toString(config.stats));

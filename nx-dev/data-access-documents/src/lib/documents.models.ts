@@ -5,17 +5,19 @@ export interface DocumentData {
   excerpt?: string;
 }
 
-export interface ArchiveVersionData {
+export interface VersionMetadata {
   name: string;
   id: string;
   release: string;
   path: string;
-  default: boolean;
+  default?: boolean;
+  hidden?: boolean;
 }
 
-export interface DocumentMapItem {
-  name: string;
+export interface DocumentMetadata {
   id: string;
+  name?: string;
   file?: string;
-  itemList?: DocumentMapItem[];
+  searchResultsName?: string;
+  itemList?: DocumentMetadata[];
 }

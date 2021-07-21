@@ -1,5 +1,6 @@
-import { output, CLIErrorMessageConfig } from '../utilities/output';
-import { ProjectGraph } from '../core/project-graph';
+import { output } from '../utilities/output';
+import type { CLIErrorMessageConfig } from '../utilities/output';
+import type { ProjectGraph } from '@nrwl/devkit';
 import { workspaceFileName } from '../core/file-utils';
 
 export class WorkspaceIntegrityChecks {

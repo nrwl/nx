@@ -1,7 +1,6 @@
 import { readJson, Tree, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
-import { NxJson } from '../../core/shared-interfaces';
+import { NxJsonConfiguration } from '@nrwl/devkit';
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
@@ -18,6 +17,7 @@ describe('lib', () => {
     js: false,
     pascalCaseFiles: false,
     strict: false,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('lib', () => {
         name: 'myLib',
         tags: 'one,two',
       });
-      const nxJson = readJson<NxJson>(tree, '/nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
           tags: ['one', 'two'],
@@ -110,14 +110,14 @@ describe('lib', () => {
       });
 
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
-      expect(tree.read(`libs/my-lib/jest.config.js`).toString())
+      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           globals: {
             'ts-jest': {
-              tsConfig: '<rootDir>/tsconfig.spec.json',
+              tsconfig: '<rootDir>/tsconfig.spec.json',
             }
           },
           transform: {
@@ -132,8 +132,9 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
 
-      const ReadmeContent = tree.read('libs/my-lib/README.md').toString();
+      const ReadmeContent = tree.read('libs/my-lib/README.md', 'utf-8');
       expect(ReadmeContent).toContain('nx test my-lib');
     });
 
@@ -142,22 +143,25 @@ describe('lib', () => {
         ...defaultOptions,
         name: 'myLib',
       });
+      const expectedRootJestConfig = `
+        "const { getJestProjects } = require('@nrwl/jest');
 
-      expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
-        "module.exports = {
-        projects: [\\"<rootDir>/libs/my-lib\\"]
+        module.exports = {
+        projects: getJestProjects()
         };"
-      `);
+      `;
+
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(
+        expectedRootJestConfig
+      );
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib2',
       });
 
-      expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
-        "module.exports = {
-        projects: [\\"<rootDir>/libs/my-lib\\",\\"<rootDir>/libs/my-lib2\\"]
-        };"
-      `);
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(
+        expectedRootJestConfig
+      );
     });
   });
 
@@ -169,7 +173,7 @@ describe('lib', () => {
         directory: 'myDir',
         tags: 'one',
       });
-      const nxJson = readJson<NxJson>(tree, '/nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -183,7 +187,7 @@ describe('lib', () => {
         tags: 'one,two',
         simpleModuleName: true,
       });
-      const nxJson2 = readJson<NxJson>(tree, '/nx.json');
+      const nxJson2 = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -210,6 +214,7 @@ describe('lib', () => {
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
     });
 
     it('should update workspace.json', async () => {
@@ -238,9 +243,9 @@ describe('lib', () => {
         directory: 'myDir',
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
-      expect(
-        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
-      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
+        ['libs/my-dir/my-lib/src/index.ts']
+      );
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
@@ -320,11 +325,6 @@ describe('lib', () => {
                     "*.js",
                     "*.jsx",
                   ],
-                  "parserOptions": Object {
-                    "project": Array [
-                      "libs/my-lib/tsconfig.*?.json",
-                    ],
-                  },
                   "rules": Object {},
                 },
                 Object {
@@ -393,11 +393,6 @@ describe('lib', () => {
                     "*.js",
                     "*.jsx",
                   ],
-                  "parserOptions": Object {
-                    "project": Array [
-                      "libs/my-dir/my-lib/tsconfig.*?.json",
-                    ],
-                  },
                   "rules": Object {},
                 },
                 Object {
@@ -677,11 +672,6 @@ describe('lib', () => {
                 "*.js",
                 "*.jsx",
               ],
-              "parserOptions": Object {
-                "project": Array [
-                  "libs/my-dir/my-lib/tsconfig.*?.json",
-                ],
-              },
               "rules": Object {},
             },
             Object {
@@ -712,7 +702,7 @@ describe('lib', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`libs/my-lib/jest.config.js`).toString())
+      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
@@ -771,6 +761,33 @@ describe('lib', () => {
         name: 'myLib',
       });
       expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
+    });
+  });
+
+  describe('--buildable', () => {
+    it('should add build target to workspace.json', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        buildable: true,
+      });
+      const workspaceJson = readJson(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+      expect(workspaceJson.projects['my-lib'].architect.build).toBeTruthy();
+      expect(workspaceJson.projects['my-lib'].architect.build.builder).toBe(
+        '@nrwl/workspace:tsc'
+      );
+    });
+
+    it('should generate a package.json file', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        buildable: true,
+      });
+
+      expect(tree.exists('libs/my-lib/package.json')).toBeTruthy();
     });
   });
 });

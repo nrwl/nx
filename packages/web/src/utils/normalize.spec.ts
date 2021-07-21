@@ -47,9 +47,9 @@ describe('normalizeBuildOptions', () => {
   });
 
   it('should normalize asset patterns', () => {
-    spyOn(fs, 'statSync').and.returnValue({
+    jest.spyOn(fs, 'statSync').mockReturnValue({
       isDirectory: () => true,
-    });
+    } as any);
     const result = normalizeBuildOptions(
       <BuildBuilderOptions>{
         ...testOptions,

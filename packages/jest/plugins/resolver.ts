@@ -1,5 +1,5 @@
 import { dirname, extname } from 'path';
-import defaultResolver from 'jest-resolve/build/defaultResolver';
+import type defaultResolver from 'jest-resolve/build/defaultResolver';
 
 interface ResolveOptions {
   rootDir: string;
@@ -50,7 +50,7 @@ module.exports = function (path: string, options: ResolveOptions) {
   }
   // Try to use the defaultResolver
   try {
-    return defaultResolver(path, options);
+    return options.defaultResolver(path, options);
   } catch (e) {
     if (
       path === 'jest-sequencer-@jest/test-sequencer' ||

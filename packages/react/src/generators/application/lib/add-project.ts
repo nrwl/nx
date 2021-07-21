@@ -22,10 +22,15 @@ export function addProject(host, options: NormalizedSchema) {
     },
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-    ...nxConfig,
-  });
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    {
+      ...project,
+      ...nxConfig,
+    },
+    options.standaloneConfig
+  );
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {
@@ -87,13 +92,21 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         namedChunks: false,
         extractLicenses: true,
         vendorChunk: false,
-        budgets: [
-          {
-            type: 'initial',
-            maximumWarning: '2mb',
-            maximumError: '5mb',
-          },
-        ],
+        budgets: options.strict
+          ? [
+              {
+                type: 'initial',
+                maximumWarning: '500kb',
+                maximumError: '1mb',
+              },
+            ]
+          : [
+              {
+                type: 'initial',
+                maximumWarning: '2mb',
+                maximumError: '5mb',
+              },
+            ],
       },
     },
   };
@@ -104,10 +117,12 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     executor: '@nrwl/web:dev-server',
     options: {
       buildTarget: `${options.projectName}:build`,
+      hmr: true,
     },
     configurations: {
       production: {
         buildTarget: `${options.projectName}:build:production`,
+        hmr: false,
       },
     },
   };

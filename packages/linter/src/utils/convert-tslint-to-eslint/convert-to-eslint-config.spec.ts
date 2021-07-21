@@ -154,13 +154,13 @@ describe('convertTSLintDisableCommentsForProject', () => {
     convertTSLintDisableCommentsForProject(tree, projectName);
 
     expect(
-      tree.read(join(projectRoot, 'top-level-file.ts')).toString()
+      tree.read(join(projectRoot, 'top-level-file.ts'), 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read(join(projectRoot, 'single-level-nested/file.ts')).toString()
+      tree.read(join(projectRoot, 'single-level-nested/file.ts'), 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read(join(projectRoot, 'multi-level/nested/file.ts')).toString()
+      tree.read(join(projectRoot, 'multi-level/nested/file.ts'), 'utf-8')
     ).toMatchSnapshot();
   });
 });

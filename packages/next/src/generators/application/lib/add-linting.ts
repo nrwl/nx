@@ -25,16 +25,37 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
-    const reactEslintJson = createReactEslintJson(options.appProjectRoot);
+    const reactEslintJson = createReactEslintJson(
+      options.appProjectRoot,
+      options.setParserOptionsProject
+    );
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
       () => {
+        // Only set parserOptions.project if it already exists (defined by options.setParserOptionsProject)
         if (reactEslintJson.overrides?.[0].parserOptions?.project) {
           reactEslintJson.overrides[0].parserOptions.project = [
             `${options.appProjectRoot}/tsconfig(.*)?.json`,
           ];
         }
+        if (!reactEslintJson.extends) {
+          reactEslintJson.extends = [];
+        }
+        if (typeof reactEslintJson.extends === 'string') {
+          reactEslintJson.extends = [reactEslintJson.extends];
+        }
+        // add next.js configuration
+        reactEslintJson.extends.push(...['next', 'next/core-web-vitals']);
+        // remove nx/react plugin, as it conflicts with the next.js one
+        reactEslintJson.extends = reactEslintJson.extends.filter(
+          (name) => name !== 'plugin:@nrwl/nx/react'
+        );
+        reactEslintJson.extends.unshift('plugin:@nrwl/nx/react-typescript');
+        if (!reactEslintJson.env) {
+          reactEslintJson.env = {};
+        }
+        reactEslintJson.env.jest = true;
         return reactEslintJson;
       }
     );

@@ -1,6 +1,34 @@
 import { NormalizedSchema } from '../schema';
-import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nrwl/devkit';
+import {
+  names,
+  offsetFromRoot,
+  Tree,
+  toJS,
+  generateFiles,
+  joinPathFragments,
+  updateJson,
+} from '@nrwl/devkit';
 import { join } from 'path';
+
+function updateTsConfig(host: Tree, options: NormalizedSchema) {
+  updateJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+    (json) => {
+      if (options.strict) {
+        json.compilerOptions = {
+          ...json.compilerOptions,
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+        };
+      }
+
+      return json;
+    }
+  );
+}
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   let styleSolutionSpecificAppFiles: string;
@@ -45,4 +73,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   if (options.js) {
     toJS(host);
   }
+
+  updateTsConfig(host, options);
 }

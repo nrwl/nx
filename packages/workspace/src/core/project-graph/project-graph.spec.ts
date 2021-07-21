@@ -1,17 +1,20 @@
 import { vol, fs } from 'memfs';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
-
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createProjectGraph } from './project-graph';
-import { DependencyType } from './project-graph-models';
-import { NxJson } from '../shared-interfaces';
-import { defaultFileHasher } from '@nrwl/workspace/src/core/hasher/file-hasher';
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+  appRootPath: '/root',
+}));
+import { createProjectGraphAsync } from './project-graph';
+import {
+  NxJsonConfiguration,
+  stripIndents,
+  DependencyType,
+} from '@nrwl/devkit';
+import { defaultFileHasher } from '../hasher/file-hasher';
 
 describe('project graph', () => {
   let packageJson: any;
   let workspaceJson: any;
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let tsConfigJson: any;
   let filesJson: any;
 
@@ -129,8 +132,8 @@ describe('project graph', () => {
     vol.fromJSON(filesJson, '/root');
   });
 
-  it('should create nodes and dependencies with workspace projects', () => {
-    const graph = createProjectGraph();
+  it('should create nodes and dependencies with workspace projects', async () => {
+    const graph = await createProjectGraphAsync();
 
     expect(graph.nodes).toMatchObject({
       api: { name: 'api', type: 'app' },
@@ -191,7 +194,7 @@ describe('project graph', () => {
   });
 
   it('should update the graph if the workspace file changes ', async () => {
-    let graph = createProjectGraph();
+    let graph = await createProjectGraphAsync();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'app' },
     });
@@ -202,19 +205,19 @@ describe('project graph', () => {
 
     defaultFileHasher.init();
 
-    graph = createProjectGraph();
+    graph = await createProjectGraphAsync();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'lib' },
     });
   });
 
-  it('should handle circular dependencies', () => {
+  it('should handle circular dependencies', async () => {
     fs.writeFileSync(
       '/root/libs/shared/util/src/index.ts',
       `import * as ui from '@nrwl/ui';`
     );
 
-    const graph = createProjectGraph();
+    const graph = await createProjectGraphAsync();
 
     expect(graph.dependencies['shared-util']).toEqual([
       {

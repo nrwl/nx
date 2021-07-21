@@ -67,9 +67,8 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     options.js ? 'index.js' : 'index.ts'
   );
 
-  const buffer = host.read(indexFilePath);
-  if (!!buffer) {
-    const indexSource = buffer.toString('utf-8');
+  const indexSource = host.read(indexFilePath, 'utf-8');
+  if (indexSource !== null) {
     const indexSourceFile = ts.createSourceFile(
       indexFilePath,
       indexSource,
@@ -93,7 +92,7 @@ function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const mainSource = host.read(options.appMainFilePath).toString();
+  const mainSource = host.read(options.appMainFilePath, 'utf-8');
   if (!mainSource.includes('redux')) {
     const mainSourceFile = ts.createSourceFile(
       options.appMainFilePath,
@@ -114,7 +113,7 @@ function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const mainSource = host.read(options.appMainFilePath).toString();
+  const mainSource = host.read(options.appMainFilePath, 'utf-8');
   const mainSourceFile = ts.createSourceFile(
     options.appMainFilePath,
     mainSource,

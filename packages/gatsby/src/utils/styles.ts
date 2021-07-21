@@ -4,6 +4,7 @@ import {
   gatsbyPluginLessVersion,
   gatsbyPluginSassVersion,
   gatsbyPluginStyledComponentsVersion,
+  gatsbyPluginStyledJsx,
   gatsbyPluginStylusVersion,
   nodeSassVersion,
 } from './versions';
@@ -44,6 +45,13 @@ export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
     dependencies: {},
     devDependencies: {
       'gatsby-plugin-stylus': gatsbyPluginStylusVersion,
+    },
+  },
+  'styled-jsx': {
+    dependencies: CSS_IN_JS_DEPENDENCIES['styled-jsx'].dependencies,
+    devDependencies: {
+      'gatsby-plugin-styled-jsx': gatsbyPluginStyledJsx,
+      ...CSS_IN_JS_DEPENDENCIES['styled-jsx'].devDependencies,
     },
   },
 };

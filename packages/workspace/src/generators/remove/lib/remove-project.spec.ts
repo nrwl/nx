@@ -12,6 +12,7 @@ describe('moveProject', () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
+      standaloneConfig: false,
     });
 
     schema = {
@@ -22,7 +23,8 @@ describe('moveProject', () => {
   });
 
   it('should delete the project folder', async () => {
-    removeProject(tree, readProjectConfiguration(tree, 'my-lib'));
+    const config = readProjectConfiguration(tree, 'my-lib');
+    removeProject(tree, config);
     expect(tree.children('libs')).not.toContain('my-lib');
   });
 });

@@ -28,32 +28,32 @@ interface NormalizedRenameDescriptors {
   inPackageJson: boolean;
 }
 
-const normalizeToDescriptors = (packageJson: any) => ([
-  packageName,
-  newPackageNameConfig,
-]): NormalizedRenameDescriptors => {
-  const isDevDep =
-    !!packageJson.devDependencies && packageName in packageJson.devDependencies;
-  const inPackageJson =
-    (packageJson.dependencies && packageName in packageJson.dependencies) ||
-    isDevDep;
-  const newPackageName = Array.isArray(newPackageNameConfig)
-    ? newPackageNameConfig[0]
-    : newPackageNameConfig;
-  const version =
-    Array.isArray(newPackageNameConfig) && newPackageNameConfig[1]
-      ? newPackageNameConfig[1]
-      : isDevDep
-      ? packageJson.devDependencies[packageName]
-      : packageJson.dependencies[packageName];
-  return {
-    packageName,
-    newPackageName,
-    version,
-    isDevDep,
-    inPackageJson,
+const normalizeToDescriptors =
+  (packageJson: any) =>
+  ([packageName, newPackageNameConfig]): NormalizedRenameDescriptors => {
+    const isDevDep =
+      !!packageJson.devDependencies &&
+      packageName in packageJson.devDependencies;
+    const inPackageJson =
+      (packageJson.dependencies && packageName in packageJson.dependencies) ||
+      isDevDep;
+    const newPackageName = Array.isArray(newPackageNameConfig)
+      ? newPackageNameConfig[0]
+      : newPackageNameConfig;
+    const version =
+      Array.isArray(newPackageNameConfig) && newPackageNameConfig[1]
+        ? newPackageNameConfig[1]
+        : isDevDep
+        ? packageJson.devDependencies[packageName]
+        : packageJson.dependencies[packageName];
+    return {
+      packageName,
+      newPackageName,
+      version,
+      isDevDep,
+      inPackageJson,
+    };
   };
-};
 
 /**
  * Updates all the imports in the workspace, and adjust the package.json appropriately.

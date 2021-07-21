@@ -41,9 +41,23 @@ describe('Gatsby Applications', () => {
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 120000);
+  }, 300000);
 
-  test('supports --js option', async () => {
+  it('should support styled-jsx', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/gatsby:app ${appName} --style styled-jsx`);
+
+    let result = runCLI(`build ${appName}`);
+    expect(result).toContain('Done building in');
+
+    result = runCLI(`lint ${appName}`);
+    expect(result).not.toMatch('Lint errors found in the listed files');
+
+    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+  }, 300000);
+
+  it('should support --js option', async () => {
     const app = uniq('app');
     runCLI(`generate @nrwl/gatsby:app ${app} --js`);
 
@@ -55,5 +69,5 @@ describe('Gatsby Applications', () => {
 
     const result = runCLI(`build ${app}`);
     expect(result).toContain('Done building in');
-  }, 120000);
+  }, 300000);
 });

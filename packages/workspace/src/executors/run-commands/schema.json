@@ -7,6 +7,7 @@
   "properties": {
     "commands": {
       "type": "array",
+      "description": "Commands to run in child process ",
       "items": {
         "oneOf": [
           {

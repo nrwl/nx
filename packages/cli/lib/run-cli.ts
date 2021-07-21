@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { writeFileSync } from 'fs';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -72,19 +72,12 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
 
   process.on('exit', (code) => {
     if (code === 0) {
-      fs.writeFileSync(
+      writeFileSync(
         process.env.NX_TERMINAL_OUTPUT_PATH,
         captureStderr ? outWithErr.join('') : out.join('')
       );
     } else {
-      fs.writeFileSync(
-        process.env.NX_TERMINAL_OUTPUT_PATH,
-        outWithErr.join('')
-      );
+      writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
     }
-  });
-
-  process.on('SIGTERM', () => {
-    process.exit(15);
   });
 }

@@ -1,4 +1,4 @@
 {
-  "presets": ["@nrwl/react/babel"],
+  "presets": ["next/babel"],
   "plugins": []
 }

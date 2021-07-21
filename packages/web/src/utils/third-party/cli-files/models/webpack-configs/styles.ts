@@ -7,7 +7,6 @@
  */
 
 import * as path from 'path';
-import * as webpack from 'webpack';
 import {
   PostcssCliResources,
   RawCssLoader,
@@ -16,10 +15,14 @@ import {
 } from '../../plugins/webpack';
 import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
+import { RemoveEmptyScriptsPlugin } from '../../plugins/remove-empty-scripts-plugin';
+import { sassImplementation } from '../../../../sass';
 
 const autoprefixer = require('autoprefixer');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const postcssImports = require('postcss-import');
+
+// TODO(jack): Remove in Nx 13
+type RuleSetRule = any;
 
 /**
  * Enumerate loaders and their dependencies from this file to let the dependency validator
@@ -35,7 +38,16 @@ const postcssImports = require('postcss-import');
  * require('sass-loader')
  */
 // tslint:disable-next-line:no-big-function
-export function getStylesConfig(wco: WebpackConfigOptions) {
+export function getStylesConfig(
+  wco: WebpackConfigOptions,
+  includePaths: string[]
+) {
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const {
+    isWebpack5,
+    MiniCssExtractPlugin,
+  } = require('../../../../../webpack/entry');
+
   const { root, buildOptions } = wco;
   const entryPoints: { [key: string]: string[] } = {};
   const globalStylePaths: string[] = [];
@@ -47,13 +59,14 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   const hashFormat = getOutputHashFormat(buildOptions.outputHashing as string);
 
   const postcssOptionsCreator = (sourceMap: boolean) => {
-    return (loader: webpack.loader.LoaderContext) => ({
+    return (loader) => ({
       map: sourceMap && {
         inline: true,
         annotation: false,
       },
       plugins: [
         postcssImports({
+          addModulesDirectories: includePaths,
           resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
           load: (filename: string) => {
             return new Promise<string>((resolve, reject) => {
@@ -75,7 +88,6 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           deployUrl: buildOptions.deployUrl,
           resourcesOutputPath: buildOptions.resourcesOutputPath,
           loader,
-          rebaseRootRelative: buildOptions.rebaseRootRelativeCssUrls,
           filename: `[name]${hashFormat.file}.[ext]`,
         }),
         autoprefixer(),
@@ -83,19 +95,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     });
   };
 
-  // use includePaths from appConfig
-  const includePaths: string[] = [];
   let lessPathOptions: { paths?: string[] } = {};
 
-  if (
-    buildOptions.stylePreprocessorOptions &&
-    buildOptions.stylePreprocessorOptions.includePaths &&
-    buildOptions.stylePreprocessorOptions.includePaths.length > 0
-  ) {
-    buildOptions.stylePreprocessorOptions.includePaths.forEach(
-      (includePath: string) =>
-        includePaths.push(path.resolve(root, includePath))
-    );
+  if (includePaths.length > 0) {
     lessPathOptions = {
       paths: includePaths,
     };
@@ -131,22 +133,8 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     }
   }
 
-  let sassImplementation: {} | undefined;
-  let fiber: {} | undefined;
-  try {
-    // tslint:disable-next-line:no-implicit-dependencies
-    sassImplementation = require('node-sass');
-  } catch {
-    sassImplementation = require('sass');
-
-    try {
-      // tslint:disable-next-line:no-implicit-dependencies
-      fiber = require('fibers');
-    } catch {}
-  }
-
   // set base rules to derive final rules from
-  const baseRules: webpack.RuleSetRule[] = [
+  const baseRules: RuleSetRule[] = [
     { test: /\.css$/, use: [] },
     {
       test: /\.scss$|\.sass$/,
@@ -157,7 +145,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
             implementation: sassImplementation,
             sourceMap: cssSourceMap,
             sassOptions: {
-              fiber,
+              fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
@@ -204,7 +192,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     !buildOptions.sourceMap.hidden
   );
 
-  const rules: webpack.RuleSetRule[] = baseRules.map(({ test, use }) => ({
+  const rules: RuleSetRule[] = baseRules.map(({ test, use }) => ({
     exclude: globalStylePaths,
     test,
     use: [
@@ -219,7 +207,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           postcssOptions: postcssOptionsCreator(componentsSourceMap),
         },
       },
-      ...(use as webpack.Loader[]),
+      ...(use as any[]),
     ],
   }));
 
@@ -234,7 +222,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           test,
           use: [
             buildOptions.extractCss
-              ? MiniCssExtractPlugin.loader
+              ? {
+                  loader: MiniCssExtractPlugin.loader,
+                  options: { esModule: true },
+                }
               : require.resolve('style-loader'),
             RawCssLoader,
             {
@@ -244,7 +235,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
                 postcssOptions: postcssOptionsCreator(globalSourceMap),
               },
             },
-            ...(use as webpack.Loader[]),
+            ...(use as any[]),
           ],
         };
       })
@@ -256,7 +247,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       // extract global css from js files into own css file
       new MiniCssExtractPlugin({ filename: `[name]${hashFormat.extract}.css` }),
       // suppress empty .js files in css only entry points
-      new SuppressExtractedTextChunksWebpackPlugin()
+      isWebpack5
+        ? new RemoveEmptyScriptsPlugin()
+        : new SuppressExtractedTextChunksWebpackPlugin()
     );
   }
 

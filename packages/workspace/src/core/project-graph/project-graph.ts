@@ -1,16 +1,18 @@
 import type {
   FileData,
+  NxJsonConfiguration,
   NxJsonProjectConfiguration,
   ProjectConfiguration,
   ProjectFileMap,
   WorkspaceJsonConfiguration,
   ProjectGraphProcessorContext,
   NxPlugin,
+  ProjectGraph,
 } from '@nrwl/devkit';
 
 import { ProjectGraphBuilder } from '@nrwl/devkit';
 
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap } from '../file-graph';
 import {
@@ -32,15 +34,21 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import { ProjectGraph } from './project-graph-models';
 import {
   differentFromCache,
   readCache,
   writeCache,
 } from '../nx-deps/nx-deps-cache';
-import { NxJson } from '../shared-interfaces';
 import { performance } from 'perf_hooks';
 
+export async function createProjectGraphAsync(): Promise<ProjectGraph> {
+  return createProjectGraph();
+}
+
+// TODO(v13): remove this deprecated function
+/**
+ * @deprecated This function is deprecated in favor of the new asynchronous version {@link createProjectGraphAsync}
+ */
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
@@ -104,7 +112,7 @@ function addWorkspaceFiles(
 
 function buildProjectGraph(
   ctx: {
-    nxJson: NxJson<string[]>;
+    nxJson: NxJsonConfiguration<string[]>;
     workspaceJson: WorkspaceJsonConfiguration;
     fileMap: ProjectFileMap;
   },

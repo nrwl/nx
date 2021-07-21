@@ -10,7 +10,11 @@ describe('component', () => {
   beforeEach(async () => {
     projectName = 'my-app';
     tree = createTreeWithEmptyWorkspace();
-    await applicationGenerator(tree, { name: projectName, style: 'css' });
+    await applicationGenerator(tree, {
+      name: projectName,
+      style: 'css',
+      standaloneConfig: false,
+    });
   });
 
   it('should generate component in pages directory', async () => {

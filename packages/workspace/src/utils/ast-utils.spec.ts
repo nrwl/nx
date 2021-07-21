@@ -50,7 +50,7 @@ describe('readJsonInTree', () => {
   it('should throw an error if the file cannot be parsed', () => {
     tree.create('data.json', `{ data: 'data'`);
     expect(() => readJsonInTree(tree, 'data.json')).toThrow(
-      'Cannot parse data.json: Unexpected token d in JSON at position 2'
+      'Cannot parse data.json: InvalidSymbol in JSON at position 2'
     );
   });
 });

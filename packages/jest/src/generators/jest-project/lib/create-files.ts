@@ -10,7 +10,10 @@ import { join } from 'path';
 export function createFiles(tree: Tree, options: JestProjectSchema) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  generateFiles(tree, join(__dirname, '../files'), projectConfig.root, {
+  const filesFolder =
+    options.setupFile === 'angular' ? '../files-angular' : '../files';
+
+  generateFiles(tree, join(__dirname, filesFolder), projectConfig.root, {
     tmpl: '',
     ...options,
     transformer: options.babelJest ? 'babel-jest' : 'ts-jest',

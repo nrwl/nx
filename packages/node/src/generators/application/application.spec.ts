@@ -1,6 +1,8 @@
 import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
+// nx-ignore-next-line
 import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/generators';
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
@@ -22,6 +24,7 @@ describe('app', () => {
       ),
       '@nrwl/angular': join(__dirname, '../../../../angular/collection.json'),
     });
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -30,7 +33,10 @@ describe('app', () => {
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      await applicationGenerator(tree, { name: 'myNodeApp' });
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        standaloneConfig: false,
+      });
       const workspaceJson = readJson(tree, '/workspace.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
@@ -53,8 +59,7 @@ describe('app', () => {
                 fileReplacements: [
                   {
                     replace: 'apps/my-node-app/src/environments/environment.ts',
-                    with:
-                      'apps/my-node-app/src/environments/environment.prod.ts',
+                    with: 'apps/my-node-app/src/environments/environment.prod.ts',
                   },
                 ],
               },
@@ -79,7 +84,11 @@ describe('app', () => {
     });
 
     it('should update nx.json', async () => {
-      await applicationGenerator(tree, { name: 'myNodeApp', tags: 'one,two' });
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        tags: 'one,two',
+        standaloneConfig: false,
+      });
       const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-node-app': {
@@ -89,7 +98,10 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      await applicationGenerator(tree, { name: 'myNodeApp' });
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        standaloneConfig: false,
+      });
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
@@ -131,11 +143,6 @@ describe('app', () => {
                 "*.js",
                 "*.jsx",
               ],
-              "parserOptions": Object {
-                "project": Array [
-                  "apps/my-node-app/tsconfig.*?.json",
-                ],
-              },
               "rules": Object {},
             },
             Object {
@@ -163,6 +170,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
 
@@ -188,6 +196,7 @@ describe('app', () => {
         name: 'myNodeApp',
         directory: 'myDir',
         tags: 'one,two',
+        standaloneConfig: false,
       });
       const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
@@ -206,6 +215,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
 
       // Make sure these exist
@@ -242,6 +252,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         unitTestRunner: 'none',
+        standaloneConfig: false,
       });
       expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
@@ -273,6 +284,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         frontendProject: 'my-frontend',
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
@@ -289,11 +301,13 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'cart',
         frontendProject: 'my-frontend',
+        standaloneConfig: false,
       });
 
       await applicationGenerator(tree, {
         name: 'billing',
         frontendProject: 'my-frontend',
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
@@ -310,6 +324,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         frontendProject: 'myFrontend',
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
@@ -329,11 +344,12 @@ describe('app', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`apps/my-node-app/jest.config.js`).toString())
+      expect(tree.read(`apps/my-node-app/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-node-app',
           preset: '../../jest.preset.js',
+          testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
@@ -404,6 +420,24 @@ describe('app', () => {
 
       // @TODO how to spy on context ?
       // expect(contextLoggerSpy).toHaveBeenCalledWith('NOTE: --pascalCaseFiles is a noop')
+    });
+  });
+
+  describe('--skipFormat', () => {
+    it('should format files by default', async () => {
+      jest.spyOn(devkit, 'formatFiles');
+
+      await applicationGenerator(tree, { name: 'myNodeApp' });
+
+      expect(devkit.formatFiles).toHaveBeenCalled();
+    });
+
+    it('should not format files when --skipFormat=true', async () => {
+      jest.spyOn(devkit, 'formatFiles');
+
+      await applicationGenerator(tree, { name: 'myNodeApp', skipFormat: true });
+
+      expect(devkit.formatFiles).not.toHaveBeenCalled();
     });
   });
 });

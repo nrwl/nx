@@ -1,8 +1,8 @@
 import * as path from 'path';
-import * as fs from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
 import { performance } from 'perf_hooks';
+import { readJsonFile } from '@nrwl/tao/src/utils/fileutils';
 
 /**
  * Nx is being run inside a workspace.
@@ -13,20 +13,23 @@ process.env.NX_CLI_SET = 'true';
 
 export function initLocal(workspace: Workspace) {
   performance.mark('init-local');
-  require('@nrwl/workspace/' + 'src/utilities/perf-logging');
+  //nx-ignore-next-line
+  require('@nrwl/workspace/src/utilities/perf-logging');
 
-  const supportedNxCommands = require('@nrwl/workspace/' +
-    'src/command-line/supported-nx-commands').supportedNxCommands;
+  //nx-ignore-next-line
+  const supportedNxCommands =
+    require('@nrwl/workspace/src/command-line/supported-nx-commands').supportedNxCommands;
 
   const runOpts = runOneOptions(workspace);
   const running = runOpts !== false;
 
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
-    require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
-      .argv;
+    //nx-ignore-next-line
+    require('@nrwl/workspace/src/command-line/nx-commands').commandsObject.argv;
   } else if (running) {
-    require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
+    //nx-ignore-next-line
+    require('@nrwl/workspace/src/command-line/run-one').runOne(runOpts);
   } else if (generating()) {
     loadCli(workspace, '@nrwl/tao/index.js');
   } else {
@@ -80,15 +83,11 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const workspaceConfigJson = JSON.parse(
-      fs
-        .readFileSync(
-          path.join(
-            workspace.dir,
-            workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
-          )
-        )
-        .toString()
+    const workspaceConfigJson = readJsonFile(
+      path.join(
+        workspace.dir,
+        workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
+      )
     );
 
     return parseRunOneOptions(
@@ -96,7 +95,7 @@ function runOneOptions(
       workspaceConfigJson,
       process.argv.slice(2)
     );
-  } catch (e) {
+  } catch {
     return false;
   }
 }

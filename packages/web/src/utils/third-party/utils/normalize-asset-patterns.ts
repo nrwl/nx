@@ -8,7 +8,7 @@
 import { normalizePath } from '@nrwl/devkit';
 import { basename, dirname, relative, join, resolve } from 'path';
 import { AssetPattern, AssetPatternClass } from '../browser/schema';
-import { statSync } from 'fs-extra';
+import { statSync } from 'fs';
 
 export class MissingAssetSourceRootException extends Error {
   constructor(path: String) {

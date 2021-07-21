@@ -80,17 +80,7 @@ describe('jestProject', () => {
       ...defaultOptions,
       project: 'lib1',
     } as JestProjectSchema);
-    expect(tree.read('libs/lib1/jest.config.js').toString()).toMatchSnapshot();
-  });
-
-  it('should add a project reference in the root jest.config.js', async () => {
-    await jestProjectGenerator(tree, {
-      ...defaultOptions,
-      project: 'lib1',
-    } as JestProjectSchema);
-    const jestConfig = jestConfigObject(tree, 'jest.config.js');
-
-    expect(jestConfig.projects).toEqual(['<rootDir>/libs/lib1']);
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add a reference to solution tsconfig.json', async () => {
@@ -130,7 +120,7 @@ describe('jestProject', () => {
         project: 'lib1',
       } as JestProjectSchema);
       expect(tree.exists('src/test-setup.ts')).toBeFalsy();
-      expect(tree.read('libs/lib1/jest.config.js').toString()).not.toContain(
+      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).not.toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
     });
@@ -141,7 +131,7 @@ describe('jestProject', () => {
         project: 'lib1',
         setupFile: 'web-components',
       } as JestProjectSchema);
-      expect(tree.read('libs/lib1/jest.config.js').toString()).toContain(
+      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
     });
@@ -153,7 +143,7 @@ describe('jestProject', () => {
         setupFile: 'angular',
       } as JestProjectSchema);
 
-      const jestConfig = tree.read('libs/lib1/jest.config.js').toString();
+      const jestConfig = tree.read('libs/lib1/jest.config.js', 'utf-8');
       expect(jestConfig).toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
@@ -219,7 +209,7 @@ describe('jestProject', () => {
         project: 'lib1',
         skipSerializers: true,
       } as JestProjectSchema);
-      const jestConfig = tree.read('libs/lib1/jest.config.js').toString();
+      const jestConfig = tree.read('libs/lib1/jest.config.js', 'utf-8');
       expect(jestConfig).not.toContain(`
       snapshotSerializers: [
         'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js,
@@ -270,7 +260,7 @@ describe('jestProject', () => {
 
       expect(jestConfig.globals).toEqual({
         'ts-jest': {
-          tsConfig: '<rootDir>/tsconfig.spec.json',
+          tsconfig: '<rootDir>/tsconfig.spec.json',
         },
       });
     });
@@ -288,9 +278,7 @@ describe('jestProject', () => {
           tsConfig: '<rootDir>/tsconfig.spec.json',
         },
       });
-      expect(
-        tree.read('libs/lib1/jest.config.js').toString()
-      ).toMatchSnapshot();
+      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
     });
 
     it('should generate proper jest.transform when babelJest and supportTsx is true', async () => {
@@ -300,9 +288,7 @@ describe('jestProject', () => {
         babelJest: true,
         supportTsx: true,
       } as JestProjectSchema);
-      expect(
-        tree.read('libs/lib1/jest.config.js').toString()
-      ).toMatchSnapshot();
+      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
     });
   });
 });

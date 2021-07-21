@@ -16,7 +16,8 @@ import {
   CrossOriginValue,
   FileInfo,
 } from './augment-index-html';
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs';
+import { interpolateEnvironmentVariablesToIndex } from '../../../../interpolate-env-variables-to-index';
 
 type ExtensionFilter = '.js' | '.css';
 
@@ -55,7 +56,7 @@ export async function writeIndexHtml({
   content = stripBom(content);
   content = augmentIndexHtml({
     input: outputPath,
-    inputContent: content,
+    inputContent: interpolateEnvironmentVariablesToIndex(content, deployUrl),
     baseHref,
     deployUrl,
     crossOrigin,

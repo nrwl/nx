@@ -11,7 +11,9 @@ import {
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
   ...jest.requireActual('@nrwl/workspace/src/core/project-graph'),
-  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => projectGraph),
 }));
 
 describe('Migrate babel setup', () => {

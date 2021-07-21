@@ -11,6 +11,7 @@ describe('@nrwl/storybook:cypress-project', () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
+      standaloneConfig: false,
     });
   });
 
@@ -18,6 +19,7 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
 
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
@@ -29,6 +31,7 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib-e2e');
 
@@ -46,11 +49,13 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'one/two',
-      cypressName: 'other-e2e',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
     const workspace = readJson(tree, 'workspace.json');
-    expect(workspace.projects['one-two-other-e2e']).toBeDefined();
-    expect(tree.exists('apps/one/two/other-e2e/cypress.json')).toBeTruthy();
+    expect(workspace.projects['one-two-test-ui-lib-e2e']).toBeDefined();
+    expect(
+      tree.exists('apps/one/two/test-ui-lib-e2e/cypress.json')
+    ).toBeTruthy();
   });
 });

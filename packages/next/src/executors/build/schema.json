@@ -20,10 +20,12 @@
         "type": "object",
         "properties": {
           "replace": {
-            "type": "string"
+            "type": "string",
+            "description": "The file to be replaced."
           },
           "with": {
-            "type": "string"
+            "type": "string",
+            "description": "The file to replace with."
           }
         },
         "additionalProperties": false,
@@ -34,6 +36,11 @@
     "nextConfig": {
       "description": "Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. next.config.js).",
       "type": "string"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
     }
   },
   "required": []

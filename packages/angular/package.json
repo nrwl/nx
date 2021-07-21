@@ -26,19 +26,23 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "schematics": "./collection.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~11.2.0",
+    "@angular-devkit/schematics": "^12.0.0",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@schematics/angular": "~11.2.0",
-    "jasmine-marbles": "~0.6.0"
+    "@nrwl/storybook": "*",
+    "@schematics/angular": "^12.0.0",
+    "ignore": "^5.0.4",
+    "jasmine-marbles": "~0.6.0",
+    "rxjs-for-await": "0.0.2",
+    "webpack-merge": "5.7.3"
   }
 }

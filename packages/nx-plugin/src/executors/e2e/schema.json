@@ -1,0 +1,23 @@
+{
+  "title": "Nx Plugin Playground Target",
+  "description": "Creates a playground for a Nx Plugin",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "target": {
+      "description": "The build target for the Nx Plugin project.",
+      "type": "string"
+    },
+    "jestConfig": {
+      "type": "string",
+      "description": "Jest config file."
+    },
+    "tsSpecConfig": {
+      "type": "string",
+      "description": "The tsconfig file for specs.",
+      "x-deprecated": "Use the `tsconfig` property for `ts-jest` in the e2e project `jest.config.js` file. It will be removed in the next major release."
+    }
+  },
+  "additionalProperties": false,
+  "required": ["target", "jestConfig"]
+}

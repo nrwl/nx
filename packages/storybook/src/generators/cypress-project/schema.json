@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "cypress-configure",
+  "$id": "cypress-configure",
   "type": "object",
   "properties": {
     "name": {
@@ -11,10 +11,6 @@
         "$source": "argv",
         "index": 0
       }
-    },
-    "cypressName": {
-      "type": "string",
-      "description": "The name of the Cypress project. Inferred from 'name' by default"
     },
     "js": {
       "type": "boolean",
@@ -28,8 +24,13 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint", "tslint", "none"],
       "default": "eslint"
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["name"]

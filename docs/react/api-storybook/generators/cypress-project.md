@@ -24,11 +24,11 @@ nx g cypress-project ... --dry-run
 
 ## Options
 
-### cypressName
+### name (_**required**_)
 
 Type: `string`
 
-The name of the Cypress project. Inferred from 'name' by default
+Library or application name
 
 ### directory
 
@@ -50,12 +50,14 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
 
-### name
+### standaloneConfig
 
-Type: `string`
+Default: `false`
 
-Library or application name
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json

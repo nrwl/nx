@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "cypress-convert-tslint-to-eslint",
+  "$id": "cypress-convert-tslint-to-eslint",
   "cli": "nx",
   "title": "Convert a Cypress project from TSLint to ESLint",
   "description": "NOTE: Does not work in --dry-run mode",

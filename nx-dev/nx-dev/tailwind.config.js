@@ -1,5 +1,7 @@
 const path = require('path');
+// nx-ignore-next-line
 const nxJson = require('@nrwl/workspace').readNxJson();
+// nx-ignore-next-line
 const workspaceJson = require('@nrwl/workspace').readWorkspaceJson();
 
 function getProjectNameWithTag(projectsJson, tag) {
@@ -8,7 +10,7 @@ function getProjectNameWithTag(projectsJson, tag) {
       ...projectsJson.projects[projectName],
       name: projectName,
     }))
-    .filter((project) => project.tags.includes(tag))
+    .filter((project) => project.tags && project.tags.includes(tag))
     .map((project) => project.name);
 }
 
@@ -28,7 +30,38 @@ module.exports = {
   ],
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        blue: {
+          'nx-dark': 'hsla(214, 61%, 11%, 1)',
+          'nx-base': 'hsla(214, 62%, 21%, 1)',
+        },
+        purple: {
+          'nx-base': 'hsla(258, 76%, 62%, 1)',
+        },
+        green: {
+          'nx-base': 'hsla(162, 47%, 50%, 1)',
+        },
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            'code::before': {
+              content: '',
+            },
+            'code::after': {
+              content: '',
+            },
+            'blockquote p:first-of-type::before': {
+              content: '',
+            },
+            'blockquote p:last-of-type::after': {
+              content: '',
+            },
+          },
+        },
+      },
+    },
   },
   variants: {
     extend: {},

@@ -1,5 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { copyAssetFiles } from '@nrwl/workspace/src/utilities/assets';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -9,14 +10,13 @@ import { NodePackageBuilderOptions } from './utils/models';
 import compileTypeScriptFiles from './utils/compile-typescript-files';
 import updatePackageJson from './utils/update-package-json';
 import normalizeOptions from './utils/normalize-options';
-import copyAssetFiles from './utils/copy-asset-files';
 import addCliWrapper from './utils/cli';
 
 export async function packageExecutor(
   options: NodePackageBuilderOptions,
   context: ExecutorContext
 ) {
-  const projGraph = createProjectGraph();
+  const projGraph = await createProjectGraphAsync();
   const libRoot = context.workspace.projects[context.projectName].root;
   const normalizedOptions = normalizeOptions(options, context, libRoot);
   const { target, dependencies } = calculateProjectDependencies(
@@ -40,12 +40,35 @@ export async function packageExecutor(
     normalizedOptions,
     context,
     libRoot,
-    dependencies
+    dependencies,
+    async () =>
+      await updatePackageAndCopyAssets(
+        normalizedOptions,
+        context,
+        target,
+        dependencies
+      )
   );
 
-  await copyAssetFiles(normalizedOptions, context);
+  if (options.cli) {
+    addCliWrapper(normalizedOptions, context);
+  }
 
-  updatePackageJson(normalizedOptions, context);
+  return {
+    ...(result as { success: boolean }),
+    outputPath: normalizedOptions.outputPath,
+  };
+}
+
+async function updatePackageAndCopyAssets(
+  options,
+  context,
+  target,
+  dependencies
+) {
+  await copyAssetFiles(options.files);
+
+  updatePackageJson(options, context);
   if (
     dependencies.length > 0 &&
     options.updateBuildableProjectDepsInPackageJson
@@ -57,18 +80,9 @@ export async function packageExecutor(
       context.configurationName,
       target,
       dependencies,
-      normalizedOptions.buildableProjectDepsInPackageJsonType
+      options.buildableProjectDepsInPackageJsonType
     );
   }
-
-  if (options.cli) {
-    addCliWrapper(normalizedOptions, context);
-  }
-
-  return {
-    ...result,
-    outputPath: normalizedOptions.outputPath,
-  };
 }
 
 export default packageExecutor;

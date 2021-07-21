@@ -260,11 +260,6 @@ Object {
         "*.js",
         "*.jsx",
       ],
-      "parserOptions": Object {
-        "project": Array [
-          "apps/nest-app-1/tsconfig.*?.json",
-        ],
-      },
       "rules": Object {},
     },
     Object {
@@ -551,11 +546,6 @@ Object {
         "*.js",
         "*.jsx",
       ],
-      "parserOptions": Object {
-        "project": Array [
-          "libs/nest-lib-1/tsconfig.*?.json",
-        ],
-      },
       "rules": Object {},
     },
     Object {

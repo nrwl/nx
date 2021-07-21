@@ -1,8 +1,18 @@
-import { AppConfig } from '../app/app';
+import { FetchProjectGraphService } from '../app/fetch-project-graph-service';
+import { Environment } from '../app/models';
 
-export const environment: { release: boolean; appConfig: AppConfig } = {
-  release: true,
+export const environment: Environment = {
+  environment: 'release',
   appConfig: {
     showDebugger: false,
+    projectGraphs: [
+      {
+        id: 'local',
+        label: 'local',
+        url: 'projectGraph.json',
+      },
+    ],
+    defaultProjectGraph: 'local',
+    projectGraphService: new FetchProjectGraphService(),
   },
 };

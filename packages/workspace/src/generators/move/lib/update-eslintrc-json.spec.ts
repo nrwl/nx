@@ -6,6 +6,7 @@ import { Linter } from '../../../utils/lint';
 import { Schema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
 import { libraryGenerator } from '../../library/library';
+import { executionAsyncId } from 'node:async_hooks';
 
 describe('updateEslint', () => {
   let tree: Tree;
@@ -26,6 +27,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.TsLint,
+      standaloneConfig: false,
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -39,6 +41,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
 
     // This step is usually handled elsewhere
@@ -54,8 +57,41 @@ describe('updateEslint', () => {
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
     ).toEqual(
-      jasmine.objectContaining({
+      expect.objectContaining({
         extends: '../../../.eslintrc.json',
+      })
+    );
+  });
+
+  it('should update .eslintrc.json overrides parser project when project is moved', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      linter: Linter.EsLint,
+      setParserOptionsProject: true,
+      standaloneConfig: false,
+    });
+
+    // This step is usually handled elsewhere
+    tree.rename(
+      'libs/my-lib/.eslintrc.json',
+      'libs/shared/my-destination/.eslintrc.json'
+    );
+
+    const projectConfig = readProjectConfiguration(tree, 'my-lib');
+
+    updateEslintrcJson(tree, schema, projectConfig);
+
+    expect(
+      readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
+    ).toEqual(
+      expect.objectContaining({
+        overrides: expect.arrayContaining([
+          expect.objectContaining({
+            parserOptions: expect.objectContaining({
+              project: ['libs/shared/my-destination/tsconfig.*?.json'],
+            }),
+          }),
+        ]),
       })
     );
   });

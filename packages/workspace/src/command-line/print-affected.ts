@@ -1,11 +1,9 @@
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { Environment } from '../core/shared-interfaces';
-import { Task } from '../tasks-runner/tasks-runner';
-import { createTask, getRunner } from '../tasks-runner/run-command';
+import type { ProjectGraph, ProjectGraphNode, Task } from '@nrwl/devkit';
+import type { Environment } from '../core/shared-interfaces';
+import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
-import { NxArgs } from './utils';
-import { Hasher } from '../core/hasher/hasher';
+import type { NxArgs } from './utils';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 export async function printAffected(
@@ -16,16 +14,12 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
-
   const projectNames = affectedProjects.map((p) => p.name);
-  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
   const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
     nxArgs,
-    overrides,
-    hasher
+    overrides
   );
   const result = {
     tasks: tasksJson,
@@ -43,8 +37,7 @@ async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
-  overrides: yargs.Arguments,
-  hasher: Hasher
+  overrides: yargs.Arguments
 ) {
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
     (affectedProject) =>
@@ -57,7 +50,6 @@ async function createTasks(
       })
   );
 
-  const taskHashes = await hasher.hashTasks(tasks);
   const pm = detectPackageManager();
   const isYarn = pm === 'yarn';
   return tasks.map((task, index) => ({
@@ -70,7 +62,6 @@ async function createTasks(
       task
     )}`,
     outputs: getOutputs(projectGraph.nodes, task),
-    hash: taskHashes[index].value,
   }));
 }
 

@@ -1,7 +1,7 @@
 import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
 import { defaultFileRead } from '../../file-utils';
 
-function convertNpmScriptsToTargets(projectRoot: string) {
+export function convertNpmScriptsToTargets(projectRoot: string) {
   try {
     const packageJsonString = defaultFileRead(
       `${projectRoot}/package.json`

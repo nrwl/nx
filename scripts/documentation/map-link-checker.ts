@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { readJsonSync } from 'fs-extra';
 import * as glob from 'glob';
 import * as chalk from 'chalk';
 
@@ -32,9 +32,7 @@ function pathExtractor(
   return pathList;
 }
 
-const mapPathList: string[] = JSON.parse(
-  fs.readFileSync(`${basePath}/map.json`, { encoding: 'utf8' })
-)
+const mapPathList: string[] = readJsonSync(`${basePath}/map.json`)
   .map((file: any) => pathExtractor([], file, ''))
   .flat()
   .filter(
@@ -85,16 +83,12 @@ if (!!mapMissList.length) {
   scriptError = true;
 } else {
   console.log(
-    console.log(
-      `${chalk.green(
-        '🗸'
-      )} The 'map.json' file and the documentation files are in sync.`
-    )
+    `${chalk.green(
+      '🗸'
+    )} The 'map.json' file and the documentation files are in sync.`
   );
 }
 
 if (scriptError) {
   process.exit(1);
-} else {
-  process.exit(0);
 }

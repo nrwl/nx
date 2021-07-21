@@ -8,7 +8,7 @@ import {
 } from '@nrwl/devkit';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
 import type { Linter } from 'eslint';
-import { addLintingGenerator } from '../../schematics/add-linting/add-linting';
+import { addLintingGenerator } from '../add-linting/add-linting';
 
 export async function conversionGenerator(
   host: Tree,
@@ -30,15 +30,25 @@ export async function conversionGenerator(
     ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       await addLintingGenerator(host, {
-        linter: 'eslint',
-        projectType: projectConfig.projectType,
         projectName,
         projectRoot: projectConfig.root,
         prefix: (projectConfig as any).prefix || 'app',
+        /**
+         * We set the parserOptions.project config just in case the converted config uses
+         * rules which require type-checking. Later in the conversion we check if it actually
+         * does and remove the config again if it doesn't, so that it is most efficient.
+         */
+        setParserOptionsProject: true,
       });
     },
   });
 
+  /**
+   * If root eslint configuration already exists it will not be recreated
+   * but we also don't want to re-run the tslint config conversion
+   * as it was likely already done
+   */
+  const rootEslintConfigExists = host.exists('.eslintrc.json');
   /**
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
@@ -55,8 +65,10 @@ export async function conversionGenerator(
         { files: ['*.html'], rules: {} },
       ];
       return applyAngularRulesToCorrectOverrides(json);
-    }
+    },
+    rootEslintConfigExists
   );
+
   /**
    * Convert the project's tslint.json to an equivalent ESLint config.
    */

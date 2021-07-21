@@ -7,8 +7,9 @@ import {
   SyntaxKind,
 } from 'typescript';
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import * as stripJsonComments from 'strip-json-comments';
 import { Config } from '@jest/types';
+import { createContext, runInContext } from 'vm';
+import { dirname, join } from 'path';
 
 function makeTextToInsert(
   value: unknown,
@@ -31,18 +32,6 @@ function findPropertyAssignment(
   }) as ts.PropertyAssignment | undefined;
 }
 
-export function getJsonObject(object: string) {
-  const value = stripJsonComments(object);
-  // react babel-jest has __dirname in the config.
-  // Put a temp variable in the anon function so that it doesnt fail.
-  // Migration script has a catch handler to give instructions on how to update the jest config if this fails.
-  return Function(`
-  "use strict";
-  let __dirname = '';
-  return (${value});
- `)();
-}
-
 export function addOrUpdateProperty(
   tree: Tree,
   object: ts.ObjectLiteralExpression,
@@ -53,7 +42,7 @@ export function addOrUpdateProperty(
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
-  const originalContents = tree.read(path).toString();
+  const originalContents = tree.read(path, 'utf-8');
 
   if (propertyAssignment) {
     if (
@@ -83,7 +72,8 @@ export function addOrUpdateProperty(
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ArrayLiteralExpression
     ) {
-      const arrayLiteral = propertyAssignment.initializer as ts.ArrayLiteralExpression;
+      const arrayLiteral =
+        propertyAssignment.initializer as ts.ArrayLiteralExpression;
 
       if (
         arrayLiteral.elements.some((element) => {
@@ -230,6 +220,23 @@ export function jestConfigObject(
   host: Tree,
   path: string
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
-  const jestConfigAst = jestConfigObjectAst(host.read(path).toString('utf-8'));
-  return getJsonObject(jestConfigAst.getText());
+  const __filename = join(host.root, path);
+  const contents = host.read(path, 'utf-8');
+  let module = { exports: {} };
+
+  // Run the contents of the file with some stuff from this current context
+  // The module.exports will be mutated by the contents of the file...
+  runInContext(
+    contents,
+    createContext({
+      module,
+      require,
+      process,
+      __filename,
+      __dirname: dirname(__filename),
+    })
+  );
+
+  // TODO: jest actually allows defining configs with async functions... we should be able to read that...
+  return module.exports;
 }

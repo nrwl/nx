@@ -1,11 +1,7 @@
 import { basename, dirname, join, normalize, Path } from '@angular-devkit/core';
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
-import {
-  formatFiles,
-  NxJson,
-  readJsonInTree,
-  updateJsonInTree,
-} from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
+import { formatFiles, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { relative } from 'path';
 import { visitNotIgnoredFiles } from '../../utils/rules/visit-not-ignored-files';
 
@@ -73,18 +69,21 @@ function updateExtend(file: Path): Rule {
 
 const originalExtendedTsconfigMap = new Map<string, any>();
 
-const changeImplicitDependency = updateJsonInTree<NxJson>('nx.json', (json) => {
-  if (
-    !json.implicitDependencies ||
-    !json.implicitDependencies['tsconfig.json']
-  ) {
+const changeImplicitDependency = updateJsonInTree<NxJsonConfiguration>(
+  'nx.json',
+  (json) => {
+    if (
+      !json.implicitDependencies ||
+      !json.implicitDependencies['tsconfig.json']
+    ) {
+      return json;
+    }
+    json.implicitDependencies['tsconfig.base.json'] =
+      json.implicitDependencies['tsconfig.json'];
+    delete json.implicitDependencies['tsconfig.json'];
     return json;
   }
-  json.implicitDependencies['tsconfig.base.json'] =
-    json.implicitDependencies['tsconfig.json'];
-  delete json.implicitDependencies['tsconfig.json'];
-  return json;
-});
+);
 
 export default function (schema: any): Rule {
   return chain([
@@ -104,9 +103,8 @@ export default function (schema: any): Rule {
         if (extendedTsconfigPath === normalize('tsconfig.json')) {
           return updateExtend(file);
         } else if (basename(json.extends) === 'tsconfig.json') {
-          let extendedTsconfig = originalExtendedTsconfigMap.get(
-            extendedTsconfigPath
-          );
+          let extendedTsconfig =
+            originalExtendedTsconfigMap.get(extendedTsconfigPath);
 
           if (!extendedTsconfig) {
             extendedTsconfig = readJsonInTree(host, extendedTsconfigPath);

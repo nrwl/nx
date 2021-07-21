@@ -5,8 +5,11 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Compiler, compilation } from 'webpack';
+import { compilation } from 'webpack';
 import { HashFormat } from '../models/webpack-configs/utils';
+
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Compiler = any;
 
 export interface RemoveHashPluginOptions {
   chunkNames: string[];
@@ -18,9 +21,11 @@ export class RemoveHashPlugin {
 
   apply(compiler: Compiler): void {
     compiler.hooks.compilation.tap('remove-hash-plugin', (compilation) => {
-      const mainTemplate = compilation.mainTemplate as compilation.MainTemplate & {
-        hooks: compilation.CompilationHooks;
-      };
+      // MainTemplate is slated to be removed in Webpack 6
+      const mainTemplate =
+        compilation.mainTemplate as compilation.MainTemplate & {
+          hooks: compilation.CompilationHooks;
+        };
 
       mainTemplate.hooks.assetPath.tap(
         'remove-hash-plugin',

@@ -23,7 +23,7 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
@@ -36,6 +36,6 @@
     "@nrwl/node": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
-    "gatsby-cli": "^3.2.0"
+    "gatsby-cli": "^3.5.0"
   }
 }

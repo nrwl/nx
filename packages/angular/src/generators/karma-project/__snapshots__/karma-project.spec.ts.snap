@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`karmaProject applications should create a test.ts 1`] = `
+"// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+
+import 'zone.js/dist/zone-testing';
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting
+} from '@angular/platform-browser-dynamic/testing';
+
+declare const require: any;
+
+// First, initialize the Angular testing environment.
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+// Then we find all the tests.
+const context = require.context('./', true, /\\\\.spec\\\\.ts$/);
+// And load the modules.
+context.keys().map(context);
+"
+`;
+
+exports[`karmaProject library should create a test.ts 1`] = `
+"// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+
+import 'zone.js/dist/zone';
+
+import 'zone.js/dist/zone-testing';
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting
+} from '@angular/platform-browser-dynamic/testing';
+
+declare const require: any;
+
+// First, initialize the Angular testing environment.
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+// Then we find all the tests.
+const context = require.context('./', true, /\\\\.spec\\\\.ts$/);
+// And load the modules.
+context.keys().map(context);
+"
+`;
+
+exports[`karmaProject should create a karma.conf.js 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/1.0/config/configuration-file.html
+
+const { join } = require('path');
+const getBaseKarmaConfig = require('../../karma.conf');
+
+module.exports = function(config) {
+  const baseConfig = getBaseKarmaConfig();
+  config.set({
+    ...baseConfig,
+    coverageIstanbulReporter: {
+      ...baseConfig.coverageIstanbulReporter,
+      dir: join(__dirname, '../../coverage/libs/lib1')
+    }
+  });
+};
+"
+`;

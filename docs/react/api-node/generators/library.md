@@ -36,6 +36,12 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Library name
+
 ### babelJest
 
 Default: `false`
@@ -84,12 +90,6 @@ Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 
-### name
-
-Type: `string`
-
-Library name
-
 ### pascalCaseFiles
 
 Alias(es): P
@@ -137,6 +137,14 @@ Default: `false`
 Type: `boolean`
 
 Do not update tsconfig.base.json for development experience.
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### strict
 

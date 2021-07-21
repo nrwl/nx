@@ -8,7 +8,6 @@ import {
 import {
   joinPathFragments,
   Tree,
-  StringInsertion,
   applyChangesToString,
   addDependenciesToPackageJson,
 } from '@nrwl/devkit';
@@ -22,7 +21,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     maybeJs(options, `src/app/${options.fileName}.tsx`)
   );
-  const appFileContent = host.read(appPath).toString('utf-8');
+  const appFileContent = host.read(appPath, 'utf-8');
   const appSource = ts.createSourceFile(
     appPath,
     appFileContent,

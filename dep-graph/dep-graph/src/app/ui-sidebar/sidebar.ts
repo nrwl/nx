@@ -1,8 +1,11 @@
-import { BehaviorSubject } from 'rxjs';
+import { ProjectGraphNode } from '@nrwl/devkit';
+import { BehaviorSubject, fromEvent } from 'rxjs';
 import { DisplayOptionsPanel } from './display-options-panel';
 import { FocusedProjectPanel } from './focused-project-panel';
 import { ProjectList } from './project-list';
 import { TextFilterPanel } from './text-filter-panel';
+
+declare var ResizeObserver;
 
 export class SidebarComponent {
   private selectedProjectsChangedSubject = new BehaviorSubject<string[]>([]);
@@ -21,7 +24,12 @@ export class SidebarComponent {
   private groupByFolder = window.groupByFolder;
   private selectedProjects: string[] = [];
 
-  constructor(private affectedProjects: string[], showDebugger: boolean) {
+  set projects(projects: ProjectGraphNode[]) {
+    this.projectList.projects = projects;
+    this.focusedProjectPanel.unfocusProject();
+  }
+
+  constructor(private affectedProjects: string[]) {
     const showAffected = this.affectedProjects.length > 0;
 
     const displayOptionsPanelContainer = document.getElementById(
@@ -34,20 +42,20 @@ export class SidebarComponent {
     );
     this.displayOptionsPanel.render(displayOptionsPanelContainer);
 
-    const focusedProjectPanelContainer = document.getElementById(
-      'focused-project'
-    );
+    const focusedProjectPanelContainer =
+      document.getElementById('focused-project');
     this.focusedProjectPanel = new FocusedProjectPanel(
       focusedProjectPanelContainer
     );
 
-    const textFilterPanelContainer = document.getElementById(
-      'text-filter-panel'
-    );
+    const textFilterPanelContainer =
+      document.getElementById('text-filter-panel');
     this.textFilterPanel = new TextFilterPanel(textFilterPanelContainer);
 
     const projectListContainer = document.getElementById('project-lists');
-    this.projectList = new ProjectList(projectListContainer, window.projects);
+    this.projectList = new ProjectList(projectListContainer);
+
+    this.projectList.projects = window.projects;
 
     if (showAffected) {
       this.selectAffectedProjects();
@@ -72,7 +80,44 @@ export class SidebarComponent {
     }
   }
 
+  selectProjects(projects: string[]) {
+    this.projectList.selectProjects(projects);
+  }
+
+  resetSidebarVisibility() {
+    const sidebarElement = document.getElementById('sidebar');
+
+    if (sidebarElement.classList.contains('hidden')) {
+      sidebarElement.classList.remove('hidden');
+      sidebarElement.style.marginLeft = `0px`;
+    }
+  }
+
   listenForDOMEvents() {
+    const sidebarElement = document.getElementById('sidebar');
+    const sidebarToggleButton = document.getElementById(
+      'sidebar-toggle-button'
+    );
+    sidebarToggleButton.style.left = `${sidebarElement.clientWidth - 1}px`;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        sidebarToggleButton.style.left = `${entry.contentRect.width - 1}px`;
+      });
+    });
+    resizeObserver.observe(sidebarElement);
+
+    fromEvent(sidebarToggleButton, 'click').subscribe((x) => {
+      sidebarElement.classList.toggle('hidden');
+      if (sidebarElement.classList.contains('hidden')) {
+        sidebarElement.style.marginLeft = `-${
+          sidebarElement.clientWidth + 1
+        }px`;
+      } else {
+        sidebarElement.style.marginLeft = `0px`;
+      }
+    });
+
     this.displayOptionsPanel.selectAll$.subscribe(() => {
       this.selectAllProjects();
     });
@@ -166,12 +211,6 @@ export class SidebarComponent {
 
   emitSelectedProjects(selectedProjects: string[]) {
     this.selectedProjects = selectedProjects;
-
-    if (selectedProjects.length === 0) {
-      document.getElementById('no-projects-chosen').style.display = 'flex';
-    } else {
-      document.getElementById('no-projects-chosen').style.display = 'none';
-    }
 
     this.selectedProjectsChangedSubject.next(selectedProjects);
   }

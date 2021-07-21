@@ -1,11 +1,9 @@
-import { fs, vol } from 'memfs';
-import {
-  ProjectGraphContext,
-  ProjectGraphNode,
-} from './project-graph/project-graph-models';
+import { vol } from 'memfs';
+import { ProjectGraphContext } from './project-graph';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
 
-jest.mock('../utilities/app-root', () => ({
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);
@@ -46,7 +44,7 @@ describe('findTargetProjectWithImport', () => {
       './tsconfig.base.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
-                              const a = { loadChildren: '@proj/proj4ab#a' };                     
+                              const a = { loadChildren: '@proj/proj4ab#a' };
       `,
       './libs/proj2/index.ts': `export const a = 2;`,
       './libs/proj3a/index.ts': `export const a = 3;`,

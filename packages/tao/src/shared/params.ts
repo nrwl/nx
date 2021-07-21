@@ -1,4 +1,4 @@
-import { ParsedArgs } from 'minimist';
+import type { Arguments } from 'yargs-parser';
 import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
 import { logger } from './logger';
 
@@ -9,6 +9,7 @@ type PropertyDescription = {
   oneOf?: any;
   items?: any;
   alias?: string;
+  aliases?: string[];
   description?: string;
   format?: string;
   visible?: boolean;
@@ -18,6 +19,7 @@ type PropertyDescription = {
   'x-prompt'?:
     | string
     | { message: string; type: string; items: any[]; multiselect?: boolean };
+  'x-deprecated'?: boolean | string;
 };
 
 type Properties = {
@@ -67,7 +69,7 @@ function camelCase(input: string): string {
   }
 }
 
-export function convertToCamelCase(parsed: ParsedArgs): Options {
+export function convertToCamelCase(parsed: Arguments): Options {
   return Object.keys(parsed).reduce(
     (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
     {}
@@ -134,7 +136,8 @@ export function convertAliases(
       acc[k] = opts[k];
     } else {
       const found = Object.entries(schema.properties).find(
-        ([_, d]) => d.alias === k
+        ([_, d]) =>
+          d.alias === k || (Array.isArray(d.aliases) && d.aliases.includes(k))
       );
       if (found) {
         acc[found[0]] = opts[k];
@@ -360,6 +363,7 @@ export function combineOptionsForExecutor(
     defaultProjectName,
     relativeCwd
   );
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
   return combined;
@@ -400,10 +404,27 @@ export async function combineOptionsForGenerator(
     combined = await promptForValues(combined, schema);
   }
 
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
 
   validateOptsAgainstSchema(combined, schema);
   return combined;
+}
+
+export function warnDeprecations(
+  opts: { [k: string]: any },
+  schema: Schema
+): void {
+  Object.keys(opts).forEach((option) => {
+    const deprecated = schema.properties[option]?.['x-deprecated'];
+    if (deprecated) {
+      logger.warn(
+        `Option "${option}" is deprecated${
+          typeof deprecated == 'string' ? ': ' + deprecated : '.'
+        }`
+      );
+    }
+  });
 }
 
 export function convertSmartDefaultsIntoNamedParams(
@@ -540,7 +561,9 @@ async function promptForValues(opts: Options, schema: Schema) {
     }
   });
 
-  return await (await import('enquirer'))
+  return await (
+    await import('enquirer')
+  )
     .prompt(prompts)
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {

@@ -1,0 +1,26 @@
+import { enableProdMode, StaticProvider } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+import * as angular from 'angular';
+import { downgradeComponent, downgradeModule, setAngularJSGlobal } from '@angular/upgrade/static';
+
+import { <%=moduleClassName%> } from '<%=moduleSpec%>';
+import { environment } from './environments/environment';
+import '<%=angularJsImport%>';
+import { <%=bootstrapComponentClassName%> } from '<%=bootstrapComponentFileName%>';
+
+export function bootstrapAngular(extra: StaticProvider[]): any {
+  setAngularJSGlobal(angular);
+  if (environment.production) {
+    enableProdMode();
+  }
+  return platformBrowserDynamic(extra)
+    .bootstrapModule(<%=moduleClassName%>)
+    .catch(err => console.log(err));
+}
+
+const downgraded = angular
+  .module('downgraded', [downgradeModule(bootstrapAngular)])
+  .directive('appRoot', downgradeComponent({ component: <%=bootstrapComponentClassName%>, propagateDigest: false }));
+
+angular.bootstrap(document, ['<%=name%>', downgraded.name]);

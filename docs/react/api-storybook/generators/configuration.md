@@ -24,6 +24,12 @@ nx g configuration ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Library or application name
+
 ### configureCypress
 
 Type: `boolean`
@@ -35,12 +41,6 @@ Run the cypress-configure generator
 Type: `string`
 
 A directory where the Cypress project will be placed. Added at root by default.
-
-### cypressName
-
-Type: `string`
-
-A custom name for the Cypress project. Inferred from 'name' by default.
 
 ### js
 
@@ -56,15 +56,17 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
 
-### name
+### standaloneConfig
 
-Type: `string`
+Default: `false`
 
-Library or application name
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### uiFramework
 

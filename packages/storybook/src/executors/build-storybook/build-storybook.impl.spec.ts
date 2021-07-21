@@ -14,8 +14,8 @@ describe('Build storybook', () => {
   beforeEach(async () => {
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
-        '@storybook/angular': '^6.0.21',
+        '@storybook/addon-essentials': '~6.2.9',
+        '@storybook/angular': '~6.2.9',
       },
     });
 
@@ -39,7 +39,7 @@ describe('Build storybook', () => {
   });
 
   it('should call the storybook static standalone build', async () => {
-    spyOn(logger, 'info');
+    jest.spyOn(logger, 'info');
     const uiFramework = '@storybook/angular';
     const outputPath = `${context.root}/dist/storybook`;
     const config = {

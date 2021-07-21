@@ -1,7 +1,7 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson } from '@nrwl/devkit';
+import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 import { workspaceGenerator } from './workspace';
 import { createTree } from '@nrwl/devkit/testing';
-import { NxJson } from '../../core/shared-interfaces';
 
 describe('@nrwl/workspace:workspace', () => {
   let tree: Tree;
@@ -32,7 +32,7 @@ describe('@nrwl/workspace:workspace', () => {
       layout: 'apps-and-libs',
       defaultBase: 'master',
     });
-    const nxJson = readJson<NxJson>(tree, '/proj/nx.json');
+    const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
       npmScope: 'proj',
       affected: {
@@ -53,6 +53,14 @@ describe('@nrwl/workspace:workspace', () => {
           },
         },
       },
+      targetDependencies: {
+        build: [
+          {
+            projects: 'dependencies',
+            target: 'build',
+          },
+        ],
+      },
       projects: {},
     });
   });
@@ -65,7 +73,7 @@ describe('@nrwl/workspace:workspace', () => {
       layout: 'apps-and-libs',
       defaultBase: 'main',
     });
-    expect(tree.read('proj/.prettierrc').toString()).toMatchSnapshot();
+    expect(tree.read('proj/.prettierrc', 'utf-8')).toMatchSnapshot();
   });
 
   it('should recommend vscode extensions', async () => {

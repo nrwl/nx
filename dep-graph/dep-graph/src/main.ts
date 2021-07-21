@@ -1,21 +1,21 @@
 import { AppComponent } from './app/app';
+import { LocalProjectGraphService } from './app/local-project-graph-service';
 import { environment } from './environments/environment';
 import { projectGraphs } from './graphs';
-import { nxGraph } from './graphs/nx';
 
-if (!environment.release) {
-  const currentGraph = nxGraph;
-
-  const nodes = Object.values(currentGraph.nodes).filter(
-    (node) => node.type !== 'npm'
-  );
-
-  window.projects = nodes;
-  window.graph = currentGraph;
+if (environment.environment !== 'release') {
   window.affected = [];
   window.exclude = [];
   window.projectGraphList = projectGraphs;
   window.selectedProjectGraph = projectGraphs[0].id;
-  window.workspaceLayout = projectGraphs[0].workspaceLayout;
 }
+
+if (environment.environment === 'dev-watch') {
+  window.watch = true;
+}
+
+if (environment.environment === 'release' && window.localMode === 'build') {
+  environment.appConfig.projectGraphService = new LocalProjectGraphService();
+}
+
 setTimeout(() => new AppComponent(environment.appConfig));

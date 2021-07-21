@@ -1,14 +1,16 @@
 import { readJson, updateJson } from './json';
 import { installPackagesTask } from '../tasks/install-packages-task';
-
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
 
 /**
  * Add Dependencies and Dev Dependencies to package.json
  *
- * For example, `addDependenciesToPackageJson(host, { react: 'latest' }, { jest: 'latest' })`
- * will add `react` and `jest` to the dependencies and devDependencies sections of package.json respectively
+ * For example:
+ * ```typescript
+ * addDependenciesToPackageJson(host, { react: 'latest' }, { jest: 'latest' })
+ * ```
+ * This will **add** `react` and `jest` to the dependencies and devDependencies sections of package.json respectively.
  *
  * @param host Tree representing file system to modify
  * @param dependencies Dependencies to be added to the dependencies section of package.json
@@ -44,7 +46,7 @@ export function addDependenciesToPackageJson(
       return json;
     });
   }
-  return () => {
+  return (): void => {
     installPackagesTask(host);
   };
 }
@@ -52,8 +54,11 @@ export function addDependenciesToPackageJson(
 /**
  * Remove Dependencies and Dev Dependencies from package.json
  *
- * For example, `removeDependenciesFromPackageJson(host, ['react'], ['jest'])`
- * will remove `react` and `jest` from the dependencies and devDependencies sections of package.json respectively
+ * For example:
+ * ```typescript
+ * removeDependenciesFromPackageJson(host, ['react'], ['jest'])
+ * ```
+ * This will **remove** `react` and `jest` from the dependencies and devDependencies sections of package.json respectively.
  *
  * @param dependencies Dependencies to be removed from the dependencies section of package.json
  * @param devDependencies Dependencies to be removed from the devDependencies section of package.json
@@ -87,12 +92,12 @@ export function removeDependenciesFromPackageJson(
       return json;
     });
   }
-  return () => {
+  return (): void => {
     installPackagesTask(host);
   };
 }
 
-function sortObjectByKeys(obj: unknown) {
+function sortObjectByKeys(obj: unknown): unknown {
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {

@@ -1,10 +1,10 @@
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
   runCLI,
-  supportUi,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -35,32 +35,31 @@ describe('Cypress E2E Test runner', () => {
     }, 1000000);
   });
 
-  if (supportUi()) {
-    describe('running Cypress', () => {
-      it('should execute e2e tests using Cypress', () => {
-        newProject();
-        const myapp = uniq('myapp');
-        runCLI(
-          `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
-        );
+  describe('running Cypress', () => {
+    it('should execute e2e tests using Cypress', async () => {
+      newProject();
+      const myapp = uniq('myapp');
+      runCLI(
+        `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
+      );
 
-        expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
-          'All specs passed!'
-        );
+      expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
+        'All specs passed!'
+      );
 
-        const originalContents = JSON.parse(
-          readFile(`apps/${myapp}-e2e/cypress.json`)
-        );
-        delete originalContents.fixturesFolder;
-        updateFile(
-          `apps/${myapp}-e2e/cypress.json`,
-          JSON.stringify(originalContents)
-        );
+      const originalContents = JSON.parse(
+        readFile(`apps/${myapp}-e2e/cypress.json`)
+      );
+      delete originalContents.fixturesFolder;
+      updateFile(
+        `apps/${myapp}-e2e/cypress.json`,
+        JSON.stringify(originalContents)
+      );
 
-        expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
-          'All specs passed!'
-        );
-      }, 1000000);
-    });
-  }
+      expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
+        'All specs passed!'
+      );
+      expect(await killPorts()).toBeTruthy();
+    }, 1000000);
+  });
 });

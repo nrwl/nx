@@ -9,9 +9,9 @@ import {
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
-import * as stripJsonComments from 'strip-json-comments';
+import { parseJson, serializeJson } from '@nrwl/devkit';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false },
@@ -87,12 +87,10 @@ function updateWorkspaceJsonToMatchFormatVersion(
   const path = possibleFiles.filter((path) => host.exists(path))[0];
   try {
     if (path) {
-      const workspaceJson = JSON.parse(
-        stripJsonComments(host.read(path).toString())
-      );
+      const workspaceJson = parseJson(host.read(path).toString());
       const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
       if (reformatted) {
-        host.overwrite(path, JSON.stringify(reformatted, null, 2));
+        host.overwrite(path, serializeJson(reformatted));
       }
     }
   } catch (e) {

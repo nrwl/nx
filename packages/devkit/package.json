@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/devkit",
   "version": "0.0.1",
-  "description": "Powerful, Extensible Dev Tools",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -29,8 +29,8 @@
     "@nrwl/tao": "*",
     "ejs": "^3.1.5",
     "ignore": "^5.0.4",
+    "rxjs": "^6.5.4",
     "semver": "7.3.4",
-    "strip-json-comments": "^3.1.1",
     "tslib": "^2.0.0"
   }
 }

@@ -1,18 +1,13 @@
+import { DepGraphClientResponse } from '@nrwl/workspace';
+import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { combineLatest, fromEvent, Subject } from 'rxjs';
 import { startWith, takeUntil } from 'rxjs/operators';
-import { projectGraphs } from '../graphs';
 import { DebuggerPanel } from './debugger-panel';
 import { GraphComponent } from './graph';
+import { AppConfig, DEFAULT_CONFIG } from './models';
 import { GraphTooltipService } from './tooltip-service';
 import { SidebarComponent } from './ui-sidebar/sidebar';
 
-export interface AppConfig {
-  showDebugger: boolean;
-}
-
-const DEFAULT_CONFIG: AppConfig = {
-  showDebugger: false,
-};
 export class AppComponent {
   private sidebar: SidebarComponent;
   private tooltipService = new GraphTooltipService();
@@ -20,35 +15,62 @@ export class AppComponent {
   private debuggerPanel: DebuggerPanel;
 
   private windowResize$ = fromEvent(window, 'resize').pipe(startWith({}));
-  private render$ = new Subject<void>();
+  private render$ = new Subject<{ newProjects: string[] }>();
 
   constructor(private config: AppConfig = DEFAULT_CONFIG) {
-    this.render$.subscribe(() => this.render());
-    this.render$.next();
+    this.render$.subscribe((nextRenderConfig) => this.render(nextRenderConfig));
+
+    this.loadProjectGraph(config.defaultProjectGraph);
+
+    if (window.watch === true) {
+      setInterval(
+        () => this.loadProjectGraph(config.defaultProjectGraph),
+        5000
+      );
+    }
   }
 
-  private onProjectGraphChange(projectGraphId: string) {
-    const project = projectGraphs.find((graph) => graph.id === projectGraphId);
-    const projectGraph = project?.graph;
-    const workspaceLayout = project?.workspaceLayout;
-
-    const nodes = Object.values(projectGraph.nodes).filter(
-      (node) => node.type !== 'npm'
+  private async loadProjectGraph(projectGraphId: string) {
+    const projectInfo = this.config.projectGraphs.find(
+      (graph) => graph.id === projectGraphId
     );
 
-    window.projects = nodes;
-    window.graph = projectGraph;
-    window.affected = [];
-    window.exclude = [];
-    window.focusedProject = null;
-    window.projectGraphList = projectGraphs;
+    const project: DepGraphClientResponse =
+      await this.config.projectGraphService.getProjectGraph(projectInfo.url);
+
+    const workspaceLayout = project?.layout;
+
+    const nodes = Object.values(project.projects)
+      .filter((node: any) => node.type !== 'npm')
+      .reduce((acc, cur: any) => {
+        acc[cur.name] = cur;
+        return acc;
+      }, {});
+
+    const newProjects = project.changes.added.filter(
+      (addedProject) => !window.graph.nodes[addedProject]
+    );
+    window.projects = project.projects;
+    window.graph = <ProjectGraph>{
+      dependencies: project.dependencies,
+      nodes: nodes,
+    };
+    window.affected = project.affected;
+    window.exclude = project.exclude;
+    window.focusedProject = project.focus;
+    window.groupByFolder = project.groupByFolder;
+    window.projectGraphList = this.config.projectGraphs;
     window.selectedProjectGraph = projectGraphId;
     window.workspaceLayout = workspaceLayout;
 
-    this.render();
+    if (this.sidebar) {
+      this.render$.next({ newProjects });
+    } else {
+      this.render$.next();
+    }
   }
 
-  private render() {
+  private render(renderConfig: { newProjects: string[] } | undefined) {
     const debuggerPanelContainer = document.getElementById('debugger-panel');
 
     if (this.config.showDebugger) {
@@ -61,7 +83,8 @@ export class AppComponent {
       );
 
       this.debuggerPanel.selectProject$.subscribe((id) => {
-        this.onProjectGraphChange(id);
+        this.loadProjectGraph(id);
+        this.sidebar.resetSidebarVisibility();
       });
     }
 
@@ -71,10 +94,16 @@ export class AppComponent {
     );
 
     this.graph.affectedProjects = affectedProjects;
-    this.sidebar = new SidebarComponent(
-      affectedProjects,
-      this.config.showDebugger
-    );
+
+    if (!this.sidebar) {
+      this.sidebar = new SidebarComponent(affectedProjects);
+    } else {
+      this.sidebar.projects = window.projects;
+
+      if (renderConfig?.newProjects.length > 0) {
+        this.sidebar.selectProjects(renderConfig.newProjects);
+      }
+    }
 
     combineLatest([
       this.sidebar.selectedProjectsChanged$,
@@ -91,7 +120,12 @@ export class AppComponent {
           }
         });
 
-        this.graph.render(selectedProjects, groupByFolder);
+        if (selectedProjects.length === 0) {
+          document.getElementById('no-projects-chosen').style.display = 'flex';
+        } else {
+          document.getElementById('no-projects-chosen').style.display = 'none';
+          this.graph.render(selectedProjects, groupByFolder);
+        }
       });
 
     if (this.debuggerPanel) {

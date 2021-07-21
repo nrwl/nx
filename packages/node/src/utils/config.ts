@@ -1,21 +1,24 @@
-import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin, Stats } from 'webpack';
-
 import * as ts from 'typescript';
-
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export const OUT_FILENAME = 'main.js';
+
+// TODO(jack): In Nx 13 go back to proper types.
+type Configuration = any;
+type WebpackPluginInstance = any; // This was webpack.Plugin in webpack 4
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions
 ): Configuration {
+  // TODO(jack): Remove in Nx 13
+  const { CopyWebpackPlugin, webpack } = require('../webpack/entry');
+
   const { options: compilerOptions } = readTsConfig(options.tsConfig);
   const supportsEs2015 =
     compilerOptions.target !== ts.ScriptTarget.ES3 &&
@@ -64,12 +67,11 @@ export function getBaseWebpackPartial(
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
-        tsconfig: options.tsConfig,
-        memoryLimit:
-          options.memoryLimit ||
-          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false,
+        typescript: {
+          enabled: true,
+          configFile: options.tsConfig,
+          memoryLimit: options.memoryLimit || 2018,
+        },
       }),
     ],
     watch: options.watch,
@@ -79,27 +81,47 @@ export function getBaseWebpackPartial(
     stats: getStatsConfig(options),
   };
 
-  const extraPlugins: webpack.Plugin[] = [];
+  const extraPlugins: WebpackPluginInstance[] = [];
 
   if (options.progress) {
-    extraPlugins.push(new ProgressPlugin());
+    extraPlugins.push(new webpack.ProgressPlugin());
   }
 
   if (options.extractLicenses) {
     extraPlugins.push(
-      (new LicenseWebpackPlugin({
+      new LicenseWebpackPlugin({
         stats: {
           errors: false,
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown) as webpack.Plugin
+      }) as unknown as WebpackPluginInstance
     );
   }
 
   // process asset entries
   if (Array.isArray(options.assets) && options.assets.length > 0) {
     const copyWebpackPluginInstance = new CopyWebpackPlugin({
+      patterns: options.assets.map((asset) => {
+        return {
+          context: asset.input,
+          // Now we remove starting slash to make Webpack place it from the output root.
+          to: asset.output,
+          from: asset.glob,
+          globOptions: {
+            ignore: [
+              '.gitkeep',
+              '**/.DS_Store',
+              '**/Thumbs.db',
+              ...(asset.ignore ?? []),
+            ],
+            dot: true,
+          },
+        };
+      }),
+    });
+
+    new CopyWebpackPlugin({
       patterns: options.assets.map((asset: any) => {
         return {
           context: asset.input,
@@ -144,7 +166,10 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
+// TODO(jack): Update the typing with new version of webpack -- was returning Stats.ToStringOptions in webpack 4
+// The StatsOptions type needs to be exported from webpack
+// PR: https://github.com/webpack/webpack/pull/12875
+function getStatsConfig(options: BuildBuilderOptions): any {
   return {
     hash: true,
     timings: false,

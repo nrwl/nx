@@ -18,17 +18,19 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import * as stripJsonComments from 'strip-json-comments';
-import { serializeJson } from '../utilities/fileutils';
+import { parseJson, serializeJson } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
-  ProjectGraph,
 } from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
+import type {
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  ProjectGraph,
+} from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from '../utilities/typescript/find-nodes';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
@@ -345,13 +347,15 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
  * @param path The path to the JSON file
  * @returns The JSON data in the file.
  */
-export function readJsonInTree<T = any>(host: Tree, path: string): T {
+export function readJsonInTree<T extends object = any>(
+  host: Tree,
+  path: string
+): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-  const contents = stripJsonComments(host.read(path)!.toString('utf-8'));
   try {
-    return JSON.parse(contents);
+    return parseJson(host.read(path)!.toString('utf-8'));
   } catch (e) {
     throw new Error(`Cannot parse ${path}: ${e.message}`);
   }
@@ -359,7 +363,7 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
 
 // TODO(v13): remove this deprecated method
 /**
- * @deprecated This method is deprecated and is synonymous to {@link onlyWorkspaceProjects}({@link createProjectGraph}())
+ * @deprecated This method is deprecated and `{@link onlyWorkspaceProjects}(await {@link createProjectGraphAsync}())` should be used instead.
  * Method for utilizing the project graph in schematics
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
@@ -368,7 +372,7 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
 
 // TODO(v13): remove this deprecated method
 /**
- * @deprecated This method is deprecated and is synonymous to {@link createProjectGraph}()
+ * @deprecated This method is deprecated and `await {@link createProjectGraphAsync}()` should be used instead
  */
 export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   return createProjectGraph(undefined, undefined, undefined);
@@ -415,7 +419,7 @@ export function allFilesInDirInHost(
  * @param callback Manipulation of the JSON data
  * @returns A rule which updates a JSON file file in a Tree
  */
-export function updateJsonInTree<T = any, O = T>(
+export function updateJsonInTree<T extends object = any, O extends object = T>(
   path: string,
   callback: (json: T, context: SchematicContext) => O
 ): Rule {
@@ -432,9 +436,10 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
-export function updateWorkspaceInTree<T = any, O = T>(
-  callback: (json: T, context: SchematicContext, host: Tree) => O
-): Rule {
+export function updateWorkspaceInTree<
+  T extends object = any,
+  O extends object = T
+>(callback: (json: T, context: SchematicContext, host: Tree) => O): Rule {
   return (host: Tree, context: SchematicContext = undefined): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
@@ -446,25 +451,24 @@ export function updateWorkspaceInTree<T = any, O = T>(
 }
 
 export function readNxJsonInTree(host: Tree) {
-  return readJsonInTree<NxJson>(host, 'nx.json');
+  return readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
 }
 
 export function libsDir(host: Tree) {
-  const json = readJsonInTree<NxJson>(host, 'nx.json');
-  return json && json.workspaceLayout && json.workspaceLayout.libsDir
-    ? json.workspaceLayout.libsDir
-    : 'libs';
+  const json = readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
+  return json?.workspaceLayout?.libsDir ?? 'libs';
 }
 
 export function appsDir(host: Tree) {
-  const json = readJsonInTree<NxJson>(host, 'nx.json');
-  return json && json.workspaceLayout && json.workspaceLayout.appsDir
-    ? json.workspaceLayout.appsDir
-    : 'apps';
+  const json = readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
+  return json?.workspaceLayout?.appsDir ?? 'apps';
 }
 
 export function updateNxJsonInTree(
-  callback: (json: NxJson, context: SchematicContext) => NxJson
+  callback: (
+    json: NxJsonConfiguration,
+    context: SchematicContext
+  ) => NxJsonConfiguration
 ): Rule {
   return (host: Tree, context: SchematicContext): Tree => {
     host.overwrite(
@@ -477,7 +481,7 @@ export function updateNxJsonInTree(
 
 export function addProjectToNxJsonInTree(
   projectName: string,
-  options: NxJsonProjectConfig
+  options: NxJsonProjectConfiguration
 ): Rule {
   const defaultOptions = {
     tags: [],
@@ -590,8 +594,11 @@ export function updatePackageJsonDependencies(
 export function getProjectConfig(host: Tree, name: string): any {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const projectConfig = workspaceJson.projects[name];
+
   if (!projectConfig) {
     throw new Error(`Cannot find project '${name}'`);
+  } else if (typeof projectConfig === 'string') {
+    return readJsonInTree(host, projectConfig);
   } else {
     return projectConfig;
   }

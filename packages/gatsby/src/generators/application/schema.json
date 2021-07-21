@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxGatsbyApp",
+  "$id": "NxGatsbyApp",
   "title": "",
   "type": "object",
   "properties": {
@@ -70,6 +70,10 @@
             "label": "emotion           [ https://emotion.sh            ]"
           },
           {
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+          },
+          {
             "value": "none",
             "label": "None"
           }
@@ -79,6 +83,16 @@
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
       "default": false
     }
   },

@@ -23,8 +23,11 @@ import {
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import {
+  calculateProjectDependencies,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
@@ -38,6 +41,12 @@ export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
+  process.env.NODE_ENV = process.env.NODE_ENV
+    ? process.env.NODE_ENV
+    : options.dev
+    ? 'development'
+    : 'production';
+  let dependencies: DependentBuildableProjectNode[] = [];
   const buildTarget = parseTargetString(options.buildTarget);
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
@@ -46,16 +55,19 @@ export default async function* serveExecutor(
   );
 
   const root = resolve(context.root, buildOptions.root);
-  const projGraph = createProjectGraph();
-  const { dependencies } = calculateProjectDependencies(
-    projGraph,
-    context.root,
-    context.projectName,
-    context.targetName,
-    context.configurationName
-  );
+  if (!options.buildLibsFromSource) {
+    const projGraph = await createProjectGraphAsync();
+    const result = calculateProjectDependencies(
+      projGraph,
+      context.root,
+      context.projectName,
+      'build', // should be generalized
+      context.configurationName
+    );
+    dependencies = result.dependencies;
 
-  assertDependentProjectsHaveBeenBuilt(dependencies, context);
+    assertDependentProjectsHaveBeenBuilt(dependencies, context);
+  }
 
   const config = await prepareConfig(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,

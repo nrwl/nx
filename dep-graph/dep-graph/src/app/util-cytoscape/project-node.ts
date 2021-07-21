@@ -1,4 +1,4 @@
-import { ProjectGraphNode } from '@nrwl/workspace';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 import { parseParentDirectoriesFromPilePath } from '../util';
 

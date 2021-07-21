@@ -1,9 +1,9 @@
-jest.mock('../../../utilities/app-root', () => ({
+jest.mock('fs', () => require('memfs').fs);
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
-jest.mock('fs', () => require('memfs').fs);
 
-import { fs, vol } from 'memfs';
+import { vol } from 'memfs';
 import {
   AddProjectDependency,
   ProjectGraphContext,
@@ -13,7 +13,6 @@ import {
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
-import { appRootPath } from '../../../utilities/app-root';
 
 describe('explicit project dependencies', () => {
   let ctx: ProjectGraphContext;
@@ -72,13 +71,13 @@ describe('explicit project dependencies', () => {
       './tsconfig.base.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
-                              const a = { loadChildren: '@proj/proj4ab#a' };                     
+                              const a = { loadChildren: '@proj/proj4ab#a' };
       `,
       './libs/proj2/index.ts': `export const a = 2;`,
       './libs/proj3a/index.ts': `export const a = 3;`,
       './libs/proj4ab/index.ts': `export const a = 4;`,
       './libs/proj123/index.ts': 'export const a = 5',
-      './libs/proj1234/index.ts': `export const a = 6 
+      './libs/proj1234/index.ts': `export const a = 6
         import { a } from '@proj/proj1234-child'
       `,
       './libs/proj1234-child/index.ts': 'export const a = 7',
@@ -93,7 +92,7 @@ describe('explicit project dependencies', () => {
                                  import('@proj/proj2')
                                  /* nx-ignore-next-line */
                                  import {a} from '@proj/proj3a
-                                 const a = { 
+                                 const a = {
                                      // nx-ignore-next-line
                                     loadChildren: '@proj/3a'
                                  }

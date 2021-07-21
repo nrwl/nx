@@ -2,8 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "lib": ["dom", "es2019"]
   },
   "exclude": ["**/*.spec.ts", "**/*.spec.tsx"],
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts"]
+  "include": ["**/*.js", "**/*.ts", "**/*.tsx", "next-env.d.ts"]
 }

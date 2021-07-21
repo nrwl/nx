@@ -39,8 +39,10 @@ function createJestConfig(host: Tree) {
     host.write(
       'jest.config.js',
       stripIndents`
+  const { getJestProjects } = require('@nrwl/jest');
+
   module.exports = {
-    projects: []
+    projects: getJestProjects()
   };`
     );
   }

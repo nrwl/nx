@@ -10,11 +10,15 @@
       "jasmine-marbles": "jasmine-marbles"
     }
   },
-  "whitelistedNonPeerDependencies": [
+  "allowedNonPeerDependencies": [
     "@nrwl/",
     "@angular-devkit",
     "@angular-eslint/",
     "@schematics",
-    "jasmine-marbles"
-  ]
+    "ignore",
+    "jasmine-marbles",
+    "rxjs-for-await",
+    "webpack-merge"
+  ],
+  "keepLifecycleScripts": true
 }

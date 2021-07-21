@@ -8,7 +8,6 @@ import {
 
 describe('Nx Plugins', () => {
   beforeAll(() => newProject());
-
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should use plugins defined in nx.json', () => {
@@ -39,7 +38,7 @@ describe('Nx Plugins', () => {
           builder.addDependency(
             require('@nrwl/devkit').DependencyType.static,
             'plugin-node',
-            'plugin-node2' 
+            'plugin-node2'
           );
           return builder.getProjectGraph();
         }
