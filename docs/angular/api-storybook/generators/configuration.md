@@ -1,4 +1,4 @@
-# configuration
+# @nrwl/storybook:configuration
 
 Add storybook configuration to a ui library or an application
 

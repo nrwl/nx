@@ -1,4 +1,4 @@
-# run-commands
+# @nrwl/workspace:run-commands
 
 Generates a target to run any command in the terminal
 

@@ -36,12 +36,18 @@ function readExecutorsJson(root: string) {
   return readJsonSync(join(root, 'executors.json')).executors;
 }
 
+function readPackageName(root: string) {
+  return readJsonSync(join(root, 'package.json')).name;
+}
+
 function generateSchematicList(
   config: Configuration,
   flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
   removeSync(config.builderOutput);
   const builderCollection = readExecutorsJson(config.root);
+  const packageName = readPackageName(config.root);
+
   return Object.keys(builderCollection).map((builderName) => {
     const schemaPath = join(
       config.root,
@@ -49,6 +55,7 @@ function generateSchematicList(
     );
     let builder = {
       name: builderName,
+      collectionName: packageName,
       ...builderCollection[builderName],
       rawSchema: readJsonSync(schemaPath),
     };
@@ -74,7 +81,7 @@ function generateTemplate(
   const cliCommand = 'nx';
 
   let template = dedent`
-    # ${builder.name}
+    # ${builder.collectionName}:${builder.name}
     ${builder.description}
 
     Options can be configured in \`${filename}\` when defining the executor, or when invoking it.

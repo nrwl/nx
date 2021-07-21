@@ -1,4 +1,4 @@
-# file-server
+# @nrwl/web:file-server
 
 Serve a web application from a folder
 

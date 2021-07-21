@@ -1,4 +1,4 @@
-# resolver
+# @nrwl/nest:resolver
 
 Run the `resolver` NestJS generator with Nx project support.
 

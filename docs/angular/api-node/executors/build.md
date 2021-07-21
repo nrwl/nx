@@ -1,4 +1,4 @@
-# build
+# @nrwl/node:build
 
 Build a Node application
 

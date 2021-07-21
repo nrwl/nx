@@ -1,4 +1,4 @@
-# eslint
+# @nrwl/linter:eslint
 
 Run ESLint on a project
 

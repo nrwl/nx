@@ -1,4 +1,4 @@
-# guard
+# @nrwl/nest:guard
 
 Run the `guard` NestJS generator with Nx project support.
 

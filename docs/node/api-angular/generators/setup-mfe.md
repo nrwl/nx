@@ -1,4 +1,4 @@
-# setup-mfe
+# @nrwl/angular:setup-mfe
 
 Generate a Module Federation configuration for a given Angular application.
 

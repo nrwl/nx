@@ -1,4 +1,4 @@
-# webpack-browser
+# @nrwl/angular:webpack-browser
 
 Builds a browser application with support for incremental builds and custom webpack configuration.
 

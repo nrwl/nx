@@ -1,4 +1,4 @@
-# page
+# @nrwl/gatsby:page
 
 Create a page
 

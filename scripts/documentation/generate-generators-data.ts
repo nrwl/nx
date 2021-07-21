@@ -68,7 +68,9 @@ function generateTemplate(
   const cliCommand = 'nx';
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   let template = dedent`
-    # ${schematic.name} ${schematic.hidden ? '[hidden]' : ''}
+    # ${schematic.collectionName}:${schematic.name} ${
+    schematic.hidden ? '[hidden]' : ''
+  }
     ${schematic.description}
   
     ## Usage

@@ -1,4 +1,4 @@
-# remove
+# @nrwl/workspace:remove
 
 Remove an application or library
 

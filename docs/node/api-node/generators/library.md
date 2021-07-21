@@ -1,4 +1,4 @@
-# library
+# @nrwl/node:library
 
 Create a library
 

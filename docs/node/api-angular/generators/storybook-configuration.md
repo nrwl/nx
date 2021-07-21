@@ -1,4 +1,4 @@
-# storybook-configuration
+# @nrwl/angular:storybook-configuration
 
 Adds Storybook configuration to a project.
 

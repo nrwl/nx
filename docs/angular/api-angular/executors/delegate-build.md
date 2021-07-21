@@ -1,4 +1,4 @@
-# delegate-build
+# @nrwl/angular:delegate-build
 
 Delegates the build to a different target while supporting incremental builds.
 

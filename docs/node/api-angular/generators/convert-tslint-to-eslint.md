@@ -1,4 +1,4 @@
-# convert-tslint-to-eslint
+# @nrwl/angular:convert-tslint-to-eslint
 
 Converts a project from TSLint to ESLint.
 

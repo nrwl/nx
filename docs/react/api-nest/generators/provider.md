@@ -1,4 +1,4 @@
-# provider
+# @nrwl/nest:provider
 
 Run the `provider` NestJS generator with Nx project support.
 

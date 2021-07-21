@@ -1,4 +1,4 @@
-# gateway
+# @nrwl/nest:gateway
 
 Run the `gateway` NestJS generator with Nx project support.
 
