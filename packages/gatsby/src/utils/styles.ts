@@ -6,7 +6,7 @@ import {
   gatsbyPluginStyledComponentsVersion,
   gatsbyPluginStyledJsx,
   gatsbyPluginStylusVersion,
-  nodeSassVersion,
+  sassVersion,
 } from './versions';
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import {
@@ -31,7 +31,7 @@ export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
   scss: {
     dependencies: {},
     devDependencies: {
-      'node-sass': nodeSassVersion,
+      sass: sassVersion,
       'gatsby-plugin-sass': gatsbyPluginSassVersion,
     },
   },
