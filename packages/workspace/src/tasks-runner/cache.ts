@@ -194,6 +194,13 @@ export class Cache {
       const cacheOutputPath = join(cachedResult.outputsPath, output);
       const rootOutputPath = join(this.root, output);
 
+      if (existsSync(cacheOutputPath) && lstatSync(cacheOutputPath).isFile()) {
+        return (
+          existsSync(join(cachedResult.outputsPath, output)) &&
+          !existsSync(join(this.root, output))
+        );
+      }
+
       const haveDifferentAmountOfFiles =
         existsSync(cacheOutputPath) &&
         existsSync(rootOutputPath) &&
