@@ -80,3 +80,50 @@ xdescribe('Angular Nrwl app builder', () => {
     it('Skip tests with pnpm', () => {});
   }
 });
+
+describe('Angular MFE App Serve', () => {
+  let hostApp;
+  let remoteApp1;
+  let remoteApp2;
+  let proj: string;
+
+  beforeEach(() => {
+    hostApp = uniq('app');
+    remoteApp1 = uniq('remoteApp1');
+    remoteApp2 = uniq('remoteApp2');
+
+    proj = newProject();
+
+    // generate host app
+    runCLI(
+      `generate @nrwl/angular:app ${hostApp} --mfe --mfeType=host --routing --style=css --no-interactive`
+    );
+
+    // generate remote apps
+    runCLI(
+      `generate @nrwl/angular:app ${remoteApp1} --mfe --mfeType=remote --host=${hostApp} --port=4201 --routing --style=css --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:app ${remoteApp2} --mfe --mfeType=remote --host=${hostApp} --port=4202 --routing --style=css --no-interactive`
+    );
+  });
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
+  it('should serve the host and remote apps successfully', () => {
+    // ACT
+    const serveOutput = runCLI(`serve-mfe ${hostApp}`);
+
+    // ASSERT
+    expect(serveOutput).toContain('Compiled successfully');
+    expect(serveOutput).toContain(
+      'Angular Live Development Server is listening on localhost:4200'
+    );
+    expect(serveOutput).toContain(
+      'Angular Live Development Server is listening on localhost:4201'
+    );
+    expect(serveOutput).toContain(
+      'Angular Live Development Server is listening on localhost:4202'
+    );
+  });
+});
