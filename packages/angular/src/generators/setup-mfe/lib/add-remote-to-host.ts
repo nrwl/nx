@@ -4,6 +4,9 @@ import type { Schema } from '../schema';
 import { readProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { ObjectLiteralExpression } from 'typescript';
+import { addRoute } from '../../../utils/nx-devkit/ast-utils';
+
+import * as ts from 'typescript';
 
 export function addRemoteToHost(host: Tree, options: Schema) {
   if (options.mfeType === 'remote' && options.host) {
@@ -28,7 +31,7 @@ export function addRemoteToHost(host: Tree, options: Schema) {
     const endOfPropertiesPos = mfRemotesNode.properties.end;
 
     const updatedConfig = `${hostWebpackConfig.slice(0, endOfPropertiesPos)}
-    \t\t${options.appName}: '${options.appName}@http://localhost:${
+    \t\t"${options.appName}": '${options.appName}@http://localhost:${
       options.port ?? 4200
     }/remoteEntry.js',${hostWebpackConfig.slice(endOfPropertiesPos)}`;
 
@@ -44,5 +47,38 @@ export function addRemoteToHost(host: Tree, options: Schema) {
         ? host.read(declarationFilePath, 'utf-8')
         : '') + `\ndeclare module '${options.appName}/Module';`;
     host.write(declarationFilePath, declarationFileContent);
+
+    addLazyLoadedRouteToHostAppModule(host, options);
   }
+}
+
+// TODO(colum): future work: allow dev to pass to path to routing module
+function addLazyLoadedRouteToHostAppModule(host: Tree, options: Schema) {
+  const hostAppConfig = readProjectConfiguration(host, options.host);
+  const pathToHostAppModule = `${hostAppConfig.sourceRoot}/app/app.module.ts`;
+  if (!host.exists(pathToHostAppModule)) {
+    return;
+  }
+
+  const hostAppModule = host.read(pathToHostAppModule, 'utf-8');
+  if (!hostAppModule.includes('RouterModule.forRoot(')) {
+    return;
+  }
+
+  let sourceFile = ts.createSourceFile(
+    pathToHostAppModule,
+    hostAppModule,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  sourceFile = addRoute(
+    host,
+    pathToHostAppModule,
+    sourceFile,
+    `{
+         path: '${options.appName}', 
+         loadChildren: () => import('${options.appName}/Module').then(m => m.RemoteEntryModule)
+     }`
+  );
 }
