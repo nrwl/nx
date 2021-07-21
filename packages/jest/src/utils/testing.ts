@@ -4,7 +4,7 @@ import { Tree, Rule } from '@angular-devkit/schematics';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/jest',
-  join(__dirname, '../../collection.json')
+  join(__dirname, '../../generators.json')
 );
 
 const migrationTestRunner = new SchematicTestRunner(

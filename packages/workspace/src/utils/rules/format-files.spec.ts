@@ -12,7 +12,7 @@ describe('formatFiles', () => {
   beforeEach(() => {
     schematicRunner = new SchematicTestRunner(
       '@nrwl/workspace',
-      path.join(__dirname, '../../../collection.json')
+      path.join(__dirname, '../../../generators.json')
     );
     jest
       .spyOn(prettier, 'format')

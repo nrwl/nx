@@ -12,26 +12,26 @@ describe('preset', () => {
     overrideCollectionResolutionForTesting({
       '@nrwl/workspace': path.join(
         __dirname,
-        '../../../../workspace/collection.json'
+        '../../../../workspace/generators.json'
       ),
       '@nrwl/angular': path.join(
         __dirname,
-        '../../../../angular/collection.json'
+        '../../../../angular/generators.json'
       ),
       '@nrwl/linter': path.join(
         __dirname,
-        '../../../../linter/collection.json'
+        '../../../../linter/generators.json'
       ),
-      '@nrwl/nest': path.join(__dirname, '../../../../nest/collection.json'),
-      '@nrwl/node': path.join(__dirname, '../../../../node/collection.json'),
-      '@nrwl/jest': path.join(__dirname, '../../../../jest/collection.json'),
+      '@nrwl/nest': path.join(__dirname, '../../../../nest/generators.json'),
+      '@nrwl/node': path.join(__dirname, '../../../../node/generators.json'),
+      '@nrwl/jest': path.join(__dirname, '../../../../jest/generators.json'),
       '@nrwl/cypress': path.join(
         __dirname,
-        '../../../../cypress/collection.json'
+        '../../../../cypress/generators.json'
       ),
       '@nrwl/express': path.join(
         __dirname,
-        '../../../../express/collection.json'
+        '../../../../express/generators.json'
       ),
     });
   });

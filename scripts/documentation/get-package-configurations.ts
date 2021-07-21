@@ -53,9 +53,7 @@ export function getPackageConfigurations(
           builderOutput: path.join(output, 'executors'),
           schematicOutput: path.join(output, 'generators'),
           hasBuilders: itemList.includes('executors.json'),
-          hasSchematics:
-            itemList.includes('collection.json') ||
-            itemList.includes('generators.json'),
+          hasSchematics: itemList.includes('generators.json'),
         };
       });
     return { framework, configs };

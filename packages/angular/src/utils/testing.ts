@@ -4,27 +4,27 @@ import { Rule, Tree } from '@angular-devkit/schematics';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/angular',
-  join(__dirname, '../../collection.json')
+  join(__dirname, '../../generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/jest',
-  join(__dirname, '../../../jest/collection.json')
+  join(__dirname, '../../../jest/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/workspace',
-  join(__dirname, '../../../workspace/collection.json')
+  join(__dirname, '../../../workspace/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/cypress',
-  join(__dirname, '../../../cypress/collection.json')
+  join(__dirname, '../../../cypress/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/storybook',
-  join(__dirname, '../../../storybook/collection.json')
+  join(__dirname, '../../../storybook/generators.json')
 );
 
 const migrationTestRunner = new SchematicTestRunner(

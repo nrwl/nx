@@ -27,7 +27,7 @@
   },
   "homepage": "https://nx.dev",
   "builders": "./executors.json",
-  "schematics": "./collection.json",
+  "schematics": "./generators.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
