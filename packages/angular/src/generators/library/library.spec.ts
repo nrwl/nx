@@ -11,7 +11,6 @@ import { createApp } from '../../utils/nx-devkit/testing';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 import { UnitTestRunner } from '../../utils/test-runners';
-import { stripIndent } from '@nrwl/tao/src/shared/logger';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -478,18 +477,6 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
-    });
-
-    it('should set a default importPath when not passing importPath when using --publishable', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({
-        directory: 'myDir',
-        publishable: true,
-      });
-
-      // ASSERT
-      const pkgJson = readJson(appTree, `libs/my-dir/my-lib/package.json`);
-      expect(pkgJson.name).toEqual('@proj/my-dir-my-lib');
     });
 
     it('should update tsconfig.json (no existing path mappings)', async () => {

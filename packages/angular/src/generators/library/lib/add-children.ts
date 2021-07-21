@@ -12,10 +12,9 @@ export function addChildren(host: Tree, options: NormalizedSchema) {
     throw new Error(`Cannot find '${options.parentModule}'`);
   }
 
-  const { npmScope } = getWorkspaceLayout(host);
   const moduleSource = host.read(options.parentModule, 'utf-8');
   const constName = `${names(options.fileName).propertyName}Routes`;
-  const importPath = `@${npmScope}/${options.projectDirectory}`;
+  const importPath = options.importPath;
   let sourceFile = ts.createSourceFile(
     options.parentModule,
     moduleSource,
