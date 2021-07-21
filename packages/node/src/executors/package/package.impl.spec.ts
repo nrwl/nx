@@ -89,8 +89,8 @@ describe('NodePackageBuilder', () => {
   describe('Without library dependencies', () => {
     beforeEach(() => {
       jest
-        .spyOn(projectGraph, 'createProjectGraphAsync')
-        .mockImplementation(async () => {
+        .spyOn(projectGraph, 'readCachedProjectGraph')
+        .mockImplementation(() => {
           return {
             nodes: {
               nodelib: {
@@ -263,8 +263,8 @@ describe('NodePackageBuilder', () => {
     beforeEach(() => {
       // fake that dep project has been built
       jest
-        .spyOn(projectGraph, 'createProjectGraphAsync')
-        .mockImplementation(async () => {
+        .spyOn(projectGraph, 'readCachedProjectGraph')
+        .mockImplementation(() => {
           return {
             nodes: {
               nodelib: {
