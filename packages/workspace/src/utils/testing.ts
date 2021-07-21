@@ -10,52 +10,52 @@ import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/workspace',
-  join(__dirname, '../../collection.json')
+  join(__dirname, '../../generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/jest',
-  join(__dirname, '../../../jest/collection.json')
+  join(__dirname, '../../../jest/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/cypress',
-  join(__dirname, '../../../cypress/collection.json')
+  join(__dirname, '../../../cypress/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/express',
-  join(__dirname, '../../../express/collection.json')
+  join(__dirname, '../../../express/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/react',
-  join(__dirname, '../../../react/collection.json')
+  join(__dirname, '../../../react/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/angular',
-  join(__dirname, '../../../angular/collection.json')
+  join(__dirname, '../../../angular/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/next',
-  join(__dirname, '../../../next/collection.json')
+  join(__dirname, '../../../next/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/node',
-  join(__dirname, '../../../node/collection.json')
+  join(__dirname, '../../../node/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/nest',
-  join(__dirname, '../../../nest/collection.json')
+  join(__dirname, '../../../nest/generators.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/web',
-  join(__dirname, '../../../web/collection.json')
+  join(__dirname, '../../../web/generators.json')
 );
 
 const migrationTestRunner = new SchematicTestRunner(

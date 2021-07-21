@@ -13,7 +13,7 @@ describe('updateKarmaConf', () => {
   beforeEach((done) => {
     schematicRunner = new SchematicTestRunner(
       '@nrwl/workspace',
-      path.join(__dirname, '../../../collection.json')
+      path.join(__dirname, '../../../generators.json')
     );
     tree = createEmptyWorkspace(Tree.empty());
     tree.create('apps/projectName/karma.conf.js', '');

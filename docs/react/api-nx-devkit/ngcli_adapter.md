@@ -70,10 +70,10 @@ Example:
 overrideCollectionResolutionForTesting({
   '@nrwl/workspace': path.join(
     __dirname,
-    '../../../../workspace/collection.json'
+    '../../../../workspace/generators.json'
   ),
-  '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
-  '@nrwl/linter': path.join(__dirname, '../../../../linter/collection.json'),
+  '@nrwl/angular': path.join(__dirname, '../../../../angular/generators.json'),
+  '@nrwl/linter': path.join(__dirname, '../../../../linter/generators.json'),
 });
 ```
 

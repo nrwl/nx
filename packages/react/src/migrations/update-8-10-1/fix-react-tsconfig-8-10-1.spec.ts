@@ -18,24 +18,24 @@ describe('Update 8-10-0', () => {
 
     schematicRunner.registerCollection(
       '@nrwl/cypress',
-      join(__dirname, '../../../../cypress/collection.json')
+      join(__dirname, '../../../../cypress/generators.json')
     );
   });
 
   it('should remove @nwrl/react/typings/svg.d.ts from tsconfig', async () => {
     const reactRunner = new SchematicTestRunner(
       '@nrwl/react',
-      path.join(__dirname, '../../../collection.json')
+      path.join(__dirname, '../../../generators.json')
     );
 
     reactRunner.registerCollection(
       '@nrwl/jest',
-      join(__dirname, '../../../../jest/collection.json')
+      join(__dirname, '../../../../jest/generators.json')
     );
 
     reactRunner.registerCollection(
       '@nrwl/cypress',
-      join(__dirname, '../../../../cypress/collection.json')
+      join(__dirname, '../../../../cypress/generators.json')
     );
 
     tree = await reactRunner

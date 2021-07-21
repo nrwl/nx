@@ -28,7 +28,7 @@ describe('StorybookConfiguration generator', () => {
     overrideCollectionResolutionForTesting({
       '@nrwl/storybook': joinPathFragments(
         __dirname,
-        '../../../../storybook/collection.json'
+        '../../../../storybook/generators.json'
       ),
     });
     jest.resetModules();

@@ -16,13 +16,13 @@ describe('app', () => {
     tree = createTreeWithEmptyWorkspace();
 
     overrideCollectionResolutionForTesting({
-      '@nrwl/cypress': join(__dirname, '../../../../cypress/collection.json'),
-      '@nrwl/jest': join(__dirname, '../../../../jest/collection.json'),
+      '@nrwl/cypress': join(__dirname, '../../../../cypress/generators.json'),
+      '@nrwl/jest': join(__dirname, '../../../../jest/generators.json'),
       '@nrwl/workspace': join(
         __dirname,
-        '../../../../workspace/collection.json'
+        '../../../../workspace/generators.json'
       ),
-      '@nrwl/angular': join(__dirname, '../../../../angular/collection.json'),
+      '@nrwl/angular': join(__dirname, '../../../../angular/generators.json'),
     });
     jest.clearAllMocks();
   });

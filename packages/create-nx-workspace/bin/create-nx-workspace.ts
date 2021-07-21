@@ -485,7 +485,7 @@ async function createApp(
   if (parsedArgs.preset === Preset.Gatsby && packageManager === 'npm') {
     process.env.npm_config_legacy_peer_deps = 'false';
   }
-  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
+  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/generators.json --cli=${cli}`;
 
   let workspaceSetupSpinner = ora('Creating your workspace').start();
 
