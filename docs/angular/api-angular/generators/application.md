@@ -1,4 +1,4 @@
-# application
+# @nrwl/angular:application
 
 Creates an Angular application.
 

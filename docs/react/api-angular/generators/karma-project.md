@@ -1,4 +1,4 @@
-# karma-project
+# @nrwl/angular:karma-project
 
 Adds Karma configuration to a project.
 

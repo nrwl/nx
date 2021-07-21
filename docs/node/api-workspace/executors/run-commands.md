@@ -1,4 +1,4 @@
-# run-commands
+# @nrwl/workspace:run-commands
 
 Run any custom commands with Nx
 

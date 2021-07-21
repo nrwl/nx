@@ -1,4 +1,4 @@
-# run-script
+# @nrwl/workspace:run-script
 
 Run an npm script using Nx
 

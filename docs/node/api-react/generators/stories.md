@@ -1,4 +1,4 @@
-# stories
+# @nrwl/react:stories
 
 Create stories/specs for all components declared in a library
 

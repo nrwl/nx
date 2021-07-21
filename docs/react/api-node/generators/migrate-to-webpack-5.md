@@ -1,4 +1,4 @@
-# migrate-to-webpack-5
+# @nrwl/node:migrate-to-webpack-5
 
 Add webpack 5 compatible dependencies to the workspace
 

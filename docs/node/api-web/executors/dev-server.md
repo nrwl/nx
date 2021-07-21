@@ -1,4 +1,4 @@
-# dev-server
+# @nrwl/web:dev-server
 
 Serve a web application
 

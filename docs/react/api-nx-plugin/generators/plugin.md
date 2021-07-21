@@ -1,4 +1,4 @@
-# plugin
+# @nrwl/nx-plugin:plugin
 
 Create a Nx Plugin
 

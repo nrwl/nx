@@ -1,4 +1,4 @@
-# webpack-server
+# @nrwl/angular:webpack-server
 
 Serves a browser application with support for a custom webpack configuration.
 

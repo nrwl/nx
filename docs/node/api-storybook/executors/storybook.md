@@ -1,4 +1,4 @@
-# storybook
+# @nrwl/storybook:storybook
 
 Serve Storybook
 
