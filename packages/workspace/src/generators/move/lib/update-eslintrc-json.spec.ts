@@ -1,4 +1,9 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Linter } from '../../../utils/lint';
@@ -6,7 +11,6 @@ import { Linter } from '../../../utils/lint';
 import { Schema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
 import { libraryGenerator } from '../../library/library';
-import { executionAsyncId } from 'node:async_hooks';
 
 describe('updateEslint', () => {
   let tree: Tree;
@@ -58,7 +62,45 @@ describe('updateEslint', () => {
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
     ).toEqual(
       expect.objectContaining({
-        extends: '../../../.eslintrc.json',
+        extends: ['../../../.eslintrc.json'],
+      })
+    );
+  });
+
+  it('should preserve .eslintrc.json non-relative extends when project is moved to subdirectory', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      linter: Linter.EsLint,
+      standaloneConfig: false,
+    });
+    updateJson(tree, 'libs/my-lib/.eslintrc.json', (eslintRcJson) => {
+      eslintRcJson.extends = [
+        'plugin:@nrwl/nx/react',
+        '../../.eslintrc.json',
+        './customrc.json',
+      ];
+      return eslintRcJson;
+    });
+
+    // This step is usually handled elsewhere
+    tree.rename(
+      'libs/my-lib/.eslintrc.json',
+      'libs/shared/my-destination/.eslintrc.json'
+    );
+
+    const projectConfig = readProjectConfiguration(tree, 'my-lib');
+
+    updateEslintrcJson(tree, schema, projectConfig);
+
+    expect(
+      readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
+    ).toEqual(
+      expect.objectContaining({
+        extends: [
+          'plugin:@nrwl/nx/react',
+          '../../../.eslintrc.json',
+          './customrc.json',
+        ],
       })
     );
   });
