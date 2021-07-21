@@ -8,7 +8,7 @@
     },
     "replace-node-sass-with-sass-12-6-1": {
       "cli": "nx",
-      "version": "12.6.1-beta.0",
+      "version": "12.6.0-beta.12",
       "description": "Replace node-sass with sass in package.json",
       "factory": "./src/migrations/update-12-6-1/replace-node-sass-with-sass-12-6-1"
     }
@@ -152,8 +152,8 @@
         }
       }
     },
-    "12.6.1": {
-      "version": "12.6.1-beta.0",
+    "12.6.0": {
+      "version": "12.6.0-beta.12",
       "packages": {
         "gatsby": {
           "version": "3.10.0",
