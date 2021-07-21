@@ -27,8 +27,8 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		remote1: 'remote1@http://localhost:4201/remoteEntry.js',
-    		remote2: 'remote2@http://localhost:4202/remoteEntry.js',
+    		\\"remote1\\": 'remote1@http://localhost:4201/remoteEntry.js',
+    		\\"remote2\\": 'remote2@http://localhost:4202/remoteEntry.js',
       
       },
       shared: {
@@ -72,7 +72,7 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		remote1: 'remote1@http://localhost:4200/remoteEntry.js',
+    		\\"remote1\\": 'remote1@http://localhost:4200/remoteEntry.js',
       
       },
       shared: {

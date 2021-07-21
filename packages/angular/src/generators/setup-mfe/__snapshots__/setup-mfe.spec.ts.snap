@@ -1,5 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Init MFE should add a remote application and add it to a specified host applications router config 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppComponent } from './app.component';
+import { RouterModule } from '@angular/router';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot([{
+         path: 'remote1', 
+         loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
+     }, {
+         path: 'remote2', 
+         loadChildren: () => import('remote2/Module').then(m => m.RemoteEntryModule)
+     }], {initialNavigation: 'enabledBlocking'})
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+"
+`;
+
 exports[`Init MFE should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
 "const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
 const mf = require(\\"@angular-architects/module-federation/webpack\\");
@@ -27,8 +55,8 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		remote1: 'remote1@http://localhost:4201/remoteEntry.js',
-    		remote2: 'remote2@http://localhost:4202/remoteEntry.js',
+    		\\"remote1\\": 'remote1@http://localhost:4201/remoteEntry.js',
+    		\\"remote2\\": 'remote2@http://localhost:4202/remoteEntry.js',
       
       },
       shared: {
@@ -72,7 +100,7 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		remote1: 'remote1@http://localhost:4200/remoteEntry.js',
+    		\\"remote1\\": 'remote1@http://localhost:4200/remoteEntry.js',
       
       },
       shared: {
