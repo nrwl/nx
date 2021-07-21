@@ -29,6 +29,7 @@ export class ForkedProcessTaskRunner {
     return new Promise<BatchResults>((res, rej) => {
       try {
         const env = this.envForForkedProcess(
+          taskGraph.tasks[0].target.target,
           process.env.FORCE_COLOR === undefined
             ? 'true'
             : process.env.FORCE_COLOR
@@ -211,6 +212,7 @@ export class ForkedProcessTaskRunner {
   }
 
   private envForForkedProcess(
+    target: string,
     forceColor: string,
     outputPath?: string,
     forwardOutput?: boolean
@@ -218,7 +220,8 @@ export class ForkedProcessTaskRunner {
     const envsFromFiles = {
       ...parseEnv('.env'),
       ...parseEnv('.local.env'),
-      ...parseEnv('.env.local'),
+      ...parseEnv(`.${target}.env`),
+      ...parseEnv(`.env.${target}`),
     };
 
     const env: NodeJS.ProcessEnv = {
@@ -249,14 +252,22 @@ export class ForkedProcessTaskRunner {
     forwardOutput: boolean
   ) {
     let env: NodeJS.ProcessEnv = this.envForForkedProcess(
+      task.target.target,
       forceColor,
       outputPath,
       forwardOutput
     );
     const envsFromFiles = {
+      ...parseEnv('.env'),
+      ...parseEnv('.local.env'),
+      ...parseEnv('.env.local'),
+      ...parseEnv(`.${task.target.target}.env`),
+      ...parseEnv(`.env.${task.target.target}`),
       ...parseEnv(`${task.projectRoot}/.env`),
       ...parseEnv(`${task.projectRoot}/.local.env`),
       ...parseEnv(`${task.projectRoot}/.env.local`),
+      ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
+      ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
     };
 
     env = {
