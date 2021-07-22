@@ -1,4 +1,4 @@
-# page
+# @nrwl/next:page
 
 Create a Next.js page component
 

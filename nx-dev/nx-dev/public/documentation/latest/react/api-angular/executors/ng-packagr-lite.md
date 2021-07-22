@@ -1,4 +1,4 @@
-# ng-packagr-lite
+# @nrwl/angular:ng-packagr-lite
 
 Builds a library with support for incremental builds.
 

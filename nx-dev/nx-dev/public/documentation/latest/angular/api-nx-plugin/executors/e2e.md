@@ -1,4 +1,4 @@
-# e2e
+# @nrwl/nx-plugin:e2e
 
 Creates and runs the e2e tests for an Nx Plugin.
 

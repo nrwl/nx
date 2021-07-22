@@ -1,4 +1,4 @@
-# redux
+# @nrwl/react:redux
 
 Create a redux slice for a project
 

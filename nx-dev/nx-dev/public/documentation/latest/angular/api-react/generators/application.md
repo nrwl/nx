@@ -1,4 +1,4 @@
-# application
+# @nrwl/react:application
 
 Create an application
 

@@ -1,4 +1,4 @@
-# setup-mfe
+# @nrwl/angular:setup-mfe
 
 Generate a Module Federation configuration for a given Angular application.
 
@@ -36,9 +36,15 @@ Default: `remote`
 
 Type: `string`
 
-Possible values: `shell`, `remote`
+Possible values: `host`, `remote`
 
 Type of application to generate the Module Federation configuration for.
+
+### host
+
+Type: `string`
+
+The name of the host application that the remote application will be consumed by.
 
 ### port
 
@@ -50,7 +56,13 @@ The port at which the remote application should be served.
 
 Type: `array`
 
-A list of remote application names that the shell application should consume.
+A list of remote application names that the host application should consume.
+
+### routing
+
+Type: `boolean`
+
+Generate a routing setup to allow a host application to route to the remote application.
 
 ### skipFormat
 

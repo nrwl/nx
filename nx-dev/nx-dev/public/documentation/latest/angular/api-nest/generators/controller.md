@@ -1,4 +1,4 @@
-# controller
+# @nrwl/nest:controller
 
 Run the `controller` NestJS generator with Nx project support.
 

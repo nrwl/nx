@@ -1,4 +1,4 @@
-# build
+# @nrwl/gatsby:build
 
 Build a Gatsby app
 

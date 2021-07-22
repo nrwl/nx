@@ -1,4 +1,4 @@
-# run-commands
+# @nrwl/workspace:run-commands
 
 Run any custom commands with Nx
 
@@ -107,14 +107,18 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ##### Custom **done** conditions
 
-Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
+Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:
 
 ```json
 "finish-when-ready": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "command": "echo 'READY' && sleep 5 && echo 'FINISHED'",
-        "readyWhen": "READY"
+        "commands": [
+            "sleep 5 && echo 'FINISHED'",
+            "echo 'READY'"
+        ],
+        "readyWhen": "READY",
+        "parallel": true
     }
 }
 ```
@@ -123,7 +127,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 nx run frontend:finish-when-ready
 ```
 
-The above command will finish immediately, instead of waiting for 5 seconds.
+The above commands will finish immediately, instead of waiting for 5 seconds.
 
 ##### Nx Affected
 
@@ -219,4 +223,4 @@ Run commands in parallel
 
 Type: `string`
 
-String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is done when all the child processes complete.
+String to appear in `stdout` or `stderr` that indicates that the task is done. This option can only be used when multiple commands are run and `parallel` is set to `true`. If not specified, the task is done when all the child processes complete.

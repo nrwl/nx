@@ -1,4 +1,4 @@
-# library
+# @nrwl/nest:library
 
 Create a new NestJS library.
 

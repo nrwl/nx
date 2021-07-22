@@ -1,4 +1,4 @@
-# cypress
+# @nrwl/cypress:cypress
 
 Run Cypress e2e tests
 

@@ -1,4 +1,4 @@
-# stories
+# @nrwl/angular:stories
 
 Creates stories/specs for all components declared in a project.
 

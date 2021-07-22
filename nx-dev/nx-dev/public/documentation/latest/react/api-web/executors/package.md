@@ -1,4 +1,4 @@
-# package
+# @nrwl/web:package
 
 Package a library
 

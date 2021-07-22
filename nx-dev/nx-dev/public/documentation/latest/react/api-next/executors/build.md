@@ -1,4 +1,4 @@
-# build
+# @nrwl/next:build
 
 Build a Next.js app
 
