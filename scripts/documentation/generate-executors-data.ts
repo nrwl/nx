@@ -87,7 +87,7 @@ function generateTemplate(
     Options can be configured in \`${filename}\` when defining the executor, or when invoking it.
     ${
       framework != 'angular'
-        ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/nx-cli#running-tasks.`
+        ? `Read more about how to use executors and the CLI here: https://nx.dev/latest/${framework}/getting-started/nx-cli#common-commands.`
         : ``
     }
     \n`;
@@ -116,7 +116,7 @@ function generateTemplate(
             ### ${option.deprecated ? `~~${option.name}~~` : option.name} ${
           option.required ? '(*__required__*)' : ''
         } ${option.hidden ? '(__hidden__)' : ''}
-            
+
             ${
               !!option.aliases.length
                 ? `Alias(es): ${option.aliases.join(',')}\n`
@@ -143,8 +143,8 @@ function generateTemplate(
               } \n`;
         }
 
-        template += dedent`  
-            ${enumStr} 
+        template += dedent`
+            ${enumStr}
             ${formatDeprecated(option.description, option.deprecated)}
           `;
 
@@ -154,7 +154,7 @@ function generateTemplate(
               #### ${optionValue.name} ${
               optionValue.required ? '(*__required__*)' : ''
             }
-              Type: \`${optionValue.type}\` \n 
+              Type: \`${optionValue.type}\` \n
               ${optionValue.description}
             `;
           });
