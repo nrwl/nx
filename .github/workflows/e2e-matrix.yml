@@ -36,7 +36,7 @@ jobs:
           - yarn
           - pnpm
         packages:
-          - e2e-angular
+          - e2e-angular-core,e2e-angular-extensions
           - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
           - e2e-cypress
           - e2e-gatsby,e2e-react
@@ -104,7 +104,6 @@ jobs:
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
         YARN_REGISTRY: http://localhost:4872
-        SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
