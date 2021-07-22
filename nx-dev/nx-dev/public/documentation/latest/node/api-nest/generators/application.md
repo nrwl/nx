@@ -1,4 +1,4 @@
-# application
+# @nrwl/nest:application
 
 Create a NestJS application.
 

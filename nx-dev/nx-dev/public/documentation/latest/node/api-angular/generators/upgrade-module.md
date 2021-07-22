@@ -1,4 +1,4 @@
-# upgrade-module
+# @nrwl/angular:upgrade-module
 
 Sets up an Upgrade Module.
 

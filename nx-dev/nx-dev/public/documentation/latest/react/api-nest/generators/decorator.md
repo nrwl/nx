@@ -1,4 +1,4 @@
-# decorator
+# @nrwl/nest:decorator
 
 Run the `decorator` NestJS generator with Nx project support.
 

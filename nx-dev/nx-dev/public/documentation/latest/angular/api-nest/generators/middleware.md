@@ -1,4 +1,4 @@
-# middleware
+# @nrwl/nest:middleware
 
 Run the `middleware` NestJS generator with Nx project support.
 

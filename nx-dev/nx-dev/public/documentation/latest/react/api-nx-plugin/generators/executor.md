@@ -1,4 +1,4 @@
-# executor
+# @nrwl/nx-plugin:executor
 
 Create a executor for an Nx Plugin
 

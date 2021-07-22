@@ -1,4 +1,4 @@
-# storybook-migrate-stories-to-6-2
+# @nrwl/angular:storybook-migrate-stories-to-6-2
 
 Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.
 

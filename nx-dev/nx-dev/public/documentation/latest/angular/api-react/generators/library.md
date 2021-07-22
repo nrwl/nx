@@ -1,4 +1,4 @@
-# library
+# @nrwl/react:library
 
 Create a library
 

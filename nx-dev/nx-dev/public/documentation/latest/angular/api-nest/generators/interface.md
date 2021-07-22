@@ -1,4 +1,4 @@
-# interface
+# @nrwl/nest:interface
 
 Run the `interface` NestJS generator with Nx project support.
 

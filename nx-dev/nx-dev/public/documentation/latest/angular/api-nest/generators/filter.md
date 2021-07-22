@@ -1,4 +1,4 @@
-# filter
+# @nrwl/nest:filter
 
 Run the `filter` NestJS generator with Nx project support.
 

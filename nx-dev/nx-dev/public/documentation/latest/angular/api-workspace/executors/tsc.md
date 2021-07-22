@@ -1,4 +1,4 @@
-# tsc
+# @nrwl/workspace:tsc
 
 Build a project using TypeScript.
 

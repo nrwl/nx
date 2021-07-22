@@ -1,4 +1,4 @@
-# build
+# @nrwl/web:build
 
 Build a application
 

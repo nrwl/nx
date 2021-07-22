@@ -1,4 +1,4 @@
-## Lerna/Yarn and Nx
+# Lerna/Yarn and Nx
 
 Nx has more in common with the build tools used at Google or Facebook (just made a lot more easily accessible for other companies) than with Lerna. When using the word "monorepo" in the context of say Google, we imagine a much richer dev experience, not simply collocating a few projects side-by-side.
 

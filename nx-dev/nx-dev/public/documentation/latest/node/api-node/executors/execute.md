@@ -1,4 +1,4 @@
-# execute
+# @nrwl/node:execute
 
 Execute a Node application
 

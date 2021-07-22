@@ -104,13 +104,13 @@
 
 ### ChangeType
 
-• **ChangeType**: _object_
+• **ChangeType**: `Object`
 
 ---
 
 ### DependencyType
 
-• **DependencyType**: _object_
+• **DependencyType**: `Object`
 
 Type of dependency between projects
 
@@ -118,7 +118,7 @@ Type of dependency between projects
 
 ### ProjectGraphBuilder
 
-• **ProjectGraphBuilder**: _object_
+• **ProjectGraphBuilder**: `Object`
 
 Builder for adding nodes and dependencies to a [ProjectGraph](../../node/nx-devkit/index#projectgraph)
 
@@ -126,7 +126,7 @@ Builder for adding nodes and dependencies to a [ProjectGraph](../../node/nx-devk
 
 ### ExecutorContext
 
-• **ExecutorContext**: _object_
+• **ExecutorContext**: `Object`
 
 Context that is passed into an executor
 
@@ -134,7 +134,7 @@ Context that is passed into an executor
 
 ### FileChange
 
-• **FileChange**: _object_
+• **FileChange**: `Object`
 
 Description of a file change in the Nx virtual file system/
 
@@ -142,7 +142,7 @@ Description of a file change in the Nx virtual file system/
 
 ### FileData
 
-• **FileData**: _object_
+• **FileData**: `Object`
 
 Some metadata about a file
 
@@ -150,57 +150,57 @@ Some metadata about a file
 
 ### ImplicitJsonSubsetDependency
 
-• **ImplicitJsonSubsetDependency**<T\>: _object_
+• **ImplicitJsonSubsetDependency**<`T`\>: `Object`
 
 #### Type parameters
 
-| Name | Default             |
+| Name | Type                |
 | :--- | :------------------ |
-| `T`  | `"*"` \| _string_[] |
+| `T`  | `"*"` \| `string`[] |
 
 ---
 
 ### JsonParseOptions
 
-• **JsonParseOptions**: _object_
+• **JsonParseOptions**: `Object`
 
 ---
 
 ### JsonSerializeOptions
 
-• **JsonSerializeOptions**: _object_
+• **JsonSerializeOptions**: `Object`
 
 ---
 
 ### NxAffectedConfig
 
-• **NxAffectedConfig**: _object_
+• **NxAffectedConfig**: `Object`
 
 ---
 
 ### NxJsonConfiguration
 
-• **NxJsonConfiguration**<T\>: _object_
+• **NxJsonConfiguration**<`T`\>: `Object`
 
 Nx.json configuration
 
 #### Type parameters
 
-| Name | Default             |
+| Name | Type                |
 | :--- | :------------------ |
-| `T`  | `"*"` \| _string_[] |
+| `T`  | `"*"` \| `string`[] |
 
 ---
 
 ### NxJsonProjectConfiguration
 
-• **NxJsonProjectConfiguration**: _object_
+• **NxJsonProjectConfiguration**: `Object`
 
 ---
 
 ### NxPlugin
 
-• **NxPlugin**: _object_
+• **NxPlugin**: `Object`
 
 A plugin for Nx
 
@@ -208,7 +208,7 @@ A plugin for Nx
 
 ### ProjectConfiguration
 
-• **ProjectConfiguration**: _object_
+• **ProjectConfiguration**: `Object`
 
 Project configuration
 
@@ -216,7 +216,7 @@ Project configuration
 
 ### ProjectFileMap
 
-• **ProjectFileMap**: _object_
+• **ProjectFileMap**: `Object`
 
 A list of files separated by the project they belong to
 
@@ -224,21 +224,21 @@ A list of files separated by the project they belong to
 
 ### ProjectGraph
 
-• **ProjectGraph**<T\>: _object_
+• **ProjectGraph**<`T`\>: `Object`
 
 A Graph of projects in the workspace and dependencies between them
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
 ### ProjectGraphDependency
 
-• **ProjectGraphDependency**: _object_
+• **ProjectGraphDependency**: `Object`
 
 A dependency between two projects
 
@@ -246,21 +246,21 @@ A dependency between two projects
 
 ### ProjectGraphNode
 
-• **ProjectGraphNode**<T\>: _object_
+• **ProjectGraphNode**<`T`\>: `Object`
 
 A node describing a project in a workspace
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
 ### ProjectGraphProcessorContext
 
-• **ProjectGraphProcessorContext**: _object_
+• **ProjectGraphProcessorContext**: `Object`
 
 Additional information to be used to process a project graph
 
@@ -268,25 +268,25 @@ Additional information to be used to process a project graph
 
 ### StringDeletion
 
-• **StringDeletion**: _object_
+• **StringDeletion**: `Object`
 
 ---
 
 ### StringInsertion
 
-• **StringInsertion**: _object_
+• **StringInsertion**: `Object`
 
 ---
 
 ### Target
 
-• **Target**: _object_
+• **Target**: `Object`
 
 ---
 
 ### TargetConfiguration
 
-• **TargetConfiguration**: _object_
+• **TargetConfiguration**: `Object`
 
 Target's configuration
 
@@ -294,13 +294,13 @@ Target's configuration
 
 ### TargetDependencyConfig
 
-• **TargetDependencyConfig**: _object_
+• **TargetDependencyConfig**: `Object`
 
 ---
 
 ### Task
 
-• **Task**: _object_
+• **Task**: `Object`
 
 A representation of the invocation of an Executor
 
@@ -308,7 +308,7 @@ A representation of the invocation of an Executor
 
 ### TaskGraph
 
-• **TaskGraph**: _object_
+• **TaskGraph**: `Object`
 
 Graph of Tasks to be executed
 
@@ -316,7 +316,7 @@ Graph of Tasks to be executed
 
 ### Tree
 
-• **Tree**: _object_
+• **Tree**: `Object`
 
 Virtual file system tree.
 
@@ -324,13 +324,13 @@ Virtual file system tree.
 
 ### Workspace
 
-• **Workspace**: _object_
+• **Workspace**: `Object`
 
 ---
 
 ### WorkspaceJsonConfiguration
 
-• **WorkspaceJsonConfiguration**: _object_
+• **WorkspaceJsonConfiguration**: `Object`
 
 Workspace configuration
 
@@ -338,83 +338,91 @@ Workspace configuration
 
 ### Executor
 
-Ƭ **Executor**<T\>: (`options`: T, `context`: [_ExecutorContext_](../../node/nx-devkit/index#executorcontext)) => _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
-
-Implementation of a target of a project
+Ƭ **Executor**<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../node/nx-devkit/index#executorcontext)) => `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 #### Type declaration
 
-▸ (`options`: T, `context`: [_ExecutorContext_](../../node/nx-devkit/index#executorcontext)): _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
+▸ (`options`, `context`): `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
 
-#### Parameters
+Implementation of a target of a project
+
+##### Parameters
 
 | Name      | Type                                                            |
 | :-------- | :-------------------------------------------------------------- |
-| `options` | T                                                               |
-| `context` | [_ExecutorContext_](../../node/nx-devkit/index#executorcontext) |
+| `options` | `T`                                                             |
+| `context` | [`ExecutorContext`](../../node/nx-devkit/index#executorcontext) |
 
-**Returns:** _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
+##### Returns
+
+`Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
 
 ---
 
 ### Generator
 
-Ƭ **Generator**<T\>: (`tree`: _any_, `schema`: T) => _void_ \| [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)\>
-
-A function that schedules updates to the filesystem to be done atomically
+Ƭ **Generator**<`T`\>: (`tree`: `any`, `schema`: `T`) => `void` \| [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)\>
 
 #### Type parameters
 
-| Name | Default   |
+| Name | Type      |
 | :--- | :-------- |
-| `T`  | _unknown_ |
+| `T`  | `unknown` |
 
 #### Type declaration
 
-▸ (`tree`: _any_, `schema`: T): _void_ \| [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)\>
+▸ (`tree`, `schema`): `void` \| [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)\>
 
-#### Parameters
+A function that schedules updates to the filesystem to be done atomically
+
+##### Parameters
 
 | Name     | Type  |
 | :------- | :---- |
-| `tree`   | _any_ |
-| `schema` | T     |
+| `tree`   | `any` |
+| `schema` | `T`   |
 
-**Returns:** _void_ \| [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)\>
+##### Returns
+
+`void` \| [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)\>
 
 ---
 
 ### GeneratorCallback
 
-Ƭ **GeneratorCallback**: () => _void_ \| _Promise_<void\>
-
-A callback function that is executed after changes are made to the file system
+Ƭ **GeneratorCallback**: () => `void` \| `Promise`<`void`\>
 
 #### Type declaration
 
-▸ (): _void_ \| _Promise_<void\>
+▸ (): `void` \| `Promise`<`void`\>
 
-**Returns:** _void_ \| _Promise_<void\>
+A callback function that is executed after changes are made to the file system
+
+##### Returns
+
+`void` \| `Promise`<`void`\>
 
 ---
 
 ### ImplicitDependencyEntry
 
-Ƭ **ImplicitDependencyEntry**<T\>: _object_
+Ƭ **ImplicitDependencyEntry**<`T`\>: `Object`
 
 #### Type parameters
 
-| Name | Default             |
+| Name | Type                |
 | :--- | :------------------ |
-| `T`  | `"*"` \| _string_[] |
+| `T`  | `"*"` \| `string`[] |
 
-#### Type declaration
+#### Index signature
+
+▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../node/nx-devkit/index#implicitjsonsubsetdependency)<`T`\>
 
 ---
 
@@ -434,7 +442,7 @@ Type of project supported
 
 ### StringChange
 
-Ƭ **StringChange**: [_StringInsertion_](../../node/nx-devkit/index#stringinsertion) \| [_StringDeletion_](../../node/nx-devkit/index#stringdeletion)
+Ƭ **StringChange**: [`StringInsertion`](../../node/nx-devkit/index#stringinsertion) \| [`StringDeletion`](../../node/nx-devkit/index#stringdeletion)
 
 A change to be made to a string
 
@@ -442,59 +450,61 @@ A change to be made to a string
 
 ### TaskGraphExecutor
 
-Ƭ **TaskGraphExecutor**<T\>: (`taskGraph`: [_TaskGraph_](../../node/nx-devkit/index#taskgraph), `options`: _Record_<string, T\>, `overrides`: T, `context`: [_ExecutorContext_](../../node/nx-devkit/index#executorcontext)) => _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
-
-Implementation of a target of a project that handles multiple projects to be batched
+Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../node/nx-devkit/index#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../node/nx-devkit/index#executorcontext)) => `Promise`<`Record`<`string`, `Object`\>\>
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 #### Type declaration
 
-▸ (`taskGraph`: [_TaskGraph_](../../node/nx-devkit/index#taskgraph), `options`: _Record_<string, T\>, `overrides`: T, `context`: [_ExecutorContext_](../../node/nx-devkit/index#executorcontext)): _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
+▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`Record`<`string`, `Object`\>\>
 
-#### Parameters
+Implementation of a target of a project that handles multiple projects to be batched
+
+##### Parameters
 
 | Name        | Type                                                            |
 | :---------- | :-------------------------------------------------------------- |
-| `taskGraph` | [_TaskGraph_](../../node/nx-devkit/index#taskgraph)             |
-| `options`   | _Record_<string, T\>                                            |
-| `overrides` | T                                                               |
-| `context`   | [_ExecutorContext_](../../node/nx-devkit/index#executorcontext) |
+| `taskGraph` | [`TaskGraph`](../../node/nx-devkit/index#taskgraph)             |
+| `options`   | `Record`<`string`, `T`\>                                        |
+| `overrides` | `T`                                                             |
+| `context`   | [`ExecutorContext`](../../node/nx-devkit/index#executorcontext) |
 
-**Returns:** _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
+##### Returns
+
+`Promise`<`Record`<`string`, `Object`\>\>
 
 ---
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: _Omit_<[_WorkspaceJsonConfiguration_](../../node/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & _Omit_<[_NxJsonConfiguration_](../../node/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Omit`<[`NxJsonConfiguration`](../../node/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
 
 ## Variables
 
 ### logger
 
-• `Const` **logger**: _object_
+• `Const` **logger**: `Object`
 
 #### Type declaration
 
 | Name    | Type                        |
 | :------ | :-------------------------- |
-| `debug` | (...`s`: _any_[]) => _void_ |
-| `error` | (`s`: _any_) => _void_      |
-| `fatal` | (...`s`: _any_[]) => _void_ |
-| `info`  | (`s`: _any_) => _void_      |
-| `log`   | (...`s`: _any_[]) => _void_ |
-| `warn`  | (`s`: _any_) => _void_      |
+| `debug` | (...`s`: `any`[]) => `void` |
+| `error` | (`s`: `any`) => `void`      |
+| `fatal` | (...`s`: `any`[]) => `void` |
+| `info`  | (`s`: `any`) => `void`      |
+| `log`   | (...`s`: `any`[]) => `void` |
+| `warn`  | (`s`: `any`) => `void`      |
 
 ## Functions
 
 ### addDependenciesToPackageJson
 
-▸ **addDependenciesToPackageJson**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `dependencies`: _Record_<string, string\>, `devDependencies`: _Record_<string, string\>, `packageJsonPath?`: _string_): [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)
+▸ **addDependenciesToPackageJson**(`host`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)
 
 Add Dependencies and Dev Dependencies to package.json
 
@@ -508,14 +518,16 @@ This will **add** `react` and `jest` to the dependencies and devDependencies sec
 
 #### Parameters
 
-| Name              | Type                                      | Default value  | Description                                                             |
-| :---------------- | :---------------------------------------- | :------------- | :---------------------------------------------------------------------- |
-| `host`            | [_Tree_](../../node/nx-devkit/index#tree) | -              | Tree representing file system to modify                                 |
-| `dependencies`    | _Record_<string, string\>                 | -              | Dependencies to be added to the dependencies section of package.json    |
-| `devDependencies` | _Record_<string, string\>                 | -              | Dependencies to be added to the devDependencies section of package.json |
-| `packageJsonPath` | _string_                                  | 'package.json' | Path to package.json                                                    |
+| Name              | Type                                      | Default value    | Description                                                             |
+| :---------------- | :---------------------------------------- | :--------------- | :---------------------------------------------------------------------- |
+| `host`            | [`Tree`](../../node/nx-devkit/index#tree) | `undefined`      | Tree representing file system to modify                                 |
+| `dependencies`    | `Record`<`string`, `string`\>             | `undefined`      | Dependencies to be added to the dependencies section of package.json    |
+| `devDependencies` | `Record`<`string`, `string`\>             | `undefined`      | Dependencies to be added to the devDependencies section of package.json |
+| `packageJsonPath` | `string`                                  | `'package.json'` | Path to package.json                                                    |
 
-**Returns:** [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)
+#### Returns
+
+[`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)
 
 Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
 
@@ -523,7 +535,7 @@ Callback to install dependencies only if necessary. undefined is returned if cha
 
 ### addProjectConfiguration
 
-▸ **addProjectConfiguration**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration), `standalone?`: _boolean_): _void_
+▸ **addProjectConfiguration**(`host`, `projectName`, `projectConfiguration`, `standalone?`): `void`
 
 Adds project configuration to the Nx workspace.
 
@@ -534,18 +546,20 @@ both files.
 
 | Name                   | Type                                                                                                                                                              | Default value | Description                                                                                |
 | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
-| `host`                 | [_Tree_](../../node/nx-devkit/index#tree)                                                                                                                         | -             | the file system tree                                                                       |
-| `projectName`          | _string_                                                                                                                                                          | -             | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration) | -             | project configuration                                                                      |
-| `standalone`           | _boolean_                                                                                                                                                         | false         | should the project use package.json? If false, the project config is inside workspace.json |
+| `host`                 | [`Tree`](../../node/nx-devkit/index#tree)                                                                                                                         | `undefined`   | the file system tree                                                                       |
+| `projectName`          | `string`                                                                                                                                                          | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../node/nx-devkit/index#nxjsonprojectconfiguration) | `undefined`   | project configuration                                                                      |
+| `standalone`           | `boolean`                                                                                                                                                         | `false`       | should the project use package.json? If false, the project config is inside workspace.json |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### applyChangesToString
 
-▸ **applyChangesToString**(`text`: _string_, `changes`: [_StringChange_](../../node/nx-devkit/index#stringchange)[]): _string_
+▸ **applyChangesToString**(`text`, `changes`): `string`
 
 Applies a list of changes to a string's original value.
 
@@ -581,16 +595,18 @@ bootstrap({
 
 | Name      | Type                                                        |
 | :-------- | :---------------------------------------------------------- |
-| `text`    | _string_                                                    |
-| `changes` | [_StringChange_](../../node/nx-devkit/index#stringchange)[] |
+| `text`    | `string`                                                    |
+| `changes` | [`StringChange`](../../node/nx-devkit/index#stringchange)[] |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### convertNxExecutor
 
-▸ **convertNxExecutor**(`executor`: [_Executor_](../../node/nx-devkit/index#executor)): _any_
+▸ **convertNxExecutor**(`executor`): `any`
 
 Convert an Nx Executor into an Angular Devkit Builder
 
@@ -600,37 +616,66 @@ Use this to expose a compatible Angular Builder
 
 | Name       | Type                                              |
 | :--------- | :------------------------------------------------ |
-| `executor` | [_Executor_](../../node/nx-devkit/index#executor) |
+| `executor` | [`Executor`](../../node/nx-devkit/index#executor) |
 
-**Returns:** _any_
+#### Returns
+
+`any`
 
 ---
 
 ### convertNxGenerator
 
-▸ **convertNxGenerator**<T\>(`generator`: [_Generator_](../../node/nx-devkit/index#generator)<T\>): _function_
+▸ **convertNxGenerator**<`T`\>(`generator`): (`options`: `T`) => (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
 
 Convert an Nx Generator into an Angular Devkit Schematic
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 #### Parameters
 
-| Name        | Type                                                    |
-| :---------- | :------------------------------------------------------ |
-| `generator` | [_Generator_](../../node/nx-devkit/index#generator)<T\> |
+| Name        | Type                                                      |
+| :---------- | :-------------------------------------------------------- |
+| `generator` | [`Generator`](../../node/nx-devkit/index#generator)<`T`\> |
 
-**Returns:** (`options`: T) => (`tree`: _any_, `context`: _any_) => _Promise_<any\>
+#### Returns
+
+`fn`
+
+▸ (`options`): (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
+
+##### Parameters
+
+| Name      | Type |
+| :-------- | :--- |
+| `options` | `T`  |
+
+##### Returns
+
+`fn`
+
+▸ (`tree`, `context`): `Promise`<`any`\>
+
+##### Parameters
+
+| Name      | Type  |
+| :-------- | :---- |
+| `tree`    | `any` |
+| `context` | `any` |
+
+##### Returns
+
+`Promise`<`any`\>
 
 ---
 
 ### detectPackageManager
 
-▸ **detectPackageManager**(`dir?`: _string_): [_PackageManager_](../../node/nx-devkit/index#packagemanager)
+▸ **detectPackageManager**(`dir?`): [`PackageManager`](../../node/nx-devkit/index#packagemanager)
 
 Detects which package manager is used in the workspace based on the lock file.
 
@@ -638,15 +683,17 @@ Detects which package manager is used in the workspace based on the lock file.
 
 | Name  | Type     | Default value |
 | :---- | :------- | :------------ |
-| `dir` | _string_ | ''            |
+| `dir` | `string` | `''`          |
 
-**Returns:** [_PackageManager_](../../node/nx-devkit/index#packagemanager)
+#### Returns
+
+[`PackageManager`](../../node/nx-devkit/index#packagemanager)
 
 ---
 
 ### formatFiles
 
-▸ **formatFiles**(`host`: [_Tree_](../../node/nx-devkit/index#tree)): _Promise_<void\>
+▸ **formatFiles**(`host`): `Promise`<`void`\>
 
 Formats all the created or updated files using Prettier
 
@@ -654,15 +701,17 @@ Formats all the created or updated files using Prettier
 
 | Name   | Type                                      | Description          |
 | :----- | :---------------------------------------- | :------------------- |
-| `host` | [_Tree_](../../node/nx-devkit/index#tree) | the file system tree |
+| `host` | [`Tree`](../../node/nx-devkit/index#tree) | the file system tree |
 
-**Returns:** _Promise_<void\>
+#### Returns
+
+`Promise`<`void`\>
 
 ---
 
 ### generateFiles
 
-▸ **generateFiles**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `srcFolder`: _string_, `target`: _string_, `substitutions`: { [k: string]: _any_; }): _void_
+▸ **generateFiles**(`host`, `srcFolder`, `target`, `substitutions`): `void`
 
 Generates a folder of files based on provided templates.
 
@@ -690,18 +739,20 @@ doesn't get confused about incorrect TypeScript files.
 
 | Name            | Type                                      | Description                                   |
 | :-------------- | :---------------------------------------- | :-------------------------------------------- |
-| `host`          | [_Tree_](../../node/nx-devkit/index#tree) | the file system tree                          |
-| `srcFolder`     | _string_                                  | the source folder of files (absolute path)    |
-| `target`        | _string_                                  | the target folder (relative to the host root) |
-| `substitutions` | _object_                                  | an object of key-value pairs                  |
+| `host`          | [`Tree`](../../node/nx-devkit/index#tree) | the file system tree                          |
+| `srcFolder`     | `string`                                  | the source folder of files (absolute path)    |
+| `target`        | `string`                                  | the target folder (relative to the host root) |
+| `substitutions` | `Object`                                  | an object of key-value pairs                  |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../node/nx-devkit/index#packagemanager)): PackageManagerCommands
+▸ **getPackageManagerCommand**(`packageManager?`): `PackageManagerCommands`
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -717,15 +768,17 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 | Name             | Type                                                          |
 | :--------------- | :------------------------------------------------------------ |
-| `packageManager` | [_PackageManager_](../../node/nx-devkit/index#packagemanager) |
+| `packageManager` | [`PackageManager`](../../node/nx-devkit/index#packagemanager) |
 
-**Returns:** PackageManagerCommands
+#### Returns
+
+`PackageManagerCommands`
 
 ---
 
 ### getPackageManagerVersion
 
-▸ **getPackageManagerVersion**(`packageManager?`: [_PackageManager_](../../node/nx-devkit/index#packagemanager)): _string_
+▸ **getPackageManagerVersion**(`packageManager?`): `string`
 
 Returns the version of the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -735,15 +788,17 @@ but it can also be passed in explicitly.
 
 | Name             | Type                                                          |
 | :--------------- | :------------------------------------------------------------ |
-| `packageManager` | [_PackageManager_](../../node/nx-devkit/index#packagemanager) |
+| `packageManager` | [`PackageManager`](../../node/nx-devkit/index#packagemanager) |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### getProjects
 
-▸ **getProjects**(`host`: [_Tree_](../../node/nx-devkit/index#tree)): _Map_<string, [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration)\>
+▸ **getProjects**(`host`): `Map`<`string`, [`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../node/nx-devkit/index#nxjsonprojectconfiguration)\>
 
 Get a map of all projects in a workspace.
 
@@ -753,15 +808,17 @@ Use [readProjectConfiguration](../../node/nx-devkit/index#readprojectconfigurati
 
 | Name   | Type                                      |
 | :----- | :---------------------------------------- |
-| `host` | [_Tree_](../../node/nx-devkit/index#tree) |
+| `host` | [`Tree`](../../node/nx-devkit/index#tree) |
 
-**Returns:** _Map_<string, [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration)\>
+#### Returns
+
+`Map`<`string`, [`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../node/nx-devkit/index#nxjsonprojectconfiguration)\>
 
 ---
 
 ### getWorkspaceLayout
 
-▸ **getWorkspaceLayout**(`host`: [_Tree_](../../node/nx-devkit/index#tree)): _object_
+▸ **getWorkspaceLayout**(`host`): `Object`
 
 Returns workspace defaults. It includes defaults folders for apps and libs,
 and the default scope.
@@ -776,36 +833,40 @@ Example:
 
 | Name   | Type                                      | Description      |
 | :----- | :---------------------------------------- | :--------------- |
-| `host` | [_Tree_](../../node/nx-devkit/index#tree) | file system tree |
+| `host` | [`Tree`](../../node/nx-devkit/index#tree) | file system tree |
 
-**Returns:** _object_
+#### Returns
+
+`Object`
 
 | Name                  | Type      |
 | :-------------------- | :-------- |
-| `appsDir`             | _string_  |
-| `libsDir`             | _string_  |
-| `npmScope`            | _string_  |
-| `standaloneAsDefault` | _boolean_ |
+| `appsDir`             | `string`  |
+| `libsDir`             | `string`  |
+| `npmScope`            | `string`  |
+| `standaloneAsDefault` | `boolean` |
 
 ---
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`host`: [_Tree_](../../node/nx-devkit/index#tree)): _string_
+▸ **getWorkspacePath**(`host`): `string`
 
 #### Parameters
 
 | Name   | Type                                      |
 | :----- | :---------------------------------------- |
-| `host` | [_Tree_](../../node/nx-devkit/index#tree) |
+| `host` | [`Tree`](../../node/nx-devkit/index#tree) |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### installPackagesTask
 
-▸ **installPackagesTask**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `alwaysRun?`: _boolean_, `cwd?`: _string_, `packageManager?`: [_PackageManager_](../../node/nx-devkit/index#packagemanager)): _void_
+▸ **installPackagesTask**(`host`, `alwaysRun?`, `cwd?`, `packageManager?`): `void`
 
 Runs `npm install` or `yarn install`. It will skip running the install if
 `package.json` hasn't changed at all or it hasn't changed since the last invocation.
@@ -814,18 +875,20 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 
 | Name             | Type                                                          | Default value | Description                                                   |
 | :--------------- | :------------------------------------------------------------ | :------------ | :------------------------------------------------------------ |
-| `host`           | [_Tree_](../../node/nx-devkit/index#tree)                     | -             | the file system tree                                          |
-| `alwaysRun`      | _boolean_                                                     | false         | always run the command even if `package.json` hasn't changed. |
-| `cwd`            | _string_                                                      | ''            | -                                                             |
-| `packageManager` | [_PackageManager_](../../node/nx-devkit/index#packagemanager) | -             | -                                                             |
+| `host`           | [`Tree`](../../node/nx-devkit/index#tree)                     | `undefined`   | the file system tree                                          |
+| `alwaysRun`      | `boolean`                                                     | `false`       | always run the command even if `package.json` hasn't changed. |
+| `cwd`            | `string`                                                      | `''`          | -                                                             |
+| `packageManager` | [`PackageManager`](../../node/nx-devkit/index#packagemanager) | `undefined`   | -                                                             |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### joinPathFragments
 
-▸ **joinPathFragments**(...`fragments`: _string_[]): _string_
+▸ **joinPathFragments**(...`fragments`): `string`
 
 Normalized path fragments and joins them
 
@@ -833,31 +896,35 @@ Normalized path fragments and joins them
 
 | Name           | Type       |
 | :------------- | :--------- |
-| `...fragments` | _string_[] |
+| `...fragments` | `string`[] |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### moveFilesToNewDirectory
 
-▸ **moveFilesToNewDirectory**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `oldDir`: _string_, `newDir`: _string_): _void_
+▸ **moveFilesToNewDirectory**(`host`, `oldDir`, `newDir`): `void`
 
 #### Parameters
 
 | Name     | Type                                      |
 | :------- | :---------------------------------------- |
-| `host`   | [_Tree_](../../node/nx-devkit/index#tree) |
-| `oldDir` | _string_                                  |
-| `newDir` | _string_                                  |
+| `host`   | [`Tree`](../../node/nx-devkit/index#tree) |
+| `oldDir` | `string`                                  |
+| `newDir` | `string`                                  |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### names
 
-▸ **names**(`name`: _string_): _object_
+▸ **names**(`name`): `Object`
 
 Util function to generate different strings based off the provided name.
 
@@ -872,23 +939,25 @@ names('myName'); // {name: 'my-name', className: 'MyName', propertyName: 'myName
 
 | Name   | Type     |
 | :----- | :------- |
-| `name` | _string_ |
+| `name` | `string` |
 
-**Returns:** _object_
+#### Returns
+
+`Object`
 
 | Name           | Type     |
 | :------------- | :------- |
-| `className`    | _string_ |
-| `constantName` | _string_ |
-| `fileName`     | _string_ |
-| `name`         | _string_ |
-| `propertyName` | _string_ |
+| `className`    | `string` |
+| `constantName` | `string` |
+| `fileName`     | `string` |
+| `name`         | `string` |
+| `propertyName` | `string` |
 
 ---
 
 ### normalizePath
 
-▸ **normalizePath**(`osSpecificPath`: _string_): _string_
+▸ **normalizePath**(`osSpecificPath`): `string`
 
 Coverts an os specific path to a unix style path
 
@@ -896,15 +965,17 @@ Coverts an os specific path to a unix style path
 
 | Name             | Type     |
 | :--------------- | :------- |
-| `osSpecificPath` | _string_ |
+| `osSpecificPath` | `string` |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### offsetFromRoot
 
-▸ **offsetFromRoot**(`fullPathToDir`: _string_): _string_
+▸ **offsetFromRoot**(`fullPathToDir`): `string`
 
 Calculates an offset from the root of the workspace, which is useful for
 constructing relative URLs.
@@ -919,33 +990,37 @@ offsetFromRoot('apps/mydir/myapp/'); // returns "../../../"
 
 | Name            | Type     | Description    |
 | :-------------- | :------- | :------------- |
-| `fullPathToDir` | _string_ | directory path |
+| `fullPathToDir` | `string` | directory path |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### parseJson
 
-▸ **parseJson**<T\>(`input`: _string_, `options?`: [_JsonParseOptions_](../../node/nx-devkit/index#jsonparseoptions)): T
+▸ **parseJson**<`T`\>(`input`, `options?`): `T`
 
 Parses the given JSON string and returns the object the JSON content represents.
 By default javascript-style comments are allowed.
 
 #### Type parameters
 
-| Name | Type     | Default |
-| :--- | :------- | :------ |
-| `T`  | _object_ | _any_   |
+| Name | Type                    |
+| :--- | :---------------------- |
+| `T`  | extends ` object``any ` |
 
 #### Parameters
 
 | Name       | Type                                                              | Description            |
 | :--------- | :---------------------------------------------------------------- | :--------------------- |
-| `input`    | _string_                                                          | JSON content as string |
-| `options?` | [_JsonParseOptions_](../../node/nx-devkit/index#jsonparseoptions) | JSON parse options     |
+| `input`    | `string`                                                          | JSON content as string |
+| `options?` | [`JsonParseOptions`](../../node/nx-devkit/index#jsonparseoptions) | JSON parse options     |
 
-**Returns:** T
+#### Returns
+
+`T`
 
 Object the JSON content represents
 
@@ -953,7 +1028,7 @@ Object the JSON content represents
 
 ### parseTargetString
 
-▸ **parseTargetString**(`targetString`: _string_): [_Target_](../../node/nx-devkit/index#target)
+▸ **parseTargetString**(`targetString`): [`Target`](../../node/nx-devkit/index#target)
 
 Parses a target string into {project, target, configuration}
 
@@ -968,56 +1043,62 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 | Name           | Type     | Description      |
 | :------------- | :------- | :--------------- |
-| `targetString` | _string_ | target reference |
+| `targetString` | `string` | target reference |
 
-**Returns:** [_Target_](../../node/nx-devkit/index#target)
+#### Returns
+
+[`Target`](../../node/nx-devkit/index#target)
 
 ---
 
 ### readJson
 
-▸ **readJson**<T\>(`host`: [_Tree_](../../node/nx-devkit/index#tree), `path`: _string_, `options?`: [_JsonParseOptions_](../../node/nx-devkit/index#jsonparseoptions)): T
+▸ **readJson**<`T`\>(`host`, `path`, `options?`): `T`
 
 Reads a document for host, removes all comments and parses JSON.
 
 #### Type parameters
 
-| Name | Type     | Default |
-| :--- | :------- | :------ |
-| `T`  | _object_ | _any_   |
+| Name | Type                    |
+| :--- | :---------------------- |
+| `T`  | extends ` object``any ` |
 
 #### Parameters
 
 | Name       | Type                                                              | Description                 |
 | :--------- | :---------------------------------------------------------------- | :-------------------------- |
-| `host`     | [_Tree_](../../node/nx-devkit/index#tree)                         | file system tree            |
-| `path`     | _string_                                                          | file path                   |
-| `options?` | [_JsonParseOptions_](../../node/nx-devkit/index#jsonparseoptions) | Optional JSON Parse Options |
+| `host`     | [`Tree`](../../node/nx-devkit/index#tree)                         | file system tree            |
+| `path`     | `string`                                                          | file path                   |
+| `options?` | [`JsonParseOptions`](../../node/nx-devkit/index#jsonparseoptions) | Optional JSON Parse Options |
 
-**Returns:** T
+#### Returns
+
+`T`
 
 ---
 
 ### readJsonFile
 
-▸ **readJsonFile**<T\>(`path`: _string_, `options?`: JsonReadOptions): T
+▸ **readJsonFile**<`T`\>(`path`, `options?`): `T`
 
 Reads a JSON file and returns the object the JSON content represents.
 
 #### Type parameters
 
-| Name | Type     | Default |
-| :--- | :------- | :------ |
-| `T`  | _object_ | _any_   |
+| Name | Type                    |
+| :--- | :---------------------- |
+| `T`  | extends ` object``any ` |
 
 #### Parameters
 
-| Name       | Type            | Description        |
-| :--------- | :-------------- | :----------------- |
-| `path`     | _string_        | A path to a file.  |
-| `options?` | JsonReadOptions | JSON parse options |
+| Name       | Type              | Description        |
+| :--------- | :---------------- | :----------------- |
+| `path`     | `string`          | A path to a file.  |
+| `options?` | `JsonReadOptions` | JSON parse options |
 
-**Returns:** T
+#### Returns
+
+`T`
 
 Object the JSON content of the file represents
 
@@ -1025,7 +1106,7 @@ Object the JSON content of the file represents
 
 ### readProjectConfiguration
 
-▸ **readProjectConfiguration**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `projectName`: _string_): [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration)
+▸ **readProjectConfiguration**(`host`, `projectName`): [`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../node/nx-devkit/index#nxjsonprojectconfiguration)
 
 Reads a project configuration.
 
@@ -1038,16 +1119,18 @@ both files.
 
 | Name          | Type                                      | Description                                                             |
 | :------------ | :---------------------------------------- | :---------------------------------------------------------------------- |
-| `host`        | [_Tree_](../../node/nx-devkit/index#tree) | the file system tree                                                    |
-| `projectName` | _string_                                  | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `host`        | [`Tree`](../../node/nx-devkit/index#tree) | the file system tree                                                    |
+| `projectName` | `string`                                  | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
-**Returns:** [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration)
+#### Returns
+
+[`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../node/nx-devkit/index#nxjsonprojectconfiguration)
 
 ---
 
 ### readTargetOptions
 
-▸ **readTargetOptions**<T\>(`__namedParameters`: [_Target_](../../node/nx-devkit/index#target), `context`: [_ExecutorContext_](../../node/nx-devkit/index#executorcontext)): T
+▸ **readTargetOptions**<`T`\>(`__namedParameters`, `context`): `T`
 
 Reads and combines options for a given target.
 
@@ -1055,24 +1138,26 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 #### Parameters
 
 | Name                | Type                                                            |
 | :------------------ | :-------------------------------------------------------------- |
-| `__namedParameters` | [_Target_](../../node/nx-devkit/index#target)                   |
-| `context`           | [_ExecutorContext_](../../node/nx-devkit/index#executorcontext) |
+| `__namedParameters` | [`Target`](../../node/nx-devkit/index#target)                   |
+| `context`           | [`ExecutorContext`](../../node/nx-devkit/index#executorcontext) |
 
-**Returns:** T
+#### Returns
+
+`T`
 
 ---
 
 ### readWorkspaceConfiguration
 
-▸ **readWorkspaceConfiguration**(`host`: [_Tree_](../../node/nx-devkit/index#tree)): [_WorkspaceConfiguration_](../../node/nx-devkit/index#workspaceconfiguration)
+▸ **readWorkspaceConfiguration**(`host`): [`WorkspaceConfiguration`](../../node/nx-devkit/index#workspaceconfiguration)
 
 Read general workspace configuration such as the default project or cli settings
 
@@ -1082,15 +1167,17 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](.
 
 | Name   | Type                                      |
 | :----- | :---------------------------------------- |
-| `host` | [_Tree_](../../node/nx-devkit/index#tree) |
+| `host` | [`Tree`](../../node/nx-devkit/index#tree) |
 
-**Returns:** [_WorkspaceConfiguration_](../../node/nx-devkit/index#workspaceconfiguration)
+#### Returns
+
+[`WorkspaceConfiguration`](../../node/nx-devkit/index#workspaceconfiguration)
 
 ---
 
 ### removeDependenciesFromPackageJson
 
-▸ **removeDependenciesFromPackageJson**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `dependencies`: _string_[], `devDependencies`: _string_[], `packageJsonPath?`: _string_): [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)
+▸ **removeDependenciesFromPackageJson**(`host`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)
 
 Remove Dependencies and Dev Dependencies from package.json
 
@@ -1104,14 +1191,16 @@ This will **remove** `react` and `jest` from the dependencies and devDependencie
 
 #### Parameters
 
-| Name              | Type                                      | Default value  | Description                                                                 |
-| :---------------- | :---------------------------------------- | :------------- | :-------------------------------------------------------------------------- |
-| `host`            | [_Tree_](../../node/nx-devkit/index#tree) | -              | -                                                                           |
-| `dependencies`    | _string_[]                                | -              | Dependencies to be removed from the dependencies section of package.json    |
-| `devDependencies` | _string_[]                                | -              | Dependencies to be removed from the devDependencies section of package.json |
-| `packageJsonPath` | _string_                                  | 'package.json' | -                                                                           |
+| Name              | Type                                      | Default value    | Description                                                                 |
+| :---------------- | :---------------------------------------- | :--------------- | :-------------------------------------------------------------------------- |
+| `host`            | [`Tree`](../../node/nx-devkit/index#tree) | `undefined`      | -                                                                           |
+| `dependencies`    | `string`[]                                | `undefined`      | Dependencies to be removed from the dependencies section of package.json    |
+| `devDependencies` | `string`[]                                | `undefined`      | Dependencies to be removed from the devDependencies section of package.json |
+| `packageJsonPath` | `string`                                  | `'package.json'` | -                                                                           |
 
-**Returns:** [_GeneratorCallback_](../../node/nx-devkit/index#generatorcallback)
+#### Returns
+
+[`GeneratorCallback`](../../node/nx-devkit/index#generatorcallback)
 
 Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
 
@@ -1119,7 +1208,7 @@ Callback to uninstall dependencies only if necessary. undefined is returned if c
 
 ### removeProjectConfiguration
 
-▸ **removeProjectConfiguration**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `projectName`: _string_): _void_
+▸ **removeProjectConfiguration**(`host`, `projectName`): `void`
 
 Removes the configuration of an existing project.
 
@@ -1130,16 +1219,18 @@ The utility will update both files.
 
 | Name          | Type                                      |
 | :------------ | :---------------------------------------- |
-| `host`        | [_Tree_](../../node/nx-devkit/index#tree) |
-| `projectName` | _string_                                  |
+| `host`        | [`Tree`](../../node/nx-devkit/index#tree) |
+| `projectName` | `string`                                  |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### runExecutor
 
-▸ **runExecutor**<T\>(`targetDescription`: { `configuration?`: _string_ ; `project`: _string_ ; `target`: _string_ }, `options`: { [k: string]: _any_; }, `context`: [_ExecutorContext_](../../node/nx-devkit/index#executorcontext)): _Promise_<AsyncIterableIterator<T\>\>
+▸ **runExecutor**<`T`\>(`targetDescription`, `options`, `context`): `Promise`<`AsyncIterableIterator`<`T`\>\>
 
 Loads and invokes executor.
 
@@ -1171,47 +1262,50 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Type parameters
 
-| Name        | Type      |
-| :---------- | :-------- |
-| `T`         | _object_  |
-| `T.success` | _boolean_ |
+| Name | Type             |
+| :--- | :--------------- |
+| `T`  | extends `Object` |
 
 #### Parameters
 
 | Name                               | Type                                                            |
 | :--------------------------------- | :-------------------------------------------------------------- |
-| `targetDescription`                | _object_                                                        |
-| `targetDescription.configuration?` | _string_                                                        |
-| `targetDescription.project`        | _string_                                                        |
-| `targetDescription.target`         | _string_                                                        |
-| `options`                          | _object_                                                        |
-| `context`                          | [_ExecutorContext_](../../node/nx-devkit/index#executorcontext) |
+| `targetDescription`                | `Object`                                                        |
+| `targetDescription.configuration?` | `string`                                                        |
+| `targetDescription.project`        | `string`                                                        |
+| `targetDescription.target`         | `string`                                                        |
+| `options`                          | `Object`                                                        |
+| `context`                          | [`ExecutorContext`](../../node/nx-devkit/index#executorcontext) |
 
-**Returns:** _Promise_<AsyncIterableIterator<T\>\>
+#### Returns
+
+`Promise`<`AsyncIterableIterator`<`T`\>\>
 
 ---
 
 ### serializeJson
 
-▸ **serializeJson**<T\>(`input`: T, `options?`: [_JsonSerializeOptions_](../../node/nx-devkit/index#jsonserializeoptions)): _string_
+▸ **serializeJson**<`T`\>(`input`, `options?`): `string`
 
 Serializes the given data to a JSON string.
 By default the JSON string is formatted with a 2 space intendation to be easy readable.
 
 #### Type parameters
 
-| Name | Type     | Default  |
-| :--- | :------- | :------- |
-| `T`  | _object_ | _object_ |
+| Name | Type                       |
+| :--- | :------------------------- |
+| `T`  | extends ` object``object ` |
 
 #### Parameters
 
 | Name       | Type                                                                      | Description                               |
 | :--------- | :------------------------------------------------------------------------ | :---------------------------------------- |
-| `input`    | T                                                                         | Object which should be serialized to JSON |
-| `options?` | [_JsonSerializeOptions_](../../node/nx-devkit/index#jsonserializeoptions) | JSON serialize options                    |
+| `input`    | `T`                                                                       | Object which should be serialized to JSON |
+| `options?` | [`JsonSerializeOptions`](../../node/nx-devkit/index#jsonserializeoptions) | JSON serialize options                    |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 the formatted JSON representation of the object
 
@@ -1219,7 +1313,7 @@ the formatted JSON representation of the object
 
 ### stripIndents
 
-▸ **stripIndents**(`strings`: TemplateStringsArray, ...`values`: _any_[]): _string_
+▸ **stripIndents**(`strings`, ...`values`): `string`
 
 Removes indents, which is useful for printing warning and messages.
 
@@ -1235,18 +1329,20 @@ stripIndents`
 
 #### Parameters
 
-| Name        | Type                 |
-| :---------- | :------------------- |
-| `strings`   | TemplateStringsArray |
-| `...values` | _any_[]              |
+| Name        | Type                   |
+| :---------- | :--------------------- |
+| `strings`   | `TemplateStringsArray` |
+| `...values` | `any`[]                |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### stripJsonComments
 
-▸ `Const` **stripJsonComments**(`text`: _string_, `replaceCh?`: _string_): _string_
+▸ `Const` **stripJsonComments**(`text`, `replaceCh?`): `string`
 
 Takes JSON with JavaScript-style comments and remove
 them. Optionally replaces every none-newline character
@@ -1256,16 +1352,18 @@ of comments with a replaceCharacter
 
 | Name         | Type     |
 | :----------- | :------- |
-| `text`       | _string_ |
-| `replaceCh?` | _string_ |
+| `text`       | `string` |
+| `replaceCh?` | `string` |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### targetToTargetString
 
-▸ **targetToTargetString**(`__namedParameters`: [_Target_](../../node/nx-devkit/index#target)): _string_
+▸ **targetToTargetString**(`__namedParameters`): `string`
 
 Returns a string in the format "project:target[:configuration]" for the target
 
@@ -1273,15 +1371,17 @@ Returns a string in the format "project:target[:configuration]" for the target
 
 | Name                | Type                                          |
 | :------------------ | :-------------------------------------------- |
-| `__namedParameters` | [_Target_](../../node/nx-devkit/index#target) |
+| `__namedParameters` | [`Target`](../../node/nx-devkit/index#target) |
 
-**Returns:** _string_
+#### Returns
+
+`string`
 
 ---
 
 ### toJS
 
-▸ **toJS**(`tree`: [_Tree_](../../node/nx-devkit/index#tree)): _void_
+▸ **toJS**(`tree`): `void`
 
 Rename and transpile any new typescript files created to javascript files
 
@@ -1289,41 +1389,45 @@ Rename and transpile any new typescript files created to javascript files
 
 | Name   | Type                                      |
 | :----- | :---------------------------------------- |
-| `tree` | [_Tree_](../../node/nx-devkit/index#tree) |
+| `tree` | [`Tree`](../../node/nx-devkit/index#tree) |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### updateJson
 
-▸ **updateJson**<T, U\>(`host`: [_Tree_](../../node/nx-devkit/index#tree), `path`: _string_, `updater`: (`value`: T) => U, `options?`: [_JsonParseOptions_](../../node/nx-devkit/index#jsonparseoptions) & [_JsonSerializeOptions_](../../node/nx-devkit/index#jsonserializeoptions)): _void_
+▸ **updateJson**<`T`, `U`\>(`host`, `path`, `updater`, `options?`): `void`
 
 Updates a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Type     | Default |
-| :--- | :------- | :------ |
-| `T`  | _object_ | _any_   |
-| `U`  | _object_ | T       |
+| Name | Type                    |
+| :--- | :---------------------- |
+| `T`  | extends ` object``any ` |
+| `U`  | extends ` object``T `   |
 
 #### Parameters
 
 | Name       | Type                                                                                                                                          | Description                                                                                          |
 | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| `host`     | [_Tree_](../../node/nx-devkit/index#tree)                                                                                                     | File system tree                                                                                     |
-| `path`     | _string_                                                                                                                                      | Path of JSON file in the Tree                                                                        |
-| `updater`  | (`value`: T) => U                                                                                                                             | Function that maps the current value of a JSON document to a new value to be written to the document |
-| `options?` | [_JsonParseOptions_](../../node/nx-devkit/index#jsonparseoptions) & [_JsonSerializeOptions_](../../node/nx-devkit/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
+| `host`     | [`Tree`](../../node/nx-devkit/index#tree)                                                                                                     | File system tree                                                                                     |
+| `path`     | `string`                                                                                                                                      | Path of JSON file in the Tree                                                                        |
+| `updater`  | (`value`: `T`) => `U`                                                                                                                         | Function that maps the current value of a JSON document to a new value to be written to the document |
+| `options?` | [`JsonParseOptions`](../../node/nx-devkit/index#jsonparseoptions) & [`JsonSerializeOptions`](../../node/nx-devkit/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### updateProjectConfiguration
 
-▸ **updateProjectConfiguration**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration)): _void_
+▸ **updateProjectConfiguration**(`host`, `projectName`, `projectConfiguration`): `void`
 
 Updates the configuration of an existing project.
 
@@ -1334,33 +1438,37 @@ both files.
 
 | Name                   | Type                                                                                                                                                              | Description                                                             |
 | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](../../node/nx-devkit/index#tree)                                                                                                                         | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](../../node/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../node/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| `host`                 | [`Tree`](../../node/nx-devkit/index#tree)                                                                                                                         | the file system tree                                                    |
+| `projectName`          | `string`                                                                                                                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../node/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### updateTsConfigsToJs
 
-▸ **updateTsConfigsToJs**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `options`: { `projectRoot`: _string_ }): _void_
+▸ **updateTsConfigsToJs**(`host`, `options`): `void`
 
 #### Parameters
 
 | Name                  | Type                                      |
 | :-------------------- | :---------------------------------------- |
-| `host`                | [_Tree_](../../node/nx-devkit/index#tree) |
-| `options`             | _object_                                  |
-| `options.projectRoot` | _string_                                  |
+| `host`                | [`Tree`](../../node/nx-devkit/index#tree) |
+| `options`             | `Object`                                  |
+| `options.projectRoot` | `string`                                  |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### updateWorkspaceConfiguration
 
-▸ **updateWorkspaceConfiguration**(`host`: [_Tree_](../../node/nx-devkit/index#tree), `workspaceConfig`: [_WorkspaceConfiguration_](../../node/nx-devkit/index#workspaceconfiguration)): _void_
+▸ **updateWorkspaceConfiguration**(`host`, `workspaceConfig`): `void`
 
 Update general workspace configuration such as the default project or cli settings.
 
@@ -1370,16 +1478,18 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 | Name              | Type                                                                          |
 | :---------------- | :---------------------------------------------------------------------------- |
-| `host`            | [_Tree_](../../node/nx-devkit/index#tree)                                     |
-| `workspaceConfig` | [_WorkspaceConfiguration_](../../node/nx-devkit/index#workspaceconfiguration) |
+| `host`            | [`Tree`](../../node/nx-devkit/index#tree)                                     |
+| `workspaceConfig` | [`WorkspaceConfiguration`](../../node/nx-devkit/index#workspaceconfiguration) |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### visitNotIgnoredFiles
 
-▸ **visitNotIgnoredFiles**(`tree`: [_Tree_](../../node/nx-devkit/index#tree), `dirPath?`: _string_, `visitor`: (`path`: _string_) => _void_): _void_
+▸ **visitNotIgnoredFiles**(`tree`, `dirPath?`, `visitor`): `void`
 
 Utility to act on all files in a tree that are not ignored by git.
 
@@ -1387,57 +1497,63 @@ Utility to act on all files in a tree that are not ignored by git.
 
 | Name      | Type                                      |
 | :-------- | :---------------------------------------- |
-| `tree`    | [_Tree_](../../node/nx-devkit/index#tree) |
-| `dirPath` | _string_                                  |
-| `visitor` | (`path`: _string_) => _void_              |
+| `tree`    | [`Tree`](../../node/nx-devkit/index#tree) |
+| `dirPath` | `string`                                  |
+| `visitor` | (`path`: `string`) => `void`              |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### writeJson
 
-▸ **writeJson**<T\>(`host`: [_Tree_](../../node/nx-devkit/index#tree), `path`: _string_, `value`: T, `options?`: [_JsonSerializeOptions_](../../node/nx-devkit/index#jsonserializeoptions)): _void_
+▸ **writeJson**<`T`\>(`host`, `path`, `value`, `options?`): `void`
 
 Writes a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Type     | Default  |
-| :--- | :------- | :------- |
-| `T`  | _object_ | _object_ |
+| Name | Type                       |
+| :--- | :------------------------- |
+| `T`  | extends ` object``object ` |
 
 #### Parameters
 
 | Name       | Type                                                                      | Description                     |
 | :--------- | :------------------------------------------------------------------------ | :------------------------------ |
-| `host`     | [_Tree_](../../node/nx-devkit/index#tree)                                 | File system tree                |
-| `path`     | _string_                                                                  | Path of JSON file in the Tree   |
-| `value`    | T                                                                         | Serializable value to write     |
-| `options?` | [_JsonSerializeOptions_](../../node/nx-devkit/index#jsonserializeoptions) | Optional JSON Serialize Options |
+| `host`     | [`Tree`](../../node/nx-devkit/index#tree)                                 | File system tree                |
+| `path`     | `string`                                                                  | Path of JSON file in the Tree   |
+| `value`    | `T`                                                                       | Serializable value to write     |
+| `options?` | [`JsonSerializeOptions`](../../node/nx-devkit/index#jsonserializeoptions) | Optional JSON Serialize Options |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### writeJsonFile
 
-▸ **writeJsonFile**<T\>(`path`: _string_, `data`: T, `options?`: JsonWriteOptions): _void_
+▸ **writeJsonFile**<`T`\>(`path`, `data`, `options?`): `void`
 
 Serializes the given data to JSON and writes it to a file.
 
 #### Type parameters
 
-| Name | Type     | Default  |
-| :--- | :------- | :------- |
-| `T`  | _object_ | _object_ |
+| Name | Type                       |
+| :--- | :------------------------- |
+| `T`  | extends ` object``object ` |
 
 #### Parameters
 
-| Name       | Type             | Description                                                     |
-| :--------- | :--------------- | :-------------------------------------------------------------- |
-| `path`     | _string_         | A path to a file.                                               |
-| `data`     | T                | data which should be serialized to JSON and written to the file |
-| `options?` | JsonWriteOptions | JSON serialize options                                          |
+| Name       | Type               | Description                                                     |
+| :--------- | :----------------- | :-------------------------------------------------------------- |
+| `path`     | `string`           | A path to a file.                                               |
+| `data`     | `T`                | data which should be serialized to JSON and written to the file |
+| `options?` | `JsonWriteOptions` | JSON serialize options                                          |
 
-**Returns:** _void_
+#### Returns
+
+`void`

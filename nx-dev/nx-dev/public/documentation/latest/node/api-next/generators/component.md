@@ -1,4 +1,4 @@
-# component
+# @nrwl/next:component
 
 Create a React component
 

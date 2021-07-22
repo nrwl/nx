@@ -16,13 +16,13 @@
 
 ### NxScopedHost
 
-• **NxScopedHost**: _object_
+• **NxScopedHost**: `Object`
 
 ## Functions
 
 ### mockSchematicsForTesting
 
-▸ **mockSchematicsForTesting**(`schematics`: { [name: string]: (`host`: [_Tree_](../../angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<void\>; }): _void_
+▸ **mockSchematicsForTesting**(`schematics`): `void`
 
 If you have an Nx Devkit generator invoking the wrapped Angular Devkit schematic,
 and you don't want the Angular Devkit schematic to run, you can mock it up using this function.
@@ -46,15 +46,17 @@ mockSchematicsForTesting({
 
 | Name         | Type     |
 | :----------- | :------- |
-| `schematics` | _object_ |
+| `schematics` | `Object` |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### overrideCollectionResolutionForTesting
 
-▸ **overrideCollectionResolutionForTesting**(`collections`: { [name: string]: _string_; }): _void_
+▸ **overrideCollectionResolutionForTesting**(`collections`): `void`
 
 By default, Angular Devkit schematic collections will be resolved using the Node resolution.
 This doesn't work if you are testing schematics that refer to other schematics in the
@@ -68,10 +70,10 @@ Example:
 overrideCollectionResolutionForTesting({
   '@nrwl/workspace': path.join(
     __dirname,
-    '../../../../workspace/collection.json'
+    '../../../../workspace/generators.json'
   ),
-  '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
-  '@nrwl/linter': path.join(__dirname, '../../../../linter/collection.json'),
+  '@nrwl/angular': path.join(__dirname, '../../../../angular/generators.json'),
+  '@nrwl/linter': path.join(__dirname, '../../../../linter/generators.json'),
 });
 ```
 
@@ -79,21 +81,38 @@ overrideCollectionResolutionForTesting({
 
 | Name          | Type     |
 | :------------ | :------- |
-| `collections` | _object_ |
+| `collections` | `Object` |
 
-**Returns:** _void_
+#### Returns
+
+`void`
 
 ---
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`: _string_, `generatorName`: _string_): _function_
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: `any`; }) => `Promise`<`any`\>
 
 #### Parameters
 
 | Name             | Type     |
 | :--------------- | :------- |
-| `collectionName` | _string_ |
-| `generatorName`  | _string_ |
+| `collectionName` | `string` |
+| `generatorName`  | `string` |
 
-**Returns:** (`host`: [_Tree_](../../angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<any\>
+#### Returns
+
+`fn`
+
+▸ (`host`, `generatorOptions`): `Promise`<`any`\>
+
+##### Parameters
+
+| Name               | Type                                         |
+| :----------------- | :------------------------------------------- |
+| `host`             | [`Tree`](../../angular/nx-devkit/index#tree) |
+| `generatorOptions` | `Object`                                     |
+
+##### Returns
+
+`Promise`<`any`\>

@@ -1,4 +1,4 @@
-# workspace-generator
+# @nrwl/workspace:workspace-generator
 
 Generates a workspace generator
 

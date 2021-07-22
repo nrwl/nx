@@ -1,4 +1,4 @@
-# generator
+# @nrwl/nx-plugin:generator
 
 Create a generator for an Nx Plugin
 

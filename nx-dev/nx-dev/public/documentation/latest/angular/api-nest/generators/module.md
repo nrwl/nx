@@ -1,4 +1,4 @@
-# module
+# @nrwl/nest:module
 
 Run the `module` NestJS generator with Nx project support.
 
