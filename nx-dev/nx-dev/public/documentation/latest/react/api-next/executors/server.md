@@ -1,4 +1,4 @@
-# server
+# @nrwl/next:server
 
 Serve a Next.js app
 

@@ -1,4 +1,4 @@
-# component
+# @nrwl/gatsby:component
 
 Create a component
 

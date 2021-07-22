@@ -1,4 +1,4 @@
-# build
+# @nrwl/storybook:build
 
 Build Storybook
 

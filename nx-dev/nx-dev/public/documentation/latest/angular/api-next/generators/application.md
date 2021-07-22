@@ -1,4 +1,4 @@
-# application
+# @nrwl/next:application
 
 Create a Next.js application
 

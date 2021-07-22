@@ -1,4 +1,4 @@
-# server
+# @nrwl/gatsby:server
 
 Starts server for app
 

@@ -1,4 +1,4 @@
-# downgrade-module
+# @nrwl/angular:downgrade-module
 
 Sets up a Downgrade Module.
 

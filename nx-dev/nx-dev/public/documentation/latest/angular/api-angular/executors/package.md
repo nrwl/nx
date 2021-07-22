@@ -1,4 +1,4 @@
-# package
+# @nrwl/angular:package
 
 Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
 

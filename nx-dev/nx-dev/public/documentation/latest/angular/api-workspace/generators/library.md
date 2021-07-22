@@ -1,4 +1,4 @@
-# library
+# @nrwl/workspace:library
 
 Create a library
 

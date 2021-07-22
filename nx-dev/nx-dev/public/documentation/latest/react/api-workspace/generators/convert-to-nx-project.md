@@ -1,4 +1,4 @@
-# convert-to-nx-project
+# @nrwl/workspace:convert-to-nx-project
 
 Moves a project's configuration outside of workspace.json
 

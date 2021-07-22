@@ -1,4 +1,4 @@
-# pipe
+# @nrwl/nest:pipe
 
 Run the `pipe` NestJS generator with Nx project support.
 

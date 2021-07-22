@@ -1,4 +1,4 @@
-# component-cypress-spec
+# @nrwl/react:component-cypress-spec
 
 Create a cypress spec for a ui component that has a story
 

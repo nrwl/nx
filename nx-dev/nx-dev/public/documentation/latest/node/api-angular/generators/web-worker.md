@@ -1,4 +1,4 @@
-# web-worker
+# @nrwl/angular:web-worker
 
 Creates a Web Worker.
 

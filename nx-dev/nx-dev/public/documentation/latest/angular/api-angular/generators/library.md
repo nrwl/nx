@@ -1,4 +1,4 @@
-# library
+# @nrwl/angular:library
 
 Creates an Angular library.
 

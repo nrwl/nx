@@ -28,13 +28,9 @@ This creates the needed files with a general boilerplate implementation.
 Next, adjust the `postcss.config.js` as follows:
 
 ```js
-const { join } = require('path');
-
 module.exports = {
   plugins: {
-    tailwindcss: {
-      config: join(__dirname, 'tailwind.config.js'),
-    },
+    tailwindcss: { config: './apps/{your app here}/tailwind.config.js' },
     autoprefixer: {},
   },
 };
@@ -47,15 +43,10 @@ In a typical `tailwind.config.js` file, the `purge` property of the tailwind con
 Nx has a utility function for determining the glob representation of all files the application depends on (based on the Nx Dependency Graph), which should be used when setting this purge property. This eliminates additional manual maintenance as your workspace progresses.
 
 ```js
-const { join } = require('path');
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 
 module.exports = {
-  purge: [
-    // place your own app's glob pattern (for example)
-    join(__dirname, '**/*.{js,ts,jsx,tsx}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+  purge: createGlobPatternsForDependencies(__dirname),
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},
@@ -66,8 +57,6 @@ module.exports = {
   plugins: [],
 };
 ```
-
-`createGlobPatternsForDependencies(..)` uses the Nx dependency graph to generate glob patterns for all the app's **dependencies** (e.g. for all referenced libraries within the Nx workspace).
 
 _NOTE:_ To ensure proper purging for custom configurations, be sure that the `NODE_ENV` environment variable is set to `production`. By default, Nx only purges on prod build (for example: `nx build --prod`).
 

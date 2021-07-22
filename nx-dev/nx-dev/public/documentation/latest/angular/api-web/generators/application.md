@@ -1,4 +1,4 @@
-# application
+# @nrwl/web:application
 
 Create an application
 

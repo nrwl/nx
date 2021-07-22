@@ -1,4 +1,4 @@
-# package
+# @nrwl/node:package
 
 Package a Node library
 

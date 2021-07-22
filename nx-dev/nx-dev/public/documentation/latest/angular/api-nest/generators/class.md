@@ -1,4 +1,4 @@
-# class
+# @nrwl/nest:class
 
 Run the `class` NestJS generator with Nx project support.
 
