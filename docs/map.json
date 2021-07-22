@@ -2295,6 +2295,11 @@
             "file": "react/guides/nextjs"
           },
           {
+            "name": "Deploying Next.js applications to Vercel",
+            "id": "deploy-nextjs-to-vercel",
+            "file": "react/guides/deploy-nextjs-to-vercel"
+          },
+          {
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
