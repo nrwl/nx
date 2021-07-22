@@ -71,9 +71,15 @@ export default async function (
   const normalized = normalizeOptions(options);
 
   if (options.readyWhen && !options.parallel) {
-    throw new Error(
-      'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
-    );
+    if (options.command || options.commands?.length === 1) {
+      process.stderr.write(
+        'Warning: "readyWhen" has no effect when a single command is run. The task will be done when the command process is completed. Ignoring.'
+      );
+    } else {
+      throw new Error(
+        'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true.'
+      );
+    }
   }
 
   try {
@@ -145,6 +151,9 @@ function normalizeOptions(
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
     );
+    if (options.commands.length === 1) {
+      options.parallel = false;
+    }
   }
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
