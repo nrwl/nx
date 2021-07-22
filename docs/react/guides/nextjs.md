@@ -1,143 +1,236 @@
-# Next.js
+# Next.js with Nx
 
-Nx comes with first-class Next.js support. In this guide we will look at how to use it.
+![](/shared/nextjs-logo.png)
 
-## Creating a New Nx Workspace
+Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Cypress](/{{version}}/{{framework}}/cypress/overview), [Storybook](/{{version}}/{{framework}}/storybook/overview), Jest, and more.
 
-Create a new Nx workspace. The easiest way to do it is to use npx.
+In this guide we will show you how to develop [Next.js](https://nextjs.org/) applications with Nx.
+
+## Creating Nx Workspace
+
+The easiest way to create your workspace is via `npx`.
 
 ```bash
-npx --ignore-existing create-nx-workspace happynrwl
+npx create-nx-workspace happynrwl \
+--preset=next \
+--style=css \
+--appName=tuskdesk
 ```
 
-You can also create a workspace with a Next.js application in place by running:
+**Note:** You can also run the command without arguments to go through the interactive prompts.
 
 ```bash
-npx --ignore-existing create-nx-workspace happynrwl --preset=next
+npx create-nx-workspace happynrwl
 ```
 
-## Adding Next.js capabilities to a workspace
+Once the command completes, the workspace will look as follows:
 
-If you used the Next.js preset, you are all set and can skip this. If you created an empty workspace or have an existing workspace, you can add Next.js capabilities to the workspace:
+```treeview
+happynrwl/
+├── apps
+│   ├── tuskdesk
+│   │   ├── index.d.ts
+│   │   ├── jest.config.js
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.js
+│   │   ├── pages
+│   │   │   ├── _app.tsx
+│   │   │   ├── index.module.css
+│   │   │   ├── index.tsx
+│   │   │   └── styles.css
+│   │   ├── public
+│   │   │   ├── nx-logo-white.svg
+│   │   │   └── star.svg
+│   │   ├── specs
+│   │   │   └── index.spec.tsx
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── tuskdesk-e2e
+│       ├── cypress.json
+│       ├── src
+│       │   ├── fixtures
+│       │   ├── integration
+│       │   ├── plugins
+│       │   └── support
+│       ├── tsconfig.e2e.json
+│       └── tsconfig.json
+├── babel.config.json
+├── jest.config.js
+├── jest.preset.js
+├── libs
+├── nx.json
+├── package-lock.json
+├── package.json
+├── tools
+│   ├── generators
+│   └── tsconfig.tools.json
+├── tsconfig.base.json
+└── workspace.json
+```
+
+Run `npx nx serve tuskdesk` to start the dev server at http://localhost:4200. Try out other commands as well.
+
+- `nx lint tuskdesk` to lint the application
+- `nx test tuskdesk` to test the application using Jest
+- `nx e2e tuskdesk-e2e` to test the application using Cypress
+- `nx build tuskdesk` to build the application
+- `nx serve tuskdesk --prod` to serve the application in the production mode
+
+When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
+
+### Adding Next.js to an Existing Workspace
+
+For existing Nx workspaces, install the `@nrwl/next` package to add Next.js capabilities to it.
 
 ```bash
+npm install @nrwl/next
+
+# Or with yarn
 yarn add @nrwl/next
 ```
 
-## Generating a Next.js Application
+## Generating an Application
 
-Run
+To create additional Next.js apps run:
 
 ```bash
-nx g @nrwl/next:app tuskdesk
+npx nx g @nrwl/next:app
 ```
 
-and you will see the following:
+## Generating a Library
+
+Nx allows you to create libraries with just one command. Some reasons you might want to create a library include:
+
+- Share code between applications
+- Publish a package to be used outside the monorepo
+- Better visualize the architecture using `npx nx dep-graph`
+
+For more information on Nx libraries, see our documentation on [Creating Libraries](/{{version}}/{{framework}}/structure/creating-libraries)
+and [Library Types](/{{version}}/{{framework}}/structure/library-types).
+
+To generate a new library run:
+
+```bash
+npx nx g @nrwl/react:lib shared-ui-components
+```
+
+And you will see the following:
 
 ```treeview
 happynrwl/
-├── apps/
-│   ├── tuskdesk/
-│   │   ├── pages/
-│   │   │   ├── index.css
-│   │   │   └── index.tsx
-│   │   ├── jest.conf.js
-│   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── .eslintrc.json
-│   └── tuskdesk-e2e/
-│   │   ├── src/
-│   │   │   ├── integrations/
-│   │   │   │   └── app.spec.ts
-│   │   │   ├── fixtures/
-│   │   │   ├── plugins/
-│   │   │   └── support/
-│   │   ├── cypress.json
-│   │   ├── tsconfig.e2e.json
-│   │   └── .eslintrc.json
-├── libs/
-├── workspace.json
-├── nx.json
-├── package.json
-├── tools/
-├── tsconfig.base.json
-└── .eslintrc.json
-```
-
-Run:
-
-- `nx serve tuskdesk` to serve the application
-- `nx serve tuskdesk --prod` to serve the application in the production mode
-- `nx build tuskdesk` to build the application
-- `nx lint tuskdesk` to lint the application
-- `nx test tuskdesk` to test the application using Jest
-- `nx export tuskdesk` to export the application
-- `nx e2e tuskdesk-e2e` to test the application using Cypress
-
-When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, Jest. No need to configure anything: watch mode, source maps, and typings just work.
-
-## Generating a React Library
-
-Run
-
-```bash
-nx g @nrwl/react:lib shared-components
-```
-
-and you will see the following:
-
-```treeview
-happynrwl/
-├── apps/
-│   ├── tuskdesk/
-│   └── tuskdesk-e2e/
-├── libs/
-│   └── shared-components/
-│       ├── src/
-│       │   ├── lib/
-│       │   │    ├── home.css
-│       │   │    ├── home.tsx
-│       │   │    └── home.spec.tsx
-│       │   └ index.ts
+├── apps
+│   └── tuskdesk
+│   └── tuskdesk-e2e
+├── babel.config.json
+├── jest.config.js
+├── jest.preset.js
+├── libs
+│   └── shared-ui-layout
+│       ├── README.md
 │       ├── jest.config.js
+│       ├── src
+│       │   ├── index.ts
+│       │   └── lib
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── nx.json
-├── workspace.json
+├── package-lock.json
 ├── package.json
-├── tools/
+├── tools
 ├── tsconfig.base.json
-└── tslint.json
+└── workspace.json
 ```
 
 Run:
 
-- `nx test shared-components` to test the library
-- `nx lint shared-components` to lint the library
+- `npx nx test shared-ui-layout` to test the library
+- `npx nx lint shared-ui-layout` to lint the library
 
-## Using the Library in an Application
+### Using Nx Library in your Application
 
-You can import the shared-components library into the Next.js application like this.
+You can import the `shared-ui-layout` library in your application as follows.
 
-```typescript
-import { Home } from '@happynrwl/shared-components';
-import React from 'react';
+```typescript jsx
+// apps/tuskapp/pages/index.tsx
+import { SharedUiLayout } from '@happynrwl/shared-ui-layout';
 
-export const Index = () => {
+export function Index() {
   return (
-    <>
-      <Home />
-      <div>the rest of the component</div>
-    </>
+    <SharedUiLayout>
+      <p>The main content</p>
+    </SharedUiLayout>
   );
-};
+}
 
 export default Index;
 ```
 
-## Sharing Code
+That's it! There is no need to build the library prior to using it. When you update your library, the Next.js application will automatically pick up the changes.
+
+### Publishable libraries
+
+For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
+
+```bash
+npx nx g @nrwl/react:lib shared-ui-components --publishable --importPath=@happynrwl/ui-components
+```
+
+Run `npx nx build shared-ui-layout` to build the library. It will generate the following:
+
+```treeview
+dist/libs/shared-ui-layout/
+├── README.md
+├── index.d.ts
+├── lib
+│   └── shared-ui-layout.d.ts
+├── package.json
+├── shared-ui-layout.esm.css
+├── shared-ui-layout.esm.js
+├── shared-ui-layout.umd.css
+└── shared-ui-layout.umd.js
+```
+
+This dist folder is ready to be published to a registry.
+
+## Generating Pages and Components
+
+Nx also provides commands to quickly generate new pages and components for your application.
+
+- `npx nx g @nrwl/next:page about` to add an about page
+- `npx nx g @nrwl/next:component banner` to add a banner component
+
+Running the above commands will result in:
+
+```treeview
+apps/tuskdesk/
+├── components
+│   └── banner
+│       ├── banner.module.css
+│       ├── banner.spec.tsx
+│       └── banner.tsx
+├── index.d.ts
+├── jest.config.js
+├── next-env.d.ts
+├── next.config.js
+├── pages
+│   ├── _app.tsx
+│   ├── about.module.css
+│   ├── about.tsx
+│   ├── index.module.css
+│   ├── index.tsx
+│   └── styles.css
+├── public
+├── specs
+├── tsconfig.json
+└── tsconfig.spec.json
+```
+
+Nx generates components with tests by default. For pages, you can pass the `--withTests` option to generate tests under the `specs` folder.
+
+Run the tests again for the application: `npx nx test tuskdesk`.
+
+## Code Sharing
 
 Without Nx, creating a new shared library can take from several hours or even weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace, it only takes minutes.
 
@@ -145,67 +238,9 @@ You can share React components between multiple Next.js applications. You can al
 
 ## Deploying to Vercel
 
-You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience.
+You may know that the company behind Next.js, [Vercel](https://vercel.com), has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience.
 
-In order to deploy your Next.js application from your Nx workspace you should do the following:
-
-### Verify the project's next.config.js
-
-Let's continue to use our `tuskdesk` example from above, and so we need to check out our config at `apps/tuskdesk/next.config.js`. If you created the application using a recent (at the time of writing) version of Nx, such as Nx 11, then you will likely see the following in that config by default:
-
-```js
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const withNx = require('@nrwl/next/plugins/with-nx');
-
-/**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
- **/
-const nextConfig = {};
-
-module.exports = withNx(nextConfig);
-```
-
-If you have a config which looks like that (leveraging the `withNx()` config plugin) **AND** the version of Nx you are using is `11.1.0` or later, **no further action is needed** in your config.
-
-If, however, you created the application using an older version of Nx, you may just see an empty object:
-
-```js
-module.exports = {};
-```
-
-If this is the case, or if you are using a version of Nx older than `11.1.0`, then you must do one of the following:
-
-[Option 1] We would naturally highly recommend upgrading to the latest Nx (for many reasons), and updating the next.config.js to match the first example which leverages the `withNx()` config plugin (which as of `11.1.0` sets target to `'experimental-serverless-trace'` behind the scenes for Vercel builds).
-
-[Option 2] If for some reason you cannot upgrade to a version of Nx which provides the updated `withNx()` config plugin, you can manually add a `target` property to your exported config with a value of `'experimental-serverless-trace'`.
-
-E.g.
-
-```js
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const withNx = require('@nrwl/next/plugins/with-nx');
-
-/**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
- **/
-const nextConfig = {
-  target: 'experimental-serverless-trace',
-  // ...You can of course have other Next.js config options specified here too, but the "target" is critical for Vercel deployments...
-};
-
-module.exports = withNx(nextConfig);
-```
-
-OR
-
-```js
-module.exports = {
-  target: 'experimental-serverless-trace',
-  // ...You can of course have other Next.js config options specified here too, but the "target" is critical for Vercel deployments...
-};
-```
-
-> Vercel themselves have informed us that this target will not be required in future versions of Next.js and their platform, but that even when that is the case this option will not cause any issues, so we do not need to worry too much about the name containing "experimental".
+Starting from Nx 11, your Next.js application should already be ready for deployment to Vercel.
 
 ### Configure your Vercel project's settings appropriately
 
@@ -238,3 +273,10 @@ When everything is updated appropriately, for our `tuskdesk` example we would se
 ![image](./next-deploy-vercel-2.png)
 
 Naturally, you can continue on and set any additional Environment Variables etc that may be appropriate for your projects, but we have now covered the key points needed to deploy Next.js projects from Nx workspaces on Vercel!
+
+## Resources
+
+Here are other resources that you may find useful to learn more about Next.js and Nx.
+
+- **Blog post:** [Building a blog with Next.js and Nx Series](https://blog.nrwl.io/create-a-next-js-web-app-with-nx-bcf2ab54613) by Juri Strumpflohner
+- **Video tutorial:** [Typescript NX Monorepo with NextJS and Express](https://www.youtube.com/watch?v=WOfL5q2HznI) by Jack Herrington

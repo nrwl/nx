@@ -81,7 +81,8 @@ export function ReactPage() {
                 <p className="sm:text-lg mb-16">
                   Nx is a smart and extensible build framework to help you
                   develop, test, build, and scale with React and React
-                  frameworks like Gatsby, Next.js, and React Native.
+                  frameworks like <b>Next.js</b>, <b>React Native</b>, and{' '}
+                  <b>Gatsby</b>.
                 </p>
               </div>
               <div className="mt-8 mb-32 flex sm:flex-row flex-col justify-center">
@@ -163,6 +164,14 @@ export function ReactPage() {
                     }
                   />
                 </div>
+
+                <p className="sm:text-lg my-6">
+                  Refer to our{' '}
+                  <Link href="/latest/react/guides/nextjs">
+                    <a className="font-bold">Next.js guide</a>
+                  </Link>{' '}
+                  to get started.
+                </p>
               </div>
             </div>
             {/*More info*/}
@@ -486,6 +495,13 @@ export function ReactPage() {
                     <Link href={'/latest/react/getting-started/intro'}>
                       <a className="underline pointer">
                         Nx React Documentation
+                      </a>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={'/latest/react/guides/nextjs'}>
+                      <a className="underline pointer">
+                        Nx Next.js Documentation
                       </a>
                     </Link>
                   </li>
