@@ -118,6 +118,7 @@ describe('@nrwl/storybook:configuration', () => {
       configurations: {
         ci: {
           quiet: true,
+          watch: false,
         },
       },
       options: {

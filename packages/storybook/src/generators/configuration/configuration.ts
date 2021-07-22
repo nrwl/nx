@@ -302,6 +302,7 @@ function addStorybookTask(
     configurations: {
       ci: {
         quiet: true,
+        watch: false,
       },
     },
   };
