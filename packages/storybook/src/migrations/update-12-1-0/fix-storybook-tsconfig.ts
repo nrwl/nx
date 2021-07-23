@@ -23,7 +23,7 @@ export default async function updateStorybookTsconfig(tree: Tree) {
       ),
     };
 
-    const storybookExecutor = Object.keys(targets).find(
+    const storybookExecutor = Object.keys(targets || {}).find(
       (x) => targets[x].executor === '@nrwl/storybook:storybook'
     );
 
@@ -38,7 +38,7 @@ export default async function updateStorybookTsconfig(tree: Tree) {
     }
 
     const isReactProject = isFramework('react', {
-      uiFramework: targets[storybookExecutor].options
+      uiFramework: targets[storybookExecutor]?.options
         ?.uiFramework as Parameters<typeof isFramework>[1]['uiFramework'],
     });
 
