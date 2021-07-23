@@ -1,18 +1,13 @@
 import { FetchProjectGraphService } from '../app/fetch-project-graph-service';
 import { Environment } from '../app/models';
+import { projectGraphs } from '../graphs';
 
 export const environment: Environment = {
-  environment: 'release',
+  environment: 'dev',
   appConfig: {
-    showDebugger: false,
-    projectGraphs: [
-      {
-        id: 'local',
-        label: 'local',
-        url: 'projectGraph.json',
-      },
-    ],
-    defaultProjectGraph: 'local',
+    showDebugger: true,
+    projectGraphs,
+    defaultProjectGraph: 'nx',
     projectGraphService: new FetchProjectGraphService(),
   },
 };
