@@ -13,7 +13,7 @@ Default: `@storybook/angular`
 
 Type: `string`
 
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`, `@storybook/web-components`, `@storybook/vue`
 
 Storybook framework npm package
 

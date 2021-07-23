@@ -14,6 +14,8 @@ export const Constants = {
     angular: '@storybook/angular',
     react: '@storybook/react',
     html: '@storybook/html',
+    'web-components': '@storybook/web-components',
+    vue: '@storybook/vue',
   } as const,
 };
 type Constants = typeof Constants;
@@ -33,6 +35,17 @@ export function isFramework(
     return true;
   }
   if (type === 'html' && schema.uiFramework === '@storybook/html') {
+    return true;
+  }
+
+  if (
+    type === 'web-components' &&
+    schema.uiFramework === '@storybook/web-components'
+  ) {
+    return true;
+  }
+
+  if (type === 'vue' && schema.uiFramework === '@storybook/vue') {
     return true;
   }
 

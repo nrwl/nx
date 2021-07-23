@@ -12,6 +12,9 @@ export function getStorybookFrameworkPath(uiFramework) {
     '@storybook/angular': '@storybook/angular/dist/ts3.9/server/options',
     '@storybook/react': '@storybook/react/dist/cjs/server/options',
     '@storybook/html': '@storybook/html/dist/cjs/server/options',
+    '@storybook/vue': '@storybook/vue/dist/cjs/server/options',
+    '@storybook/web-components"':
+      '@storybook/web-components"/dist/cjs/server/options',
   };
 
   if (isStorybookV62onwards(uiFramework)) {
