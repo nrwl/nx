@@ -1,31 +1,44 @@
+jest.mock('../../core/project-graph');
+jest.mock('../../utilities/assets');
+jest.mock('../../utilities/buildable-libs-utils');
+jest.mock('../../utilities/fileutils');
+jest.mock('../../utilities/typescript/compilation');
+
 import { ExecutorContext } from '@nrwl/devkit';
 import { join } from 'path';
 import { copyAssets } from '../../utilities/assets';
+import {
+  calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
+} from '../../utilities/buildable-libs-utils';
 import { readJsonFile, writeJsonFile } from '../../utilities/fileutils';
 import { compileTypeScript } from '../../utilities/typescript/compilation';
 import { TypeScriptExecutorOptions } from './schema';
 import { tscExecutor } from './tsc.impl';
-
-const defaultPackageJson = { name: 'workspacelib', version: '0.0.1' };
-jest.mock('../../utilities/fileutils', () => ({
-  ...jest.requireActual<any>('../../utilities/fileutils'),
-  writeJsonFile: jest.fn(),
-  readJsonFile: jest.fn(() => ({ ...defaultPackageJson })),
-}));
-const readJsonFileMock = readJsonFile as jest.Mock<any>;
-jest.mock('../../utilities/typescript/compilation');
-const compileTypeScriptMock = compileTypeScript as jest.Mock<{
-  success: boolean;
-}>;
-jest.mock('../../utilities/assets');
 
 describe('executor: tsc', () => {
   const assets = ['some-file.md'];
   let context: ExecutorContext;
   let normalizedOptions: TypeScriptExecutorOptions;
   let options: TypeScriptExecutorOptions;
+  const defaultPackageJson = { name: 'workspacelib', version: '0.0.1' };
+  const compileTypeScriptMock = compileTypeScript as jest.Mock;
+  const readJsonFileMock = readJsonFile as jest.Mock;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
+    (calculateProjectDependencies as jest.Mock).mockImplementation(() => ({
+      target: { data: { root: 'libs/workspacelib' } },
+      dependencies: [],
+    }));
+    (createTmpTsConfig as jest.Mock).mockImplementation(
+      () => '/my-app/tsconfig.app.generated.json'
+    );
+    (checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(true);
+    readJsonFileMock.mockImplementation(() => ({ ...defaultPackageJson }));
+
     context = {
       cwd: '/root',
       root: '/root',
@@ -54,8 +67,19 @@ describe('executor: tsc', () => {
       outputPath: join(context.root, options.outputPath),
       tsConfig: join(context.root, options.tsConfig),
     };
+  });
 
-    jest.clearAllMocks();
+  it('should return { success: false } when dependent projects have not been built', async () => {
+    (calculateProjectDependencies as jest.Mock).mockImplementation(() => ({
+      target: { data: { root: 'libs/workspacelib' } },
+      dependencies: [{}],
+    }));
+    (checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(false);
+
+    const result = await tscExecutor(options, context);
+
+    expect(result).toEqual({ success: false });
+    expect(compileTypeScriptMock).not.toHaveBeenCalled();
   });
 
   it('should return typescript compilation result', async () => {
