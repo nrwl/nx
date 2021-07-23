@@ -20,10 +20,7 @@ export {
 export { output } from './src/utilities/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
-export {
-  DepGraphClientProject,
-  DepGraphClientResponse,
-} from './src/command-line/dep-graph';
+
 export {
   readWorkspaceJson,
   readNxJson,

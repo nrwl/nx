@@ -1,5 +1,6 @@
-import { DepGraphClientResponse } from '@nrwl/workspace';
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+// nx-ignore-next-line
+import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
+import { ProjectGraph } from '@nrwl/devkit';
 import { combineLatest, fromEvent, Subject } from 'rxjs';
 import { startWith, takeUntil } from 'rxjs/operators';
 import { DebuggerPanel } from './debugger-panel';
