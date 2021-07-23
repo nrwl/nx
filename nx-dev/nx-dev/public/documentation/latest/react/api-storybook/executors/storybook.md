@@ -3,7 +3,7 @@
 Serve Storybook
 
 Options can be configured in `workspace.json` when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/react/getting-started/nx-cli#common-commands.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
 ## Options
 
@@ -13,7 +13,7 @@ Default: `@storybook/angular`
 
 Type: `string`
 
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`, `@storybook/web-components`, `@storybook/vue`
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
 
 Storybook framework npm package
 
