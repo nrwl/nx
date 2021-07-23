@@ -311,7 +311,8 @@ export function Index() {
                       <a
                         href="https://nx.dev/getting-started/console#nx-console-for-vscode"
                         target="_blank"
-                        className="cursor-pointer underline" rel="noreferrer"
+                        className="cursor-pointer underline"
+                        rel="noreferrer"
                       >
                         VS Code plugin
                       </a>{' '}
@@ -488,7 +489,8 @@ export function Index() {
                         <a
                           className="underline pointer"
                           target="_blank"
-                          href="https://blog.nrwl.io/painlessly-build-and-deploy-next-js-apps-with-nx-225e2721da78?source=friends_link&sk=b381e3b9e7a2d8951fbe806ac0363851" rel="noreferrer"
+                          href="https://blog.nrwl.io/painlessly-build-and-deploy-next-js-apps-with-nx-225e2721da78?source=friends_link&sk=b381e3b9e7a2d8951fbe806ac0363851"
+                          rel="noreferrer"
                         >
                           Next.js
                         </a>
@@ -496,7 +498,8 @@ export function Index() {
                         <a
                           className="underline pointer"
                           target="_blank"
-                          href="https://blog.nrwl.io/step-to-step-guide-on-creating-a-blog-using-nx-gatsby-wordpress-ac7e9bfc0efd?source=friends_link&sk=5af5e109144bc4985f3fe8d92429463b" rel="noreferrer"
+                          href="https://blog.nrwl.io/step-to-step-guide-on-creating-a-blog-using-nx-gatsby-wordpress-ac7e9bfc0efd?source=friends_link&sk=5af5e109144bc4985f3fe8d92429463b"
+                          rel="noreferrer"
                         >
                           Gatsby
                         </a>
@@ -504,7 +507,8 @@ export function Index() {
                         <a
                           className="underline pointer"
                           target="_blank"
-                          href="https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89?source=friends_link&sk=e04878accafe0d9f696b647d0b9ae2d4" rel="noreferrer"
+                          href="https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89?source=friends_link&sk=e04878accafe0d9f696b647d0b9ae2d4"
+                          rel="noreferrer"
                         >
                           React Native
                         </a>{' '}
