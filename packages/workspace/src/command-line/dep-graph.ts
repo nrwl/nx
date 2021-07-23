@@ -26,17 +26,9 @@ import {
 import { writeJsonFile } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 
-export interface DepGraphClientProject {
-  name: string;
-  type: string;
-  data: {
-    tags: string[];
-    root: string;
-  };
-}
 export interface DepGraphClientResponse {
   hash: string;
-  projects: DepGraphClientProject[];
+  projects: ProjectGraphNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   layout: { appsDir: string; libsDir: string };
   changes: {
@@ -512,13 +504,14 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
   performance.mark('dep graph response generation:start');
 
   const layout = workspaceLayout();
-  const projects: DepGraphClientProject[] = Object.values(graph.nodes).map(
+  const projects: ProjectGraphNode[] = Object.values(graph.nodes).map(
     (project) => ({
       name: project.name,
       type: project.type,
       data: {
         tags: project.data.tags,
         root: project.data.root,
+        files: [],
       },
     })
   );
