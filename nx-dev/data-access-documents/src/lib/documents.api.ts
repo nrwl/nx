@@ -8,6 +8,10 @@ import {
   VersionMetadata,
 } from './documents.models';
 
+export interface StaticDocumentPaths {
+  params: { segments: string[] };
+}
+
 export const flavorList: {
   label: string;
   value: string;
@@ -26,10 +30,16 @@ export class DocumentsApi {
       versions: VersionMetadata[];
       documentsMap: Map<string, DocumentMetadata[]>;
     }
-  ) {}
+  ) {
+    if (!options.archiveRoot || !options.previewRoot) {
+      throw new Error('archive and preview roots cannot be undefined');
+    }
+  }
 
   getDefaultVersion(): VersionMetadata {
-    return this.options.versions.find((v) => v.default);
+    const found = this.options.versions.find((v) => v.default);
+    if (found) return found;
+    throw new Error('Cannot find default version');
   }
 
   getVersions(): VersionMetadata[] {
@@ -72,8 +82,8 @@ export class DocumentsApi {
     }
   }
 
-  getStaticDocumentPaths(version: string) {
-    const paths = [];
+  getStaticDocumentPaths(version: string): StaticDocumentPaths[] {
+    const paths: StaticDocumentPaths[] = [];
     const defaultVersion = this.getDefaultVersion();
 
     function recur(curr, acc) {
@@ -111,11 +121,12 @@ export class DocumentsApi {
       return this.options.previewRoot;
     }
 
-    if (version === 'latest' || version === 'previous') {
-      return join(
-        this.options.archiveRoot,
-        this.options.versions.find((x) => x.id === version).path
-      );
+    const versionPath = this.options.versions.find(
+      (x) => x.id === version
+    )?.path;
+
+    if (versionPath) {
+      return join(this.options.archiveRoot, versionPath);
     }
 
     throw new Error(`Cannot find root for ${version}`);
@@ -132,7 +143,7 @@ export class DocumentsApi {
 
     let found;
     for (const part of path) {
-      found = items.find((item) => item.id === part);
+      found = items?.find((item) => item.id === part);
       if (found) {
         items = found.itemList;
       } else {
