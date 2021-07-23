@@ -1,9 +1,6 @@
-import { WorkspaceConfiguration } from '@nrwl/devkit';
-import {
-  DepGraphClientResponse,
-  ProjectGraph,
-  ProjectGraphNode,
-} from '@nrwl/workspace';
+// nx-ignore-next-line
+import { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
+import { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { ProjectGraphList } from './graphs';
 
 export declare global {
