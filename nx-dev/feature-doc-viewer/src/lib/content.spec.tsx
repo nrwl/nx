@@ -7,6 +7,8 @@ describe('Content', () => {
   it('should render successfully', () => {
     const { baseElement } = render(
       <Content
+        versionList={[]}
+        flavorList={[]}
         version="1.0.0"
         flavor="react"
         document={{

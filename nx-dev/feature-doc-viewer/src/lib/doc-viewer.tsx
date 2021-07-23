@@ -17,7 +17,7 @@ export interface DocumentationFeatureDocViewerProps {
   menu: Menu;
   document: DocumentData;
   toc: any;
-  navIsOpen: boolean;
+  navIsOpen?: boolean;
 }
 
 export function DocViewer({

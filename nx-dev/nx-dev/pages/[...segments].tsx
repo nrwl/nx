@@ -17,8 +17,11 @@ import { documentsApi, menuApi } from '../lib/api';
 import { useStorage } from '../lib/use-storage';
 
 const versionList = documentsApi.getVersions();
-const defaultVersion = versionList.find((v) => v.default);
-const defaultFlavor = flavorList.find((f) => f.default);
+const defaultVersion = versionList.find((v) => v.default) as VersionMetadata;
+const defaultFlavor = flavorList.find((f) => f.default) as {
+  value: string;
+  label: string;
+};
 
 interface DocumentationPageProps {
   version: VersionMetadata;
@@ -277,12 +280,16 @@ function findDocumentAndMenu(
   version: VersionMetadata,
   flavor: { label: string; value: string },
   segments: string[]
-): { menu?: Menu; document?: DocumentData; isFallback?: boolean } {
+): {
+  menu: undefined | Menu;
+  document: undefined | DocumentData;
+  isFallback?: boolean;
+} {
   const isFallback = segments[0] !== version.id;
   const path = isFallback ? segments : segments.slice(2);
 
-  let menu: Menu;
-  let document: DocumentData;
+  let menu: undefined | Menu = undefined;
+  let document: undefined | DocumentData = undefined;
 
   try {
     menu = menuApi.getMenu(version.id, flavor.value);

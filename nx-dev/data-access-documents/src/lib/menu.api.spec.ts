@@ -29,7 +29,7 @@ describe('MenuApi', () => {
 
       // first basic section item should have prefix by version and flavor
       // e.g. "latest/react/getting-started/intro"
-      expect(menu.sections[0].itemList[0].itemList[0].path).toMatch(
+      expect(menu?.sections?.[0]?.itemList?.[0]?.itemList?.[0].path).toMatch(
         /latest\/react/
       );
     });

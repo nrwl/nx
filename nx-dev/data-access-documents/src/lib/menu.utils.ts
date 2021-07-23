@@ -23,12 +23,14 @@ export function createMenuItems(
     return pathData;
   };
 
-  return items.map((item) => {
-    return {
-      ...item,
-      itemList: item.itemList?.map((ii) => createPathMetadata(ii, item.id)),
-    };
-  });
+  return (
+    items?.map((item) => {
+      return {
+        ...item,
+        itemList: item.itemList?.map((ii) => createPathMetadata(ii, item.id)),
+      };
+    }) ?? []
+  );
 }
 
 export function getBasicSection(items: MenuItem[]): MenuSection {
@@ -73,7 +75,7 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
       .map((m) => ({
         ...m,
         disableCollapsible: true,
-        itemList: m.itemList.map((item) => ({
+        itemList: m.itemList?.map((item) => ({
           ...item,
           disableCollapsible: true,
         })),
