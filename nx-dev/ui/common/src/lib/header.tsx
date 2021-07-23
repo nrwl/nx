@@ -4,12 +4,12 @@ import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
 interface HeaderPropsWithoutFlavorAndVersion {
   showSearch: false;
-  useDarkBackground: boolean;
+  useDarkBackground?: boolean;
 }
 
 interface HeaderPropsWithFlavorAndVersion {
   showSearch: boolean;
-  useDarkBackground: boolean;
+  useDarkBackground?: boolean;
   flavor: { name: string; value: string };
   version: { name: string; value: string };
 }

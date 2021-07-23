@@ -26,7 +26,7 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
 
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const searchButtonRef = useRef();
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [initialQuery, setInitialQuery] = useState(null);
   const [browserDetected, setBrowserDetected] = useState(false);
   const [actionKey, setActionKey] = useState(ACTION_KEY_DEFAULT);
