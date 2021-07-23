@@ -3,7 +3,7 @@
 **[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/latest/node/getting-started/nx-cli#common-commands.
 
 ## Properties
 

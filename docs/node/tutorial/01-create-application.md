@@ -113,7 +113,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/node/getting-started/console)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/latest/node/getting-started/console#nx-console-for-vscode)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 

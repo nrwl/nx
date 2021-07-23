@@ -312,6 +312,7 @@ export function Index() {
                         href="https://nx.dev/getting-started/console#nx-console-for-vscode"
                         target="_blank"
                         className="cursor-pointer underline"
+                        rel="noreferrer"
                       >
                         VS Code plugin
                       </a>{' '}
@@ -489,6 +490,7 @@ export function Index() {
                           className="underline pointer"
                           target="_blank"
                           href="https://blog.nrwl.io/painlessly-build-and-deploy-next-js-apps-with-nx-225e2721da78?source=friends_link&sk=b381e3b9e7a2d8951fbe806ac0363851"
+                          rel="noreferrer"
                         >
                           Next.js
                         </a>
@@ -497,6 +499,7 @@ export function Index() {
                           className="underline pointer"
                           target="_blank"
                           href="https://blog.nrwl.io/step-to-step-guide-on-creating-a-blog-using-nx-gatsby-wordpress-ac7e9bfc0efd?source=friends_link&sk=5af5e109144bc4985f3fe8d92429463b"
+                          rel="noreferrer"
                         >
                           Gatsby
                         </a>
@@ -505,6 +508,7 @@ export function Index() {
                           className="underline pointer"
                           target="_blank"
                           href="https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89?source=friends_link&sk=e04878accafe0d9f696b647d0b9ae2d4"
+                          rel="noreferrer"
                         >
                           React Native
                         </a>{' '}
@@ -562,6 +566,7 @@ export function Index() {
                     className="cursor-pointer underline"
                     href="https://nxplaybook.com/?utm_source=nx.dev"
                     target="_blank"
+                    rel="noreferrer"
                   >
                     NxPlaybook.com
                   </a>
@@ -573,6 +578,7 @@ export function Index() {
                       target="_blank"
                       href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco?utm_source=nx.dev"
                       className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-base"
+                      rel="noreferrer"
                     >
                       Watch Nx Workspaces Course
                     </a>
@@ -600,6 +606,7 @@ export function Index() {
                       href="https://nx.dev/getting-started/console#nx-console-for-vscode"
                       target="_blank"
                       className="cursor-pointer underline"
+                      rel="noreferrer"
                     >
                       Try out Nx Console
                     </a>
@@ -619,6 +626,7 @@ export function Index() {
                       href="https://nrwl.io/?utm_source=nx.dev"
                       target="_blank"
                       className="cursor-pointer underline"
+                      rel="noreferrer"
                     >
                       nrwl.io
                     </a>

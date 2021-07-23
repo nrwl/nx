@@ -3,7 +3,7 @@
 Angular browser builder that supports incremental builds
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/latest/node/getting-started/nx-cli#common-commands.
 
 ## Properties
 
