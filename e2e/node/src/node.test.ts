@@ -75,6 +75,55 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
+  it('should be able to generate an empty application with additional entries', async () => {
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+
+    const lintResults = runCLI(`lint ${nodeapp}`);
+    expect(lintResults).toContain('All files pass linting.');
+
+    updateFile('workspace.json', (workspaceJson) => {
+      const workspace = JSON.parse(workspaceJson);
+
+      workspace.projects[nodeapp].targets.build.options.additionalEntryPoints =
+        [
+          {
+            entryName: 'additional-main',
+            entryPath: `apps/${nodeapp}/src/additional-main.ts`,
+          },
+        ];
+
+      const newWorkspace = JSON.stringify(workspace, undefined, 2);
+
+      return newWorkspace;
+    });
+
+    updateFile(
+      `apps/${nodeapp}/src/additional-main.ts`,
+      `console.log('Hello Additional World!');`
+    );
+    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+    await runCLIAsync(`build ${nodeapp}`);
+
+    checkFilesExist(
+      `dist/apps/${nodeapp}/main.js`,
+      `dist/apps/${nodeapp}/additional-main.js`
+    );
+    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
+      cwd: tmpProjPath(),
+    }).toString();
+    expect(result).toContain('Hello World!');
+
+    const additionalResult = execSync(
+      `node dist/apps/${nodeapp}/additional-main.js`,
+      {
+        cwd: tmpProjPath(),
+      }
+    ).toString();
+    expect(additionalResult).toContain('Hello Additional World!');
+  }, 60000);
+
   xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const port = 3334;

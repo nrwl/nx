@@ -19,6 +19,22 @@ Type: `string`
 
 The name of the Typescript configuration file.
 
+### additionalEntryPoints
+
+Type: `object[]`
+
+#### entryName
+
+Type: `string`
+
+Name of the additional entry file
+
+#### entryPath
+
+Type: `string`
+
+Path to the additional entry file
+
 ### assets
 
 Type: `array`

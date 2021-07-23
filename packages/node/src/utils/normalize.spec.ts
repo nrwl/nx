@@ -52,6 +52,23 @@ describe('normalizeBuildOptions', () => {
     expect(result.main).toEqual('/root/apps/nodeapp/src/main.ts');
   });
 
+  it('should resolve additional entries from root', () => {
+    const result = normalizeBuildOptions(
+      {
+        ...testOptions,
+        additionalEntryPoints: [
+          { entryName: 'test', entryPath: 'some/path.ts' },
+        ],
+      },
+      root,
+      sourceRoot,
+      projectRoot
+    );
+    expect(result.additionalEntryPoints[0].entryPath).toEqual(
+      '/root/some/path.ts'
+    );
+  });
+
   it('should resolve the output path', () => {
     const result = normalizeBuildOptions(
       testOptions,

@@ -9,6 +9,7 @@ import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export const OUT_FILENAME = 'main.js';
+export const OUT_FILENAME_TEMPLATE = '[name].js';
 
 // TODO(jack): In Nx 13 go back to proper types.
 type Configuration = any;
@@ -29,15 +30,27 @@ export function getBaseWebpackPartial(
 
   const { compilerPluginHooks, hasPlugin } = loadTsPlugins(options.tsPlugins);
 
+  const additionalEntryPoints =
+    options.additionalEntryPoints?.reduce(
+      (obj, current) => ({
+        ...obj,
+        [current.entryName]: current.entryPath,
+      }),
+      {} as { [entryName: string]: string }
+    ) ?? {};
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main],
+      ...additionalEntryPoints,
     },
     devtool: options.sourceMap ? 'source-map' : false,
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,
-      filename: OUT_FILENAME,
+      filename:
+        options.additionalEntryPoints?.length > 0
+          ? OUT_FILENAME_TEMPLATE
+          : OUT_FILENAME,
     },
     module: {
       rules: [

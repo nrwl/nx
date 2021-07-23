@@ -144,6 +144,22 @@
       "items": {
         "$ref": "#/definitions/tsPluginPattern"
       }
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entryName": {
+            "type": "string",
+            "description": "Name of the additional entry file"
+          },
+          "entryPath": {
+            "type": "string",
+            "description": "Path to the additional entry file"
+          }
+        }
+      }
     }
   },
   "required": ["tsConfig", "main"],

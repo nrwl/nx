@@ -1,5 +1,6 @@
 import { resolve, dirname, relative, basename } from 'path';
 import {
+  AdditionalEntryPoint,
   BuildNodeBuilderOptions,
   NormalizedBuildNodeBuilderOptions,
 } from './types';
@@ -31,6 +32,10 @@ export function normalizeBuildOptions(
           .concat(options.webpackConfig)
           .map((path) => normalizePluginPath(path, root))
       : [],
+    additionalEntryPoints: normalizeAdditionalEntries(
+      root,
+      options.additionalEntryPoints ?? []
+    ),
   };
 }
 
@@ -98,4 +103,17 @@ function normalizePluginPath(path: string, root: string) {
   } catch {
     return resolve(root, path);
   }
+}
+
+function normalizeAdditionalEntries(
+  root: string,
+  additionalEntries: AdditionalEntryPoint[]
+) {
+  return additionalEntries.map(
+    ({ entryName, entryPath }) =>
+      ({
+        entryName,
+        entryPath: resolve(root, entryPath),
+      } as AdditionalEntryPoint)
+  );
 }
