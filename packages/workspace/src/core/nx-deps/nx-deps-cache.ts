@@ -83,7 +83,7 @@ export function readCache(): false | ProjectGraphCache {
 export function writeCache(
   packageJsonDeps: Record<string, string>,
   nxJson: NxJsonConfiguration,
-  tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
+  tsConfig: { compilerOptions: { paths?: { [k: string]: any } } },
   projectGraph: ProjectGraph
 ): void {
   performance.mark('write cache:start');
@@ -94,7 +94,7 @@ export function writeCache(
   const newValue: ProjectGraphCache = {
     version: '3.0',
     deps: packageJsonDeps,
-    pathMappings: tsConfig.compilerOptions.paths,
+    pathMappings: tsConfig.compilerOptions.paths || {},
     nxJsonPlugins,
     nodes: projectGraph.nodes,
     dependencies: projectGraph.dependencies,
