@@ -194,36 +194,6 @@ describe('Command Runner Builder', () => {
   });
 
   describe('readyWhen', () => {
-    it('should warn when command is specified instead of commands', async () => {
-      jest.spyOn(process.stderr, 'write');
-      await runCommands(
-        {
-          command: `echo 'Hello World'`,
-          readyWhen: 'READY',
-        },
-        context
-      );
-
-      expect(process.stderr.write).toHaveBeenCalledWith(
-        'Warning: "readyWhen" has no effect when a single command is run. The task will be done when the command process is completed. Ignoring.'
-      );
-    });
-
-    it('should warn when a single command is specified', async () => {
-      jest.spyOn(process.stderr, 'write');
-      await runCommands(
-        {
-          commands: [`echo 'Hello World'`],
-          readyWhen: 'READY',
-        },
-        context
-      );
-
-      expect(process.stderr.write).toHaveBeenCalledWith(
-        'Warning: "readyWhen" has no effect when a single command is run. The task will be done when the command process is completed. Ignoring.'
-      );
-    });
-
     it('should error when parallel = false', async () => {
       try {
         await runCommands(
@@ -237,7 +207,7 @@ describe('Command Runner Builder', () => {
         fail('should throw');
       } catch (e) {
         expect(e.message).toEqual(
-          `ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true.`
+          `ERROR: Bad executor config for @nrwl/run-commands - "readyWhen" can only be used when "parallel=true".`
         );
       }
     });
