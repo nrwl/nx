@@ -129,7 +129,8 @@ jobs:
       - run:
           name: Check Package dependencies
           command: yarn depcheck
-      - nx/set-shas
+      - nx/set-shas:
+          main-branch-name: 'master'
       - run:
           name: Run Builds
           command: |
@@ -170,7 +171,8 @@ jobs:
     steps:
       - setup:
           os: << parameters.os >>
-      - nx/set-shas
+      - nx/set-shas:
+          main-branch-name: 'master'
       - run:
           name: Run Builds
           command: npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
