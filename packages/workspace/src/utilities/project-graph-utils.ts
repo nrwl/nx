@@ -71,7 +71,7 @@ export function getProjectNameFromDirPath(
  * collects all dependent
  * @param filename name of a file in some workspace app / lib
  */
-function findAllProjectNodeDependencies(
+export function findAllProjectNodeDependencies(
   parentNodeName: string,
   projectGraph = readCachedProjectGraph()
 ): string[] {
@@ -86,11 +86,28 @@ function findAllProjectNodeDependencies(
   return Array.from(dependencyNodeNames);
 }
 
+export function findAllProjectNpmDependencies(
+  parentNodeName: string,
+  projectGraph = readCachedProjectGraph()
+): string[] {
+  const dependencyNames = new Set<string>();
+
+  collectDependentProjectNodesNames(
+    projectGraph,
+    dependencyNames,
+    parentNodeName,
+    false
+  );
+
+  return Array.from(dependencyNames);
+}
+
 // Recursively get all the dependencies of the node
 function collectDependentProjectNodesNames(
   nxDeps: ProjectGraph,
   dependencyNodeNames: Set<string>,
-  parentNodeName: string
+  parentNodeName: string,
+  internal = true
 ) {
   const dependencies = nxDeps.dependencies[parentNodeName];
   if (!dependencies) {
@@ -102,8 +119,13 @@ function collectDependentProjectNodesNames(
   for (const dependency of dependencies) {
     const dependencyName = dependency.target;
 
-    // we're only intersted in project dependencies, not npm
-    if (dependencyName.startsWith('npm:')) {
+    // We are only interested in the dependencies matching the internal flag
+    // if internal=true then only count Nx deps (no npm)
+    // if internal=false then we only care about npm deps (no Nx)
+    if (
+      (dependencyName.startsWith('npm:') && internal) ||
+      (!dependencyName.startsWith('npm:') && !internal)
+    ) {
       continue;
     }
 
@@ -113,7 +135,8 @@ function collectDependentProjectNodesNames(
     collectDependentProjectNodesNames(
       nxDeps,
       dependencyNodeNames,
-      dependencyName
+      dependencyName,
+      internal
     );
   }
 }
