@@ -1,26 +1,28 @@
 import {
   ProjectConfiguration,
+  readJson,
   readProjectConfiguration,
   Tree,
-  readJson,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Schema } from '../schema';
-import { updateCypressJson } from './update-cypress-json';
 import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updateCypressJson } from './update-cypress-json';
 
 describe('updateCypressJson', () => {
   let tree: Tree;
-  let schema: Schema;
+  let schema: NormalizedSchema;
   let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace();
@@ -46,7 +48,6 @@ describe('updateCypressJson', () => {
       screenshotsFolder: '../../dist/cypress/libs/my-lib/screenshots',
       chromeWebSecurity: false,
     };
-
     writeJson(tree, '/libs/my-destination/cypress.json', cypressJson);
 
     updateCypressJson(tree, schema, projectConfig);

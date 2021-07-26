@@ -715,7 +715,7 @@ describe('Move Angular Project', () => {
     const lib2FilePath = `libs/${lib2}/src/lib/${lib2}.module.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { ${newModule} } from '@${proj}/shared/${lib1}';`
+      `import { ${newModule} } from '@${proj}/shared-${lib1}';`
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });
@@ -834,7 +834,7 @@ describe('Move Project', () => {
       rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared-${lib1}-data-access`]
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -854,7 +854,7 @@ describe('Move Project', () => {
     const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
     );
   });
 
@@ -970,7 +970,7 @@ describe('Move Project', () => {
       rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared-${lib1}-data-access`]
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -991,7 +991,7 @@ describe('Move Project', () => {
     const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
     );
   });
 
@@ -1109,7 +1109,7 @@ describe('Move Project', () => {
       rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared-${lib1}-data-access`]
     ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -1129,7 +1129,7 @@ describe('Move Project', () => {
     const lib2FilePath = `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
     );
 
     nxJson = readJson('nx.json');

@@ -1,19 +1,16 @@
 import { getWorkspacePath, Tree, updateJson } from '@nrwl/devkit';
-import { Schema } from '../schema';
-import { getNewProjectName } from './utils';
+import { NormalizedSchema } from '../schema';
 
 /**
  * Update other references to the source project's targets
  */
-export function updateBuildTargets(tree: Tree, schema: Schema) {
-  const newProjectName = getNewProjectName(schema.destination);
-
+export function updateBuildTargets(tree: Tree, schema: NormalizedSchema) {
   updateJson(tree, getWorkspacePath(tree), (json) => {
     const strWorkspace = JSON.stringify(json);
     json = JSON.parse(
       strWorkspace.replace(
         new RegExp(`${schema.projectName}:`, 'g'),
-        `${newProjectName}:`
+        `${schema.newProjectName}:`
       )
     );
     return json;

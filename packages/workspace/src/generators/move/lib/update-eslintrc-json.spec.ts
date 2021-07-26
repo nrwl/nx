@@ -5,23 +5,23 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
 import { Linter } from '../../../utils/lint';
-
-import { Schema } from '../schema';
-import { updateEslintrcJson } from './update-eslintrc-json';
 import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updateEslintrcJson } from './update-eslintrc-json';
 
 describe('updateEslint', () => {
   let tree: Tree;
-  let schema: Schema;
+  let schema: NormalizedSchema;
 
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
       destination: 'shared/my-destination',
-      importPath: undefined,
+      importPath: '@proj/shared-my-destination',
       updateImportPath: true,
+      newProjectName: 'shared-my-destination',
+      relativeToRootDestination: 'libs/shared/my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace();
@@ -47,13 +47,11 @@ describe('updateEslint', () => {
       linter: Linter.EsLint,
       standaloneConfig: false,
     });
-
     // This step is usually handled elsewhere
     tree.rename(
       'libs/my-lib/.eslintrc.json',
       'libs/shared/my-destination/.eslintrc.json'
     );
-
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintrcJson(tree, schema, projectConfig);
@@ -81,13 +79,11 @@ describe('updateEslint', () => {
       ];
       return eslintRcJson;
     });
-
     // This step is usually handled elsewhere
     tree.rename(
       'libs/my-lib/.eslintrc.json',
       'libs/shared/my-destination/.eslintrc.json'
     );
-
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintrcJson(tree, schema, projectConfig);
@@ -112,13 +108,11 @@ describe('updateEslint', () => {
       setParserOptionsProject: true,
       standaloneConfig: false,
     });
-
     // This step is usually handled elsewhere
     tree.rename(
       'libs/my-lib/.eslintrc.json',
       'libs/shared/my-destination/.eslintrc.json'
     );
-
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintrcJson(tree, schema, projectConfig);

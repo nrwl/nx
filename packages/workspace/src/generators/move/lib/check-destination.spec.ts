@@ -65,17 +65,4 @@ describe('checkDestination', () => {
       checkDestination(tree, schema, projectConfig);
     }).not.toThrow();
   });
-
-  it('should normalize the destination', async () => {
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: '/my-other-lib//wibble',
-      importPath: undefined,
-      updateImportPath: true,
-    };
-
-    checkDestination(tree, schema, projectConfig);
-
-    expect(schema.destination).toBe('my-other-lib/wibble');
-  });
 });

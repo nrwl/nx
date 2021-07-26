@@ -1,13 +1,11 @@
-import { join, relative } from 'path';
 import {
   offsetFromRoot,
   ProjectConfiguration,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-
-import { Schema } from '../schema';
-import { getDestination } from './utils';
+import { join } from 'path';
+import { NormalizedSchema } from '../schema';
 
 interface PartialEsLintrcOverride {
   parserOptions?: {
@@ -40,18 +38,17 @@ function offsetFilePath(
  */
 export function updateEslintrcJson(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  const destination = getDestination(tree, schema, project);
-  const eslintRcPath = join(destination, '.eslintrc.json');
+  const eslintRcPath = join(schema.relativeToRootDestination, '.eslintrc.json');
 
   if (!tree.exists(eslintRcPath)) {
     // no .eslintrc found. nothing to do
     return;
   }
 
-  const offset = offsetFromRoot(destination);
+  const offset = offsetFromRoot(schema.relativeToRootDestination);
 
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
     if (typeof eslintRcJson.extends === 'string') {
@@ -68,7 +65,9 @@ export function updateEslintrcJson(
 
     eslintRcJson.overrides?.forEach((o) => {
       if (o.parserOptions?.project) {
-        o.parserOptions.project = [`${destination}/tsconfig.*?.json`];
+        o.parserOptions.project = [
+          `${schema.relativeToRootDestination}/tsconfig.*?.json`,
+        ];
       }
     });
 
