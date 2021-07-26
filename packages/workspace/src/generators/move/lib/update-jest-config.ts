@@ -1,9 +1,6 @@
-import { Tree, ProjectConfiguration } from '@nrwl/devkit';
-
+import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import * as path from 'path';
-
-import { Schema } from '../schema';
-import { getDestination, getNewProjectName } from './utils';
+import { NormalizedSchema } from '../schema';
 
 /**
  * Updates the project name and coverage folder in the jest.config.js if it exists
@@ -14,13 +11,13 @@ import { getDestination, getNewProjectName } from './utils';
  */
 export function updateJestConfig(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  const destination = getDestination(tree, schema, project);
-  const newProjectName = getNewProjectName(schema.destination);
-
-  const jestConfigPath = path.join(destination, 'jest.config.js');
+  const jestConfigPath = path.join(
+    schema.relativeToRootDestination,
+    'jest.config.js'
+  );
 
   if (tree.exists(jestConfigPath)) {
     const oldContent = tree.read(jestConfigPath, 'utf-8');
@@ -29,8 +26,8 @@ export function updateJestConfig(
     const findDir = new RegExp(project.root, 'g');
 
     const newContent = oldContent
-      .replace(findName, `'${newProjectName}'`)
-      .replace(findDir, destination);
+      .replace(findName, `'${schema.newProjectName}'`)
+      .replace(findDir, schema.relativeToRootDestination);
     tree.write(jestConfigPath, newContent);
   }
 
@@ -49,7 +46,7 @@ export function updateJestConfig(
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,
-    usingJestProjects ? `` : `'<rootDir>/${destination}'`
+    usingJestProjects ? `` : `'<rootDir>/${schema.relativeToRootDestination}'`
   );
 
   tree.write(rootJestConfigPath, newRootJestConfigContent);

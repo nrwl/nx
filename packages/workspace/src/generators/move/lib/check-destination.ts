@@ -1,6 +1,6 @@
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
-import { getDestination, normalizeSlashes } from './utils';
+import { getDestination } from './utils';
 
 /**
  * Checks whether the destination folder is valid
@@ -25,9 +25,5 @@ export function checkDestination(
 
   if (tree.children(destination).length > 0) {
     throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
-  }
-
-  if (schema.destination.startsWith('/')) {
-    schema.destination = normalizeSlashes(schema.destination.substr(1));
   }
 }

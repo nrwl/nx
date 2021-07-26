@@ -1,24 +1,21 @@
 import {
   addProjectConfiguration,
-  removeProjectConfiguration,
   NxJsonProjectConfiguration,
   ProjectConfiguration,
+  removeProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-
-import { Schema } from '../schema';
-import { getDestination, getNewProjectName } from './utils';
+import { NormalizedSchema } from '../schema';
 
 export function moveProjectConfiguration(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   projectConfig: ProjectConfiguration & NxJsonProjectConfiguration
 ) {
-  let destination = getDestination(tree, schema, projectConfig);
   const projectString = JSON.stringify(projectConfig);
   const newProjectString = projectString.replace(
     new RegExp(projectConfig.root, 'g'),
-    destination
+    schema.relativeToRootDestination
   );
 
   // rename
@@ -28,9 +25,5 @@ export function moveProjectConfiguration(
   removeProjectConfiguration(tree, schema.projectName);
 
   // Create a new project with the root replaced
-  addProjectConfiguration(
-    tree,
-    getNewProjectName(schema.destination),
-    newProject
-  );
+  addProjectConfiguration(tree, schema.newProjectName, newProject);
 }

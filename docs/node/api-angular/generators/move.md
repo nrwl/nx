@@ -56,6 +56,16 @@ Type: `string`
 
 The new import path to use in the `tsconfig.base.json`.
 
+### skipFormat
+
+Alias(es): skip-format
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.
+
 ### updateImportPath
 
 Default: `true`

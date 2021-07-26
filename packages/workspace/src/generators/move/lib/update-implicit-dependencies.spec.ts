@@ -4,20 +4,21 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
-import { Schema } from '../schema';
+import { NormalizedSchema } from '../schema';
 import { updateImplicitDependencies } from './update-implicit-dependencies';
 
 describe('updateImplicitDepenencies', () => {
   let tree: Tree;
-  let schema: Schema;
+  let schema: NormalizedSchema;
 
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace();

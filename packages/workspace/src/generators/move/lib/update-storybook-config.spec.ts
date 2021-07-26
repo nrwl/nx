@@ -1,8 +1,8 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { Schema } from '../schema';
-import { updateStorybookConfig } from './update-storybook-config';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updateStorybookConfig } from './update-storybook-config';
 
 describe('updateStorybookConfig', () => {
   let tree: Tree;
@@ -17,15 +17,18 @@ describe('updateStorybookConfig', () => {
       standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
-
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
 
-    updateStorybookConfig(tree, schema, projectConfig);
+    expect(() =>
+      updateStorybookConfig(tree, schema, projectConfig)
+    ).not.toThrow();
   });
 
   it('should update the import path for main.js', async () => {
@@ -33,22 +36,21 @@ describe('updateStorybookConfig', () => {
       const rootMain = require('../../../.storybook/main');
       module.exports = rootMain;
     `;
-
     const storybookMainPath =
       '/libs/namespace/my-destination/.storybook/main.js';
-
     await libraryGenerator(tree, {
       name: 'my-source',
       standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookMainPath, storybookMain);
-
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'namespace/my-destination',
-      importPath: undefined,
+      importPath: '@proj/namespace-my-destination',
       updateImportPath: true,
+      newProjectName: 'namespace-my-destination',
+      relativeToRootDestination: 'libs/namespace/my-destination',
     };
 
     updateStorybookConfig(tree, schema, projectConfig);
@@ -63,22 +65,21 @@ describe('updateStorybookConfig', () => {
     const storybookWebpackConfig = `
       const rootWebpackConfig = require('../../../.storybook/webpack.config');
     `;
-
     const storybookWebpackConfigPath =
       '/libs/namespace/my-destination/.storybook/webpack.config.js';
-
     await libraryGenerator(tree, {
       name: 'my-source',
       standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
-
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'namespace/my-destination',
-      importPath: undefined,
+      importPath: '@proj/namespace-my-destination',
       updateImportPath: true,
+      newProjectName: 'namespace-my-destination',
+      relativeToRootDestination: 'libs/namespace/my-destination',
     };
 
     updateStorybookConfig(tree, schema, projectConfig);
