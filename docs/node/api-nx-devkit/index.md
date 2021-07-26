@@ -471,7 +471,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: _Omit_<[_WorkspaceJsonConfiguration_](../../node/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & _Omit_<[_NxJsonConfiguration_](../../node/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
+Ƭ **WorkspaceConfiguration**: _Omit_<[_WorkspaceJsonConfiguration_](../../node/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & _Partial_<Omit<[_NxJsonConfiguration_](../../node/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
 
 ## Variables
 
