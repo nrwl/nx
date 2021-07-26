@@ -10,6 +10,30 @@ import { UnitTestRunner } from '../../../utils/test-runners';
 describe('updateModuleName Rule', () => {
   let tree: Tree;
 
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should handle nesting resulting in the same project name', async () => {
+    const updatedModulePath = '/libs/my/first/src/lib/my-first.module.ts';
+    await libraryGenerator(tree, {
+      name: 'my-first',
+      simpleModuleName: true,
+    });
+    const schema: Schema = {
+      projectName: 'my-first',
+      destination: 'my/first',
+      updateImportPath: true,
+    };
+    await moveGenerator(tree, schema);
+
+    updateModuleName(tree, { ...schema, destination: 'my/first' });
+
+    expect(tree.exists(updatedModulePath)).toBe(true);
+    const moduleFile = tree.read(updatedModulePath).toString('utf-8');
+    expect(moduleFile).toContain(`export class MyFirstModule { }`);
+  });
+
   describe('move to subfolder', () => {
     const updatedModulePath =
       '/libs/shared/my-first/src/lib/shared-my-first.module.ts';
@@ -25,8 +49,6 @@ describe('updateModuleName Rule', () => {
     };
 
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
-
       await libraryGenerator(tree, {
         name: 'my-first',
         buildable: false,
@@ -86,7 +108,7 @@ describe('updateModuleName Rule', () => {
     });
 
     it('should rename the module files and update the module name', async () => {
-      await updateModuleName(tree, schema);
+      updateModuleName(tree, schema);
 
       expect(tree.exists(updatedModulePath)).toBe(true);
       expect(tree.exists(updatedModuleSpecPath)).toBe(true);
@@ -108,11 +130,11 @@ describe('updateModuleName Rule', () => {
     });
 
     it('should update any references to the module', async () => {
-      await updateModuleName(tree, schema);
+      updateModuleName(tree, schema);
 
       const importerFile = tree.read(secondModulePath).toString('utf-8');
       expect(importerFile).toContain(
-        `import { SharedMyFirstModule } from '@proj/shared/my-first';`
+        `import { SharedMyFirstModule } from '@proj/shared-my-first';`
       );
       expect(importerFile).toContain(
         `export class MySecondModule extends SharedMyFirstModule {}`
@@ -120,7 +142,7 @@ describe('updateModuleName Rule', () => {
     });
 
     it('should update the index.ts file which exports the module', async () => {
-      await updateModuleName(tree, schema);
+      updateModuleName(tree, schema);
 
       const indexFile = tree.read(indexPath).toString('utf-8');
       expect(indexFile).toContain(
@@ -128,6 +150,7 @@ describe('updateModuleName Rule', () => {
       );
     });
   });
+
   describe('rename', () => {
     const schema: Schema = {
       projectName: 'my-source',
@@ -142,8 +165,6 @@ describe('updateModuleName Rule', () => {
     const importerPath = '/libs/my-importer/src/lib/my-importing-file.ts';
 
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
-
       // fake a mid-move tree:
       await libraryGenerator(tree, {
         name: 'my-destination',
@@ -211,7 +232,7 @@ describe('updateModuleName Rule', () => {
     });
 
     it('should rename the module files and update the module name', async () => {
-      await updateModuleName(tree, schema);
+      updateModuleName(tree, schema);
 
       expect(tree.exists(modulePath)).toBe(true);
       expect(tree.exists(moduleSpecPath)).toBe(true);
@@ -233,7 +254,7 @@ describe('updateModuleName Rule', () => {
     });
 
     it('should update any references to the module', async () => {
-      await updateModuleName(tree, schema);
+      updateModuleName(tree, schema);
 
       const importerFile = tree.read(importerPath).toString('utf-8');
       expect(importerFile).toContain(
@@ -245,7 +266,7 @@ describe('updateModuleName Rule', () => {
     });
 
     it('should update the index.ts file which exports the module', async () => {
-      await updateModuleName(tree, schema);
+      updateModuleName(tree, schema);
 
       const indexFile = tree.read(indexPath).toString('utf-8');
       expect(indexFile).toContain(

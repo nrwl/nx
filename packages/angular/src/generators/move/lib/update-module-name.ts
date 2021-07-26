@@ -8,6 +8,7 @@ import {
 import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
 import { join } from 'path';
 import { Schema } from '../schema';
+
 /**
  * Updates the Angular module name (including the spec file and index.ts)
  *
@@ -16,10 +17,10 @@ import { Schema } from '../schema';
  *
  * @param schema The options provided to the schematic
  */
-export async function updateModuleName(
+export function updateModuleName(
   tree: Tree,
   { projectName, destination }: Schema
-) {
+): void {
   const newProjectName = getNewProjectName(destination);
 
   const project = readProjectConfiguration(tree, newProjectName);
@@ -27,7 +28,7 @@ export async function updateModuleName(
   if (project.projectType === 'application') {
     // Expect the module to be something like 'app.module.ts' regardless of the folder name,
     // Therefore, nothing to do.
-    return tree;
+    return;
   }
 
   const moduleName = {
@@ -53,7 +54,11 @@ export async function updateModuleName(
       from: `${project.sourceRoot}/lib/${moduleFile.from}.spec.ts`,
       to: `${project.sourceRoot}/lib/${moduleFile.to}.spec.ts`,
     },
-  ];
+  ].filter((rename) => rename.from !== rename.to);
+
+  if (filesToRename.length === 0) {
+    return;
+  }
 
   const replacements = [
     {
@@ -84,8 +89,7 @@ export async function updateModuleName(
   const skipFiles = [...filesToRename.map((file) => file.to), indexFile];
 
   // Update any files which import the module
-
-  for (const [name, definition] of getProjects(tree)) {
+  for (const [, definition] of getProjects(tree)) {
     visitNotIgnoredFiles(tree, definition.root, (file) => {
       // skip files that were already modified
 
@@ -97,6 +101,7 @@ export async function updateModuleName(
     });
   }
 }
+
 function updateFileContent(
   tree: Tree,
   replacements: { regex: RegExp; replaceWith: string }[],

@@ -1,24 +1,27 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
+  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
-  updateJson,
 } from '@nrwl/devkit';
-import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
-import type { Schema } from '../schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { NormalizedSchema } from '../schema';
 import { moveProjectConfiguration } from './move-project-configuration';
 
 describe('moveProjectConfiguration', () => {
   let tree: Tree;
-  let projectConfig;
-  let schema: Schema;
+  let projectConfig: ProjectConfiguration;
+  let schema: NormalizedSchema;
+
   beforeEach(async () => {
     schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
-      importPath: undefined,
+      importPath: '@proj/subfolder-my-destination',
       updateImportPath: true,
+      newProjectName: 'subfolder-my-destination',
+      relativeToRootDestination: 'apps/subfolder/my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace();
@@ -146,13 +149,13 @@ describe('moveProjectConfiguration', () => {
 
     projectConfig = readProjectConfiguration(tree, 'my-source');
   });
+
   it('should rename the project', async () => {
     moveProjectConfiguration(tree, schema, projectConfig);
 
     expect(() => {
       readProjectConfiguration(tree, 'my-source');
     }).toThrow();
-
     expect(
       readProjectConfiguration(tree, 'subfolder-my-destination')
     ).toBeDefined();
@@ -167,25 +170,11 @@ describe('moveProjectConfiguration', () => {
     );
     expect(actualProject).toBeDefined();
     expect(actualProject.root).toBe('apps/subfolder/my-destination');
-    expect(actualProject.root).toBe('apps/subfolder/my-destination');
+    expect(actualProject.sourceRoot).toBe('apps/subfolder/my-destination/src');
 
     const similarProject = readProjectConfiguration(tree, 'my-source-e2e');
     expect(similarProject).toBeDefined();
     expect(similarProject.root).toBe('apps/my-source-e2e');
-  });
-
-  it('honor custom workspace layouts', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.workspaceLayout = { appsDir: 'e2e', libsDir: 'packages' };
-      return json;
-    });
-
-    moveProjectConfiguration(tree, schema, projectConfig);
-
-    const project = readProjectConfiguration(tree, 'subfolder-my-destination');
-    expect(project).toBeDefined();
-    expect(project.root).toBe('e2e/subfolder/my-destination');
-    expect(project.sourceRoot).toBe('e2e/subfolder/my-destination/src');
   });
 
   it('should update nx.json', () => {
@@ -195,10 +184,8 @@ describe('moveProjectConfiguration', () => {
       tree,
       'subfolder-my-destination'
     );
-
     expect(actualProject.tags).toEqual(['type:ui']);
     expect(actualProject.implicitDependencies).toEqual(['my-other-lib']);
-
     expect(readJson(tree, 'nx.json').projects['my-source']).not.toBeDefined();
   });
 });

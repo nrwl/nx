@@ -3,8 +3,7 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { Schema } from '../schema';
-import { getNewProjectName } from './utils';
+import { NormalizedSchema } from '../schema';
 
 /**
  * Updates the project in the workspace file
@@ -13,7 +12,7 @@ import { getNewProjectName } from './utils';
  * - change the project name
  * - change target references
  */
-export function updateDefaultProject(tree: Tree, schema: Schema) {
+export function updateDefaultProject(tree: Tree, schema: NormalizedSchema) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
 
   // update default project (if necessary)
@@ -21,9 +20,7 @@ export function updateDefaultProject(tree: Tree, schema: Schema) {
     workspaceConfiguration.defaultProject &&
     workspaceConfiguration.defaultProject === schema.projectName
   ) {
-    workspaceConfiguration.defaultProject = getNewProjectName(
-      schema.destination
-    );
+    workspaceConfiguration.defaultProject = schema.newProjectName;
     updateWorkspaceConfiguration(tree, workspaceConfiguration);
   }
 }

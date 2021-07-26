@@ -1,8 +1,7 @@
 import { Tree } from '@nrwl/devkit';
-import * as path from 'path';
-import { Schema } from '../schema';
-import { getDestination } from './utils';
 import { ProjectConfiguration } from '@nrwl/tao/src/shared/workspace';
+import * as path from 'path';
+import { NormalizedSchema } from '../schema';
 
 interface PartialCypressJson {
   videosFolder: string;
@@ -18,12 +17,13 @@ interface PartialCypressJson {
  */
 export function updateCypressJson(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  const destination = getDestination(tree, schema, project);
-
-  const cypressJsonPath = path.join(destination, 'cypress.json');
+  const cypressJsonPath = path.join(
+    schema.relativeToRootDestination,
+    'cypress.json'
+  );
 
   if (!tree.exists(cypressJsonPath)) {
     // nothing to do
@@ -35,11 +35,11 @@ export function updateCypressJson(
   ) as PartialCypressJson;
   cypressJson.videosFolder = cypressJson.videosFolder.replace(
     project.root,
-    destination
+    schema.relativeToRootDestination
   );
   cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
     project.root,
-    destination
+    schema.relativeToRootDestination
   );
 
   tree.write(cypressJsonPath, JSON.stringify(cypressJson));

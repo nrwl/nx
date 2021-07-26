@@ -1,11 +1,8 @@
-import * as path from 'path';
-
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { Schema } from '../schema';
-import { getDestination } from './utils';
+import * as path from 'path';
 import { extname, join } from 'path';
+import { NormalizedSchema } from '../schema';
 
 /**
  * Updates the files in the root of the project
@@ -16,13 +13,14 @@ import { extname, join } from 'path';
  */
 export function updateProjectRootFiles(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  const destination = getDestination(tree, schema, project);
-
   const newRelativeRoot = path
-    .relative(path.join(appRootPath, destination), appRootPath)
+    .relative(
+      path.join(appRootPath, schema.relativeToRootDestination),
+      appRootPath
+    )
     .split(path.sep)
     .join('/');
   const oldRelativeRoot = path
@@ -38,13 +36,16 @@ export function updateProjectRootFiles(
   const dots = /\./g;
   const regex = new RegExp(oldRelativeRoot.replace(dots, '\\.'), 'g');
 
-  for (const file of tree.children(destination)) {
+  for (const file of tree.children(schema.relativeToRootDestination)) {
     if (!extname(file).startsWith('.js')) {
       continue;
     }
 
-    const oldContent = tree.read(join(destination, file), 'utf-8');
+    const oldContent = tree.read(
+      join(schema.relativeToRootDestination, file),
+      'utf-8'
+    );
     const newContent = oldContent.replace(regex, newRelativeRoot);
-    tree.write(join(destination, file), newContent);
+    tree.write(join(schema.relativeToRootDestination, file), newContent);
   }
 }

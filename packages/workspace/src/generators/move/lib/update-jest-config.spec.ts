@@ -1,9 +1,8 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
-import { Schema } from '../schema';
-import { updateJestConfig } from './update-jest-config';
 import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updateJestConfig } from './update-jest-config';
 
 describe('updateJestConfig', () => {
   let tree: Tree;
@@ -18,15 +17,16 @@ describe('updateJestConfig', () => {
       standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
-
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
 
-    updateJestConfig(tree, schema, projectConfig);
+    expect(() => updateJestConfig(tree, schema, projectConfig)).not.toThrow();
   });
 
   it('should update the name and coverage directory', async () => {
@@ -40,21 +40,20 @@ describe('updateJestConfig', () => {
       ]
     };`;
     const jestConfigPath = '/libs/my-destination/jest.config.js';
-
     const rootJestConfigPath = '/jest.config.js';
-
     await libraryGenerator(tree, {
       name: 'my-source',
       standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(jestConfigPath, jestConfig);
-
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
@@ -65,7 +64,6 @@ describe('updateJestConfig', () => {
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../../coverage/libs/my-destination'`
     );
-
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
 
@@ -80,9 +78,7 @@ describe('updateJestConfig', () => {
       ]
     };`;
     const jestConfigPath = '/libs/other/test/dir/my-destination/jest.config.js';
-
     const rootJestConfigPath = '/jest.config.js';
-
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -92,29 +88,27 @@ describe('updateJestConfig', () => {
       'some-test-dir-my-source'
     );
     tree.write(jestConfigPath, jestConfig);
-
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: undefined,
+      importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
+      newProjectName: 'other-test-dir-my-destination',
+      relativeToRootDestination: 'libs/other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
-
     const jestConfigAfter = tree.read(jestConfigPath, 'utf-8');
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'other-test-dir-my-destination'`);
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../../coverage/libs/other/test/dir/my-destination'`
     );
-
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
 
   it('updates the root config if not using `getJestProjects()`', async () => {
     const rootJestConfigPath = '/jest.config.js';
-
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -130,11 +124,13 @@ describe('updateJestConfig', () => {
       tree,
       'some-test-dir-my-source'
     );
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: undefined,
+      importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
+      newProjectName: 'other-test-dir-my-destination',
+      relativeToRootDestination: 'libs/other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
@@ -150,7 +146,6 @@ describe('updateJestConfig', () => {
 
   it('updates the root config if `getJestProjects()` is used but old path exists', async () => {
     const rootJestConfigPath = '/jest.config.js';
-
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -168,11 +163,13 @@ module.exports = {
       tree,
       'some-test-dir-my-source'
     );
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: undefined,
+      importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
+      newProjectName: 'other-test-dir-my-destination',
+      relativeToRootDestination: 'libs/other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
@@ -189,7 +186,6 @@ module.exports = {
 
   it('updates the root config if `getJestProjects()` is used with other projects in the array', async () => {
     const rootJestConfigPath = '/jest.config.js';
-
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -207,11 +203,13 @@ module.exports = {
       tree,
       'some-test-dir-my-source'
     );
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: undefined,
+      importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
+      newProjectName: 'other-test-dir-my-destination',
+      relativeToRootDestination: 'libs/other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);

@@ -1,36 +1,30 @@
-import {
-  ProjectConfiguration,
-  readProjectConfiguration,
-  Tree,
-  readJson,
-  writeJson,
-} from '@nrwl/devkit';
+import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Schema } from '../schema';
-import { updatePackageJson } from './update-package-json';
 import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updatePackageJson } from './update-package-json';
 
 describe('updatePackageJson', () => {
   let tree: Tree;
-  let schema: Schema;
-  let projectConfig: ProjectConfiguration;
+  let schema: NormalizedSchema;
 
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
-    projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
   it('should handle package.json not existing', async () => {
     expect(() => {
-      updatePackageJson(tree, schema, projectConfig);
+      updatePackageJson(tree, schema);
     }).not.toThrow();
   });
 
@@ -38,10 +32,9 @@ describe('updatePackageJson', () => {
     const packageJson = {
       name: '@proj/my-lib',
     };
-
     writeJson(tree, '/libs/my-destination/package.json', packageJson);
 
-    updatePackageJson(tree, schema, projectConfig);
+    updatePackageJson(tree, schema);
 
     expect(readJson(tree, '/libs/my-destination/package.json')).toEqual({
       ...packageJson,

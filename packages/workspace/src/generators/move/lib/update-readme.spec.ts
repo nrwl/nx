@@ -1,22 +1,22 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
-import { updateReadme } from './update-readme';
-import { Schema } from '../schema';
-import { libraryGenerator } from '../../library/library';
-import { getDestination } from './utils';
 import { join } from 'path';
+import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updateReadme } from './update-readme';
 
 describe('updateReadme', () => {
   let tree: Tree;
-  let schema: Schema;
+  let schema: NormalizedSchema;
 
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
       destination: 'shared/my-destination',
-      importPath: undefined,
+      importPath: '@proj/shared-my-destination',
       updateImportPath: true,
+      newProjectName: 'shared-my-destination',
+      relativeToRootDestination: 'libs/shared/my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace();
@@ -27,14 +27,11 @@ describe('updateReadme', () => {
       name: 'my-lib',
       standaloneConfig: false,
     });
-
-    const projectConfig = readProjectConfiguration(tree, 'my-lib');
-    const destination = getDestination(tree, schema, projectConfig);
-    const readmePath = join(destination, 'README.md');
+    const readmePath = join(schema.relativeToRootDestination, 'README.md');
     tree.delete(readmePath);
 
     expect(() => {
-      updateReadme(tree, schema, projectConfig);
+      updateReadme(tree, schema);
     }).not.toThrow();
   });
 
@@ -43,16 +40,13 @@ describe('updateReadme', () => {
       name: 'my-lib',
       standaloneConfig: false,
     });
-
     // This step is usually handled elsewhere
     tree.rename(
       'libs/my-lib/README.md',
       'libs/shared/my-destination/README.md'
     );
 
-    const projectConfig = readProjectConfiguration(tree, 'my-lib');
-
-    updateReadme(tree, schema, projectConfig);
+    updateReadme(tree, schema);
 
     const content = tree
       .read('/libs/shared/my-destination/README.md')
