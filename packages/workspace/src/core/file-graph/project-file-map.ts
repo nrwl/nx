@@ -10,16 +10,15 @@ export function createProjectFileMap(
   // a chance to match prefix first.
   Object.keys(workspaceJson.projects)
     .sort((a, b) => {
-      if (!workspaceJson.projects[a].root) return -1;
-      if (!workspaceJson.projects[b].root) return -1;
-      return workspaceJson.projects[a].root.length >
-        workspaceJson.projects[b].root.length
-        ? -1
-        : 1;
+      const projectA = workspaceJson.projects[a];
+      const projectB = workspaceJson.projects[b];
+      if (!projectA.root) return -1;
+      if (!projectB.root) return -1;
+      return projectA.root.length > projectB.root.length ? -1 : 1;
     })
     .forEach((projectName) => {
       const p = workspaceJson.projects[projectName];
-      fileMap[projectName] = fileMap[projectName] || [];
+      fileMap[projectName] = [];
       files.forEach((f) => {
         if (seen.has(f.file)) {
           return;

@@ -1,4 +1,5 @@
 import type { ProjectGraph } from '@nrwl/devkit';
+import { isNpmProject } from '../core/project-graph';
 import { readJsonFile } from './fileutils';
 
 /**
@@ -58,7 +59,7 @@ function findAllNpmDeps(
 
   const node = graph.nodes[projectName];
 
-  if (node.type === 'npm') {
+  if (isNpmProject(node)) {
     list[node.data.packageName] = node.data.version;
     recursivelyCollectPeerDependencies(node.name, graph, list);
   }
@@ -77,7 +78,7 @@ function recursivelyCollectPeerDependencies(
 ) {
   if (
     !graph.nodes[projectName] ||
-    graph.nodes[projectName].type !== 'npm' ||
+    !isNpmProject(graph.nodes[projectName]) ||
     seen.has(projectName)
   ) {
     return list;

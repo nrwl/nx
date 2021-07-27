@@ -1,11 +1,6 @@
-import { ProjectType } from '../core/project-graph';
+import { isNpmProject, ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
-import {
-  directoryExists,
-  fileExists,
-  readJsonFile,
-  writeJsonFile,
-} from './fileutils';
+import { directoryExists, readJsonFile, writeJsonFile } from './fileutils';
 import { stripIndents } from '@nrwl/devkit';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
@@ -66,7 +61,7 @@ export function calculateProjectDependencies(
           ),
           node: depNode,
         };
-      } else if (depNode.type === 'npm') {
+      } else if (isNpmProject(depNode)) {
         return {
           name: depNode.data.packageName,
           outputs: [],
@@ -286,8 +281,9 @@ export function updateBuildableProjectPackageJsonDependencies(
 
   let updatePackageJson = false;
   dependencies.forEach((entry) => {
-    const packageName =
-      entry.node.type === 'npm' ? entry.node.data.packageName : entry.name;
+    const packageName = isNpmProject(entry.node)
+      ? entry.node.data.packageName
+      : entry.name;
 
     if (
       !hasDependency(packageJson, 'dependencies', packageName) &&
@@ -313,7 +309,7 @@ export function updateBuildableProjectPackageJsonDependencies(
           depVersion = readJsonFile(depPackageJsonPath).version;
 
           packageJson[typeOfDependency][packageName] = depVersion;
-        } else if (entry.node.type === 'npm') {
+        } else if (isNpmProject(entry.node)) {
           // If an npm dep is part of the workspace devDependencies, do not include it the library
           if (
             !!workspacePackageJson.devDependencies?.[
