@@ -1,3 +1,3 @@
-const shell = require('shelljs');
+const fs = require('fs');
 
-shell.chmod('+x', process.argv[2]);
+fs.chmodSync(process.argv[2], 0o777);

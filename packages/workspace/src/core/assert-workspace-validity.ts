@@ -1,27 +1,16 @@
 import { workspaceFileName } from './file-utils';
-import {
+import type {
   ImplicitJsonSubsetDependency,
-  NxJson,
-} from '@nrwl/workspace/src/core/shared-interfaces';
+  NxJsonConfiguration,
+} from '@nrwl/devkit';
 import { output } from '../utilities/output';
 
-export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
+export function assertWorkspaceValidity(
+  workspaceJson,
+  nxJson: NxJsonConfiguration
+) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
   const nxJsonProjects = Object.keys(nxJson.projects);
-
-  if (minus(workspaceJsonProjects, nxJsonProjects).length > 0) {
-    output.error({
-      title: 'Configuration Error',
-      bodyLines: [
-        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
-          workspaceJsonProjects,
-          nxJsonProjects
-        ).join(', ')}`,
-      ],
-    });
-
-    process.exit(1);
-  }
 
   if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
     output.error({
@@ -48,18 +37,30 @@ export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
     nxJson.implicitDependencies || {}
   )
     .reduce((acc, entry) => {
-      function recur(value, acc = []) {
+      function recur(value, acc = [], path: string[]) {
         if (value === '*') {
           // do nothing since '*' is calculated and always valid.
+        } else if (typeof value === 'string') {
+          // This is invalid because the only valid string is '*'
+
+          output.error({
+            title: 'Configuration Error',
+            bodyLines: [
+              `nx.json is not configured properly. "${path.join(
+                ' > '
+              )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".`,
+            ],
+          });
+          process.exit(1);
         } else if (Array.isArray(value)) {
           acc.push([entry[0], value]);
         } else {
-          Object.values(value).forEach((v) => {
-            recur(v, acc);
+          Object.entries(value).forEach(([k, v]) => {
+            recur(v, acc, [...path, k]);
           });
         }
       }
-      recur(entry[1], acc);
+      recur(entry[1], acc, [entry[0]]);
       return acc;
     }, [])
     .reduce((map, [filename, projectNames]: [string, string[]]) => {

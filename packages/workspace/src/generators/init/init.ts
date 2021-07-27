@@ -6,7 +6,9 @@ import {
   generateFiles,
   getWorkspacePath,
   installPackagesTask,
+  joinPathFragments,
   names,
+  normalizePath,
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
@@ -17,20 +19,18 @@ import {
   updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
   writeJson,
-  normalizePath,
-  joinPathFragments,
 } from '@nrwl/devkit';
+import { readFileSync } from 'fs';
 import { basename } from 'path';
-import { Schema } from './schema';
+import { serializeJson } from '../../utilities/fileutils';
+import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
 import {
   angularCliVersion,
   nxVersion,
   prettierVersion,
 } from '../../utils/versions';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
-import { readFileSync } from 'fs';
-import { serializeJson } from '../../utilities/fileutils';
-import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
+import { Schema } from './schema';
 
 function updatePackageJson(tree) {
   updateJson(tree, 'package.json', (packageJson) => {
@@ -90,7 +90,7 @@ function convertPath(name: string, originalPath: string) {
 function updateAngularCLIJson(host: Tree, options: Schema) {
   const workspaceConfig = readWorkspaceConfiguration(host);
   const appName = workspaceConfig.defaultProject;
-  const e2eName = appName + '-e2e';
+  const e2eName = `${appName}-e2e`;
   const e2eRoot = joinPathFragments('apps', e2eName);
   delete (workspaceConfig as any).newProjectRoot;
 
@@ -161,7 +161,7 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
       joinPathFragments(
         normalizePath('dist'),
         'apps',
-        options.name + '-server'
+        `${options.name}-server`
       );
     serverOptions.main = serverOptions.main && convertAsset(serverOptions.main);
     serverOptions.tsConfig =
@@ -178,9 +178,9 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
   if (defaultProject.targets.server) {
     const serverOptions = defaultProject.targets.server.options;
     convertServerOptions(serverOptions);
-    Object.values(
-      defaultProject.targets.server.configurations
-    ).forEach((config) => convertServerOptions(config));
+    Object.values(defaultProject.targets.server.configurations).forEach(
+      (config) => convertServerOptions(config)
+    );
   }
 
   if (defaultProject.targets.e2e) {
@@ -407,7 +407,7 @@ function moveExistingFiles(host: Tree, options: Schema) {
     const oldE2eRoot = joinPathFragments(app.root || '', 'e2e');
     const newE2eRoot = joinPathFragments(
       'apps',
-      getE2eKey(workspaceJson) + '-e2e'
+      `${getE2eKey(workspaceJson)}-e2e`
     );
     renameDirSyncInTree(host, oldE2eRoot, newE2eRoot);
   } else {
@@ -439,7 +439,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
         [options.name]: {
           tags: [],
         },
-        [getE2eKey(workspaceJson) + '-e2e']: {
+        [`${getE2eKey(workspaceJson)}-e2e`]: {
           tags: [],
         },
       },
@@ -450,7 +450,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
   const recommendations = [
     'nrwl.angular-console',
     'angular.ng-template',
-    'ms-vscode.vscode-typescript-tslint-plugin',
+    'dbaeumer.vscode-eslint',
     'esbenp.prettier-vscode',
   ];
   if (host.exists('.vscode/extensions.json')) {
@@ -634,15 +634,7 @@ function renameSyncInTree(
 
 function renameDirSyncInTree(tree: Tree, from: string, to: string) {
   visitNotIgnoredFiles(tree, from, (file) => {
-    try {
-      tree.rename(file, file.replace(from, to));
-    } catch (e) {
-      if (!tree.exists(from)) {
-        console.warn(`Path: ${from} does not exist`);
-      } else if (tree.exists(to)) {
-        console.warn(`Path: ${to} already exists`);
-      }
-    }
+    renameSyncInTree(tree, file, file.replace(from, to), true);
   });
 }
 

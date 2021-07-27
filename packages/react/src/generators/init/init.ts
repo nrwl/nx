@@ -56,6 +56,7 @@ function updateDependencies(host: Tree) {
       'core-js': '^3.6.5',
       react: reactVersion,
       'react-dom': reactDomVersion,
+      'regenerator-runtime': '0.13.7',
       tslib: '^2.0.0',
     },
     {

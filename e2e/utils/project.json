@@ -1,0 +1,6 @@
+{
+  "root": "e2e/utils",
+  "sourceRoot": "e2e/utils",
+  "projectType": "library",
+  "targets": {}
+}

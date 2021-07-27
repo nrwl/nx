@@ -1,4 +1,4 @@
-# application
+# @nrwl/gatsby:application
 
 Create an application
 
@@ -28,6 +28,10 @@ nx g application ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
 ### directory
 
 Alias(es): d
@@ -54,9 +58,21 @@ Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files
 
-### name
+### setParserOptionsProject
 
-Type: `string`
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### style
 
@@ -66,7 +82,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `none`
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `styled-jsx`, `none`
 
 The file extension to be used for style files.
 

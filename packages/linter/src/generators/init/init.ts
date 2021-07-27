@@ -1,17 +1,16 @@
 import {
   addDependenciesToPackageJson,
-  GeneratorCallback,
-  Tree,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
-  nxVersion,
+  buildAngularVersion,
   eslintConfigPrettierVersion,
   eslintVersion,
-  typescriptESLintVersion,
+  nxVersion,
   tslintVersion,
-  buildAngularVersion,
+  typescriptESLintVersion,
 } from '../../utils/versions';
 import { Linter } from '../utils/linter';
 
@@ -123,11 +122,6 @@ const globalEsLintConfiguration = {
       files: ['*.ts', '*.tsx'],
       extends: ['plugin:@nrwl/nx/typescript'],
       /**
-       * TODO: Remove this usage of project at the root in a follow up PR (and migration),
-       * it should be set in each project's config
-       */
-      parserOptions: { project: './tsconfig.*?.json' },
-      /**
        * Having an empty rules object present makes it more obvious to the user where they would
        * extend things from if they needed to
        */
@@ -158,7 +152,6 @@ function initTsLint(tree: Tree): GeneratorCallback {
 
   return addDependenciesToPackageJson(
     tree,
-
     {},
     {
       tslint: tslintVersion,
@@ -173,7 +166,7 @@ function initEsLint(tree: Tree): GeneratorCallback {
   }
 
   updateJson(tree, 'package.json', (json) => {
-    json.dependencies = json.dependencies || {};
+    json.dependencies ||= {};
 
     delete json.dependencies['@nrwl/linter'];
 
@@ -182,9 +175,19 @@ function initEsLint(tree: Tree): GeneratorCallback {
 
   writeJson(tree, '.eslintrc.json', globalEsLintConfiguration);
 
+  if (tree.exists('.vscode/extensions.json')) {
+    updateJson(tree, '.vscode/extensions.json', (json) => {
+      json.recommendations ||= [];
+      const extension = 'dbaeumer.vscode-eslint';
+      if (!json.recommendations.includes(extension)) {
+        json.recommendations.push(extension);
+      }
+      return json;
+    });
+  }
+
   return addDependenciesToPackageJson(
     tree,
-
     {},
     {
       '@nrwl/linter': nxVersion,

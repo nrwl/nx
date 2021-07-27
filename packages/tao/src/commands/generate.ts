@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   combineOptionsForGenerator,
   convertToCamelCase,
@@ -8,13 +8,11 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
-import { statSync, unlinkSync, writeFileSync } from 'fs';
-import { mkdirpSync, rmdirSync } from 'fs-extra';
+import { removeSync, ensureDirSync, writeFileSync } from 'fs-extra';
 import * as path from 'path';
 import { FileChange, FsTree } from '../shared/tree';
 import { logger } from '../shared/logger';
-
-const chalk = require('chalk');
+import * as chalk from 'chalk';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -40,7 +38,7 @@ function parseGenerateOpts(
   defaultCollection: string | null
 ): GenerateOptions {
   const generatorOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive', 'defaults'],
       alias: {
         dryRun: 'dry-run',
@@ -137,19 +135,12 @@ export function flushChanges(root: string, fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
     const fpath = path.join(root, f.path);
     if (f.type === 'CREATE') {
-      mkdirpSync(path.dirname(fpath));
+      ensureDirSync(path.dirname(fpath));
       writeFileSync(fpath, f.content);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
     } else if (f.type === 'DELETE') {
-      try {
-        const stat = statSync(fpath);
-        if (stat.isDirectory()) {
-          rmdirSync(fpath, { recursive: true });
-        } else {
-          unlinkSync(fpath);
-        }
-      } catch (e) {}
+      removeSync(fpath);
     }
   });
 }
@@ -171,11 +162,8 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      ws.readGenerator(opts.collectionName, opts.generatorName);
 
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
@@ -232,11 +220,8 @@ export async function generate(
       readDefaultCollection(workspaceDefinition)
     );
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (opts.help) {
       printGenHelp(opts, schema);
@@ -269,6 +254,7 @@ export async function generate(
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }
     } else {
+      require('../compat/compat');
       return (await import('./ngcli-adapter')).generate(
         root,
         {

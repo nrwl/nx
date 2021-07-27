@@ -8,11 +8,13 @@ export interface Schema extends JsonObject {
   silent: boolean;
   fix: boolean;
   cache: boolean;
+  noEslintrc: boolean;
   outputFile: string | null;
   cacheLocation: string | null;
   maxWarnings: number;
   quiet: boolean;
   ignorePath: string | null;
+  hasTypeAwareRules: boolean;
 }
 
 type Formatter =

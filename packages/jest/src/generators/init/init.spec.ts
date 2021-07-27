@@ -1,4 +1,4 @@
-import { readJson, writeJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { jestInitGenerator } from './init';
 
@@ -13,9 +13,11 @@ describe('jest', () => {
     jestInitGenerator(tree, {});
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
-    expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
-      "module.exports = {
-      projects: []
+    expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
+      "const { getJestProjects } = require('@nrwl/jest');
+      
+      module.exports = {
+      projects: getJestProjects()
       };"
     `);
   });
@@ -23,7 +25,7 @@ describe('jest', () => {
   it('should not override existing files', async () => {
     tree.write('jest.config.js', `test`);
     jestInitGenerator(tree, {});
-    expect(tree.read('jest.config.js').toString()).toEqual('test');
+    expect(tree.read('jest.config.js', 'utf-8')).toEqual('test');
   });
 
   it('should add dependencies', async () => {
@@ -55,7 +57,7 @@ describe('jest', () => {
         recommendations: [
           'nrwl.angular-console',
           'angular.ng-template',
-          'ms-vscode.vscode-typescript-tslint-plugin',
+          'dbaeumer.vscode-eslint',
           'esbenp.prettier-vscode',
         ],
       });
@@ -69,7 +71,7 @@ describe('jest', () => {
           "recommendations": Array [
             "nrwl.angular-console",
             "angular.ng-template",
-            "ms-vscode.vscode-typescript-tslint-plugin",
+            "dbaeumer.vscode-eslint",
             "esbenp.prettier-vscode",
             "firsttris.vscode-jest-runner",
           ],

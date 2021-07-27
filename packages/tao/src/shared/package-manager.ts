@@ -1,7 +1,23 @@
+import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-export function detectPackageManager(dir = '') {
+export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+
+export interface PackageManagerCommands {
+  install: string;
+  add: string;
+  addDev: string;
+  rm: string;
+  exec: string;
+  list: string;
+  run: (script: string, args: string) => string;
+}
+
+/**
+ * Detects which package manager is used in the workspace based on the lock file.
+ */
+export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
@@ -19,51 +35,54 @@ export function detectPackageManager(dir = '') {
  * ```javascript
  * execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
  * ```
- *
  */
 export function getPackageManagerCommand(
-  packageManager = detectPackageManager()
-): {
-  install: string;
-  add: string;
-  addDev: string;
-  rm: string;
-  exec: string;
-  list: string;
-  run: (script: string, args: string) => string;
-} {
-  switch (packageManager) {
-    case 'yarn':
-      return {
-        install: 'yarn',
-        add: 'yarn add',
-        addDev: 'yarn add -D',
-        rm: 'yarn rm',
-        exec: 'yarn',
-        run: (script: string, args: string) => `yarn ${script} ${args}`,
-        list: 'yarn list',
-      };
+  packageManager: PackageManager = detectPackageManager()
+): PackageManagerCommands {
+  const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
+    yarn: () => ({
+      install: 'yarn',
+      add: 'yarn add',
+      addDev: 'yarn add -D',
+      rm: 'yarn remove',
+      exec: 'yarn',
+      run: (script: string, args: string) => `yarn ${script} ${args}`,
+      list: 'yarn list',
+    }),
+    pnpm: () => ({
+      install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
+      add: 'pnpm add',
+      addDev: 'pnpm add -D',
+      rm: 'pnpm rm',
+      exec: 'pnpx',
+      run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
+      list: 'pnpm ls --depth 100',
+    }),
+    npm: () => {
+      process.env.npm_config_legacy_peer_deps ??= 'true';
 
-    case 'pnpm':
       return {
-        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
-        add: 'pnpm add',
-        addDev: 'pnpm add -D',
-        rm: 'pnpm rm',
-        exec: 'pnpx',
-        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
-        list: 'pnpm ls --depth 100',
-      };
-
-    case 'npm':
-      return {
-        install: 'npm install --legacy-peer-deps',
-        add: 'npm install --legacy-peer-deps',
-        addDev: 'npm install --legacy-peer-deps -D',
+        install: 'npm install',
+        add: 'npm install',
+        addDev: 'npm install -D',
         rm: 'npm rm',
         exec: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
       };
-  }
+    },
+  };
+
+  return commands[packageManager]();
+}
+
+/**
+ * Returns the version of the package manager used in the workspace.
+ * By default, the package manager is derived based on the lock file,
+ * but it can also be passed in explicitly.
+ */
+export function getPackageManagerVersion(
+  packageManager: PackageManager = detectPackageManager()
+): string {
+  return execSync(`${packageManager} --version`).toString('utf-8').trim();
 }

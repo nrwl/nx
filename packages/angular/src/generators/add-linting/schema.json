@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularAddLintingGenerator",
+  "title": "Add linting to an Angular project.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "prefix": {
+      "type": "string",
+      "format": "html-selector",
+      "description": "The prefix to apply to generated selectors."
+    },
+    "projectName": {
+      "type": "string",
+      "description": "The name of the project."
+    },
+    "projectRoot": {
+      "type": "string",
+      "description": "The path to the root of the selected project."
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["prefix", "projectName", "projectRoot"]
+}

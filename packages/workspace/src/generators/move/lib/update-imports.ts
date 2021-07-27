@@ -9,9 +9,9 @@ import {
   visitNotIgnoredFiles,
   writeJson,
 } from '@nrwl/devkit';
-import { findNodes } from '../../../utilities/typescript/find-nodes';
 import * as ts from 'typescript';
-import { Schema } from '../schema';
+import { findNodes } from '../../../utilities/typescript/find-nodes';
+import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 
 /**
@@ -21,7 +21,7 @@ import { normalizeSlashes } from './utils';
  */
 export function updateImports(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
   if (project.projectType === 'application') {
@@ -52,21 +52,19 @@ export function updateImports(
       normalizeSlashes(
         `@${npmScope}/${project.root.substr(libsDir.length + 1)}`
       ),
-    to:
-      schema.importPath ||
-      normalizeSlashes(`@${npmScope}/${schema.destination}`),
+    to: schema.importPath,
   };
 
   if (schema.updateImportPath) {
     const replaceProjectRef = new RegExp(projectRef.from, 'g');
 
-    for (const [name, definition] of projects.entries()) {
+    for (const [name, definition] of Array.from(projects.entries())) {
       if (name === schema.projectName) {
         continue;
       }
 
       visitNotIgnoredFiles(tree, definition.root, (file) => {
-        const contents = tree.read(file).toString('utf-8');
+        const contents = tree.read(file, 'utf-8');
         if (!replaceProjectRef.test(contents)) {
           return;
         }
@@ -110,7 +108,7 @@ export function updateImports(
  * Changes imports in a file from one import to another
  */
 function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
-  const contents = tree.read(path).toString('utf-8');
+  const contents = tree.read(path, 'utf-8');
   const sourceFile = ts.createSourceFile(
     path,
     contents,
@@ -202,7 +200,7 @@ function updateModuleSpecifier(
 ): StringChange[] {
   if (
     moduleSpecifier.text === from ||
-    moduleSpecifier.text.startsWith(from + '/')
+    moduleSpecifier.text.startsWith(`${from}/`)
   ) {
     return [
       {

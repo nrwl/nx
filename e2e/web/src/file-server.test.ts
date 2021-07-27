@@ -1,4 +1,5 @@
 import {
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -6,13 +7,15 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
-  it('should serve folder of files', async (done) => {
-    newProject();
+  it('should serve folder of files', async () => {
+    newProject({ name: uniq('fileserver') });
     const appName = uniq('app');
+    const port = 4301;
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
     const workspaceJson = readJson(workspaceConfigName());
@@ -20,13 +23,20 @@ describe('file-server', () => {
       '@nrwl/web:file-server';
     updateFile(workspaceConfigName(), serializeJson(workspaceJson));
 
-    await runCommandUntil(`serve ${appName}`, (output) => {
-      return (
-        output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
-      );
-    });
-
-    // success, nothing to do
-    done();
-  }, 30000);
+    const p = await runCommandUntil(
+      `serve ${appName} --port=${port}`,
+      (output) => {
+        return (
+          output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
+        );
+      }
+    );
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      await killPorts(port);
+      // expect(await killPorts(port)).toBeTruthy();
+    } catch {
+      expect('process running').toBeFalsy();
+    }
+  }, 300000);
 });

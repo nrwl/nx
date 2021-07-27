@@ -2,20 +2,26 @@ import { serializeJson } from '@nrwl/workspace';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
   renameFile,
   runCLI,
   runCLIAsync,
+  runCypressTests,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
 describe('React Applications', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
   it('should be able to generate a react app + lib', async () => {
-    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -28,7 +34,7 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
@@ -42,10 +48,9 @@ describe('React Applications', () => {
       checkLinter: true,
       checkE2E: true,
     });
-  }, 120000);
+  }, 500000);
 
   it('should support vendor sourcemaps', () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
@@ -65,10 +70,9 @@ describe('React Applications', () => {
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/vendor.js.map`);
-  }, 120000);
+  }, 250000);
 
   it('should be able to generate a publishable react lib', async () => {
-    const proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
@@ -102,10 +106,9 @@ describe('React Applications', () => {
       `dist/libs/${libName}/${libName}.umd.css`,
       `dist/libs/${libName}/${libName}.umd.js`
     );
-  }, 120000);
+  }, 250000);
 
   it('should be able to generate a react lib with no components', async () => {
-    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -117,7 +120,7 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
@@ -129,10 +132,9 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 120000);
+  }, 250000);
 
   it('should not create a dist folder if there is an error', async () => {
-    const proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
@@ -140,7 +142,7 @@ describe('React Applications', () => {
     );
 
     const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
-    updateFile(mainPath, readFile(mainPath) + `\n console.log(a);`); // should error - "a" will be undefined
+    updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
 
     await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
       /Bundle failed/
@@ -148,10 +150,9 @@ describe('React Applications', () => {
     expect(() => {
       checkFilesExist(`dist/libs/${libName}/package.json`);
     }).toThrow();
-  }, 120000);
+  }, 250000);
 
   it('should generate app with routing', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
@@ -162,11 +163,9 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 120000);
+  }, 250000);
 
   it('should generate app with different style options', async () => {
-    newProject();
-
     const styledComponentsApp = uniq('app');
 
     runCLI(
@@ -244,10 +243,9 @@ describe('React Applications', () => {
     expect(readFile(`dist/apps/${noStylesApp}/index.html`)).not.toContain(
       `<link rel="stylesheet" href="styles.css">`
     );
-  }, 120000);
+  }, 250000);
 
   it('should generate app with legacy-ie support', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
@@ -272,10 +270,9 @@ describe('React Applications', () => {
     expect(readFile(`dist/apps/${appName}/prod/index.html`)).toContain(
       `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
     );
-  }, 120000);
+  }, 250000);
 
   it('should be able to add a redux slice', async () => {
-    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -293,10 +290,9 @@ describe('React Applications', () => {
     expect(libTestResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 120000);
+  }, 250000);
 
   it('should be able to use JSX', async () => {
-    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -329,7 +325,7 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.jsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     await testGeneratedApp(appName, {
@@ -338,7 +334,7 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 30000);
+  }, 250000);
 
   async function testGeneratedApp(
     appName,
@@ -378,7 +374,7 @@ describe('React Applications', () => {
       );
       filesToCheck = [
         `${prodOutputPath}/index.html`,
-        `${prodOutputPath}/runtime.js`,
+        `${prodOutputPath}/runtime.esm.js`,
         `${prodOutputPath}/polyfills.esm.js`,
         `${prodOutputPath}/main.esm.js`,
       ];
@@ -399,9 +395,59 @@ describe('React Applications', () => {
       'Test Suites: 1 passed, 1 total'
     );
 
-    if (opts.checkE2E) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e`);
+    if (opts.checkE2E && runCypressTests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
     }
   }
+});
+
+describe('--style option', () => {
+  beforeAll(() => newProject());
+
+  it.each`
+    style
+    ${'css'}
+    ${'scss'}
+    ${'less'}
+    ${'styl'}
+  `('should support global and css modules', ({ style }) => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive`
+    );
+
+    // make sure stylePreprocessorOptions works
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[
+        appName
+      ].targets.build.options.stylePreprocessorOptions = {
+        includePaths: ['libs/shared/lib'],
+      };
+      return workspace;
+    });
+    updateFile(
+      `apps/${appName}/src/styles.${style}`,
+      `@import 'base.${style}';`
+    );
+    updateFile(
+      `apps/${appName}/src/app/app.module.${style}`,
+      (s) => `@import 'base.${style}';\n${s}`
+    );
+    updateFile(
+      `libs/shared/lib/base.${style}`,
+      `body { font-family: "Comic Sans MS"; }`
+    );
+
+    runCLI(`build ${appName}`);
+
+    expect(readFile(`dist/apps/${appName}/styles.js`)).toMatch(/Comic Sans MS/);
+
+    runCLI(`build ${appName} --prod --output-hashing none`);
+
+    expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
+      /Comic Sans MS/
+    );
+  });
 });

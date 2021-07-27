@@ -52,6 +52,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   if (options.js) {
     host.delete(`${options.appProjectRoot}/index.d.ts`);
     toJS(host);
-    updateTsConfigsToJs(host, { projectRoot: options.appProjectRoot });
+    host.delete(`${options.appProjectRoot}/next-env.d.js`);
   }
 }

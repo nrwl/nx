@@ -6,6 +6,7 @@ import { serializeJson } from '@nrwl/workspace';
 import { jestConfigObject } from '../utils/config/legacy/functions';
 
 import { getJestObject } from './require-jest-config';
+
 jest.mock('./require-jest-config');
 const getJestObjectMock = getJestObject as jest.Mock<typeof getJestObject>;
 
@@ -28,10 +29,7 @@ const reactJestObject = {
   preset: '../../jest.config.js',
   transform: {
     '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
-    '^.+\\\\.[tj]sx?$': [
-      'babel-jest',
-      { cwd: __dirname, configFile: './babel-jest.config.json' },
-    ],
+    '^.+\\\\.[tj]sx?$': ['babel-jest', { cwd: __dirname }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   coverageDirectory: '../../coverage/apps/my-react-app',
@@ -113,7 +111,7 @@ describe('update 10.0.0', () => {
     );
   });
 
-  it('should remove setupFile and tsconfig in test architect from workspace.json', async (done) => {
+  it('should remove setupFile and tsconfig in test architect from workspace.json', async () => {
     const result = await schematicRunner
       .runSchematicAsync('update-10.0.0', {}, initialTree)
       .toPromise();
@@ -127,10 +125,9 @@ describe('update 10.0.0', () => {
       jestConfig: expect.anything(),
       passWithNoTests: expect.anything(),
     });
-    done();
   });
 
-  it('should update the jest.config files', async (done) => {
+  it('should update the jest.config files', async () => {
     await schematicRunner
       .runSchematicAsync('update-10.0.0', {}, initialTree)
       .toPromise();
@@ -165,7 +162,5 @@ describe('update 10.0.0', () => {
     const reactGlobals = reactJestObject.globals;
     expect(reactSetupFiles).toBeUndefined();
     expect(reactGlobals).toBeUndefined();
-
-    done();
   });
 });

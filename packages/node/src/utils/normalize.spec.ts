@@ -1,13 +1,12 @@
 import { normalizeBuildOptions } from './normalize';
-import { BuildBuilderOptions } from './types';
-import { Path, normalize } from '@angular-devkit/core';
+import { BuildNodeBuilderOptions } from './types';
 
 import * as fs from 'fs';
 
 describe('normalizeBuildOptions', () => {
-  let testOptions: BuildBuilderOptions;
+  let testOptions: BuildNodeBuilderOptions;
   let root: string;
-  let sourceRoot: Path;
+  let sourceRoot: string;
   let projectRoot: string;
 
   beforeEach(() => {
@@ -27,9 +26,10 @@ describe('normalizeBuildOptions', () => {
       ],
       assets: [],
       statsJson: false,
+      externalDependencies: 'all',
     };
     root = '/root';
-    sourceRoot = normalize('apps/nodeapp/src');
+    sourceRoot = 'apps/nodeapp/src';
     projectRoot = 'apps/nodeapp';
   });
   it('should add the root', () => {
@@ -73,11 +73,11 @@ describe('normalizeBuildOptions', () => {
   });
 
   it('should normalize asset patterns', () => {
-    spyOn(fs, 'statSync').and.returnValue({
+    jest.spyOn(fs, 'statSync').mockReturnValue({
       isDirectory: () => true,
-    });
+    } as any);
     const result = normalizeBuildOptions(
-      <BuildBuilderOptions>{
+      {
         ...testOptions,
         root,
         assets: [

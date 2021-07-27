@@ -9,28 +9,45 @@ import {
 
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator as _cypressProjectGenerator } from '@nrwl/cypress';
+import {
+  getE2eProjectName,
+  getUnscopedLibName,
+} from '@nrwl/cypress/src/utils/project-name';
 import { safeFileDelete } from '../../utils/utilities';
 
 export interface CypressConfigureSchema {
   name: string;
   js?: boolean;
+  directory?: string;
   linter: Linter;
+  standaloneConfig?: boolean;
 }
 
 export async function cypressProjectGenerator(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
-  const e2eProjectName = schema.name + '-e2e';
+  const libConfig = readProjectConfiguration(tree, schema.name);
+  const libRoot = libConfig.root;
+  const cypressProjectName = `${
+    schema.directory ? getUnscopedLibName(libRoot) : schema.name
+  }-e2e`;
   const installTask = await _cypressProjectGenerator(tree, {
-    name: e2eProjectName,
+    name: cypressProjectName,
     project: schema.name,
     js: schema.js,
     linter: schema.linter,
+    directory: schema.directory,
+    standaloneConfig: schema.standaloneConfig,
   });
-  removeUnneededFiles(tree, e2eProjectName, schema.js);
-  addBaseUrlToCypressConfig(tree, e2eProjectName);
-  updateAngularJsonBuilder(tree, e2eProjectName, schema.name);
+  const generatedCypressProjectName = getE2eProjectName(
+    schema.name,
+    libRoot,
+    schema.directory
+  );
+  removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
+  addBaseUrlToCypressConfig(tree, generatedCypressProjectName);
+  updateAngularJsonBuilder(tree, generatedCypressProjectName, schema.name);
 
   await formatFiles(tree);
 
@@ -38,21 +55,16 @@ export async function cypressProjectGenerator(
 }
 
 function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {
-  safeFileDelete(
-    tree,
-    readProjectConfiguration(tree, projectName).sourceRoot +
-      (js ? '/integration/app.spec.js' : '/integration/app.spec.ts')
-  );
-  safeFileDelete(
-    tree,
-    readProjectConfiguration(tree, projectName).sourceRoot +
-      (js ? '/support/app.po.js' : '/support/app.po.ts')
-  );
+  const { sourceRoot } = readProjectConfiguration(tree, projectName);
+  const fileType = js ? 'js' : 'ts';
+  safeFileDelete(tree, `${sourceRoot}/integration/app.spec.${fileType}`);
+  safeFileDelete(tree, `${sourceRoot}/support/app.po.${fileType}`);
 }
 
 function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
-  const cypressConfigPath =
-    readProjectConfiguration(tree, projectName).root + '/cypress.json';
+  const cypressConfigPath = `${
+    readProjectConfiguration(tree, projectName).root
+  }/cypress.json`;
   updateJson(tree, cypressConfigPath, (cypressConfig) => {
     cypressConfig.baseUrl = 'http://localhost:4400';
     return cypressConfig;

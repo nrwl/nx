@@ -12,7 +12,7 @@ import {
   eslintConfigPrettierVersion,
   nxVersion,
   tslintVersion,
-  buildAngularVersion,
+  angularCliVersion,
 } from './versions';
 import { offsetFromRoot } from '@nrwl/devkit';
 
@@ -33,7 +33,7 @@ export function generateProjectLint(
       builder: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**/*'],
+        exclude: ['**/node_modules/**', `!${projectRoot}/**/*`],
       },
     };
   } else if (linter === Linter.EsLint) {
@@ -55,6 +55,7 @@ interface AddLintFileOptions {
     dependencies: { [key: string]: string };
     devDependencies: { [key: string]: string };
   };
+  setParserOptionsProject?: boolean;
 }
 export function addLintFiles(
   projectRoot: string,
@@ -95,7 +96,7 @@ export function addLintFiles(
           {},
           {
             tslint: tslintVersion,
-            '@angular-devkit/build-angular': buildAngularVersion,
+            '@angular-devkit/build-angular': angularCliVersion,
           }
         )
       );
@@ -105,29 +106,26 @@ export function addLintFiles(
 
     if (linter === 'eslint') {
       if (!host.exists('/.eslintrc.json')) {
-        chainedCommands.push((host: Tree) => {
-          host.create('/.eslintrc.json', globalESLint);
-
-          return addDepsToPackageJson(
-            {
-              ...(options.extraPackageDeps
-                ? options.extraPackageDeps.dependencies
-                : {}),
-            },
-            {
-              '@nrwl/linter': nxVersion,
-              '@nrwl/eslint-plugin-nx': nxVersion,
-              '@typescript-eslint/parser': typescriptESLintVersion,
-              '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-              eslint: eslintVersion,
-              'eslint-config-prettier': eslintConfigPrettierVersion,
-              ...(options.extraPackageDeps
-                ? options.extraPackageDeps.devDependencies
-                : {}),
-            }
-          );
-        });
+        host.create('/.eslintrc.json', globalESLint);
       }
+      chainedCommands.push(
+        addDepsToPackageJson(
+          {
+            ...(options.extraPackageDeps
+              ? options.extraPackageDeps.dependencies
+              : {}),
+          },
+          {
+            '@nrwl/linter': nxVersion,
+            '@nrwl/eslint-plugin-nx': nxVersion,
+            '@typescript-eslint/parser': typescriptESLintVersion,
+            '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+            eslint: eslintVersion,
+            'eslint-config-prettier': eslintConfigPrettierVersion,
+            ...(options.extraPackageDeps?.devDependencies ?? {}),
+          }
+        )
+      );
 
       if (!options.onlyGlobal) {
         chainedCommands.push((host: Tree) => {
@@ -143,10 +141,8 @@ export function addLintFiles(
              * so as well as applying the extension from the root lint config, we also
              * adjust the config to make extends come first.
              */
-            const {
-              extends: extendsVal,
-              ...localConfigExceptExtends
-            } = options.localConfig;
+            const { extends: extendsVal, ...localConfigExceptExtends } =
+              options.localConfig;
 
             const extendsOption = extendsVal
               ? Array.isArray(extendsVal)
@@ -163,7 +159,42 @@ export function addLintFiles(
             configJson = {
               extends: rootConfig,
               ignorePatterns,
-              rules: {},
+              overrides: [
+                {
+                  files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+                  /**
+                   * NOTE: We no longer set parserOptions.project by default when creating new projects.
+                   *
+                   * We have observed that users rarely add rules requiring type-checking to their Nx workspaces, and therefore
+                   * do not actually need the capabilites which parserOptions.project provides. When specifying parserOptions.project,
+                   * typescript-eslint needs to create full TypeScript Programs for you. When omitting it, it can perform a simple
+                   * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and much
+                   * less memory intensive.
+                   *
+                   * In the rare case that users attempt to add rules requiring type-checking to their setup later on (and haven't set
+                   * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
+                   * and provide feedback to the user.
+                   */
+                  parserOptions: !options.setParserOptionsProject
+                    ? undefined
+                    : {
+                        project: [`${projectRoot}/tsconfig.*?.json`],
+                      },
+                  /**
+                   * Having an empty rules object present makes it more obvious to the user where they would
+                   * extend things from if they needed to
+                   */
+                  rules: {},
+                },
+                {
+                  files: ['*.ts', '*.tsx'],
+                  rules: {},
+                },
+                {
+                  files: ['*.js', '*.jsx'],
+                  rules: {},
+                },
+              ],
             };
           }
 
@@ -286,11 +317,6 @@ const globalESLint = JSON.stringify({
     {
       files: ['*.ts', '*.tsx'],
       extends: ['plugin:@nrwl/nx/typescript'],
-      /**
-       * TODO: Remove this usage of project at the root in a follow up PR (and migration),
-       * it should be set in each project's config
-       */
-      parserOptions: { project: './tsconfig.*?.json' },
       /**
        * Having an empty rules object present makes it more obvious to the user where they would
        * extend things from if they needed to

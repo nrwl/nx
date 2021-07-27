@@ -1,4 +1,4 @@
-<div align="center">
+<div style="text-align: center;">
 
 [![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
 [![License](https://img.shields.io/npm/l/@nrwl/workspace.svg?style=flat-square)]()

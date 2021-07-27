@@ -1,17 +1,15 @@
 import { resolveModuleByImport } from '../utilities/typescript';
-import { defaultFileRead, FileRead, normalizedProjectRoot } from './file-utils';
-import {
-  ProjectGraphNode,
-  ProjectGraphNodeRecords,
-} from './project-graph/project-graph-models';
+import { normalizedProjectRoot, readFileIfExisting } from './file-utils';
+import type { ProjectGraphNode } from '@nrwl/devkit';
+import { parseJson } from '@nrwl/devkit';
 import {
   getSortedProjectNodes,
   isNpmProject,
   isWorkspaceProject,
 } from './project-graph';
-import { isRelativePath, parseJsonWithComments } from '../utilities/fileutils';
-import { dirname, join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { isRelativePath } from '../utilities/fileutils';
+import { dirname, join, posix } from 'path';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export class TargetProjectLocator {
   private sortedProjects = getSortedProjectNodes(this.nodes);
@@ -29,17 +27,12 @@ export class TargetProjectLocator {
         } as ProjectGraphNode)
     );
   private npmProjects = this.sortedProjects.filter(isNpmProject);
-  private tsConfigPath = this.getRootTsConfigPath();
-  private absTsConfigPath = join(appRootPath, this.tsConfigPath);
-  private paths = parseJsonWithComments(this.fileRead(this.tsConfigPath))
-    ?.compilerOptions?.paths;
+  private tsConfig = this.getRootTsConfig();
+  private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
-  constructor(
-    private nodes: ProjectGraphNodeRecords,
-    private fileRead: FileRead = defaultFileRead
-  ) {}
+  constructor(private readonly nodes: Record<string, ProjectGraphNode>) {}
 
   /**
    * Find a project based on its import
@@ -60,13 +53,11 @@ export class TargetProjectLocator {
     const normalizedImportExpr = importExpr.split('#')[0];
 
     if (isRelativePath(normalizedImportExpr)) {
-      const resolvedModule = join(dirname(filePath), normalizedImportExpr);
+      const resolvedModule = posix.join(
+        dirname(filePath),
+        normalizedImportExpr
+      );
       return this.findProjectOfResolvedModule(resolvedModule);
-    }
-
-    const npmProject = this.findNpmPackage(importExpr);
-    if (npmProject) {
-      return npmProject;
     }
 
     if (this.paths && this.paths[normalizedImportExpr]) {
@@ -78,44 +69,65 @@ export class TargetProjectLocator {
       }
     }
 
-    const resolvedModule = this.typescriptResolutionCache.has(
-      normalizedImportExpr
-    )
-      ? this.typescriptResolutionCache.get(normalizedImportExpr)
-      : resolveModuleByImport(
-          normalizedImportExpr,
-          filePath,
-          this.absTsConfigPath
-        );
+    let resolvedModule: string;
+    if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
+      resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
+    } else {
+      resolvedModule = resolveModuleByImport(
+        normalizedImportExpr,
+        filePath,
+        this.tsConfig.absolutePath
+      );
+      this.typescriptResolutionCache.set(
+        normalizedImportExpr,
+        resolvedModule ? resolvedModule : null
+      );
+    }
 
-    this.typescriptResolutionCache.set(normalizedImportExpr, resolvedModule);
-    if (resolvedModule) {
+    // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
+    if (resolvedModule && resolvedModule.indexOf('node_modules/') === -1) {
       const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
-
       if (resolvedProject) {
         return resolvedProject;
       }
     }
 
+    // try to find npm package before using expensive typescript resolution
+    const npmProject = this.findNpmPackage(importExpr);
+    if (npmProject || this.npmResolutionCache.has(importExpr)) {
+      return npmProject;
+    }
+
+    // TODO: meeroslav this block should be probably removed
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
       const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
-      return normalizedImportExpr.startsWith(projectImport);
+      return (
+        normalizedImportExpr === projectImport ||
+        normalizedImportExpr.startsWith(`${projectImport}/`)
+      );
     });
+    if (importedProject) {
+      return importedProject.name;
+    }
 
-    return importedProject?.name;
+    // nothing found, cache for later
+    this.npmResolutionCache.set(importExpr, undefined);
+    return null;
   }
 
-  private findNpmPackage(npmImport: string) {
+  private findNpmPackage(npmImport: string): string | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);
     } else {
-      const pkgName = this.npmProjects.find(
+      const pkg = this.npmProjects.find(
         (pkg) =>
           npmImport === pkg.data.packageName ||
-          npmImport.startsWith(pkg.data.packageName + '/')
-      )?.name;
-      this.npmResolutionCache.set(npmImport, pkgName);
-      return pkgName;
+          npmImport.startsWith(`${pkg.data.packageName}/`)
+      );
+      if (pkg) {
+        this.npmResolutionCache.set(npmImport, pkg.name);
+        return pkg.name;
+      }
     }
   }
 
@@ -124,15 +136,18 @@ export class TargetProjectLocator {
       return resolvedModule.startsWith(p.data.root);
     });
 
-    return importedProject?.name;
+    return importedProject ? importedProject.name : void 0;
   }
 
-  private getRootTsConfigPath() {
-    try {
-      this.fileRead('tsconfig.base.json');
-      return 'tsconfig.base.json';
-    } catch (e) {
-      return 'tsconfig.json';
+  private getRootTsConfig() {
+    let path = 'tsconfig.base.json';
+    let absolutePath = join(appRootPath, path);
+    let content = readFileIfExisting(absolutePath);
+    if (!content) {
+      path = 'tsconfig.json';
+      absolutePath = join(appRootPath, path);
+      content = readFileIfExisting(absolutePath);
     }
+    return { path, absolutePath, config: parseJson(content) };
   }
 }

@@ -1,44 +1,32 @@
-import { appRootPath } from '../utilities/app-root';
-import { Task } from './tasks-runner';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { Task } from '@nrwl/devkit';
 import {
   existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
   lstatSync,
+  unlinkSync,
 } from 'fs';
-import { join, resolve } from 'path';
-import * as fsExtra from 'fs-extra';
+import { removeSync, ensureDirSync, copySync, readdirSync } from 'fs-extra';
+import { join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
+import { writeToFile } from '../utilities/fileutils';
 
-export type CachedResult = { terminalOutput: string; outputsPath: string };
+export type CachedResult = {
+  terminalOutput: string;
+  outputsPath: string;
+  code: number;
+};
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
-
-class CacheConfig {
-  constructor(private readonly options: DefaultTasksRunnerOptions) {}
-
-  isCacheableTask(task: Task) {
-    const cacheable =
-      this.options.cacheableOperations || this.options.cacheableTargets;
-    return (
-      cacheable &&
-      cacheable.indexOf(task.target.target) > -1 &&
-      !this.longRunningTask(task)
-    );
-  }
-
-  private longRunningTask(task: Task) {
-    return !!task.overrides['watch'];
-  }
-}
 
 export class Cache {
   root = appRootPath;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  cacheConfig = new CacheConfig(this.options);
+  latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -68,8 +56,6 @@ export class Cache {
   }
 
   async get(task: Task): Promise<CachedResult> {
-    if (!this.cacheConfig.isCacheableTask(task)) return null;
-
     const res = this.getFromLocalDir(task);
 
     // didn't find it locally but we have a remote cache
@@ -83,21 +69,24 @@ export class Cache {
     }
   }
 
-  async put(task: Task, terminalOutputPath: string, outputs: string[]) {
-    const terminalOutput = readFileSync(terminalOutputPath).toString();
+  async put(
+    task: Task,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ) {
     const td = join(this.cachePath, task.hash);
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
     // might be left overs from partially-completed cache invocations
-    if (existsSync(tdCommit)) {
-      fsExtra.removeSync(tdCommit);
-    }
-    if (existsSync(td)) {
-      fsExtra.removeSync(td);
-    }
+    removeSync(tdCommit);
+    removeSync(td);
 
     mkdirSync(td);
-    writeFileSync(join(td, 'terminalOutput'), terminalOutput);
+    writeFileSync(
+      join(td, 'terminalOutput'),
+      terminalOutput ?? 'no terminal output'
+    );
 
     mkdirSync(join(td, 'outputs'));
     outputs.forEach((f) => {
@@ -107,15 +96,16 @@ export class Cache {
         // Ensure parent directory is created if src is a file
         const isFile = lstatSync(src).isFile();
         const directory = isFile ? resolve(cached, '..') : cached;
-        fsExtra.ensureDirSync(directory);
+        ensureDirSync(directory);
 
-        fsExtra.copySync(src, cached);
+        copySync(src, cached);
       }
     });
     // we need this file to account for partial writes to the cache folder.
     // creating this file is atomic, whereas creating a folder is not.
     // so if the process gets terminated while we are copying stuff into cache,
     // the cache entry won't be used.
+    writeFileSync(join(td, 'code'), code.toString());
     writeFileSync(tdCommit, 'true');
 
     if (this.options.remoteCache) {
@@ -123,29 +113,112 @@ export class Cache {
     }
   }
 
-  copyFilesFromCache(cachedResult: CachedResult, outputs: string[]) {
+  copyFilesFromCache(
+    hash: string,
+    cachedResult: CachedResult,
+    outputs: string[]
+  ) {
+    this.removeRecordedOutputsHashes(outputs);
     outputs.forEach((f) => {
       const cached = join(cachedResult.outputsPath, f);
       if (existsSync(cached)) {
         const isFile = lstatSync(cached).isFile();
         const src = join(this.root, f);
-        if (existsSync(src)) {
-          fsExtra.removeSync(src);
-        }
+        removeSync(src);
+
         // Ensure parent directory is created if src is a file
         const directory = isFile ? resolve(src, '..') : src;
-        fsExtra.ensureDirSync(directory);
-        fsExtra.copySync(cached, src);
+        ensureDirSync(directory);
+        copySync(cached, src);
       }
     });
+    this.recordOutputsHash(outputs, hash);
   }
 
   temporaryOutputPath(task: Task) {
-    if (this.cacheConfig.isCacheableTask(task)) {
-      return join(this.terminalOutputsDir, task.hash);
-    } else {
+    return join(this.terminalOutputsDir, task.hash);
+  }
+
+  removeRecordedOutputsHashes(outputs: string[]): void {
+    outputs.forEach((output) => {
+      const hashFile = this.getFileNameWithLatestRecordedHashForOutput(output);
+      try {
+        unlinkSync(hashFile);
+      } catch (e) {}
+    });
+  }
+
+  recordOutputsHash(outputs: string[], hash: string): void {
+    outputs.forEach((output) => {
+      const hashFile = this.getFileNameWithLatestRecordedHashForOutput(output);
+      writeToFile(hashFile, hash);
+    });
+  }
+
+  shouldCopyOutputsFromCache(
+    taskWithCachedResult: TaskWithCachedResult,
+    outputs: string[]
+  ): boolean {
+    return (
+      this.areLatestOutputsHashesDifferentThanTaskHash(
+        outputs,
+        taskWithCachedResult.task.hash
+      ) || this.isAnyOutputMissing(taskWithCachedResult.cachedResult, outputs)
+    );
+  }
+
+  private areLatestOutputsHashesDifferentThanTaskHash(
+    outputs: string[],
+    hash: string
+  ) {
+    return outputs.some(
+      (output) => this.getLatestRecordedHashForTask(output) !== hash
+    );
+  }
+
+  private getLatestRecordedHashForTask(output: string): string | null {
+    try {
+      return readFileSync(
+        this.getFileNameWithLatestRecordedHashForOutput(output)
+      ).toString();
+    } catch (e) {
       return null;
     }
+  }
+
+  private isAnyOutputMissing(
+    cachedResult: CachedResult,
+    outputs: string[]
+  ): boolean {
+    return outputs.some((output) => {
+      const cacheOutputPath = join(cachedResult.outputsPath, output);
+      const rootOutputPath = join(this.root, output);
+
+      if (existsSync(cacheOutputPath) && lstatSync(cacheOutputPath).isFile()) {
+        return (
+          existsSync(join(cachedResult.outputsPath, output)) &&
+          !existsSync(join(this.root, output))
+        );
+      }
+
+      const haveDifferentAmountOfFiles =
+        existsSync(cacheOutputPath) &&
+        existsSync(rootOutputPath) &&
+        readdirSync(cacheOutputPath).length !==
+          readdirSync(rootOutputPath).length;
+
+      return (
+        (existsSync(cacheOutputPath) && !existsSync(rootOutputPath)) ||
+        haveDifferentAmountOfFiles
+      );
+    });
+  }
+
+  private getFileNameWithLatestRecordedHashForOutput(output: string): string {
+    return join(
+      this.latestOutputsHashesDir,
+      `${output.split(sep).join('-')}.hash`
+    );
   }
 
   private getFromLocalDir(task: Task) {
@@ -153,9 +226,15 @@ export class Cache {
     const td = join(this.cachePath, task.hash);
 
     if (existsSync(tdCommit)) {
+      const terminalOutput = readFileSync(join(td, 'terminalOutput'), 'utf-8');
+      let code = 0;
+      try {
+        code = Number(readFileSync(join(td, 'code'), 'utf-8'));
+      } catch (e) {}
       return {
-        terminalOutput: readFileSync(join(td, 'terminalOutput')).toString(),
+        terminalOutput,
         outputsPath: join(td, 'outputs'),
+        code,
       };
     } else {
       return null;
@@ -164,15 +243,19 @@ export class Cache {
 
   private createCacheDir() {
     const dir = cacheDirectory(this.root, this.options.cacheDirectory);
-    if (!existsSync(dir)) {
-      fsExtra.ensureDirSync(dir);
-    }
+    ensureDirSync(dir);
     return dir;
   }
 
   private createTerminalOutputsDir() {
     const path = join(this.cachePath, 'terminalOutputs');
-    fsExtra.ensureDirSync(path);
+    ensureDirSync(path);
+    return path;
+  }
+
+  private ensureLatestOutputsHashesDir() {
+    const path = join(this.cachePath, 'latestOutputsHashes');
+    ensureDirSync(path);
     return path;
   }
 }

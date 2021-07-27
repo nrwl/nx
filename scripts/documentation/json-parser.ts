@@ -1,4 +1,5 @@
 import { json } from '@angular-devkit/core';
+import { SchemaFlattener } from './schema-flattener';
 
 export enum OptionType {
   Any = 'any',
@@ -20,14 +21,14 @@ function _getEnumFromValue<E, T extends E[keyof E]>(
   if (Object.values(enumeration).indexOf(value) !== -1) {
     // TODO: this should be unknown
     // tslint:disable-next-line:no-any
-    return (value as any) as T;
+    return value as any as T;
   }
 
   return defaultValue;
 }
 
 export async function parseJsonSchemaToOptions(
-  registry: json.schema.SchemaRegistry,
+  flattener: SchemaFlattener,
   schema: json.JsonObject
 ): Promise<any[]> {
   const options: any[] = [];
@@ -134,13 +135,14 @@ export async function parseJsonSchemaToOptions(
     const positional: number | undefined =
       typeof $defaultIndex == 'number' ? $defaultIndex : undefined;
 
-    const required = json.isJsonArray(current.required)
-      ? current.required.indexOf(name) != -1
-      : false;
+    const required =
+      json.isJsonObject(parentSchema) && json.isJsonArray(parentSchema.required)
+        ? parentSchema.required.indexOf(name) != -1
+        : false;
     const aliases = json.isJsonArray(current.aliases)
-      ? [...current.aliases].map((x) => '' + x)
+      ? [...current.aliases].map((x) => `${x}`)
       : current.alias
-      ? ['' + current.alias]
+      ? [`${current.alias}`]
       : [];
     const format =
       typeof current.format == 'string' ? current.format : undefined;
@@ -157,7 +159,7 @@ export async function parseJsonSchemaToOptions(
     const option: any = {
       name,
       description:
-        '' + (current.description === undefined ? '' : current.description),
+        current.description === undefined ? '' : `${current.description}`,
       ...(types.length == 1 ? { type } : { type, types }),
       ...(defaultValue !== undefined ? { default: defaultValue } : {}),
       ...(enumValues && enumValues.length > 0 ? { enum: enumValues } : {}),
@@ -190,7 +192,7 @@ export async function parseJsonSchemaToOptions(
     options.push(option);
   }
 
-  const flattenedSchema = await registry.flatten(schema).toPromise();
+  const flattenedSchema = flattener.flatten(schema);
   json.schema.visitJsonSchema(flattenedSchema, visitor);
 
   // Sort by positional.

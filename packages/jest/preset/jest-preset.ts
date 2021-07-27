@@ -6,4 +6,5 @@ export = {
   transform: {
     '^.+\\.(ts|js|html)$': 'ts-jest',
   },
+  testEnvironment: 'jsdom',
 };

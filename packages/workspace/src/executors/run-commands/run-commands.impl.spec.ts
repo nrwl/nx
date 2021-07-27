@@ -1,49 +1,63 @@
-import { fileSync } from 'tmp';
 import { readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { relative } from 'path';
+import { dirSync, fileSync } from 'tmp';
 import runCommands, { LARGE_BUFFER } from './run-commands.impl';
 
+function normalize(p: string) {
+  return p.startsWith('/private') ? p.substring(8) : p;
+}
 function readFile(f: string) {
   return readFileSync(f).toString().replace(/\s/g, '');
 }
 
 describe('Command Runner Builder', () => {
+  const context = {} as any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should run one command', async () => {
     const f = fileSync().name;
-    const result = await runCommands({
-      command: `echo 1 >> ${f}`,
-    });
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    const result = await runCommands({ command: `echo 1 >> ${f}` }, context);
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('1');
   });
 
   it('should interpolate provided --args', async () => {
     const f = fileSync().name;
-    const result = await runCommands({
-      command: `echo {args.key} >> ${f}`,
-      args: '--key=123',
-    });
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    const result = await runCommands(
+      { command: `echo {args.key} >> ${f}`, args: '--key=123' },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
   });
 
   it('should interpolate all unknown args as if they were --args', async () => {
     const f = fileSync().name;
-    const result = await runCommands({
-      command: `echo {args.key} >> ${f}`,
-      key: 123,
-    });
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    const result = await runCommands(
+      {
+        command: `echo {args.key} >> ${f}`,
+        key: 123,
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
   });
 
   it('should add all args to the command if no interpolation in the command', async () => {
-    const exec = spyOn(require('child_process'), 'execSync').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'execSync');
 
-    await runCommands({
-      command: `echo`,
-      a: 123,
-      b: 456,
-    });
+    await runCommands(
+      {
+        command: `echo`,
+        a: 123,
+        b: 456,
+      },
+      context
+    );
     expect(exec).toHaveBeenCalledWith(`echo --a=123 --b=456`, {
       stdio: [0, 1, 2],
       cwd: undefined,
@@ -52,49 +66,79 @@ describe('Command Runner Builder', () => {
     });
   });
 
-  it('ssss should forward args by default when using commands (plural)', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+  it('should forward args by default when using commands (plural)', async () => {
+    const exec = jest.spyOn(require('child_process'), 'exec');
 
-    await runCommands({
-      commands: [{ command: 'echo' }],
-      parallel: true,
-      a: 123,
-      b: 456,
+    await runCommands(
+      {
+        commands: [{ command: 'echo' }, { command: 'echo foo' }],
+        parallel: true,
+        a: 123,
+        b: 456,
+      },
+      context
+    );
+
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
     });
-
-    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
   });
 
   it('should forward args when forwardAllArgs is set to true', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'exec');
 
-    await runCommands({
-      commands: [{ command: 'echo', forwardAllArgs: true }],
-      parallel: true,
-      a: 123,
-      b: 456,
+    await runCommands(
+      {
+        commands: [
+          { command: 'echo', forwardAllArgs: true },
+          { command: 'echo foo', forwardAllArgs: true },
+        ],
+        parallel: true,
+        a: 123,
+        b: 456,
+      },
+      context
+    );
+
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
     });
-
-    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
   });
 
   it('should not forward args when forwardAllArgs is set to false', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+    const exec = jest.spyOn(require('child_process'), 'exec');
 
-    await runCommands({
-      commands: [{ command: 'echo', forwardAllArgs: false }],
-      parallel: true,
-      a: 123,
-      b: 456,
+    await runCommands(
+      {
+        commands: [
+          { command: 'echo', forwardAllArgs: false },
+          { command: 'echo foo', forwardAllArgs: false },
+        ],
+        parallel: true,
+        a: 123,
+        b: 456,
+      },
+      context
+    );
+
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(exec).toHaveBeenNthCalledWith(1, 'echo', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
     });
-
-    expect(exec).toHaveBeenCalledWith('echo', {
+    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo', {
       maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
@@ -102,10 +146,13 @@ describe('Command Runner Builder', () => {
 
   it('should throw when invalid args', async () => {
     try {
-      await runCommands({
-        command: `echo {args.key}`,
-        args: 'key=value',
-      });
+      await runCommands(
+        {
+          command: `echo {args.key}`,
+          args: 'key=value',
+        },
+        context
+      );
     } catch (e) {
       expect(e.message).toEqual('Invalid args: key=value');
     }
@@ -113,66 +160,73 @@ describe('Command Runner Builder', () => {
 
   it('should run commands serially', async () => {
     const f = fileSync().name;
-    const result = await runCommands({
-      commands: [`sleep 0.2 && echo 1 >> ${f}`, `echo 2 >> ${f}`],
-      parallel: false,
-    });
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    const result = await runCommands(
+      {
+        commands: [`sleep 0.2 && echo 1 >> ${f}`, `echo 2 >> ${f}`],
+        parallel: false,
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('12');
   });
 
   it('should run commands in parallel', async () => {
     const f = fileSync().name;
-    const result = await runCommands({
-      commands: [
-        {
-          command: `echo 1 >> ${f}`,
-        },
-        {
-          command: `echo 2 >> ${f}`,
-        },
-      ],
-      parallel: true,
-    });
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    const result = await runCommands(
+      {
+        commands: [
+          {
+            command: `echo 1 >> ${f}`,
+          },
+          {
+            command: `echo 2 >> ${f}`,
+          },
+        ],
+        parallel: true,
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
     const contents = readFile(f);
-    expect(contents).toContain(1);
-    expect(contents).toContain(2);
+    expect(contents).toContain('1');
+    expect(contents).toContain('2');
   });
 
   describe('readyWhen', () => {
     it('should error when parallel = false', async () => {
       try {
-        await runCommands({
-          commands: [{ command: 'some command' }],
-          parallel: false,
-          readyWhen: 'READY',
-        });
+        await runCommands(
+          {
+            commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
+            parallel: false,
+            readyWhen: 'READY',
+          },
+          context
+        );
         fail('should throw');
       } catch (e) {
         expect(e.message).toEqual(
-          `ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true`
+          `ERROR: Bad executor config for @nrwl/run-commands - "readyWhen" can only be used when "parallel=true".`
         );
       }
     });
 
-    it('should return success true when the string specified is ready condition is found', async (done) => {
+    it('should return success true when the string specified as ready condition is found', async () => {
       const f = fileSync().name;
-      const result = await runCommands({
-        commands: [
-          {
-            command: `echo READY && sleep 0.1 && echo 1 >> ${f}`,
-          },
-        ],
-        parallel: true,
-        readyWhen: 'READY',
-      });
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      const result = await runCommands(
+        {
+          commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+          parallel: true,
+          readyWhen: 'READY',
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('');
 
       setTimeout(() => {
         expect(readFile(f)).toEqual('1');
-        done();
       }, 150);
     });
   });
@@ -181,10 +235,13 @@ describe('Command Runner Builder', () => {
     const f = fileSync().name;
 
     try {
-      await runCommands({
-        commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
-        parallel: false,
-      });
+      await runCommands(
+        {
+          commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
+          parallel: false,
+        },
+        context
+      );
       fail('should fail when a command fails');
     } catch (e) {}
     expect(readFile(f)).toEqual('1');
@@ -192,67 +249,114 @@ describe('Command Runner Builder', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
-      await runCommands({
-        commands: [
-          {
-            command: `echo 'Hello World'`,
-          },
-        ],
-        parallel: true,
-      });
+      const exec = jest.spyOn(require('child_process'), 'exec');
+      await runCommands(
+        {
+          commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
+          parallel: true,
+        },
+        context
+      );
 
-      expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
+      expect(exec).toHaveBeenCalledTimes(2);
+      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
+        maxBuffer: LARGE_BUFFER,
+        env: { ...process.env },
+      });
+      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env },
       });
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
-      await runCommands({
-        commands: [
-          {
-            command: `echo 'Hello World'`,
-          },
-        ],
-        parallel: true,
-        color: true,
-      });
+      const exec = jest.spyOn(require('child_process'), 'exec');
+      await runCommands(
+        {
+          commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
+          parallel: true,
+          color: true,
+        },
+        context
+      );
 
-      expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
+      expect(exec).toHaveBeenCalledTimes(2);
+      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
+        maxBuffer: LARGE_BUFFER,
+        env: { ...process.env, FORCE_COLOR: `true` },
+      });
+      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true` },
       });
     });
   });
 
-  it('should run the task in the specified working directory', async () => {
-    const f = fileSync().name;
-    const result = await runCommands({
-      commands: [
+  describe('cwd', () => {
+    it('should run the task in the workspace root when no cwd is specified', async () => {
+      const root = dirSync().name;
+      const f = fileSync().name;
+
+      const result = await runCommands(
         {
-          command: `pwd >> ${f}`,
+          commands: [
+            {
+              command: `pwd >> ${f}`,
+            },
+          ],
+          parallel: true,
         },
-      ],
-      parallel: true,
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toBe(root);
     });
 
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
-    expect(readFile(f)).not.toContain('/packages');
+    it('should run the task in the specified cwd relative to the workspace root when cwd is not an absolute path', async () => {
+      const root = dirSync().name;
+      const childFolder = dirSync({ dir: root }).name;
+      const cwd = relative(root, childFolder);
+      const f = fileSync().name;
 
-    const result2 = await runCommands({
-      commands: [
+      const result = await runCommands(
         {
-          command: `pwd >> ${f}`,
+          commands: [
+            {
+              command: `pwd >> ${f}`,
+            },
+          ],
+          cwd,
+          parallel: true,
         },
-      ],
-      parallel: true,
-      cwd: 'packages',
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toBe(childFolder);
     });
 
-    expect(result2).toEqual(jasmine.objectContaining({ success: true }));
-    expect(readFile(f)).toContain('/packages');
+    it('should run the task in the specified absolute cwd', async () => {
+      const root = dirSync().name;
+      const childFolder = dirSync({ dir: root }).name;
+      const f = fileSync().name;
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `pwd >> ${f}`,
+            },
+          ],
+          cwd: childFolder,
+          parallel: true,
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toBe(childFolder);
+    });
   });
 
   describe('dotenv', () => {
@@ -271,15 +375,18 @@ describe('Command Runner Builder', () => {
 
     it('should load the root .env file by default if there is one', async () => {
       let f = fileSync().name;
-      const result = await runCommands({
-        commands: [
-          {
-            command: `echo $NRWL_SITE >> ${f}`,
-          },
-        ],
-      });
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+        },
+        context
+      );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('https://nrwl.io/');
     });
 
@@ -287,30 +394,36 @@ describe('Command Runner Builder', () => {
       const devEnv = fileSync().name;
       writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
       let f = fileSync().name;
-      const result = await runCommands({
-        commands: [
-          {
-            command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
-          },
-        ],
-        envFile: devEnv,
-      });
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          envFile: devEnv,
+        },
+        context
+      );
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('https://nx.dev/');
     });
 
     it('should error if the specified .env file does not exist', async () => {
       let f = fileSync().name;
       try {
-        await runCommands({
-          commands: [
-            {
-              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
-            },
-          ],
-          envFile: '/somePath/.fakeEnv',
-        });
+        await runCommands(
+          {
+            commands: [
+              {
+                command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+              },
+            ],
+            envFile: '/somePath/.fakeEnv',
+          },
+          context
+        );
         fail('should not reach');
       } catch (e) {
         expect(e.message).toContain(

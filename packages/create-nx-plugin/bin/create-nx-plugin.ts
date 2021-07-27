@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
+import {
+  getPackageManagerCommand,
+  PackageManager,
+} from '@nrwl/tao/src/shared/package-manager';
+import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
+import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
 import { output } from '@nrwl/workspace/src/utilities/output';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-import { dirSync } from 'tmp';
-import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
-import * as path from 'path';
 import { execSync } from 'child_process';
-import * as inquirer from 'inquirer';
-import yargsParser = require('yargs-parser');
+import { removeSync } from 'fs-extra';
+import enquirer = require('enquirer');
+import * as path from 'path';
+import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
+import yargsParser = require('yargs-parser');
 
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
@@ -17,9 +22,11 @@ const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['pluginName', 'packageManager'],
+  string: ['pluginName', 'packageManager', 'importPath'],
   alias: {
+    importPath: 'import-path',
     pluginName: 'plugin-name',
+    packageManager: 'pm',
   },
   boolean: ['help'],
 });
@@ -27,18 +34,15 @@ const parsedArgs = yargsParser(process.argv, {
 function createSandbox(packageManager: string) {
   console.log(`Creating a sandbox with Nx...`);
   const tmpDir = dirSync().name;
-  writeFileSync(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: {
-        '@nrwl/workspace': nxVersion,
-        '@nrwl/tao': cliVersion,
-        typescript: tsVersion,
-        prettier: prettierVersion,
-      },
-      license: 'MIT',
-    })
-  );
+  writeJsonFile(path.join(tmpDir, 'package.json'), {
+    dependencies: {
+      '@nrwl/workspace': nxVersion,
+      '@nrwl/tao': cliVersion,
+      typescript: tsVersion,
+      prettier: prettierVersion,
+    },
+    license: 'MIT',
+  });
 
   execSync(`${packageManager} install --silent`, {
     cwd: tmpDir,
@@ -50,7 +54,7 @@ function createSandbox(packageManager: string) {
 
 function createWorkspace(
   tmpDir: string,
-  packageManager: string,
+  packageManager: PackageManager,
   parsedArgs: any,
   name: string
 ) {
@@ -66,7 +70,7 @@ function createWorkspace(
   execSync(
     `${
       pmc.exec
-    } tao ${command}/collection.json --nxWorkspaceRoot="${process.cwd()}"`,
+    } tao ${command}/generators.json --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
@@ -78,31 +82,33 @@ function createWorkspace(
   });
 }
 
-function createNxPlugin(workspaceName, pluginName, packageManager) {
-  console.log(
-    `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
-  );
+function createNxPlugin(
+  workspaceName,
+  pluginName,
+  packageManager,
+  parsedArgs: any
+) {
+  const importPath = parsedArgs.importPath ?? `${workspaceName}/${pluginName}`;
+  const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${importPath}`;
+  console.log(command);
+
   const pmc = getPackageManagerCommand(packageManager);
-  execSync(
-    `${pmc.exec} nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
-    {
-      cwd: workspaceName,
-      stdio: [0, 1, 2],
-    }
-  );
+  execSync(`${pmc.exec} ${command}`, {
+    cwd: workspaceName,
+    stdio: [0, 1, 2],
+  });
 }
 
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
+  const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath);
 
-  const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('UTF-8'));
-
-  nxJson['workspaceLayout'] = {
+  nxJson.workspaceLayout = {
     appsDir: 'e2e',
     libsDir: 'packages',
   };
 
-  writeFileSync(nxJsonPath, JSON.stringify(nxJson, undefined, 2));
+  writeJsonFile(nxJsonPath, nxJson);
 
   removeSync(path.join(workspaceName, 'apps'));
   removeSync(path.join(workspaceName, 'libs'));
@@ -126,15 +132,15 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
     return Promise.resolve(workspaceName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'WorkspaceName',
         message: `Workspace name (e.g., org name)    `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { WorkspaceName: string }) => {
       if (!a.WorkspaceName) {
         output.error({
           title: 'Invalid workspace name',
@@ -151,15 +157,15 @@ function determinePluginName(parsedArgs) {
     return Promise.resolve(parsedArgs.pluginName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'PluginName',
         message: `Plugin name                        `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { PluginName: string }) => {
       if (!a.PluginName) {
         output.error({
           title: 'Invalid name',
@@ -177,13 +183,13 @@ function showHelp() {
 
   Create a new Nx workspace
 
-  Args: 
+  Args:
 
     name           workspace name (e.g., org name)
 
   Options:
 
-    pluginName     the name of the plugin to be created  
+    pluginName     the name of the plugin to be created
 `);
 }
 
@@ -192,13 +198,13 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-const packageManager = parsedArgs.packageManager || 'npm';
+const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((workspaceName) => {
   return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     updateWorkspace(workspaceName);
-    createNxPlugin(workspaceName, pluginName, packageManager);
+    createNxPlugin(workspaceName, pluginName, packageManager, parsedArgs);
     commitChanges(workspaceName);
     showNxWarning(workspaceName);
   });

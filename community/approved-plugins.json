@@ -1,8 +1,18 @@
 [
   {
+    "name": "@rxap/plugin-localazy",
+    "description": "An Nx plugin for localazy.com upload and download tasks.",
+    "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
+  },
+  {
     "name": "nx-electron",
     "description": "An Nx plugin for developing Electron applications",
     "url": "https://github.com/bennymeg/nx-electron"
+  },
+  {
+    "name": "nx-stylelint",
+    "description": "Nx plugin to use stylelint in a nx workspace",
+    "url": "https://github.com/Phillip9587/nx-stylelint"
   },
   {
     "name": "@nxtend/ionic-react",
@@ -40,6 +50,16 @@
     "url": "https://github.com/flowaccount/nx-plugins"
   },
   {
+    "name": "@ns3/nx-serverless",
+    "description": "Nx plugin for node serverless applications in an Nx workspace",
+    "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-serverless"
+  },
+  {
+    "name": "@ns3/nx-jest-playwright",
+    "description": "Nx plugin to run jest-playwright e2e tests in an Nx workspace",
+    "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-jest-playwright"
+  },
+  {
     "name": "@dev-thought/nx-deploy-it",
     "description": "Nx plugin to deploy applications on your favorite cloud provider",
     "url": "https://github.com/Dev-Thought/nx-plugins/tree/master/libs/nx-deploy-it"
@@ -52,7 +72,7 @@
   {
     "name": "@nx-tools/nx-docker",
     "description": "Nx plugin to build docker images of your affected apps",
-    "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker"
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
   },
   {
     "name": "@angular-custom-builders/lite-serve",
@@ -128,5 +148,55 @@
     "name": "@jscutlery/semver",
     "description": "Nx plugin to automate semantic versioning and CHANGELOG generation.",
     "url": "https://github.com/jscutlery/semver"
+  },
+  {
+    "name": "ngx-deploy-npm",
+    "description": "Publish your libraries to NPM with just one command.",
+    "url": "https://github.com/bikecoders/ngx-deploy-npm"
+  },
+  {
+    "name": "@trafilea/nx-shopify",
+    "description": "Nx plugin for developing performance-first Shopify themes",
+    "url": "https://github.com/trafilea/nx-shopify"
+  },
+  {
+    "name": "nx-dotnet",
+    "description": "Nx plugin for developing and housing .NET projects within an Nx workspace.",
+    "url": "https://github.com/nx-dotnet/nx-dotnet"
+  },
+  {
+    "name": "@nxrocks/nx-quarkus",
+    "description": "Nx plugin to generate, run, package, build (and more) Quarkus projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-quarkus"
+  },
+  {
+    "name": "@nx-extend/gcp-secrets",
+    "description": "Nx plugin to generate and securely deploy your Google Cloud Secrets",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-secrets"
+  },
+  {
+    "name": "@nx-extend/gcp-storage",
+    "description": "Nx plugin to upload to Google Cloud Storage",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-storage"
+  },
+  {
+    "name": "@nx-extend/gcp-functions",
+    "description": "Nx plugin to generate, run, build and deploy your Google Cloud Functions",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-functions"
+  },
+  {
+    "name": "@nx-extend/gcp-deployment-manager",
+    "description": "Nx plugin to deploy your Google Cloud Deployments",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-deployment-manager"
+  },
+  {
+    "name": "@nx-extend/gcp-cloud-run",
+    "description": "Nx plugin to build and deploy your docker container to Google Cloud Run",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-cloud-run"
+  },
+  {
+    "name": "@nx-extend/translations",
+    "description": "Nx plugin to extract, pull, push and translate your apps translations",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
   }
 ]

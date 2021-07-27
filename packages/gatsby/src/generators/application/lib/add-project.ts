@@ -1,4 +1,3 @@
-import { generateProjectLint, Linter } from '@nrwl/workspace';
 import { NormalizedSchema } from './normalize-options';
 import {
   addProjectConfiguration,
@@ -40,13 +39,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     },
   };
 
-  targets.lint = generateProjectLint(
-    options.projectRoot,
-    joinPathFragments(options.projectRoot, 'tsconfig.json'),
-    Linter.EsLint,
-    [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`]
-  );
-
   const project: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -54,8 +46,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     targets,
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-    ...nxConfig,
-  });
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    {
+      ...project,
+      ...nxConfig,
+    },
+    options.standaloneConfig
+  );
 }

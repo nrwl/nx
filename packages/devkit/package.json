@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/devkit",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -17,8 +17,8 @@
     "Cypress",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -29,8 +29,8 @@
     "@nrwl/tao": "*",
     "ejs": "^3.1.5",
     "ignore": "^5.0.4",
-    "semver": "6.3.0",
-    "strip-json-comments": "2.0.1",
+    "rxjs": "^6.5.4",
+    "semver": "7.3.4",
     "tslib": "^2.0.0"
   }
 }

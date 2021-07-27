@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxNextNgInit",
+  "$id": "NxNextNgInit",
   "title": "Init Next Plugin",
   "type": "object",
   "properties": {

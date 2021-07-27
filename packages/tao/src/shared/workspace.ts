@@ -1,7 +1,16 @@
-import * as fs from 'fs';
+import { existsSync } from 'fs';
 import * as path from 'path';
-import * as stripJsonComments from 'strip-json-comments';
-import '../compat/compat';
+import { appRootPath } from '../utils/app-root';
+import { readJsonFile } from '../utils/fileutils';
+import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
+import type { PackageManager } from './package-manager';
+import { TaskGraph } from './tasks';
+
+export interface Workspace
+  extends WorkspaceJsonConfiguration,
+    NxJsonConfiguration {
+  projects: Record<string, ProjectConfiguration & NxJsonProjectConfiguration>;
+}
 
 /**
  * Workspace configuration
@@ -45,9 +54,14 @@ export interface WorkspaceJsonConfiguration {
    * Default generator collection. It is used when no collection is provided.
    */
   cli?: {
-    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    packageManager?: PackageManager;
     defaultCollection?: string;
   };
+}
+
+export interface RawWorkspaceJsonConfiguration
+  extends Omit<WorkspaceJsonConfiguration, 'projects'> {
+  projects: { [projectName: string]: ProjectConfiguration | string };
 }
 
 /**
@@ -99,6 +113,21 @@ export interface ProjectConfiguration {
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
 }
 
+export interface TargetDependencyConfig {
+  /**
+   * This the projects that the targets belong to
+   *
+   * 'self': This target depends on another target of the same project
+   * 'deps': This target depends on targets of the projects of it's deps.
+   */
+  projects: 'self' | 'dependencies';
+
+  /**
+   * The name of the target
+   */
+  target: string;
+}
+
 /**
  * Target's configuration
  */
@@ -111,6 +140,17 @@ export interface TargetConfiguration {
   executor: string;
 
   /**
+   * List of the target's outputs. The outputs will be cached by the Nx computation
+   * caching engine.
+   */
+  outputs?: string[];
+
+  /**
+   * This describes other targets that a target depends on.
+   */
+  dependsOn?: [TargetDependencyConfig];
+
+  /**
    * Target's options. They are passed in to the executor.
    */
   options?: any;
@@ -121,17 +161,15 @@ export interface TargetConfiguration {
   configurations?: { [config: string]: any };
 
   /**
-   * List of the target's outputs. The outputs will be cached by the Nx computation
-   * caching engine.
+   * A default named configuration to use when a target configuration is not provided.
    */
-  outputs?: string[];
+  defaultConfiguration?: string;
 }
 
 export function workspaceConfigName(root: string) {
-  try {
-    fs.statSync(path.join(root, 'angular.json'));
+  if (existsSync(path.join(root, 'angular.json'))) {
     return 'angular.json';
-  } catch (e) {
+  } else {
     return 'workspace.json';
   }
 }
@@ -149,6 +187,13 @@ export type Generator<T = unknown> = (
   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
+export interface ExecutorConfig {
+  schema: any;
+  hasherFactory?: () => any;
+  implementationFactory: () => Executor;
+  batchImplementationFactory?: () => TaskGraphExecutor;
+}
+
 /**
  * Implementation of a target of a project
  */
@@ -161,6 +206,25 @@ export type Executor<T = any> = (
 ) =>
   | Promise<{ success: boolean }>
   | AsyncIterableIterator<{ success: boolean }>;
+
+/**
+ * Implementation of a target of a project that handles multiple projects to be batched
+ */
+export type TaskGraphExecutor<T = any> = (
+  /**
+   * Graph of Tasks to be executed
+   */
+  taskGraph: TaskGraph,
+  /**
+   * Map of Task IDs to options for the task
+   */
+  options: Record<string, T>,
+  /**
+   * Set of overrides for the overall execution
+   */
+  overrides: T,
+  context: ExecutorContext
+) => Promise<Record<string, { success: boolean; terminalOutput: string }>>;
 
 /**
  * Context that is passed into an executor
@@ -230,14 +294,10 @@ export class Workspaces {
   }
 
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
-    const w = JSON.parse(
-      stripJsonComments(
-        fs
-          .readFileSync(path.join(this.root, workspaceConfigName(this.root)))
-          .toString()
-      )
+    const w = readJsonFile(
+      path.join(this.root, workspaceConfigName(this.root))
     );
-    return toNewFormat(w);
+    return resolveNewFormatWithInlineProjects(w, this.root);
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -250,10 +310,7 @@ export class Workspaces {
     return schema['cli'] === 'nx';
   }
 
-  readExecutor(
-    nodeModule: string,
-    executor: string
-  ): { schema: any; implementationFactory: () => Executor } {
+  readExecutor(nodeModule: string, executor: string): ExecutorConfig {
     try {
       const { executorsFilePath, executorConfig } = this.readExecutorsJson(
         nodeModule,
@@ -261,18 +318,35 @@ export class Workspaces {
       );
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = JSON.parse(
-        stripJsonComments(fs.readFileSync(schemaPath).toString())
-      );
+      const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
-      const [modulePath, exportName] = executorConfig.implementation.split('#');
-      const implementationFactory = () => {
-        const module = require(path.join(executorsDir, modulePath));
-        return module[exportName || 'default'] as Executor;
+      const implementationFactory = this.getImplementationFactory<Executor>(
+        executorConfig.implementation,
+        executorsDir
+      );
+
+      const batchImplementationFactory = executorConfig.batchImplementation
+        ? this.getImplementationFactory<TaskGraphExecutor>(
+            executorConfig.batchImplementation,
+            executorsDir
+          )
+        : null;
+
+      const hasherFactory = executorConfig.hasher
+        ? this.getImplementationFactory<Function>(
+            executorConfig.hasher,
+            executorsDir
+          )
+        : null;
+
+      return {
+        schema,
+        implementationFactory,
+        batchImplementationFactory,
+        hasherFactory,
       };
-      return { schema, implementationFactory };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
@@ -282,30 +356,23 @@ export class Workspaces {
 
   readGenerator(collectionName: string, generatorName: string) {
     try {
-      const {
-        generatorsFilePath,
-        generatorsJson,
-        normalizedGeneratorName,
-      } = this.readGeneratorsJson(collectionName, generatorName);
+      const { generatorsFilePath, generatorsJson, normalizedGeneratorName } =
+        this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
-      const generatorConfig = (generatorsJson.generators ||
-        generatorsJson.schematics)[normalizedGeneratorName];
+      const generatorConfig =
+        generatorsJson.generators?.[normalizedGeneratorName] ||
+        generatorsJson.schematics?.[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
-      const schema = JSON.parse(
-        stripJsonComments(fs.readFileSync(schemaPath).toString())
-      );
+      const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
       generatorConfig.implementation =
         generatorConfig.implementation || generatorConfig.factory;
-      const [modulePath, exportName] = generatorConfig.implementation.split(
-        '#'
+      const implementationFactory = this.getImplementationFactory<Generator>(
+        generatorConfig.implementation,
+        generatorsDir
       );
-      const implementationFactory = () => {
-        const module = require(path.join(generatorsDir, modulePath));
-        return module[exportName || 'default'] as Generator;
-      };
       return { normalizedGeneratorName, schema, implementationFactory };
     } catch (e) {
       throw new Error(
@@ -314,26 +381,42 @@ export class Workspaces {
     }
   }
 
+  private getImplementationFactory<T>(
+    implementation: string,
+    directory: string
+  ): () => T {
+    const [implementationModulePath, implementationExportName] =
+      implementation.split('#');
+    return () => {
+      const module = require(path.join(directory, implementationModulePath));
+      return module[implementationExportName || 'default'] as T;
+    };
+  }
+
   private readExecutorsJson(nodeModule: string, executor: string) {
     const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
       paths: this.resolvePaths(),
     });
-    const packageJson = JSON.parse(
-      stripJsonComments(fs.readFileSync(packageJsonPath).toString())
-    );
-    const executorsFile = packageJson.executors
-      ? packageJson.executors
-      : packageJson.builders;
+    const packageJson = readJsonFile(packageJsonPath);
+    const executorsFile = packageJson.executors ?? packageJson.builders;
+
+    if (!executorsFile) {
+      throw new Error(
+        `The "${nodeModule}" package does not support Nx executors.`
+      );
+    }
+
     const executorsFilePath = require.resolve(
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
-    const executorsJson = JSON.parse(
-      stripJsonComments(fs.readFileSync(executorsFilePath).toString())
-    );
-    const mapOfExecutors = executorsJson.executors
-      ? executorsJson.executors
-      : executorsJson.builders;
-    const executorConfig = mapOfExecutors[executor];
+    const executorsJson = readJsonFile(executorsFilePath);
+    const executorConfig: {
+      implementation: string;
+      batchImplementation?: string;
+      schema: string;
+      hasher?: string;
+    } =
+      executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
     if (!executorConfig) {
       throw new Error(
         `Cannot find executor '${executor}' in ${executorsFilePath}.`
@@ -355,32 +438,24 @@ export class Workspaces {
           paths: this.resolvePaths(),
         }
       );
-      const packageJson = JSON.parse(
-        stripJsonComments(fs.readFileSync(packageJsonPath).toString())
-      );
-      const generatorsFile = packageJson.generators
-        ? packageJson.generators
-        : packageJson.schematics;
+      const packageJson = readJsonFile(packageJsonPath);
+      const generatorsFile = packageJson.generators ?? packageJson.schematics;
+
+      if (!generatorsFile) {
+        throw new Error(
+          `The "${collectionName}" package does not support Nx generators.`
+        );
+      }
+
       generatorsFilePath = require.resolve(
         path.join(path.dirname(packageJsonPath), generatorsFile)
       );
     }
-    const generatorsJson = JSON.parse(
-      stripJsonComments(fs.readFileSync(generatorsFilePath).toString())
-    );
+    const generatorsJson = readJsonFile(generatorsFilePath);
 
-    let normalizedGeneratorName;
-    const gens = generatorsJson.generators || generatorsJson.schematics;
-    for (let k of Object.keys(gens)) {
-      if (k === generator) {
-        normalizedGeneratorName = k;
-        break;
-      }
-      if (gens[k].aliases && gens[k].aliases.indexOf(generator) > -1) {
-        normalizedGeneratorName = k;
-        break;
-      }
-    }
+    let normalizedGeneratorName =
+      findFullGeneratorName(generator, generatorsJson.generators) ||
+      findFullGeneratorName(generator, generatorsJson.schematics);
 
     if (!normalizedGeneratorName) {
       for (let parent of generatorsJson.extends || []) {
@@ -401,36 +476,55 @@ export class Workspaces {
   }
 }
 
+function findFullGeneratorName(
+  name: string,
+  generators: {
+    [name: string]: { aliases?: string[] };
+  }
+) {
+  if (generators) {
+    for (let [key, data] of Object.entries<{ aliases?: string[] }>(
+      generators
+    )) {
+      if (
+        key === name ||
+        (data.aliases && (data.aliases as string[]).includes(name))
+      ) {
+        return key;
+      }
+    }
+  }
+}
+
 export function reformattedWorkspaceJsonOrNull(w: any) {
   return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
 }
 
 export function toNewFormat(w: any): WorkspaceJsonConfiguration {
   const f = toNewFormatOrNull(w);
-  return f ? f : w;
+  return f ?? w;
 }
 
 export function toNewFormatOrNull(w: any) {
   let formatted = false;
-  Object.values(w.projects || {}).forEach((project: any) => {
-    if (project.architect) {
-      renameProperty(project, 'architect', 'targets');
+  Object.values(w.projects || {}).forEach((projectConfig: any) => {
+    if (projectConfig.architect) {
+      renamePropertyWithStableKeys(projectConfig, 'architect', 'targets');
       formatted = true;
     }
-    if (project.schematics) {
-      renameProperty(project, 'schematics', 'generators');
+    if (projectConfig.schematics) {
+      renamePropertyWithStableKeys(projectConfig, 'schematics', 'generators');
       formatted = true;
     }
-    Object.values(project.targets || {}).forEach((target: any) => {
+    Object.values(projectConfig.targets || {}).forEach((target: any) => {
       if (target.builder) {
-        renameProperty(target, 'builder', 'executor');
+        renamePropertyWithStableKeys(target, 'builder', 'executor');
         formatted = true;
       }
     });
   });
-
   if (w.schematics) {
-    renameProperty(w, 'schematics', 'generators');
+    renamePropertyWithStableKeys(w, 'schematics', 'generators');
     formatted = true;
   }
   if (w.version !== 2) {
@@ -442,25 +536,31 @@ export function toNewFormatOrNull(w: any) {
 
 export function toOldFormatOrNull(w: any) {
   let formatted = false;
-  Object.values(w.projects || {}).forEach((project: any) => {
-    if (project.targets) {
-      renameProperty(project, 'targets', 'architect');
+
+  Object.values(w.projects || {}).forEach((projectConfig: any) => {
+    if (typeof projectConfig === 'string') {
+      throw new Error(
+        "'project.json' files are incompatible with version 1 workspace schemas."
+      );
+    }
+    if (projectConfig.targets) {
+      renamePropertyWithStableKeys(projectConfig, 'targets', 'architect');
       formatted = true;
     }
-    if (project.generators) {
-      renameProperty(project, 'generators', 'schematics');
+    if (projectConfig.generators) {
+      renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
       formatted = true;
     }
-    Object.values(project.architect || {}).forEach((target: any) => {
+    Object.values(projectConfig.architect || {}).forEach((target: any) => {
       if (target.executor) {
-        renameProperty(target, 'executor', 'builder');
+        renamePropertyWithStableKeys(target, 'executor', 'builder');
         formatted = true;
       }
     });
   });
 
   if (w.generators) {
-    renameProperty(w, 'generators', 'schematics');
+    renamePropertyWithStableKeys(w, 'generators', 'schematics');
     formatted = true;
   }
   if (w.version !== 1) {
@@ -470,9 +570,43 @@ export function toOldFormatOrNull(w: any) {
   return formatted ? w : null;
 }
 
+export function resolveOldFormatWithInlineProjects(
+  w: any,
+  root: string = appRootPath
+) {
+  return toOldFormatOrNull(inlineProjectConfigurations(w, root));
+}
+
+export function resolveNewFormatWithInlineProjects(
+  w: any,
+  root: string = appRootPath
+) {
+  return toNewFormat(inlineProjectConfigurations(w, root));
+}
+
+export function inlineProjectConfigurations(
+  w: any,
+  root: string = appRootPath
+) {
+  Object.entries(w.projects || {}).forEach(
+    ([project, config]: [string, any]) => {
+      if (typeof config === 'string') {
+        const configFilePath = path.join(root, config, 'project.json');
+        const fileConfig = readJsonFile(configFilePath);
+        w.projects[project] = { ...fileConfig, configFilePath };
+      }
+    }
+  );
+  return w;
+}
+
 // we have to do it this way to preserve the order of properties
 // not to screw up the formatting
-function renameProperty(obj: any, from: string, to: string) {
+export function renamePropertyWithStableKeys(
+  obj: any,
+  from: string,
+  to: string
+) {
   const copy = { ...obj };
   Object.keys(obj).forEach((k) => {
     delete obj[k];

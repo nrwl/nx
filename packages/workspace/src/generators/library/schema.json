@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "Typescript library",
+  "$id": "NxTypescriptLibrary",
   "cli": "nx",
   "title": "Create a TypeScript Library",
   "type": "object",
@@ -19,7 +19,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the library?",
-      "pattern": "^[a-zA-Z]{1}.*$"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "type": "string",
@@ -80,6 +80,26 @@
     "strict": {
       "type": "boolean",
       "description": "Whether to enable tsconfig strict mode or not.",
+      "default": false
+    },
+    "skipBabelrc": {
+      "type": "boolean",
+      "description": "Do not generate .babelrc file. Useful for Node libraries that are not compiled by Babel",
+      "default": false
+    },
+    "buildable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate a buildable library."
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
       "default": false
     }
   },

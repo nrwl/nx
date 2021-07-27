@@ -1,0 +1,43 @@
+{
+  "builders": {
+    "run-commands": {
+      "implementation": "./src/executors/run-commands/compat",
+      "schema": "./src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx"
+    },
+    "tsc": {
+      "implementation": "./src/executors/tsc/compat",
+      "schema": "./src/executors/tsc/schema.json",
+      "description": "Build a project using TypeScript."
+    },
+    "run-script": {
+      "implementation": "./src/executors/run-script/compat",
+      "schema": "./src/executors/run-script/schema.json",
+      "description": "Run an npm script using Nx"
+    }
+  },
+  "executors": {
+    "run-commands": {
+      "implementation": "./src/executors/run-commands/run-commands.impl",
+      "schema": "./src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx"
+    },
+    "tsc": {
+      "implementation": "./src/executors/tsc/tsc.impl",
+      "schema": "./src/executors/tsc/schema.json",
+      "description": "Build a project using TypeScript."
+    },
+    "counter": {
+      "implementation": "./src/executors/counter/counter.impl",
+      "batchImplementation": "./src/executors/counter/counter.impl#batchCounter",
+      "schema": "./src/executors/counter/schema.json",
+      "description": "A dummy executor useful for e2e tests",
+      "hidden": true
+    },
+    "run-script": {
+      "implementation": "./src/executors/run-script/run-script.impl",
+      "schema": "./src/executors/run-script/schema.json",
+      "description": "Run an npm script using Nx"
+    }
+  }
+}

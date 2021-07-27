@@ -1,18 +1,15 @@
-import * as webpack from 'webpack';
-import { Stats, Configuration } from 'webpack';
-import * as WebpackDevServer from 'webpack-dev-server';
-import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
 import { Observable } from 'rxjs';
 
 import { extname } from 'path';
 import * as url from 'url';
 
-export function runWebpack(config: Configuration): Observable<Stats> {
+export function runWebpack(config: any, webpack: any): Observable<any> {
   return new Observable((subscriber) => {
     const webpackCompiler = webpack(config);
 
-    function callback(err: Error, stats: Stats) {
+    function callback(err: Error, stats: any) {
       if (err) {
         subscriber.error(err);
       }
@@ -36,10 +33,12 @@ export function runWebpack(config: Configuration): Observable<Stats> {
 }
 
 export function runWebpackDevServer(
-  config: Configuration
-): Observable<{ stats: Stats; baseUrl: string }> {
+  config: any,
+  webpack: typeof import('webpack'),
+  WebpackDevServer: typeof import('webpack-dev-server')
+): Observable<{ stats: any; baseUrl: string }> {
   return new Observable((subscriber) => {
-    const webpackCompiler = webpack(config);
+    const webpackCompiler: any = webpack(config);
 
     let baseUrl: string;
 
@@ -47,7 +46,7 @@ export function runWebpackDevServer(
       subscriber.next({ stats, baseUrl });
     });
 
-    const devServerConfig = config.devServer || {};
+    const devServerConfig = (config as any).devServer || {};
 
     const originalOnListen = devServerConfig.onListening;
 
@@ -64,7 +63,8 @@ export function runWebpackDevServer(
     };
 
     const webpackServer = new WebpackDevServer(
-      webpackCompiler,
+      // Some type mismatches between webpack's built-in type defs and what webpack-dev-server expects.
+      webpackCompiler as any,
       devServerConfig
     );
 
@@ -97,7 +97,7 @@ export interface EmittedFile {
   asset?: boolean;
 }
 
-export function getEmittedFiles(stats: webpack.Stats) {
+export function getEmittedFiles(stats: any) {
   const { compilation } = stats;
   const files: EmittedFile[] = [];
   // adds all chunks to the list of emitted files such as lazy loaded modules

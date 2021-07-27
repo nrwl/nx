@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import 'v8-compile-cache';
 // polyfill rxjs observable to avoid issues with multiple version fo Observable installed in node_modules
 // https://twitter.com/BenLesh/status/1192478226385428483?s=20
 if (!(Symbol as any).observable)
@@ -33,7 +33,7 @@ try {
   localNx = require.resolve('@nrwl/cli/bin/nx.js', {
     paths: [workspace.dir],
   });
-} catch (e) {
+} catch {
   output.error({
     title: `Could not find Nx modules in this workspace.`,
     bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
@@ -53,10 +53,11 @@ if (localNx === require.resolve('@nrwl/cli/bin/nx.js')) {
     output.warn({
       title: `Running global Nx CLI with PNPM may have issues.`,
       bodyLines: [
-        `Prefer to use "pnpm run" (https://pnpm.js.org/en/cli/run') to execute commands in this workspace.`,
+        `Prefer to use "pnpm run" (https://pnpm.js.org/en/cli/run) to execute commands in this workspace.`,
         `${chalk.reset.inverse.bold.cyan(
           ' TIP '
         )} create a shortcut such as: ${chalk.bold.white(tip)}`,
+        ``,
       ],
     });
   }

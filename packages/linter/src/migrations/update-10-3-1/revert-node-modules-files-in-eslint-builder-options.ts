@@ -1,10 +1,5 @@
-import { chain, Tree } from '@angular-devkit/schematics';
-import {
-  formatFiles,
-  readJsonInTree,
-  updateBuilderConfig,
-} from '@nrwl/workspace';
-import { join, normalize } from '@angular-devkit/core';
+import { chain } from '@angular-devkit/schematics';
+import { formatFiles, updateBuilderConfig } from '@nrwl/workspace';
 
 /**
  * The migration for v10.3.0 called "update-eslint-builder-and-config" initially had a bug

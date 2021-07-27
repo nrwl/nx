@@ -6,13 +6,19 @@ jest.mock('@storybook/core/standalone', () =>
 );
 import * as storybook from '@storybook/core/standalone';
 import storybookBuilder from './build-storybook.impl';
-
-import angularStorybookOptions from '@storybook/angular/dist/server/options';
+import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 describe('Build storybook', () => {
   let context: ExecutorContext;
 
   beforeEach(async () => {
+    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+      devDependencies: {
+        '@storybook/addon-essentials': '~6.2.9',
+        '@storybook/angular': '~6.2.9',
+      },
+    });
+
     context = {
       root: '/root',
       cwd: '/root',
@@ -33,7 +39,7 @@ describe('Build storybook', () => {
   });
 
   it('should call the storybook static standalone build', async () => {
-    spyOn(logger, 'info');
+    jest.spyOn(logger, 'info');
     const uiFramework = '@storybook/angular';
     const outputPath = `${context.root}/dist/storybook`;
     const config = {
@@ -53,8 +59,8 @@ describe('Build storybook', () => {
 
     const result = await storybookBuilder(
       {
-        uiFramework: uiFramework,
-        outputPath: outputPath,
+        uiFramework,
+        outputPath,
         config,
       },
       context

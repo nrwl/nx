@@ -1,11 +1,23 @@
-# package
+# @nrwl/node:package
 
 Package a Node library
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
-## Properties
+## Options
+
+### main (_**required**_)
+
+Type: `string`
+
+The name of the main entry-point file.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The name of the Typescript configuration file.
 
 ### assets
 
@@ -23,11 +35,19 @@ Possible values: `dependencies`, `peerDependencies`
 
 When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
 
-### main
+### cli
 
-Type: `string`
+Type: `boolean`
 
-The name of the main entry-point file.
+Adds a CLI wrapper to main entry-point file.
+
+### deleteOutputPath
+
+Default: `true`
+
+Type: `boolean`
+
+Delete the output path before building.
 
 ### outputPath
 
@@ -54,12 +74,6 @@ Output sourcemaps.
 Type: `string`
 
 Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property
-
-### tsConfig
-
-Type: `string`
-
-The name of the Typescript configuration file.
 
 ### updateBuildableProjectDepsInPackageJson
 

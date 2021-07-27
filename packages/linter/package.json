@@ -14,8 +14,8 @@
     "ESLint",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -26,11 +26,12 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "dependencies": {
     "@nrwl/devkit": "*",
     "glob": "7.1.4",
     "minimatch": "3.0.4",
+    "tmp": "~0.2.1",
     "tslib": "^2.0.0"
   }
 }

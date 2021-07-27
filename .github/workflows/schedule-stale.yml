@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "* 0 * * *"
 name: Stale Bot workflow
 jobs:
   build:

@@ -24,6 +24,8 @@ import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { gte } from 'semver';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -42,12 +44,7 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(
-    tree,
-    schema.name,
-    schema.js,
-    workspaceStorybookVersion
-  );
+  createRootStorybookDir(tree, schema.js, workspaceStorybookVersion);
   createProjectStorybookDir(
     tree,
     schema.name,
@@ -59,15 +56,19 @@ export async function configurationGenerator(
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
   addStorybookTask(tree, schema.name, schema.uiFramework);
-  if (schema.configureCypress && projectType !== 'application') {
-    const cypressTask = await cypressProjectGenerator(tree, {
-      name: schema.name,
-      js: schema.js,
-      linter: schema.linter,
-    });
-    tasks.push(cypressTask);
-  } else {
-    logger.warn('There is already an e2e project setup');
+  if (schema.configureCypress) {
+    if (projectType !== 'application') {
+      const cypressTask = await cypressProjectGenerator(tree, {
+        name: schema.name,
+        js: schema.js,
+        linter: schema.linter,
+        directory: schema.cypressDirectory,
+        standaloneConfig: schema.standaloneConfig,
+      });
+      tasks.push(cypressTask);
+    } else {
+      logger.warn('There is already an e2e project setup');
+    }
   }
 
   await formatFiles(tree);
@@ -89,15 +90,15 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
 
 function createRootStorybookDir(
   tree: Tree,
-  projectName: string,
   js: boolean,
   workspaceStorybookVersion: string
 ) {
-  const { projectType } = readProjectConfiguration(tree, projectName);
-  const projectDirectory = projectType === 'application' ? 'app' : 'lib';
+  if (tree.exists('.storybook')) {
+    return;
+  }
   logger.debug(
-    `adding .storybook folder to ${projectDirectory} -\n
-  based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version.`
+    `adding .storybook folder to the root directory - 
+     based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
   );
   const templatePath = join(
     __dirname,
@@ -127,7 +128,9 @@ function createProjectStorybookDir(
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
 
-  if (tree.exists(join(root, '.storybook'))) {
+  const storybookRoot = join(root, '.storybook');
+
+  if (tree.exists(storybookRoot)) {
     return;
   }
 
@@ -144,6 +147,7 @@ function createProjectStorybookDir(
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
     projectType: projectDirectory,
+    useWebpack5: uiFramework === '@storybook/angular',
   });
 
   if (js) {
@@ -259,13 +263,13 @@ function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
       }
 
       const overrides = json.overrides || [];
-      for (const override of overrides) {
-        if (typeof override.parserOptions?.project === 'string') {
-          override.parserOptions.project = [override.parserOptions.project];
+      for (const o of overrides) {
+        if (typeof o.parserOptions?.project === 'string') {
+          o.parserOptions.project = [o.parserOptions.project];
         }
-        if (Array.isArray(override.parserOptions?.project)) {
-          override.parserOptions.project = dedupe([
-            ...override.parserOptions.project,
+        if (Array.isArray(o.parserOptions?.project)) {
+          o.parserOptions.project = dedupe([
+            ...o.parserOptions.project,
             join(root, '.storybook/tsconfig.json'),
           ]);
         }
@@ -353,8 +357,10 @@ function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
     }
   }
   if (
-    workspaceStorybookVersion.startsWith('6') ||
-    workspaceStorybookVersion.startsWith('^6')
+    gte(
+      checkAndCleanWithSemver('@storybook/core', workspaceStorybookVersion),
+      '6.0.0'
+    )
   ) {
     workspaceStorybookVersion = '6';
   }

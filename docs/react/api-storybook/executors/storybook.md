@@ -1,11 +1,21 @@
-# storybook
+# @nrwl/storybook:storybook
 
 Serve Storybook
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
-## Properties
+## Options
+
+### uiFramework (_**required**_) (**hidden**)
+
+Default: `@storybook/angular`
+
+Type: `string`
+
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`, `@storybook/web-components`, `@storybook/vue`
+
+Storybook framework npm package
 
 ### docsMode
 
@@ -22,6 +32,14 @@ Default: `localhost`
 Type: `string`
 
 Host to listen on.
+
+### https
+
+Default: `false`
+
+Type: `boolean`
+
+Serve using HTTPS.
 
 ### port
 
@@ -45,14 +63,6 @@ Type: `boolean`
 
 Suppress verbose build output.
 
-### ssl
-
-Default: `false`
-
-Type: `boolean`
-
-Serve using HTTPS.
-
 ### sslCert
 
 Type: `string`
@@ -70,14 +80,6 @@ SSL key to use for serving HTTPS.
 Type: `array`
 
 Directory where to load static files from, array of strings
-
-### uiFramework (**hidden**)
-
-Default: `@storybook/angular`
-
-Type: `string`
-
-Storybook framework npm package
 
 ### watch
 

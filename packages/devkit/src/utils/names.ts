@@ -9,9 +9,7 @@
  * ```
  * @param name
  */
-export function names(
-  name: string
-): {
+export function names(name: string): {
   name: string;
   className: string;
   propertyName: string;
@@ -39,7 +37,7 @@ function toClassName(str: string): string {
  */
 function toPropertyName(s: string): string {
   return s
-    .replace(/(-|_|\.|\s)+(.)?/g, (_, __, chr) =>
+    .replace(/([^a-zA-Z0-9])+(.)?/g, (_, __, chr) =>
       chr ? chr.toUpperCase() : ''
     )
     .replace(/[^a-zA-Z\d]/g, '')
@@ -50,7 +48,7 @@ function toPropertyName(s: string): string {
  * Hyphenated to CONSTANT_CASE
  */
 function toConstantName(s: string): string {
-  return s.replace(/(-|_|\.|\s)/g, '_').toUpperCase();
+  return s.replace(/([^a-zA-Z0-9])/g, '_').toUpperCase();
 }
 
 /**

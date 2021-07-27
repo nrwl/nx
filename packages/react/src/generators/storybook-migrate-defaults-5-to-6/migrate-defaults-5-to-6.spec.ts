@@ -1,6 +1,6 @@
 import { createTestUILib } from '../stories/stories-lib.spec';
 import { storybookVersion } from '@nrwl/storybook';
-import { readJson, Tree, updateJson } from '@nrwl/devkit';
+import { logger, readJson, Tree, updateJson } from '@nrwl/devkit';
 import storybookConfigurationGenerator from '../storybook-configuration/configuration';
 import { storybookMigration5to6Generator } from '@nrwl/react';
 
@@ -28,7 +28,15 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       configureCypress: false,
       generateCypressSpecs: false,
       generateStories: false,
+      standaloneConfig: false,
     });
+
+    jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should update the correct dependencies', async () => {

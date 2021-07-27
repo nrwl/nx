@@ -13,8 +13,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Cli', () => {
+  beforeEach(() => newProject());
+
   it('should execute long running tasks', () => {
-    newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -37,7 +38,6 @@ describe('Cli', () => {
   });
 
   it('should run npm scripts', async () => {
-    newProject();
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
 
@@ -62,7 +62,6 @@ describe('Cli', () => {
   }, 1000000);
 
   it('should show help', async () => {
-    newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -86,14 +85,14 @@ describe('Cli', () => {
     expect(affectedHelp).toContain('Run task for affected projects');
 
     const version = runCLI(`--version`);
-    expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
+    expect(version).toContain('9999.0.2'); // stub value
   }, 120000);
 });
 
 describe('report', () => {
-  it(`should report package versions`, async () => {
-    newProject();
+  beforeEach(() => newProject());
 
+  it(`should report package versions`, async () => {
     const reportOutput = runCLI('report');
 
     packagesWeCareAbout.forEach((p) => {
@@ -103,9 +102,7 @@ describe('report', () => {
 });
 
 describe('list', () => {
-  beforeEach(() => {
-    newProject();
-  });
+  beforeEach(() => newProject());
 
   it(`should work`, async () => {
     let listOutput = runCLI('list');
@@ -160,9 +157,9 @@ describe('list', () => {
 });
 
 describe('migrate', () => {
-  it('should run migrations', () => {
-    newProject();
+  beforeEach(() => newProject());
 
+  it('should run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
@@ -240,7 +237,13 @@ describe('migrate', () => {
                       }
                     },
                     packageJsonUpdates: {
-                      'run-11': {version: '1.1.0', packages: {'migrate-child-package': {version: '9.0.0', alwaysAddToPackageJson: true}}},
+                      'run-11': {version: '1.1.0', packages: {
+                        'migrate-child-package': {version: '9.0.0', alwaysAddToPackageJson: true},
+                        'migrate-child-package-2': {version: '9.0.0', alwaysAddToPackageJson: false},
+                        'migrate-child-package-3': {version: '9.0.0', addToPackageJson: false},
+                        'migrate-child-package-4': {version: '9.0.0', addToPackageJson: 'dependencies'},
+                        'migrate-child-package-5': {version: '9.0.0', addToPackageJson: 'devDependencies'},
+                      }},
                     }
                   });
                 } else {
@@ -268,7 +271,21 @@ describe('migrate', () => {
     // updates package.json
     const packageJson = readJson(`package.json`);
     expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
-    expect(readFile(`package.json`).endsWith(`}\n`)).toEqual(true);
+    expect(
+      packageJson.dependencies['migrate-child-package-2']
+    ).not.toBeDefined();
+    expect(
+      packageJson.dependencies['migrate-child-package-3']
+    ).not.toBeDefined();
+    expect(packageJson.dependencies['migrate-child-package-4']).toEqual(
+      '9.0.0'
+    );
+    expect(packageJson.devDependencies['migrate-child-package-5']).toEqual(
+      '9.0.0'
+    );
+    // should keep new line on package
+    const packageContent = readFile('package.json');
+    expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json
     const migrationsJson = readJson(`migrations.json`);

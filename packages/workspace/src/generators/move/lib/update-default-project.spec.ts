@@ -1,4 +1,3 @@
-import { Schema } from '@nrwl/workspace/src/generators/move/schema';
 import {
   addProjectConfiguration,
   readWorkspaceConfiguration,
@@ -6,7 +5,8 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { updateDefaultProject } from '@nrwl/workspace/src/generators/move/lib/update-default-project';
+import { NormalizedSchema } from '../schema';
+import { updateDefaultProject } from './update-default-project';
 
 describe('updateDefaultProject', () => {
   let tree: Tree;
@@ -27,17 +27,18 @@ describe('updateDefaultProject', () => {
   });
 
   it('should update the default project', async () => {
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
-      importPath: undefined,
+      importPath: '@proj/subfolder-my-destination',
       updateImportPath: true,
+      newProjectName: 'subfolder-my-destination',
+      relativeToRootDestination: 'libs/subfolder/my-destination',
     };
 
     updateDefaultProject(tree, schema);
 
     const { defaultProject } = readWorkspaceConfiguration(tree);
-
     expect(defaultProject).toBe('subfolder-my-destination');
   });
 });

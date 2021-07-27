@@ -31,4 +31,5 @@ export interface JestExecutorOptions {
   watch?: boolean;
   watchAll?: boolean;
   testLocationInResults?: boolean;
+  testTimeout?: number;
 }

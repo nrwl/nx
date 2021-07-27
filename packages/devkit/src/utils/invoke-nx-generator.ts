@@ -1,6 +1,9 @@
 import { join, relative } from 'path';
-import { FileChange } from '@nrwl/tao/src/shared/tree';
-import { Generator, GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import type { FileChange, Tree } from '@nrwl/tao/src/shared/tree';
+import type {
+  Generator,
+  GeneratorCallback,
+} from '@nrwl/tao/src/shared/workspace';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -31,6 +34,7 @@ function createRunCallbackTask() {
  * Convert an Nx Generator into an Angular Devkit Schematic
  */
 export function convertNxGenerator<T = any>(generator: Generator<T>) {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   return (options: T) => invokeNxGenerator(generator, options);
 }
 
@@ -44,9 +48,10 @@ function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
       engineHost.registerTaskExecutor(createRunCallbackTask());
     }
 
-    const root = context.engine.workflow
-      ? context.engine.workflow.engineHost.paths[1]
-      : tree.root.path;
+    const root =
+      context.engine.workflow && context.engine.workflow.engineHost.paths
+        ? context.engine.workflow.engineHost.paths[1]
+        : tree.root.path;
 
     const adapterTree = new DevkitTreeFromAngularDevkitTree(tree, root);
     const result = await generator(adapterTree, options);
@@ -68,7 +73,7 @@ const actionToFileChangeMap = {
   d: 'DELETE',
 };
 
-class DevkitTreeFromAngularDevkitTree {
+class DevkitTreeFromAngularDevkitTree implements Tree {
   constructor(private tree, private _root: string) {}
 
   get root(): string {
@@ -85,7 +90,11 @@ class DevkitTreeFromAngularDevkitTree {
   }
 
   exists(filePath: string): boolean {
-    return this.tree.exists(filePath);
+    if (this.isFile(filePath)) {
+      return this.tree.exists(filePath);
+    } else {
+      return this.children(filePath).length > 0;
+    }
   }
 
   isFile(filePath: string): boolean {
@@ -123,12 +132,16 @@ class DevkitTreeFromAngularDevkitTree {
     return fileChanges;
   }
 
-  private normalize(path) {
+  private normalize(path: string): string {
     return relative(this.root, join(this.root, path));
   }
 
-  read(filePath: string): Buffer | null {
-    return this.tree.read(filePath);
+  read(filePath: string): Buffer;
+  read(filePath: string, encoding: BufferEncoding): string;
+  read(filePath: string, encoding?: BufferEncoding) {
+    return encoding
+      ? this.tree.read(filePath).toString(encoding)
+      : this.tree.read(filePath);
   }
 
   rename(from: string, to: string): void {

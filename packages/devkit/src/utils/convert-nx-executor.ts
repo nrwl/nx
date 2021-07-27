@@ -1,17 +1,13 @@
-import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
-
-import {
-  Executor,
-  ExecutorContext,
-  Workspaces,
-} from '@nrwl/tao/src/shared/workspace';
+import { from, Observable } from 'rxjs';
+import type { Executor, ExecutorContext } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
  *
  * Use this to expose a compatible Angular Builder
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaceConfig = new Workspaces(
@@ -36,29 +32,44 @@ export function convertNxExecutor(executor: Executor) {
           builderContext.target.target
         ];
     }
-    return from(toPromise(executor(options, context))).pipe(
-      map((output) => {
-        if (!output) {
-          return {
-            success: true,
-          };
-        } else {
-          return {
-            ...output,
-            success: true,
-          };
-        }
-      })
-    );
+    return toObservable(executor(options, context));
   };
   return require('@angular-devkit/architect').createBuilder(builderFunction);
 }
 
-async function toPromise(promiseOrAsyncIterator: any): Promise<any> {
-  if (typeof promiseOrAsyncIterator.then === 'function')
-    return promiseOrAsyncIterator;
-  let q;
-  for await (q of promiseOrAsyncIterator) {
+function toObservable<T extends { success: boolean }>(
+  promiseOrAsyncIterator: Promise<T> | AsyncIterableIterator<T>
+): Observable<T> {
+  if (typeof (promiseOrAsyncIterator as any).then === 'function') {
+    return from(promiseOrAsyncIterator as Promise<T>);
+  } else {
+    return new Observable((subscriber) => {
+      let asyncIterator = promiseOrAsyncIterator as AsyncIterableIterator<T>;
+
+      function recurse(iterator: AsyncIterableIterator<T>) {
+        iterator
+          .next()
+          .then((result) => {
+            if (!result.done) {
+              subscriber.next(result.value);
+              recurse(iterator);
+            } else {
+              if (result.value) {
+                subscriber.next(result.value);
+              }
+              subscriber.complete();
+            }
+          })
+          .catch((e) => {
+            subscriber.error(e);
+          });
+      }
+
+      recurse(asyncIterator);
+
+      return () => {
+        asyncIterator.return();
+      };
+    });
   }
-  return q;
 }

@@ -2,13 +2,26 @@ import {
   readdirSync,
   readFileSync,
   statSync,
-  unlinkSync,
   writeFileSync,
-} from 'fs';
-import { mkdirpSync, rmdirSync } from 'fs-extra';
+  ensureDirSync,
+  removeSync,
+  chmodSync,
+} from 'fs-extra';
 import { logger } from './logger';
 import { dirname, join, relative, sep } from 'path';
-const chalk = require('chalk');
+import * as chalk from 'chalk';
+
+/**
+ * Options to set when writing a file in the Virtual file system tree.
+ */
+export interface TreeWriteOptions {
+  /**
+   * Permission to be granted on the file, given as a string (e.g `755`) or octal integer (e.g `0o755`).
+   * The logical OR operator can be used to separate multiple permissions.
+   * See https://nodejs.org/api/fs.html#fs_file_modes
+   */
+  mode?: string | number;
+}
 
 /**
  * Virtual file system tree.
@@ -21,13 +34,25 @@ export interface Tree {
 
   /**
    * Read the contents of a file.
+   * @param filePath A path to a file.
    */
   read(filePath: string): Buffer | null;
 
   /**
+   * Read the contents of a file as string.
+   * @param filePath A path to a file.
+   * @param encoding the encoding for the result
+   */
+  read(filePath: string, encoding: BufferEncoding): string | null;
+
+  /**
    * Update the contents of a file or create a new file.
    */
-  write(filePath: string, content: Buffer | string): void;
+  write(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void;
 
   /**
    * Check if a file exists.
@@ -78,23 +103,36 @@ export interface FileChange {
    * The content of the file or null in case of delete.
    */
   content: Buffer | null;
+  /**
+   * Options to set on the file being created or updated.
+   */
+  options?: TreeWriteOptions;
 }
 
 export class FsTree implements Tree {
   private recordedChanges: {
-    [path: string]: { content: Buffer | null; isDeleted: boolean };
+    [path: string]: {
+      content: Buffer | null;
+      isDeleted: boolean;
+      options?: TreeWriteOptions;
+    };
   } = {};
 
   constructor(readonly root: string, private readonly isVerbose: boolean) {}
 
-  read(filePath: string): Buffer | null {
+  read(filePath: string): Buffer | null;
+  read(filePath: string, encoding: BufferEncoding): string | null;
+  read(filePath: string, encoding?: BufferEncoding): Buffer | string | null {
     filePath = this.normalize(filePath);
     try {
+      let content: Buffer;
       if (this.recordedChanges[this.rp(filePath)]) {
-        return this.recordedChanges[this.rp(filePath)].content;
+        content = this.recordedChanges[this.rp(filePath)].content;
       } else {
-        return this.fsReadFile(filePath);
+        content = this.fsReadFile(filePath);
       }
+
+      return encoding ? content.toString(encoding) : content;
     } catch (e) {
       if (this.isVerbose) {
         logger.error(e);
@@ -103,7 +141,11 @@ export class FsTree implements Tree {
     }
   }
 
-  write(filePath: string, content: Buffer | string): void {
+  write(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void {
     filePath = this.normalize(filePath);
     if (
       this.fsExists(this.rp(filePath)) &&
@@ -117,6 +159,7 @@ export class FsTree implements Tree {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),
         isDeleted: false,
+        options,
       };
     } catch (e) {
       if (this.isVerbose) {
@@ -125,9 +168,13 @@ export class FsTree implements Tree {
     }
   }
 
-  overwrite(filePath: string, content: Buffer | string): void {
+  overwrite(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void {
     filePath = this.normalize(filePath);
-    this.write(filePath, content);
+    this.write(filePath, content, options);
   }
 
   delete(filePath: string): void {
@@ -143,10 +190,7 @@ export class FsTree implements Tree {
     };
 
     // Delete directories when
-    if (
-      this.exists(dirname(this.rp(filePath))) &&
-      this.children(dirname(this.rp(filePath))).length < 1
-    ) {
+    if (this.children(dirname(this.rp(filePath))).length < 1) {
       this.delete(dirname(this.rp(filePath)));
     }
   }
@@ -161,7 +205,7 @@ export class FsTree implements Tree {
       } else {
         return this.fsExists(filePath);
       }
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -182,7 +226,7 @@ export class FsTree implements Tree {
       } else {
         return this.fsIsFile(filePath);
       }
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -213,12 +257,14 @@ export class FsTree implements Tree {
             path: f,
             type: 'UPDATE',
             content: this.recordedChanges[f].content,
+            options: this.recordedChanges[f].options,
           });
         } else {
           res.push({
             path: f,
             type: 'CREATE',
             content: this.recordedChanges[f].content,
+            options: this.recordedChanges[f].options,
           });
         }
       }
@@ -231,42 +277,34 @@ export class FsTree implements Tree {
   }
 
   private fsReadDir(dirPath: string) {
-    if (!this.delegateToFs) return [];
     try {
       return readdirSync(join(this.root, dirPath));
-    } catch (e) {
+    } catch {
       return [];
     }
   }
 
-  private fsIsFile(filePath: string) {
-    if (!this.delegateToFs) return false;
+  private fsIsFile(filePath: string): boolean {
     const stat = statSync(join(this.root, filePath));
     return stat.isFile();
   }
 
-  private fsReadFile(filePath: string) {
-    if (!this.delegateToFs) return null;
+  private fsReadFile(filePath: string): Buffer {
     return readFileSync(join(this.root, filePath));
   }
 
   private fsExists(filePath: string): boolean {
-    if (!this.delegateToFs) return false;
     try {
       const stat = statSync(join(this.root, filePath));
       return stat.isFile() || stat.isDirectory();
-    } catch (e) {
+    } catch {
       return false;
     }
   }
 
-  private delegateToFs(): boolean {
-    return this.root !== null;
-  }
-
   private filesForDir(path: string): string[] {
     return Object.keys(this.recordedChanges).filter(
-      (f) => f.startsWith(path + '/') && !this.recordedChanges[f].isDeleted
+      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted
     );
   }
 
@@ -278,8 +316,8 @@ export class FsTree implements Tree {
       );
     }
     Object.keys(this.recordedChanges).forEach((f) => {
-      if (f.startsWith(path + '/')) {
-        const [_, file] = f.split(path + '/');
+      if (f.startsWith(`${path}/`)) {
+        const [_, file] = f.split(`${path}/`);
         res[file.split('/')[0]] = true;
       }
     });
@@ -287,33 +325,28 @@ export class FsTree implements Tree {
     return Object.keys(res);
   }
 
-  private rp(pp: string) {
+  private rp(pp: string): string {
     return pp.startsWith('/') ? pp.substring(1) : pp;
   }
 }
 
-export function flushChanges(root: string, fileChanges: FileChange[]) {
+export function flushChanges(root: string, fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
-      mkdirpSync(dirname(fpath));
+      ensureDirSync(dirname(fpath));
       writeFileSync(fpath, f.content);
+      if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
+      if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'DELETE') {
-      try {
-        const stat = statSync(fpath);
-        if (stat.isDirectory()) {
-          rmdirSync(fpath, { recursive: true });
-        } else {
-          unlinkSync(fpath);
-        }
-      } catch (e) {}
+      removeSync(fpath);
     }
   });
 }
 
-export function printChanges(fileChanges: FileChange[]) {
+export function printChanges(fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
       console.log(`${chalk.green('CREATE')} ${f.path}`);

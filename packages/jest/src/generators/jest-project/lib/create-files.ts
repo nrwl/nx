@@ -10,7 +10,10 @@ import { join } from 'path';
 export function createFiles(tree: Tree, options: JestProjectSchema) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  generateFiles(tree, join(__dirname, '../files'), projectConfig.root, {
+  const filesFolder =
+    options.setupFile === 'angular' ? '../files-angular' : '../files';
+
+  generateFiles(tree, join(__dirname, filesFolder), projectConfig.root, {
     tmpl: '',
     ...options,
     transformer: options.babelJest ? 'babel-jest' : 'ts-jest',
@@ -20,9 +23,5 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
 
   if (options.setupFile === 'none') {
     tree.delete(join(projectConfig.root, './src/test-setup.ts'));
-  }
-
-  if (!options.babelJest) {
-    tree.delete(join(projectConfig.root, './babel-jest.config.json'));
   }
 }

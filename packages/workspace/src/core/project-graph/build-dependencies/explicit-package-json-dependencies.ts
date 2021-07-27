@@ -1,24 +1,20 @@
+import { ProjectGraphNodeRecords } from '../project-graph-models';
+import { defaultFileRead } from '../../file-utils';
 import {
-  AddProjectDependency,
-  DependencyType,
-  ProjectGraphContext,
-  ProjectGraphNodeRecords,
-} from '../project-graph-models';
-import { FileRead } from '../../file-utils';
-import { parseJsonWithComments } from '@nrwl/workspace/src/utilities/fileutils';
-import { basename } from 'path';
-import { joinPathFragments } from '@nrwl/devkit';
+  joinPathFragments,
+  parseJson,
+  ProjectGraphBuilder,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 
 export function buildExplicitPackageJsonDependencies(
-  ctx: ProjectGraphContext,
-  nodes: ProjectGraphNodeRecords,
-  addDependency: AddProjectDependency,
-  fileRead: FileRead
+  ctx: ProjectGraphProcessorContext,
+  builder: ProjectGraphBuilder
 ) {
-  Object.keys(ctx.fileMap).forEach((source) => {
-    Object.values(ctx.fileMap[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(nodes, f.file)) {
-        processPackageJson(source, f.file, nodes, addDependency, fileRead);
+  Object.keys(ctx.filesToProcess).forEach((source) => {
+    Object.values(ctx.filesToProcess[source]).forEach((f) => {
+      if (isPackageJsonAtProjectRoot(builder.graph.nodes, f.file)) {
+        processPackageJson(source, f.file, builder);
       }
     });
   });
@@ -38,20 +34,18 @@ function isPackageJsonAtProjectRoot(
 function processPackageJson(
   sourceProject: string,
   fileName: string,
-  nodes: ProjectGraphNodeRecords,
-  addDependency: AddProjectDependency,
-  fileRead: FileRead
+  builder: ProjectGraphBuilder
 ) {
   try {
-    const deps = readDeps(parseJsonWithComments(fileRead(fileName)));
+    const deps = readDeps(parseJson(defaultFileRead(fileName)));
     deps.forEach((d) => {
       // package.json refers to another project in the monorepo
-      if (nodes[d]) {
-        addDependency(DependencyType.static, sourceProject, d);
+      if (builder.graph.nodes[d]) {
+        builder.addExplicitDependency(sourceProject, fileName, d);
       }
     });
   } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(e);
     }
   }

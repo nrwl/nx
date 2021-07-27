@@ -1,4 +1,4 @@
-import { getProjects, Tree } from '@nrwl/devkit';
+import { getProjects, ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 
 /**
@@ -8,28 +8,36 @@ import { Schema } from '../schema';
  *
  * @param schema The options provided to the schematic
  */
-export function checkTargets(tree: Tree, schema: Schema) {
+export function checkTargets(
+  tree: Tree,
+  schema: Schema,
+  proj: ProjectConfiguration
+) {
   if (schema.forceRemove) {
     return;
   }
 
-  const usedIn = [];
+  const errors: string[] = [];
+  const findRegex = new RegExp(
+    `${schema.projectName}:(${Object.keys(proj.targets).join('|')})`
+  );
   getProjects(tree).forEach((project, projectName) => {
-    const findTarget = new RegExp(`${schema.projectName}:`);
-
     if (projectName === schema.projectName) {
       return;
     }
 
-    if (findTarget.test(JSON.stringify(project))) {
-      usedIn.push(projectName);
+    const matches = findRegex.exec(JSON.stringify(project));
+    if (matches) {
+      errors.push(
+        `"${schema.projectName}:${matches[1]}" is used by "${projectName}"`
+      );
     }
   });
 
-  if (usedIn.length > 0) {
-    let message = `${schema.projectName} is still targeted by the following projects:\n\n`;
-    for (let project of usedIn) {
-      message += `${project}\n`;
+  if (errors.length > 0) {
+    let message = `${schema.projectName} is still targeted by some projects:\n\n`;
+    for (let error of errors) {
+      message += `${error}\n`;
     }
 
     throw new Error(message);

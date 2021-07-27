@@ -28,11 +28,15 @@ nx serve myapp
 
 ## Common Options
 
-The options below are common to the `serve` command used within an Nx workspace. The Web and Angular-specifc serve options are listed after these options.
+The options below are common to the `serve` command used within an Nx workspace. The Web and Angular-specific serve options are listed after these options.
 
 ### allowedHosts
 
 This option allows you to whitelist services that are allowed to access the dev server.
+
+### hmr
+
+Enable hot module replacement.
 
 ### host
 
@@ -139,10 +143,6 @@ Don't verify connected clients are part of allowed hosts.
 ### eval-source-map
 
 Output in-file eval sourcemaps.
-
-### hmr
-
-Enable hot module replacement.
 
 ### hmr-warning
 

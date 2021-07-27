@@ -20,17 +20,12 @@ export {
 export { output } from './src/utilities/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
+
 export {
   readWorkspaceJson,
   readNxJson,
   readWorkspaceConfig,
 } from './src/core/file-utils';
-export { NxJson } from './src/core/shared-interfaces';
-export {
-  ProjectGraphNode,
-  ProjectGraphDependency,
-  ProjectGraph,
-} from './src/core/project-graph';
 export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
 export {
   readJsonInTree,
@@ -95,5 +90,9 @@ export { libraryGenerator } from './src/generators/library/library';
 export { moveGenerator } from './src/generators/move/move';
 export { removeGenerator } from './src/generators/remove/remove';
 export { runCommandsGenerator } from './src/generators/run-commands/run-commands';
+export {
+  convertToNxProjectGenerator,
+  convertToNxProjectSchematic,
+} from './src/generators/convert-to-nx-project/convert-to-nx-project';
 
 export const stringUtils = strings;

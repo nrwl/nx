@@ -7,6 +7,7 @@
   "properties": {
     "commands": {
       "type": "array",
+      "description": "Commands to run in child process ",
       "items": {
         "oneOf": [
           {
@@ -19,6 +20,10 @@
               "forwardAllArgs": {
                 "type": "boolean",
                 "description": "Whether arguments should be forwarded when interpolation is not present"
+              },
+              "description": {
+                "type": "string",
+                "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command"
               }
             },
             "additionalProperties": false,
@@ -41,7 +46,7 @@
     },
     "readyWhen": {
       "type": "string",
-      "description": "String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is done when all the child processes complete."
+      "description": "String to appear in `stdout` or `stderr` that indicates that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete."
     },
     "args": {
       "type": "string",
@@ -72,7 +77,7 @@
     },
     "cwd": {
       "type": "string",
-      "description": "Current working directory of the commands."
+      "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
     }
   },
   "additionalProperties": true,

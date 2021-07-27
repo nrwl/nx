@@ -1,14 +1,14 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '@nrwl/tao/src/shared/package-manager';
-
+import type { PackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { joinPathFragments } from '../utils/path';
 
-let storedPackageJsonValue;
+let storedPackageJsonValue: string;
 
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
@@ -21,11 +21,12 @@ export function installPackagesTask(
   host: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
-  packageManager?: string
-) {
-  const packageJsonValue = host
-    .read(joinPathFragments(cwd, 'package.json'))
-    .toString();
+  packageManager: PackageManager = detectPackageManager(cwd)
+): void {
+  const packageJsonValue = host.read(
+    joinPathFragments(cwd, 'package.json'),
+    'utf-8'
+  );
   if (
     host
       .listChanges()
@@ -34,11 +35,8 @@ export function installPackagesTask(
   ) {
     // Don't install again if install was already executed with package.json
     if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
-      storedPackageJsonValue = host
-        .read(joinPathFragments(cwd, 'package.json'))
-        .toString();
-      const pm = packageManager || detectPackageManager(cwd);
-      const pmc = getPackageManagerCommand(pm);
+      storedPackageJsonValue = packageJsonValue;
+      const pmc = getPackageManagerCommand(packageManager);
       execSync(pmc.install, {
         cwd: join(host.root, cwd),
         stdio: [0, 1, 2],

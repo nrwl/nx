@@ -7,6 +7,13 @@
     "uiFramework": {
       "type": "string",
       "description": "Storybook framework npm package",
+      "enum": [
+        "@storybook/angular",
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue"
+      ],
       "default": "@storybook/angular",
       "hidden": true
     },
@@ -20,7 +27,7 @@
       "description": "Host to listen on.",
       "default": "localhost"
     },
-    "ssl": {
+    "https": {
       "type": "boolean",
       "description": "Serve using HTTPS.",
       "default": false

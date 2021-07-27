@@ -9,7 +9,7 @@ import {
  * Insert a statement after the last import statement in a file
  */
 export function insertStatement(tree: Tree, path: string, statement: string) {
-  const contents = tree.read(path).toString();
+  const contents = tree.read(path, 'utf-8');
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
 
@@ -20,7 +20,7 @@ export function insertStatement(tree: Tree, path: string, statement: string) {
       : 0;
 
   if (importStatements.length > 0) {
-    statement = '\n' + statement;
+    statement = `\n${statement}`;
   }
 
   const newContents = applyChangesToString(contents, [

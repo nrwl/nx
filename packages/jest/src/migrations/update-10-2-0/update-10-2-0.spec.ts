@@ -59,7 +59,7 @@ describe('update 10.2.0', () => {
     );
   });
 
-  it('should remove setupFile and tsconfig in test architect from workspace.json', async (done) => {
+  it('should remove setupFile and tsconfig in test architect from workspace.json', async () => {
     const result = await schematicRunner
       .runSchematicAsync('update-10.2.0', {}, initialTree)
       .toPromise();
@@ -73,6 +73,5 @@ describe('update 10.2.0', () => {
       jestConfig: expect.anything(),
       passWithNoTests: expect.anything(),
     });
-    done();
   });
 });

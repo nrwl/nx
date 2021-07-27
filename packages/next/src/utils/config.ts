@@ -1,3 +1,4 @@
+import { ExecutorContext, offsetFromRoot } from '@nrwl/devkit';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
@@ -5,20 +6,31 @@ import {
   PHASE_PRODUCTION_SERVER,
 } from 'next/dist/next-server/lib/constants';
 import loadConfig from 'next/dist/next-server/server/config';
+import { NextConfig } from 'next/dist/next-server/server/config-shared';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { FileReplacement, NextBuildBuilderOptions } from './types';
-import { BuilderContext } from '@angular-devkit/architect';
-import { offsetFromRoot } from '@nrwl/devkit';
+import {
+  FileReplacement,
+  NextBuildBuilderOptions,
+  WebpackConfigOptions,
+} from './types';
 import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
+import { WithNxOptions } from '../../plugins/with-nx';
+import {
+  computeCompilerOptionsPaths,
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
 export function createWebpackConfig(
   workspaceRoot: string,
   projectRoot: string,
   fileReplacements: FileReplacement[] = [],
-  assets: any = null
+  assets: any = null,
+  nxConfigOptions: WebpackConfigOptions = {},
+  dependencies: DependentBuildableProjectNode[] = []
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
@@ -32,11 +44,27 @@ export function createWebpackConfig(
       defaultLoaders: any;
     }
   ): Configuration {
+    // default `svgr` to `true`, as it used to be supported by default,
+    // before this option was introduced
+    if (typeof nxConfigOptions.svgr === 'undefined') {
+      nxConfigOptions.svgr = true;
+    }
+
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
+    let tsConfigPath = join(projectRoot, 'tsconfig.json');
+    if (dependencies.length > 0) {
+      tsConfigPath = createTmpTsConfig(
+        join(workspaceRoot, tsConfigPath),
+        workspaceRoot,
+        projectRoot,
+        dependencies
+      );
+    }
+
     config.resolve.plugins = [
       new TsconfigPathsPlugin({
-        configFile: resolve(workspaceRoot, projectRoot, 'tsconfig.json'),
+        configFile: tsConfigPath,
         extensions,
         mainFields,
       }),
@@ -52,19 +80,19 @@ export function createWebpackConfig(
         return alias;
       }, config.resolve.alias);
 
-    config.module.rules.push(
-      {
-        test: /\.tsx?$/,
-        use: [defaultLoaders.babel],
-      },
-      {
+    config.module.rules.push({
+      test: /\.([jt])sx?$/,
+      exclude: /node_modules/,
+      use: [defaultLoaders.babel],
+    });
+
+    if (nxConfigOptions.svgr) {
+      config.module.rules.push({
         test: /\.svg$/,
         oneOf: [
           // If coming from JS/TS file, then transform into React component using SVGR.
           {
-            issuer: {
-              test: /\.[jt]sx?$/,
-            },
+            issuer: /\.[jt]sx?$/,
             use: [
               {
                 loader: require.resolve('@svgr/webpack'),
@@ -83,21 +111,9 @@ export function createWebpackConfig(
               },
             ],
           },
-          // Fallback to plain URL loader.
-          {
-            use: [
-              {
-                loader: require.resolve('url-loader'),
-                options: {
-                  limit: 10000, // 10kB
-                  name: '[name].[hash:7].[ext]',
-                },
-              },
-            ],
-          },
         ],
-      }
-    );
+      });
+    }
 
     // Copy (shared) assets to `public` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
@@ -115,29 +131,66 @@ export function createWebpackConfig(
   };
 }
 
-export function prepareConfig(
+export async function prepareConfig(
   phase:
     | typeof PHASE_PRODUCTION_BUILD
     | typeof PHASE_EXPORT
     | typeof PHASE_DEVELOPMENT_SERVER
     | typeof PHASE_PRODUCTION_SERVER,
   options: NextBuildBuilderOptions,
-  context: BuilderContext
+  context: ExecutorContext,
+  dependencies: DependentBuildableProjectNode[]
 ) {
-  const config = loadConfig(phase, options.root, null);
+  const config = (await loadConfig(phase, options.root, null)) as NextConfig &
+    WithNxOptions;
   const userWebpack = config.webpack;
-  const userNextConfig = options.nextConfig
-    ? require(options.nextConfig)
-    : (_, x) => x;
+  const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
   // Yes, these do have different capitalisation...
   config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
-  config.distDir = join(config.outdir, '.next');
+  config.distDir =
+    config.distDir && config.distDir !== '.next'
+      ? config.distDir
+      : join(config.outdir, '.next');
   config.webpack = (a, b) =>
     createWebpackConfig(
-      context.workspaceRoot,
+      context.root,
       options.root,
       options.fileReplacements,
-      options.assets
+      options.assets,
+      config.nx,
+      dependencies
     )(userWebpack ? userWebpack(a, b) : a, b);
+
+  if (typeof userNextConfig !== 'function') {
+    throw new Error(
+      `Module specified by 'nextConfig' option does not export a function. It should be of form 'module.exports = (phase, config, options) => config;'`
+    );
+  }
+
   return userNextConfig(phase, config, { options });
+}
+
+function getConfigEnhancer(
+  pluginPath: undefined | string,
+  workspaceRoot: string
+) {
+  if (!pluginPath) {
+    return (_, x) => x;
+  }
+
+  let fullPath: string;
+
+  try {
+    fullPath = require.resolve(pluginPath);
+  } catch {
+    fullPath = join(workspaceRoot, pluginPath);
+  }
+
+  try {
+    return require(fullPath);
+  } catch {
+    throw new Error(
+      `Could not find file specified by 'nextConfig' option: ${fullPath}`
+    );
+  }
 }

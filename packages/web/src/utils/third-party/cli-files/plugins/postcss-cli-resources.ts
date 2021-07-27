@@ -14,16 +14,13 @@ import * as webpack from 'webpack';
 function wrapUrl(url: string): string {
   let wrappedUrl;
   const hasSingleQuotes = url.indexOf("'") >= 0;
-
   if (hasSingleQuotes) {
     wrappedUrl = `"${url}"`;
   } else {
     wrappedUrl = `'${url}'`;
   }
-
   return `url(${wrappedUrl})`;
 }
-
 export interface PostcssCliResourcesOptions {
   baseHref?: string;
   deployUrl?: string;
@@ -39,14 +36,12 @@ async function resolve(
   resolver: (file: string, base: string) => Promise<string>
 ): Promise<string> {
   try {
-    return await resolver('./' + file, base);
+    return await resolver(`./${file}`, base);
   } catch {
     return resolver(file, base);
   }
 }
-
 module.exports.postcss = true;
-
 export default (options: PostcssCliResourcesOptions) => {
   const {
     deployUrl = '',
@@ -56,9 +51,7 @@ export default (options: PostcssCliResourcesOptions) => {
     filename,
     loader,
   } = options;
-
   const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
-
   const process = async (
     inputUrl: string,
     context: string,
@@ -68,27 +61,22 @@ export default (options: PostcssCliResourcesOptions) => {
     if (/^((?:\w+:)?\/\/|data:|chrome:|#)/.test(inputUrl)) {
       return inputUrl;
     }
-
     if (!rebaseRootRelative && /^\//.test(inputUrl)) {
       return inputUrl;
     }
-
     // If starts with a caret, remove and return remainder
     // this supports bypassing asset processing
     if (inputUrl.startsWith('^')) {
       return inputUrl.substr(1);
     }
-
     const cacheKey = path.resolve(context, inputUrl);
     const cachedUrl = resourceCache.get(cacheKey);
     if (cachedUrl) {
       return cachedUrl;
     }
-
     if (inputUrl.startsWith('~')) {
       inputUrl = inputUrl.substr(1);
     }
-
     if (inputUrl.startsWith('/')) {
       let outputUrl = '';
       if (deployUrl.match(/:\/\//) || deployUrl.startsWith('/')) {
@@ -103,32 +91,25 @@ export default (options: PostcssCliResourcesOptions) => {
         // Join together base-href, deploy-url and the original URL.
         outputUrl = dedupeSlashes(`/${baseHref}/${deployUrl}/${inputUrl}`);
       }
-
       resourceCache.set(cacheKey, outputUrl);
-
       return outputUrl;
     }
-
     const { pathname, hash, search } = url.parse(inputUrl.replace(/\\/g, '/'));
     const resolver = (file: string, base: string) =>
       new Promise<string>((resolve, reject) => {
         loader.resolve(base, decodeURI(file), (err, result) => {
           if (err) {
             reject(err);
-
             return;
           }
           resolve(result);
         });
       });
-
     const result = await resolve(pathname as string, context, resolver);
-
     return new Promise<string>((resolve, reject) => {
       loader.fs.readFile(result, (err: Error, content: Buffer) => {
         if (err) {
           reject(err);
-
           return;
         }
 
@@ -137,32 +118,26 @@ export default (options: PostcssCliResourcesOptions) => {
           filename,
           { content }
         );
-
         if (resourcesOutputPath) {
           outputPath = path.posix.join(resourcesOutputPath, outputPath);
         }
-
         loader.addDependency(result);
         loader.emitFile(outputPath, content, undefined);
-
         let outputUrl = outputPath.replace(/\\/g, '/');
         if (hash || search) {
           outputUrl = url.format({ pathname: outputUrl, hash, search });
         }
-
         if (
           deployUrl &&
           loader.loaders[loader.loaderIndex].options.ident !== 'extracted'
         ) {
           outputUrl = url.resolve(deployUrl, outputUrl);
         }
-
         resourceCache.set(cacheKey, outputUrl);
         resolve(outputUrl);
       });
     });
   };
-
   return {
     postcssPlugin: 'postcss-cli-resources',
     Once(root) {
@@ -176,28 +151,22 @@ export default (options: PostcssCliResourcesOptions) => {
           urlDeclarations.push(decl);
         }
       });
-
       if (urlDeclarations.length === 0) {
         return;
       }
-
       const resourceCache = new Map<string, string>();
-
       return Promise.all(
         urlDeclarations.map(async (decl) => {
           const value = decl.value;
           const urlRegex = /url\(\s*(?:"([^"]+)"|'([^']+)'|(.+?))\s*\)/g;
           const segments: string[] = [];
-
           let match;
           let lastIndex = 0;
           let modified = false;
-
           // We want to load it relative to the file that imports
           const inputFile = decl.source && decl.source.input.file;
           const context =
             (inputFile && path.dirname(inputFile)) || loader.context;
-
           // tslint:disable-next-line:no-conditional-assignment
           while ((match = urlRegex.exec(value))) {
             const originalUrl = match[1] || match[2] || match[3];
@@ -210,25 +179,20 @@ export default (options: PostcssCliResourcesOptions) => {
               );
               continue;
             }
-
             if (lastIndex < match.index) {
               segments.push(value.slice(lastIndex, match.index));
             }
-
             if (!processedUrl || originalUrl === processedUrl) {
               segments.push(match[0]);
             } else {
               segments.push(wrapUrl(processedUrl));
               modified = true;
             }
-
             lastIndex = match.index + match[0].length;
           }
-
           if (lastIndex < value.length) {
             segments.push(value.slice(lastIndex));
           }
-
           if (modified) {
             decl.value = segments.join('');
           }

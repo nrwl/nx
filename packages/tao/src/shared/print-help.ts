@@ -3,7 +3,7 @@ import * as chalk from 'chalk';
 import { logger, stripIndent } from '../shared/logger';
 
 function formatOption(name: string, description: string) {
-  return `  --${(name + '                     ').substr(0, 22)}${chalk.grey(
+  return `  --${`${name}                     `.substr(0, 22)}${chalk.grey(
     description
   )}`;
 }
@@ -24,7 +24,7 @@ export function printHelp(header: string, schema: Schema) {
 
   logger.info(
     stripIndent(`
-${chalk.bold(header + positional + ' [options,...]')}
+${chalk.bold(`${header + positional} [options,...]`)}
 
 ${chalk.bold('Options')}:
 ${args}

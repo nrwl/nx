@@ -1,20 +1,23 @@
-import * as mergeWebpack from 'webpack-merge';
 // TODO @FrozenPandaz we should remove the following imports
 import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
 import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
-import { Configuration } from 'webpack';
 import { basename, resolve, posix } from 'path';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { getBaseWebpackPartial } from './config';
+import { LegacyIndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/legacy-index-html-webpack-plugin';
 import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-html-webpack-plugin';
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
+import postcssImports = require('postcss-import');
+import * as path from 'path';
+import { sassImplementation } from './sass';
 
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+// TODO(jack): Remove this in Nx 13
+type Configuration = any;
 
 export function getWebConfig(
   root,
@@ -24,16 +27,18 @@ export function getWebConfig(
   isScriptOptimizeOn?: boolean,
   configuration?: string
 ) {
+  // TODO(jack): Remove this in Nx 13 and go back to proper import
+  const { webpackMerge } = require('../webpack/entry');
+
   const tsConfig = readTsConfig(options.tsConfig);
 
   if (isScriptOptimizeOn) {
     // Angular CLI uses an environment variable (NG_BUILD_DIFFERENTIAL_FULL)
     // to determine whether to use the scriptTargetOverride
     // or the tsConfig target
-    // We want to force the target if overriden
+    // We want to force the target if overridden
     tsConfig.options.target = ScriptTarget.ES5;
   }
-
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),
@@ -43,8 +48,14 @@ export function getWebConfig(
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
-  return mergeWebpack([
-    _getBaseWebpackPartial(options, esm, isScriptOptimizeOn, configuration),
+  return webpackMerge([
+    _getBaseWebpackPartial(
+      options,
+      esm,
+      isScriptOptimizeOn,
+      tsConfig.options.emitDecoratorMetadata,
+      configuration
+    ),
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco, options),
     getCommonPartial(wco),
@@ -58,6 +69,7 @@ function getBrowserPartial(
   isScriptOptimizeOn: boolean
 ) {
   const config = getBrowserConfig(wco);
+  const { isWebpack5 } = require('../webpack/entry');
 
   if (!isScriptOptimizeOn) {
     const {
@@ -70,15 +82,26 @@ function getBrowserPartial(
     } = options;
 
     config.plugins.push(
-      new IndexHtmlWebpackPlugin({
-        input: resolve(wco.root, index),
-        output: basename(index),
-        baseHref,
-        entrypoints: generateEntryPoints({ scripts, styles }),
-        deployUrl: deployUrl,
-        sri: subresourceIntegrity,
-        noModuleEntrypoints: ['polyfills-es5'],
-      })
+      isWebpack5
+        ? new IndexHtmlWebpackPlugin({
+            indexPath: resolve(wco.root, index),
+            outputPath: basename(index),
+            baseHref,
+            entrypoints: generateEntryPoints({ scripts, styles }),
+            deployUrl,
+            sri: subresourceIntegrity,
+            moduleEntrypoints: [],
+            noModuleEntrypoints: ['polyfills-es5'],
+          })
+        : new LegacyIndexHtmlWebpackPlugin({
+            input: resolve(wco.root, index),
+            output: basename(index),
+            baseHref,
+            entrypoints: generateEntryPoints({ scripts, styles }),
+            deployUrl,
+            sri: subresourceIntegrity,
+            noModuleEntrypoints: ['polyfills-es5'],
+          })
     );
   }
 
@@ -89,12 +112,14 @@ function _getBaseWebpackPartial(
   options: WebBuildBuilderOptions,
   esm: boolean,
   isScriptOptimizeOn: boolean,
+  emitDecoratorMetadata: boolean,
   configuration?: string
 ) {
   let partial = getBaseWebpackPartial(
     options,
     esm,
     isScriptOptimizeOn,
+    emitDecoratorMetadata,
     configuration
   );
   delete partial.resolve.mainFields;
@@ -104,7 +129,6 @@ function _getBaseWebpackPartial(
 function getCommonPartial(wco: any): Configuration {
   const commonConfig: Configuration = <Configuration>getCommonConfig(wco);
   delete commonConfig.entry;
-  // delete commonConfig.devtool;
   delete commonConfig.resolve.modules;
   delete commonConfig.resolve.extensions;
   delete commonConfig.output.path;
@@ -116,7 +140,19 @@ function getStylesPartial(
   wco: any,
   options: WebBuildBuilderOptions
 ): Configuration {
-  const partial = getStylesConfig(wco);
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const { MiniCssExtractPlugin } = require('../webpack/entry');
+
+  const includePaths: string[] = [];
+
+  if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
+    options.stylePreprocessorOptions.includePaths.forEach(
+      (includePath: string) =>
+        includePaths.push(path.resolve(wco.root, includePath))
+    );
+  }
+
+  const partial = getStylesConfig(wco, includePaths);
   const rules = partial.module.rules.map((rule) => {
     if (!Array.isArray(rule.use)) {
       return rule;
@@ -159,6 +195,38 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
+            {
+              loader: require.resolve('postcss-loader'),
+              options: {
+                implementation: require('postcss'),
+                postcssOptions: (loader) => ({
+                  plugins: [
+                    postcssImports({
+                      addModulesDirectories: includePaths,
+                      resolve: (url: string) =>
+                        url.startsWith('~') ? url.substr(1) : url,
+                      load: (filename: string) => {
+                        return new Promise<string>((resolve, reject) => {
+                          loader.fs.readFile(
+                            filename,
+                            (err: Error, data: Buffer) => {
+                              if (err) {
+                                reject(err);
+
+                                return;
+                              }
+
+                              const content = data.toString();
+                              resolve(content);
+                            }
+                          );
+                        });
+                      },
+                    }),
+                  ],
+                }),
+              },
+            },
           ],
         },
         {
@@ -173,7 +241,17 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
-            { loader: require.resolve('sass-loader') },
+            {
+              loader: require.resolve('sass-loader'),
+              options: {
+                implementation: sassImplementation,
+                sassOptions: {
+                  fiber: false,
+                  precision: 8,
+                  includePaths,
+                },
+              },
+            },
           ],
         },
         {
@@ -188,7 +266,12 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
-            { loader: require.resolve('less-loader') },
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                paths: includePaths,
+              },
+            },
           ],
         },
         {
@@ -203,7 +286,12 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
-            { loader: require.resolve('stylus-loader') },
+            {
+              loader: require.resolve('stylus-loader'),
+              options: {
+                paths: includePaths,
+              },
+            },
           ],
         },
         ...rules,
@@ -265,7 +353,7 @@ function getCSSModuleLocalIdent(context, localIdentName, localName, options) {
   // Use loaderUtils to find the file or folder name
   const className = interpolateName(
     context,
-    fileNameOrFolder + '_' + localName + '__' + hash,
+    `${fileNameOrFolder}_${localName}__${hash}`,
     options
   );
   // Remove the .module that appears in every classname when based on the file and replace all "." with "_".

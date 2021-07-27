@@ -14,7 +14,7 @@ describe('checkDestination', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
@@ -34,7 +34,10 @@ describe('checkDestination', () => {
   });
 
   it('should throw an error if the path already exists', async () => {
-    await libraryGenerator(tree, { name: 'my-other-lib' });
+    await libraryGenerator(tree, {
+      name: 'my-other-lib',
+      standaloneConfig: false,
+    });
 
     const schema: Schema = {
       projectName: 'my-lib',
@@ -61,18 +64,5 @@ describe('checkDestination', () => {
     expect(() => {
       checkDestination(tree, schema, projectConfig);
     }).not.toThrow();
-  });
-
-  it('should normalize the destination', async () => {
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: '/my-other-lib//wibble',
-      importPath: undefined,
-      updateImportPath: true,
-    };
-
-    checkDestination(tree, schema, projectConfig);
-
-    expect(schema.destination).toBe('my-other-lib/wibble');
   });
 });

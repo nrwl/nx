@@ -15,7 +15,6 @@ import {
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
-  webpackTypesVersion,
 } from '../../utils/versions';
 import { isFramework } from '../../utils/utilities';
 import { Schema } from './schema';
@@ -29,7 +28,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   // base deps
   devDependencies['@nrwl/storybook'] = nxVersion;
-  devDependencies['@types/webpack'] = webpackTypesVersion;
 
   /**
    * If Storybook already exists, do NOT update it to the latest version.
@@ -37,10 +35,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
    */
 
   if (
-    !packageJson.dependencies['@storybook/addon-knobs'] &&
-    !packageJson.devDependencies['@storybook/addon-knobs']
+    !packageJson.dependencies['@storybook/addon-essentials'] &&
+    !packageJson.devDependencies['@storybook/addon-essentials']
   ) {
-    devDependencies['@storybook/addon-knobs'] = storybookVersion;
+    devDependencies['@storybook/addon-essentials'] = storybookVersion;
   }
 
   if (isFramework('angular', schema)) {
@@ -49,6 +47,20 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       !packageJson.devDependencies['@storybook/angular']
     ) {
       devDependencies['@storybook/angular'] = storybookVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/builder-webpack5'] &&
+      !packageJson.devDependencies['@storybook/builder-webpack5']
+    ) {
+      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/manager-webpack5'] &&
+      !packageJson.devDependencies['@storybook/manager-webpack5']
+    ) {
+      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
     }
 
     if (
@@ -77,6 +89,14 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   if (isFramework('html', schema)) {
     devDependencies['@storybook/html'] = storybookVersion;
+  }
+
+  if (isFramework('vue', schema)) {
+    devDependencies['@storybook/vue'] = storybookVersion;
+  }
+
+  if (isFramework('web-components', schema)) {
+    devDependencies['@storybook/web-components'] = storybookVersion;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);

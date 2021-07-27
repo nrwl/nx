@@ -9,6 +9,7 @@ import {
   names,
   getPackageManagerCommand,
   WorkspaceJsonConfiguration,
+  PackageManager,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -17,7 +18,6 @@ import { spawn, SpawnOptions } from 'child_process';
 
 import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 
 export enum Preset {
   Empty = 'empty',
@@ -30,6 +30,7 @@ export enum Preset {
   NextJs = 'next',
   Gatsby = 'gatsby',
   Nest = 'nest',
+  Express = 'express',
 }
 
 export interface Schema {
@@ -46,7 +47,7 @@ export interface Schema {
   commit?: { name: string; email: string; message?: string };
   defaultBase: string;
   linter: 'tslint' | 'eslint';
-  packageManager?: 'npm' | 'yarn' | 'pnpm';
+  packageManager?: PackageManager;
 }
 
 function generatePreset(host: Tree, opts: Schema) {
@@ -72,7 +73,7 @@ function generatePreset(host: Tree, opts: Schema) {
     `--cli=${cliCommand}`,
     parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
   ].filter((e) => !!e);
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     spawn(executable, args, spawnOptions).on('close', (code: number) => {
       if (code === 0) {
         resolve();
@@ -112,7 +113,7 @@ async function initializeGitRepo(
           : {}),
       },
     };
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       spawn('git', args, spawnOptions).on('close', (code) => {
         if (code === 0) {
           resolve();
@@ -170,6 +171,16 @@ export async function newGenerator(host: Tree, options: Schema) {
   }
 
   options = normalizeOptions(options);
+
+  if (
+    host.exists(options.name) &&
+    !host.isFile(options.name) &&
+    host.children(options.name).length > 0
+  ) {
+    throw new Error(
+      `${join(host.root, options.name)} is not an empty directory.`
+    );
+  }
 
   const layout: 'packages' | 'apps-and-libs' =
     options.preset === 'oss' ? 'packages' : 'apps-and-libs';
@@ -244,11 +255,17 @@ const presetDependencies: Omit<
       '@nrwl/nest': nxVersion,
     },
   },
-  [Preset.NextJs]: {
+  [Preset.Express]: {
     dependencies: {},
     dev: {
+      '@nrwl/express': nxVersion,
+    },
+  },
+  [Preset.NextJs]: {
+    dependencies: {
       '@nrwl/next': nxVersion,
     },
+    dev: {},
   },
   [Preset.Gatsby]: {
     dependencies: {},

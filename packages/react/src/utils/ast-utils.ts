@@ -498,8 +498,9 @@ export function getComponentPropsInterface(
     );
 
     if (propsParam && propsParam.type) {
-      propsTypeName = ((propsParam.type as ts.TypeReferenceNode)
-        .typeName as ts.Identifier).text;
+      propsTypeName = (
+        (propsParam.type as ts.TypeReferenceNode).typeName as ts.Identifier
+      ).text;
     }
   } else if (
     (cmpDeclaration as ts.VariableDeclaration).initializer &&
@@ -513,8 +514,9 @@ export function getComponentPropsInterface(
     );
 
     if (propsParam && propsParam.type) {
-      propsTypeName = ((propsParam.type as ts.TypeReferenceNode)
-        .typeName as ts.Identifier).text;
+      propsTypeName = (
+        (propsParam.type as ts.TypeReferenceNode).typeName as ts.Identifier
+      ).text;
     }
   } else if (
     // do we have a class component extending from React.Component
@@ -525,17 +527,17 @@ export function getComponentPropsInterface(
     const heritageClause = cmpDeclaration.heritageClauses[0];
 
     if (heritageClause) {
-      const propsTypeExpression = heritageClause.types.find(
-        (x) =>
-          (x.expression as ts.PropertyAccessExpression).name.text ===
-            'Component' ||
-          (x.expression as ts.PropertyAccessExpression).name.text ===
-            'PureComponent'
-      );
+      const propsTypeExpression = heritageClause.types.find((x) => {
+        const name =
+          (x.expression as ts.Identifier).escapedText ||
+          (x.expression as ts.PropertyAccessExpression).name.text;
+        return name === 'Component' || name === 'PureComponent';
+      });
 
       if (propsTypeExpression && propsTypeExpression.typeArguments) {
-        propsTypeName = (propsTypeExpression
-          .typeArguments[0] as ts.TypeReferenceNode).typeName.getText();
+        propsTypeName = (
+          propsTypeExpression.typeArguments[0] as ts.TypeReferenceNode
+        ).typeName.getText();
       }
     }
   } else {

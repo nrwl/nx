@@ -64,7 +64,7 @@
     },
     "copyFiles": {
       "type": "string",
-      "description": "DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder",
+      "description": "A regex string that is used to choose what additional integration files to copy to the dist folder",
       "x-deprecated": true
     },
     "ciBuildId": {
@@ -86,6 +86,17 @@
     "reporterOptions": {
       "type": "string",
       "description": "The reporter options used. Supported options depend on the reporter."
+    },
+    "skipServe": {
+      "type": "boolean",
+      "description": "Skip dev-server build.",
+      "default": false
+    },
+    "testingType": {
+      "type": "string",
+      "description": "Specify the type of tests to execute",
+      "enum": ["component", "e2e"],
+      "default": "e2e"
     }
   },
   "additionalProperties": true,

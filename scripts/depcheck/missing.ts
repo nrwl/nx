@@ -7,19 +7,23 @@ const IGNORE_MATCHES = {
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
     '@angular-devkit/core',
+    '@angular/compiler',
     '@angular/compiler-cli',
     '@angular/core',
     '@angular/router',
     '@ngrx/effects',
     '@ngrx/router-store',
     '@ngrx/store',
+    '@storybook/angular',
     'injection-js',
     'ng-packagr',
     'rxjs',
+    'semver',
   ],
   cli: ['@nrwl/cli'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
+  'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   gatsby: ['@angular-devkit/architect', 'babel-preset-gatsby', 'rxjs'],
   jest: [
     'jest',
@@ -27,7 +31,15 @@ const IGNORE_MATCHES = {
     'identity-obj-proxy',
     '@angular-devkit/schematics',
   ],
-  linter: ['eslint', '@angular-devkit/schematics', '@angular-devkit/architect'],
+  linter: [
+    'eslint',
+    '@angular-devkit/schematics',
+    '@angular-devkit/architect',
+    // Installed and uninstalled dynamically when the conversion generator runs
+    'tslint-to-eslint-config',
+    // Resolved from the end user's own workspace installation dynamically
+    '@typescript-eslint/eslint-plugin',
+  ],
   next: [
     '@angular-devkit/architect',
     '@nrwl/devkit',
@@ -51,6 +63,7 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/schematics',
     '@storybook/addon-knobs',
+    '@storybook/addon-essentials',
     '@storybook/core',
     'rxjs',
   ],
@@ -84,6 +97,32 @@ export default async function getMissingDependencies(
   verbose: boolean
 ) {
   const options: any = {
+    /**
+     * If a dependency is exclusively used via a TypeScript type import
+     * e.g. `import type { Foo } from 'bar';`
+     * ...then we do not want it to trigger a missing dependency warning
+     * because it is not required at runtime.
+     *
+     * We can achieve this by overriding the default detector for
+     * ImportDeclaration nodes to check the `importKind` value.
+     */
+    detectors: [
+      ...Object.entries(depcheck.detector).map(([detectorName, detectorFn]) => {
+        // Use all the default detectors, apart from 'importDeclaration'
+        if (detectorName !== 'importDeclaration') {
+          return detectorFn;
+        }
+        const customImportDeclarationDetector: depcheck.Detector = (node) => {
+          return node.type === 'ImportDeclaration' &&
+            node.source &&
+            node.source.value &&
+            node.importKind !== 'type'
+            ? [node.source.value]
+            : [];
+        };
+        return customImportDeclarationDetector;
+      }),
+    ],
     skipMissing: false, // skip calculation of missing dependencies
     ignorePatterns: [
       '*.d.ts',

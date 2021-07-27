@@ -1,0 +1,247 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 1`] = `
+"
+      /* eslint-disable */
+      eval('');
+    "
+`;
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 2`] = `
+"
+      // eslint-disable-next-line
+      eval('');
+    "
+`;
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 3`] = `
+"
+      /* eslint-disable @typescript-eslint/quotes */
+      eval('');
+    "
+`;
+
+exports[`convertToESLintConfig() should work for a non-Angular project tslint.json file 1`] = `
+Object {
+  "convertedESLintConfig": Object {
+    "env": Object {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": Object {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": Array [
+      "@typescript-eslint",
+    ],
+  },
+  "ensureESLintPlugins": Array [],
+  "unconvertedTSLintRules": Array [],
+}
+`;
+
+exports[`convertToESLintConfig() should work for a project tslint.json file 1`] = `
+Object {
+  "convertedESLintConfig": Object {
+    "env": Object {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": Object {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": Array [
+      "@angular-eslint/eslint-plugin",
+      "@typescript-eslint",
+    ],
+    "rules": Object {
+      "@angular-eslint/component-selector": Array [
+        "error",
+        Object {
+          "prefix": "angular-app",
+          "style": "kebab-case",
+          "type": "element",
+        },
+      ],
+      "@angular-eslint/directive-selector": Array [
+        "error",
+        Object {
+          "prefix": "angular-app",
+          "style": "camelCase",
+          "type": "attribute",
+        },
+      ],
+    },
+  },
+  "ensureESLintPlugins": Array [],
+  "unconvertedTSLintRules": Array [],
+}
+`;
+
+exports[`convertToESLintConfig() should work for a root tslint.json file 1`] = `
+Object {
+  "convertedESLintConfig": Object {
+    "env": Object {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": Object {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": Array [
+      "eslint-plugin-import",
+      "@angular-eslint/eslint-plugin",
+      "@angular-eslint/eslint-plugin-template",
+      "@typescript-eslint",
+    ],
+    "rules": Object {
+      "@angular-eslint/component-selector": Array [
+        "error",
+        Object {
+          "prefix": "app",
+          "style": "kebab-case",
+          "type": "element",
+        },
+      ],
+      "@angular-eslint/directive-selector": Array [
+        "error",
+        Object {
+          "prefix": "app",
+          "style": "camelCase",
+          "type": "attribute",
+        },
+      ],
+      "@angular-eslint/no-conflicting-lifecycle": "error",
+      "@angular-eslint/no-host-metadata-property": "error",
+      "@angular-eslint/no-input-rename": "error",
+      "@angular-eslint/no-inputs-metadata-property": "error",
+      "@angular-eslint/no-output-native": "error",
+      "@angular-eslint/no-output-on-prefix": "error",
+      "@angular-eslint/no-output-rename": "error",
+      "@angular-eslint/no-outputs-metadata-property": "error",
+      "@angular-eslint/template/banana-in-box": "error",
+      "@angular-eslint/template/eqeqeq": "error",
+      "@angular-eslint/template/no-negated-async": "error",
+      "@angular-eslint/use-lifecycle-interface": "error",
+      "@angular-eslint/use-pipe-transform-interface": "error",
+      "@typescript-eslint/consistent-type-definitions": "error",
+      "@typescript-eslint/dot-notation": "off",
+      "@typescript-eslint/explicit-member-accessibility": Array [
+        "off",
+        Object {
+          "accessibility": "explicit",
+        },
+      ],
+      "@typescript-eslint/member-ordering": "error",
+      "@typescript-eslint/naming-convention": "error",
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-empty-interface": "error",
+      "@typescript-eslint/no-inferrable-types": Array [
+        "error",
+        Object {
+          "ignoreParameters": true,
+        },
+      ],
+      "@typescript-eslint/no-misused-new": "error",
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/no-shadow": Array [
+        "error",
+        Object {
+          "hoist": "all",
+        },
+      ],
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/prefer-function-type": "error",
+      "@typescript-eslint/unified-signatures": "error",
+      "arrow-body-style": "error",
+      "constructor-super": "error",
+      "eqeqeq": Array [
+        "error",
+        "smart",
+      ],
+      "guard-for-in": "error",
+      "id-blacklist": "off",
+      "id-match": "off",
+      "import/no-deprecated": "warn",
+      "no-bitwise": "error",
+      "no-caller": "error",
+      "no-console": Array [
+        "error",
+        Object {
+          "allow": Array [
+            "Console",
+            "_buffer",
+            "_counters",
+            "_groupDepth",
+            "_timers",
+            "assert",
+            "clear",
+            "count",
+            "countReset",
+            "dir",
+            "dirxml",
+            "error",
+            "group",
+            "groupCollapsed",
+            "groupEnd",
+            "log",
+            "table",
+            "timeLog",
+            "warn",
+          ],
+        },
+      ],
+      "no-debugger": "error",
+      "no-empty": "off",
+      "no-eval": "error",
+      "no-fallthrough": "error",
+      "no-new-wrappers": "error",
+      "no-restricted-imports": Array [
+        "error",
+        "rxjs/Rx",
+      ],
+      "no-throw-literal": "error",
+      "no-undef-init": "error",
+      "no-underscore-dangle": "off",
+      "no-var": "error",
+      "prefer-const": "error",
+      "radix": "error",
+    },
+  },
+  "ensureESLintPlugins": Array [
+    "eslint-plugin-import",
+  ],
+  "unconvertedTSLintRules": Array [],
+}
+`;
+
+exports[`convertToESLintConfig() should work for an e2e project tslint.json file 1`] = `
+Object {
+  "convertedESLintConfig": Object {
+    "env": Object {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": Object {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": Array [
+      "@typescript-eslint",
+    ],
+  },
+  "ensureESLintPlugins": Array [],
+  "unconvertedTSLintRules": Array [],
+}
+`;

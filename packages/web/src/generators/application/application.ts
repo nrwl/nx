@@ -24,7 +24,7 @@ import { cypressProjectGenerator } from '@nrwl/cypress';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 
-import { WebBuildBuilderOptions } from '../../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../../executors/build/build.impl';
 import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
@@ -149,7 +149,12 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   project = addBuildTarget(project, options);
   project = addServeTarget(project, options);
 
-  addProjectConfiguration(tree, options.projectName, project);
+  addProjectConfiguration(
+    tree,
+    options.projectName,
+    project,
+    options.standaloneConfig
+  );
 
   const workspace = readWorkspaceConfiguration(tree);
 
@@ -201,13 +206,14 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     ],
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
     skipFormat: true,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
   tasks.push(lintTask);
 
   if (options.e2eTestRunner === 'cypress') {
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
-      name: options.name + '-e2e',
+      name: `${options.name}-e2e`,
       directory: options.directory,
       project: options.projectName,
     });
@@ -255,7 +261,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    prefix: options.prefix ? options.prefix : defaultPrefix,
+    prefix: options.prefix ?? defaultPrefix,
     name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,

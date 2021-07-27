@@ -1,8 +1,13 @@
 import { runCLI } from 'jest';
+import { readConfig } from 'jest-config';
+import { utils as jestReporterUtils } from '@jest/reporters';
+import { makeEmptyAggregatedTestResult, addResult } from '@jest/test-result';
 import * as path from 'path';
 import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, TaskGraph } from '@nrwl/devkit';
+import { join } from 'path';
+import { getSummary } from './summary';
 
 try {
   require('dotenv').config();
@@ -18,21 +23,30 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  options.jestConfig = path.resolve(context.root, options.jestConfig);
+  const config = jestConfigParser(options, context);
 
-  const jestConfig: {
-    transform: any;
-    globals: any;
-    setupFilesAfterEnv: any;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-  } = require(options.jestConfig);
+  const { results } = await runCLI(config, [options.jestConfig]);
 
-  const transformers = Object.values<string>(jestConfig.transform || {});
-  if (transformers.includes('babel-jest') && transformers.includes('ts-jest')) {
-    throw new Error(
-      'Using babel-jest and ts-jest together is not supported.\n' +
-        'See ts-jest documentation for babel integration: https://kulshekhar.github.io/ts-jest/user/config/babelConfig'
-    );
+  return { success: results.success };
+}
+
+export function jestConfigParser(
+  options: JestExecutorOptions,
+  context: ExecutorContext,
+  multiProjects = false
+): Config.Argv {
+  let jestConfig:
+    | {
+        transform: any;
+        globals: any;
+        setupFilesAfterEnv: any;
+      }
+    | undefined;
+
+  if (!multiProjects) {
+    options.jestConfig = path.resolve(context.root, options.jestConfig);
+
+    jestConfig = require(options.jestConfig);
   }
 
   const config: Config.Argv = {
@@ -55,6 +69,7 @@ export async function jestExecutor(
     testLocationInResults: options.testLocationInResults,
     testNamePattern: options.testNamePattern,
     testPathPattern: options.testPathPattern,
+    testTimeout: options.testTimeout,
     colors: options.colors,
     verbose: options.verbose,
     testResultsProcessor: options.testResultsProcessor,
@@ -65,7 +80,7 @@ export async function jestExecutor(
   };
 
   // for backwards compatibility
-  if (options.setupFile) {
+  if (options.setupFile && !multiProjects) {
     const setupFilesAfterEnvSet = new Set([
       ...(jestConfig.setupFilesAfterEnv ?? []),
       path.resolve(context.root, options.setupFile),
@@ -107,9 +122,62 @@ export async function jestExecutor(
     config.coverageReporters = options.coverageReporters;
   }
 
-  const { results } = await runCLI(config, [options.jestConfig]);
-
-  return { success: results.success };
+  return config;
 }
 
 export default jestExecutor;
+
+export async function batchJest(
+  taskGraph: TaskGraph,
+  inputs: Record<string, JestExecutorOptions>,
+  overrides: JestExecutorOptions,
+  context: ExecutorContext
+): Promise<Record<string, { success: boolean; terminalOutput: string }>> {
+  const configPaths = taskGraph.roots.map((root) =>
+    path.resolve(context.root, inputs[root].jestConfig)
+  );
+
+  const { globalConfig, results } = await runCLI(
+    jestConfigParser(overrides, context, true),
+    [...configPaths]
+  );
+
+  const jestTaskExecutionResults: Record<
+    string,
+    { success: boolean; terminalOutput: string }
+  > = {};
+
+  const configs = await Promise.all(
+    configPaths.map(async (path) => readConfig({ $0: '', _: undefined }, path))
+  );
+
+  for (let i = 0; i < taskGraph.roots.length; i++) {
+    let root = taskGraph.roots[i];
+    const aggregatedResults = makeEmptyAggregatedTestResult();
+    aggregatedResults.startTime = results.startTime;
+
+    const projectRoot = join(context.root, taskGraph.tasks[root].projectRoot);
+
+    let resultOutput = '';
+    for (const testResult of results.testResults) {
+      if (testResult.testFilePath.startsWith(projectRoot)) {
+        addResult(aggregatedResults, testResult);
+        resultOutput +=
+          '\n\r' +
+          jestReporterUtils.getResultHeader(
+            testResult,
+            globalConfig,
+            configs[i].projectConfig
+          );
+      }
+    }
+    aggregatedResults.numTotalTestSuites = aggregatedResults.testResults.length;
+
+    jestTaskExecutionResults[root] = {
+      success: aggregatedResults.numFailedTests === 0,
+      terminalOutput: resultOutput + '\n\r\n\r' + getSummary(aggregatedResults),
+    };
+  }
+
+  return jestTaskExecutionResults;
+}

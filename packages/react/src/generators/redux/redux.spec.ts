@@ -16,6 +16,7 @@ describe('redux', () => {
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',
+      standaloneConfig: false,
     });
   });
 
@@ -54,6 +55,7 @@ describe('redux', () => {
         style: 'css',
         unitTestRunner: 'none',
         name: 'my-app',
+        standaloneConfig: false,
       });
       await reduxGenerator(appTree, {
         name: 'my-slice',
@@ -71,7 +73,7 @@ describe('redux', () => {
         appProject: 'my-app',
       });
 
-      const main = appTree.read('/apps/my-app/src/main.tsx').toString();
+      const main = appTree.read('/apps/my-app/src/main.tsx', 'utf-8');
       expect(main).toContain('@reduxjs/toolkit');
       expect(main).toContain('configureStore');
       expect(main).toContain('[THIRD_SLICE_FEATURE_KEY]: thirdSliceReducer,');

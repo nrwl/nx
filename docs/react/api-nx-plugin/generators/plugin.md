@@ -1,4 +1,4 @@
-# plugin
+# @nrwl/nx-plugin:plugin
 
 Create a Nx Plugin
 
@@ -32,6 +32,12 @@ nx g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Plugin name
+
 ### directory
 
 Alias(es): d
@@ -56,12 +62,6 @@ Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 
-### name
-
-Type: `string`
-
-Plugin name
-
 ### skipFormat
 
 Default: `false`
@@ -77,6 +77,14 @@ Default: `false`
 Type: `boolean`
 
 Do not update tsconfig.json for development experience.
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### tags
 

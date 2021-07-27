@@ -1,9 +1,6 @@
-import { Tree, ProjectConfiguration, getWorkspaceLayout } from '@nrwl/devkit';
-
+import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import * as path from 'path';
-
-import { Schema } from '../schema';
-import { getDestination, getNewProjectName } from './utils';
+import { NormalizedSchema } from '../schema';
 
 /**
  * Updates the project name and coverage folder in the jest.config.js if it exists
@@ -14,28 +11,25 @@ import { getDestination, getNewProjectName } from './utils';
  */
 export function updateJestConfig(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  const destination = getDestination(tree, schema, project);
-  const newProjectName = getNewProjectName(schema.destination);
+  const jestConfigPath = path.join(
+    schema.relativeToRootDestination,
+    'jest.config.js'
+  );
 
-  const jestConfigPath = path.join(destination, 'jest.config.js');
+  if (tree.exists(jestConfigPath)) {
+    const oldContent = tree.read(jestConfigPath, 'utf-8');
 
-  if (!tree.exists(jestConfigPath)) {
-    // nothing to do
-    return;
+    const findName = new RegExp(`'${schema.projectName}'`, 'g');
+    const findDir = new RegExp(project.root, 'g');
+
+    const newContent = oldContent
+      .replace(findName, `'${schema.newProjectName}'`)
+      .replace(findDir, schema.relativeToRootDestination);
+    tree.write(jestConfigPath, newContent);
   }
-
-  const oldContent = tree.read(jestConfigPath).toString('utf-8');
-
-  const findName = new RegExp(`'${schema.projectName}'`, 'g');
-  const findDir = new RegExp(project.root, 'g');
-
-  const newContent = oldContent
-    .replace(findName, `'${newProjectName}'`)
-    .replace(findDir, destination);
-  tree.write(jestConfigPath, newContent);
 
   // update root jest.config.js
   const rootJestConfigPath = '/jest.config.js';
@@ -44,19 +38,15 @@ export function updateJestConfig(
     return;
   }
 
-  const { libsDir, appsDir } = getWorkspaceLayout(tree);
-  const findProject = new RegExp(
-    `<rootDir>\/(${libsDir}|${appsDir})\/${schema.projectName}`,
-    'g'
-  );
+  const findProject = `'<rootDir>/${project.root}'`;
 
-  const oldRootJestConfigContent = tree
-    .read(rootJestConfigPath)
-    .toString('utf-8');
+  const oldRootJestConfigContent = tree.read(rootJestConfigPath, 'utf-8');
+  const usingJestProjects =
+    oldRootJestConfigContent.includes('getJestProjects()');
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,
-    `<rootDir>/${destination}`
+    usingJestProjects ? `` : `'<rootDir>/${schema.relativeToRootDestination}'`
   );
 
   tree.write(rootJestConfigPath, newRootJestConfigContent);

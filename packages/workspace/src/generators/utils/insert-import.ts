@@ -15,7 +15,7 @@ export function insertImport(
   name: string,
   modulePath: string
 ) {
-  const contents = tree.read(path).toString();
+  const contents = tree.read(path, 'utf-8');
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
 
@@ -44,9 +44,9 @@ export function insertImport(
 
   let text: string;
   if (namedImports.elements.hasTrailingComma) {
-    text = name + ',';
+    text = `${name},`;
   } else {
-    text = ',' + name;
+    text = `,${name}`;
   }
 
   const newContents = applyChangesToString(contents, [

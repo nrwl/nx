@@ -1,4 +1,4 @@
-# library
+# @nrwl/react:library
 
 Create a library
 
@@ -41,6 +41,12 @@ nx g lib mylib --appProject=myapp
 ```
 
 ## Options
+
+### name (_**required**_)
+
+Type: `string`
+
+Library name
 
 ### appProject
 
@@ -106,12 +112,6 @@ Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 
-### name
-
-Type: `string`
-
-Library name
-
 ### pascalCaseFiles
 
 Alias(es): P
@@ -134,6 +134,14 @@ Type: `boolean`
 
 Generate library with routes.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
@@ -149,6 +157,22 @@ Default: `false`
 Type: `boolean`
 
 Do not update tsconfig.json for development experience.
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
+### strict
+
+Default: `true`
+
+Type: `boolean`
+
+Whether to enable tsconfig strict mode or not.
 
 ### style
 

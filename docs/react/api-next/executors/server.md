@@ -1,11 +1,19 @@
-# server
+# @nrwl/next:server
 
 Serve a Next.js app
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
-## Properties
+## Options
+
+### buildLibsFromSource
+
+Default: `true`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
 
 ### buildTarget
 

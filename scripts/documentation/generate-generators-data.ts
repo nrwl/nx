@@ -1,22 +1,26 @@
-import * as fs from 'fs-extra';
+import { removeSync, readJsonSync } from 'fs-extra';
+import * as chalk from 'chalk';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
-import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import {
   htmlSelectorFormat,
   pathFormat,
 } from '@angular-devkit/schematics/src/formats';
 import {
+  formatDeprecated,
   generateJsonFile,
   generateMarkdownFile,
   sortAlphabeticallyFunction,
+  sortByBooleanFunction,
 } from './utils';
 import {
   Configuration,
   getPackageConfigurations,
 } from './get-package-configurations';
+import { Framework } from './frameworks';
 import { parseJsonSchemaToOptions } from './json-parser';
+import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 
 /**
  * @WhatItDoes: Generates default documentation from the schematics' schema.
@@ -25,18 +29,15 @@ import { parseJsonSchemaToOptions } from './json-parser';
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
-const registry = new CoreSchemaRegistry();
-registry.addFormat(pathFormat);
-registry.addFormat(htmlSelectorFormat);
+const flattener = createSchemaFlattener([pathFormat, htmlSelectorFormat]);
 
 function generateSchematicList(
   config: Configuration,
-  registry: CoreSchemaRegistry
+  flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  const schematicCollectionFile = path.join(config.root, 'collection.json');
-  fs.removeSync(config.schematicOutput);
-  const schematicCollection = fs.readJsonSync(schematicCollectionFile)
-    .schematics;
+  const schematicCollectionFile = path.join(config.root, 'generators.json');
+  removeSync(config.schematicOutput);
+  const schematicCollection = readJsonSync(schematicCollectionFile).schematics;
   return Object.keys(schematicCollection).map((schematicName) => {
     const schematic = {
       name: schematicName,
@@ -45,29 +46,31 @@ function generateSchematicList(
       alias: schematicCollection[schematicName].hasOwnProperty('aliases')
         ? schematicCollection[schematicName]['aliases'][0]
         : null,
-      rawSchema: fs.readJsonSync(
+      rawSchema: readJsonSync(
         path.join(config.root, schematicCollection[schematicName]['schema'])
       ),
     };
 
-    return parseJsonSchemaToOptions(registry, schematic.rawSchema)
+    return parseJsonSchemaToOptions(flattener, schematic.rawSchema)
       .then((options) => ({ ...schematic, options }))
       .catch((error) =>
         console.error(
-          `Can't parse schema option of ${schematic.name}:\n${error}`
+          `Can't parse schema option of ${schematic.name} | ${schematic.collectionName}:\n${error}`
         )
       );
   });
 }
 
 function generateTemplate(
-  framework: string,
+  framework: Framework,
   schematic
 ): { name: string; template: string } {
   const cliCommand = 'nx';
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   let template = dedent`
-    # ${schematic.name} ${schematic.hidden ? '[hidden]' : ''}
+    # ${schematic.collectionName}:${schematic.name} ${
+    schematic.hidden ? '[hidden]' : ''
+  }
     ${schematic.description}
   
     ## Usage
@@ -116,6 +119,7 @@ function generateTemplate(
 
     schematic.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .sort((a, b) => sortByBooleanFunction(a.required, b.required))
       .forEach((option) => {
         let enumValues = [];
         const rawSchemaProp = schematic.rawSchema.properties[option.name];
@@ -137,9 +141,9 @@ function generateTemplate(
             : ``;
 
         template += dedent`
-          ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-          option.hidden ? '(__hidden__)' : ''
-        }
+          ### ${option.deprecated ? `~~${option.name}~~` : option.name} ${
+          option.required ? '(*__required__*)' : ''
+        } ${option.hidden ? '(__hidden__)' : ''}
           
           ${
             !!option.aliases.length
@@ -152,54 +156,76 @@ function generateTemplate(
               : `Default: \`${option.default}\`\n`
           }
           Type: \`${option.type}\`
-
-          ${enumStr}
-          
-          ${option.description}
         `;
+
+        template += dedent`  
+            ${enumStr}
+
+            ${formatDeprecated(option.description, option.deprecated)}
+          `;
       });
   }
 
   return { name: schematic.name, template };
 }
 
-Promise.all(
-  getPackageConfigurations().map(({ framework, configs }) => {
-    return Promise.all(
-      configs
-        .filter((item) => item.hasSchematics)
-        .map((config) => {
-          return Promise.all(generateSchematicList(config, registry))
-            .then((schematicList) => {
-              return schematicList
-                .filter((s) => !s['hidden'])
-                .map((s) => generateTemplate(framework, s));
-            })
-            .then((markdownList) =>
-              Promise.all(
-                markdownList.map((template) =>
-                  generateMarkdownFile(config.schematicOutput, template)
-                )
-              )
-            )
-            .then(() => {
-              console.log(
-                `Documentation from ${config.root} generated to ${config.schematicOutput}`
-              );
-            });
-        })
-    );
-  })
-).then(() => {
-  console.log('Finished Generating Documentation for Generators');
-});
+export async function generateGeneratorsDocumentation() {
+  console.log(`\n${chalk.blue('i')} Generating Documentation for Generators\n`);
 
-getPackageConfigurations().forEach(async ({ framework, configs }) => {
-  const schematics = configs
-    .filter((item) => item.hasSchematics)
-    .map((item) => item.name);
-  await generateJsonFile(
-    path.join(__dirname, '../../docs', framework, 'generators.json'),
-    schematics
+  await Promise.all(
+    getPackageConfigurations().map(({ framework, configs }) => {
+      return Promise.all(
+        configs
+          .filter((item) => item.hasSchematics)
+          .map(async (config) => {
+            const schematicList = await Promise.all(
+              generateSchematicList(config, flattener)
+            );
+
+            const markdownList = schematicList
+              .filter((s) => s != null && !s['hidden'])
+              .map((s_1) => generateTemplate(framework, s_1));
+
+            await Promise.all(
+              markdownList.map((template) =>
+                generateMarkdownFile(config.schematicOutput, template)
+              )
+            );
+
+            console.log(
+              ` - ${chalk.blue(
+                config.framework
+              )} Documentation for ${chalk.magenta(
+                path.relative(process.cwd(), config.root)
+              )} generated at ${chalk.grey(
+                path.relative(process.cwd(), config.schematicOutput)
+              )}`
+            );
+          })
+      );
+    })
   );
-});
+
+  console.log();
+  await Promise.all(
+    getPackageConfigurations().map(({ framework, configs }) => {
+      const schematics = configs
+        .filter((item) => item.hasSchematics)
+        .map((item) => item.name);
+      return generateJsonFile(
+        path.join(__dirname, '../../docs', framework, 'generators.json'),
+        schematics
+      ).then(() => {
+        console.log(
+          `${chalk.green('🗸')} Generated ${chalk.blue(
+            framework
+          )} generators.json at ${chalk.grey(
+            `docs/${framework}/generators.json`
+          )}`
+        );
+      });
+    })
+  );
+
+  console.log(`\n${chalk.green('🗸')} Generated Documentation for Generators`);
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxWebApp",
+  "$id": "NxWebApp",
   "title": "Create a Web Application for Nx",
   "type": "object",
   "properties": {
@@ -13,7 +13,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z]{1}.*$"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "description": "The directory of the new application.",
@@ -73,6 +73,16 @@
     "babelJest": {
       "type": "boolean",
       "description": "Use babel instead ts-jest",
+      "default": false
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
       "default": false
     }
   },

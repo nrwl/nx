@@ -1,11 +1,35 @@
-# package
+# @nrwl/web:package
 
 Package a library
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
-## Properties
+## Options
+
+### entryFile (_**required**_)
+
+Type: `string`
+
+The path to the entry file, relative to project.
+
+### outputPath (_**required**_)
+
+Type: `string`
+
+The output path of the generated files.
+
+### project (_**required**_)
+
+Type: `string`
+
+The path to package.json file.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The path to tsconfig file.
 
 ### assets
 
@@ -13,11 +37,13 @@ Type: `array`
 
 List of static assets.
 
-### babelConfig
+### ~~babelConfig~~
 
 Type: `string`
 
-(deprecated) Path to a function which takes a babel config and returns an updated babel config
+**Deprecated:** Use the .babelrc file for project instead
+
+Path to a function which takes a babel config and returns an updated babel config
 
 ### buildableProjectDepsInPackageJsonType
 
@@ -36,12 +62,6 @@ Default: `true`
 Type: `boolean`
 
 Delete the output path before building.
-
-### entryFile
-
-Type: `string`
-
-The path to the entry file, relative to project.
 
 ### external
 
@@ -75,29 +95,11 @@ Type: `string`
 
 The global name to map to (e.g. `ReactDOM`).
 
-### outputPath
-
-Type: `string`
-
-The output path of the generated files.
-
-### project
-
-Type: `string`
-
-The path to package.json file.
-
 ### rollupConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a rollup config and returns an updated rollup config
-
-### tsConfig
-
-Type: `string`
-
-The path to tsconfig file.
 
 ### umdName
 

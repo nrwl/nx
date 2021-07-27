@@ -1,0 +1,118 @@
+{
+  "root": "dep-graph/dep-graph",
+  "sourceRoot": "dep-graph/dep-graph/src",
+  "projectType": "application",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/web:build",
+      "options": {
+        "maxWorkers": 8,
+        "outputPath": "build/apps/dep-graph",
+        "index": "dep-graph/dep-graph/src/index.html",
+        "main": "dep-graph/dep-graph/src/main.ts",
+        "polyfills": "dep-graph/dep-graph/src/polyfills.ts",
+        "tsConfig": "dep-graph/dep-graph/tsconfig.app.json",
+        "styles": ["dep-graph/dep-graph/src/styles.scss"],
+        "scripts": [],
+        "assets": [],
+        "optimization": true,
+        "outputHashing": "none",
+        "sourceMap": false,
+        "extractCss": true,
+        "namedChunks": false,
+        "extractLicenses": true,
+        "vendorChunk": false,
+        "budgets": [
+          {
+            "type": "initial",
+            "maximumWarning": "2mb",
+            "maximumError": "5mb"
+          }
+        ]
+      },
+      "configurations": {
+        "dev": {
+          "fileReplacements": [
+            {
+              "replace": "dep-graph/dep-graph/src/environments/environment.ts",
+              "with": "dep-graph/dep-graph/src/environments/environment.dev.ts"
+            }
+          ],
+          "assets": [
+            "dep-graph/dep-graph/src/favicon.ico",
+            "dep-graph/dep-graph/src/assets"
+          ],
+          "optimization": false,
+          "outputHashing": "none",
+          "sourceMap": true,
+          "extractCss": true,
+          "namedChunks": false,
+          "extractLicenses": false,
+          "vendorChunk": true,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "5mb"
+            }
+          ]
+        },
+        "watch": {
+          "fileReplacements": [
+            {
+              "replace": "dep-graph/dep-graph/src/environments/environment.ts",
+              "with": "dep-graph/dep-graph/src/environments/environment.watch.ts"
+            }
+          ],
+          "assets": [],
+          "optimization": false,
+          "outputHashing": "none",
+          "sourceMap": true,
+          "extractCss": true,
+          "namedChunks": false,
+          "extractLicenses": false,
+          "vendorChunk": true,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "5mb"
+            }
+          ]
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "serve": {
+      "executor": "@nrwl/web:dev-server",
+      "options": {
+        "buildTarget": "dep-graph-dep-graph:build-base:dev"
+      },
+      "configurations": {
+        "watch": {
+          "buildTarget": "dep-graph-dep-graph:build-base:watch"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:lint",
+      "options": {
+        "linter": "eslint",
+        "tsConfig": [
+          "dep-graph/dep-graph/tsconfig.app.json",
+          "dep-graph/dep-graph/tsconfig.spec.json"
+        ],
+        "exclude": ["**/node_modules/**", "!dep-graph/dep-graph/**/*"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/dep-graph/dep-graph"],
+      "options": {
+        "jestConfig": "dep-graph/dep-graph/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["core"]
+}

@@ -102,10 +102,10 @@ describe('react:component-cypress-spec', () => {
 
           it('should properly set up the spec', () => {
             expect(
-              formatFile`${appTree.read(cypressStorySpecFilePath).toString()}`
+              formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`
             )
               .toContain(formatFile`describe('test-ui-lib: Test component', () => {
-        beforeEach(() => cy.visit('/iframe.html?id=test--primary&knob-name=&knob-displayAge=false'));
+        beforeEach(() => cy.visit('/iframe.html?id=test--primary&args=name;displayAge:false;'));
         
         it('should render the component', () => {
           cy.get('h1').should('contain', 'Welcome to test-ui-lib!');
@@ -130,9 +130,8 @@ describe('react:component-cypress-spec', () => {
         });
 
         it('should properly set up the spec', () => {
-          expect(
-            formatFile`${appTree.read(cypressStorySpecFilePath).toString()}`
-          ).toContain(formatFile`describe('test-ui-lib: Test component', () => {
+          expect(formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`)
+            .toContain(formatFile`describe('test-ui-lib: Test component', () => {
       beforeEach(() => cy.visit('/iframe.html?id=test--primary'));
       
       it('should render the component', () => {
@@ -143,6 +142,35 @@ describe('react:component-cypress-spec', () => {
         });
       });
     });
+  });
+
+  it('should target the correct cypress suite', async () => {
+    appTree = await createTestUILib('test-ui-lib');
+    await applicationGenerator(appTree, {
+      babelJest: false,
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      name: `other-e2e`,
+      skipFormat: true,
+      style: 'css',
+      unitTestRunner: 'none',
+      standaloneConfig: false,
+    });
+    await componentCypressSpecGenerator(appTree, {
+      componentPath: `lib/test-ui-lib.tsx`,
+      project: 'test-ui-lib',
+      cypressProject: 'other-e2e',
+    });
+    expect(
+      appTree.exists(
+        'apps/other-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts'
+      )
+    ).toBeTruthy();
+    expect(
+      appTree.exists(
+        'apps/test-ui-lib/src/integration/test-ui-lib/test-ui-lib.spec.ts'
+      )
+    ).toBeFalsy();
   });
 });
 
@@ -160,6 +188,7 @@ export async function createTestUILib(
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
+    standaloneConfig: false,
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -173,6 +202,7 @@ export async function createTestUILib(
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
+    standaloneConfig: false,
   });
 
   return appTree;

@@ -1,6 +1,8 @@
 import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
+import { NextBuildBuilderOptions } from '@nrwl/next';
+import { dirname } from 'path';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/next-server/server/config', () => ({
@@ -9,6 +11,7 @@ jest.mock('next/dist/next-server/server/config', () => ({
     webpack: () => ({}),
   }),
 }));
+jest.mock('fs', () => require('memfs').fs);
 
 describe('Next.js webpack config builder', () => {
   beforeEach(() => {
@@ -25,7 +28,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       expect(TsconfigPathsPlugin).toHaveBeenCalledWith({
-        configFile: '/root/apps/wibble/tsconfig.json',
+        configFile: expect.stringMatching(/tsconfig/),
         extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
         mainFields: ['es2015', 'module', 'main'],
       });
@@ -62,18 +65,53 @@ describe('Next.js webpack config builder', () => {
       // just check they get added
       expect(config.module.rules.length).toBe(2);
     });
+
+    it('should set svgr rule by default', () => {
+      const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
+
+      const config = webpackConfig(
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
+        { defaultLoaders: {} }
+      );
+
+      const svgrRule = config.module.rules.find(
+        (rule) => rule.test.toString() === String(/\.svg$/)
+      );
+      expect(svgrRule).toBeTruthy();
+    });
+
+    it('should not set svgr rule when its turned off', () => {
+      const webpackConfig = createWebpackConfig(
+        '/root',
+        'apps/wibble',
+        [],
+        undefined,
+        { svgr: false }
+      );
+
+      const config = webpackConfig(
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
+        { defaultLoaders: {} }
+      );
+
+      const svgrRule = config.module.rules.find(
+        (rule) => rule.test.toString() === String(/\.svg$/)
+      );
+      expect(svgrRule).toBeFalsy();
+    });
   });
 
   describe('prepareConfig', () => {
-    it('should set the dist and out directories', () => {
-      const config = prepareConfig(
+    it('should set the dist and out directories', async () => {
+      const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
           root: 'apps/wibble',
           outputPath: 'dist/apps/wibble',
           fileReplacements: [],
         },
-        { workspaceRoot: '/root' } as any
+        { root: '/root' } as any,
+        []
       );
 
       expect(config).toEqual(
@@ -84,23 +122,60 @@ describe('Next.js webpack config builder', () => {
       );
     });
 
-    it('should support nextConfig option to customize the config', () => {
-      const config = prepareConfig(
+    it('should support nextConfig option to customize the config', async () => {
+      const fullPath = require.resolve('./config.fixture');
+      const rootPath = dirname(fullPath);
+      const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
           root: 'apps/wibble',
           outputPath: 'dist/apps/wibble',
           fileReplacements: [],
-          nextConfig: require.resolve('./config.fixture'),
+          nextConfig: 'config.fixture',
           customValue: 'test',
-        },
-        { workspaceRoot: '/root' } as any
+        } as NextBuildBuilderOptions,
+        { root: rootPath } as any,
+        []
       );
 
       expect(config).toMatchObject({
         myPhase: 'phase-production-build',
         myCustomValue: 'test',
       });
+    });
+
+    it('should provide error message when nextConfig path is invalid', async () => {
+      await expect(() =>
+        prepareConfig(
+          PHASE_PRODUCTION_BUILD,
+          {
+            root: 'apps/wibble',
+            outputPath: 'dist/apps/wibble',
+            fileReplacements: [],
+            nextConfig: 'config-does-not-exist.fixture',
+            customValue: 'test',
+          } as NextBuildBuilderOptions,
+          { root: '/root' } as any,
+          []
+        )
+      ).rejects.toThrow(/Could not find file/);
+    });
+
+    it('should provide error message when nextConfig does not export a function', async () => {
+      await expect(() =>
+        prepareConfig(
+          PHASE_PRODUCTION_BUILD,
+          {
+            root: 'apps/wibble',
+            outputPath: 'dist/apps/wibble',
+            fileReplacements: [],
+            nextConfig: require.resolve('./config-not-a-function.fixture'),
+            customValue: 'test',
+          } as NextBuildBuilderOptions,
+          { root: '/root' } as any,
+          []
+        )
+      ).rejects.toThrow(/option does not export a function/);
     });
   });
 });

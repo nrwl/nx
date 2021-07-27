@@ -1,23 +1,20 @@
-jest.mock('../../../utilities/app-root', () => ({
+jest.mock('fs', () => require('memfs').fs);
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
-jest.mock('fs', () => require('memfs').fs);
 
-import { fs, vol } from 'memfs';
-import {
-  AddProjectDependency,
-  ProjectGraphContext,
-  ProjectGraphNode,
-  DependencyType,
-} from '../project-graph-models';
+import { vol } from 'memfs';
+import { ProjectGraphNode, DependencyType } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { createFileMap } from '../../file-graph';
+import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
-import { appRootPath } from '../../../utilities/app-root';
-import { string } from 'prop-types';
+import {
+  ProjectGraphBuilder,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 
 describe('explicit project dependencies', () => {
-  let ctx: ProjectGraphContext;
+  let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphNode>;
   let fsJson;
   beforeEach(() => {
@@ -73,24 +70,52 @@ describe('explicit project dependencies', () => {
       './tsconfig.base.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
-                              const a = { loadChildren: '@proj/proj4ab#a' };                     
+                              const a = { loadChildren: '@proj/proj4ab#a' };
       `,
       './libs/proj2/index.ts': `export const a = 2;`,
       './libs/proj3a/index.ts': `export const a = 3;`,
       './libs/proj4ab/index.ts': `export const a = 4;`,
       './libs/proj123/index.ts': 'export const a = 5',
-      './libs/proj1234/index.ts': `export const a = 6 
+      './libs/proj1234/index.ts': `export const a = 6
         import { a } from '@proj/proj1234-child'
       `,
       './libs/proj1234-child/index.ts': 'export const a = 7',
+      './libs/proj1234/a.b.ts': `// nx-ignore-next-line
+                                 import('@proj/proj2')
+                                 /* nx-ignore-next-line */
+                                 import {a} from '@proj/proj3a
+      `,
+      './libs/proj1234/b.c.ts': `// nx-ignore-next-line
+                                 require('@proj/proj4ab#a')
+                                 // nx-ignore-next-line
+                                 import('@proj/proj2')
+                                 /* nx-ignore-next-line */
+                                 import {a} from '@proj/proj3a
+                                 const a = {
+                                     // nx-ignore-next-line
+                                    loadChildren: '@proj/3a'
+                                 }
+                                 const b = {
+                                    // nx-ignore-next-line
+                                    loadChildren: '@proj/3a',
+                                    children: [{
+                                      // nx-ignore-next-line
+                                      loadChildren: '@proj/proj2,
+                                      // nx-ignore-next-line
+                                      loadChildren: '@proj/proj3a'
+                                    }]
+                                 }
+      `,
     };
     vol.fromJSON(fsJson, '/root');
 
     ctx = {
-      workspaceJson,
-      nxJson,
-      fileMap: createFileMap(workspaceJson, readWorkspaceFiles()),
-    };
+      workspace: {
+        ...workspaceJson,
+        ...nxJson,
+      } as any,
+      filesToProcess: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+    } as any;
 
     projects = {
       proj3a: {
@@ -98,7 +123,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: [],
+          files: [{ file: 'libs/proj3a/index.ts' }],
         },
       },
       proj2: {
@@ -106,7 +131,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: [],
+          files: [{ file: 'libs/proj2/index.ts' }],
         },
       },
       proj: {
@@ -114,7 +139,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [],
+          files: [{ file: 'libs/proj/index.ts' }],
         },
       },
       proj1234: {
@@ -122,7 +147,11 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: [],
+          files: [
+            { file: 'libs/proj1234/index.ts' },
+            { file: 'libs/proj1234/a.b.ts' },
+            { file: 'libs/proj1234/b.c.ts' },
+          ],
         },
       },
       proj123: {
@@ -130,7 +159,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: [],
+          files: [{ file: 'libs/proj123/index.ts' }],
         },
       },
       proj4ab: {
@@ -138,7 +167,7 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: [],
+          files: [{ file: 'libs/proj4ab/index.ts' }],
         },
       },
       'proj1234-child': {
@@ -146,36 +175,21 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: [],
+          files: [{ file: 'libs/proj1234-child/index.ts' }],
         },
       },
     };
   });
 
   it(`should add dependencies for projects based on file imports`, () => {
-    const dependencyMap = {};
-    const addDependency = jest
-      .fn<ReturnType<AddProjectDependency>, Parameters<AddProjectDependency>>()
-      .mockImplementation(
-        (type: DependencyType, source: string, target: string) => {
-          const depObj = {
-            type,
-            source,
-            target,
-          };
-          if (dependencyMap[source]) {
-            dependencyMap[source].push(depObj);
-          } else {
-            dependencyMap[source] = [depObj];
-          }
-        }
-      );
-
-    buildExplicitTypeScriptDependencies(ctx, projects, addDependency, (s) => {
-      return fs.readFileSync(`${appRootPath}/${s}`).toString();
+    const builder = new ProjectGraphBuilder();
+    Object.values(projects).forEach((p) => {
+      builder.addNode(p);
     });
 
-    expect(dependencyMap).toEqual({
+    buildExplicitTypeScriptDependencies(ctx, builder);
+
+    expect(builder.getUpdatedProjectGraph().dependencies).toEqual({
       proj1234: [
         {
           source: 'proj1234',
@@ -192,14 +206,19 @@ describe('explicit project dependencies', () => {
         {
           source: 'proj',
           target: 'proj3a',
-          type: DependencyType.dynamic,
+          type: DependencyType.static,
         },
         {
           source: 'proj',
           target: 'proj4ab',
-          type: DependencyType.dynamic,
+          type: DependencyType.static,
         },
       ],
+      proj123: [],
+      'proj1234-child': [],
+      proj2: [],
+      proj3a: [],
+      proj4ab: [],
     });
   });
 });

@@ -3,7 +3,7 @@ import {
   _test_addWorkspaceFile,
   WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
-import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { Architect, BuilderContext, Target } from '@angular-devkit/architect';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
@@ -37,7 +37,7 @@ export function createEmptyWorkspace(tree: Tree): Tree {
   );
   tree.create(
     '/nx.json',
-    JSON.stringify(<NxJson>{
+    JSON.stringify(<NxJsonConfiguration>{
       npmScope: 'proj',
       projects: {},
       affected: {

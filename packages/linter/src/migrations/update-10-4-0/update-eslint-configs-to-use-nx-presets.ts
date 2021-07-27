@@ -444,8 +444,8 @@ export function updatePluginsAndRemoveDuplication(
   deleteIfUltimatelyEmpty: boolean,
   ensurePlugin?: string
 ): void {
-  json.plugins = json.plugins || [];
-  configBeingExtended.plugins = configBeingExtended.plugins || [];
+  json.plugins ||= [];
+  configBeingExtended.plugins ||= [];
   if (ensurePlugin && !json.plugins.includes(ensurePlugin)) {
     json.plugins.unshift(ensurePlugin);
   }
@@ -462,8 +462,8 @@ export function updateParserOptionsAndRemoveDuplication(
   json: Linter.Config,
   configBeingExtended: Linter.Config
 ): void {
-  json.parserOptions = json.parserOptions || {};
-  configBeingExtended.parserOptions = configBeingExtended.parserOptions || {};
+  json.parserOptions ||= {};
+  configBeingExtended.parserOptions ||= {};
   /**
    * If the user is still using the 2018 ecmaVersion that Nx set for them
    * previously we can just remove it and let them inherit the new 2020 value.
@@ -494,8 +494,8 @@ export function updateObjPropAndRemoveDuplication(
   objPropName: string,
   deleteIfUltimatelyEmpty: boolean
 ): void {
-  json[objPropName] = json[objPropName] || {};
-  configBeingExtended[objPropName] = configBeingExtended[objPropName] || {};
+  json[objPropName] ||= {};
+  configBeingExtended[objPropName] ||= {};
 
   for (const [name, val] of Object.entries(json[objPropName])) {
     const valueOfSamePropInExtendedConfig =
@@ -526,10 +526,10 @@ export function updateOverridesAndRemoveDuplication(
   ) {
     return;
   }
-  json.overrides = json.overrides.filter((override) => {
+  json.overrides = json.overrides.filter((o) => {
     for (const extendedOverride of configBeingExtended.overrides) {
       try {
-        assert.deepStrictEqual(override, extendedOverride);
+        assert.deepStrictEqual(o, extendedOverride);
         return false;
       } catch {}
     }

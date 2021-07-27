@@ -10,10 +10,9 @@ import {
 
 describe('Run Commands', () => {
   beforeAll(() => newProject());
-
   afterAll(() => removeProject({ onlyOnCI: true }));
 
-  it('should not override environment variables already set when setting a custom env file path', async (done) => {
+  it('should not override environment variables already set when setting a custom env file path', async () => {
     const nodeapp = uniq('nodeapp');
     updateFile(
       `.env`,
@@ -45,10 +44,33 @@ describe('Run Commands', () => {
     expect(result).not.toContain('shared-nested-value');
     expect(result).toContain('root-only-value');
     expect(result).toContain('nested-only-value');
-    done();
   }, 120000);
 
-  it('should interpolate provided arguments', async (done) => {
+  it('should pass options', async () => {
+    const myapp = uniq('myapp1');
+
+    runCLI(`generate @nrwl/web:app ${myapp}`);
+
+    const config = readJson(workspaceConfigName());
+    config.projects[myapp].targets.echo = {
+      executor: '@nrwl/workspace:run-commands',
+      options: {
+        command: 'echo',
+        var1: 'a',
+        var2: 'b',
+        'var-hyphen': 'c',
+        varCamelCase: 'd',
+      },
+    };
+    updateFile(workspaceConfigName(), JSON.stringify(config));
+
+    const result = runCLI(`run ${myapp}:echo`, { silent: true });
+    expect(result).toContain(
+      '--var1=a --var2=b --var-hyphen=c --varCamelCase=d'
+    );
+  }, 120000);
+
+  it('should interpolate provided arguments', async () => {
     const myapp = uniq('myapp1');
 
     runCLI(`generate @nrwl/web:app ${myapp}`);
@@ -82,7 +104,6 @@ describe('Run Commands', () => {
     expect(resultArgs).toContain('var2: b');
     expect(resultArgs).toContain('hyphen: c');
     expect(resultArgs).toContain('camel: d');
-    done();
   }, 120000);
 
   it('should fail when a process exits non-zero', () => {

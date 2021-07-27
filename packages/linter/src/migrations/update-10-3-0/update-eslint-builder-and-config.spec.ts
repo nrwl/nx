@@ -1,6 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
 import {
-  readJsonInTree,
   readWorkspace,
   updateJsonInTree,
   updateWorkspace,

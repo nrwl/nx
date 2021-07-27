@@ -1,23 +1,5 @@
+const { getJestProjects } = require('@nrwl/jest');
+
 module.exports = {
-  projects: [
-    '<rootDir>/packages/tao',
-    '<rootDir>/packages/workspace',
-    '<rootDir>/packages/web',
-    '<rootDir>/packages/cypress',
-    '<rootDir>/packages/jest',
-    '<rootDir>/packages/storybook',
-    '<rootDir>/packages/react',
-    '<rootDir>/packages/nx-plugin',
-    '<rootDir>/packages/node',
-    '<rootDir>/packages/next',
-    '<rootDir>/packages/nest',
-    '<rootDir>/packages/linter',
-    '<rootDir>/packages/express',
-    '<rootDir>/packages/eslint-plugin-nx',
-    '<rootDir>/packages/create-nx-workspace',
-    '<rootDir>/packages/create-nx-plugin',
-    '<rootDir>/packages/cli',
-    '<rootDir>/packages/angular',
-    '<rootDir>/packages/gatsby',
-  ],
+  projects: getJestProjects(),
 };

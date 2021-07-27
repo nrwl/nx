@@ -1,5 +1,4 @@
 import { readJson, readWorkspaceConfiguration, Tree } from '@nrwl/devkit';
-import { reactVersion } from '../../utils/versions';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import reactInitGenerator from './init';
 import { InitSchema } from './schema';

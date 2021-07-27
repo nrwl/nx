@@ -1,9 +1,5 @@
-import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin, Stats } from 'webpack';
 import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
@@ -16,12 +12,21 @@ const IGNORED_WEBPACK_WARNINGS = [
   /could not find any license/i,
 ];
 
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Configuration = any;
+type WebpackPluginInstance = any;
+
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
+  emitDecoratorMetadata?: boolean,
   configuration?: string
 ): Configuration {
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const { webpack } = require('../webpack/entry');
+  const { ProgressPlugin } = webpack;
+
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const mainFields = [...(esm ? ['es2015'] : []), 'module', 'main'];
   const hashFormat = getOutputHashFormat(options.outputHashing);
@@ -54,8 +59,9 @@ export function getBaseWebpackPartial(
           options: {
             rootMode: 'upward',
             cwd: join(options.root, options.sourceRoot),
+            emitDecoratorMetadata,
             isModern: esm,
-            envName: configuration,
+            envName: isScriptOptimizeOn ? 'production' : configuration,
             babelrc: true,
             cacheDirectory: true,
             cacheCompression: false,
@@ -67,6 +73,8 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
+        // TODO  Remove the never type when module is updated
+        // PR opened for the proper typing here; https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/66
         new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
@@ -96,17 +104,16 @@ export function getBaseWebpackPartial(
     };
   }
 
-  const extraPlugins: webpack.Plugin[] = [];
+  const extraPlugins: WebpackPluginInstance[] = [];
 
   if (esm) {
     extraPlugins.push(
       new ForkTsCheckerWebpackPlugin({
-        tsconfig: options.tsConfig,
-        memoryLimit:
-          options.memoryLimit ||
-          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false,
+        typescript: {
+          enabled: true,
+          configFile: options.tsConfig,
+          memoryLimit: options.memoryLimit || 2018,
+        },
       })
     );
   }
@@ -115,15 +122,16 @@ export function getBaseWebpackPartial(
     extraPlugins.push(new ProgressPlugin());
   }
 
+  // TODO  LicenseWebpackPlugin needs a PR for proper typing
   if (options.extractLicenses) {
     extraPlugins.push(
-      (new LicenseWebpackPlugin({
+      new LicenseWebpackPlugin({
         stats: {
           errors: false,
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown) as webpack.Plugin
+      }) as unknown as WebpackPluginInstance
     );
   }
 
@@ -154,14 +162,15 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
+// TODO  Sourcemap and cache options have been removed from plugin.
+//  Investigate what this mgiht change in the build process
 export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const { TerserWebpackPlugin } = require('../webpack/entry');
   return new TerserWebpackPlugin({
     parallel: true,
-    cache: true,
-    sourceMap,
     terserOptions: {
       ecma: esm ? 8 : 5,
-      // Don't remove safari 10 workaround for ES modules
       safari10: true,
       output: {
         ascii_only: true,
@@ -172,7 +181,11 @@ export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   });
 }
 
-function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
+// TODO(jack): Update the typing with new version of webpack -- was returning Stats.ToStringOptions in webpack 4
+// The StatsOptions type needs to be exported from webpack
+// PR: https://github.com/webpack/webpack/pull/12875
+function getStatsConfig(options: BuildBuilderOptions): any {
+  const { isWebpack5 } = require('../webpack/entry');
   return {
     hash: true,
     timings: false,
@@ -228,6 +241,9 @@ function getClientEnvironment(mode) {
 }
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const { CopyWebpackPlugin } = require('../webpack/entry');
+
   return new CopyWebpackPlugin({
     patterns: assets.map((asset) => {
       return {
@@ -240,7 +256,7 @@ export function createCopyPlugin(assets: AssetGlobPattern[]) {
             '.gitkeep',
             '**/.DS_Store',
             '**/Thumbs.db',
-            ...(asset.ignore ? asset.ignore : []),
+            ...(asset.ignore ?? []),
           ],
           dot: true,
         },

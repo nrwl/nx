@@ -28,6 +28,7 @@ function updateDependencies(tree: Tree) {
     {
       'core-js': '^3.6.5',
       'document-register-element': documentRegisterElementVersion,
+      'regenerator-runtime': '0.13.7',
       tslib: '^2.0.0',
     },
     {
@@ -42,7 +43,6 @@ function initRootBabelConfig(tree: Tree) {
   }
 
   writeJson(tree, '/babel.config.json', {
-    presets: ['@nrwl/web/babel'],
     babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
   });
 }

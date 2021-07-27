@@ -1,7 +1,7 @@
 {
   "name": "create-nx-workspace",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -27,11 +27,12 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/workspace": "*",
-    "tmp": "0.0.33",
+    "tmp": "~0.2.1",
     "yargs-parser": "20.0.0",
-    "tslib": "^2.0.0",
-    "inquirer": "^6.3.1",
-    "typescript": "~4.0.3"
+    "enquirer": "~2.3.6",
+    "flat": "^5.0.2",
+    "chalk": "4.1.0",
+    "ora": "5.3.0",
+    "tslib": "^2.0.0"
   }
 }

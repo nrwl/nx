@@ -7,4 +7,6 @@ export interface StorybookConfigureSchema {
   generateCypressSpecs?: boolean;
   js?: boolean;
   linter?: Linter;
+  cypressDirectory?: string;
+  standaloneConfig?: boolean;
 }

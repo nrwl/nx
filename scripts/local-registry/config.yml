@@ -1,6 +1,8 @@
 # path to a directory with all packages
 storage: ../../tmp/local-registry/storage
 
+listen: localhost:4872
+
 # a list of other known repositories we can talk to
 uplinks:
   npmjs:
@@ -9,10 +11,6 @@ uplinks:
     maxage: 30m
     fail_timeout: 10m
     timeout: 600s
-    agent_options:
-      keepAlive: true
-      maxSockets: 40
-      maxFreeSockets: 10
     cache: false
 
 packages:
@@ -28,4 +26,6 @@ packages:
 
 # log settings
 logs:
-  - { type: stdout, format: pretty, level: warn }
+  type: stdout
+  format: pretty
+  level: warn

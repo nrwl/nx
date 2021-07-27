@@ -12,58 +12,9 @@ import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import * as path from 'path';
 import { names } from '@nrwl/devkit';
 
-function _angularImportsFromNode(
-  node: ts.ImportDeclaration,
-  _sourceFile: ts.SourceFile
-): { [name: string]: string } {
-  const ms = node.moduleSpecifier;
-  let modulePath: string;
-  switch (ms.kind) {
-    case ts.SyntaxKind.StringLiteral:
-      modulePath = (ms as ts.StringLiteral).text;
-      break;
-    default:
-      return {};
-  }
-
-  if (!modulePath.startsWith('@angular/')) {
-    return {};
-  }
-
-  if (node.importClause) {
-    if (node.importClause.name) {
-      // This is of the form `import Name from 'path'`. Ignore.
-      return {};
-    } else if (node.importClause.namedBindings) {
-      const nb = node.importClause.namedBindings;
-      if (nb.kind == ts.SyntaxKind.NamespaceImport) {
-        // This is of the form `import * as name from 'path'`. Return `name.`.
-        return {
-          [(nb as ts.NamespaceImport).name.text + '.']: modulePath,
-        };
-      } else {
-        // This is of the form `import {a,b,c} from 'path'`
-        const namedImports = nb as ts.NamedImports;
-
-        return namedImports.elements
-          .map((is: ts.ImportSpecifier) =>
-            is.propertyName ? is.propertyName.text : is.name.text
-          )
-          .reduce((acc: { [name: string]: string }, curr: string) => {
-            acc[curr] = modulePath;
-
-            return acc;
-          }, {});
-      }
-    }
-
-    return {};
-  } else {
-    // This is of the form `import 'path';`. Nothing to do.
-    return {};
-  }
-}
-
+/**
+ * @deprecated will be removed in v13.
+ */
 export function getDecoratorMetadata(
   source: ts.SourceFile,
   identifier: string,
@@ -117,7 +68,7 @@ export function getDecoratorMetadata(
         const id = paExpr.name.text;
         const moduleId = (paExpr.expression as ts.Identifier).getText(source);
 
-        return id === identifier && angularImports[moduleId + '.'] === module;
+        return id === identifier && angularImports[`${moduleId}.`] === module;
       }
 
       return false;
@@ -130,142 +81,9 @@ export function getDecoratorMetadata(
     .map((expr) => expr.arguments[0] as ts.ObjectLiteralExpression);
 }
 
-function _addSymbolToNgModuleMetadata(
-  source: ts.SourceFile,
-  ngModulePath: string,
-  metadataField: string,
-  expression: string
-): Change[] {
-  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
-
-  // Find the decorator declaration.
-  if (!node) {
-    return [];
-  }
-  // Get all the children property assignment of object literals.
-  const matchingProperties: ts.ObjectLiteralElement[] = (node as ts.ObjectLiteralExpression).properties
-    .filter((prop) => prop.kind == ts.SyntaxKind.PropertyAssignment)
-    // Filter out every fields that's not "metadataField". Also handles string literals
-    // (but not expressions).
-    .filter((prop: ts.PropertyAssignment) => {
-      const name = prop.name;
-      switch (name.kind) {
-        case ts.SyntaxKind.Identifier:
-          return (name as ts.Identifier).getText(source) == metadataField;
-        case ts.SyntaxKind.StringLiteral:
-          return (name as ts.StringLiteral).text == metadataField;
-      }
-
-      return false;
-    });
-
-  // Get the last node of the array literal.
-  if (!matchingProperties) {
-    return [];
-  }
-  if (matchingProperties.length == 0) {
-    // We haven't found the field in the metadata declaration. Insert a new field.
-    const expr = node as ts.ObjectLiteralExpression;
-    let position: number;
-    let toInsert: string;
-    if (expr.properties.length == 0) {
-      position = expr.getEnd() - 1;
-      toInsert = `  ${metadataField}: [${expression}]\n`;
-    } else {
-      node = expr.properties[expr.properties.length - 1];
-      position = node.getEnd();
-      // Get the indentation of the last element, if any.
-      const text = node.getFullText(source);
-      if (text.match('^\r?\r?\n')) {
-        toInsert = `,${
-          text.match(/^\r?\n\s+/)[0]
-        }${metadataField}: [${expression}]`;
-      } else {
-        toInsert = `, ${metadataField}: [${expression}]`;
-      }
-    }
-    const newMetadataProperty = new InsertChange(
-      ngModulePath,
-      position,
-      toInsert
-    );
-    return [newMetadataProperty];
-  }
-
-  const assignment = matchingProperties[0] as ts.PropertyAssignment;
-
-  // If it's not an array, nothing we can do really.
-  if (assignment.initializer.kind !== ts.SyntaxKind.ArrayLiteralExpression) {
-    return [];
-  }
-
-  const arrLiteral = assignment.initializer as ts.ArrayLiteralExpression;
-  if (arrLiteral.elements.length == 0) {
-    // Forward the property.
-    node = arrLiteral;
-  } else {
-    node = arrLiteral.elements;
-  }
-
-  if (!node) {
-    console.log(
-      'No app module found. Please add your new class to your component.'
-    );
-
-    return [];
-  }
-
-  const isArray = Array.isArray(node);
-  if (isArray) {
-    const nodeArray = (node as {}) as Array<ts.Node>;
-    const symbolsArray = nodeArray.map((node) => node.getText());
-    if (symbolsArray.includes(expression)) {
-      return [];
-    }
-
-    node = node[node.length - 1];
-  }
-
-  let toInsert: string;
-  let position = node.getEnd();
-  if (!isArray && node.kind == ts.SyntaxKind.ObjectLiteralExpression) {
-    // We haven't found the field in the metadata declaration. Insert a new
-    // field.
-    const expr = node as ts.ObjectLiteralExpression;
-    if (expr.properties.length == 0) {
-      position = expr.getEnd() - 1;
-      toInsert = `  ${metadataField}: [${expression}]\n`;
-    } else {
-      node = expr.properties[expr.properties.length - 1];
-      position = node.getEnd();
-      // Get the indentation of the last element, if any.
-      const text = node.getFullText(source);
-      if (text.match('^\r?\r?\n')) {
-        toInsert = `,${
-          text.match(/^\r?\n\s+/)[0]
-        }${metadataField}: [${expression}]`;
-      } else {
-        toInsert = `, ${metadataField}: [${expression}]`;
-      }
-    }
-  } else if (!isArray && node.kind == ts.SyntaxKind.ArrayLiteralExpression) {
-    // We found the field but it's empty. Insert it just before the `]`.
-    position--;
-    toInsert = `${expression}`;
-  } else {
-    // Get the indentation of the last element, if any.
-    const text = node.getFullText(source);
-    if (text.match(/^\r?\n/)) {
-      toInsert = `,${text.match(/^\r?\n(\r?)\s+/)[0]}${expression}`;
-    } else {
-      toInsert = `, ${expression}`;
-    }
-  }
-  const insert = new InsertChange(ngModulePath, position, toInsert);
-  return [insert];
-}
-
+/**
+ * @deprecated will be removed in v13.
+ */
 export function removeFromNgModule(
   source: ts.SourceFile,
   modulePath: string,
@@ -299,6 +117,9 @@ export function removeFromNgModule(
   }
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function addImportToModule(
   source: ts.SourceFile,
   modulePath: string,
@@ -312,6 +133,9 @@ export function addImportToModule(
   );
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function addImportToTestBed(
   source: ts.SourceFile,
   specPath: string,
@@ -344,6 +168,9 @@ export function addImportToTestBed(
   }
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function getBootstrapComponent(
   source: ts.SourceFile,
   moduleClassName: string
@@ -368,21 +195,9 @@ export function getBootstrapComponent(
   return bootstrapComponent.getText();
 }
 
-function getMatchingProperty(
-  source: ts.SourceFile,
-  property: string,
-  identifier: string,
-  module: string
-): ts.ObjectLiteralElement {
-  const nodes = getDecoratorMetadata(source, identifier, module);
-  let node: any = nodes[0]; // tslint:disable-line:no-any
-
-  if (!node) return null;
-
-  // Get all the children property assignment of object literals.
-  return getMatchingObjectLiteralElement(node, source, property);
-}
-
+/**
+ * @deprecated will be removed in v13.
+ */
 export function addRoute(
   ngModulePath: string,
   source: ts.SourceFile,
@@ -398,54 +213,9 @@ export function addRoute(
   }
 }
 
-function getListOfRoutes(
-  source: ts.SourceFile
-): ts.NodeArray<ts.Expression> | null {
-  const imports: any = getMatchingProperty(
-    source,
-    'imports',
-    'NgModule',
-    '@angular/core'
-  );
-
-  if (imports.initializer.kind === ts.SyntaxKind.ArrayLiteralExpression) {
-    const a = imports.initializer as ts.ArrayLiteralExpression;
-
-    for (const e of a.elements) {
-      if (e.kind === ts.SyntaxKind.CallExpression) {
-        const ee = e as ts.CallExpression;
-        const text = ee.expression.getText(source);
-        if (
-          (text === 'RouterModule.forRoot' ||
-            text === 'RouterModule.forChild') &&
-          ee.arguments.length > 0
-        ) {
-          const routes = ee.arguments[0];
-          if (routes.kind === ts.SyntaxKind.ArrayLiteralExpression) {
-            return (routes as ts.ArrayLiteralExpression).elements;
-          } else if (routes.kind === ts.SyntaxKind.Identifier) {
-            // find the array expression
-            const variableDeclarations = findNodes(
-              source,
-              ts.SyntaxKind.VariableDeclaration
-            ) as ts.VariableDeclaration[];
-
-            const routesDeclaration = variableDeclarations.find((x) => {
-              return x.name.getText() === routes.getText();
-            });
-
-            if (routesDeclaration) {
-              return (routesDeclaration.initializer as ts.ArrayLiteralExpression)
-                .elements;
-            }
-          }
-        }
-      }
-    }
-  }
-  return null;
-}
-
+/**
+ * @deprecated will be removed in v13.
+ */
 export function addProviderToModule(
   source: ts.SourceFile,
   modulePath: string,
@@ -459,6 +229,9 @@ export function addProviderToModule(
   );
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function addDeclarationToModule(
   source: ts.SourceFile,
   modulePath: string,
@@ -472,6 +245,9 @@ export function addDeclarationToModule(
   );
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function addEntryComponents(
   source: ts.SourceFile,
   modulePath: string,
@@ -485,6 +261,9 @@ export function addEntryComponents(
   );
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function readBootstrapInfo(
   host: Tree,
   app: string
@@ -572,6 +351,9 @@ export function readBootstrapInfo(
   };
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function getDecoratorPropertyValueNode(
   host: Tree,
   modulePath: string,
@@ -596,6 +378,279 @@ export function getDecoratorPropertyValueNode(
   return templateNode.getChildAt(templateNode.getChildCount() - 1);
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
+export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
+  const buffer = host.read(path);
+  if (!buffer) {
+    throw new SchematicsException(`Could not read TS file (${path}).`);
+  }
+  const content = buffer.toString();
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return source;
+}
+
+function _angularImportsFromNode(
+  node: ts.ImportDeclaration,
+  _sourceFile: ts.SourceFile
+): { [name: string]: string } {
+  const ms = node.moduleSpecifier;
+  let modulePath: string;
+  switch (ms.kind) {
+    case ts.SyntaxKind.StringLiteral:
+      modulePath = (ms as ts.StringLiteral).text;
+      break;
+    default:
+      return {};
+  }
+
+  if (!modulePath.startsWith('@angular/')) {
+    return {};
+  }
+
+  if (node.importClause) {
+    if (node.importClause.name) {
+      // This is of the form `import Name from 'path'`. Ignore.
+      return {};
+    } else if (node.importClause.namedBindings) {
+      const nb = node.importClause.namedBindings;
+      if (nb.kind == ts.SyntaxKind.NamespaceImport) {
+        // This is of the form `import * as name from 'path'`. Return `name.`.
+        return {
+          [`${(nb as ts.NamespaceImport).name.text}.`]: modulePath,
+        };
+      } else {
+        // This is of the form `import {a,b,c} from 'path'`
+        const namedImports = nb as ts.NamedImports;
+
+        return namedImports.elements
+          .map((is: ts.ImportSpecifier) =>
+            is.propertyName ? is.propertyName.text : is.name.text
+          )
+          .reduce((acc: { [name: string]: string }, curr: string) => {
+            acc[curr] = modulePath;
+
+            return acc;
+          }, {});
+      }
+    }
+
+    return {};
+  } else {
+    // This is of the form `import 'path';`. Nothing to do.
+    return {};
+  }
+}
+
+function _addSymbolToNgModuleMetadata(
+  source: ts.SourceFile,
+  ngModulePath: string,
+  metadataField: string,
+  expression: string
+): Change[] {
+  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
+  let node: any = nodes[0]; // tslint:disable-line:no-any
+
+  // Find the decorator declaration.
+  if (!node) {
+    return [];
+  }
+  // Get all the children property assignment of object literals.
+  const matchingProperties: ts.ObjectLiteralElement[] = (
+    node as ts.ObjectLiteralExpression
+  ).properties
+    .filter((prop) => prop.kind == ts.SyntaxKind.PropertyAssignment)
+    // Filter out every fields that's not "metadataField". Also handles string literals
+    // (but not expressions).
+    .filter((prop: ts.PropertyAssignment) => {
+      const name = prop.name;
+      switch (name.kind) {
+        case ts.SyntaxKind.Identifier:
+          return (name as ts.Identifier).getText(source) == metadataField;
+        case ts.SyntaxKind.StringLiteral:
+          return (name as ts.StringLiteral).text == metadataField;
+      }
+
+      return false;
+    });
+
+  // Get the last node of the array literal.
+  if (!matchingProperties) {
+    return [];
+  }
+  if (matchingProperties.length == 0) {
+    // We haven't found the field in the metadata declaration. Insert a new field.
+    const expr = node as ts.ObjectLiteralExpression;
+    let position: number;
+    let toInsert: string;
+    if (expr.properties.length == 0) {
+      position = expr.getEnd() - 1;
+      toInsert = `  ${metadataField}: [${expression}]\n`;
+    } else {
+      node = expr.properties[expr.properties.length - 1];
+      position = node.getEnd();
+      // Get the indentation of the last element, if any.
+      const text = node.getFullText(source);
+      if (text.match('^\r?\r?\n')) {
+        toInsert = `,${
+          text.match(/^\r?\n\s+/)[0]
+        }${metadataField}: [${expression}]`;
+      } else {
+        toInsert = `, ${metadataField}: [${expression}]`;
+      }
+    }
+    const newMetadataProperty = new InsertChange(
+      ngModulePath,
+      position,
+      toInsert
+    );
+    return [newMetadataProperty];
+  }
+
+  const assignment = matchingProperties[0] as ts.PropertyAssignment;
+
+  // If it's not an array, nothing we can do really.
+  if (assignment.initializer.kind !== ts.SyntaxKind.ArrayLiteralExpression) {
+    return [];
+  }
+
+  const arrLiteral = assignment.initializer as ts.ArrayLiteralExpression;
+  if (arrLiteral.elements.length == 0) {
+    // Forward the property.
+    node = arrLiteral;
+  } else {
+    node = arrLiteral.elements;
+  }
+
+  if (!node) {
+    console.log(
+      'No app module found. Please add your new class to your component.'
+    );
+
+    return [];
+  }
+
+  const isArray = Array.isArray(node);
+  if (isArray) {
+    const nodeArray = node as {} as Array<ts.Node>;
+    const symbolsArray = nodeArray.map((node) => node.getText());
+    if (symbolsArray.includes(expression)) {
+      return [];
+    }
+
+    node = node[node.length - 1];
+  }
+
+  let toInsert: string;
+  let position = node.getEnd();
+  if (!isArray && node.kind == ts.SyntaxKind.ObjectLiteralExpression) {
+    // We haven't found the field in the metadata declaration. Insert a new
+    // field.
+    const expr = node as ts.ObjectLiteralExpression;
+    if (expr.properties.length == 0) {
+      position = expr.getEnd() - 1;
+      toInsert = `  ${metadataField}: [${expression}]\n`;
+    } else {
+      node = expr.properties[expr.properties.length - 1];
+      position = node.getEnd();
+      // Get the indentation of the last element, if any.
+      const text = node.getFullText(source);
+      if (text.match('^\r?\r?\n')) {
+        toInsert = `,${
+          text.match(/^\r?\n\s+/)[0]
+        }${metadataField}: [${expression}]`;
+      } else {
+        toInsert = `, ${metadataField}: [${expression}]`;
+      }
+    }
+  } else if (!isArray && node.kind == ts.SyntaxKind.ArrayLiteralExpression) {
+    // We found the field but it's empty. Insert it just before the `]`.
+    position--;
+    toInsert = `${expression}`;
+  } else {
+    // Get the indentation of the last element, if any.
+    const text = node.getFullText(source);
+    if (text.match(/^\r?\n/)) {
+      toInsert = `,${text.match(/^\r?\n(\r?)\s+/)[0]}${expression}`;
+    } else {
+      toInsert = `, ${expression}`;
+    }
+  }
+  const insert = new InsertChange(ngModulePath, position, toInsert);
+  return [insert];
+}
+
+function getMatchingProperty(
+  source: ts.SourceFile,
+  property: string,
+  identifier: string,
+  module: string
+): ts.ObjectLiteralElement {
+  const nodes = getDecoratorMetadata(source, identifier, module);
+  let node: any = nodes[0]; // tslint:disable-line:no-any
+
+  if (!node) return null;
+
+  // Get all the children property assignment of object literals.
+  return getMatchingObjectLiteralElement(node, source, property);
+}
+
+function getListOfRoutes(
+  source: ts.SourceFile
+): ts.NodeArray<ts.Expression> | null {
+  const imports: any = getMatchingProperty(
+    source,
+    'imports',
+    'NgModule',
+    '@angular/core'
+  );
+
+  if (imports.initializer.kind === ts.SyntaxKind.ArrayLiteralExpression) {
+    const a = imports.initializer as ts.ArrayLiteralExpression;
+
+    for (const e of a.elements) {
+      if (e.kind === ts.SyntaxKind.CallExpression) {
+        const ee = e as ts.CallExpression;
+        const text = ee.expression.getText(source);
+        if (
+          (text === 'RouterModule.forRoot' ||
+            text === 'RouterModule.forChild') &&
+          ee.arguments.length > 0
+        ) {
+          const routes = ee.arguments[0];
+          if (routes.kind === ts.SyntaxKind.ArrayLiteralExpression) {
+            return (routes as ts.ArrayLiteralExpression).elements;
+          } else if (routes.kind === ts.SyntaxKind.Identifier) {
+            // find the array expression
+            const variableDeclarations = findNodes(
+              source,
+              ts.SyntaxKind.VariableDeclaration
+            ) as ts.VariableDeclaration[];
+
+            const routesDeclaration = variableDeclarations.find((x) => {
+              return x.name.getText() === routes.getText();
+            });
+
+            if (routesDeclaration) {
+              return (
+                routesDeclaration.initializer as ts.ArrayLiteralExpression
+              ).elements;
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function getMatchingObjectLiteralElement(
   node: any,
   source: ts.SourceFile,
@@ -617,20 +672,4 @@ function getMatchingObjectLiteralElement(
         return false;
       })[0]
   );
-}
-
-export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
-  const buffer = host.read(path);
-  if (!buffer) {
-    throw new SchematicsException(`Could not read TS file (${path}).`);
-  }
-  const content = buffer.toString();
-  const source = ts.createSourceFile(
-    path,
-    content,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return source;
 }

@@ -11,12 +11,16 @@ import {
   updateJson,
   GeneratorCallback,
   joinPathFragments,
+  ProjectConfiguration,
+  NxJsonProjectConfiguration,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { join } from 'path';
 import { Schema } from './schema';
 
+// nx-ignore-next-line
 const { jestProjectGenerator } = require('@nrwl/jest');
+// nx-ignore-next-line
 const { lintProjectGenerator, Linter } = require('@nrwl/linter');
 
 export interface NormalizedSchema extends Schema {
@@ -29,16 +33,38 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  addProjectConfiguration(tree, options.name, {
+  const projectConfiguration: ProjectConfiguration &
+    NxJsonProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
     targets: {},
     tags: options.parsedTags,
-  });
+  };
+
+  if (options.buildable) {
+    const { libsDir } = getWorkspaceLayout(tree);
+    projectConfiguration.targets.build = {
+      executor: '@nrwl/workspace:tsc',
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+        assets: [`${options.projectRoot}/*.md`],
+      },
+    };
+  }
+
+  addProjectConfiguration(
+    tree,
+    options.name,
+    projectConfiguration,
+    options.standaloneConfig
+  );
 }
 
-function addLint(
+export function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
@@ -52,6 +78,7 @@ function addLint(
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 }
 
@@ -100,6 +127,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
+    dot: '.',
     className,
     name,
     propertyName,
@@ -117,8 +145,16 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     );
   }
 
+  if (options.skipBabelrc) {
+    tree.delete(join(options.projectRoot, '.babelrc'));
+  }
+
   if (options.js) {
     toJS(tree);
+  }
+
+  if (!options.buildable) {
+    tree.delete(join(options.projectRoot, 'package.json'));
   }
 
   updateLibTsConfig(tree, options);

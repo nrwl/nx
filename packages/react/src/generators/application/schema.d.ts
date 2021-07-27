@@ -17,6 +17,9 @@ export interface Schema {
   skipWorkspaceJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
+  strict?: boolean;
+  setParserOptionsProject?: boolean;
+  standaloneConfig?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

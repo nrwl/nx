@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 import { dirname, join } from 'path';
-
-const argv = require('yargs-parser')(process.argv.slice(2));
-import './src/compat/compat';
 import { existsSync } from 'fs-extra';
+import * as yargsParser from 'yargs-parser';
+
+const argv = yargsParser(process.argv.slice(2));
 
 export async function invokeCommand(
   command: string,
   root: string,
   commandArgs: string[] = []
 ) {
-  if (command === undefined) {
+  if (!command) {
     command = 'help';
   }
 

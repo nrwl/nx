@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
 import {
@@ -9,10 +9,10 @@ import {
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { readFileSync } from 'fs';
+import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({ appRootPath: '/root' }));
 
 const tsconfig = {
   compilerOptions: {
@@ -70,7 +70,7 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
-describe('Enforce Module Boundaries', () => {
+describe('Enforce Module Boundaries (tslint)', () => {
   beforeEach(() => {
     vol.fromJSON(fileSys, '/root');
   });
@@ -726,6 +726,121 @@ describe('Enforce Module Boundaries', () => {
     );
   });
 
+  it('should error when absolute path within project detected', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+    const message =
+      'Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "@mycompany/mylib"';
+    expect(failures.length).toEqual(1);
+    expect(failures[0].getFailure()).toEqual(message);
+  });
+
+  it('should ignore detected absolute path within project if allowCircularSelfDependency flag is set', () => {
+    const failures = runRule(
+      {
+        allowCircularSelfDependency: true,
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
+
   it('should error when circular dependency detected', () => {
     const failures = runRule(
       {},
@@ -1063,14 +1178,14 @@ function runRule(
     true
   );
 
+  const mappedProjectGraph = mapProjectGraphFiles(projectGraph);
+
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
     'mycompany',
-    projectGraph,
-    new TargetProjectLocator(projectGraph.nodes, (path) =>
-      readFileSync(join('/root', path)).toString()
-    )
+    mappedProjectGraph,
+    new TargetProjectLocator(mappedProjectGraph.nodes)
   );
   return rule.apply(sourceFile);
 }

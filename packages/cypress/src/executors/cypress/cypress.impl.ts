@@ -3,6 +3,8 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import {
   ExecutorContext,
   logger,
+  parseTargetString,
+  readTargetOptions,
   runExecutor,
   stripIndents,
 } from '@nrwl/devkit';
@@ -31,6 +33,8 @@ export interface CypressExecutorOptions extends Json {
   ignoreTestFiles?: string;
   reporter?: string;
   reporterOptions?: string;
+  skipServe: boolean;
+  testingType?: 'component' | 'e2e';
 }
 
 try {
@@ -105,20 +109,30 @@ async function* startDevServer(
   context: ExecutorContext
 ) {
   // no dev server, return the provisioned base url
-  if (!opts.devServerTarget) {
+  if (!opts.devServerTarget || opts.skipServe) {
     yield opts.baseUrl;
     return;
   }
 
-  const [project, target, configuration] = opts.devServerTarget.split(':');
+  const { project, target, configuration } = parseTargetString(
+    opts.devServerTarget
+  );
+  const devServerTargetOpts = readTargetOptions(
+    { project, target, configuration },
+    context
+  );
+  const targetSupportsWatchOpt =
+    Object.keys(devServerTargetOpts).includes('watch');
+
   for await (const output of await runExecutor<{
     success: boolean;
     baseUrl?: string;
   }>(
     { project, target, configuration },
-    {
-      watch: opts.watch,
-    },
+    // @NOTE: Do not forward watch option if not supported by the target dev server,
+    // this is relevant for running Cypress against dev server target that does not support this option,
+    // for instance @nguniversal/builders:ssr-dev-server.
+    targetSupportsWatchOpt ? { watch: opts.watch } : {},
     context
   )) {
     if (!output.success && !opts.watch)
@@ -144,7 +158,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
 
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
-    options.config = { baseUrl: baseUrl };
+    options.config = { baseUrl };
   }
 
   if (opts.browser) {
@@ -169,6 +183,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   options.ignoreTestFiles = opts.ignoreTestFiles;
   options.reporter = opts.reporter;
   options.reporterOptions = opts.reporterOptions;
+  options.testingType = opts.testingType;
 
   const result = await (!opts.watch || opts.headless
     ? Cypress.run(options)

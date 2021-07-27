@@ -1,27 +1,28 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { writeFileSync } from 'fs';
+import { readdirSync, existsSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
-import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { fileExists } from '../utilities/fileutils';
+import { output } from '../utilities/output';
+import type { CompilerOptions } from 'typescript';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import {
-  detectPackageManager,
+  logger,
+  normalizePath,
   getPackageManagerCommand,
-} from '@nrwl/tao/src/shared/package-manager';
-import {
-  fileExists,
+  detectPackageManager,
   readJsonFile,
   writeJsonFile,
-} from '../utilities/fileutils';
-import { output } from '../utilities/output';
-import { CompilerOptions } from 'typescript';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { logger, normalizePath } from '@nrwl/devkit';
+} from '@nrwl/devkit';
+import { generate } from '@nrwl/tao/src/commands/generate';
 
 const rootDirectory = appRootPath;
+const toolsDir = path.join(rootDirectory, 'tools');
+const generatorsDir = path.join(toolsDir, 'generators');
+const toolsTsConfigPath = path.join(toolsDir, 'tsconfig.tools.json');
 
 type TsConfig = {
   extends: string;
@@ -42,17 +43,14 @@ export async function workspaceGenerators(args: string[]) {
   }
   const generatorName = args[0];
   const ws = new Workspaces(rootDirectory);
+  args[0] = collectionFile + ':' + generatorName;
   if (ws.isNxGenerator(collectionFile, generatorName)) {
-    try {
-      execSync(
-        `npx tao g "${collectionFile}":${generatorName} ${args
-          .slice(1)
-          .join(' ')}`,
-        { stdio: ['inherit', 'inherit', 'inherit'] }
-      );
-    } catch (e) {
-      process.exit(1);
-    }
+    process.exitCode = await generate(
+      process.cwd(),
+      rootDirectory,
+      args,
+      parsedArgs.verbose
+    );
   } else {
     const logger = require('@angular-devkit/core/node').createConsoleLogger(
       parsedArgs.verbose,
@@ -60,7 +58,7 @@ export async function workspaceGenerators(args: string[]) {
       process.stderr
     );
     try {
-      const workflow = createWorkflow(parsedArgs.dryRun);
+      const workflow = createWorkflow(ws, parsedArgs.dryRun);
       await executeAngularDevkitSchematic(
         generatorName,
         parsedArgs,
@@ -68,7 +66,7 @@ export async function workspaceGenerators(args: string[]) {
         outDir,
         logger
       );
-    } catch (e) {
+    } catch {
       process.exit(1);
     }
   }
@@ -82,19 +80,22 @@ function compileTools() {
 
   const generatorsOutDir = path.join(toolsOutDir, 'generators');
   const collectionData = constructCollection();
-  saveCollection(generatorsOutDir, collectionData);
+  writeJsonFile(
+    path.join(generatorsOutDir, 'workspace-generators.json'),
+    collectionData
+  );
   return generatorsOutDir;
 }
 
 function getToolsOutDir() {
-  return path.resolve(toolsDir(), toolsTsConfig().compilerOptions.outDir);
+  return path.resolve(toolsDir, toolsTsConfig().compilerOptions.outDir);
 }
 
 function compileToolsDir(outDir: string) {
-  copySync(generatorsDir(), path.join(outDir, 'generators'));
+  copySync(generatorsDir, path.join(outDir, 'generators'));
 
-  const tmpTsConfigPath = createTmpTsConfig(toolsTsConfigPath(), {
-    include: [path.join(generatorsDir(), '**/*.ts')],
+  const tmpTsConfigPath = createTmpTsConfig(toolsTsConfigPath, {
+    include: [path.join(generatorsDir, '**/*.ts')],
   });
 
   const pmc = getPackageManagerCommand();
@@ -104,16 +105,16 @@ function compileToolsDir(outDir: string) {
       stdio: 'inherit',
       cwd: rootDirectory,
     });
-  } catch (e) {
+  } catch {
     process.exit(1);
   }
 }
 
 function constructCollection() {
   const generators = {};
-  fs.readdirSync(generatorsDir()).forEach((c) => {
-    const childDir = path.join(generatorsDir(), c);
-    if (exists(path.join(childDir, 'schema.json'))) {
+  readdirSync(generatorsDir).forEach((c) => {
+    const childDir = path.join(generatorsDir, c);
+    if (existsSync(path.join(childDir, 'schema.json'))) {
       generators[c] = {
         factory: `./${c}`,
         schema: `./${normalizePath(path.join(c, 'schema.json'))}`,
@@ -124,54 +125,42 @@ function constructCollection() {
   return {
     name: 'workspace-generators',
     version: '1.0',
-    generators: generators,
+    generators,
     schematics: generators,
   };
 }
 
-function saveCollection(dir: string, collection: any) {
-  writeFileSync(
-    path.join(dir, 'workspace-generators.json'),
-    JSON.stringify(collection)
-  );
+function toolsTsConfig(): TsConfig {
+  return readJsonFile<TsConfig>(toolsTsConfigPath);
 }
 
-function generatorsDir() {
-  return path.join(rootDirectory, 'tools', 'generators');
-}
-
-function toolsDir() {
-  return path.join(rootDirectory, 'tools');
-}
-
-function toolsTsConfigPath() {
-  return path.join(toolsDir(), 'tsconfig.tools.json');
-}
-
-function toolsTsConfig() {
-  return readJsonFile<TsConfig>(toolsTsConfigPath());
-}
-
-function createWorkflow(dryRun: boolean) {
+function createWorkflow(workspace: Workspaces, dryRun: boolean) {
   const { virtualFs, schema } = require('@angular-devkit/core');
   const { NodeJsSyncHost } = require('@angular-devkit/core/node');
   const { formats } = require('@angular-devkit/schematics');
   const { NodeWorkflow } = require('@angular-devkit/schematics/tools');
   const root = normalizePath(rootDirectory);
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
-  return new NodeWorkflow(host, {
+  const workflow = new NodeWorkflow(host, {
     packageManager: detectPackageManager(),
     dryRun,
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), rootDirectory],
   });
+  workflow.registry.addSmartDefaultProvider('projectName', () =>
+    workspace.calculateDefaultProjectName(
+      process.cwd(),
+      workspace.readWorkspaceConfiguration()
+    )
+  );
+  return workflow;
 }
 
 function listGenerators(collectionFile: string) {
   try {
     const bodyLines: string[] = [];
 
-    const collection = JSON.parse(fs.readFileSync(collectionFile).toString());
+    const collection = readJsonFile(collectionFile);
 
     bodyLines.push(chalk.bold(chalk.green('WORKSPACE GENERATORS')));
     bodyLines.push('');
@@ -195,14 +184,26 @@ function listGenerators(collectionFile: string) {
   return 0;
 }
 
-function createPromptProvider(): any {
+function createPromptProvider() {
+  interface Prompt {
+    name: string;
+    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    message: string;
+    initial?: any;
+    choices?: (string | { name: string; message: string })[];
+    validate?: (value: string) => boolean | string;
+  }
+
   return (definitions: Array<any>) => {
-    const questions: inquirer.Questions = definitions.map((definition) => {
-      const question: inquirer.Question = {
+    const questions: Prompt[] = definitions.map((definition) => {
+      const question: Prompt = {
         name: definition.id,
         message: definition.message,
-        default: definition.default,
-      };
+      } as any;
+
+      if (definition.default) {
+        question.initial = definition.default;
+      }
 
       const validator = definition.validator;
       if (validator) {
@@ -210,12 +211,20 @@ function createPromptProvider(): any {
       }
 
       switch (definition.type) {
+        case 'string':
+        case 'input':
+          return { ...question, type: 'input' };
+        case 'boolean':
         case 'confirmation':
+        case 'confirm':
           return { ...question, type: 'confirm' };
+        case 'number':
+        case 'numeral':
+          return { ...question, type: 'numeral' };
         case 'list':
           return {
             ...question,
-            type: !!definition.multiselect ? 'checkbox' : 'list',
+            type: !!definition.multiselect ? 'multiselect' : 'select',
             choices:
               definition.items &&
               definition.items.map((item) => {
@@ -223,8 +232,8 @@ function createPromptProvider(): any {
                   return item;
                 } else {
                   return {
-                    name: item.label,
-                    value: item.value,
+                    message: item.label,
+                    name: item.value,
                   };
                 }
               }),
@@ -234,7 +243,7 @@ function createPromptProvider(): any {
       }
     });
 
-    return inquirer.prompt(questions);
+    return require('enquirer').prompt(questions);
   };
 }
 
@@ -346,8 +355,8 @@ async function executeAngularDevkitSchematic(
       .execute({
         collection: path.join(outDir, 'workspace-generators.json'),
         schematic: schematicName,
-        options: options,
-        logger: logger,
+        options,
+        logger,
       })
       .toPromise();
 
@@ -394,14 +403,6 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
   });
 }
 
-function exists(file: string): boolean {
-  try {
-    return !!fs.statSync(file);
-  } catch (e) {
-    return false;
-  }
-}
-
 function createTmpTsConfig(
   tsconfigPath: string,
   updateConfig: Partial<TsConfig>
@@ -415,28 +416,14 @@ function createTmpTsConfig(
     ...originalTSConfig,
     ...updateConfig,
   };
-
-  process.on('exit', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-  });
-  process.on('SIGTERM', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-  process.on('SIGINT', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-
+  process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
   writeJsonFile(tmpTsConfigPath, generatedTSConfig);
 
   return tmpTsConfigPath;
 }
 
-function cleanupTmpTsConfigFile(tmpTsConfigPath) {
-  try {
-    if (tmpTsConfigPath) {
-      fs.unlinkSync(tmpTsConfigPath);
-    }
-  } catch (e) {}
+function cleanupTmpTsConfigFile(tmpTsConfigPath: string) {
+  if (tmpTsConfigPath) {
+    removeSync(tmpTsConfigPath);
+  }
 }

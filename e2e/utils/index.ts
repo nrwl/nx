@@ -1,19 +1,33 @@
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
+  copySync,
+  createFileSync,
+  ensureDirSync,
+  moveSync,
   readdirSync,
   readFileSync,
+  removeSync,
   renameSync,
   statSync,
   writeFileSync,
-  ensureDirSync,
-  createFileSync,
-  moveSync,
-  copySync,
-  removeSync,
 } from 'fs-extra';
+import isCI = require('is-ci');
 import * as path from 'path';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import * as isCI from 'is-ci';
+import { dirSync } from 'tmp';
+const kill = require('kill-port');
+const isWindows = require('is-windows');
+import { check as portCheck } from 'tcp-port-used';
+import { parseJson } from '@nrwl/devkit';
+
+import chalk = require('chalk');
+import treeKill = require('tree-kill');
+import { promisify } from 'util';
+
+export const promisifiedTreeKill: (
+  pid: number,
+  signal: string
+) => Promise<void> = promisify(treeKill);
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -23,8 +37,12 @@ interface RunCmdOpts {
 }
 
 export function currentCli() {
-  return process.env.SELECTED_CLI ? process.env.SELECTED_CLI : 'nx';
+  return process.env.SELECTED_CLI || 'nx';
 }
+
+export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
+export const e2eCwd = `${e2eRoot}/${currentCli()}`;
+ensureDirSync(e2eCwd);
 
 let projName: string;
 
@@ -34,6 +52,13 @@ export function uniq(prefix: string) {
 
 export function workspaceConfigName() {
   return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
+}
+
+export function updateWorkspaceConfig(
+  callback: (json: { [key: string]: any }) => Object
+) {
+  const file = workspaceConfigName();
+  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
 }
 
 export function runCreateWorkspace(
@@ -60,11 +85,9 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  const linterArg =
-    preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
   let command = `${pm.createWorkspace} ${name} --cli=${
     cli || currentCli()
-  } --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
+  } --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -85,30 +108,36 @@ export function runCreateWorkspace(
   }
 
   const create = execSync(command, {
-    cwd: `./tmp/${currentCli()}`,
+    cwd: e2eCwd,
     stdio: [0, 1, 2],
     env: process.env,
+    encoding: 'utf-8',
   });
   return create ? create.toString() : '';
 }
 
 export function packageInstall(pkg: string, projName?: string) {
-  const cwd = projName ? `./tmp/${currentCli()}/${projName}` : tmpProjPath();
+  const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
   const install = execSync(`${pm.addDev} ${pkg}`, {
     cwd,
-    // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
-    ...{ stdio: [0, 1, 2] },
+    stdio: [0, 1, 2],
     env: process.env,
+    encoding: 'utf-8',
   });
   return install ? install.toString() : '';
 }
 
-export function runNgNew(): string {
-  return execSync(`../../node_modules/.bin/ng new proj --no-interactive`, {
-    cwd: `./tmp/${currentCli()}`,
-    env: process.env,
-  }).toString();
+export function runNgNew(projectName: string): string {
+  projName = projectName;
+  return execSync(
+    `../../node_modules/.bin/ng new ${projName} --no-interactive`,
+    {
+      cwd: e2eCwd,
+      env: process.env,
+      encoding: 'utf-8',
+    }
+  ).toString();
 }
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
@@ -136,23 +165,23 @@ export function newProject({ name = uniq('proj') } = {}): string {
 
       const packages = [
         `@nrwl/angular`,
+        `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
+        `@nrwl/gatsby`,
         `@nrwl/jest`,
         `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
-        `@nrwl/gatsby`,
         `@nrwl/node`,
+        `@nrwl/nx-plugin`,
         `@nrwl/react`,
         `@nrwl/storybook`,
-        `@nrwl/nx-plugin`,
-        `@nrwl/eslint-plugin-nx`,
         `@nrwl/web`,
       ];
       packageInstall(packages.join(` `), projScope);
 
       if (useBackupProject) {
-        moveSync(`./tmp/${currentCli()}/proj`, `${tmpBackupProjPath()}`);
+        moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
       }
     }
     projName = name;
@@ -161,30 +190,64 @@ export function newProject({ name = uniq('proj') } = {}): string {
     }
     return projScope;
   } catch (e) {
-    console.log(`Failed to set up project for e2e tests.`);
-    console.log(e.message);
+    logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }
 }
 
+const KILL_PORT_DELAY = 5000;
+async function killPort(port: number): Promise<boolean> {
+  if (await portCheck(port)) {
+    try {
+      logInfo(`Attempting to close port ${port}`);
+      await kill(port);
+      await new Promise<void>((resolve) =>
+        setTimeout(() => resolve(), KILL_PORT_DELAY)
+      );
+      if (await portCheck(port)) {
+        logError(`Port ${port} still open`);
+      } else {
+        logSuccess(`Port ${port} successfully closed`);
+        return true;
+      }
+    } catch {
+      logError(`Port ${port} closing failed`);
+    }
+    return false;
+  } else {
+    return true;
+  }
+}
+
+export async function killPorts(port?: number): Promise<boolean> {
+  return port
+    ? await killPort(port)
+    : (await killPort(3333)) && (await killPort(4200));
+}
+
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export function removeProject({ onlyOnCI = false } = {}) {
+export async function removeProject({ onlyOnCI = false } = {}) {
   if (onlyOnCI && !isCI) {
     return;
   }
-  removeSync(tmpProjPath());
+  try {
+    removeSync(tmpProjPath());
+  } catch (e) {}
 }
 
-export function supportUi() {
-  return false;
-  // return !process.env.NO_CHROME;
+export function runCypressTests() {
+  return process.env.NX_E2E_RUN_CYPRESS === 'true';
+}
+
+export function isNotWindows() {
+  return !isWindows();
 }
 
 export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: null,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -192,7 +255,12 @@ export function runCommandAsync(
       command,
       {
         cwd: tmpProjPath(),
-        env: { ...process.env, FORCE_COLOR: 'false' },
+        env: {
+          ...(opts.env || process.env),
+          FORCE_COLOR: 'false',
+          NX_INVOKED_BY_RUNNER: undefined,
+        },
+        encoding: 'utf-8',
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -206,37 +274,38 @@ export function runCommandAsync(
 
 export function runCommandUntil(
   command: string,
-  criteria: (output: string) => boolean,
-  { kill = true } = {}
-): Promise<{ process: ChildProcess }> {
+  criteria: (output: string) => boolean
+): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
-    env: { ...process.env, FORCE_COLOR: 'false' },
+    env: {
+      ...process.env,
+      FORCE_COLOR: 'false',
+      NX_INVOKED_BY_RUNNER: undefined,
+    },
+    encoding: 'utf-8',
   });
-
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
 
     function checkCriteria(c) {
       output += c.toString();
-      if (criteria(output)) {
+      if (criteria(output) && !complete) {
         complete = true;
-        res({ process: p });
-        if (kill) {
-          p.kill();
-        }
+        res(p);
       }
     }
 
     p.stdout.on('data', checkCriteria);
     p.stderr.on('data', checkCriteria);
     p.on('exit', (code) => {
-      if (code !== 0 && !complete) {
-        console.log(output);
+      if (!complete) {
+        rej(`Exited with ${code}`);
+      } else {
+        res(p);
       }
-      rej(`Exited with ${code}`);
     });
   });
 }
@@ -260,19 +329,17 @@ export function runNgAdd(
   command?: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: null,
     cwd: tmpProjPath(),
   }
 ): string {
   try {
     packageInstall('@nrwl/workspace');
-    return execSync(
-      `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
-      {
-        cwd: tmpProjPath(),
-        env: opts.env as any,
-      }
-    )
+    return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
+      cwd: tmpProjPath(),
+      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      encoding: 'utf-8',
+    })
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
@@ -282,7 +349,10 @@ export function runNgAdd(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e.stdout.toString(), e.stderr.toString());
+      logError(
+        `Ng Add failed: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
       throw e;
     }
   }
@@ -292,21 +362,23 @@ export function runCLI(
   command?: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: null,
   }
 ): string {
   try {
     const pm = getPackageManagerCommand();
     let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: opts.env,
+      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      encoding: 'utf-8',
+      maxBuffer: 50 * 1024 * 1024,
     }).toString();
     r = r.replace(
       /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
       ''
     );
     if (process.env.VERBOSE_OUTPUT) {
-      console.log(r);
+      logInfo(`result of running: ${command}`, r);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -317,10 +389,12 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout.toString();
+      return e.stdout?.toString() + e.stderr?.toString();
     } else {
-      console.log('original command', command);
-      console.log(e.stdout?.toString(), e.stderr?.toString());
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
       throw e;
     }
   }
@@ -336,13 +410,20 @@ export function runCommand(command: string): string {
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, FORCE_COLOR: 'false' },
+      env: {
+        ...process.env,
+        FORCE_COLOR: 'false',
+        NX_INVOKED_BY_RUNNER: undefined,
+      },
+      encoding: 'utf-8',
     }).toString();
     if (process.env.VERBOSE_OUTPUT) {
       console.log(r);
     }
     return r;
   } catch (e) {
+    // this is intentional
+    // npm ls fails if package is not found
     return e.stdout.toString() + e.stderr.toString();
   }
 }
@@ -359,16 +440,17 @@ function setMaxWorkers() {
     const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const targets = workspace.projects[appName].targets
-        ? workspace.projects[appName].targets
-        : workspace.projects[appName].architect;
-      const build = targets.build;
+      let project = workspace.projects[appName];
+      if (typeof project === 'string') {
+        project = readJson(path.join(project, 'project.json'));
+      }
+      const { build } = project.targets ?? project.architect;
 
       if (!build) {
         return;
       }
 
-      const executor = build.builder ? build.builder : build.executor;
+      const executor = build.builder ?? build.executor;
       if (
         executor.startsWith('@nrwl/node') ||
         executor.startsWith('@nrwl/web') ||
@@ -386,13 +468,13 @@ export function createFile(f: string, content: string = ''): void {
   const path = tmpProjPath(f);
   createFileSync(path);
   if (content) {
-    updateFile(path, content);
+    updateFile(f, content);
   }
 }
 
 export function updateFile(
   f: string,
-  content: string | ((content: string) => void)
+  content: string | ((content: string) => string)
 ): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
   if (typeof content === 'string') {
@@ -433,12 +515,13 @@ export function listFiles(dirName: string) {
 }
 
 export function readJson(f: string): any {
-  return JSON.parse(readFile(f));
+  const content = readFile(f);
+  return parseJson(content);
 }
 
 export function readFile(f: string) {
   const ff = f.startsWith('/') ? f : tmpProjPath(f);
-  return readFileSync(ff).toString();
+  return readFileSync(ff, 'utf-8');
 }
 
 export function rmDist() {
@@ -470,15 +553,43 @@ export function getSize(filePath: string): number {
 }
 
 export function tmpProjPath(path?: string) {
-  return path
-    ? `./tmp/${currentCli()}/${projName}/${path}`
-    : `./tmp/${currentCli()}/${projName}`;
+  return path ? `${e2eCwd}/${projName}/${path}` : `${e2eCwd}/${projName}`;
 }
 
 function tmpBackupProjPath(path?: string) {
-  return path
-    ? `./tmp/${currentCli()}/proj-backup/${path}`
-    : `./tmp/${currentCli()}/proj-backup`;
+  return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
+}
+
+const E2E_LOG_PREFIX = `${chalk.reset.inverse.bold.keyword('orange')(' E2E ')}`;
+
+function e2eConsoleLogger(message: string, body?: string) {
+  process.stdout.write('\n');
+  process.stdout.write(`${E2E_LOG_PREFIX} ${message}\n`);
+  if (body) {
+    process.stdout.write(`${body}\n`);
+  }
+  process.stdout.write('\n');
+}
+
+export function logInfo(title: string, body?: string) {
+  const message = `${chalk.reset.inverse.bold.white(
+    ' INFO '
+  )} ${chalk.bold.white(title)}`;
+  return e2eConsoleLogger(message, body);
+}
+
+export function logError(title: string, body?: string) {
+  const message = `${chalk.reset.inverse.bold.red(' ERROR ')} ${chalk.bold.red(
+    title
+  )}`;
+  return e2eConsoleLogger(message, body);
+}
+
+export function logSuccess(title: string, body?: string) {
+  const message = `${chalk.reset.inverse.bold.green(
+    ' SUCCESS '
+  )} ${chalk.bold.green(title)}`;
+  return e2eConsoleLogger(message, body);
 }
 
 export function getPackageManagerCommand({
@@ -496,24 +607,30 @@ export function getPackageManagerCommand({
     ? ' --scripts-prepend-node-path '
     : '';
 
+  const publishedVersion = `9999.0.2`;
+
+  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+
   return {
     npm: {
-      createWorkspace: `npx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
+      createWorkspace: `npx ${
+        +npmMajorVersion >= 7 ? '--yes' : ''
+      } create-nx-workspace@${publishedVersion}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
-      addDev: `npm install -D`,
+      addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${process.env.PUBLISHED_VERSION} && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
     pnpm: {
-      createWorkspace: `pnpx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
+      createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
       addDev: `pnpm add -D`,
@@ -521,6 +638,12 @@ export function getPackageManagerCommand({
     },
   }[packageManager];
 }
+
+export const packageManagerLockFile = {
+  npm: 'package-lock.json',
+  yarn: 'yarn.lock',
+  pnpm: 'pnpm-lock.yaml',
+};
 
 export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();

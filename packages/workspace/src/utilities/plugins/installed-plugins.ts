@@ -1,14 +1,14 @@
 import * as chalk from 'chalk';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
-import { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
+import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
 
 export function getInstalledPluginsFromPackageJson(
   workspaceRoot: string,
   corePlugins: CorePlugin[],
-  communityPlugins: CommunityPlugin[]
+  communityPlugins: CommunityPlugin[] = []
 ): Array<PluginCapabilities> {
   const packageJson = readJsonFile(`${workspaceRoot}/package.json`);
 
@@ -19,7 +19,7 @@ export function getInstalledPluginsFromPackageJson(
     ...Object.keys(packageJson.devDependencies || {}),
   ]);
 
-  return [...plugins]
+  return Array.from(plugins)
     .filter((name) => {
       try {
         // Check for `package.json` existence instead of requiring the module itself

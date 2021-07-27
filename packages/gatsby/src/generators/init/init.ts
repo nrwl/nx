@@ -42,6 +42,7 @@ function updateDependencies(host: Tree) {
   });
 
   const isPnpm = host.exists('pnpm-lock.yaml');
+  process.env.npm_config_legacy_peer_deps = 'false';
   return addDependenciesToPackageJson(
     host,
     {
@@ -60,6 +61,7 @@ function updateDependencies(host: Tree) {
       'react-helmet': reactHelmetVersion,
       'gatsby-plugin-typescript': gatsbyPluginTypescriptVersion,
       ...(isPnpm ? { 'gatsby-plugin-pnpm': gatsbyPluginPnpm } : {}),
+      webpack: '^5.39.1',
     },
     {
       '@nrwl/gatsby': nxVersion,

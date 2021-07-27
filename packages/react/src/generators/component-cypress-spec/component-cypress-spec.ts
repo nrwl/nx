@@ -16,6 +16,7 @@ export interface CreateComponentSpecFileSchema {
   project: string;
   componentPath: string;
   js?: boolean;
+  cypressProject?: string;
 }
 
 export function componentCypressGenerator(
@@ -26,7 +27,7 @@ export function componentCypressGenerator(
 }
 
 // TODO: candidate to refactor with the angular component story
-export function getKnobDefaultValue(property: ts.SyntaxKind): string {
+export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   const typeNameToDefault: Record<number, any> = {
     [ts.SyntaxKind.StringKeyword]: '',
     [ts.SyntaxKind.NumberKeyword]: 0,
@@ -36,6 +37,8 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
   const resolvedValue = typeNameToDefault[property];
   if (typeof resolvedValue === undefined) {
     return '';
+  } else if (typeof resolvedValue === 'string') {
+    return resolvedValue.replace(/\s/g, '+');
   } else {
     return resolvedValue;
   }
@@ -43,11 +46,13 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
 
 export function createComponentSpecFile(
   tree: Tree,
-  { project, componentPath, js }: CreateComponentSpecFileSchema
+  { project, componentPath, js, cypressProject }: CreateComponentSpecFileSchema
 ) {
+  const e2eProjectName = cypressProject || `${project}-e2e`;
   const projects = getProjects(tree);
-  const e2eLibIntegrationFolderPath =
-    projects.get(project + '-e2e').sourceRoot + '/integration';
+  const e2eLibIntegrationFolderPath = `${
+    projects.get(e2eProjectName).sourceRoot
+  }/integration`;
 
   const proj = projects.get(project);
   const componentFilePath = joinPathFragments(proj.sourceRoot, componentPath);
@@ -57,14 +62,14 @@ export function createComponentSpecFile(
     .replace('.jsx', '')
     .replace('.js', '');
 
-  const contents = tree.read(componentFilePath);
-  if (!contents) {
+  const contents = tree.read(componentFilePath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentFilePath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );
@@ -87,7 +92,7 @@ export function createComponentSpecFile(
     props = propsInterface.members.map((member: ts.PropertySignature) => {
       return {
         name: (member.name as ts.Identifier).text,
-        defaultValue: getKnobDefaultValue(member.type.kind),
+        defaultValue: getArgsDefaultValue(member.type.kind),
       };
     });
   }
@@ -95,7 +100,7 @@ export function createComponentSpecFile(
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files'),
-    e2eLibIntegrationFolderPath + '/' + componentName,
+    `${e2eLibIntegrationFolderPath}/${componentName}`,
     {
       projectName: project,
       componentName,

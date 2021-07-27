@@ -4,7 +4,7 @@ import { logger, stripIndent } from '../shared/logger';
 export function help() {
   logger.info(
     stripIndent(`
-    ${chalk.bold('Nx - Extensible Dev Tools for Monorepos.')}
+    ${chalk.bold('Nx - Smart, Extensible Build Framework')}
   
     ${chalk.bold('Create a new project.')}
      nx new ${chalk.grey(

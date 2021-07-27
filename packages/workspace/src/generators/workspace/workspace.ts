@@ -51,7 +51,7 @@ function createAppsAndLibsFolders(host: Tree, options: Schema) {
 }
 
 function createFiles(host: Tree, options: Schema) {
-  const npmScope = options.npmScope ? options.npmScope : options.name;
+  const npmScope = options.npmScope ?? options.name;
   const formattedNames = names(options.name);
   generateFiles(host, pathJoin(__dirname, './files'), options.directory, {
     formattedNames,
@@ -88,8 +88,9 @@ function formatWorkspaceJson(host: Tree, options: Schema) {
     updateJson(host, path, (workspaceJson) => {
       const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
       if (reformatted) {
-        host.write(path, JSON.stringify(reformatted, null, 2));
+        return reformatted;
       }
+      return workspaceJson;
     });
   } catch (e) {
     console.error(`Failed to format: ${path}`);

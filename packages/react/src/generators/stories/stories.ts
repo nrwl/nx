@@ -6,6 +6,7 @@ import {
   convertNxGenerator,
   getProjects,
   joinPathFragments,
+  logger,
   ProjectType,
   Tree,
   visitNotIgnoredFiles,
@@ -16,6 +17,7 @@ export interface StorybookStoriesSchema {
   project: string;
   generateCypressSpecs: boolean;
   js?: boolean;
+  cypressProject?: string;
 }
 
 export function projectRootPath(
@@ -39,14 +41,14 @@ function containsComponentDeclaration(
   tree: Tree,
   componentPath: string
 ): boolean {
-  const contents = tree.read(componentPath);
-  if (!contents) {
+  const contents = tree.read(componentPath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentPath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentPath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );
@@ -58,16 +60,17 @@ export async function createAllStories(
   tree: Tree,
   projectName: string,
   generateCypressSpecs: boolean,
-  js: boolean
+  js: boolean,
+  cypressProject?: string
 ) {
   const projects = getProjects(tree);
   const project = projects.get(projectName);
 
   const { sourceRoot, projectType } = project;
-  const libPath = projectRootPath(tree, sourceRoot, projectType);
+  const projectPath = projectRootPath(tree, sourceRoot, projectType);
 
   let componentPaths: string[] = [];
-  visitNotIgnoredFiles(tree, libPath, (path) => {
+  visitNotIgnoredFiles(tree, projectPath, (path) => {
     if (
       (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
@@ -76,6 +79,15 @@ export async function createAllStories(
       componentPaths.push(path);
     }
   });
+
+  const e2eProjectName = cypressProject || `${projectName}-e2e`;
+  const e2eProject = projects.get(e2eProjectName);
+
+  if (generateCypressSpecs && !e2eProject) {
+    logger.info(
+      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`
+    );
+  }
 
   await Promise.all(
     componentPaths.map(async (componentPath) => {
@@ -90,11 +102,12 @@ export async function createAllStories(
         project: projectName,
       });
 
-      if (generateCypressSpecs) {
+      if (generateCypressSpecs && e2eProject) {
         await componentCypressSpecGenerator(tree, {
           project: projectName,
           componentPath: relativeCmpDir,
           js,
+          cypressProject,
         });
       }
     })
@@ -109,7 +122,8 @@ export async function storiesGenerator(
     host,
     schema.project,
     schema.generateCypressSpecs,
-    schema.js
+    schema.js,
+    schema.cypressProject
   );
 }
 

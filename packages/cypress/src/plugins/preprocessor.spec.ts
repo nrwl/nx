@@ -1,16 +1,23 @@
+import { mocked } from 'ts-jest/utils';
 import { getWebpackConfig, preprocessTypescript } from './preprocessor';
 jest.mock('@cypress/webpack-preprocessor', () => {
-  return jest.fn(() => (...args) => Promise.resolve());
+  return jest.fn(
+    () =>
+      (...args) =>
+        Promise.resolve()
+  );
 });
 jest.mock('tsconfig-paths-webpack-plugin');
 import * as wp from '@cypress/webpack-preprocessor';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
+const mockWp = mocked(wp);
+
 describe('getWebpackConfig', () => {
   beforeEach(() => {
-    (<any>(
-      TsConfigPathsPlugin
-    )).mockImplementation(function MockPathsPlugin() {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
   it('should load typescript', () => {
     const config = getWebpackConfig({
@@ -19,7 +26,7 @@ describe('getWebpackConfig', () => {
       },
     });
     expect(config.module.rules).toContainEqual({
-      test: /\.(j|t)sx?$/,
+      test: /\.([jt])sx?$/,
       loader: require.resolve('ts-loader'),
       exclude: [/node_modules/],
       options: {
@@ -78,10 +85,10 @@ describe('preprocessTypescript', () => {
         tsConfig: './tsconfig.json',
       },
     });
-    await preprocessor('arg0', 'arg1');
+    await preprocessor('arg0');
     expect(wp).toBeCalled();
     expect(
-      wp.mock.calls[wp.mock.calls.length - 1][0].webpackOptions.resolve
+      mockWp.mock.calls[mockWp.mock.calls.length - 1][0].webpackOptions.resolve
         .extensions
     ).toEqual(['.ts', '.tsx', '.mjs', '.js', '.jsx']);
   });
@@ -98,10 +105,10 @@ describe('preprocessTypescript', () => {
         return webpackConfig;
       }
     );
-    await preprocessor('arg0', 'arg1');
+    await preprocessor('arg0');
     expect(wp).toBeCalled();
     expect(
-      wp.mock.calls[wp.mock.calls.length - 1][0].webpackOptions.resolve
+      mockWp.mock.calls[mockWp.mock.calls.length - 1][0].webpackOptions.resolve
         .extensions
     ).toEqual(['.ts', '.tsx', '.mjs', '.js', '.jsx', '.mdx']);
   });

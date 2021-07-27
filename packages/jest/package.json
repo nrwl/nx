@@ -17,15 +17,15 @@
     "Unit Testing",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./collection.json",
+  "schematics": "./generators.json",
   "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
@@ -33,9 +33,14 @@
   },
   "dependencies": {
     "@nrwl/devkit": "*",
-    "jest-resolve": "^26.6.2",
+    "identity-obj-proxy": "3.0.0",
+    "jest-resolve": "27.0.6",
     "rxjs": "^6.5.4",
-    "strip-json-comments": "2.0.1",
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.0",
+    "@jest/reporters": "27.0.6",
+    "@jest/test-result": "27.0.6",
+    "chalk": "4.1.0",
+    "jest-config": "27.0.6",
+    "jest-util": "27.0.6"
   }
 }

@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   combineOptionsForExecutor,
   convertToCamelCase,
@@ -8,6 +8,7 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import {
+  Executor,
   ExecutorContext,
   ProjectConfiguration,
   TargetConfiguration,
@@ -42,7 +43,7 @@ function parseRunOpts(
   defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
       alias: {
@@ -55,11 +56,8 @@ function parseRunOpts(
     throwInvalidInvocation();
   }
   // eslint-disable-next-line prefer-const
-  let [project, target, configuration]: [
-    string,
-    string,
-    string
-  ] = runOptions._[0].split(':');
+  let [project, target, configuration]: [string, string, string] =
+    runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
       `No project name specified. Using default project : ${chalk.bold(
@@ -108,28 +106,53 @@ export function validateProject(
   }
 }
 
-function isPromise(
-  v: Promise<{ success: boolean }> | AsyncIterableIterator<{ success: boolean }>
-): v is Promise<{ success: boolean }> {
-  return typeof (v as any).then === 'function';
+function isPromise<T extends { success: boolean }>(
+  v: Promise<T> | AsyncIterableIterator<T>
+): v is Promise<T> {
+  return typeof (v as any)?.then === 'function';
 }
 
-async function* promiseToIterator(
-  v: Promise<{ success: boolean }>
-): AsyncIterableIterator<{ success: boolean }> {
+function isAsyncIterator<T extends { success: boolean }>(
+  v: Promise<{ success: boolean }> | AsyncIterableIterator<T>
+): v is AsyncIterableIterator<T> {
+  return typeof (v as any)?.[Symbol.asyncIterator] === 'function';
+}
+
+async function* promiseToIterator<T extends { success: boolean }>(
+  v: Promise<T>
+): AsyncIterableIterator<T> {
   yield await v;
 }
 
 async function iteratorToProcessStatusCode(
   i: AsyncIterableIterator<{ success: boolean }>
 ): Promise<number> {
-  let r;
-  for await (r of i) {
+  let success: boolean;
+
+  // This is a workaround to fix an issue that only happens with
+  // the @angular-devkit/build-angular:browser builder. Starting
+  // on version 12.0.1, a SASS compilation implementation was
+  // introduced making use of workers and it's unref()-ing the worker
+  // too early, causing the process to exit early in environments
+  // like CI or when running Docker builds.
+  const keepProcessAliveInterval = setInterval(() => {}, 1000);
+  try {
+    let prev: IteratorResult<{ success: boolean }>;
+    let current: IteratorResult<{ success: boolean }>;
+    do {
+      prev = current;
+      current = await i.next();
+    } while (!current.done);
+
+    success =
+      current.value !== undefined || !prev
+        ? current.value.success
+        : prev.value.success;
+
+    return success ? 0 : 1;
+  } finally {
+    clearInterval(keepProcessAliveInterval);
   }
-  if (!r) {
-    throw new Error('NX Executor has not returned or yielded a response.');
-  }
-  return r.success ? 0 : 1;
 }
 
 function createImplicitTargetConfig(
@@ -165,10 +188,18 @@ async function runExecutorInternal<T extends { success: boolean }>(
 
   const ws = new Workspaces(root);
   const proj = workspace.projects[project];
-  const targetConfig =
-    proj.targets && proj.targets[target]
-      ? proj.targets[target]
-      : createImplicitTargetConfig(proj, target);
+  const targetConfig = proj.targets
+    ? proj.targets[target]
+    : createImplicitTargetConfig(proj, target);
+
+  if (!targetConfig) {
+    throw new Error(
+      `NX Cannot find target '${target}' for project '${project}'`
+    );
+  }
+
+  configuration = configuration ?? targetConfig.defaultConfiguration;
+
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,
@@ -190,26 +221,38 @@ async function runExecutorInternal<T extends { success: boolean }>(
   );
 
   if (ws.isNxExecutor(nodeModule, executor)) {
-    const implementation = implementationFactory();
+    const implementation = implementationFactory() as Executor<any>;
     const r = implementation(combinedOptions, {
-      root: root,
+      root,
       target: targetConfig,
-      workspace: workspace,
+      workspace,
       projectName: project,
       targetName: target,
       configurationName: configuration,
-      cwd: cwd,
-      isVerbose: isVerbose,
-    });
-    return (isPromise(r) ? promiseToIterator(r) : r) as any;
+      cwd,
+      isVerbose,
+    }) as Promise<T> | AsyncIterableIterator<T>;
+    if (isPromise<T>(r)) {
+      return promiseToIterator<T>(r);
+    } else if (isAsyncIterator<T>(r)) {
+      return r;
+    } else {
+      throw new TypeError(
+        `NX Executor "${targetConfig.executor}" should return either a Promise or an AsyncIterator`
+      );
+    }
   } else {
-    const observable = await (await import('./ngcli-adapter')).scheduleTarget(
+    require('../compat/compat');
+    const observable = await (
+      await import('./ngcli-adapter')
+    ).scheduleTarget(
       root,
       {
         project,
         target,
         configuration,
         runOptions: combinedOptions,
+        executor: targetConfig.executor,
       },
       isVerbose
     );

@@ -14,33 +14,37 @@
     "Cypress",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./collection.json",
+  "schematics": "./generators.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@babel/core": "7.9.6",
-    "@babel/preset-react": "7.9.4",
+    "@babel/core": "7.12.13",
+    "@babel/preset-react": "7.12.13",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
-    "@nrwl/web": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
-    "@svgr/webpack": "^5.4.0",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.18.3",
-    "eslint-plugin-react-hooks": "4.2.0",
-    "url-loader": "^3.0.0"
+    "@nrwl/web": "*",
+    "@nrwl/workspace": "*",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
+    "@svgr/webpack": "^5.5.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.23.1",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "react-refresh": "^0.9.0",
+    "url-loader": "^3.0.0",
+    "webpack": "4.46.0"
   }
 }

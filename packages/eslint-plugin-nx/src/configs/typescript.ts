@@ -1,3 +1,5 @@
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+
 /**
  * This configuration is intended to be applied to ALL .ts and .tsx files
  * within an Nx workspace.
@@ -15,6 +17,7 @@ export default {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
+    tsconfigRootDir: appRootPath,
   },
   plugins: ['@typescript-eslint'],
   extends: [
@@ -22,7 +25,6 @@ export default {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     'prettier',
-    'prettier/@typescript-eslint',
   ],
   rules: {
     '@typescript-eslint/explicit-member-accessibility': 'off',

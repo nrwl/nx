@@ -6,7 +6,8 @@ import {
   joinPathFragments,
   updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
+import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
+import type { Linter as ESLintLinter } from 'eslint';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -20,19 +21,31 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
   });
 
+  const reactEslintJson = createReactEslintJson(
+    options.projectRoot,
+    options.setParserOptionsProject
+  );
+
   updateJson(
     host,
     joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    (json) => {
-      json.extends = [...reactEslintJson.extends, ...json.extends];
+    (json: ESLintLinter.Config) => {
+      json = reactEslintJson;
       json.ignorePatterns = ['!**/*', 'public', '.cache'];
-      json.overrides = json.overrides || [];
-      json.overrides.push({
-        files: ['*.tsx', '*.ts'],
-        rules: {
-          '@typescript-eslint/camelcase': 'off',
-        },
-      });
+
+      for (const override of json.overrides) {
+        if (!override.files || override.files.length !== 2) {
+          continue;
+        }
+        if (
+          !(override.files.includes('*.ts') && override.files.includes('*.tsx'))
+        ) {
+          continue;
+        }
+        override.rules = override.rules || {};
+        override.rules['@typescript-eslint/camelcase'] = 'off';
+      }
+
       return json;
     }
   );

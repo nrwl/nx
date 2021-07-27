@@ -1,0 +1,98 @@
+import { NgModule } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule, Store } from '@ngrx/store';
+import { NxModule } from '@nrwl/angular';
+import { readFirst } from '@nrwl/angular/testing';
+
+import { Load<%= className %>, <%= className %>Loaded } from './<%= fileName %>.actions';
+import { <%= className %>Effects } from './<%= fileName %>.effects';
+import { <%= className %>Facade } from './<%= fileName %>.facade';
+import {
+  <%= className %>State,
+  Entity,
+  initialState,
+  reducer
+} from './<%= fileName %>.reducer';
+import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
+
+interface TestSchema {
+  <%= propertyName %>: <%= className %>State;
+}
+
+describe('<%= className %>Facade', () => {
+  let facade: <%= className %>Facade;
+  let store: Store<TestSchema>;
+  const create<%= className %> = (id: string, name?: string): Entity => ({
+    id,
+    name: name || `name-${id}`
+  });
+
+  describe('used in NgModule', () => {
+    beforeEach(() => {
+      @NgModule({
+        imports: [
+          StoreModule.forFeature('<%= propertyName %>', reducer, { initialState }),
+          EffectsModule.forFeature([<%= className %>Effects])
+        ],
+        providers: [<%= className %>Facade]
+      })
+      class CustomFeatureModule {}
+
+      @NgModule({
+        imports: [
+          NxModule.forRoot(),
+          StoreModule.forRoot({}),
+          EffectsModule.forRoot([]),
+          CustomFeatureModule,
+        ]
+      })
+      class RootModule {}
+      TestBed.configureTestingModule({ imports: [RootModule] });
+
+      store = TestBed.inject(Store);
+      facade = TestBed.inject(<%= className %>Facade);
+    });
+
+    /**
+     * The initially generated facade::loadAll() returns empty array
+     */
+    it('loadAll() should return empty list with loaded == true', async () => {
+      let list = await readFirst(facade.all<%= className %>$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      facade.loadAll();
+
+      list = await readFirst(facade.all<%= className %>$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(true);
+    });
+
+    /**
+     * Use `<%= className %>Loaded` to manually submit list for state management
+     */
+    it('all<%= className %>$ should return the loaded list; and loaded flag == true', async () => {
+      let list = await readFirst(facade.all<%= className %>$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      store.dispatch(new <%= className %>Loaded([
+        create<%= className %>('AAA'),
+        create<%= className %>('BBB')
+      ]));
+
+      list = await readFirst(facade.all<%= className %>$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(2);
+      expect(isLoaded).toBe(true);
+    });
+  });
+});

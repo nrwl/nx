@@ -9,13 +9,13 @@ export function showNxWarning(workspaceName: string) {
       cwd: pathToRunNxCommand,
       stdio: ['ignore', 'ignore', 'ignore'],
     });
-  } catch (e) {
+  } catch {
     // no nx found
     output.addVerticalSeparator();
     output.note({
       title: `Nx CLI is not installed globally.`,
       bodyLines: [
-        `This means that you might have to use "yarn nx" or "npm nx" to execute commands in the workspace.`,
+        `This means that you might have to use "yarn nx" or "npx nx" to execute commands in the workspace.`,
         `Run "yarn global add nx" or "npm install -g nx" to be able to execute command directly.`,
       ],
     });

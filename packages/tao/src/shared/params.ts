@@ -1,14 +1,15 @@
-import { ParsedArgs } from 'minimist';
+import type { Arguments } from 'yargs-parser';
 import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
-import * as inquirer from 'inquirer';
 import { logger } from './logger';
 
 type PropertyDescription = {
   type?: string;
+  enum?: string[];
   properties?: any;
   oneOf?: any;
   items?: any;
   alias?: string;
+  aliases?: string[];
   description?: string;
   format?: string;
   visible?: boolean;
@@ -18,6 +19,7 @@ type PropertyDescription = {
   'x-prompt'?:
     | string
     | { message: string; type: string; items: any[]; multiselect?: boolean };
+  'x-deprecated'?: boolean | string;
 };
 
 type Properties = {
@@ -49,6 +51,8 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
       logger.error('The generator workflow failed. See above.');
     } else if (err.message) {
       logger.error(err.message);
+    } else {
+      logger.error(err);
     }
     if (isVerbose && err.stack) {
       logger.info(err.stack);
@@ -67,7 +71,7 @@ function camelCase(input: string): string {
   }
 }
 
-export function convertToCamelCase(parsed: ParsedArgs): Options {
+export function convertToCamelCase(parsed: Arguments): Options {
   return Object.keys(parsed).reduce(
     (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
     {}
@@ -134,7 +138,8 @@ export function convertAliases(
       acc[k] = opts[k];
     } else {
       const found = Object.entries(schema.properties).find(
-        ([_, d]) => d.alias === k
+        ([_, d]) =>
+          d.alias === k || (Array.isArray(d.aliases) && d.aliases.includes(k))
       );
       if (found) {
         acc[found[0]] = opts[k];
@@ -239,6 +244,14 @@ function validateProperty(
           ','
         )}.`
       );
+    }
+
+    if (schema.type === 'string' && schema.pattern) {
+      if (!new RegExp(schema.pattern).test(value)) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. '${value}' should match the pattern '${schema.pattern}'.`
+        );
+      }
     }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
@@ -360,6 +373,7 @@ export function combineOptionsForExecutor(
     defaultProjectName,
     relativeCwd
   );
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
   return combined;
@@ -400,10 +414,27 @@ export async function combineOptionsForGenerator(
     combined = await promptForValues(combined, schema);
   }
 
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
 
   validateOptsAgainstSchema(combined, schema);
   return combined;
+}
+
+export function warnDeprecations(
+  opts: { [k: string]: any },
+  schema: Schema
+): void {
+  Object.keys(opts).forEach((option) => {
+    const deprecated = schema.properties[option]?.['x-deprecated'];
+    if (deprecated) {
+      logger.warn(
+        `Option "${option}" is deprecated${
+          typeof deprecated == 'string' ? ': ' + deprecated : '.'
+        }`
+      );
+    }
+  });
 }
 
 export function convertSmartDefaultsIntoNamedParams(
@@ -484,20 +515,36 @@ function getGeneratorDefaults(
 }
 
 async function promptForValues(opts: Options, schema: Schema) {
-  const prompts = [];
+  interface Prompt {
+    name: string;
+    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    message: string;
+    initial?: any;
+    choices?: (string | { name: string; message: string })[];
+  }
+
+  const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (v['x-prompt'] && opts[k] === undefined) {
-      const question = {
+      const question: Prompt = {
         name: k,
-        default: v.default,
       } as any;
+
+      if (v.default) {
+        question.initial = v.default;
+      }
 
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
-        question.type = v.type === 'boolean' ? 'confirm' : 'string';
+        if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
+          question.type = 'select';
+          question.choices = v.enum;
+        } else {
+          question.type = v.type === 'boolean' ? 'confirm' : 'input';
+        }
       } else if (v['x-prompt'].type == 'number') {
         question.message = v['x-prompt'].message;
-        question.type = 'number';
+        question.type = 'numeral';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
@@ -506,7 +553,7 @@ async function promptForValues(opts: Options, schema: Schema) {
         question.type = 'confirm';
       } else {
         question.message = v['x-prompt'].message;
-        question.type = v['x-prompt'].multiselect ? 'checkbox' : 'list';
+        question.type = v['x-prompt'].multiselect ? 'multiselect' : 'select';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {
@@ -514,8 +561,8 @@ async function promptForValues(opts: Options, schema: Schema) {
               return item;
             } else {
               return {
-                name: item.label,
-                value: item.value,
+                message: item.label,
+                name: item.value,
               };
             }
           });
@@ -524,9 +571,15 @@ async function promptForValues(opts: Options, schema: Schema) {
     }
   });
 
-  return await inquirer
+  return await (
+    await import('enquirer')
+  )
     .prompt(prompts)
-    .then((values) => ({ ...opts, ...values }));
+    .then((values) => ({ ...opts, ...values }))
+    .catch((e) => {
+      console.error(e);
+      process.exit(0);
+    });
 }
 
 /**

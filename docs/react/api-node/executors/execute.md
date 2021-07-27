@@ -1,23 +1,23 @@
-# execute
+# @nrwl/node:execute
 
 Execute a Node application
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
-## Properties
+## Options
+
+### buildTarget (_**required**_)
+
+Type: `string`
+
+The target to run to build you the app
 
 ### args
 
 Type: `array`
 
 Extra args when starting the app
-
-### buildTarget
-
-Type: `string`
-
-The target to run to build you the app
 
 ### host
 

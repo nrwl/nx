@@ -1,7 +1,7 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson } from '@nrwl/devkit';
+import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 import { workspaceGenerator } from './workspace';
 import { createTree } from '@nrwl/devkit/testing';
-import { NxJson } from '../../core/shared-interfaces';
 
 describe('@nrwl/workspace:workspace', () => {
   let tree: Tree;
@@ -32,22 +32,18 @@ describe('@nrwl/workspace:workspace', () => {
       layout: 'apps-and-libs',
       defaultBase: 'master',
     });
-    const nxJson = readJson<NxJson>(tree, '/proj/nx.json');
+    const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
       npmScope: 'proj',
       affected: {
         defaultBase: 'master',
       },
       implicitDependencies: {
-        'workspace.json': '*',
         'package.json': {
           dependencies: '*',
           devDependencies: '*',
         },
-        'tsconfig.base.json': '*',
-        'tslint.json': '*',
         '.eslintrc.json': '*',
-        'nx.json': '*',
       },
       tasksRunnerOptions: {
         default: {
@@ -56,6 +52,14 @@ describe('@nrwl/workspace:workspace', () => {
             cacheableOperations: ['build', 'lint', 'test', 'e2e'],
           },
         },
+      },
+      targetDependencies: {
+        build: [
+          {
+            projects: 'dependencies',
+            target: 'build',
+          },
+        ],
       },
       projects: {},
     });
@@ -69,7 +73,7 @@ describe('@nrwl/workspace:workspace', () => {
       layout: 'apps-and-libs',
       defaultBase: 'main',
     });
-    expect(tree.read('proj/.prettierrc').toString()).toMatchSnapshot();
+    expect(tree.read('proj/.prettierrc', 'utf-8')).toMatchSnapshot();
   });
 
   it('should recommend vscode extensions', async () => {
@@ -85,10 +89,7 @@ describe('@nrwl/workspace:workspace', () => {
       'proj/.vscode/extensions.json'
     ).recommendations;
 
-    expect(recommendations).toEqual([
-      'ms-vscode.vscode-typescript-tslint-plugin',
-      'esbenp.prettier-vscode',
-    ]);
+    expect(recommendations).toMatchSnapshot();
   });
 
   it('should recommend vscode extensions (angular)', async () => {
@@ -104,12 +105,7 @@ describe('@nrwl/workspace:workspace', () => {
       'proj/.vscode/extensions.json'
     ).recommendations;
 
-    expect(recommendations).toEqual([
-      'nrwl.angular-console',
-      'angular.ng-template',
-      'ms-vscode.vscode-typescript-tslint-plugin',
-      'esbenp.prettier-vscode',
-    ]);
+    expect(recommendations).toMatchSnapshot();
   });
 
   it('should add decorate-angular-cli when used with angular cli', async () => {

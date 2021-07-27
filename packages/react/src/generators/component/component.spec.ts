@@ -1,10 +1,7 @@
 import { createApp, createLib } from '../../utils/testing-generators';
-import { readJson, Tree } from '@nrwl/devkit';
+import { logger, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { componentGenerator } from './component';
-import applicationGenerator from '../application/application';
-import { Linter } from '@nrwl/linter';
-import { Schema } from './schema';
 
 describe('component', () => {
   let appTree: Tree;
@@ -13,8 +10,14 @@ describe('component', () => {
   beforeEach(async () => {
     projectName = 'my-lib';
     appTree = createTreeWithEmptyWorkspace();
-    await createApp(appTree, 'my-app');
-    await createLib(appTree, projectName);
+    await createApp(appTree, 'my-app', false);
+    await createLib(appTree, projectName, false);
+    jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should generate files', async () => {
@@ -94,7 +97,7 @@ describe('component', () => {
         export: true,
       });
 
-      const indexContent = appTree.read('libs/my-lib/src/index.ts').toString();
+      const indexContent = appTree.read('libs/my-lib/src/index.ts', 'utf-8');
 
       expect(indexContent).toMatch(/lib\/hello/);
     });
@@ -107,7 +110,7 @@ describe('component', () => {
         export: true,
       });
 
-      const indexContent = appTree.read('libs/my-lib/src/index.ts').toString();
+      const indexContent = appTree.read('libs/my-lib/src/index.ts', 'utf-8');
 
       expect(indexContent).not.toMatch(/lib\/hello/);
     });

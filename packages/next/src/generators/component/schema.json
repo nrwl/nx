@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxReactApp",
+  "$id": "NxNextReactComponent",
   "title": "Create a React Component for Next",
   "type": "object",
   "examples": [
@@ -32,11 +32,6 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the component?"
-    },
-    "directory": {
-      "type": "string",
-      "description": "Create the component under this directory (can be nested).",
-      "alias": "d"
     },
     "style": {
       "description": "The file extension to be used for style files.",

@@ -8,7 +8,31 @@ exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint conf
   \\"ignorePatterns\\": [
     \\"!**/*\\"
   ],
-  \\"rules\\": {}
+  \\"overrides\\": [
+    {
+      \\"files\\": [
+        \\"*.ts\\",
+        \\"*.tsx\\",
+        \\"*.js\\",
+        \\"*.jsx\\"
+      ],
+      \\"rules\\": {}
+    },
+    {
+      \\"files\\": [
+        \\"*.ts\\",
+        \\"*.tsx\\"
+      ],
+      \\"rules\\": {}
+    },
+    {
+      \\"files\\": [
+        \\"*.js\\",
+        \\"*.jsx\\"
+      ],
+      \\"rules\\": {}
+    }
+  ]
 }"
 `;
 

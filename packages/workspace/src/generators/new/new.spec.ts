@@ -1,5 +1,5 @@
 import { createTree } from '@nrwl/devkit/testing';
-import { readJson, Tree, writeJson } from '@nrwl/devkit';
+import { readJson, Tree, writeJson, PackageManager } from '@nrwl/devkit';
 import { newGenerator, Preset, Schema } from './new';
 import { Linter } from '../../utils/lint';
 
@@ -64,7 +64,7 @@ describe('new', () => {
   describe('--packageManager', () => {
     describe.each([['npm'], ['yarn'], ['pnpm']])(
       '%s',
-      (packageManager: 'npm' | 'yarn' | 'pnpm') => {
+      (packageManager: PackageManager) => {
         it('should set the packageManager in workspace.json', async () => {
           await newGenerator(tree, {
             ...defaultOptions,
@@ -105,5 +105,20 @@ describe('new', () => {
 
     expect(readJson(tree, 'package.json')).toEqual(packageJson);
     expect(readJson(tree, '.eslintrc.json')).toEqual(eslintConfig);
+  });
+
+  it('should throw an error when the directory is not empty', async () => {
+    tree.write('my-workspace/file.txt', '');
+
+    try {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        npmScope: 'npmScope',
+        appName: 'app',
+      });
+      fail('Generating into a non-empty directory should error.');
+    } catch (e) {}
   });
 });

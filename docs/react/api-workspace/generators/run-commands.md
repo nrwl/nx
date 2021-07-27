@@ -1,4 +1,4 @@
-# run-commands
+# @nrwl/workspace:run-commands
 
 Generates a target to run any command in the terminal
 
@@ -36,11 +36,23 @@ nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 
 
 ## Options
 
-### command
+### command (_**required**_)
 
 Type: `string`
 
 Command to run
+
+### name (_**required**_)
+
+Type: `string`
+
+Target name
+
+### project (_**required**_)
+
+Type: `string`
+
+Project name
 
 ### cwd
 
@@ -54,20 +66,8 @@ Type: `string`
 
 Env files to be loaded before executing the commands
 
-### name
-
-Type: `string`
-
-Target name
-
 ### outputs
 
 Type: `string`
 
 Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.
-
-### project
-
-Type: `string`
-
-Project name

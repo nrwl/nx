@@ -1,0 +1,525 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NgRx generator classes syntax should generate the ngrx actions 1`] = `
+"import {Action} from '@ngrx/store';
+import {Entity} from './users.reducer';
+
+export enum UsersActionTypes {
+  LoadUsers = '[Users] Load Users',
+  UsersLoaded = '[Users] Users Loaded',
+  UsersLoadError = '[Users] Users Load Error'
+}
+
+export class LoadUsers implements Action {
+  readonly type = UsersActionTypes.LoadUsers;
+}
+
+export class UsersLoadError implements Action {
+  readonly type = UsersActionTypes.UsersLoadError;
+
+  constructor(public payload: any) {}
+}
+
+export class UsersLoaded implements Action {
+  readonly type = UsersActionTypes.UsersLoaded;
+
+  constructor(public payload: Entity[]) {}
+}
+
+export type UsersAction = LoadUsers | UsersLoaded | UsersLoadError;
+
+export const fromUsersActions = {
+  LoadUsers,
+  UsersLoaded,
+  UsersLoadError
+};
+"
+`;
+
+exports[`NgRx generator classes syntax should generate the ngrx effects 1`] = `
+"import { Injectable } from '@angular/core';
+import { Effect, Actions, ofType } from '@ngrx/effects';
+import { fetch } from '@nrwl/angular';
+
+import { LoadUsers, UsersLoaded, UsersLoadError, UsersActionTypes } from './users.actions';
+import { UsersPartialState } from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  @Effect() loadUsers$ =  this.actions$.pipe(
+    ofType(UsersActionTypes.LoadUsers),
+    fetch({
+      run: (action: LoadUsers, state: UsersPartialState) => {
+        // Your custom REST 'load' logic goes here. For now just return an empty list...
+        return new UsersLoaded([]);
+      },
+
+      onError: (action: LoadUsers, error) => {
+        console.error('Error', error);
+        return new UsersLoadError(error);
+      }
+    })
+  );
+
+  constructor(
+    private readonly actions$: Actions
+  ) {}
+}
+"
+`;
+
+exports[`NgRx generator classes syntax should generate the ngrx facade 1`] = `
+"import { Injectable } from '@angular/core';
+import { select, Store } from '@ngrx/store';
+
+import { UsersPartialState } from './users.reducer';
+import { usersQuery } from './users.selectors';
+import { LoadUsers } from './users.actions';
+
+@Injectable()
+export class UsersFacade {
+  loaded$ = this.store.pipe(select(usersQuery.getLoaded));
+  allUsers$ = this.store.pipe(select(usersQuery.getAllUsers));
+  selectedUsers$ = this.store.pipe(select(usersQuery.getSelectedUsers));
+  
+  constructor(private readonly store: Store<UsersPartialState>) {}
+ 
+  loadAll() {
+    this.store.dispatch(new LoadUsers());
+  }  
+}
+"
+`;
+
+exports[`NgRx generator classes syntax should generate the ngrx reducer 1`] = `
+"import { UsersAction, UsersActionTypes } from './users.actions';
+
+export const USERS_FEATURE_KEY = 'users';
+
+/**
+ * Interface for the 'Users' data used in
+ *  - UsersState, and the reducer function
+ *
+ *  Note: replace if already defined in another module
+ */
+export interface Entity {
+  id: string;
+  name: string;
+}
+
+export interface UsersState {
+  list: Entity[]; // list of Users; analogous to a sql normalized table
+  selectedId?: string | number; // which Users record has been selected
+  loaded: boolean; // has the Users list been loaded
+  error?: any; // last none error (if any)
+};
+
+export interface UsersPartialState {
+  readonly [USERS_FEATURE_KEY]: UsersState;
+}
+
+export const initialState: UsersState = {
+  list: [],
+  loaded: false
+};
+
+export function reducer(
+  state: UsersState = initialState, 
+  action: UsersAction): UsersState
+{
+  switch (action.type) {
+    case UsersActionTypes.UsersLoaded: {
+      state = {
+        ...state,
+        list: action.payload,
+        loaded: true
+      };
+      break;
+    }
+  }
+  return state;
+}
+"
+`;
+
+exports[`NgRx generator classes syntax should generate the ngrx selectors 1`] = `
+"import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { USERS_FEATURE_KEY, UsersState } from './users.reducer';
+
+// Lookup the 'Users' feature state managed by NgRx
+const getUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+
+const getLoaded = createSelector( getUsersState, (state:UsersState) => state.loaded );
+const getError = createSelector( getUsersState, (state:UsersState) => state.error );
+
+const getAllUsers = createSelector( getUsersState, getLoaded, (state:UsersState, isLoaded) => {
+  return isLoaded ? state.list : [ ];
+});
+const getSelectedId = createSelector( getUsersState, (state:UsersState) => state.selectedId );
+const getSelectedUsers = createSelector( getAllUsers, getSelectedId, (users, id) => {
+  const result = users.find(it => it['id'] === id);
+  return result ? Object.assign({}, result) : undefined;
+});
+
+export const usersQuery = {
+  getLoaded,
+  getError,
+  getAllUsers,
+  getSelectedUsers
+};
+"
+`;
+
+exports[`NgRx generator classes syntax should update the entry point file correctly when barrels is true 1`] = `
+"import * as SuperUsersActions from './lib/+state/super-users.actions';
+
+import * as SuperUsersFeature from './lib/+state/super-users.reducer';
+
+import * as SuperUsersSelectors from './lib/+state/super-users.selectors';
+
+export * from './lib/+state/super-users.facade';
+
+export { SuperUsersActions, SuperUsersFeature, SuperUsersSelectors };
+
+    export * from './lib/flights.module';
+  "
+`;
+
+exports[`NgRx generator classes syntax should update the entry point file with no facade 1`] = `
+"export * from './lib/+state/super-users.selectors';
+export * from './lib/+state/super-users.reducer';
+export * from './lib/+state/super-users.actions';
+
+    export * from './lib/flights.module';
+  "
+`;
+
+exports[`NgRx generator classes syntax should update the entry point file with the right exports 1`] = `
+"export * from './lib/+state/super-users.facade';
+export * from './lib/+state/super-users.selectors';
+export * from './lib/+state/super-users.reducer';
+export * from './lib/+state/super-users.actions';
+
+    export * from './lib/flights.module';
+  "
+`;
+
+exports[`NgRx generator classes syntax should use DataPersistence when useDataPersistence is true 1`] = `
+"import { Injectable } from '@angular/core';
+import { Effect, Actions } from '@ngrx/effects';
+import { DataPersistence } from '@nrwl/angular';
+
+import { LoadUsers, UsersLoaded, UsersLoadError, UsersActionTypes } from './users.actions';
+import { UsersPartialState } from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  @Effect() loadUsers$ = this.dataPersistence.fetch(UsersActionTypes.LoadUsers, {
+    run: (action: LoadUsers, state: UsersPartialState) => {
+      // Your custom REST 'load' logic goes here. For now just return an empty list...
+      return new UsersLoaded([]);
+    },
+
+    onError: (action: LoadUsers, error) => {
+      console.error('Error', error);
+      return new UsersLoadError(error);
+    }
+  }); 
+
+  constructor(
+    private readonly actions$: Actions,
+    private readonly dataPersistence: DataPersistence<UsersPartialState>
+  ) {}
+}
+"
+`;
+
+exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx effects 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { EffectsModule } from '@ngrx/effects';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Action, StoreModule } from '@ngrx/store';
+import { NxModule } from '@nrwl/angular';
+import { hot } from '@nrwl/angular/testing';
+import { Observable } from 'rxjs';
+
+import { SuperUsersEffects } from './super-users.effects';
+import { LoadSuperUsers, SuperUsersLoaded } from './super-users.actions';
+
+describe('SuperUsersEffects', () => {
+  let actions: Observable<Action>;
+  let effects: SuperUsersEffects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        NxModule.forRoot(),
+        StoreModule.forRoot({}),
+        EffectsModule.forRoot([])
+      ],
+      providers: [
+        SuperUsersEffects,
+        provideMockActions(() => actions)
+      ],
+    });
+
+    effects = TestBed.inject(SuperUsersEffects);
+  });
+
+  describe('loadSuperUsers$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', { a: new LoadSuperUsers() });
+
+      expect(effects.loadSuperUsers$).toBeObservable(
+        hot('-a-|', { a: new SuperUsersLoaded([]) })
+      );
+    });
+  });
+});
+"
+`;
+
+exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx effects correctly when useDataPersistence is true 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { EffectsModule } from '@ngrx/effects';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Action, StoreModule } from '@ngrx/store';
+import { NxModule, DataPersistence } from '@nrwl/angular';
+import { hot } from '@nrwl/angular/testing';
+import { Observable } from 'rxjs';
+
+import { SuperUsersEffects } from './super-users.effects';
+import { LoadSuperUsers, SuperUsersLoaded } from './super-users.actions';
+
+describe('SuperUsersEffects', () => {
+  let actions: Observable<Action>;
+  let effects: SuperUsersEffects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        NxModule.forRoot(),
+        StoreModule.forRoot({}),
+        EffectsModule.forRoot([])
+      ],
+      providers: [
+        SuperUsersEffects,
+        DataPersistence,
+        provideMockActions(() => actions)
+      ],
+    });
+
+    effects = TestBed.inject(SuperUsersEffects);
+  });
+
+  describe('loadSuperUsers$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', { a: new LoadSuperUsers() });
+
+      expect(effects.loadSuperUsers$).toBeObservable(
+        hot('-a-|', { a: new SuperUsersLoaded([]) })
+      );
+    });
+  });
+});
+"
+`;
+
+exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx facade 1`] = `
+"import { NgModule } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule, Store } from '@ngrx/store';
+import { NxModule } from '@nrwl/angular';
+import { readFirst } from '@nrwl/angular/testing';
+
+import { LoadSuperUsers, SuperUsersLoaded } from './super-users.actions';
+import { SuperUsersEffects } from './super-users.effects';
+import { SuperUsersFacade } from './super-users.facade';
+import {
+  SuperUsersState,
+  Entity,
+  initialState,
+  reducer
+} from './super-users.reducer';
+import { superUsersQuery } from './super-users.selectors';
+
+interface TestSchema {
+  superUsers: SuperUsersState;
+}
+
+describe('SuperUsersFacade', () => {
+  let facade: SuperUsersFacade;
+  let store: Store<TestSchema>;
+  const createSuperUsers = (id: string, name?: string): Entity => ({
+    id,
+    name: name || \`name-\${id}\`
+  });
+
+  describe('used in NgModule', () => {
+    beforeEach(() => {
+      @NgModule({
+        imports: [
+          StoreModule.forFeature('superUsers', reducer, { initialState }),
+          EffectsModule.forFeature([SuperUsersEffects])
+        ],
+        providers: [SuperUsersFacade]
+      })
+      class CustomFeatureModule {}
+
+      @NgModule({
+        imports: [
+          NxModule.forRoot(),
+          StoreModule.forRoot({}),
+          EffectsModule.forRoot([]),
+          CustomFeatureModule,
+        ]
+      })
+      class RootModule {}
+      TestBed.configureTestingModule({ imports: [RootModule] });
+
+      store = TestBed.inject(Store);
+      facade = TestBed.inject(SuperUsersFacade);
+    });
+
+    /**
+     * The initially generated facade::loadAll() returns empty array
+     */
+    it('loadAll() should return empty list with loaded == true', async () => {
+      let list = await readFirst(facade.allSuperUsers$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      facade.loadAll();
+
+      list = await readFirst(facade.allSuperUsers$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(true);
+    });
+
+    /**
+     * Use \`SuperUsersLoaded\` to manually submit list for state management
+     */
+    it('allSuperUsers$ should return the loaded list; and loaded flag == true', async () => {
+      let list = await readFirst(facade.allSuperUsers$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      store.dispatch(new SuperUsersLoaded([
+        createSuperUsers('AAA'),
+        createSuperUsers('BBB')
+      ]));
+
+      list = await readFirst(facade.allSuperUsers$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(2);
+      expect(isLoaded).toBe(true);
+    });
+  });
+});
+"
+`;
+
+exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx reducer 1`] = `
+"import { SuperUsersLoaded } from './super-users.actions';
+import { SuperUsersState, Entity, initialState, reducer } from './super-users.reducer';
+
+describe('SuperUsers Reducer', () => {
+  const getSuperUsersId = (it: Entity) => it.id;
+  const createSuperUsers = (id: string, name = ''): Entity => ({
+    id,
+    name: name || \`name-\${id}\`
+  });
+
+  describe('valid SuperUsers actions', () => {
+    it('should return the list of known SuperUsers', () => {
+      const superUsers = [createSuperUsers('PRODUCT-AAA'), createSuperUsers('PRODUCT-zzz')];
+      const action = new SuperUsersLoaded(superUsers);
+      const result: SuperUsersState = reducer(initialState, action);
+      const selId: string = getSuperUsersId(result.list[1]);
+
+      expect(result.loaded).toBe(true);
+      expect(result.list.length).toBe(2);
+      expect(selId).toBe('PRODUCT-zzz');
+    });
+  });
+
+  describe('unknown action', () => {
+    it('should return the previous state', () => {
+      const action = {} as any;
+      const result = reducer(initialState, action);
+
+      expect(result).toBe(initialState);
+    });
+  });
+});
+"
+`;
+
+exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx selectors 1`] = `
+"import { Entity, SuperUsersPartialState } from './super-users.reducer';
+import { superUsersQuery } from './super-users.selectors';
+
+describe('SuperUsers Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const getSuperUsersId = (it: Entity) => it.id;
+
+  let storeState: SuperUsersPartialState;
+
+  beforeEach(() => {
+    const createSuperUsers = (id: string, name = ''): Entity => ({
+      id,
+      name: name || \`name-\${id}\`
+    });
+    storeState = {
+      superUsers: {
+        list : [
+          createSuperUsers('PRODUCT-AAA'),
+          createSuperUsers('PRODUCT-BBB'),
+          createSuperUsers('PRODUCT-CCC')
+        ],
+        selectedId: 'PRODUCT-BBB',
+        error: ERROR_MSG,
+        loaded: true
+      }
+    };
+  });
+
+  describe('SuperUsers Selectors', () => {
+    it('getAllSuperUsers() should return the list of SuperUsers', () => {
+      const results = superUsersQuery.getAllSuperUsers(storeState);
+      const selId = getSuperUsersId(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('getSelectedSuperUsers() should return the selected Entity', () => {
+      const result = superUsersQuery.getSelectedSuperUsers(storeState) as Entity;
+      const selId = getSuperUsersId(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('getLoaded() should return the current \\"loaded\\" status', () => {
+      const result = superUsersQuery.getLoaded(storeState);
+
+      expect(result).toBe(true);
+    });
+
+    it('getError() should return the current \\"error\\" storeState', () => {
+      const result = superUsersQuery.getError(storeState);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});
+"
+`;

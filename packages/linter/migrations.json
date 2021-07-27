@@ -34,6 +34,18 @@
       "version": "10.4.0-beta.1",
       "description": "Update root ESLint config to use overrides",
       "factory": "./src/migrations/update-10-4-0/update-root-eslint-config-to-use-overrides"
+    },
+    "always-use-project-level-tsconfigs-with-eslint": {
+      "cli": "nx",
+      "version": "11.5.0-beta.0",
+      "description": "Update project .eslintrc.json files to always use project level tsconfigs",
+      "factory": "./src/migrations/update-11-5-0/always-use-project-level-tsconfigs-with-eslint"
+    },
+    "remove-eslint-project-config-if-no-type-checking-rules": {
+      "cli": "nx",
+      "version": "12.4.0-beta.0",
+      "description": "Remove ESLint parserOptions.project config if no rules requiring type-checking are in use",
+      "factory": "./src/migrations/update-12-4-0/remove-eslint-project-config-if-no-type-checking-rules"
     }
   },
   "packageJsonUpdates": {
@@ -51,6 +63,43 @@
         "eslint": {
           "version": "7.10.0",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.5.0": {
+      "version": "11.5.0-beta.0",
+      "packages": {
+        "eslint-config-prettier": {
+          "version": "8.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.6.0": {
+      "version": "11.6.0-beta.1",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "4.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "4.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint": {
+          "version": "7.22.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.8",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~4.28.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~4.28.0"
         }
       }
     }

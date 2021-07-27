@@ -7,6 +7,14 @@ import { Schema } from '../schema';
 import { checkDependencies } from './check-dependencies';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
+import { DependencyType, ProjectGraph } from '../../../core/project-graph';
+let projectGraph: ProjectGraph;
+jest.mock('../../../core/project-graph', () => ({
+  ...jest.requireActual<any>('../../../core/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => projectGraph),
+}));
 
 describe('checkDependencies', () => {
   let tree: Tree;
@@ -23,10 +31,42 @@ describe('checkDependencies', () => {
 
     await libraryGenerator(tree, {
       name: 'my-dependent',
+      standaloneConfig: false,
     });
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
+
+    projectGraph = {
+      nodes: {
+        'my-source': {
+          name: 'my-source',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'libs/my-source',
+          },
+        },
+        'my-dependent': {
+          name: 'my-dependent',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'libs/my-dependent',
+          },
+        },
+      },
+      dependencies: {
+        'my-source': [
+          {
+            type: DependencyType.static,
+            source: 'my-dependent',
+            target: 'my-source',
+          },
+        ],
+      },
+    };
   });
 
   describe('static dependencies', () => {
@@ -49,17 +89,12 @@ describe('checkDependencies', () => {
     });
 
     it('should fatally error if any dependent exists', async () => {
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).toThrow();
+      await expect(checkDependencies(tree, schema)).rejects.toThrow();
     });
 
     it('should not error if forceRemove is true', async () => {
       schema.forceRemove = true;
-
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).not.toThrow();
+      await expect(checkDependencies(tree, schema)).resolves.not.toThrow();
     });
   });
 
@@ -73,25 +108,22 @@ describe('checkDependencies', () => {
     });
 
     it('should fatally error if any dependent exists', async () => {
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).toThrow(
+      await expect(checkDependencies(tree, schema)).rejects.toThrow(
         `${schema.projectName} is still depended on by the following projects:\nmy-dependent`
       );
     });
 
     it('should not error if forceRemove is true', async () => {
       schema.forceRemove = true;
-
-      expect(() => {
-        checkDependencies(tree, schema);
-      }).not.toThrow();
+      await expect(checkDependencies(tree, schema)).resolves.not.toThrow();
     });
   });
 
   it('should not error if there are no dependents', async () => {
-    expect(() => {
-      checkDependencies(tree, schema);
-    }).not.toThrow();
+    projectGraph = {
+      nodes: projectGraph.nodes,
+      dependencies: {},
+    };
+    await expect(checkDependencies(tree, schema)).resolves.not.toThrow();
   });
 });

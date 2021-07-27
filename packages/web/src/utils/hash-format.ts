@@ -15,13 +15,13 @@ export function getOutputHashFormat(option: string, length = 20): HashFormat {
       chunk: `.[chunkhash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: '',
-      script: `.[hash:${length}]`,
+      script: `.[contenthash:${length}]`,
     },
     all: {
       chunk: `.[chunkhash:${length}]`,
       extract: `.[contenthash:${length}]`,
-      file: `.[hash:${length}]`,
-      script: `.[hash:${length}]`,
+      file: `.[contenthash:${length}]`,
+      script: `.[contenthash:${length}]`,
     },
   };
   return hashFormats[option] || hashFormats['none'];

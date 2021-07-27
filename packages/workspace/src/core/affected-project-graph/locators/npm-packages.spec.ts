@@ -1,12 +1,11 @@
 import { getTouchedNpmPackages } from './npm-packages';
-import { NxJson } from '../../shared-interfaces';
+import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 import { WholeFileChange } from '../../file-utils';
 import { DiffType } from '../../../utilities/json-diff';
-import { ProjectGraph } from '../../project-graph';
 
 describe('getTouchedNpmPackages', () => {
   let workspaceJson;
-  let nxJson: NxJson<string[]>;
+  let nxJson: NxJsonConfiguration<string[]>;
   let projectGraph: ProjectGraph;
   beforeEach(() => {
     workspaceJson = {

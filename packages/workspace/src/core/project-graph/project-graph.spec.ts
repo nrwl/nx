@@ -1,17 +1,21 @@
 import { vol, fs } from 'memfs';
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
 
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createProjectGraph } from './project-graph';
-import { DependencyType } from './project-graph-models';
-import { NxJson } from '../shared-interfaces';
-import { defaultFileHasher } from '@nrwl/workspace/src/core/hasher/file-hasher';
+jest.mock('fs', () => require('memfs').fs);
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+  appRootPath: '/root',
+}));
+import { createProjectGraphAsync } from './project-graph';
+import {
+  NxJsonConfiguration,
+  stripIndents,
+  DependencyType,
+} from '@nrwl/devkit';
+import { defaultFileHasher } from '../hasher/file-hasher';
 
 describe('project graph', () => {
   let packageJson: any;
   let workspaceJson: any;
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let tsConfigJson: any;
   let filesJson: any;
 
@@ -129,8 +133,8 @@ describe('project graph', () => {
     vol.fromJSON(filesJson, '/root');
   });
 
-  it('should create nodes and dependencies with workspace projects', () => {
-    const graph = createProjectGraph();
+  it('should create nodes and dependencies with workspace projects', async () => {
+    const graph = await createProjectGraphAsync();
 
     expect(graph.nodes).toMatchObject({
       api: { name: 'api', type: 'app' },
@@ -155,66 +159,65 @@ describe('project graph', () => {
         },
       },
     });
-    expect(graph.dependencies).toMatchObject({
-      api: [
-        { type: DependencyType.static, source: 'api', target: 'npm:express' },
-      ],
-      'demo-e2e': [
-        { type: DependencyType.implicit, source: 'demo-e2e', target: 'demo' },
-      ],
+    expect(graph.dependencies).toEqual({
+      api: [{ source: 'api', target: 'npm:express', type: 'static' }],
       demo: [
-        { type: DependencyType.static, source: 'demo', target: 'ui' },
+        { source: 'demo', target: 'api', type: 'implicit' },
         {
-          type: DependencyType.static,
           source: 'demo',
-          target: 'shared-util-data',
+          target: 'ui',
+          type: 'static',
         },
+        { source: 'demo', target: 'shared-util-data', type: 'static' },
         {
-          type: DependencyType.dynamic,
           source: 'demo',
           target: 'lazy-lib',
+          type: 'static',
         },
-        { type: DependencyType.implicit, source: 'demo', target: 'api' },
       ],
-      ui: [
-        { type: DependencyType.static, source: 'ui', target: 'shared-util' },
-        { type: DependencyType.dynamic, source: 'ui', target: 'lazy-lib' },
-      ],
+      'demo-e2e': [],
+      'lazy-lib': [],
+      'npm:@nrwl/workspace': [],
+      'npm:express': [],
+      'npm:happy-nrwl': [],
       'shared-util': [
+        { source: 'shared-util', target: 'npm:happy-nrwl', type: 'static' },
+      ],
+      'shared-util-data': [],
+      ui: [
+        { source: 'ui', target: 'shared-util', type: 'static' },
         {
-          type: DependencyType.static,
-          source: 'shared-util',
-          target: 'npm:happy-nrwl',
+          source: 'ui',
+          target: 'lazy-lib',
+          type: 'static',
         },
       ],
     });
   });
 
-  it('should update the graph if the workspace file changes ', async () => {
-    let graph = createProjectGraph();
+  it('should update the graph if a project got renamed', async () => {
+    let graph = await createProjectGraphAsync();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'app' },
     });
-    workspaceJson.projects.demo.projectType = 'library';
-    //wait a tick to ensure the modified time of workspace.json will be after the creation of the project graph file
-    await new Promise((resolve) => setTimeout(resolve, 1));
+    workspaceJson.projects.renamed = workspaceJson.projects.demo;
     fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
 
     defaultFileHasher.init();
 
-    graph = createProjectGraph();
+    graph = await createProjectGraphAsync();
     expect(graph.nodes).toMatchObject({
-      demo: { name: 'demo', type: 'lib' },
+      renamed: { name: 'renamed', type: 'app' },
     });
   });
 
-  it('should handle circular dependencies', () => {
+  it('should handle circular dependencies', async () => {
     fs.writeFileSync(
       '/root/libs/shared/util/src/index.ts',
       `import * as ui from '@nrwl/ui';`
     );
 
-    const graph = createProjectGraph();
+    const graph = await createProjectGraphAsync();
 
     expect(graph.dependencies['shared-util']).toEqual([
       {
@@ -230,7 +233,7 @@ describe('project graph', () => {
         target: 'shared-util',
       },
       {
-        type: DependencyType.dynamic,
+        type: DependencyType.static,
         source: 'ui',
         target: 'lazy-lib',
       },

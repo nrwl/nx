@@ -1,14 +1,39 @@
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   runCLI,
+  runCommandUntil,
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  describe('serve storybook', () => {
+    afterEach(() => killPorts());
+
+    it('should run a React based Storybook setup', async () => {
+      newProject();
+
+      const reactStorybookLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      );
+
+      // serve the storybook
+      const p = await runCommandUntil(
+        `run ${reactStorybookLib}:storybook`,
+        (output) => {
+          return /Storybook.*started/gi.test(output);
+        }
+      );
+      p.kill();
+    }, 1000000);
+  });
+
   describe('build storybook', () => {
     it('should build a React based storybook', () => {
       newProject();
@@ -27,6 +52,20 @@ describe('Storybook schematics', () => {
       ).toContain(`<title>Storybook</title>`);
     }, 1000000);
 
+    it('should lint a React based storybook without errors', () => {
+      newProject();
+
+      const reactStorybookLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      );
+
+      // build React lib
+      const output = runCLI(`run ${reactStorybookLib}:lint`);
+      expect(output).toContain('All files pass linting.');
+    }, 1000000);
+
     it('should build a React based storybook that references another lib', () => {
       const proj = newProject();
 
@@ -43,10 +82,10 @@ describe('Storybook schematics', () => {
         tmpProjPath(`libs/${anotherReactLib}/src/lib/mytestcmp.tsx`),
         `
             import React from 'react';
-            
+
             /* eslint-disable-next-line */
             export interface MyTestCmpProps {}
-            
+
             export const MyTestCmp = (props: MyTestCmpProps) => {
               return (
                 <div>
@@ -54,7 +93,7 @@ describe('Storybook schematics', () => {
                 </div>
               );
             };
-            
+
             export default MyTestCmp;
         `
       );
@@ -73,18 +112,18 @@ describe('Storybook schematics', () => {
         ),
         `
             import React from 'react';
-            
+
             import { MyTestCmp, MyTestCmpProps } from '@${proj}/${anotherReactLib}';
-    
+
             export default {
               component: MyTestCmp,
               title: 'MyTestCmp',
             };
-    
+
             export const primary = () => {
               /* eslint-disable-next-line */
               const props: MyTestCmpProps = {};
-    
+
               return <MyTestCmp />;
             };
         `

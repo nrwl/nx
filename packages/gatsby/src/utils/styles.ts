@@ -4,8 +4,9 @@ import {
   gatsbyPluginLessVersion,
   gatsbyPluginSassVersion,
   gatsbyPluginStyledComponentsVersion,
+  gatsbyPluginStyledJsx,
   gatsbyPluginStylusVersion,
-  nodeSassVersion,
+  sassVersion,
 } from './versions';
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import {
@@ -13,7 +14,6 @@ import {
   GeneratorCallback,
   updateJson,
 } from '@nrwl/devkit';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
   'styled-components': {
@@ -31,7 +31,7 @@ export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
   scss: {
     dependencies: {},
     devDependencies: {
-      'node-sass': nodeSassVersion,
+      sass: sassVersion,
       'gatsby-plugin-sass': gatsbyPluginSassVersion,
     },
   },
@@ -45,6 +45,13 @@ export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
     dependencies: {},
     devDependencies: {
       'gatsby-plugin-stylus': gatsbyPluginStylusVersion,
+    },
+  },
+  'styled-jsx': {
+    dependencies: CSS_IN_JS_DEPENDENCIES['styled-jsx'].dependencies,
+    devDependencies: {
+      'gatsby-plugin-styled-jsx': gatsbyPluginStyledJsx,
+      ...CSS_IN_JS_DEPENDENCIES['styled-jsx'].devDependencies,
     },
   },
 };

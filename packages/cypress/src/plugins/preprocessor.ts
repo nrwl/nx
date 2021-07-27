@@ -1,7 +1,6 @@
 import * as wp from '@cypress/webpack-preprocessor';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import * as nodeExternals from 'webpack-node-externals';
-import * as ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export function preprocessTypescript(
   config: any,
@@ -13,15 +12,18 @@ export function preprocessTypescript(
     );
   }
 
-  return async (...args) => {
+  return async (file) => {
     const webpackOptions = customizeWebpackConfig
       ? customizeWebpackConfig(getWebpackConfig(config))
       : getWebpackConfig(config);
-    return wp({ webpackOptions })(...args);
+    return wp({ webpackOptions })(file);
   };
 }
 
 export function getWebpackConfig(config: any) {
+  // TODO(jack): Remove in Nx 13 and go back to proper import.
+  const { nodeExternals } = require('../webpack/entry');
+
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   return {
     resolve: {
@@ -36,7 +38,7 @@ export function getWebpackConfig(config: any) {
     module: {
       rules: [
         {
-          test: /\.(j|t)sx?$/,
+          test: /\.([jt])sx?$/,
           loader: require.resolve('ts-loader'),
           exclude: [/node_modules/],
           options: {
@@ -50,8 +52,10 @@ export function getWebpackConfig(config: any) {
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
-        tsconfig: config.env.tsConfig,
-        useTypescriptIncrementalApi: false,
+        typescript: {
+          enabled: true,
+          configFile: config.env.tsConfig,
+        },
       }),
     ],
     externals: [nodeExternals()],

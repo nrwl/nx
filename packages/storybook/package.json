@@ -13,16 +13,16 @@
     "Storybook",
     "Cypress"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Isaac Mann",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
@@ -31,11 +31,10 @@
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
+    "@nrwl/workspace": "*",
     "core-js": "^3.6.5",
-    "semver": "6.3.0",
-    "tree-kill": "1.2.2",
+    "semver": "7.3.4",
     "ts-loader": "5.4.5",
-    "tsconfig-paths-webpack-plugin": "3.2.0",
-    "webpack-node-externals": "1.7.2"
+    "tsconfig-paths-webpack-plugin": "3.4.1"
   }
 }

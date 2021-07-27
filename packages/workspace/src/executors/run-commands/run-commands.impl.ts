@@ -1,4 +1,6 @@
+import { ExecutorContext } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
+import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 
 export const LARGE_BUFFER = 1024 * 1000000;
@@ -23,6 +25,11 @@ export interface RunCommandsBuilderOptions extends Json {
     | {
         command: string;
         forwardAllArgs?: boolean;
+        /**
+         * description was added to allow users to document their commands inline,
+         * it is not intended to be used as part of the execution of the command.
+         */
+        description?: string;
       }
     | string
   )[];
@@ -57,36 +64,43 @@ export interface NormalizedRunCommandsBuilderOptions
 }
 
 export default async function (
-  options: RunCommandsBuilderOptions
+  options: RunCommandsBuilderOptions,
+  context: ExecutorContext
 ): Promise<{ success: boolean }> {
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
   if (options.readyWhen && !options.parallel) {
     throw new Error(
-      'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
+      'ERROR: Bad executor config for @nrwl/run-commands - "readyWhen" can only be used when "parallel=true".'
     );
   }
 
   try {
     const success = options.parallel
-      ? await runInParallel(normalized)
-      : await runSerially(normalized);
+      ? await runInParallel(normalized, context)
+      : await runSerially(normalized, context);
     return { success };
   } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
     throw new Error(
       `ERROR: Something went wrong in @nrwl/run-commands - ${e.message}`
     );
   }
 }
 
-async function runInParallel(options: NormalizedRunCommandsBuilderOptions) {
+async function runInParallel(
+  options: NormalizedRunCommandsBuilderOptions,
+  context: ExecutorContext
+) {
   const procs = options.commands.map((c) =>
     createProcess(
       c.command,
       options.readyWhen,
       options.color,
-      options.cwd
+      calculateCwd(options.cwd, context)
     ).then((result) => ({
       result,
       command: c.command,
@@ -126,7 +140,7 @@ function normalizeOptions(
 
   if (options.command) {
     options.commands = [{ command: options.command }];
-    options.parallel = false;
+    options.parallel = !!options.readyWhen;
   } else {
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
@@ -142,9 +156,16 @@ function normalizeOptions(
   return options as any;
 }
 
-async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
+async function runSerially(
+  options: NormalizedRunCommandsBuilderOptions,
+  context: ExecutorContext
+) {
   for (const c of options.commands) {
-    createSyncProcess(c.command, options.color, options.cwd);
+    createSyncProcess(
+      c.command,
+      options.color,
+      calculateCwd(options.cwd, context)
+    );
   }
   return true;
 }
@@ -164,7 +185,9 @@ function createProcess(
     /**
      * Ensure the child process is killed when the parent exits
      */
-    process.on('exit', () => childProcess.kill());
+    const processExitListener = () => childProcess.kill();
+    process.on('exit', processExitListener);
+    process.on('SIGTERM', processExitListener);
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -177,7 +200,7 @@ function createProcess(
         res(true);
       }
     });
-    childProcess.on('close', (code) => {
+    childProcess.on('exit', (code) => {
       if (!readyWhen) {
         res(code === 0);
       }
@@ -192,6 +215,15 @@ function createSyncProcess(command: string, color: boolean, cwd: string) {
     maxBuffer: LARGE_BUFFER,
     cwd,
   });
+}
+
+function calculateCwd(
+  cwd: string | undefined,
+  context: ExecutorContext
+): string {
+  if (!cwd) return context.root;
+  if (path.isAbsolute(cwd)) return cwd;
+  return path.join(context.root, cwd);
 }
 
 function processEnv(color: boolean) {
@@ -225,7 +257,7 @@ function parseArgs(options: RunCommandsBuilderOptions) {
   if (!args) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
-      .reduce((m, c) => ((m[camelCase(c)] = options[c]), m), {});
+      .reduce((m, c) => ((m[c] = options[c]), m), {});
     return unknownOptionsTreatedAsArgs;
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {

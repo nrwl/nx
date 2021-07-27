@@ -54,6 +54,12 @@ Show the graph where every node is either an ancestor or a descendant of todos-f
 nx dep-graph --focus=todos-feature-main --exclude=project-one,project-two
 ```
 
+Watch for changes to dep graph and update in-browser:
+
+```bash
+nx dep-graph --watch
+```
+
 ## Options
 
 ### exclude
@@ -87,3 +93,9 @@ Bind the dep graph server to a specific port.
 ### version
 
 Show version number
+
+### watch
+
+Default: `false`
+
+Watch for changes to dep graph and update in-browser

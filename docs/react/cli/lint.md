@@ -28,7 +28,7 @@ nx lint myapp --fix
 
 ## Common Options
 
-The options below are common to the `lint` command used within an Nx workspace. The ESLint and Angular-specifc lint options are listed after these options.
+The options below are common to the `lint` command used within an Nx workspace. The ESLint and Angular-specific lint options are listed after these options.
 
 ### exclude
 

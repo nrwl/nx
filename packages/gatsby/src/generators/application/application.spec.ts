@@ -1,4 +1,4 @@
-import { NxJson } from '@nrwl/workspace';
+import { NxJsonConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from './application';
 import { readJson, Tree } from '@nrwl/devkit';
@@ -13,13 +13,18 @@ describe('app', () => {
   });
 
   it('should update workspace.json', async () => {
-    await applicationGenerator(tree, { name: 'myApp', style: 'css' });
+    await applicationGenerator(tree, {
+      name: 'myApp',
+      style: 'css',
+      standaloneConfig: false,
+    });
     const workspaceJson = readJson(tree, '/workspace.json');
 
     expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
     expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
       'apps/my-app-e2e'
     );
+    expect(workspaceJson.defaultProject).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {
@@ -27,8 +32,9 @@ describe('app', () => {
       name: 'myApp',
       style: 'css',
       tags: 'one,two',
+      standaloneConfig: false,
     });
-    const nxJson = readJson<NxJson>(tree, '/nx.json');
+    const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
     expect(nxJson.projects).toEqual({
       'my-app': {
         tags: ['one', 'two'],
@@ -41,7 +47,11 @@ describe('app', () => {
   });
 
   it('should generate files', async () => {
-    await applicationGenerator(tree, { name: 'myApp', style: 'css' });
+    await applicationGenerator(tree, {
+      name: 'myApp',
+      style: 'css',
+      standaloneConfig: false,
+    });
     expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
     expect(tree.exists('apps/my-app/tsconfig.app.json')).toBeTruthy();
     expect(tree.exists('apps/my-app/src/pages/index.tsx')).toBeTruthy();
@@ -54,6 +64,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'scss',
+        standaloneConfig: false,
       });
       expect(
         tree.exists('apps/my-app/src/pages/index.module.scss')
@@ -63,8 +74,13 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
       expect(indexContent).toContain(
-        `import styles from './index.module.scss'`
+        `import * as styles from './index.module.scss'`
       );
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/gatsby'].application.style
+      ).toEqual('scss');
     });
   });
 
@@ -73,6 +89,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'less',
+        standaloneConfig: false,
       });
       expect(
         tree.exists('apps/my-app/src/pages/index.module.less')
@@ -82,8 +99,13 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
       expect(indexContent).toContain(
-        `import styles from './index.module.less'`
+        `import * as styles from './index.module.less'`
       );
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/gatsby'].application.style
+      ).toEqual('less');
     });
   });
 
@@ -92,6 +114,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'styl',
+        standaloneConfig: false,
       });
       expect(
         tree.exists('apps/my-app/src/pages/index.module.styl')
@@ -101,8 +124,13 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
       expect(indexContent).toContain(
-        `import styles from './index.module.styl'`
+        `import * as styles from './index.module.styl'`
       );
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/gatsby'].application.style
+      ).toEqual('styl');
     });
   });
 
@@ -111,6 +139,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'styled-components',
+        standaloneConfig: false,
       });
       expect(
         tree.exists('apps/my-app/src/pages/index.module.styled-components')
@@ -119,8 +148,15 @@ describe('app', () => {
       const indexContent = tree
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import * as styles from './index.module`
+      );
       expect(indexContent).toContain(`import styled from 'styled-components'`);
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/gatsby'].application.style
+      ).toEqual('styled-components');
     });
   });
 
@@ -129,6 +165,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: '@emotion/styled',
+        standaloneConfig: false,
       });
       expect(
         tree.exists('apps/my-app/src/pages/index.module.styled-components')
@@ -137,39 +174,46 @@ describe('app', () => {
       const indexContent = tree
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import * as styles from './index.module`
+      );
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/gatsby'].application.style
+      ).toEqual('@emotion/styled');
     });
   });
 
-  // TODO: We should also add styled-jsx support for Gatsby to keep React plugins consistent.
-  // This needs to be here before Nx 12 is released.
-  xdescribe('--style styled-jsx', () => {
+  describe('--style styled-jsx', () => {
     it('should use <style jsx> in index page', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'styled-jsx',
+        standaloneConfig: false,
       });
 
       const indexContent = tree
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
 
-      const babelJestConfig = readJson(
-        tree,
-        'apps/my-app/babel-jest.config.json'
-      );
-
       expect(indexContent).toMatch(/<style jsx>/);
-      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
       expect(
         tree.exists('apps/my-app/src/pages/index.module.styled-jsx')
       ).toBeFalsy();
 
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import * as styles from './index.module`
+      );
       expect(indexContent).not.toContain(
         `import styled from 'styled-components'`
       );
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/gatsby'].application.style
+      ).toEqual('styled-jsx');
     });
   });
 
@@ -177,9 +221,10 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
+      standaloneConfig: false,
     });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -188,9 +233,10 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
+      standaloneConfig: false,
     });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
     );
   });
@@ -199,6 +245,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
+      standaloneConfig: false,
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
@@ -212,6 +259,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
+      standaloneConfig: false,
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
@@ -230,6 +278,7 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         unitTestRunner: 'none',
+        standaloneConfig: false,
       });
       expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeFalsy();
@@ -242,6 +291,7 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         e2eTestRunner: 'none',
+        standaloneConfig: false,
       });
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
       const workspaceJson = readJson(tree, 'workspace.json');
@@ -250,9 +300,13 @@ describe('app', () => {
   });
 
   it('should generate an index component', async () => {
-    await applicationGenerator(tree, { name: 'myApp', style: 'css' });
+    await applicationGenerator(tree, {
+      name: 'myApp',
+      style: 'css',
+      standaloneConfig: false,
+    });
 
-    const appContent = tree.read('apps/my-app/src/pages/index.tsx').toString();
+    const appContent = tree.read('apps/my-app/src/pages/index.tsx', 'utf-8');
 
     expect(appContent).not.toMatch(/extends Component/);
   });
@@ -261,20 +315,58 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'myApp',
       style: 'css',
+      standaloneConfig: false,
     });
 
-    const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJson(tree, '/package.json');
-
-    expect(eslintJson.extends).toEqual(
-      expect.arrayContaining(['plugin:@nrwl/nx/react'])
-    );
     expect(packageJson).toMatchObject({
       devDependencies: {
         'eslint-plugin-react': expect.anything(),
         'eslint-plugin-react-hooks': expect.anything(),
       },
     });
+
+    const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
+    expect(eslintJson).toMatchInlineSnapshot(`
+      Object {
+        "extends": Array [
+          "plugin:@nrwl/nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": Array [
+          "!**/*",
+          "public",
+          ".cache",
+        ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": Object {
+              "@typescript-eslint/camelcase": "off",
+            },
+          },
+          Object {
+            "files": Array [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
+          },
+        ],
+      }
+    `);
   });
 
   describe('--js', () => {
@@ -283,6 +375,7 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         js: true,
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-app/src/pages/index.js')).toBeTruthy();

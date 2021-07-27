@@ -1,22 +1,27 @@
-import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
+import { AffectedEventType, TasksRunner } from './tasks-runner';
 import { join } from 'path';
-import { appRootPath } from '../utilities/app-root';
-import { ReporterArgs } from './default-reporter';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { Reporter, ReporterArgs } from './reporter';
 import * as yargs from 'yargs';
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { Environment, NxJson } from '../core/shared-interfaces';
+import type {
+  ProjectGraph,
+  ProjectGraphNode,
+  TargetDependencyConfig,
+  NxJsonConfiguration,
+  Task,
+} from '@nrwl/devkit';
+import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
-import { Hasher } from '../core/hasher/hasher';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
+import { getDependencyConfigs } from './utils';
+import { Hasher } from '../core/hasher/hasher';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
-
-function setParallelDefaults(options: NxArgs) {}
 
 export async function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
@@ -24,51 +29,90 @@ export async function runCommand<T extends RunArgs>(
   { nxJson, workspaceResults }: Environment,
   nxArgs: NxArgs,
   overrides: any,
-  reporter: any,
+  reporter: Reporter,
   initiatingProject: string | null
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
-  // we have to special parallel because they can be overwritten in nx.json
-  setParallelDefaults(runnerOptions);
+
+  const defaultDependencyConfigs = nxJson.targetDependencies ?? {};
+  const tasks = createTasksForProjectToRun(
+    projectsToRun,
+    {
+      target: nxArgs.target,
+      configuration: nxArgs.configuration,
+      overrides,
+    },
+    projectGraph,
+    initiatingProject,
+    defaultDependencyConfigs
+  );
 
   reporter.beforeRun(
     projectsToRun.map((p) => p.name),
+    tasks,
     nxArgs,
     overrides
   );
 
-  const tasks: Task[] = projectsToRun.map((project) => {
-    return createTask({
-      project,
-      target: nxArgs.target,
-      configuration: nxArgs.configuration,
-      overrides: overrides,
-      errorIfCannotFindConfiguration: project.name === initiatingProject,
-    });
-  });
-
+  // TODO: vsavkin remove hashing after Nx 13
   const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
-  const res = await hasher.hashTasks(tasks);
+  const res = await Promise.all(
+    tasks.map((t) => hasher.hashTaskWithDepsAndContext(t))
+  );
   for (let i = 0; i < res.length; ++i) {
     tasks[i].hash = res[i].value;
     tasks[i].hashDetails = res[i].details;
   }
-  const cached = [];
+
+  const cachedTasks: Task[] = [];
+  const failedTasks: Task[] = [];
+  const tasksWithFailedDependencies: Task[] = [];
   tasksRunner(tasks, runnerOptions, {
-    initiatingProject: initiatingProject,
+    initiatingProject,
     target: nxArgs.target,
     projectGraph,
     nxJson,
+    hideCachedOutput: nxArgs.hideCachedOutput,
   }).subscribe({
     next: (event: any) => {
       switch (event.type) {
         case AffectedEventType.TaskComplete: {
-          workspaceResults.setResult(event.task.target.project, event.success);
+          if (
+            projectsToRun
+              .map((project) => project.name)
+              .includes(event.task.target.project) &&
+            event.task.target.target === nxArgs.target
+          ) {
+            workspaceResults.setResult(
+              event.task.target.project,
+              event.success
+            );
+          }
+          if (!event.success) {
+            failedTasks.push(event.task);
+          }
+          break;
+        }
+        case AffectedEventType.TaskDependencyFailed: {
+          tasksWithFailedDependencies.push(event.task);
           break;
         }
         case AffectedEventType.TaskCacheRead: {
-          workspaceResults.setResult(event.task.target.project, event.success);
-          cached.push(event.task.target.project);
+          if (
+            projectsToRun
+              .map((project) => project.name)
+              .includes(event.task.target.project) &&
+            event.task.target.target === nxArgs.target
+          ) {
+            workspaceResults.setResult(
+              event.task.target.project,
+              event.success
+            );
+          }
+          cachedTasks.push(event.task);
+          if (!event.success) {
+            failedTasks.push(event.task);
+          }
           break;
         }
       }
@@ -81,9 +125,11 @@ export async function runCommand<T extends RunArgs>(
       workspaceResults.saveResults();
       reporter.printResults(
         nxArgs,
-        workspaceResults.failedProjects,
         workspaceResults.startedWithFailedProjects,
-        cached
+        tasks,
+        failedTasks,
+        tasksWithFailedDependencies,
+        cachedTasks
       );
 
       if (workspaceResults.hasFailure) {
@@ -99,6 +145,81 @@ interface TaskParams {
   configuration: string;
   overrides: Object;
   errorIfCannotFindConfiguration: boolean;
+}
+
+export function createTasksForProjectToRun(
+  projectsToRun: ProjectGraphNode[],
+  params: Omit<TaskParams, 'project' | 'errorIfCannotFindConfiguration'>,
+  projectGraph: ProjectGraph,
+  initiatingProject: string | null,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {}
+) {
+  const tasksMap: Map<string, Task> = new Map<string, Task>();
+  const seenSet = new Set<string>();
+
+  for (const project of projectsToRun) {
+    addTasksForProjectTarget(
+      {
+        project,
+        ...params,
+        errorIfCannotFindConfiguration: project.name === initiatingProject,
+      },
+      defaultDependencyConfigs,
+      projectGraph,
+      tasksMap,
+      [],
+      seenSet
+    );
+  }
+  return Array.from(tasksMap.values());
+}
+
+function addTasksForProjectTarget(
+  {
+    project,
+    target,
+    configuration,
+    overrides,
+    errorIfCannotFindConfiguration,
+  }: TaskParams,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {},
+  projectGraph: ProjectGraph,
+  tasksMap: Map<string, Task>,
+  path: string[],
+  seenSet: Set<string>
+) {
+  const task = createTask({
+    project,
+    target,
+    configuration,
+    overrides,
+    errorIfCannotFindConfiguration,
+  });
+
+  const dependencyConfigs = getDependencyConfigs(
+    { project: project.name, target },
+    defaultDependencyConfigs,
+    projectGraph
+  );
+
+  if (dependencyConfigs) {
+    for (const dependencyConfig of dependencyConfigs) {
+      addTasksForProjectDependencyConfig(
+        project,
+        {
+          target,
+          configuration,
+        },
+        dependencyConfig,
+        defaultDependencyConfigs,
+        projectGraph,
+        tasksMap,
+        path,
+        seenSet
+      );
+    }
+  }
+  tasksMap.set(task.id, task);
 }
 
 export function createTask({
@@ -125,7 +246,7 @@ export function createTask({
 
   if (errorIfCannotFindConfiguration && configuration && !config) {
     output.error({
-      title: `Cannot find configuration '${configuration}' for project '${project.name}'`,
+      title: `Cannot find configuration '${configuration}' for project '${project.name}:${target}'`,
     });
     process.exit(1);
   }
@@ -143,6 +264,89 @@ export function createTask({
   };
 }
 
+function addTasksForProjectDependencyConfig(
+  project: ProjectGraphNode,
+  { target, configuration }: Pick<TaskParams, 'target' | 'configuration'>,
+  dependencyConfig: TargetDependencyConfig,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
+  projectGraph: ProjectGraph,
+  tasksMap: Map<string, Task>,
+  path: string[],
+  seenSet: Set<string>
+) {
+  const targetIdentifier = getId({
+    project: project.name,
+    target,
+    configuration,
+  });
+  seenSet.add(project.name);
+
+  if (path.includes(targetIdentifier)) {
+    output.error({
+      title: `Could not execute ${path[0]} because it has a circular dependency`,
+      bodyLines: [`${[...path, targetIdentifier].join(' --> ')}`],
+    });
+    process.exit(1);
+  }
+
+  if (tasksMap.has(targetIdentifier)) {
+    return;
+  }
+
+  if (dependencyConfig.projects === 'dependencies') {
+    const dependencies = projectGraph.dependencies[project.name];
+    for (const dep of dependencies) {
+      const depProject = projectGraph.nodes[dep.target];
+      if (projectHasTarget(depProject, dependencyConfig.target)) {
+        addTasksForProjectTarget(
+          {
+            project: projectGraph.nodes[dep.target],
+            target: dependencyConfig.target,
+            configuration,
+            overrides: {},
+            errorIfCannotFindConfiguration: false,
+          },
+          defaultDependencyConfigs,
+          projectGraph,
+          tasksMap,
+          [...path, targetIdentifier],
+          seenSet
+        );
+      } else {
+        if (seenSet.has(dep.target)) {
+          continue;
+        }
+
+        addTasksForProjectDependencyConfig(
+          projectGraph.nodes[dep.target],
+          { target, configuration },
+          dependencyConfig,
+          defaultDependencyConfigs,
+          projectGraph,
+          tasksMap,
+          path,
+          seenSet
+        );
+      }
+    }
+  } else {
+    addTasksForProjectTarget(
+      {
+        project,
+        target: dependencyConfig.target,
+        configuration,
+        overrides: {},
+        errorIfCannotFindConfiguration: true,
+      },
+      defaultDependencyConfigs,
+      projectGraph,
+      tasksMap,
+      [...path, targetIdentifier],
+      seenSet
+    );
+  }
+}
+
 function getId({
   project,
   target,
@@ -152,16 +356,16 @@ function getId({
   target: string;
   configuration?: string;
 }): string {
-  let id = project + ':' + target;
+  let id = `${project}:${target}`;
   if (configuration) {
-    id += ':' + configuration;
+    id += `:${configuration}`;
   }
   return id;
 }
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJson
+  nxJson: NxJsonConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: unknown;

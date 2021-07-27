@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/cli",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -27,10 +27,10 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "tmp": "0.0.33",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "@nrwl/tao": "*",
-    "chalk": "4.1.0"
+    "chalk": "4.1.0",
+    "v8-compile-cache": "2.3.0"
   }
 }

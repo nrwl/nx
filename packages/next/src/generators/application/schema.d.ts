@@ -13,4 +13,6 @@ export interface Schema {
   linter?: Linter;
   skipWorkspaceJson?: boolean;
   js?: boolean;
+  setParserOptionsProject?: boolean;
+  standaloneConfig?: boolean;
 }

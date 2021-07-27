@@ -1,4 +1,10 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  readJson,
+  addProjectConfiguration,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { cypressProjectGenerator } from './cypress-project';
 import { Schema } from './schema';
@@ -8,10 +14,37 @@ describe('schematic:cypress-project', () => {
   let tree: Tree;
   const defaultOptions: Omit<Schema, 'name' | 'project'> = {
     linter: Linter.EsLint,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'my-app', {
+      root: 'my-app',
+      targets: {
+        serve: {
+          executor: 'serve-executor',
+          options: {},
+          configurations: {
+            production: {},
+          },
+        },
+      },
+    });
+
+    addProjectConfiguration(tree, 'my-dir-my-app', {
+      root: 'my-dir/my-app',
+      targets: {
+        serve: {
+          executor: 'serve-executor',
+          options: {},
+          configurations: {
+            production: {},
+          },
+        },
+      },
+    });
   });
 
   describe('Cypress Project', () => {
@@ -44,6 +77,7 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.TsLint,
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
@@ -72,11 +106,51 @@ describe('schematic:cypress-project', () => {
       });
     });
 
+    it('should add update `workspace.json` file for a project with a defaultConfiguration', async () => {
+      const originalProject = readProjectConfiguration(tree, 'my-app');
+      originalProject.targets.serve.defaultConfiguration = 'development';
+      originalProject.targets.serve.configurations.development = {};
+      updateProjectConfiguration(tree, 'my-app', originalProject);
+
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.TsLint,
+        standaloneConfig: false,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
+
+      expect(project.root).toEqual('apps/my-app-e2e');
+
+      expect(project.architect.lint).toEqual({
+        builder: '@angular-devkit/build-angular:tslint',
+        options: {
+          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
+        },
+      });
+      expect(project.architect.e2e).toEqual({
+        builder: '@nrwl/cypress:cypress',
+        options: {
+          cypressConfig: 'apps/my-app-e2e/cypress.json',
+          devServerTarget: 'my-app:serve:development',
+          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+        },
+        configurations: {
+          production: {
+            devServerTarget: 'my-app:serve:production',
+          },
+        },
+      });
+    });
+
     it('should add update `workspace.json` file properly when eslint is passed', async () => {
       await cypressProjectGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.EsLint,
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
@@ -89,11 +163,25 @@ describe('schematic:cypress-project', () => {
       });
     });
 
+    it('should not add lint target when "none" is passed', async () => {
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.None,
+        standaloneConfig: false,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
+
+      expect(project.architect.lint).toBeUndefined();
+    });
+
     it('should update nx.json', async () => {
       await cypressProjectGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.EsLint,
+        standaloneConfig: false,
       });
 
       const project = readProjectConfiguration(tree, 'my-app-e2e');
@@ -142,6 +230,7 @@ describe('schematic:cypress-project', () => {
           project: 'my-dir-my-app',
           directory: 'my-dir',
           linter: Linter.TsLint,
+          standaloneConfig: false,
         });
         const projectConfig = readJson(tree, 'workspace.json').projects[
           'my-dir-my-app-e2e'
@@ -237,16 +326,61 @@ describe('schematic:cypress-project', () => {
             name: 'my-app-e2e',
             project: 'my-app',
             linter: Linter.EsLint,
+            standaloneConfig: false,
           });
           const packageJson = readJson(tree, 'package.json');
-          const eslintrcJson = readJson(tree, 'apps/my-app-e2e/.eslintrc.json');
-
           expect(
             packageJson.devDependencies['eslint-plugin-cypress']
           ).toBeTruthy();
-          expect(eslintrcJson.extends).toContain('plugin:cypress/recommended');
+
+          const eslintrcJson = readJson(tree, 'apps/my-app-e2e/.eslintrc.json');
+          expect(eslintrcJson).toMatchInlineSnapshot(`
+            Object {
+              "extends": Array [
+                "plugin:cypress/recommended",
+                "../../.eslintrc.json",
+              ],
+              "ignorePatterns": Array [
+                "!**/*",
+              ],
+              "overrides": Array [
+                Object {
+                  "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
+                    "src/plugins/index.js",
+                  ],
+                  "rules": Object {
+                    "@typescript-eslint/no-var-requires": "off",
+                    "no-undef": "off",
+                  },
+                },
+              ],
+            }
+          `);
         });
       });
+    });
+    it('should generate in the correct folder', async () => {
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'other-e2e',
+        project: 'my-app',
+        directory: 'one/two',
+      });
+      const workspace = readJson(tree, 'workspace.json');
+      expect(workspace.projects['one-two-other-e2e']).toBeDefined();
+      [
+        'apps/one/two/other-e2e/cypress.json',
+        'apps/one/two/other-e2e/src/integration/app.spec.ts',
+      ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
     });
   });
 });

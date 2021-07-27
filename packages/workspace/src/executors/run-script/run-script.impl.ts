@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-import { ExecutorContext } from '@nrwl/devkit';
+import { getPackageManagerCommand } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
+import * as path from 'path';
 
 export interface RunScriptOptions {
   script: string;
@@ -22,7 +23,10 @@ export default async function (
   try {
     execSync(pm.run(script, args.join(' ')), {
       stdio: ['inherit', 'inherit', 'inherit'],
-      cwd: context.workspace.projects[context.projectName].root,
+      cwd: path.join(
+        context.root,
+        context.workspace.projects[context.projectName].root
+      ),
     });
     return { success: true };
   } catch (e) {

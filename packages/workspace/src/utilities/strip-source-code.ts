@@ -1,10 +1,12 @@
-import { Scanner, SyntaxKind } from 'typescript';
+import type { Scanner } from 'typescript';
 
+let SyntaxKind;
 export function stripSourceCode(scanner: Scanner, contents: string): string {
-  if (contents.indexOf('loadChildren') > -1) {
-    return contents;
+  if (!SyntaxKind) {
+    SyntaxKind = require('typescript').SyntaxKind;
   }
-  if (contents.indexOf('require') > -1) {
+
+  if (contents.indexOf('loadChildren') > -1) {
     return contents;
   }
 
@@ -15,6 +17,35 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
   while (token !== SyntaxKind.EndOfFileToken) {
     const potentialStart = scanner.getStartPos();
     switch (token) {
+      case SyntaxKind.MultiLineCommentTrivia:
+      case SyntaxKind.SingleLineCommentTrivia: {
+        const isMultiLineCommentTrivia =
+          token === SyntaxKind.MultiLineCommentTrivia;
+        const start = potentialStart + 2;
+        token = scanner.scan();
+        const end = scanner.getStartPos() - (isMultiLineCommentTrivia ? 2 : 0);
+        const comment = contents.substring(start, end).trim();
+        if (comment === 'nx-ignore-next-line') {
+          // reading till the end of the line
+          while (
+            token === SyntaxKind.WhitespaceTrivia ||
+            token === SyntaxKind.NewLineTrivia
+          ) {
+            token = scanner.scan();
+          }
+
+          // ignore next line
+          while (
+            token !== SyntaxKind.NewLineTrivia &&
+            token !== SyntaxKind.EndOfFileToken
+          ) {
+            token = scanner.scan();
+          }
+        }
+        break;
+      }
+
+      case SyntaxKind.RequireKeyword:
       case SyntaxKind.ImportKeyword: {
         token = scanner.scan();
         while (

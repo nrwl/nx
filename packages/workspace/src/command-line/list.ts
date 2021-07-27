@@ -1,5 +1,5 @@
 import * as yargs from 'yargs';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output } from '../utilities/output';
 import {
   fetchCommunityPlugins,
@@ -41,8 +41,16 @@ async function listHandler(args: YargsListArgs) {
   if (args.plugin) {
     listPluginCapabilities(args.plugin);
   } else {
-    const corePlugins = await fetchCorePlugins();
-    const communityPlugins = await fetchCommunityPlugins();
+    const corePlugins = fetchCorePlugins();
+    const communityPlugins = await fetchCommunityPlugins().catch(() => {
+      output.warn({
+        title: `Community plugins:`,
+        bodyLines: [`Error fetching plugins.`],
+      });
+
+      return [];
+    });
+
     const installedPlugins = getInstalledPluginsFromPackageJson(
       appRootPath,
       corePlugins,

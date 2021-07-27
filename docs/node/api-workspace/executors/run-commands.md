@@ -1,9 +1,9 @@
-# run-commands
+# @nrwl/workspace:run-commands
 
 Run any custom commands with Nx
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
 ## Examples
 
@@ -107,14 +107,18 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ##### Custom **done** conditions
 
-Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
+Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:
 
 ```json
 "finish-when-ready": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "command": "echo 'READY' && sleep 5 && echo 'FINISHED'",
-        "readyWhen": "READY"
+        "commands": [
+            "sleep 5 && echo 'FINISHED'",
+            "echo 'READY'"
+        ],
+        "readyWhen": "READY",
+        "parallel": true
     }
 }
 ```
@@ -123,7 +127,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 nx run frontend:finish-when-ready
 ```
 
-The above command will finish immediately, instead of waiting for 5 seconds.
+The above commands will finish immediately, instead of waiting for 5 seconds.
 
 ##### Nx Affected
 
@@ -161,7 +165,7 @@ nx affected --target=generate-docs
 }
 ```
 
-## Properties
+## Options
 
 ### args
 
@@ -187,11 +191,13 @@ Command to run in child process
 
 Type: `array`
 
+Commands to run in child process
+
 ### cwd
 
 Type: `string`
 
-Current working directory of the commands.
+Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path.
 
 ### envFile
 
@@ -217,4 +223,4 @@ Run commands in parallel
 
 Type: `string`
 
-String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is done when all the child processes complete.
+String to appear in `stdout` or `stderr` that indicates that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete.

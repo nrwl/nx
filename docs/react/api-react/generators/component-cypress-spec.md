@@ -1,4 +1,4 @@
-# component-cypress-spec
+# @nrwl/react:component-cypress-spec
 
 Create a cypress spec for a ui component that has a story
 
@@ -24,11 +24,23 @@ nx g component-cypress-spec ... --dry-run
 
 ## Options
 
-### componentPath
+### componentPath (_**required**_)
 
 Type: `string`
 
 Relative path to the component file from the library root?
+
+### project (_**required**_)
+
+Type: `string`
+
+The project name for which to generate tests.
+
+### cypressProject
+
+Type: `string`
+
+The Cypress project to generate the stories under. By default, inferred from 'project'
 
 ### js
 
@@ -37,9 +49,3 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
-
-### project
-
-Type: `string`
-
-The project name for which to generate tests.

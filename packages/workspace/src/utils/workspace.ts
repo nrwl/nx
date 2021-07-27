@@ -20,6 +20,8 @@ function createHost(tree: Tree): workspaces.WorkspaceHost {
     },
     async isDirectory(path: string): Promise<boolean> {
       // approximate a directory check
+      // special case needed when testing wrapped schematics
+      if (path === '/') return true;
       return !tree.exists(path) && tree.getDir(path).subfiles.length > 0;
     },
     async isFile(path: string): Promise<boolean> {

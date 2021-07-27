@@ -1,0 +1,45 @@
+{
+  "name": "nx/web",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#webInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add @nrwl/web to a project",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an application"
+    },
+    "migrate-to-webpack-5": {
+      "factory": "./src/generators/migrate-to-webpack-5/migrate-to-webpack-5#webMigrateToWebpack5Generator",
+      "schema": "./src/generators/migrate-to-webpack-5/schema.json",
+      "aliases": ["webpack5"],
+      "description": "Add webpack 5 compatible dependencies to the workspace"
+    }
+  },
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#webInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add @nrwl/web to a project",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an application"
+    },
+    "migrate-to-webpack-5": {
+      "factory": "./src/generators/migrate-to-webpack-5/migrate-to-webpack-5#webMigrateToWebpack5Schematic",
+      "schema": "./src/generators/migrate-to-webpack-5/schema.json",
+      "aliases": ["webpack5"],
+      "description": "Add webpack 5 compatible dependencies to the workspace"
+    }
+  }
+}

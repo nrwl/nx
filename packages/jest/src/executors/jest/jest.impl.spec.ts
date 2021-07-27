@@ -74,7 +74,7 @@ describe('Jest Executor', () => {
         mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           _: [],
           testPathPattern: [],
           watch: false,
@@ -103,7 +103,7 @@ describe('Jest Executor', () => {
       );
 
       expect(runCLI).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           _: ['lib.spec.ts'],
           coverage: false,
           runInBand: true,
@@ -135,7 +135,7 @@ describe('Jest Executor', () => {
       );
 
       expect(runCLI).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           _: ['file1.ts', 'file2.ts'],
           coverage: false,
           findRelatedTests: true,
@@ -243,7 +243,7 @@ describe('Jest Executor', () => {
         mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           _: [],
           setupFilesAfterEnv: ['/root/test-setup.ts'],
           testPathPattern: [],
@@ -279,7 +279,7 @@ describe('Jest Executor', () => {
         );
 
         expect(runCLI).toHaveBeenCalledWith(
-          jasmine.objectContaining({
+          expect.objectContaining({
             _: [],
             setupFilesAfterEnv: ['/root/test-setup.ts'],
             testPathPattern: [],
@@ -312,43 +312,13 @@ describe('Jest Executor', () => {
 
         await jestExecutor(options, mockContext);
         expect(runCLI).toHaveBeenCalledWith(
-          jasmine.objectContaining({
+          expect.objectContaining({
             _: [],
             testPathPattern: [],
             watch: false,
           }),
           ['/root/jest.config.js']
         );
-      });
-    });
-
-    describe('when the user tries to use babel-jest AND ts-jest', () => {
-      beforeEach(() => {
-        jest.doMock(
-          '/root/jest.config.js',
-          () => ({
-            transform: {
-              '^.+\\.tsx?$': 'ts-jest',
-              '^.+\\.jsx?$': 'babel-jest',
-            },
-          }),
-          { virtual: true }
-        );
-      });
-
-      it('should throw an appropriate error', async () => {
-        const options: JestExecutorOptions = {
-          jestConfig: './jest.config.js',
-          watch: false,
-        };
-
-        try {
-          await jestExecutor(options, mockContext);
-        } catch (e) {
-          expect(e.message).toMatch(
-            /Using babel-jest and ts-jest together is not supported/
-          );
-        }
       });
     });
   });

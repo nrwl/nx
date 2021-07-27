@@ -1,8 +1,36 @@
 import { ExecutorContext } from '@nrwl/devkit';
+import { gte } from 'semver';
+import { join } from 'path';
 
 export interface NodePackage {
   name: string;
   version: string;
+}
+
+export function getStorybookFrameworkPath(uiFramework) {
+  const serverOptionsPaths = {
+    '@storybook/angular': '@storybook/angular/dist/ts3.9/server/options',
+    '@storybook/react': '@storybook/react/dist/cjs/server/options',
+    '@storybook/html': '@storybook/html/dist/cjs/server/options',
+    '@storybook/vue': '@storybook/vue/dist/cjs/server/options',
+    '@storybook/web-components"':
+      '@storybook/web-components"/dist/cjs/server/options',
+  };
+
+  if (isStorybookV62onwards(uiFramework)) {
+    return serverOptionsPaths[uiFramework];
+  } else {
+    return `${uiFramework}/dist/server/options`;
+  }
+}
+
+function isStorybookV62onwards(uiFramework) {
+  const storybookPackageVersion = require(join(
+    uiFramework,
+    'package.json'
+  )).version;
+
+  return gte(storybookPackageVersion, '6.2.0-rc.4');
 }
 
 // see: https://github.com/storybookjs/storybook/pull/12565

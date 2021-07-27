@@ -24,6 +24,30 @@
       "version": "11.0.0-beta.0",
       "description": "Update libraries",
       "factory": "./src/migrations/update-11-0-0/update-11-0-0"
+    },
+    "update-babel-config-11.5.0": {
+      "cli": "nx",
+      "version": "11.5.0-beta.1",
+      "description": "Update .babelrc to use '@nrwl/next/babel' instead of 'next/babel'",
+      "factory": "./src/migrations/update-11-5-0/update-babel-config"
+    },
+    "remove-tsconfig-app-11.5.0": {
+      "cli": "nx",
+      "version": "11.5.0-beta.1",
+      "description": "Remove tsconfig.app.json",
+      "factory": "./src/migrations/update-11-5-0/remove-tsconfig-app-11-5-0"
+    },
+    "add-js-include-11.6.0": {
+      "cli": "nx",
+      "version": "11.6.0-beta.0",
+      "description": "Add js patterns to tsconfig.json",
+      "factory": "./src/migrations/update-11-6-0/add-js-include-11-6-0"
+    },
+    "add-next-eslint-12.6.0": {
+      "cli": "nx",
+      "version": "12.6.0-beta.0",
+      "description": "Add 'next' eslint config",
+      "factory": "./src/migrations/update-12-6-0/add-next-eslint"
     }
   },
   "packageJsonUpdates": {
@@ -72,6 +96,46 @@
         "@emotion/styled": {
           "version": "11.0.0",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.5.2": {
+      "version": "11.5.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.0.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.6.1": {
+      "version": "11.6.1-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.1.2": {
+      "version": "12.1.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.0.1",
+          "addToPackageJson": "devDependencies"
         }
       }
     }

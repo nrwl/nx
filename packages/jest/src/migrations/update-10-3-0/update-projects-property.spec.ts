@@ -108,7 +108,7 @@ describe('update projects property', () => {
     );
   });
 
-  it('should remove setupFile and tsconfig in test architect from workspace.json', async (done) => {
+  it('should remove setupFile and tsconfig in test architect from workspace.json', async () => {
     const result = await schematicRunner
       .runSchematicAsync('update-projects-property', {}, initialTree)
       .toPromise();
@@ -156,7 +156,5 @@ describe('update projects property', () => {
         displayName: 'products',
       };
     `);
-
-    done();
   });
 });

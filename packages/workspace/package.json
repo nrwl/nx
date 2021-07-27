@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/workspace",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -17,16 +17,16 @@
     "Cypress",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
@@ -35,8 +35,10 @@
       "@nrwl/angular",
       "@nrwl/cli",
       "@nrwl/cypress",
+      "@nrwl/devkit",
       "@nrwl/eslint-plugin-nx",
       "@nrwl/express",
+      "@nrwl/gatsby",
       "@nrwl/jest",
       "@nrwl/linter",
       "@nrwl/nest",
@@ -50,32 +52,30 @@
     ]
   },
   "peerDependencies": {
-    "prettier": "^2.0.4"
+    "prettier": "^2.3.0"
   },
   "dependencies": {
     "@nrwl/cli": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
+    "chokidar": "^3.5.1",
     "cosmiconfig": "^4.0.0",
-    "fs-extra": "7.0.1",
-    "dotenv": "6.2.0",
+    "fs-extra": "^9.1.0",
+    "dotenv": "8.2.0",
+    "glob": "7.1.4",
     "ignore": "^5.0.4",
     "npm-run-all": "^4.1.5",
-    "opn": "^5.3.0",
+    "open": "^7.4.2",
     "rxjs": "^6.5.4",
-    "semver": "6.3.0",
-    "strip-json-comments": "2.0.1",
-    "tmp": "0.0.33",
+    "semver": "7.3.4",
+    "tmp": "~0.2.1",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "chalk": "4.1.0",
-    "axios": "0.21.1",
     "flat": "^5.0.2",
-    "lodash": "^4.17.20",
     "minimatch": "3.0.4",
-    "inquirer": "^6.3.1",
-    "resolve": "1.17.0",
+    "enquirer": "~2.3.6",
     "tslib": "^2.0.0"
   }
 }

@@ -1,11 +1,17 @@
-# eslint
+# @nrwl/linter:eslint
 
 Run ESLint on a project
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
-## Properties
+## Options
+
+### lintFilePatterns (_**required**_)
+
+Type: `array`
+
+One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
 
 ### cache
 
@@ -51,17 +57,17 @@ Type: `string`
 
 ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
+### hasTypeAwareRules
+
+Type: `boolean`
+
+When set to true, the linter will invalidate its cache when any of its dependencies changes.
+
 ### ignorePath
 
 Type: `string`
 
 The path of the .eslintignore file.
-
-### lintFilePatterns
-
-Type: `array`
-
-One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
 
 ### maxWarnings
 
@@ -70,6 +76,14 @@ Default: `-1`
 Type: `number`
 
 Number of warnings to trigger nonzero exit code - default: -1
+
+### noEslintrc
+
+Default: `false`
+
+Type: `boolean`
+
+The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default
 
 ### outputFile
 

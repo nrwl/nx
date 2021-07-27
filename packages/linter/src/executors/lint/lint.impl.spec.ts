@@ -7,7 +7,7 @@ const mockOutputFixes = jest.fn();
 
 const mockCreateProgram = jest
   .fn()
-  .mockImplementation((path) => path + '-program');
+  .mockImplementation((path) => `${path}-program`);
 jest.mock('./utility/ts-utils', () => ({
   createProgram: mockCreateProgram,
 }));

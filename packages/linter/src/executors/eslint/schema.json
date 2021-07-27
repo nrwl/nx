@@ -39,7 +39,9 @@
             "tap"
           ]
         },
-        { "minLength": 1 }
+        {
+          "minLength": 1
+        }
       ]
     },
     "force": {
@@ -83,6 +85,15 @@
     "ignorePath": {
       "type": "string",
       "description": "The path of the .eslintignore file."
+    },
+    "noEslintrc": {
+      "type": "boolean",
+      "description": "The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default",
+      "default": false
+    },
+    "hasTypeAwareRules": {
+      "type": "boolean",
+      "description": "When set to true, the linter will invalidate its cache when any of its dependencies changes."
     }
   },
   "additionalProperties": false,

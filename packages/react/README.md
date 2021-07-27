@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-react.png" width="600"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-react.png" width="600" alt="Nx - Smart, Extensible Build Framework"></p>
 
 {{links}}
 
@@ -32,7 +32,7 @@ You can always add the React plugin to an existing workspace by installing `@nrw
 ## Quick Start Videos
 
 <a href="https://www.youtube.com/watch?v=E188J7E_MDU" target="_blank">
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-react-video.png" width="350"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-react-video.png" width="350" alt="Nx - Quick start video"></p>
 </a>
 
 - [Nx Dev Tools for Monorepos, In-Depth Explainer (React)](https://www.youtube.com/watch?v=jCf92IyR-GE)

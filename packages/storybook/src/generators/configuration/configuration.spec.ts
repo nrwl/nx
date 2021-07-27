@@ -20,11 +20,12 @@ describe('@nrwl/storybook:configuration', () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
+      standaloneConfig: false,
     });
     writeJson(tree, 'package.json', {
       devDependencies: {
-        '@storybook/addon-knobs': '^6.0.21',
-        '@storybook/react': '^6.0.21',
+        '@storybook/addon-essentials': '~6.2.9',
+        '@storybook/react': '~6.2.9',
       },
     });
   });
@@ -33,6 +34,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/angular',
+      standaloneConfig: false,
     });
 
     // Root
@@ -75,10 +77,39 @@ describe('@nrwl/storybook:configuration', () => {
     ).toBeFalsy();
   });
 
+  it('should not update root files after generating them once', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    const newContents = `module.exports = {
+  stories: [],
+  addons: ['@storybook/addon-essentials', 'new-addon'],
+};
+`;
+    // Setup a new lib
+    await libraryGenerator(tree, {
+      name: 'test-ui-lib-2',
+      standaloneConfig: false,
+    });
+
+    tree.write('.storybook/main.js', newContents);
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib-2',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    expect(tree.read('.storybook/main.js', 'utf-8')).toEqual(newContents);
+  });
+
   it('should update workspace file', async () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib');
 
@@ -110,6 +141,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
     const tsconfigJson = readJson<TsConfig>(
       tree,
@@ -126,6 +158,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
     const tsconfigJson = readJson<TsConfig>(
       tree,
@@ -151,6 +184,7 @@ describe('@nrwl/storybook:configuration', () => {
     await libraryGenerator(tree, {
       name: 'test-ui-lib2',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
 
     updateJson(tree, 'libs/test-ui-lib2/.eslintrc.json', (json) => {
@@ -163,6 +197,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib2',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
 
     expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)

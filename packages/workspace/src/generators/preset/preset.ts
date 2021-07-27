@@ -35,12 +35,13 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === 'angular') {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/schematics/application/application');
+    } = require('@nrwl' + '/angular/src/generators/application/application');
 
     await angularApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/angular');
   } else if (options.preset === 'react') {
@@ -52,6 +53,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/react');
   } else if (options.preset === 'next') {
@@ -62,6 +64,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/next');
   } else if (options.preset === 'web-components') {
@@ -72,6 +75,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     addDependenciesToPackageJson(
       tree,
@@ -89,7 +93,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === 'angular-nest') {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/schematics/application/application');
+    } = require('@nrwl' + '/angular/src/generators/application/application');
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 
@@ -98,16 +102,19 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       skipFormat: true,
+      standaloneConfig: options.standaloneConfig,
     });
     await nestApplicationGenerator(tree, {
       name: 'api',
       frontendProject: options.name,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     await libraryGenerator(tree, {
       name: 'api-interfaces',
       unitTestRunner: 'none',
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/angular');
     connectAngularAndNest(tree, options);
@@ -123,16 +130,19 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     await expressApplicationGenerator(tree, {
       name: 'api',
       frontendProject: options.name,
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     await libraryGenerator(tree, {
       name: 'api-interfaces',
       unitTestRunner: 'none',
       linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/react');
     connectReactAndExpress(tree, options);
@@ -145,6 +155,27 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
     setDefaultCollection(tree, '@nrwl/nest');
+  } else if (options.preset === 'express') {
+    const {
+      applicationGenerator: expressApplicationGenerator,
+    } = require('@nrwl' + '/express');
+    await expressApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
+    });
+    setDefaultCollection(tree, '@nrwl/express');
+  } else if (options.preset === 'gatsby') {
+    const {
+      applicationGenerator: gatsbyApplicationGenerator,
+    } = require('@nrwl' + '/gatsby');
+    await gatsbyApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      style: options.style,
+      standaloneConfig: options.standaloneConfig,
+    });
+    setDefaultCollection(tree, '@nrwl/gatsby');
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
@@ -152,7 +183,7 @@ async function createPreset(tree: Tree, options: Schema) {
 
 function connectAngularAndNest(host: Tree, options: Schema) {
   const { insertNgModuleImport } = require('@nrwl' +
-    '/angular/src/schematics/utils/insert-ngmodule-import');
+    '/angular/src/generators/utils/insert-ngmodule-import');
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`
@@ -165,7 +196,7 @@ function connectAngularAndNest(host: Tree, options: Schema) {
   insertNgModuleImport(host, modulePath, 'HttpClientModule');
 
   const scope = options.npmScope;
-  const style = options.style ? options.style : 'css';
+  const style = options.style ?? 'css';
   host.write(
     `apps/${options.name}/src/app/app.component.ts`,
     `import { Component } from '@angular/core';
@@ -215,6 +246,7 @@ describe('AppComponent', () => {
   <img
     width="450"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
+    alt="Nx - Smart, Extensible Build Framework"
   />
 </div>
 <div>Message: {{ (hello$|async)|json }}</div>
@@ -284,6 +316,7 @@ export const App = () => {
         <img
           width="450"
           src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
+          alt="Nx - Smart, Extensible Build Framework"
         />
       </div>
       <div>{m.message}</div>

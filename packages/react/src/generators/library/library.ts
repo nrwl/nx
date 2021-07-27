@@ -8,7 +8,10 @@ import {
   addRoute,
   findComponentImportPath,
 } from '../../utils/ast-utils';
-import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import {
+  extraEslintDependencies,
+  createReactEslintJson,
+} from '../../utils/lint';
 import {
   reactDomVersion,
   reactRouterDomVersion,
@@ -16,7 +19,6 @@ import {
   typesReactRouterDomVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -80,7 +82,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   createFiles(host, options);
 
   if (!options.skipTsConfig) {
-    updateTsConfig(host, options);
+    updateBaseTsConfig(host, options);
   }
 
   if (options.unitTestRunner === 'jest') {
@@ -92,13 +94,6 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       babelJest: true,
     });
     tasks.push(jestTask);
-
-    updateBabelJestConfig(host, options.projectRoot, (json) => {
-      if (options.style === 'styled-jsx') {
-        json.plugins = (json.plugins || []).concat('styled-jsx/babel');
-      }
-      return json;
-    });
   }
 
   if (options.component) {
@@ -155,13 +150,15 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
 
+  const reactEslintJson = createReactEslintJson(
+    options.projectRoot,
+    options.setParserOptionsProject
+  );
+
   updateJson(
     host,
     joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    (json) => {
-      json.extends = [...reactEslintJson.extends, ...json.extends];
-      return json;
-    }
+    () => reactEslintJson
   );
 
   const installTask = await addDependenciesToPackageJson(
@@ -178,20 +175,12 @@ function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.publishable || options.buildable) {
     const { libsDir } = getWorkspaceLayout(host);
+    const external = ['react/jsx-runtime'];
 
-    const external = ['react', 'react-dom'];
-    // Also exclude CSS-in-JS packages from build
-    if (
-      options.style !== 'css' &&
-      options.style !== 'scss' &&
-      options.style !== 'styl' &&
-      options.style !== 'less' &&
-      options.style !== 'none'
-    ) {
-      external.push(
-        ...Object.keys(CSS_IN_JS_DEPENDENCIES[options.style].dependencies)
-      );
+    if (options.style === '@emotion/styled') {
+      external.push('@emotion/styled/base');
     }
+
     targets.build = {
       builder: '@nrwl/web:package',
       outputs: ['{options.outputPath}'],
@@ -201,11 +190,10 @@ function addProject(host: Tree, options: NormalizedSchema) {
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
-        babelConfig: `@nrwl/react/plugins/bundle-babel`,
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
         assets: [
           {
-            glob: 'README.md',
+            glob: `${options.projectRoot}/README.md`,
             input: '.',
             output: '.',
           },
@@ -214,16 +202,41 @@ function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(host, options.name, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'library',
-    tags: options.parsedTags,
-    targets,
-  });
+  addProjectConfiguration(
+    host,
+    options.name,
+    {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'library',
+      tags: options.parsedTags,
+      targets,
+    },
+    options.standaloneConfig
+  );
 }
 
-function updateTsConfig(host: Tree, options: NormalizedSchema) {
+function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'tsconfig.json'),
+    (json) => {
+      if (options.strict) {
+        json.compilerOptions = {
+          ...json.compilerOptions,
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+        };
+      }
+
+      return json;
+    }
+  );
+}
+
+function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, 'tsconfig.base.json', (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
@@ -265,6 +278,8 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   if (options.js) {
     toJS(host);
   }
+
+  updateTsConfig(host, options);
 }
 
 function updateAppRoutes(host: Tree, options: NormalizedSchema) {
@@ -305,10 +320,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addInitialAppRoutes
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const isComponentRouterPresent = componentContent.match(/react-router-dom/);
     if (!isComponentRouterPresent) {
       const changes = applyChangesToString(
@@ -321,10 +334,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addNewAppRoute
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const { npmScope } = getWorkspaceLayout(host);
     const changes = applyChangesToString(
       componentContent,
@@ -348,7 +359,7 @@ function readComponent(
     throw new Error(`Cannot find ${path}`);
   }
 
-  const content = host.read(path).toString('utf-8');
+  const content = host.read(path, 'utf-8');
 
   const source = ts.createSourceFile(
     path,

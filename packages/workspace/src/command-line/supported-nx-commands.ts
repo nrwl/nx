@@ -1,4 +1,4 @@
-export const supportedNxCommands = [
+export const supportedNxCommands: string[] = [
   'affected',
   'affected:apps',
   'affected:libs',
@@ -18,6 +18,8 @@ export const supportedNxCommands = [
   'migrate',
   'report',
   'run-many',
+  'connect-to-nx-cloud',
+  'clear-cache',
   'list',
   'help',
   '--help',

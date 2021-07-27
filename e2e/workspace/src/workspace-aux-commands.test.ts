@@ -2,6 +2,7 @@ import * as path from 'path';
 import {
   checkFilesExist,
   exists,
+  isNotWindows,
   newProject,
   readFile,
   readJson,
@@ -14,7 +15,7 @@ import {
   updateFile,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
-import { NxJson } from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;
@@ -82,7 +83,7 @@ describe('lint', () => {
     expect(out).toContain(
       'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
     );
-    expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
+    // expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
     expect(out).toContain('Imports of apps are forbidden');
     expect(out).toContain(
       'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
@@ -116,129 +117,133 @@ describe('lint', () => {
 
 describe('format', () => {
   it('should check and reformat the code', async () => {
-    const myapp = uniq('myapp');
-    const mylib = uniq('mylib');
+    if (isNotWindows()) {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
 
-    runCLI(`generate @nrwl/angular:app ${myapp}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    updateFile(
-      `apps/${myapp}/src/main.ts`,
-      `
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      updateFile(
+        `apps/${myapp}/src/main.ts`,
+        `
          const x = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `apps/${myapp}/src/app/app.module.ts`,
-      `
+      updateFile(
+        `apps/${myapp}/src/app/app.module.ts`,
+        `
          const y = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `apps/${myapp}/src/app/app.component.ts`,
-      `
+      updateFile(
+        `apps/${myapp}/src/app/app.component.ts`,
+        `
          const z = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `libs/${mylib}/index.ts`,
-      `
+      updateFile(
+        `libs/${mylib}/index.ts`,
+        `
          const x = 1111;
     `
-    );
-    updateFile(
-      `libs/${mylib}/src/${mylib}.module.ts`,
-      `
+      );
+      updateFile(
+        `libs/${mylib}/src/${mylib}.module.ts`,
+        `
          const y = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `README.md`,
-      `
+      updateFile(
+        `README.md`,
+        `
          my new readme;
     `
-    );
+      );
 
-    let stdout = runCLI(
-      `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
-      { silenceError: true }
-    );
-    expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
-    expect(stdout).toContain(
-      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
+      let stdout = runCLI(
+        `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
+        { silenceError: true }
+      );
+      expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
 
-    stdout = runCLI(`format:check --all`, { silenceError: true });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
+      stdout = runCLI(`format:check --all`, { silenceError: true });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
 
-    stdout = runCLI(`format:check --projects=${myapp}`, { silenceError: true });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
-    expect(stdout).not.toContain(
-      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`README.md`));
-
-    stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
-      silenceError: true,
-    });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
-    expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
-    expect(stdout).toContain(
-      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`README.md`));
-
-    const { stderr } = await runCLIAsync(
-      `format:check --projects=${myapp},${mylib} --all`,
-      {
+      stdout = runCLI(`format:check --projects=${myapp}`, {
         silenceError: true,
-      }
-    );
-    expect(stderr).toContain(
-      'Arguments all and projects are mutually exclusive'
-    );
+      });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).not.toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`README.md`));
 
-    runCLI(
-      `format:write --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
-    );
+      stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
+        silenceError: true,
+      });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+      expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`README.md`));
 
-    stdout = runCLI('format:check --all', { silenceError: true });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).not.toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).not.toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
+      const { stderr } = await runCLIAsync(
+        `format:check --projects=${myapp},${mylib} --all`,
+        {
+          silenceError: true,
+        }
+      );
+      expect(stderr).toContain(
+        'Arguments all and projects are mutually exclusive'
+      );
 
-    runCLI('format:write --all');
-    expect(runCLI('format:check --all')).not.toContain(
-      path.normalize(`apps/${myapp}/src/main.ts`)
-    );
-  });
+      runCLI(
+        `format:write --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
+      );
+
+      stdout = runCLI('format:check --all', { silenceError: true });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).not.toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).not.toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+
+      runCLI('format:write --all');
+      expect(runCLI('format:check --all')).not.toContain(
+        path.normalize(`apps/${myapp}/src/main.ts`)
+      );
+    }
+  }, 90000);
 });
 
 describe('workspace-generator', () => {
@@ -409,9 +414,9 @@ describe('dep-graph', () => {
     myapp = uniq('myapp');
     myapp2 = uniq('myapp2');
     myapp3 = uniq('myapp3');
-    myappE2e = myapp + '-e2e';
-    myapp2E2e = myapp2 + '-e2e';
-    myapp3E2e = myapp3 + '-e2e';
+    myappE2e = `${myapp}-e2e`;
+    myapp2E2e = `${myapp2}-e2e`;
+    myapp3E2e = `${myapp3}-e2e`;
     mylib = uniq('mylib');
     mylib2 = uniq('mylib2');
 
@@ -449,7 +454,7 @@ describe('dep-graph', () => {
     const jsonFileContents = readJson('project-graph.json');
 
     expect(jsonFileContents.graph.dependencies).toEqual(
-      jasmine.objectContaining({
+      expect.objectContaining({
         [myapp3E2e]: [
           {
             source: myapp3E2e,
@@ -485,7 +490,7 @@ describe('dep-graph', () => {
             target: mylib,
             type: 'static',
           },
-          { source: myapp, target: mylib2, type: 'dynamic' },
+          { source: myapp, target: mylib2, type: 'static' },
         ],
         [myappE2e]: [
           {
@@ -578,7 +583,7 @@ describe('dep-graph', () => {
 
     expect(() => checkFilesExist('project-graph.html')).not.toThrow();
     expect(() => checkFilesExist('static/styles.css')).not.toThrow();
-    expect(() => checkFilesExist('static/runtime.js')).not.toThrow();
+    expect(() => checkFilesExist('static/runtime.esm.js')).not.toThrow();
     expect(() => checkFilesExist('static/polyfills.esm.js')).not.toThrow();
     expect(() => checkFilesExist('static/main.esm.js')).not.toThrow();
   });
@@ -710,7 +715,7 @@ describe('Move Angular Project', () => {
     const lib2FilePath = `libs/${lib2}/src/lib/${lib2}.module.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { ${newModule} } from '@${proj}/shared/${lib1}';`
+      `import { ${newModule} } from '@${proj}/shared-${lib1}';`
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });
@@ -755,7 +760,7 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -814,7 +819,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -829,7 +834,7 @@ describe('Move Project', () => {
       rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared-${lib1}-data-access`]
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -849,7 +854,7 @@ describe('Move Project', () => {
     const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
     );
   });
 
@@ -891,7 +896,7 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -950,7 +955,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -965,7 +970,7 @@ describe('Move Project', () => {
       rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared-${lib1}-data-access`]
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -986,7 +991,7 @@ describe('Move Project', () => {
     const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
     );
   });
 
@@ -1030,7 +1035,7 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -1089,7 +1094,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -1104,7 +1109,7 @@ describe('Move Project', () => {
       rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared-${lib1}-data-access`]
     ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -1124,7 +1129,7 @@ describe('Move Project', () => {
     const lib2FilePath = `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
     );
 
     nxJson = readJson('nx.json');
@@ -1150,7 +1155,7 @@ describe('Remove Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib2}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib2].implicitDependencies = [lib1];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -1167,8 +1172,9 @@ describe('Remove Project', () => {
 
     expect(error).toBeDefined();
     expect(error.stderr.toString()).toContain(
-      `${lib1} is still depended on by the following projects:\n${lib2}`
+      `${lib1} is still depended on by the following projects`
     );
+    expect(error.stderr.toString()).toContain(lib2);
 
     /**
      * Try force removing the project
@@ -1182,7 +1188,7 @@ describe('Remove Project', () => {
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
     expect(removeOutputForced).toContain(`UPDATE nx.json`);
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}`]).toBeUndefined();
     expect(nxJson.projects[lib2].implicitDependencies).toEqual([]);
 

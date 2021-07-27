@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "component-cypress-spec",
+  "$id": "NxReactComponentCypressSpec",
   "type": "object",
   "properties": {
     "project": {
@@ -24,6 +24,10 @@
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
+    },
+    "cypressProject": {
+      "type": "string",
+      "description": "The Cypress project to generate the stories under. By default, inferred from 'project'"
     }
   },
   "required": ["project", "componentPath"]

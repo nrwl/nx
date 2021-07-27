@@ -1,5 +1,3 @@
-import { JsonObject } from '@angular-devkit/core';
-
 export type NextServer = (
   options: NextServerOptions,
   proxyConfig?: ProxyConfig
@@ -25,20 +23,21 @@ export interface NextServerOptions {
   hostname: string;
 }
 
-export interface FileReplacement extends JsonObject {
+export interface FileReplacement {
   replace: string;
   with: string;
 }
 
-export interface NextBuildBuilderOptions extends JsonObject {
+export interface NextBuildBuilderOptions {
   root: string;
   outputPath: string;
   fileReplacements: FileReplacement[];
   assets?: any[];
   nextConfig?: string;
+  buildLibsFromSource?: boolean;
 }
 
-export interface NextServeBuilderOptions extends JsonObject {
+export interface NextServeBuilderOptions {
   dev: boolean;
   port: number;
   staticMarkup: boolean;
@@ -47,10 +46,16 @@ export interface NextServeBuilderOptions extends JsonObject {
   customServerPath?: string;
   hostname?: string;
   proxyConfig?: string;
+  buildLibsFromSource?: boolean;
 }
 
-export interface NextExportBuilderOptions extends JsonObject {
+export interface NextExportBuilderOptions {
   buildTarget: string;
   silent: boolean;
   threads: number;
+  buildLibsFromSource?: boolean;
+}
+
+export interface WebpackConfigOptions {
+  svgr?: boolean;
 }
