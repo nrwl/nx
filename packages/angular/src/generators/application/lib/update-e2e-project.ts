@@ -1,15 +1,12 @@
 import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import type { NormalizedSchema } from './normalized-schema';
-
 import {
-  offsetFromRoot,
-  updateJson,
   addProjectConfiguration,
+  offsetFromRoot,
   readProjectConfiguration,
+  updateJson,
   updateProjectConfiguration,
-  ProjectType,
 } from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
   const spec = `${options.e2eProjectRoot}/src/app.e2e-spec.ts`;
@@ -32,15 +29,6 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
     projectType: 'application',
     targets: {
       e2e: proj.targets.e2e,
-      lint:
-        options.linter === Linter.None
-          ? undefined
-          : {
-              executor: '@nrwl/linter:eslint',
-              options: {
-                lintFilePatterns: [`${options.e2eProjectRoot}/**/*.ts`],
-              },
-            },
     },
   };
   project.targets.e2e.options.protractorConfig = `${options.e2eProjectRoot}/protractor.conf.js`;
