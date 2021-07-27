@@ -74,13 +74,16 @@ export class IndexHtmlWebpackPlugin extends IndexHtmlGenerator {
 
       try {
         for (const [entryName, entrypoint] of this.compilation.entrypoints) {
-          const entryFiles: FileInfo[] = entrypoint?.getFiles()?.map(
-            (f: string): FileInfo => ({
-              name: entryName,
-              file: f,
-              extension: extname(f),
-            })
-          );
+          const entryFiles: FileInfo[] = entrypoint
+            ?.getFiles()
+            ?.filter((f) => !f.endsWith('.hot-update.js'))
+            ?.map(
+              (f: string): FileInfo => ({
+                name: entryName,
+                file: f,
+                extension: extname(f),
+              })
+            );
 
           if (!entryFiles) {
             continue;

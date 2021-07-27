@@ -1,10 +1,9 @@
 import type { Configuration } from 'webpack';
-import * as ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
 // Add React-specific configuration
 function getWebpackConfig(config: Configuration) {
   // TODO(jack): Remove in Nx 13
-  const { isWebpack5 } = require('@nrwl/web/src/webpack/entry');
+  const { ReactRefreshPlugin, isWebpack5 } = require('../src/webpack/entry');
   config.module.rules.push(
     {
       test: /\.(png|jpe?g|gif|webp)$/,
@@ -55,12 +54,7 @@ function getWebpackConfig(config: Configuration) {
     }
   );
 
-  // TODO(jack): support webpack 5
-  if (
-    !isWebpack5 &&
-    config.mode === 'development' &&
-    config['devServer']?.hot
-  ) {
+  if (config.mode === 'development' && config['devServer']?.hot) {
     // add `react-refresh/babel` to babel loader plugin
     const babelLoader = config.module.rules.find((rule) =>
       rule.loader.toString().includes('babel-loader')
