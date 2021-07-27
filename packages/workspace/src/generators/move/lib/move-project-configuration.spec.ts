@@ -188,4 +188,36 @@ describe('moveProjectConfiguration', () => {
     expect(actualProject.implicitDependencies).toEqual(['my-other-lib']);
     expect(readJson(tree, 'nx.json').projects['my-source']).not.toBeDefined();
   });
+
+  it('should support moving a standalone project', () => {
+    const projectName = 'standalone';
+    const newProjectName = 'parent-standalone';
+    addProjectConfiguration(
+      tree,
+      projectName,
+      {
+        projectType: 'library',
+        root: 'libs/standalone',
+        targets: {},
+      },
+      true
+    );
+    const moveSchema: NormalizedSchema = {
+      projectName: 'standalone',
+      destination: 'parent/standalone',
+      importPath: '@proj/parent-standalone',
+      newProjectName,
+      relativeToRootDestination: 'libs/parent/standalone',
+      updateImportPath: true,
+    };
+
+    moveProjectConfiguration(tree, moveSchema, projectConfig);
+
+    expect(() => {
+      readProjectConfiguration(tree, projectName);
+    }).toThrow();
+    const ws = readJson(tree, 'workspace.json');
+    expect(typeof ws.projects[newProjectName]).toBe('string');
+    expect(readProjectConfiguration(tree, newProjectName)).toBeDefined();
+  });
 });
