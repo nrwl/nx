@@ -69,6 +69,57 @@ export class TargetProjectLocator {
       }
     }
 
+    // if it's internal project, default to typescript resolver first
+    if (normalizedImportExpr.startsWith(`@${npmScope}`)) {
+      const resolvedProject = this.resolveImportWithTypescript(
+        normalizedImportExpr,
+        filePath
+      );
+      if (resolvedProject) {
+        return resolvedProject;
+      }
+
+      const npmProject = this.findNpmPackage(normalizedImportExpr);
+      if (npmProject) {
+        return npmProject;
+      }
+    } else {
+      // try to find npm package before using expensive typescript resolution
+      const npmProject = this.findNpmPackage(normalizedImportExpr);
+      if (npmProject) {
+        return npmProject;
+      }
+
+      const resolvedProject = this.resolveImportWithTypescript(
+        normalizedImportExpr,
+        filePath
+      );
+      if (resolvedProject) {
+        return resolvedProject;
+      }
+    }
+
+    // TODO: meeroslav this block should be probably removed
+    const importedProject = this.sortedWorkspaceProjects.find((p) => {
+      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
+      return (
+        normalizedImportExpr === projectImport ||
+        normalizedImportExpr.startsWith(`${projectImport}/`)
+      );
+    });
+    if (importedProject) {
+      return importedProject.name;
+    }
+
+    // nothing found, cache for later
+    this.npmResolutionCache.set(normalizedImportExpr, undefined);
+    return null;
+  }
+
+  private resolveImportWithTypescript(
+    normalizedImportExpr: string,
+    filePath: string
+  ): string | undefined {
     let resolvedModule: string;
     if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
       resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
@@ -91,28 +142,7 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
-
-    // try to find npm package before using expensive typescript resolution
-    const npmProject = this.findNpmPackage(importExpr);
-    if (npmProject || this.npmResolutionCache.has(importExpr)) {
-      return npmProject;
-    }
-
-    // TODO: meeroslav this block should be probably removed
-    const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
-      return (
-        normalizedImportExpr === projectImport ||
-        normalizedImportExpr.startsWith(`${projectImport}/`)
-      );
-    });
-    if (importedProject) {
-      return importedProject.name;
-    }
-
-    // nothing found, cache for later
-    this.npmResolutionCache.set(importExpr, undefined);
-    return null;
+    return;
   }
 
   private findNpmPackage(npmImport: string): string | undefined {
@@ -131,7 +161,9 @@ export class TargetProjectLocator {
     }
   }
 
-  private findProjectOfResolvedModule(resolvedModule: string) {
+  private findProjectOfResolvedModule(
+    resolvedModule: string
+  ): string | undefined {
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
       return resolvedModule.startsWith(p.data.root);
     });
