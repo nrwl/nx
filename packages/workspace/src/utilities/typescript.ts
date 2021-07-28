@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 import type * as ts from 'typescript';
-import { appRootPath } from './app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { compileTypeScript } from './typescript/compilation';
