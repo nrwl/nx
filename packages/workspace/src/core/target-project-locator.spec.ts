@@ -36,6 +36,7 @@ describe('findTargetProjectWithImport', () => {
           '@proj/my-second-proj': ['libs/proj2'],
           '@proj/my-second-proj/*': ['libs/proj2/*'],
           '@proj/project-3': ['libs/proj3a'],
+          '@proj/proj4ab': ['libs/proj4ab'],
           '@proj/proj123': ['libs/proj123'],
           '@proj/proj1234': ['libs/proj1234'],
           '@proj/proj1234-child': ['libs/proj1234-child'],
@@ -54,9 +55,10 @@ describe('findTargetProjectWithImport', () => {
       './libs/proj2/deep/index.ts': `export const a = 22;`,
       './libs/proj3a/index.ts': `export const a = 3;`,
       './libs/proj4ab/index.ts': `export const a = 4;`,
-      './libs/proj123/index.ts': 'export const a = 5',
-      './libs/proj1234/index.ts': 'export const a = 6',
-      './libs/proj1234-child/index.ts': 'export const a = 7',
+      './libs/proj5/index.ts': `export const a = 5;`,
+      './libs/proj123/index.ts': 'export const a = 123',
+      './libs/proj1234/index.ts': 'export const a = 1234',
+      './libs/proj1234-child/index.ts': 'export const a = 12345',
     };
     vol.fromJSON(fsJson, '/root');
 
@@ -172,6 +174,14 @@ describe('findTargetProjectWithImport', () => {
           files: [],
         },
       },
+      proj5: {
+        name: 'proj5',
+        type: 'lib',
+        data: {
+          root: 'libs/proj5',
+          files: [],
+        },
+      },
       'npm:@ng/core': {
         name: 'npm:@ng/core',
         type: 'npm',
@@ -269,7 +279,7 @@ describe('findTargetProjectWithImport', () => {
     expect(proj3a).toEqual('proj3a');
   });
 
-  it('should be able to resolve nested files', () => {
+  it('should be able to resolve nested files using tsConfig paths', () => {
     const proj2deep = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj/deep',
       'libs/proj1/index.ts',
@@ -297,7 +307,7 @@ describe('findTargetProjectWithImport', () => {
 
   it('should be able to resolve a module using a normalized path', () => {
     const proj4ab = targetProjectLocator.findProjectWithImport(
-      '@proj/proj4ab',
+      '@proj/proj4ab#a',
       'libs/proj1/index.ts',
       ctx.workspace.npmScope
     );
@@ -341,5 +351,16 @@ describe('findTargetProjectWithImport', () => {
       ctx.workspace.npmScope
     );
     expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
+  });
+
+  // TODO(meeroslav): This should fail if path is missing in tsconfig,
+  // but passes because of implicit check for project's prefix
+  it('should be able to resolve packages using project prefix', () => {
+    const proj5 = targetProjectLocator.findProjectWithImport(
+      '@proj/proj5',
+      'libs/proj/index.ts',
+      ctx.workspace.npmScope
+    );
+    expect(proj5).toEqual('proj5');
   });
 });

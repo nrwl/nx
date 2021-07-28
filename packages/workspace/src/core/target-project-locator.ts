@@ -60,8 +60,9 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
-    if (this.paths && this.paths[normalizedImportExpr]) {
-      for (let p of this.paths[normalizedImportExpr]) {
+    const paths = this.findPaths(normalizedImportExpr);
+    if (paths) {
+      for (let p of paths) {
         const maybeResolvedProject = this.findProjectOfResolvedModule(p);
         if (maybeResolvedProject) {
           return maybeResolvedProject;
@@ -69,37 +70,25 @@ export class TargetProjectLocator {
       }
     }
 
-    // if it's internal project, default to typescript resolver first
-    if (normalizedImportExpr.startsWith(`@${npmScope}`)) {
-      const resolvedProject = this.resolveImportWithTypescript(
-        normalizedImportExpr,
-        filePath
-      );
-      if (resolvedProject) {
-        return resolvedProject;
-      }
-
-      const npmProject = this.findNpmPackage(normalizedImportExpr);
-      if (npmProject) {
-        return npmProject;
-      }
-    } else {
-      // try to find npm package before using expensive typescript resolution
-      const npmProject = this.findNpmPackage(normalizedImportExpr);
-      if (npmProject) {
-        return npmProject;
-      }
-
-      const resolvedProject = this.resolveImportWithTypescript(
-        normalizedImportExpr,
-        filePath
-      );
-      if (resolvedProject) {
-        return resolvedProject;
-      }
+    // try to find npm package before using expensive typescript resolution
+    const npmProject = this.findNpmPackage(normalizedImportExpr);
+    if (npmProject) {
+      return npmProject;
     }
 
-    // TODO: meeroslav this block should be probably removed
+    // TODO(meeroslav): this block is probably obsolete
+    // and existed only because of the incomplete `paths` matching
+    // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
+    const resolvedProject = this.resolveImportWithTypescript(
+      normalizedImportExpr,
+      filePath
+    );
+    if (resolvedProject) {
+      return resolvedProject;
+    }
+
+    // TODO(meeroslav): this block should be removed as it's going around typescript paths
+    // unless we want to support local JS projects
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
       const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
       return (
@@ -114,6 +103,24 @@ export class TargetProjectLocator {
     // nothing found, cache for later
     this.npmResolutionCache.set(normalizedImportExpr, undefined);
     return null;
+  }
+
+  private findPaths(normalizedImportExpr: string): string[] | undefined {
+    if (!this.paths) {
+      return undefined;
+    }
+    if (this.paths[normalizedImportExpr]) {
+      return this.paths[normalizedImportExpr];
+    }
+    const wildcardPath = Object.keys(this.paths).find(
+      (path) =>
+        path.endsWith('/*') &&
+        normalizedImportExpr.startsWith(path.replace(/\/\*$/, ''))
+    );
+    if (wildcardPath) {
+      return this.paths[wildcardPath];
+    }
+    return undefined;
   }
 
   private resolveImportWithTypescript(
