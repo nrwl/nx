@@ -2,7 +2,7 @@ import { fileExists } from './fileutils';
 import * as path from 'path';
 
 /**
- * @deprecated Use appRootPath in tao instead!
+ * @deprecated Use appRootPath in tao instead! Will be removed in v13.
  */
 export const appRootPath = pathInner(__dirname);
 

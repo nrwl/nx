@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { getPackageManagerCommand, readJsonFile } from '@nrwl/devkit';
-import { appRootPath } from '../app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
