@@ -36,12 +36,18 @@ function readExecutorsJson(root: string) {
   return readJsonSync(join(root, 'executors.json')).executors;
 }
 
+function readPackageName(root: string) {
+  return readJsonSync(join(root, 'package.json')).name;
+}
+
 function generateSchematicList(
   config: Configuration,
   flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
   removeSync(config.builderOutput);
   const builderCollection = readExecutorsJson(config.root);
+  const packageName = readPackageName(config.root);
+
   return Object.keys(builderCollection).map((builderName) => {
     const schemaPath = join(
       config.root,
@@ -49,6 +55,7 @@ function generateSchematicList(
     );
     let builder = {
       name: builderName,
+      collectionName: packageName,
       ...builderCollection[builderName],
       rawSchema: readJsonSync(schemaPath),
     };
@@ -74,13 +81,13 @@ function generateTemplate(
   const cliCommand = 'nx';
 
   let template = dedent`
-    # ${builder.name}
+    # ${builder.collectionName}:${builder.name}
     ${builder.description}
 
     Options can be configured in \`${filename}\` when defining the executor, or when invoking it.
     ${
       framework != 'angular'
-        ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/nx-cli#running-tasks.`
+        ? `Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.`
         : ``
     }
     \n`;
@@ -109,7 +116,7 @@ function generateTemplate(
             ### ${option.deprecated ? `~~${option.name}~~` : option.name} ${
           option.required ? '(*__required__*)' : ''
         } ${option.hidden ? '(__hidden__)' : ''}
-            
+
             ${
               !!option.aliases.length
                 ? `Alias(es): ${option.aliases.join(',')}\n`
@@ -136,8 +143,8 @@ function generateTemplate(
               } \n`;
         }
 
-        template += dedent`  
-            ${enumStr} 
+        template += dedent`
+            ${enumStr}
             ${formatDeprecated(option.description, option.deprecated)}
           `;
 
@@ -147,7 +154,7 @@ function generateTemplate(
               #### ${optionValue.name} ${
               optionValue.required ? '(*__required__*)' : ''
             }
-              Type: \`${optionValue.type}\` \n 
+              Type: \`${optionValue.type}\` \n
               ${optionValue.description}
             `;
           });

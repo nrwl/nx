@@ -16,7 +16,7 @@ export interface SidebarProps {
   versionList: VersionMetadata[];
   flavorList: any[];
   flavor: any;
-  navIsOpen: boolean;
+  navIsOpen?: boolean;
 }
 
 // Exported for testing

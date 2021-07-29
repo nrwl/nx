@@ -22,7 +22,7 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./collection.json",
+  "schematics": "./generators.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
@@ -39,6 +39,7 @@
     "@nrwl/workspace": "*",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "@svgr/webpack": "^5.5.0",
+    "chalk": "4.1.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.23.1",

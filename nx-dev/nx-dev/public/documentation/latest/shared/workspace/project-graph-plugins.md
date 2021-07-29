@@ -2,11 +2,13 @@
 
 > This API is experimental and might change.
 
-Nx views the workspace as a graph of projects that depend on one another. It's able to infer most projects and dependencies automatically. Currently, this works best within the JavaScript ecosystem, but it can be extended to other languages and technologies as well. This is where project graph plugins come in.
+Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
 
-## Defining Plugins to be used in a workspace
+One of the best features of Nx is that is able to construct the project graph automatically by analyzing your source code. Currently, this works best within the JavaScript ecosystem, but it can be extended to other languages and technologies using plugins.
 
-In `nx.json`, add an array of plugins:
+## Adding Plugins to Workspace
+
+You can register a plugin by adding it to the plugins array in `nx.json`:
 
 ```json
 {
@@ -17,22 +19,23 @@ In `nx.json`, add an array of plugins:
 }
 ```
 
-These plugins are used when running targets, linting, and sometimes when generating code.
-
 ## Implementing a Project Graph Processor
 
-Project Graph Plugins are chained together to produce the final project graph. Each plugin may have a Project Graph Processor which iterates upon the project graph. Let's first take a look at the API of Project Graph Plugins. In later sections, we will go over some common use cases. Plugins should export a function named `processProjectGraph` that handles updating the project graph with new nodes and edges. This function receives two things:
+A Project Graph Processor that takes a project graph and returns a new project graph. It can add/remove nodes and edges.
+
+Plugins should export a function named `processProjectGraph` that handles updating the project graph with new nodes and edges. This function receives two things:
 
 - A `ProjectGraph`
-  - Nodes in the project graph are the different projects currently in the graph.
-  - Edges in the project graph are dependencies between different projects in the graph.
-- Some context is also passed into the function to use when processing the project graph. The context contains:
-  - The `workspace` which contains both configuration and the different projects.
-  - A `fileMap` which has a map of files by projects
 
-> Note: The notion of a workspace is separate from the notion of the project graph. The workspace is first party code that is checked into git, targets are run on, etc. The project graph may include third party packages as well that is not checked into git, not run at all, etc.
+  - `graph.nodes` lists all the projects currently known to Nx. `node.data.files` lists the files belonging to a particular project.
+  - `graph.dependencies` lists the dependencies between projects.
 
-The `processProjectGraph` function should return an updated `ProjectGraph`. This is most easily done using the `ProjectGraphBuilder` to iteratively add edges and nodes to the graph:
+- A `Context`
+  - `context.workspace` contains the combined configuration for the workspace.
+  - `files` contains all the files found in the workspace.
+  - `filesToProcess` contains all the files that have changed since the last invocation and need to be reanalyzed.
+
+The `processProjectGraph` function should return an updated `ProjectGraph`. This is most easily done using `ProjectGraphBuilder`. The builder is there for convenience, so you don't have to use it.
 
 ```typescript
 import {
@@ -48,32 +51,15 @@ export function processProjectGraph(
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder(graph);
   // We will see how this is used below.
-  return builder.getProjectGraph();
+  return builder.getUpdatedProjectGraph();
 }
 ```
 
-## Adding New Dependencies to the Project Graph
-
-Project Graph Plugins can add smarter dependency resolution to projects already in the workspace. Projects in the workspace are first party code whose dependencies change as the code in the workspace changes and matter to Nx the most. Such projects should be defined in `workspace.json` and `nx.json` and will be automatically included as nodes in the project graph. However, when some projects are written in other languages, the relationships between these projects will not be clear to Nx out of the box. A Project Graph Plugin can add these relationships.
-
-```typescript
-import { DependencyType } from '@nrwl/devkit';
-
-// Add a new edge
-builder.addDependency(DependencyType.static, 'existing-project', 'new-project');
-```
-
-> Note: Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
-
-Dependencies can be one of the following types:
-
-- `DependencyType.static` dependencies indicate that a dependency is imported directly into the code and would be present even without running the code.
-- `DependencyType.dynamic` dependencies indicate that a dependency _might be_ imported at runtime such as lazy loaded dependencies.
-- `DependencyType.implicit` dependencies indicate that one project affects another project's behavior or outcome even though there is no dependency in the code. For example, e2e tests or communication over HTTP.
-
 ## Adding New Nodes to the Project Graph
 
-Sometimes it can be valuable to have third party packages as part of the project graph. A Project Graph Plugin can add these packages to the project graph. After these packages are added as nodes to the project graph, dependencies can then be drawn from the workspace projects to the third party packages as well as between the third party packages.
+You can add nodes to the project graph. Since first-party code is added to the graph automatically, this is most commonly used for third-party packages.
+
+A Project Graph Plugin can add them to the project graph. After these packages are added as nodes to the project graph, dependencies can then be drawn from the workspace projects to the third party packages as well as between the third party packages.
 
 ```typescript
 // Add a new node
@@ -86,15 +72,46 @@ builder.addNode({
 });
 ```
 
-> Note: You can designate any type for the node. This differentiates third party projects from projects in the workspace. Also, like before, retrieving these projects might be easiest within their native language. Therefore, spawning a new process may also be a common approach here.
+> Note: You can designate any type for the node. This differentiates third party projects from projects in the workspace. If you are writing a plugin for a different language, it's common to use IPC to get the list of nodes which you can then add using the builder.
 
-## Incrementally Reprocessing
+## Adding New Dependencies to the Project Graph
 
-Workspaces can have _a lot_ of files and finding dependencies for every file can be expensive. Nx incrementally recalculates the `ProjectGraph` by only looking at files that have changed. Let's take a look at how this works.
+It's more common for plugins to create new dependencies. First-party code contained in the workspace is registered in `workpspace.json` and is added to the project graph automatically. Whether your project contains TypeScript or say Java, both projects will be created in the same way. However, Nx does not know how to analyze Java sources, and that's what plugins can do.
 
-Remember that the `ProjectGraph` that is passed into the `processProjectGraph` function is a graph that already has nodes and dependencies. These nodes and dependencies are not _only_ those from prior plugins, but might also be a cached part of the graph that does not need to be recalculated. If files have not been modified since the last calculation, they do not need to be processed again. How do we know which files we _need_ to reprocess?
+You can create 2 types of dependencies.
 
-`ProjectGraphProcessorContext.fileMap` contains only the files that need to be processed. You should, if possible, definitely take advantage of this subset of files to make it cheaper to reprocess the graph.
+### Implicit Dependencies
+
+An implicit dependency is not associated with any file, and can be crated as follows:
+
+```typescript
+import { DependencyType } from '@nrwl/devkit';
+
+// Add a new edge
+builder.addImplicitDependency('existing-project', 'new-project');
+```
+
+> Note: Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
+> .
+
+Because an implicit dependency is not associated with any file, Nx doesn't know when it might change, so it will be recomputed every time.
+
+## Explicit Dependencies
+
+Nx knows what files have changed since the last invocation. Only those files will be present in the provided `filesToProcess`. You can associate a dependency with a particular file (e.g., if that file contains an import).
+
+```typescript
+import { DependencyType } from '@nrwl/devkit';
+
+// Add a new edge
+builder.addExplicitDependency(
+  'existing-project',
+  'libs/existing-project/src/index.ts',
+  'new-project'
+);
+```
+
+If a file hasn't changed since the last invocation, it doesn't need to be reanalyzed. Nx knows what dependencies are associated with what files, so it will reuse this information for the files that haven't changed.
 
 ## Visualizing the Project Graph
 

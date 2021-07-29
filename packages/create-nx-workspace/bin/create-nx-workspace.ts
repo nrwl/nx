@@ -173,17 +173,17 @@ function showHelp() {
 
     preset                    What to create in a new workspace (options: ${options})
 
-    appName                   The name of the application created by some presets  
+    appName                   The name of the application created by some presets
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
-    
+
     style                     Default style option to be used when a non-empty preset is selected
                               options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js, Gatsby
 
     interactive               Enable interactive mode when using presets (boolean)
 
     packageManager            Package manager to use (npm, yarn, pnpm)
-    
+
     nx-cloud                  Use Nx Cloud (boolean)
 
     [new workspace options]   any 'new workspace' options
@@ -485,7 +485,7 @@ async function createApp(
   if (parsedArgs.preset === Preset.Gatsby && packageManager === 'npm') {
     process.env.npm_config_legacy_peer_deps = 'false';
   }
-  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
+  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/generators.json --cli=${cli}`;
 
   let workspaceSetupSpinner = ora('Creating your workspace').start();
 
@@ -581,7 +581,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/react/tutorial/01-create-application`,
+          `https://nx.dev/latest/react/tutorial/01-create-application`,
           ...pointToFreeCourseOnEgghead(),
         ],
       });
@@ -592,7 +592,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/angular/tutorial/01-create-application`,
+          `https://nx.dev/latest/angular/tutorial/01-create-application`,
           ...pointToFreeCourseOnYoutube(),
         ],
       });
@@ -602,7 +602,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/node/tutorial/01-create-application`,
+          `https://nx.dev/latest/node/tutorial/01-create-application`,
           ...pointToFreeCourseOnYoutube(),
         ],
       });

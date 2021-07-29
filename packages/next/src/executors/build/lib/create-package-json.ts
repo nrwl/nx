@@ -1,6 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
 
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { createPackageJson as generatePackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
 
@@ -10,7 +10,7 @@ export async function createPackageJson(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
-  const depGraph = await createProjectGraphAsync();
+  const depGraph = readCachedProjectGraph();
   const packageJson = generatePackageJson(context.projectName, depGraph, {
     root: context.root,
     projectRoot: context.workspace.projects[context.projectName].sourceRoot,

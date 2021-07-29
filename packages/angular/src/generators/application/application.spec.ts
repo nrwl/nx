@@ -1,20 +1,18 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-
+import * as devkit from '@nrwl/devkit';
 import {
-  readJson,
-  updateJson,
   NxJsonConfiguration,
-  readProjectConfiguration,
   parseJson,
+  readJson,
+  readProjectConfiguration,
+  updateJson,
 } from '@nrwl/devkit';
+import type { Schema } from './schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from './application';
-
-import * as devkit from '@nrwl/devkit';
 
 describe('app', () => {
   let appTree: Tree;
@@ -366,6 +364,38 @@ describe('app', () => {
         `);
       });
 
+      it('should add a lint target when e2e test runner is protractor', async () => {
+        await generateApp(appTree, 'myApp', {
+          linter: Linter.EsLint,
+          e2eTestRunner: E2eTestRunner.Protractor,
+        });
+        const workspaceJson = readJson(appTree, 'workspace.json');
+        expect(workspaceJson.projects['my-app'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app/src/**/*.ts",
+                "apps/my-app/src/**/*.html",
+              ],
+            },
+          }
+        `);
+        expect(appTree.exists('apps/my-app-e2e/.eslintrc.json')).toBeTruthy();
+        expect(workspaceJson.projects['my-app-e2e'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app-e2e/**/*.ts",
+              ],
+            },
+          }
+        `);
+      });
+
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
         await generateApp(appTree, 'myApp', { linter: Linter.EsLint });
 
@@ -426,6 +456,21 @@ describe('app', () => {
         await generateApp(appTree, 'myApp', { linter: Linter.None });
         const workspaceJson = readJson(appTree, 'workspace.json');
         expect(workspaceJson.projects['my-app'].architect.lint).toBeUndefined();
+        expect(
+          workspaceJson.projects['my-app-e2e'].architect.lint
+        ).toBeUndefined();
+      });
+
+      it('should not add an architect target for lint when e2e test runner is protractor', async () => {
+        await generateApp(appTree, 'myApp', {
+          linter: Linter.None,
+          e2eTestRunner: E2eTestRunner.Protractor,
+        });
+        const workspaceJson = readJson(appTree, 'workspace.json');
+        expect(workspaceJson.projects['my-app'].architect.lint).toBeUndefined();
+        expect(
+          workspaceJson.projects['my-app-e2e'].architect.lint
+        ).toBeUndefined();
       });
     });
   });
@@ -539,6 +584,23 @@ describe('app', () => {
         ).toContain(`'Welcome to my-app!'`);
         expect(
           appTree.read('apps/my-app-e2e/src/app.po.ts', 'utf-8')
+        ).toContain(`'proj-root header h1'`);
+      });
+
+      it('should update E2E spec files to match the app name when generating within a directory', async () => {
+        await generateApp(appTree, 'myApp', {
+          e2eTestRunner: E2eTestRunner.Protractor,
+          directory: 'my-directory',
+        });
+
+        expect(
+          appTree.read(
+            'apps/my-directory/my-app-e2e/src/app.e2e-spec.ts',
+            'utf-8'
+          )
+        ).toContain(`'Welcome to my-directory-my-app!'`);
+        expect(
+          appTree.read('apps/my-directory/my-app-e2e/src/app.po.ts', 'utf-8')
         ).toContain(`'proj-root header h1'`);
       });
     });

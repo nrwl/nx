@@ -1,4 +1,5 @@
-import { DepGraphClientResponse } from '@nrwl/workspace';
+// nx-ignore-next-line
+import { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
 import { ProjectGraphService } from './models';
 
 export class FetchProjectGraphService implements ProjectGraphService {

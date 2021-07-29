@@ -1,4 +1,5 @@
 import { Tree } from '@nrwl/devkit';
+import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { angularMoveGenerator } from './move';
 import libraryGenerator from '../library/library';
@@ -21,6 +22,8 @@ describe('@nrwl/angular:move', () => {
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
     });
+
+    jest.clearAllMocks();
   });
 
   it('should move a project', async () => {
@@ -33,5 +36,30 @@ describe('@nrwl/angular:move', () => {
     expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
       true
     );
+  });
+
+  it('should format files', async () => {
+    jest.spyOn(devkit, 'formatFiles');
+
+    await angularMoveGenerator(tree, {
+      projectName: 'mylib',
+      destination: 'mynewlib',
+      updateImportPath: true,
+    });
+
+    expect(devkit.formatFiles).toHaveBeenCalled();
+  });
+
+  it('should not format files when --skipFormat=true', async () => {
+    jest.spyOn(devkit, 'formatFiles');
+
+    await angularMoveGenerator(tree, {
+      projectName: 'mylib',
+      destination: 'mynewlib',
+      updateImportPath: true,
+      skipFormat: true,
+    });
+
+    expect(devkit.formatFiles).not.toHaveBeenCalled();
   });
 });

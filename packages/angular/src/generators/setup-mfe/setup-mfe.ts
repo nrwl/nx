@@ -8,6 +8,7 @@ import {
 } from '@nrwl/devkit';
 
 import {
+  addEntryModule,
   addImplicitDeps,
   addRemoteToHost,
   changeBuildTarget,
@@ -25,6 +26,7 @@ export async function setupMfe(host: Tree, options: Schema) {
 
   generateWebpackConfig(host, options, projectConfig.root, remotesWithPorts);
 
+  addEntryModule(host, options, projectConfig.root);
   addImplicitDeps(host, options);
   changeBuildTarget(host, options);
   setupServeTarget(host, options);

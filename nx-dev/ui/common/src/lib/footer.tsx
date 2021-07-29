@@ -2,7 +2,7 @@ import cx from 'classnames';
 import Link from 'next/link';
 
 export interface FooterProps {
-  useDarkBackground: boolean;
+  useDarkBackground?: boolean;
 }
 export function Footer({ useDarkBackground }: FooterProps) {
   return (

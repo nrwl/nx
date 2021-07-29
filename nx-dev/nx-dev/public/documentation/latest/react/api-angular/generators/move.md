@@ -1,4 +1,4 @@
-# move
+# @nrwl/angular:move
 
 Moves an Angular application or library to another folder within the workspace and updates the project configuration.
 

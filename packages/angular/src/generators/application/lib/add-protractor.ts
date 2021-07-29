@@ -9,12 +9,8 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
-export async function addProtractor(
-  host: Tree,
-  options: NormalizedSchema,
-  e2eProjectRoot: string
-) {
-  const { appsDir, standaloneAsDefault } = getWorkspaceLayout(host);
+export async function addProtractor(host: Tree, options: NormalizedSchema) {
+  const { standaloneAsDefault } = getWorkspaceLayout(host);
 
   const protractorSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
@@ -34,7 +30,7 @@ export async function addProtractor(
 
   moveFilesToNewDirectory(
     host,
-    joinPathFragments(appsDir, e2eProjectRoot),
+    joinPathFragments(options.appProjectRoot, 'e2e'),
     options.e2eProjectRoot
   );
 }

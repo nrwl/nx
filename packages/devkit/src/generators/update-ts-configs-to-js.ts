@@ -2,7 +2,7 @@ import type { Tree } from '@nrwl/tao/src/shared/tree';
 import { updateJson } from '../utils/json';
 
 export function updateTsConfigsToJs(
-  host: Tree,
+  tree: Tree,
   options: { projectRoot: string }
 ): void {
   let updateConfigPath: string;
@@ -26,7 +26,7 @@ export function updateTsConfigsToJs(
     );
   };
 
-  updateJson(host, paths.tsConfig, (json) => {
+  updateJson(tree, paths.tsConfig, (json) => {
     if (json.compilerOptions) {
       json.compilerOptions.allowJs = true;
     } else {
@@ -35,7 +35,7 @@ export function updateTsConfigsToJs(
     return json;
   });
 
-  const projectType = getProjectType(host);
+  const projectType = getProjectType(tree);
 
   if (projectType === 'library') {
     updateConfigPath = paths.tsConfigLib;
@@ -44,7 +44,7 @@ export function updateTsConfigsToJs(
     updateConfigPath = paths.tsConfigApp;
   }
 
-  updateJson(host, updateConfigPath, (json) => {
+  updateJson(tree, updateConfigPath, (json) => {
     json.include = uniq([...json.include, '**/*.js']);
     json.exclude = uniq([...json.exclude, '**/*.spec.js']);
 

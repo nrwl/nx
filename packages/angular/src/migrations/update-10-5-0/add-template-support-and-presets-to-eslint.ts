@@ -11,7 +11,10 @@ import {
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { offsetFromRoot } from '@nrwl/devkit';
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import {
+  createProjectGraphAsync,
+  isNpmProject,
+} from '@nrwl/workspace/src/core/project-graph';
 
 /**
  * It was decided with Jason that we would do a simple replacement in this migration
@@ -67,7 +70,7 @@ async function updateProjectESLintConfigsAndBuilders(
       !graph.dependencies[projectName].some(
         (dependency) =>
           dependency.target.startsWith('npm:@angular/') &&
-          graph.nodes[dependency.target].type === 'npm'
+          isNpmProject(graph.nodes[dependency.target])
       )
     ) {
       return;

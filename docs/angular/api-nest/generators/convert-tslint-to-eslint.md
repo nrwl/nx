@@ -1,4 +1,4 @@
-# convert-tslint-to-eslint
+# @nrwl/nest:convert-tslint-to-eslint
 
 Convert a project from TSLint to ESLint.
 

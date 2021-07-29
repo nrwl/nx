@@ -13,6 +13,10 @@ function readFile(f: string) {
 describe('Command Runner Builder', () => {
   const context = {} as any;
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should run one command', async () => {
     const f = fileSync().name;
     const result = await runCommands({ command: `echo 1 >> ${f}` }, context);
@@ -67,7 +71,7 @@ describe('Command Runner Builder', () => {
 
     await runCommands(
       {
-        commands: [{ command: 'echo' }],
+        commands: [{ command: 'echo' }, { command: 'echo foo' }],
         parallel: true,
         a: 123,
         b: 456,
@@ -75,7 +79,12 @@ describe('Command Runner Builder', () => {
       context
     );
 
-    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
+    });
+    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
@@ -86,7 +95,10 @@ describe('Command Runner Builder', () => {
 
     await runCommands(
       {
-        commands: [{ command: 'echo', forwardAllArgs: true }],
+        commands: [
+          { command: 'echo', forwardAllArgs: true },
+          { command: 'echo foo', forwardAllArgs: true },
+        ],
         parallel: true,
         a: 123,
         b: 456,
@@ -94,7 +106,12 @@ describe('Command Runner Builder', () => {
       context
     );
 
-    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
+    });
+    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
       maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
@@ -105,7 +122,10 @@ describe('Command Runner Builder', () => {
 
     await runCommands(
       {
-        commands: [{ command: 'echo', forwardAllArgs: false }],
+        commands: [
+          { command: 'echo', forwardAllArgs: false },
+          { command: 'echo foo', forwardAllArgs: false },
+        ],
         parallel: true,
         a: 123,
         b: 456,
@@ -113,7 +133,12 @@ describe('Command Runner Builder', () => {
       context
     );
 
-    expect(exec).toHaveBeenCalledWith('echo', {
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(exec).toHaveBeenNthCalledWith(1, 'echo', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
+    });
+    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo', {
       maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
@@ -173,7 +198,7 @@ describe('Command Runner Builder', () => {
       try {
         await runCommands(
           {
-            commands: [{ command: 'some command' }],
+            commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
             parallel: false,
             readyWhen: 'READY',
           },
@@ -182,20 +207,16 @@ describe('Command Runner Builder', () => {
         fail('should throw');
       } catch (e) {
         expect(e.message).toEqual(
-          `ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true`
+          `ERROR: Bad executor config for @nrwl/run-commands - "readyWhen" can only be used when "parallel=true".`
         );
       }
     });
 
-    it('should return success true when the string specified is ready condition is found', async () => {
+    it('should return success true when the string specified as ready condition is found', async () => {
       const f = fileSync().name;
       const result = await runCommands(
         {
-          commands: [
-            {
-              command: `echo READY && sleep 0.1 && echo 1 >> ${f}`,
-            },
-          ],
+          commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
           parallel: true,
           readyWhen: 'READY',
         },
@@ -231,17 +252,18 @@ describe('Command Runner Builder', () => {
       const exec = jest.spyOn(require('child_process'), 'exec');
       await runCommands(
         {
-          commands: [
-            {
-              command: `echo 'Hello World'`,
-            },
-          ],
+          commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
           parallel: true,
         },
         context
       );
 
-      expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
+      expect(exec).toHaveBeenCalledTimes(2);
+      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
+        maxBuffer: LARGE_BUFFER,
+        env: { ...process.env },
+      });
+      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env },
       });
@@ -251,18 +273,19 @@ describe('Command Runner Builder', () => {
       const exec = jest.spyOn(require('child_process'), 'exec');
       await runCommands(
         {
-          commands: [
-            {
-              command: `echo 'Hello World'`,
-            },
-          ],
+          commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
           parallel: true,
           color: true,
         },
         context
       );
 
-      expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
+      expect(exec).toHaveBeenCalledTimes(2);
+      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
+        maxBuffer: LARGE_BUFFER,
+        env: { ...process.env, FORCE_COLOR: `true` },
+      });
+      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true` },
       });

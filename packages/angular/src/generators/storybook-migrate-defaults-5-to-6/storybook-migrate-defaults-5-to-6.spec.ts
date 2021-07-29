@@ -15,7 +15,7 @@ describe('storybookMigrateDefaults5To6 generator', () => {
     overrideCollectionResolutionForTesting({
       '@nrwl/storybook': joinPathFragments(
         __dirname,
-        '../../../../storybook/collection.json'
+        '../../../../storybook/generators.json'
       ),
     });
 

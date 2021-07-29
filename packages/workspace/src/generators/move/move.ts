@@ -20,10 +20,14 @@ import { moveProjectConfiguration } from './lib/move-project-configuration';
 import { updateBuildTargets } from './lib/update-build-targets';
 import { updateReadme } from './lib/update-readme';
 import { updatePackageJson } from './lib/update-package-json';
+import { normalizeSchema } from './lib/normalize-schema';
 
-export async function moveGenerator(tree: Tree, schema: Schema) {
-  const projectConfig = readProjectConfiguration(tree, schema.projectName);
-  checkDestination(tree, schema, projectConfig);
+export async function moveGenerator(tree: Tree, rawSchema: Schema) {
+  const projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
+  checkDestination(tree, rawSchema, projectConfig);
+  const schema = normalizeSchema(tree, rawSchema, projectConfig);
+
+  moveProjectConfiguration(tree, schema, projectConfig);
   moveProject(tree, schema, projectConfig); // we MUST move the project first, if we don't we get a "This should never happen" error 🤦‍♀️
   updateImports(tree, schema, projectConfig);
   updateProjectRootFiles(tree, schema, projectConfig);
@@ -31,9 +35,8 @@ export async function moveGenerator(tree: Tree, schema: Schema) {
   updateJestConfig(tree, schema, projectConfig);
   updateStorybookConfig(tree, schema, projectConfig);
   updateEslintrcJson(tree, schema, projectConfig);
-  updateReadme(tree, schema, projectConfig);
-  updatePackageJson(tree, schema, projectConfig);
-  moveProjectConfiguration(tree, schema, projectConfig);
+  updateReadme(tree, schema);
+  updatePackageJson(tree, schema);
   updateBuildTargets(tree, schema);
   updateDefaultProject(tree, schema);
   updateImplicitDependencies(tree, schema);

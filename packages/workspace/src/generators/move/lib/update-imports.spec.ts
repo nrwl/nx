@@ -1,12 +1,12 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { Schema } from '../schema';
-import { updateImports } from './update-imports';
-import { libraryGenerator } from '../../library/library';
+import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { libraryGenerator } from '../../library/library';
+import { NormalizedSchema } from '../schema';
+import { updateImports } from './update-imports';
 
 describe('updateImports', () => {
   let tree: Tree;
-  let schema: Schema;
+  let schema: NormalizedSchema;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
@@ -14,8 +14,10 @@ describe('updateImports', () => {
     schema = {
       projectName: 'my-source',
       destination: 'my-destination',
-      importPath: undefined,
+      importPath: '@proj/my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      relativeToRootDestination: 'libs/my-destination',
     };
   });
 
@@ -31,7 +33,6 @@ describe('updateImports', () => {
       name: 'my-source',
       standaloneConfig: false,
     });
-
     await libraryGenerator(tree, {
       name: 'my-importer',
       standaloneConfig: false,
@@ -45,8 +46,8 @@ describe('updateImports', () => {
         export class MyExtendedClass extends MyClass {};
       `
     );
-
     const projectConfig = readProjectConfiguration(tree, 'my-source');
+
     updateImports(tree, schema, projectConfig);
 
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
@@ -60,7 +61,6 @@ describe('updateImports', () => {
   it('should not update import paths when they contain a partial match', async () => {
     await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
     await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
-
     await libraryGenerator(tree, {
       name: 'my-importer',
       standaloneConfig: false,
@@ -76,15 +76,17 @@ describe('updateImports', () => {
         export class MyTab extends Tab {};
       `
     );
-
     const projectConfig = readProjectConfiguration(tree, 'tab');
+
     updateImports(
       tree,
       {
         projectName: 'tab',
         destination: 'tabs',
-        importPath: undefined,
+        importPath: '@proj/tabs',
         updateImportPath: true,
+        newProjectName: 'tabs',
+        relativeToRootDestination: 'libs/tabs',
       },
       projectConfig
     );
@@ -92,18 +94,15 @@ describe('updateImports', () => {
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Table } from '@proj/table';`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Tab } from '@proj/tabs';`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
   it('should correctly update deep imports', async () => {
     await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
     await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
-
     await libraryGenerator(tree, {
       name: 'my-importer',
       standaloneConfig: false,
@@ -119,15 +118,17 @@ describe('updateImports', () => {
         export class MyTab extends Tab {};
       `
     );
-
     const projectConfig = readProjectConfiguration(tree, 'tab');
+
     updateImports(
       tree,
       {
         projectName: 'tab',
         destination: 'tabs',
-        importPath: undefined,
+        importPath: '@proj/tabs',
         updateImportPath: true,
+        newProjectName: 'tabs',
+        relativeToRootDestination: 'libs/tabs',
       },
       projectConfig
     );
@@ -135,18 +136,15 @@ describe('updateImports', () => {
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Table } from '@proj/table/components';`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Tab } from '@proj/tabs/components';`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
   it('should update dynamic imports', async () => {
     await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
     await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
-
     await libraryGenerator(tree, {
       name: 'my-importer',
       standaloneConfig: false,
@@ -161,15 +159,17 @@ describe('updateImports', () => {
       import('@proj/tab/components').then(m => m.Tab);
       `
     );
-
     const projectConfig = readProjectConfiguration(tree, 'tab');
+
     updateImports(
       tree,
       {
         projectName: 'tab',
         destination: 'tabs',
-        importPath: undefined,
+        importPath: '@proj/tabs',
         updateImportPath: true,
+        newProjectName: 'tabs',
+        relativeToRootDestination: 'libs/tabs',
       },
       projectConfig
     );
@@ -177,147 +177,124 @@ describe('updateImports', () => {
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/table').then(m => m.Table);`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/table/components').then(m => m.Table);`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/tabs').then(m => m.Tab);`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/tabs/components').then(m => m.Tab);`
     );
-
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
-  //
-  // it('should update require imports', async () => {
-  //   tree = await runSchematic('lib', { name: 'table' }, tree);
-  //   tree = await runSchematic('lib', { name: 'tab' }, tree);
-  //
-  //   tree = await runSchematic('lib', { name: 'my-importer' }, tree);
-  //   const importerFilePath = 'libs/my-importer/src/importer.ts';
-  //   tree.create(
-  //     importerFilePath,
-  //     `
-  //     require('@proj/table');
-  //     require('@proj/table/components');
-  //     require('@proj/tab');
-  //     require('@proj/tab/components');
-  //     `
-  //   );
-  //
-  //   tree = (await callRule(
-  //     updateImports({
-  //       projectName: 'tab',
-  //       destination: 'tabs',
-  //       importPath: undefined,
-  //       updateImportPath: true,
-  //     }),
-  //     tree
-  //   )) as UnitTestTree;
-  //
-  //   expect(tree.read(importerFilePath).toString()).toContain(
-  //     `require('@proj/table');`
-  //   );
-  //
-  //   expect(tree.read(importerFilePath).toString()).toContain(
-  //     `require('@proj/table/components');`
-  //   );
-  //
-  //   expect(tree.read(importerFilePath).toString()).toContain(
-  //     `require('@proj/tabs');`
-  //   );
-  //
-  //   expect(tree.read(importerFilePath).toString()).toContain(
-  //     `require('@proj/tabs/components');`
-  //   );
-  // });
-  //
-  // it('should not update project refs when --updateImportPath=false', async () => {
-  //   // this is a bit of a cheat - we expect to run this rule on an intermediate state
-  //   // tree where the workspace hasn't been updated yet, so just create libs representing
-  //   // source and destination to make sure that the workspace has libraries with those names.
-  //   tree = await runSchematic('lib', { name: 'my-destination' }, tree);
-  //   tree = await runSchematic('lib', { name: 'my-source' }, tree);
-  //
-  //   tree = await runSchematic('lib', { name: 'my-importer' }, tree);
-  //   const importerFilePath = 'libs/my-importer/src/importer.ts';
-  //   tree.create(
-  //     importerFilePath,
-  //     `
-  //       import { MyClass } from '@proj/my-source';
-  //
-  //       export MyExtendedClass extends MyClass {};
-  //     `
-  //   );
-  //
-  //   schema.updateImportPath = false;
-  //   tree = (await callRule(updateImports(schema), tree)) as UnitTestTree;
-  //
-  //   expect(tree.read(importerFilePath).toString()).toContain(
-  //     `import { MyClass } from '@proj/my-source';`
-  //   );
-  // });
-  //
-  // it('should update project refs to --importPath when provided', async () => {
-  //   // this is a bit of a cheat - we expect to run this rule on an intermediate state
-  //   // tree where the workspace hasn't been updated yet, so just create libs representing
-  //   // source and destination to make sure that the workspace has libraries with those names.
-  //   tree = await runSchematic('lib', { name: 'my-destination' }, tree);
-  //   tree = await runSchematic('lib', { name: 'my-source' }, tree);
-  //
-  //   tree = await runSchematic('lib', { name: 'my-importer' }, tree);
-  //   const importerFilePath = 'libs/my-importer/src/importer.ts';
-  //   tree.create(
-  //     importerFilePath,
-  //     `
-  //       import { MyClass } from '@proj/my-source';
-  //
-  //       export class MyExtendedClass extends MyClass {};
-  //     `
-  //   );
-  //
-  //   schema.importPath = '@proj/wibble';
-  //   tree = (await callRule(updateImports(schema), tree)) as UnitTestTree;
-  //
-  //   expect(tree.read(importerFilePath).toString()).toContain(
-  //     `import { MyClass } from '${schema.importPath}';`
-  //   );
-  // });
-  //
-  // it('should update project ref in the tsconfig file', async () => {
-  //   tree = await runSchematic('lib', { name: 'my-source' }, tree);
-  //
-  //   let tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
-  //   expect(tsConfig.compilerOptions.paths).toEqual({
-  //     '@proj/my-source': ['libs/my-source/src/index.ts'],
-  //   });
-  //
-  //   tree = (await callRule(updateImports(schema), tree)) as UnitTestTree;
-  //
-  //   tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
-  //   expect(tsConfig.compilerOptions.paths).toEqual({
-  //     '@proj/my-destination': ['libs/my-destination/src/index.ts'],
-  //   });
-  // });
-  //
-  // it('should only update the project ref paths in the tsconfig file when --updateImportPath=false', async () => {
-  //   tree = await runSchematic('lib', { name: 'my-source' }, tree);
-  //
-  //   let tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
-  //   expect(tsConfig.compilerOptions.paths).toEqual({
-  //     '@proj/my-source': ['libs/my-source/src/index.ts'],
-  //   });
-  //
-  //   schema.updateImportPath = false;
-  //   tree = (await callRule(updateImports(schema), tree)) as UnitTestTree;
-  //
-  //   tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
-  //   expect(tsConfig.compilerOptions.paths).toEqual({
-  //     '@proj/my-source': ['libs/my-destination/src/index.ts'],
-  //   });
-  // });
+
+  it('should update require imports', async () => {
+    await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
+    await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      standaloneConfig: false,
+    });
+    const importerFilePath = 'libs/my-importer/src/importer.ts';
+    tree.write(
+      importerFilePath,
+      `
+      require('@proj/table');
+      require('@proj/table/components');
+      require('@proj/tab');
+      require('@proj/tab/components');
+      `
+    );
+    const projectConfig = readProjectConfiguration(tree, 'tab');
+
+    updateImports(
+      tree,
+      {
+        projectName: 'tab',
+        destination: 'tabs',
+        importPath: '@proj/tabs',
+        updateImportPath: true,
+        newProjectName: 'tabs',
+        relativeToRootDestination: 'libs/tabs',
+      },
+      projectConfig
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/table');`
+    );
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/table/components');`
+    );
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/tabs');`
+    );
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/tabs/components');`
+    );
+  });
+
+  it('should not update project refs when --updateImportPath=false', async () => {
+    // this is a bit of a cheat - we expect to run this rule on an intermediate state
+    // tree where the workspace hasn't been updated yet, so just create libs representing
+    // source and destination to make sure that the workspace has libraries with those names.
+    await libraryGenerator(tree, {
+      name: 'my-destination',
+      standaloneConfig: false,
+    });
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      standaloneConfig: false,
+    });
+    const importerFilePath = 'libs/my-importer/src/importer.ts';
+    tree.write(
+      importerFilePath,
+      `import { MyClass } from '@proj/my-source';
+  
+export MyExtendedClass extends MyClass {};`
+    );
+    schema.updateImportPath = false;
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(tree, { ...schema, updateImportPath: false }, projectConfig);
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import { MyClass } from '@proj/my-source';`
+    );
+  });
+
+  it('should update project ref in the tsconfig file', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(tree, schema, projectConfig);
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+    });
+  });
+
+  it('should only update the project ref paths in the tsconfig file when --updateImportPath=false', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(tree, { ...schema, updateImportPath: false }, projectConfig);
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-source': ['libs/my-destination/src/index.ts'],
+    });
+  });
 });

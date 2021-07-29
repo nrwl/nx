@@ -2,6 +2,7 @@
   "root": "packages/workspace",
   "sourceRoot": "packages/workspace",
   "projectType": "library",
+  "implicitDependencies": ["dep-graph-dep-graph"],
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
@@ -61,9 +62,6 @@
       "outputs": ["build/packages/workspace"],
       "options": {
         "commands": [
-          {
-            "command": "nx build-base dep-graph-dep-graph --configuration release"
-          },
           {
             "command": "node ./scripts/copy-dep-graph.js"
           },

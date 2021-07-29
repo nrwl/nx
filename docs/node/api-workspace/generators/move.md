@@ -1,4 +1,4 @@
-# move
+# @nrwl/workspace:move
 
 Move an application or library to another folder
 

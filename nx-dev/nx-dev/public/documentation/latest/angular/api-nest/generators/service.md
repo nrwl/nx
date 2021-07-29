@@ -1,4 +1,4 @@
-# service
+# @nrwl/nest:service
 
 Run the `service` NestJS generator with Nx project support.
 

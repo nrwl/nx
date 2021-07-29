@@ -1,4 +1,4 @@
-# interceptor
+# @nrwl/nest:interceptor
 
 Run the `interceptor` NestJS generator with Nx project support.
 

@@ -35,7 +35,7 @@ function generateSchematicList(
   config: Configuration,
   flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  const schematicCollectionFile = path.join(config.root, 'collection.json');
+  const schematicCollectionFile = path.join(config.root, 'generators.json');
   removeSync(config.schematicOutput);
   const schematicCollection = readJsonSync(schematicCollectionFile).schematics;
   return Object.keys(schematicCollection).map((schematicName) => {
@@ -68,7 +68,9 @@ function generateTemplate(
   const cliCommand = 'nx';
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   let template = dedent`
-    # ${schematic.name} ${schematic.hidden ? '[hidden]' : ''}
+    # ${schematic.collectionName}:${schematic.name} ${
+    schematic.hidden ? '[hidden]' : ''
+  }
     ${schematic.description}
   
     ## Usage

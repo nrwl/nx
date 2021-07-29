@@ -4,5 +4,6 @@ export interface Schema {
   port?: number;
   remotes?: string[];
   host?: string;
+  routing?: boolean;
   skipFormat?: boolean;
 }

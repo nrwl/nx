@@ -91,6 +91,14 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@storybook/html'] = storybookVersion;
   }
 
+  if (isFramework('vue', schema)) {
+    devDependencies['@storybook/vue'] = storybookVersion;
+  }
+
+  if (isFramework('web-components', schema)) {
+    devDependencies['@storybook/web-components'] = storybookVersion;
+  }
+
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }
 

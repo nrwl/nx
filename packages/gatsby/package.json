@@ -22,7 +22,7 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./collection.json",
+  "schematics": "./generators.json",
   "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
@@ -36,6 +36,6 @@
     "@nrwl/node": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
-    "gatsby-cli": "^3.5.0"
+    "gatsby-cli": "^3.10.0"
   }
 }

@@ -12,6 +12,7 @@ import { performance } from 'perf_hooks';
 import type { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appendArray } from '../utilities/array';
 import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
@@ -260,12 +261,12 @@ export function readWorkspaceFiles(): FileData[] {
     r.push(...rootWorkspaceFileData());
 
     // Add known workspace files and directories
-    r.push(...allFilesInDir(appRootPath, false));
-    r.push(...allFilesInDir(`${appRootPath}/tools`));
+    appendArray(r, allFilesInDir(appRootPath, false));
+    appendArray(r, allFilesInDir(`${appRootPath}/tools`));
     const wl = workspaceLayout();
-    r.push(...allFilesInDir(`${appRootPath}/${wl.appsDir}`));
+    appendArray(r, allFilesInDir(`${appRootPath}/${wl.appsDir}`));
     if (wl.appsDir !== wl.libsDir) {
-      r.push(...allFilesInDir(`${appRootPath}/${wl.libsDir}`));
+      appendArray(r, allFilesInDir(`${appRootPath}/${wl.libsDir}`));
     }
     performance.mark('read workspace files:end');
     performance.measure(
@@ -300,16 +301,6 @@ export function normalizedProjectRoot(p: ProjectGraphNode): string {
   } else {
     return '';
   }
-}
-
-export function filesChanged(a: FileData[], b: FileData[]) {
-  if (a.length !== b.length) return true;
-
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i].file !== b[i].file) return true;
-    if (a[i].hash !== b[i].hash) return true;
-  }
-  return false;
 }
 
 // Original Exports

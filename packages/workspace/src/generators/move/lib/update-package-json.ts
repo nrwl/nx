@@ -1,8 +1,6 @@
-import { Tree, getWorkspaceLayout } from '@nrwl/devkit';
+import { readJson, Tree } from '@nrwl/devkit';
 import * as path from 'path';
-import { Schema } from '../schema';
-import { getDestination, normalizeSlashes } from './utils';
-import { ProjectConfiguration } from '@nrwl/tao/src/shared/workspace';
+import { NormalizedSchema } from '../schema';
 
 interface PartialPackageJson {
   name: string;
@@ -13,23 +11,18 @@ interface PartialPackageJson {
  *
  * @param schema The options provided to the schematic
  */
-export function updatePackageJson(
-  tree: Tree,
-  schema: Schema,
-  project: ProjectConfiguration
-) {
-  const destination = getDestination(tree, schema, project);
-  const packageJsonPath = path.join(destination, 'package.json');
+export function updatePackageJson(tree: Tree, schema: NormalizedSchema) {
+  const packageJsonPath = path.join(
+    schema.relativeToRootDestination,
+    'package.json'
+  );
 
   if (!tree.exists(packageJsonPath)) {
     // nothing to do
     return;
   }
 
-  const { npmScope } = getWorkspaceLayout(tree);
-  const packageJson = JSON.parse(
-    tree.read(packageJsonPath).toString('utf-8')
-  ) as PartialPackageJson;
-  packageJson.name = normalizeSlashes(`@${npmScope}/${schema.destination}`);
+  const packageJson = readJson(tree, packageJsonPath) as PartialPackageJson;
+  packageJson.name = schema.importPath;
   tree.write(packageJsonPath, JSON.stringify(packageJson));
 }

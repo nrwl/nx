@@ -131,7 +131,7 @@
             "id": "migration-angularjs"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -275,6 +275,11 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "angular/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "angular/cli/clear-cache"
           }
         ]
       },
@@ -481,6 +486,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "angular/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -1292,7 +1302,7 @@
             "id": "migration-cra"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -1436,6 +1446,11 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "react/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "react/cli/clear-cache"
           }
         ]
       },
@@ -1642,6 +1657,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "react/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -2275,6 +2295,11 @@
             "file": "react/guides/nextjs"
           },
           {
+            "name": "Deploying Next.js applications to Vercel",
+            "id": "deploy-nextjs-to-vercel",
+            "file": "react/guides/deploy-nextjs-to-vercel"
+          },
+          {
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
@@ -2417,7 +2442,7 @@
             "file": "shared/migration/overview"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -2561,6 +2586,11 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "node/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "node/cli/clear-cache"
           }
         ]
       },
@@ -2767,6 +2797,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "node/api-angular/executors/webpack-server"
           }
         ]
       },

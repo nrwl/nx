@@ -27,6 +27,13 @@ const binaryExts = new Set([
   // Java files
   '.jar',
   '.keystore',
+
+  // Font files
+  '.ttf',
+  '.otf',
+  '.woff',
+  '.woff2',
+  '.eot',
 ]);
 
 /**
@@ -38,7 +45,7 @@ const binaryExts = new Set([
  *
  * Examples:
  * ```typescript
- * generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'})
+ * generateFiles(tree, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'})
  * ```
  * This command will take all the files from the `files` directory next to the place where the command is invoked from.
  * It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all
@@ -46,13 +53,13 @@ const binaryExts = new Set([
  * `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor
  * doesn't get confused about incorrect TypeScript files.
  *
- * @param host - the file system tree
+ * @param tree - the file system tree
  * @param srcFolder - the source folder of files (absolute path)
- * @param target - the target folder (relative to the host root)
+ * @param target - the target folder (relative to the tree root)
  * @param substitutions - an object of key-value pairs
  */
 export function generateFiles(
-  host: Tree,
+  tree: Tree,
   srcFolder: string,
   target: string,
   substitutions: { [k: string]: any }
@@ -74,12 +81,12 @@ export function generateFiles(
       try {
         newContent = ejs.render(template, substitutions, {});
       } catch (e) {
-        logger.error(`Error in ${filePath.replace(`${host.root}/`, '')}:`);
+        logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
         throw e;
       }
     }
 
-    host.write(computedPath, newContent);
+    tree.write(computedPath, newContent);
   });
 }
 

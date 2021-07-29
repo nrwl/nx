@@ -1,10 +1,9 @@
-import { extname } from 'path';
 import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraphAsync } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
-import { FileData, WholeFileChange } from '../file-utils';
+import { WholeFileChange } from '../file-utils';
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
@@ -18,11 +17,9 @@ describe('project graph', () => {
   let tsConfigJson: any;
   let nxJson: NxJsonConfiguration;
   let filesJson: any;
-  let filesAtMasterJson: any;
-  let files: FileData[];
-  let readFileAtRevision: (path: string, rev: string) => string;
 
   beforeEach(() => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     packageJson = {
       name: '@nrwl/workspace-src',
       scripts: {
@@ -115,25 +112,10 @@ describe('project graph', () => {
       './workspace.json': JSON.stringify(workspaceJson),
       './tsconfig.base.json': JSON.stringify(tsConfigJson),
     };
-    files = Object.keys(filesJson).map((f) => ({
-      file: f,
-      ext: extname(f),
-      hash: 'some-hash',
-    }));
-    readFileAtRevision = (p, r) => {
-      const fromFs = filesJson[`./${p}`];
-      if (!fromFs) {
-        throw new Error(`File not found: ${p}`);
-      }
-      if (r === 'master') {
-        const fromMaster = filesAtMasterJson[`./${p}`];
-        return fromMaster || fromFs;
-      } else {
-        return fromFs;
-      }
-    };
     vol.fromJSON(filesJson, '/root');
   });
+
+  afterEach(() => [delete process.env.NX_CACHE_PROJECT_GRAPH]);
 
   it('should create nodes and dependencies with workspace projects', async () => {
     const graph = await createProjectGraphAsync();
@@ -151,7 +133,7 @@ describe('project graph', () => {
         getChanges: () => [new WholeFileChange()],
       },
     ]);
-    expect(affected).toEqual({
+    expect(affected).toMatchObject({
       nodes: {
         api: {
           name: 'api',
@@ -170,6 +152,7 @@ describe('project graph', () => {
         },
       },
       dependencies: {
+        api: [],
         demo: [
           {
             type: 'static',
@@ -182,7 +165,6 @@ describe('project graph', () => {
             target: 'api',
           },
         ],
-        api: [],
         ui: [],
       },
     });

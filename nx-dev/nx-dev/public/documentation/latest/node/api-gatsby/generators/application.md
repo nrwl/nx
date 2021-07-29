@@ -1,4 +1,4 @@
-# application
+# @nrwl/gatsby:application
 
 Create an application
 

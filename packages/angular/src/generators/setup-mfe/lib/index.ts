@@ -1,3 +1,4 @@
+export * from './add-entry-module';
 export * from './add-implicit-deps';
 export * from './add-remote-to-host';
 export * from './change-build-target';

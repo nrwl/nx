@@ -17,8 +17,8 @@ describe('Node Build Executor', () => {
 
   beforeEach(async () => {
     jest
-      .spyOn(projectGraph, 'createProjectGraphAsync')
-      .mockReturnValue(Promise.resolve({} as ProjectGraph));
+      .spyOn(projectGraph, 'readCachedProjectGraph')
+      .mockReturnValue({} as ProjectGraph);
 
     (<any>runWebpack).mockReturnValue(of({ hasErrors: () => false }));
     context = {

@@ -1,11 +1,14 @@
-import { ExecutorContext, logger, normalizePath } from '@nrwl/devkit';
+import { ExecutorContext, normalizePath } from '@nrwl/devkit';
 import { basename, dirname, join, relative } from 'path';
+import { readCachedProjectGraph } from '../../core/project-graph';
 import { copyAssets } from '../../utilities/assets';
-import { readJsonFile, writeJsonFile } from '../../utilities/fileutils';
 import {
-  compileTypeScript,
-  TypescriptWatchChangeEvent,
-} from '../../utilities/typescript/compilation';
+  calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
+} from '../../utilities/buildable-libs-utils';
+import { readJsonFile, writeJsonFile } from '../../utilities/fileutils';
+import { compileTypeScript } from '../../utilities/typescript/compilation';
 import { TypeScriptExecutorOptions } from './schema';
 
 export async function tscExecutor(
@@ -13,7 +16,36 @@ export async function tscExecutor(
   context: ExecutorContext
 ) {
   const normalizedOptions = normalizeOptions(options, context);
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  // const projectRoot = context.workspace.projects[context.projectName].root;
+
+  const projectGraph = readCachedProjectGraph();
+  const { target, dependencies } = calculateProjectDependencies(
+    projectGraph,
+    context.root,
+    context.projectName,
+    context.targetName,
+    context.configurationName
+  );
+  const projectRoot = target.data.root;
+
+  if (dependencies.length > 0) {
+    const areDependentProjectsBuilt = checkDependentProjectsHaveBeenBuilt(
+      context.root,
+      context.projectName,
+      context.targetName,
+      dependencies
+    );
+    if (!areDependentProjectsBuilt) {
+      return { success: false };
+    }
+
+    normalizedOptions.tsConfig = createTmpTsConfig(
+      join(context.root, options.tsConfig),
+      context.root,
+      projectRoot,
+      dependencies
+    );
+  }
 
   // this has to happen first so the folder is created where the assets are copied into
   const result = compileTypeScript({

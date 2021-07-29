@@ -24,9 +24,6 @@ interface ComponentsConfig {
 }
 
 const components: any = (config: ComponentsConfig) => ({
-  p({ children }) {
-    return <div className={'mb-5'}>{children}</div>;
-  },
   code({ node, inline, className, children, ...props }) {
     const language = /language-(\w+)/.exec(className || '')?.[1];
     return !inline && language ? (

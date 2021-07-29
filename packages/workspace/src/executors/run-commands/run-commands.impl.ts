@@ -25,6 +25,11 @@ export interface RunCommandsBuilderOptions extends Json {
     | {
         command: string;
         forwardAllArgs?: boolean;
+        /**
+         * description was added to allow users to document their commands inline,
+         * it is not intended to be used as part of the execution of the command.
+         */
+        description?: string;
       }
     | string
   )[];
@@ -67,7 +72,7 @@ export default async function (
 
   if (options.readyWhen && !options.parallel) {
     throw new Error(
-      'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
+      'ERROR: Bad executor config for @nrwl/run-commands - "readyWhen" can only be used when "parallel=true".'
     );
   }
 
@@ -135,7 +140,7 @@ function normalizeOptions(
 
   if (options.command) {
     options.commands = [{ command: options.command }];
-    options.parallel = false;
+    options.parallel = !!options.readyWhen;
   } else {
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c

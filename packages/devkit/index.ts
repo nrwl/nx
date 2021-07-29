@@ -41,6 +41,7 @@ export {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
   getProjects,
+  isStandaloneProject,
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
 export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
@@ -62,7 +63,7 @@ export type {
   ProjectGraphProcessorContext,
 } from './src/project-graph/interfaces';
 export { DependencyType } from './src/project-graph/interfaces';
-export { ProjectGraphBuilder } from './src/project-graph/utils';
+export { ProjectGraphBuilder } from './src/project-graph/project-graph-builder';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
 

@@ -33,6 +33,12 @@
       "type": "boolean",
       "description": "Update the import path to reflect the new location.",
       "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "aliases": ["skip-format"],
+      "description": "Skip formatting files.",
+      "default": false
     }
   },
   "required": ["projectName", "destination"]

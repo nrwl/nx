@@ -1,4 +1,4 @@
-# application
+# @nrwl/node:application
 
 Create a node application
 

@@ -198,7 +198,9 @@ function determineErroneousInternalLinks(
   let erroneousInternalLinks: Record<string, string[]> | undefined;
   for (const [docPath, links] of Object.entries(internalLinks)) {
     const erroneousLinks = links.filter(
-      (link) => !validInternalLinksMap[`${link.slice(1)}`]
+      (link) =>
+        !validInternalLinksMap[`${link.slice(1)}`] &&
+        !validInternalLinksMap[`angular/${link.slice(1)}`]
     );
     if (erroneousLinks.length) {
       if (!erroneousInternalLinks) {

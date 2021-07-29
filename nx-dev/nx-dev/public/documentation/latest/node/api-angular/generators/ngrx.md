@@ -1,4 +1,4 @@
-# ngrx
+# @nrwl/angular:ngrx
 
 Adds NgRx support to an application or library.
 

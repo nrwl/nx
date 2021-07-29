@@ -19,6 +19,7 @@ export const supportedNxCommands: string[] = [
   'report',
   'run-many',
   'connect-to-nx-cloud',
+  'clear-cache',
   'list',
   'help',
   '--help',

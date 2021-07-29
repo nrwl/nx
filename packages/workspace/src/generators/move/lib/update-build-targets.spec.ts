@@ -1,23 +1,24 @@
-import { Schema } from '../schema';
 import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
+import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
 
 describe('updateBuildTargets', () => {
   let tree: Tree;
-  let schema: Schema;
+  let schema: NormalizedSchema;
 
   beforeEach(async () => {
     schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
-      importPath: undefined,
+      importPath: '@proj/subfolder-my-destination',
       updateImportPath: true,
+      newProjectName: 'subfolder-my-destination',
+      relativeToRootDestination: 'libs/subfolder/my-destination',
     };
     tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'my-source', {

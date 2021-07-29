@@ -51,6 +51,8 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
       logger.error('The generator workflow failed. See above.');
     } else if (err.message) {
       logger.error(err.message);
+    } else {
+      logger.error(err);
     }
     if (isVerbose && err.stack) {
       logger.info(err.stack);

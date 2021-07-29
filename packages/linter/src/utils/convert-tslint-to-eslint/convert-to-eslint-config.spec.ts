@@ -55,7 +55,7 @@ jest.mock('tslint-to-eslint-config', () => {
   return {
     // Since upgrading to (ts-)jest 26 this usage of this mock has caused issues...
     // @ts-ignore
-    ...jest.requireActual('tslint-to-eslint-config'),
+    ...jest.requireActual<any>('tslint-to-eslint-config'),
     findReportedConfiguration: jest.fn(mockFindReportedConfiguration),
   };
 });

@@ -108,9 +108,9 @@ describe('react:component-cypress-spec', () => {
         beforeEach(() => cy.visit('/iframe.html?id=test--primary&args=name;displayAge:false;'));
         
         it('should render the component', () => {
-          cy.get('h1').should('contain', 'Welcome to test-ui-lib!');
+          cy.get('h1').should('contain', 'Welcome to Test!');
         });
-      });
+      })
       `);
           });
         });
@@ -135,7 +135,7 @@ describe('react:component-cypress-spec', () => {
       beforeEach(() => cy.visit('/iframe.html?id=test--primary'));
       
       it('should render the component', () => {
-        cy.get('h1').should('contain', 'Welcome to test-ui-lib!');
+        cy.get('h1').should('contain', 'Welcome to Test!');
       });
     });
     `);

@@ -12,29 +12,43 @@
         "main": "dep-graph/dep-graph/src/main.ts",
         "polyfills": "dep-graph/dep-graph/src/polyfills.ts",
         "tsConfig": "dep-graph/dep-graph/tsconfig.app.json",
-        "assets": [
-          "dep-graph/dep-graph/src/favicon.ico",
-          "dep-graph/dep-graph/src/assets"
-        ],
         "styles": ["dep-graph/dep-graph/src/styles.scss"],
-        "scripts": []
+        "scripts": [],
+        "assets": [],
+        "optimization": true,
+        "outputHashing": "none",
+        "sourceMap": false,
+        "extractCss": true,
+        "namedChunks": false,
+        "extractLicenses": true,
+        "vendorChunk": false,
+        "budgets": [
+          {
+            "type": "initial",
+            "maximumWarning": "2mb",
+            "maximumError": "5mb"
+          }
+        ]
       },
       "configurations": {
-        "release": {
+        "dev": {
           "fileReplacements": [
             {
               "replace": "dep-graph/dep-graph/src/environments/environment.ts",
-              "with": "dep-graph/dep-graph/src/environments/environment.release.ts"
+              "with": "dep-graph/dep-graph/src/environments/environment.dev.ts"
             }
           ],
-          "assets": [],
-          "optimization": true,
+          "assets": [
+            "dep-graph/dep-graph/src/favicon.ico",
+            "dep-graph/dep-graph/src/assets"
+          ],
+          "optimization": false,
           "outputHashing": "none",
-          "sourceMap": false,
+          "sourceMap": true,
           "extractCss": true,
           "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false,
+          "extractLicenses": false,
+          "vendorChunk": true,
           "budgets": [
             {
               "type": "initial",
@@ -72,12 +86,9 @@
     "serve": {
       "executor": "@nrwl/web:dev-server",
       "options": {
-        "buildTarget": "dep-graph-dep-graph:build-base"
+        "buildTarget": "dep-graph-dep-graph:build-base:dev"
       },
       "configurations": {
-        "release": {
-          "buildTarget": "dep-graph-dep-graph:build-base:release"
-        },
         "watch": {
           "buildTarget": "dep-graph-dep-graph:build-base:watch"
         }

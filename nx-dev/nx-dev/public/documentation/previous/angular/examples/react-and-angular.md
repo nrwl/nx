@@ -19,7 +19,7 @@ npx --ignore-existing create-nx-workspace happynrwl --preset=empty
 An empty workspace does not have any capabilities to create applications. Add capabilities for Angular development via:
 
 ```bash
-ng add @nrwl/angular
+npm i -D @nrwl/angular
 ```
 
 ## Creating an Angular Application
@@ -27,7 +27,7 @@ ng add @nrwl/angular
 An empty workspace has no application or libraries: nothing to run and nothing to test. Let's add an Angular application into it via:
 
 ```bash
-ng g @nrwl/angular:app angularapp
+nx g @nrwl/angular:app angularapp
 ```
 
 The result should look like this:
@@ -95,6 +95,7 @@ And the template of the generated component will look as follows:
   <img
     width="300"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
+    alt="Nx - Smart, Extensible Build Framework"
   />
 </div>
 
@@ -106,14 +107,14 @@ And the template of the generated component will look as follows:
 Generating a React application is just as easy. First, add capabilities for React development via:
 
 ```bash
-ng add @nrwl/react
+npm i -D @nrwl/react
 ```
 
 ## Creating a React Application
 
 Create a React application via:
 
-`ng g @nrwl/react:app reactapp` and this is what we will see:
+`nx g @nrwl/react:app reactapp` and this is what we will see:
 
 ```treeview
 happynrwl/
@@ -193,10 +194,10 @@ export class App extends Component {
 
 Nx provides a uniform tool for development the commands used for React development are the same as the commands used to develop Angular applications.
 
-- `ng serve reactapp` serves the React app
-- `ng build reactapp` builds the React app
-- `ng test reactapp` tests the React app using Jest
-- `ng e2e reactapp-e2e` tests the React app using Cypress
+- `nx serve reactapp` serves the React app
+- `nx build reactapp` builds the React app
+- `nx test reactapp` tests the React app using Jest
+- `nx e2e reactapp-e2e` tests the React app using Cypress
 
 TypeScript support, Jest, Cypress, source maps, watch mode--all work with React out of the box. If we run ng serve reactapp, we will see the following:
 
@@ -206,7 +207,7 @@ TypeScript support, Jest, Cypress, source maps, watch mode--all work with React 
 
 Nx makes sharing code between applications easy. What used to take days or even weeks, with Nx takes minutes. Say we want to create a ui library of shared components that we will use in both the React and Angular applications.
 
-`ng g @nrwl/workspace:lib ui` and this is what we will see:
+`nx g @nrwl/workspace:lib ui` and this is what we will see:
 
 ```treeview
 happynrwl/
@@ -322,6 +323,7 @@ Finally, we can update `app.component.html` to use our shared web component.
   <img
     width="300"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
+    alt="Nx - Smart, Extensible Build Framework"
   />
 </div>
 

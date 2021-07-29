@@ -10,7 +10,7 @@ import {
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
-  ...jest.requireActual('@nrwl/workspace/src/core/project-graph'),
+  ...jest.requireActual<any>('@nrwl/workspace/src/core/project-graph'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),

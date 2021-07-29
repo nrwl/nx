@@ -1,4 +1,4 @@
-import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
 import { moveGenerator } from '@nrwl/workspace';
 import { updateModuleName } from './lib/update-module-name';
 import { Schema } from './schema';
@@ -10,10 +10,16 @@ import { Schema } from './schema';
  * to the workspace, so it can't use the same tricks as the `@nrwl/workspace` rules
  * to get the before and after names and paths.
  */
+export async function angularMoveGenerator(
+  tree: Tree,
+  schema: Schema
+): Promise<void> {
+  await moveGenerator(tree, { ...schema, skipFormat: true });
+  updateModuleName(tree, schema);
 
-export async function angularMoveGenerator(tree: Tree, schema: Schema) {
-  await moveGenerator(tree, schema);
-  await updateModuleName(tree, schema);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 export const angularMoveSchematic = convertNxGenerator(angularMoveGenerator);

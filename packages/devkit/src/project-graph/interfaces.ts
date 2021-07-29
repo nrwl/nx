@@ -10,6 +10,7 @@ export interface FileData {
   file: string;
   hash: string;
   ext: string;
+  deps?: string[];
 }
 
 /**
@@ -96,7 +97,16 @@ export interface ProjectGraphProcessorContext {
    * Workspace information such as projects and configuration
    */
   workspace: Workspace;
+
+  /**
+   * All files in the workspace
+   */
   fileMap: ProjectFileMap;
+
+  /**
+   * Files changes since last invocation
+   */
+  filesToProcess: ProjectFileMap;
 }
 
 /**

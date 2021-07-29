@@ -1,6 +1,6 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { isAbsolute, relative } from 'path';
-import { createProjectGraph } from '../core/project-graph';
+import { normalizePath, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { relative } from 'path';
+import { readCachedProjectGraph } from '../core/project-graph';
 
 export function projectHasTarget(project: ProjectGraphNode, target: string) {
   return project.data && project.data.targets && project.data.targets[target];
@@ -20,7 +20,7 @@ export function projectHasTargetAndConfiguration(
 
 export function getSourceDirOfDependentProjects(
   projectName: string,
-  projectGraph = createProjectGraph()
+  projectGraph = readCachedProjectGraph()
 ): string[] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
@@ -41,14 +41,17 @@ export function getSourceDirOfDependentProjects(
  */
 export function getProjectNameFromDirPath(
   projRelativeDirPath: string,
-  projectGraph = createProjectGraph()
+  projectGraph = readCachedProjectGraph()
 ) {
   let parentNodeName = null;
   for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
-    const relativePath = relative(node.data.root, projRelativeDirPath);
+    const normalizedRootPath = normalizePath(node.data.root);
+    const normalizedProjRelPath = normalizePath(projRelativeDirPath);
+
+    const relativePath = relative(normalizedRootPath, normalizedProjRelPath);
     const isMatch = relativePath && !relativePath.startsWith('..');
 
-    if (isMatch || node.data.root === projRelativeDirPath) {
+    if (isMatch || normalizedRootPath === normalizedProjRelPath) {
       parentNodeName = nodeName;
       break;
     }
@@ -64,13 +67,15 @@ export function getProjectNameFromDirPath(
 }
 
 /**
- * Takes a filename and figures out the belonging app and from there
- * collects all dependent
- * @param filename name of a file in some workspace app / lib
+ * Find all internal project dependencies.
+ * All the external (npm) dependencies will be filtered out
+ * @param {string} parentNodeName
+ * @param {ProjectGraph} projectGraph
+ * @returns {string[]}
  */
 function findAllProjectNodeDependencies(
   parentNodeName: string,
-  projectGraph = createProjectGraph()
+  projectGraph = readCachedProjectGraph()
 ): string[] {
   const dependencyNodeNames = new Set<string>();
 

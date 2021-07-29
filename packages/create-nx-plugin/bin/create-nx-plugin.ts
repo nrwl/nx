@@ -70,7 +70,7 @@ function createWorkspace(
   execSync(
     `${
       pmc.exec
-    } tao ${command}/collection.json --nxWorkspaceRoot="${process.cwd()}"`,
+    } tao ${command}/generators.json --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,

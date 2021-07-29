@@ -1,4 +1,4 @@
-# component-story
+# @nrwl/react:component-story
 
 Generate storybook story for a react component
 

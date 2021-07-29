@@ -9,9 +9,9 @@ import {
   visitNotIgnoredFiles,
   writeJson,
 } from '@nrwl/devkit';
-import { findNodes } from '../../../utilities/typescript/find-nodes';
 import * as ts from 'typescript';
-import { Schema } from '../schema';
+import { findNodes } from '../../../utilities/typescript/find-nodes';
+import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 
 /**
@@ -21,7 +21,7 @@ import { normalizeSlashes } from './utils';
  */
 export function updateImports(
   tree: Tree,
-  schema: Schema,
+  schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
   if (project.projectType === 'application') {
@@ -52,9 +52,7 @@ export function updateImports(
       normalizeSlashes(
         `@${npmScope}/${project.root.substr(libsDir.length + 1)}`
       ),
-    to:
-      schema.importPath ||
-      normalizeSlashes(`@${npmScope}/${schema.destination}`),
+    to: schema.importPath,
   };
 
   if (schema.updateImportPath) {

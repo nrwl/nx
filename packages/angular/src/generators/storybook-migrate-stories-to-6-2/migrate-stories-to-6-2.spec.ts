@@ -29,7 +29,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
       overrideCollectionResolutionForTesting({
         '@nrwl/storybook': joinPathFragments(
           __dirname,
-          '../../../../storybook/collection.json'
+          '../../../../storybook/generators.json'
         ),
       });
 

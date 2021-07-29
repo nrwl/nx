@@ -1,4 +1,4 @@
-# move
+# @nrwl/angular:move
 
 Moves an Angular application or library to another folder within the workspace and updates the project configuration.
 
@@ -55,6 +55,16 @@ The name of the Angular project to move.
 Type: `string`
 
 The new import path to use in the `tsconfig.base.json`.
+
+### skipFormat
+
+Alias(es): skip-format
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.
 
 ### updateImportPath
 

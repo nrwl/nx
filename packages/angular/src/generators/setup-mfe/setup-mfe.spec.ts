@@ -11,9 +11,11 @@ describe('Init MFE', () => {
     host = createTreeWithEmptyWorkspace();
     await applicationGenerator(host, {
       name: 'app1',
+      routing: true,
     });
     await applicationGenerator(host, {
       name: 'remote1',
+      routing: true,
     });
   });
 
@@ -214,5 +216,79 @@ describe('Init MFE', () => {
     // ASSERT
     const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
     expect(hostWebpackConfig).toMatchSnapshot();
+  });
+
+  it('should add a remote application and add it to a specified host applications router config', async () => {
+    // ARRANGE
+    await applicationGenerator(host, {
+      name: 'remote2',
+      routing: true,
+    });
+
+    await setupMfe(host, {
+      appName: 'app1',
+      mfeType: 'host',
+      routing: true,
+    });
+
+    await setupMfe(host, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4201,
+      routing: true,
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'remote2',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4202,
+      routing: true,
+    });
+
+    // ASSERT
+    const hostAppModule = host.read('apps/app1/src/app/app.module.ts', 'utf-8');
+    expect(hostAppModule).toMatchSnapshot();
+  });
+
+  it('should add a remote application and add it to a specified host applications serve-mfe target', async () => {
+    // ARRANGE
+    await applicationGenerator(host, {
+      name: 'remote2',
+      routing: true,
+    });
+
+    await setupMfe(host, {
+      appName: 'app1',
+      mfeType: 'host',
+      routing: true,
+    });
+
+    await setupMfe(host, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4201,
+      routing: true,
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'remote2',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4202,
+      routing: true,
+    });
+
+    // ASSERT
+    const hostAppConfig = readProjectConfiguration(host, 'app1');
+    const serveMfe = hostAppConfig.targets['serve-mfe'];
+
+    expect(serveMfe.options.commands).toContain('nx serve remote1');
+    expect(serveMfe.options.commands).toContain('nx serve remote2');
+    expect(serveMfe.options.commands).toContain('nx serve app1');
   });
 });

@@ -9,29 +9,31 @@ import { addProtractor } from './add-protractor';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
 import { updateE2eProject } from './update-e2e-project';
 import { convertToNxProjectGenerator } from '@nrwl/workspace';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { joinPathFragments } from '@nrwl/devkit';
 
 /**
  * Add E2E Config
  *
- * @param host Nx Devkit Virtual Tree
+ * @param tree Nx Devkit Virtual Tree
  * @param options Normalized Schema
  * @param e2eProjectRoot Raw E2E Project Root that Angular tries to write to
  *
  * @returns Function to run to add Cypres config after intial app files have been moved to correct location
  */
 export async function addE2e(
-  host: Tree,
+  tree: Tree,
   options: NormalizedSchema,
   e2eProjectRoot: string
 ) {
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    await addProtractor(host, options, e2eProjectRoot);
+    await addProtractor(tree, options);
   } else {
-    removeScaffoldedE2e(host, options, e2eProjectRoot);
+    removeScaffoldedE2e(tree, options, e2eProjectRoot);
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    await cypressProjectGenerator(host, {
+    await cypressProjectGenerator(tree, {
       name: options.e2eProjectName,
       directory: options.directory,
       project: options.name,
@@ -42,10 +44,20 @@ export async function addE2e(
   }
 
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    updateE2eProject(host, options);
+    updateE2eProject(tree, options);
     if (options.standaloneConfig) {
-      convertToNxProjectGenerator(host, {
+      convertToNxProjectGenerator(tree, {
         project: `${options.e2eProjectName}`,
+      });
+    }
+    if (options.linter === Linter.EsLint) {
+      await lintProjectGenerator(tree, {
+        project: options.e2eProjectName,
+        linter: options.linter,
+        eslintFilePatterns: [
+          joinPathFragments(options.e2eProjectRoot, '**/*.ts'),
+        ],
+        skipFormat: true,
       });
     }
   }

@@ -1,9 +1,9 @@
-# file-server
+# @nrwl/web:file-server
 
 Serve a web application from a folder
 
 Options can be configured in `workspace.json` when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.
 
 ## Options
 

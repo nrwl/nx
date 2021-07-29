@@ -161,7 +161,7 @@ describe('addDepsToPackageJson', () => {
 
     const testRunner = new SchematicTestRunner(
       '@nrwl/jest',
-      join(__dirname, '../../../jest/collection.json')
+      join(__dirname, '../../../jest/generators.json')
     );
 
     await testRunner
@@ -193,7 +193,7 @@ describe('addDepsToPackageJson', () => {
 
     const testRunner = new SchematicTestRunner(
       '@nrwl/jest',
-      join(__dirname, '../../../jest/collection.json')
+      join(__dirname, '../../../jest/generators.json')
     );
 
     await testRunner

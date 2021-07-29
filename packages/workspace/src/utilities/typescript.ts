@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 import type * as ts from 'typescript';
-import { appRootPath } from './app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { compileTypeScript } from './typescript/compilation';
@@ -24,6 +24,23 @@ export function readTsConfig(tsConfigPath: string) {
     tsModule.sys,
     dirname(tsConfigPath)
   );
+}
+
+function readTsConfigOptions(tsConfigPath: string) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const readResult = tsModule.readConfigFile(
+    tsConfigPath,
+    tsModule.sys.readFile
+  );
+  // we don't need to scan the files, we only care about options
+  const host = { readDirectory: () => [] };
+  return tsModule.parseJsonConfigFileContent(
+    readResult.config,
+    host,
+    dirname(tsConfigPath)
+  ).options;
 }
 
 let compilerHost: {
@@ -63,7 +80,7 @@ export function resolveModuleByImport(
 }
 
 function getCompilerHost(tsConfigPath: string) {
-  const { options } = readTsConfig(tsConfigPath);
+  const options = readTsConfigOptions(tsConfigPath);
   const host = tsModule.createCompilerHost(options, true);
   const moduleResolutionCache = tsModule.createModuleResolutionCache(
     appRootPath,

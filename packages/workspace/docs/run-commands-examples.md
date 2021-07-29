@@ -98,14 +98,18 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ##### Custom **done** conditions
 
-Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
+Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:
 
 ```json
 "finish-when-ready": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "command": "echo 'READY' && sleep 5 && echo 'FINISHED'",
-        "readyWhen": "READY"
+        "commands": [
+            "sleep 5 && echo 'FINISHED'",
+            "echo 'READY'"
+        ],
+        "readyWhen": "READY",
+        "parallel": true
     }
 }
 ```
@@ -114,7 +118,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 <%= cli %> run frontend:finish-when-ready
 ```
 
-The above command will finish immediately, instead of waiting for 5 seconds.
+The above commands will finish immediately, instead of waiting for 5 seconds.
 
 ##### Nx Affected
 

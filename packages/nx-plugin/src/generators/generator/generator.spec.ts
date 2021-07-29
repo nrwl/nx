@@ -38,7 +38,7 @@ describe('NxPlugin Generator Generator', () => {
     ).toBeTruthy();
   });
 
-  it('should update collection.json', async () => {
+  it('should update generators.json', async () => {
     await generatorGenerator(tree, {
       project: projectName,
       name: 'my-generator',
