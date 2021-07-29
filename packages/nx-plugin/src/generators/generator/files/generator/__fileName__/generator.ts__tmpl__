@@ -17,13 +17,13 @@ interface NormalizedSchema extends <%= className %>GeneratorSchema {
   parsedTags: string[]
 }
 
-function normalizeOptions(host: Tree, options: <%= className %>GeneratorSchema): NormalizedSchema {
+function normalizeOptions(tree: Tree, options: <%= className %>GeneratorSchema): NormalizedSchema {
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
     ? `${names(options.directory).fileName}/${name}`
     : name;
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const projectRoot = `${getWorkspaceLayout(host).libsDir}/${projectDirectory}`;
+  const projectRoot = `${getWorkspaceLayout(tree).libsDir}/${projectDirectory}`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
@@ -37,20 +37,20 @@ function normalizeOptions(host: Tree, options: <%= className %>GeneratorSchema):
   };
 }
 
-function addFiles(host: Tree, options: NormalizedSchema) {
+function addFiles(tree: Tree, options: NormalizedSchema) {
     const templateOptions = {
       ...options,
       ...names(options.name),
       offsetFromRoot: offsetFromRoot(options.projectRoot),
       template: ''
     };
-    generateFiles(host, path.join(__dirname, 'files'), options.projectRoot, templateOptions);
+    generateFiles(tree, path.join(__dirname, 'files'), options.projectRoot, templateOptions);
 }
 
-export default async function (host: Tree, options: <%= className %>GeneratorSchema) {
-  const normalizedOptions = normalizeOptions(host, options);
+export default async function (tree: Tree, options: <%= className %>GeneratorSchema) {
+  const normalizedOptions = normalizeOptions(tree, options);
   addProjectConfiguration(
-    host,
+    tree,
     normalizedOptions.projectName,
     {
       root: normalizedOptions.projectRoot,
@@ -64,6 +64,6 @@ export default async function (host: Tree, options: <%= className %>GeneratorSch
       tags: normalizedOptions.parsedTags,
     }
   );
-  addFiles(host, normalizedOptions);
-  await formatFiles(host);
+  addFiles(tree, normalizedOptions);
+  await formatFiles(tree);
 }

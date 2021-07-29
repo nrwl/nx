@@ -15,18 +15,18 @@ import {
  * ```typescript
  * { appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }
  * ```
- * @param host - file system tree
+ * @param tree - file system tree
  */
-export function getWorkspaceLayout(host: Tree): {
+export function getWorkspaceLayout(tree: Tree): {
   appsDir: string;
   libsDir: string;
   standaloneAsDefault: boolean;
   npmScope: string;
 } {
-  const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
   const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
-    host,
-    getWorkspacePath(host)
+    tree,
+    getWorkspacePath(tree)
   );
 
   return {
@@ -45,7 +45,7 @@ export function getWorkspaceLayout(host: Tree): {
   };
 }
 
-export function getWorkspacePath(host: Tree): string {
+export function getWorkspacePath(tree: Tree): string {
   const possibleFiles = ['/angular.json', '/workspace.json'];
-  return possibleFiles.filter((path) => host.exists(path))[0];
+  return possibleFiles.filter((path) => tree.exists(path))[0];
 }
