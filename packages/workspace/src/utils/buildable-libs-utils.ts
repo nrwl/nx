@@ -12,6 +12,8 @@ import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 
+// TODO(v13): remove this deprecated file
+
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
     node.data.targets &&
@@ -20,12 +22,18 @@ function isBuildable(target: string, node: ProjectGraphNode): boolean {
   );
 }
 
+/**
+ * @deprecated will be removed in v13. Use `{@link DependentBuildableProjectNode}` from `utilities/buildable-libs-utils`
+ */
 export type DependentBuildableProjectNode = {
   name: string;
   outputs: string[];
   node: ProjectGraphNode;
 };
 
+/**
+ * @deprecated will be removed in v13. Use `{@link calculateProjectDependencies}` from `utilities/buildable-libs-utils`
+ */
 export function calculateProjectDependencies(
   projGraph: ProjectGraph,
   context: BuilderContext
@@ -103,6 +111,9 @@ function readTsConfigWithRemappedPaths(
   return generatedTsConfig;
 }
 
+/**
+ * @deprecated will be removed in v13. Use `{@link computeCompilerOptionsPaths}` from `utilities/buildable-libs-utils`
+ */
 export function computeCompilerOptionsPaths(tsConfig, dependencies) {
   const paths = readPaths(tsConfig) || {};
   updatePaths(dependencies, paths);
@@ -127,6 +138,9 @@ function readPaths(tsConfig: string) {
   }
 }
 
+/**
+ * @deprecated will be removed in v13. Use `{@link createTmpTsConfig}` from `utilities/buildable-libs-utils`
+ */
 export function createTmpTsConfig(
   tsconfigPath: string,
   workspaceRoot: string,
@@ -159,6 +173,9 @@ function cleanupTmpTsConfigFile(tmpTsConfigPath) {
   } catch (e) {}
 }
 
+/**
+ * @deprecated will be removed in v13. Use `{@link checkDependentProjectsHaveBeenBuilt}` from `utilities/buildable-libs-utils`
+ */
 export function checkDependentProjectsHaveBeenBuilt(
   context: BuilderContext,
   projectDependencies: DependentBuildableProjectNode[]
@@ -196,6 +213,9 @@ export function checkDependentProjectsHaveBeenBuilt(
   }
 }
 
+/**
+ * @deprecated will be removed in v13. Use `{@link updatePaths}` from `utilities/buildable-libs-utils`
+ */
 export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
   paths: Record<string, string[]>
@@ -218,6 +238,8 @@ export function updatePaths(
 /**
  * Updates the peerDependencies section in the `dist/lib/xyz/package.json` with
  * the proper dependency and version
+ *
+ * @deprecated will be removed in v13. Use `{@link updateBuildableProjectPackageJsonDependencies}` from `utilities/buildable-libs-utils`
  */
 export function updateBuildableProjectPackageJsonDependencies(
   context: BuilderContext,

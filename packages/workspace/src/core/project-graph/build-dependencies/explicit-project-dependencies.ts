@@ -22,7 +22,7 @@ export function buildExplicitTypeScriptDependencies(
             f.file,
             ctx.workspace.npmScope
           );
-          if (source && target) {
+          if (target) {
             builder.addExplicitDependency(source, f.file, target);
           }
         }
