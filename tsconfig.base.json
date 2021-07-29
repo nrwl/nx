@@ -42,11 +42,13 @@
       "@nrwl/nx-dev/feature-analytics": [
         "./nx-dev/feature-analytics/src/index.ts"
       ],
+      "@nrwl/nx-dev/feature-conf": ["./nx-dev/feature-conf/src/index.ts"],
       "@nrwl/nx-dev/feature-doc-viewer": [
         "./nx-dev/feature-doc-viewer/src/index.ts"
       ],
       "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"],
       "@nrwl/nx-dev/ui/common": ["./nx-dev/ui/common/src/index.ts"],
+      "@nrwl/nx-dev/ui/member-card": ["./nx-dev/ui/member-card/src/index.ts"],
       "@nrwl/react": ["./packages/react"],
       "@nrwl/react/*": ["./packages/react/*"],
       "@nrwl/storybook": ["./packages/storybook"],
