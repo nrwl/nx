@@ -72,6 +72,7 @@
 - [getWorkspaceLayout](../../node/nx-devkit/index#getworkspacelayout)
 - [getWorkspacePath](../../node/nx-devkit/index#getworkspacepath)
 - [installPackagesTask](../../node/nx-devkit/index#installpackagestask)
+- [isStandaloneProject](../../node/nx-devkit/index#isstandaloneproject)
 - [joinPathFragments](../../node/nx-devkit/index#joinpathfragments)
 - [moveFilesToNewDirectory](../../node/nx-devkit/index#movefilestonewdirectory)
 - [names](../../node/nx-devkit/index#names)
@@ -883,6 +884,25 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 #### Returns
 
 `void`
+
+---
+
+### isStandaloneProject
+
+▸ **isStandaloneProject**(`host`, `project`): `boolean`
+
+Returns if a project has a standalone configuration (project.json).
+
+#### Parameters
+
+| Name      | Type                                      | Description          |
+| :-------- | :---------------------------------------- | :------------------- |
+| `host`    | [`Tree`](../../node/nx-devkit/index#tree) | the file system tree |
+| `project` | `string`                                  | the project name     |
+
+#### Returns
+
+`boolean`
 
 ---
 

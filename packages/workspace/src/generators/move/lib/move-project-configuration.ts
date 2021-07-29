@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  isStandaloneProject,
   NxJsonProjectConfiguration,
   ProjectConfiguration,
   removeProjectConfiguration,
@@ -12,6 +13,7 @@ export function moveProjectConfiguration(
   schema: NormalizedSchema,
   projectConfig: ProjectConfiguration & NxJsonProjectConfiguration
 ) {
+  const isStandalone = isStandaloneProject(tree, schema.projectName);
   const projectString = JSON.stringify(projectConfig);
   const newProjectString = projectString.replace(
     new RegExp(projectConfig.root, 'g'),
@@ -25,5 +27,10 @@ export function moveProjectConfiguration(
   removeProjectConfiguration(tree, schema.projectName);
 
   // Create a new project with the root replaced
-  addProjectConfiguration(tree, schema.newProjectName, newProject);
+  addProjectConfiguration(
+    tree,
+    schema.newProjectName,
+    newProject,
+    isStandalone
+  );
 }

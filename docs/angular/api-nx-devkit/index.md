@@ -72,6 +72,7 @@
 - [getWorkspaceLayout](../../angular/nx-devkit/index#getworkspacelayout)
 - [getWorkspacePath](../../angular/nx-devkit/index#getworkspacepath)
 - [installPackagesTask](../../angular/nx-devkit/index#installpackagestask)
+- [isStandaloneProject](../../angular/nx-devkit/index#isstandaloneproject)
 - [joinPathFragments](../../angular/nx-devkit/index#joinpathfragments)
 - [moveFilesToNewDirectory](../../angular/nx-devkit/index#movefilestonewdirectory)
 - [names](../../angular/nx-devkit/index#names)
@@ -883,6 +884,25 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 #### Returns
 
 `void`
+
+---
+
+### isStandaloneProject
+
+▸ **isStandaloneProject**(`host`, `project`): `boolean`
+
+Returns if a project has a standalone configuration (project.json).
+
+#### Parameters
+
+| Name      | Type                                         | Description          |
+| :-------- | :------------------------------------------- | :------------------- |
+| `host`    | [`Tree`](../../angular/nx-devkit/index#tree) | the file system tree |
+| `project` | `string`                                     | the project name     |
+
+#### Returns
+
+`boolean`
 
 ---
 
