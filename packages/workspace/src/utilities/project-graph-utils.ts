@@ -67,9 +67,11 @@ export function getProjectNameFromDirPath(
 }
 
 /**
- * Takes a filename and figures out the belonging app and from there
- * collects all dependent
- * @param filename name of a file in some workspace app / lib
+ * Find all internal project dependencies.
+ * All the external (npm) dependencies will be filtered out
+ * @param {string} parentNodeName
+ * @param {ProjectGraph} projectGraph
+ * @returns {string[]}
  */
 function findAllProjectNodeDependencies(
   parentNodeName: string,

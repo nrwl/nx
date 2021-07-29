@@ -10,7 +10,10 @@ import {
 } from '@angular-devkit/core/src/utils/literals';
 import { initRootBabelConfig } from '../utils/rules';
 import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import {
+  createProjectGraphAsync,
+  isNpmProject,
+} from '@nrwl/workspace/src/core/project-graph';
 
 let addedEmotionPreset = false;
 
@@ -30,7 +33,7 @@ export default function update(): Rule {
       context.logger.info(
         `
         Found an existing babel.config.json file so we skipped creating it.
-        
+
         You may want to update it to include the Nx preset "@nrwl/web/babel".
         `
       );
@@ -38,7 +41,7 @@ export default function update(): Rule {
       context.logger.info(
         `
         Found an existing babel.config.js file so we skipped creating it.
-        
+
         You may want to update it to include the Nx preset "@nrwl/web/babel".
         `
       );
@@ -51,7 +54,7 @@ export default function update(): Rule {
       const deps = projectGraph.dependencies[name];
       const isReact = deps.some(
         (d) =>
-          projectGraph.nodes[d.target].type === 'npm' &&
+          isNpmProject(projectGraph.nodes[d.target]) &&
           d.target.indexOf('react') !== -1
       );
       if (isReact) {
@@ -69,11 +72,11 @@ export default function update(): Rule {
     if (conflicts.length > 0) {
       context.logger.info(stripIndent`
       The following projects already have .babelrc so we did not create them:
-      
+
         ${conflicts
           .map(([name, babelrc]) => `${name} - ${babelrc}`)
           .join('\n  ')}
-          
+
       You may want to update them to include the Nx preset "@nrwl/react/babel".
       `);
     }
@@ -109,7 +112,7 @@ function createBabelrc(host, context, babelrcPath, deps) {
     context.logger.warn(
       stripIndents`We created a babel config at ${babelrcPath} with both styled-components and emotion plugins.
       Only one should be used, please remove the unused plugin.
-      
+
       For example, if you don't use styled-components, then remove that plugin from the .babelrc file.
       `
     );

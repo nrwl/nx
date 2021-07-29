@@ -10,6 +10,8 @@ import {
 } from '../core/project-graph';
 import { getMockContext } from './testing';
 
+// TODO(v13): remove this deprecated file
+
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
     { name: '@proj/lib', node: {} as any, outputs: ['dist/libs/lib'] },
