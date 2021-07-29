@@ -101,7 +101,7 @@ If you want the generated file or folder name to contain variable values, use `_
 
 ## EJS Syntax Quickstart
 
-The EJS syntax can do much more than replace variable names with values. Here are some common techniques.
+The [EJS syntax](https://ejs.co/) can do much more than replace variable names with values. Here are some common techniques.
 
 1. Pass a function into the template:
 
@@ -140,7 +140,7 @@ This is the short version.
 ```typescript
 // typescript file
 generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
-  shortVerstion: false,
+  shortVersion: false,
   numRepetitions: 3,
 });
 ```
