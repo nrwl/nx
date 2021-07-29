@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { basename, dirname, join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import {
@@ -36,10 +37,6 @@ export interface CypressExecutorOptions extends Json {
   skipServe: boolean;
   testingType?: 'component' | 'e2e';
 }
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 export default async function cypressExecutor(
   options: CypressExecutorOptions,

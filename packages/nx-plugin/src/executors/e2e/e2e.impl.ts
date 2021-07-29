@@ -1,4 +1,7 @@
+import 'dotenv/config';
+
 import type { ExecutorContext } from '@nrwl/devkit';
+
 import {
   convertNxExecutor,
   logger,
@@ -8,11 +11,6 @@ import {
 } from '@nrwl/devkit';
 import { jestExecutor } from '@nrwl/jest/src/executors/jest/jest.impl';
 import type { NxPluginE2EExecutorOptions } from './schema';
-
-try {
-  require('dotenv').config();
-  // eslint-disable-next-line no-empty
-} catch (e) {}
 
 export async function* nxPluginE2EExecutor(
   options: NxPluginE2EExecutorOptions,

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
 
 import build from 'next/dist/build';
@@ -18,16 +19,12 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
-try {
-  require('dotenv').config();
-} catch (e) {}
-
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
   let dependencies: DependentBuildableProjectNode[] = [];
-  process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+  process.env.NODE_ENV ||= 'production';
 
   const root = resolve(context.root, options.root);
 
