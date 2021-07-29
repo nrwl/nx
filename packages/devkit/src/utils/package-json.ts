@@ -8,28 +8,28 @@ import type { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
  *
  * For example:
  * ```typescript
- * addDependenciesToPackageJson(host, { react: 'latest' }, { jest: 'latest' })
+ * addDependenciesToPackageJson(tree, { react: 'latest' }, { jest: 'latest' })
  * ```
  * This will **add** `react` and `jest` to the dependencies and devDependencies sections of package.json respectively.
  *
- * @param host Tree representing file system to modify
+ * @param tree Tree representing file system to modify
  * @param dependencies Dependencies to be added to the dependencies section of package.json
  * @param devDependencies Dependencies to be added to the devDependencies section of package.json
  * @param packageJsonPath Path to package.json
  * @returns Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
  */
 export function addDependenciesToPackageJson(
-  host: Tree,
+  tree: Tree,
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
   packageJsonPath: string = 'package.json'
 ): GeneratorCallback {
-  const currentPackageJson = readJson(host, packageJsonPath);
+  const currentPackageJson = readJson(tree, packageJsonPath);
 
   if (
     requiresAddingOfPackages(currentPackageJson, dependencies, devDependencies)
   ) {
-    updateJson(host, packageJsonPath, (json) => {
+    updateJson(tree, packageJsonPath, (json) => {
       json.dependencies = {
         ...(json.dependencies || {}),
         ...dependencies,
@@ -47,7 +47,7 @@ export function addDependenciesToPackageJson(
     });
   }
   return (): void => {
-    installPackagesTask(host);
+    installPackagesTask(tree);
   };
 }
 
@@ -56,7 +56,7 @@ export function addDependenciesToPackageJson(
  *
  * For example:
  * ```typescript
- * removeDependenciesFromPackageJson(host, ['react'], ['jest'])
+ * removeDependenciesFromPackageJson(tree, ['react'], ['jest'])
  * ```
  * This will **remove** `react` and `jest` from the dependencies and devDependencies sections of package.json respectively.
  *
@@ -65,12 +65,12 @@ export function addDependenciesToPackageJson(
  * @returns Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
  */
 export function removeDependenciesFromPackageJson(
-  host: Tree,
+  tree: Tree,
   dependencies: string[],
   devDependencies: string[],
   packageJsonPath: string = 'package.json'
 ): GeneratorCallback {
-  const currentPackageJson = readJson(host, packageJsonPath);
+  const currentPackageJson = readJson(tree, packageJsonPath);
 
   if (
     requiresRemovingOfPackages(
@@ -79,7 +79,7 @@ export function removeDependenciesFromPackageJson(
       devDependencies
     )
   ) {
-    updateJson(host, packageJsonPath, (json) => {
+    updateJson(tree, packageJsonPath, (json) => {
       for (const dep of dependencies) {
         delete json.dependencies[dep];
       }
@@ -93,7 +93,7 @@ export function removeDependenciesFromPackageJson(
     });
   }
   return (): void => {
-    installPackagesTask(host);
+    installPackagesTask(tree);
   };
 }
 
