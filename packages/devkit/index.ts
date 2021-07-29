@@ -41,6 +41,7 @@ export {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
   getProjects,
+  isStandaloneProject,
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
 export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';

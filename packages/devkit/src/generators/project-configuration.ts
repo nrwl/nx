@@ -205,6 +205,22 @@ export function readProjectConfiguration(
   return getProjectConfiguration(host, projectName, workspace, nxJson);
 }
 
+/**
+ * Returns if a project has a standalone configuration (project.json).
+ *
+ * @param host - the file system tree
+ * @param project - the project name
+ */
+export function isStandaloneProject(host: Tree, project: string): boolean {
+  const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
+    host,
+    getWorkspacePath(host)
+  );
+  const projectConfig = rawWorkspace.projects?.[project];
+
+  return typeof projectConfig === 'string';
+}
+
 function getProjectConfiguration(
   host: Tree,
   projectName: string,
