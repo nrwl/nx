@@ -14,21 +14,21 @@ let storedPackageJsonValue: string;
  * Runs `npm install` or `yarn install`. It will skip running the install if
  * `package.json` hasn't changed at all or it hasn't changed since the last invocation.
  *
- * @param host - the file system tree
+ * @param tree - the file system tree
  * @param alwaysRun - always run the command even if `package.json` hasn't changed.
  */
 export function installPackagesTask(
-  host: Tree,
+  tree: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
   packageManager: PackageManager = detectPackageManager(cwd)
 ): void {
-  const packageJsonValue = host.read(
+  const packageJsonValue = tree.read(
     joinPathFragments(cwd, 'package.json'),
     'utf-8'
   );
   if (
-    host
+    tree
       .listChanges()
       .find((f) => f.path === joinPathFragments(cwd, 'package.json')) ||
     alwaysRun
@@ -38,7 +38,7 @@ export function installPackagesTask(
       storedPackageJsonValue = packageJsonValue;
       const pmc = getPackageManagerCommand(packageManager);
       execSync(pmc.install, {
-        cwd: join(host.root, cwd),
+        cwd: join(tree.root, cwd),
         stdio: [0, 1, 2],
       });
     }

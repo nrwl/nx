@@ -28,20 +28,20 @@ export type WorkspaceConfiguration = Omit<
  * The project configuration is stored in workspace.json and nx.json. The utility will update
  * both files.
  *
- * @param host - the file system tree
+ * @param tree - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
  * @param projectConfiguration - project configuration
  * @param standalone - should the project use package.json? If false, the project config is inside workspace.json
  */
 export function addProjectConfiguration(
-  host: Tree,
+  tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration,
   standalone: boolean = false
 ): void {
-  standalone = standalone || getWorkspaceLayout(host).standaloneAsDefault;
+  standalone = standalone || getWorkspaceLayout(tree).standaloneAsDefault;
   setProjectConfiguration(
-    host,
+    tree,
     projectName,
     projectConfiguration,
     'create',
@@ -55,16 +55,16 @@ export function addProjectConfiguration(
  * The project configuration is stored in workspace.json and nx.json. The utility will update
  * both files.
  *
- * @param host - the file system tree
+ * @param tree - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
  * @param projectConfiguration - project configuration
  */
 export function updateProjectConfiguration(
-  host: Tree,
+  tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration
 ): void {
-  setProjectConfiguration(host, projectName, projectConfiguration, 'update');
+  setProjectConfiguration(tree, projectName, projectConfiguration, 'update');
 }
 
 /**
@@ -74,10 +74,10 @@ export function updateProjectConfiguration(
  * The utility will update both files.
  */
 export function removeProjectConfiguration(
-  host: Tree,
+  tree: Tree,
   projectName: string
 ): void {
-  setProjectConfiguration(host, projectName, undefined, 'delete');
+  setProjectConfiguration(tree, projectName, undefined, 'delete');
 }
 
 /**
@@ -86,16 +86,16 @@ export function removeProjectConfiguration(
  * Use {@link readProjectConfiguration} if only one project is needed.
  */
 export function getProjects(
-  host: Tree
+  tree: Tree
 ): Map<string, ProjectConfiguration & NxJsonProjectConfiguration> {
-  const workspace = readWorkspace(host);
-  const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  const workspace = readWorkspace(tree);
+  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
   return new Map(
     Object.keys(workspace.projects || {}).map((projectName) => {
       return [
         projectName,
-        getProjectConfiguration(host, projectName, workspace, nxJson),
+        getProjectConfiguration(tree, projectName, workspace, nxJson),
       ];
     })
   );
@@ -106,10 +106,10 @@ export function getProjects(
  *
  * This does _not_ provide projects configuration, use {@link readProjectConfiguration} instead.
  */
-export function readWorkspaceConfiguration(host: Tree): WorkspaceConfiguration {
-  const workspace = readWorkspace(host);
+export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
+  const workspace = readWorkspace(tree);
   delete workspace.projects;
-  const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
   delete nxJson.projects;
   return {
     ...workspace,
@@ -123,7 +123,7 @@ export function readWorkspaceConfiguration(host: Tree): WorkspaceConfiguration {
  * This does _not_ update projects configuration, use {@link updateProjectConfiguration} or {@link addProjectConfiguration} instead.
  */
 export function updateWorkspaceConfiguration(
-  host: Tree,
+  tree: Tree,
   workspaceConfig: WorkspaceConfiguration
 ): void {
   const {
@@ -159,13 +159,13 @@ export function updateWorkspaceConfiguration(
   };
 
   updateJson<WorkspaceJsonConfiguration>(
-    host,
-    getWorkspacePath(host),
+    tree,
+    getWorkspacePath(tree),
     (json) => {
       return { ...json, ...workspace };
     }
   );
-  updateJson<NxJsonConfiguration>(host, 'nx.json', (json) => {
+  updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
     return { ...json, ...nxJson };
   });
 }
@@ -176,24 +176,24 @@ export function updateWorkspaceConfiguration(
  * The project configuration is stored in workspace.json and nx.json. The utility will read
  * both files.
  *
- * @param host - the file system tree
+ * @param tree - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
  * @throws If supplied projectName cannot be found
  */
 export function readProjectConfiguration(
-  host: Tree,
+  tree: Tree,
   projectName: string
 ): ProjectConfiguration & NxJsonProjectConfiguration {
-  const workspace = readWorkspace(host);
+  const workspace = readWorkspace(tree);
   if (!workspace.projects[projectName]) {
     throw new Error(
       `Cannot find configuration for '${projectName}' in ${getWorkspacePath(
-        host
+        tree
       )}.`
     );
   }
 
-  const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
   // TODO: Remove after confirming that nx.json should be optional.
   // if (!nxJson.projects[projectName]) {
@@ -202,19 +202,19 @@ export function readProjectConfiguration(
   //   );
   // }
 
-  return getProjectConfiguration(host, projectName, workspace, nxJson);
+  return getProjectConfiguration(tree, projectName, workspace, nxJson);
 }
 
 /**
  * Returns if a project has a standalone configuration (project.json).
  *
- * @param host - the file system tree
+ * @param tree - the file system tree
  * @param project - the project name
  */
-export function isStandaloneProject(host: Tree, project: string): boolean {
+export function isStandaloneProject(tree: Tree, project: string): boolean {
   const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
-    host,
-    getWorkspacePath(host)
+    tree,
+    getWorkspacePath(tree)
   );
   const projectConfig = rawWorkspace.projects?.[project];
 
@@ -222,19 +222,19 @@ export function isStandaloneProject(host: Tree, project: string): boolean {
 }
 
 function getProjectConfiguration(
-  host: Tree,
+  tree: Tree,
   projectName: string,
   workspace: WorkspaceJsonConfiguration,
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & NxJsonProjectConfiguration {
   return {
-    ...readWorkspaceSection(host, workspace, projectName),
+    ...readWorkspaceSection(tree, workspace, projectName),
     ...readNxJsonSection(nxJson, projectName),
   };
 }
 
 function readWorkspaceSection(
-  host: Tree,
+  tree: Tree,
   workspace: WorkspaceJsonConfiguration,
   projectName: string
 ) {
@@ -247,15 +247,15 @@ function readNxJsonSection(nxJson: NxJsonConfiguration, projectName: string) {
 }
 
 function setProjectConfiguration(
-  host: Tree,
+  tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration,
   mode: 'create' | 'update' | 'delete',
   standalone: boolean = false
 ) {
   if (mode === 'delete') {
-    addProjectToNxJson(host, projectName, undefined, mode);
-    addProjectToWorkspaceJson(host, projectName, undefined, mode);
+    addProjectToNxJson(tree, projectName, undefined, mode);
+    addProjectToWorkspaceJson(tree, projectName, undefined, mode);
     return;
   }
 
@@ -267,14 +267,14 @@ function setProjectConfiguration(
 
   const { tags, implicitDependencies } = projectConfiguration;
   addProjectToWorkspaceJson(
-    host,
+    tree,
     projectName,
     projectConfiguration,
     mode,
     standalone
   );
   addProjectToNxJson(
-    host,
+    tree,
     projectName,
     {
       tags,
@@ -285,28 +285,28 @@ function setProjectConfiguration(
 }
 
 function addProjectToWorkspaceJson(
-  host: Tree,
+  tree: Tree,
   projectName: string,
   project: ProjectConfiguration & NxJsonProjectConfiguration,
   mode: 'create' | 'update' | 'delete',
   standalone: boolean = false
 ) {
-  const path = getWorkspacePath(host);
-  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
+  const path = getWorkspacePath(tree);
+  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(tree, path);
 
   validateWorkspaceJsonOperations(mode, workspaceJson, projectName);
 
   const configFile =
     mode === 'create' && standalone
       ? joinPathFragments(project.root, 'project.json')
-      : getProjectFileLocation(host, projectName);
+      : getProjectFileLocation(tree, projectName);
 
   if (configFile) {
     if (mode === 'delete') {
-      host.delete(configFile);
+      tree.delete(configFile);
       delete workspaceJson.projects[projectName];
     } else {
-      writeJson(host, configFile, project);
+      writeJson(tree, configFile, project);
     }
     if (mode === 'create') {
       workspaceJson.projects[projectName] = project.root;
@@ -319,19 +319,19 @@ function addProjectToWorkspaceJson(
     }
     workspaceJson.projects[projectName] = workspaceConfiguration;
   }
-  writeJson(host, path, workspaceJson);
+  writeJson(tree, path, workspaceJson);
 }
 
 function addProjectToNxJson(
-  host: Tree,
+  tree: Tree,
   projectName: string,
   config: NxJsonProjectConfiguration,
   mode: 'create' | 'update' | 'delete'
 ) {
   // distributed project files do not use nx.json,
   // so only proceed if the project does not use them.
-  if (!getProjectFileLocation(host, projectName)) {
-    const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  if (!getProjectFileLocation(tree, projectName)) {
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     if (mode === 'delete') {
       delete nxJson.projects[projectName];
     } else {
@@ -342,12 +342,12 @@ function addProjectToNxJson(
         ...(config || {}),
       };
     }
-    writeJson(host, 'nx.json', nxJson);
+    writeJson(tree, 'nx.json', nxJson);
   }
 }
 
-function readWorkspace(host: Tree): WorkspaceJsonConfiguration {
-  const workspaceJson = inlineProjectConfigurationsWithTree(host);
+function readWorkspace(tree: Tree): WorkspaceJsonConfiguration {
+  const workspaceJson = inlineProjectConfigurationsWithTree(tree);
   const originalVersion = workspaceJson.version;
   return {
     ...toNewFormat(workspaceJson),
@@ -362,16 +362,16 @@ function readWorkspace(host: Tree): WorkspaceJsonConfiguration {
  * @returns
  */
 function inlineProjectConfigurationsWithTree(
-  host: Tree
+  tree: Tree
 ): WorkspaceJsonConfiguration {
-  const path = getWorkspacePath(host);
-  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
+  const path = getWorkspacePath(tree);
+  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(tree, path);
   Object.entries(workspaceJson.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
       const configFileLocation = joinPathFragments(config, 'project.json');
       workspaceJson.projects[project] = readJson<
         ProjectConfiguration & NxJsonProjectConfiguration
-      >(host, configFileLocation);
+      >(tree, configFileLocation);
     }
   });
   return workspaceJson as WorkspaceJsonConfiguration;
@@ -381,10 +381,10 @@ function inlineProjectConfigurationsWithTree(
  * @description Determine where a project's configuration is located.
  * @returns file path if separate from root config, null otherwise.
  */
-function getProjectFileLocation(host: Tree, project: string): string | null {
+function getProjectFileLocation(tree: Tree, project: string): string | null {
   const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
-    host,
-    getWorkspacePath(host)
+    tree,
+    getWorkspacePath(tree)
   );
   const projectConfig = rawWorkspace.projects?.[project];
   return typeof projectConfig === 'string'

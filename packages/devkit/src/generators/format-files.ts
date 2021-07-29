@@ -8,27 +8,27 @@ import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 /**
  * Formats all the created or updated files using Prettier
- * @param host - the file system tree
+ * @param tree - the file system tree
  */
-export async function formatFiles(host: Tree): Promise<void> {
+export async function formatFiles(tree: Tree): Promise<void> {
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
   } catch {}
 
-  updateWorkspaceJsonToMatchFormatVersion(host);
-  sortWorkspaceJson(host);
-  sortNxJson(host);
-  sortTsConfig(host);
+  updateWorkspaceJsonToMatchFormatVersion(tree);
+  sortWorkspaceJson(tree);
+  sortNxJson(tree);
+  sortTsConfig(tree);
 
   if (!prettier) return;
 
   const files = new Set(
-    host.listChanges().filter((file) => file.type !== 'DELETE')
+    tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
   await Promise.all(
     Array.from(files).map(async (file) => {
-      const systemPath = path.join(host.root, file.path);
+      const systemPath = path.join(tree.root, file.path);
       let options: Prettier.Options = {
         filepath: systemPath,
       };
@@ -48,7 +48,7 @@ export async function formatFiles(host: Tree): Promise<void> {
       }
 
       try {
-        host.write(
+        tree.write(
           file.path,
           prettier.format(file.content.toString('utf-8'), options)
         );
@@ -59,17 +59,17 @@ export async function formatFiles(host: Tree): Promise<void> {
   );
 }
 
-function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
-  const path = getWorkspacePath(host);
+function updateWorkspaceJsonToMatchFormatVersion(tree: Tree) {
+  const path = getWorkspacePath(tree);
   if (!path) {
     return;
   }
 
   try {
-    const workspaceJson = readJson(host, path);
+    const workspaceJson = readJson(tree, path);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      writeJson(host, path, reformatted);
+      writeJson(tree, path, reformatted);
     }
   } catch (e) {
     console.error(`Failed to format: ${path}`);
@@ -77,17 +77,17 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
   }
 }
 
-function sortWorkspaceJson(host: Tree) {
-  const workspaceJsonPath = getWorkspacePath(host);
+function sortWorkspaceJson(tree: Tree) {
+  const workspaceJsonPath = getWorkspacePath(tree);
   if (!path) {
     return;
   }
 
   try {
-    const workspaceJson = readJson(host, workspaceJsonPath);
+    const workspaceJson = readJson(tree, workspaceJsonPath);
     if (Object.entries(workspaceJson.projects).length !== 0) {
       const sortedProjects = sortObjectByKeys(workspaceJson.projects);
-      writeJson(host, workspaceJsonPath, {
+      writeJson(tree, workspaceJsonPath, {
         ...workspaceJson,
         projects: sortedProjects,
       });
@@ -97,11 +97,11 @@ function sortWorkspaceJson(host: Tree) {
   }
 }
 
-function sortNxJson(host: Tree) {
+function sortNxJson(tree: Tree) {
   try {
-    const nxJson = readJson(host, 'nx.json');
+    const nxJson = readJson(tree, 'nx.json');
     const sortedProjects = sortObjectByKeys(nxJson.projects);
-    writeJson(host, 'nx.json', {
+    writeJson(tree, 'nx.json', {
       ...nxJson,
       projects: sortedProjects,
     });
@@ -110,11 +110,11 @@ function sortNxJson(host: Tree) {
   }
 }
 
-function sortTsConfig(host: Tree) {
+function sortTsConfig(tree: Tree) {
   try {
-    const tsconfig = readJson(host, 'tsconfig.base.json');
+    const tsconfig = readJson(tree, 'tsconfig.base.json');
     const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
-    writeJson(host, 'tsconfig.base.json', {
+    writeJson(tree, 'tsconfig.base.json', {
       ...tsconfig,
       compilerOptions: {
         ...tsconfig.compilerOptions,
