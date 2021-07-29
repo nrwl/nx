@@ -40,6 +40,8 @@ export function getBaseWebpackPartial(
   const mode = isScriptOptimizeOn ? 'production' : 'development';
 
   const webpackConfig: Configuration = {
+    target: 'web', // webpack defaults to 'browserslist' which breaks Fast Refresh
+
     entry: {
       main: [options.main],
     },
