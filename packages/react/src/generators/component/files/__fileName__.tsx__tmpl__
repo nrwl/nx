@@ -33,7 +33,7 @@ export class <%= className %> extends Component<<%= className %>Props> {
     return (
       <<%= wrapper %>>
         <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>
-        <p>Welcome to <%= name %>!</p>
+        <p>Welcome to <%= className %>!</p>
         <% if (routing) { %>
           <ul>
             <li><Link to="/"><%= name %> root</Link></li>
@@ -49,7 +49,7 @@ export function <%= className %>(props: <%= className %>Props) {
   return (
     <<%= wrapper %>>
       <% if (styledModule === 'styled-jsx') { %><style jsx>{`div { color: pink; }`}</style><% } %>
-      <h1>Welcome to <%= name %>!</h1>
+      <h1>Welcome to <%= className %>!</h1>
       <% if (routing) { %>
         <ul>
           <li><Link to="/"><%= name %> root</Link></li>
