@@ -8,6 +8,6 @@ describe('<%=projectName%>: <%= componentSelector %> component', () => {
     }%>'));
     
     it('should render the component', () => {
-      cy.get('h1').should('contain', 'Welcome to <%=projectName%>!');
+      cy.get('h1').should('contain', 'Welcome to <%=componentSelector%>!');
     });
 });
