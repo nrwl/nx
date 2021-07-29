@@ -22,7 +22,7 @@ import { catchError, concatMap, last, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -58,9 +58,8 @@ export default async function* run(
 ) {
   const project = context.workspace.projects[context.projectName];
   const sourceRoot = project.sourceRoot;
-  const projGraph = await createProjectGraphAsync();
   const { target, dependencies } = calculateProjectDependencies(
-    projGraph,
+    readCachedProjectGraph(),
     context.root,
     context.projectName,
     context.targetName,

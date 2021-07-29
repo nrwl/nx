@@ -7,7 +7,7 @@ import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
 
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -137,9 +137,8 @@ export async function* run(
   const metadata = context.workspace.projects[context.projectName];
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const projGraph = await createProjectGraphAsync();
     const { dependencies } = calculateProjectDependencies(
-      projGraph,
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       context.targetName,

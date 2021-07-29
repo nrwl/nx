@@ -1,6 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
 
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -48,7 +48,7 @@ export async function* buildExecutor(
     sourceRoot,
     root
   );
-  const projGraph = await createProjectGraphAsync();
+  const projGraph = readCachedProjectGraph();
   if (!options.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
       projGraph,
