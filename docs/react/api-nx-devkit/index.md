@@ -482,7 +482,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Omit`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
 
 ## Variables
 
