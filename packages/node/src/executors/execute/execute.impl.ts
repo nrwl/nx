@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
   runExecutor,
   stripIndents,
@@ -13,10 +14,6 @@ import * as treeKill from 'tree-kill';
 
 import { NodeBuildEvent } from '../build/build.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 export const enum InspectType {
   Inspect = 'inspect',

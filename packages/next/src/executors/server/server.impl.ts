@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
   ExecutorContext,
   logger,
@@ -29,10 +30,6 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
 const readyPrefix = `[ ${chalk.green('ready')} ]`;

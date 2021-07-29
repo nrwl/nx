@@ -62,7 +62,7 @@
     "chokidar": "^3.5.1",
     "cosmiconfig": "^4.0.0",
     "fs-extra": "^9.1.0",
-    "dotenv": "8.2.0",
+    "dotenv": "~10.0.0",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
     "npm-run-all": "^4.1.5",
