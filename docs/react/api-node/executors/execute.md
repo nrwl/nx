@@ -37,7 +37,7 @@ Ensures the app is starting with debugging
 
 ### port
 
-Default: `0`
+Default: `9229`
 
 Type: `number`
 
