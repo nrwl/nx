@@ -4,15 +4,15 @@
 
 Storybook is a development environment for UI components. It allows you to browse a component library, view the different states of each component, and interactively develop and test components.
 
-## How to Use Storybook in an Nx Repo
+This guide will briefly walk you through using Storybook within an Nx workspace.
 
-### Add the Storybook plugin
+## Add the Storybook plugin
 
 ```bash
 yarn add --dev @nrwl/storybook
 ```
 
-### Generating Storybook Configuration
+## Generating Storybook Configuration
 
 You can generate Storybook configuration for an individual project with this command:
 
@@ -20,14 +20,28 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/angular:storybook-configuration project-name
 ```
 
-If there's no `.storybook` folder at the root of the workspace, one is created.
+## Running Storybook
+
+Serve Storybook using this command:
+
+```bash
+nx run project-name:storybook
+```
+
+## Anatomy of the Storybook setup
+
+When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create
+
+- a global Storybook configuration
+- a project specific Storybook configuration
+
+The **global** Storybook configuration allows to set addon-ons or custom webpack configuration at a global level that applies to all Storybook's within the Nx workspace. You can find that folder at `.storybook/` at the root of the workspace.
 
 ```treeview
 <workspace name>/
 ├── .storybook/
 │   ├── main.js
 │   ├── tsconfig.json
-│   └── webpack.config.js
 ├── apps/
 ├── libs/
 ├── nx.json
@@ -36,29 +50,59 @@ If there's no `.storybook` folder at the root of the workspace, one is created.
 └── etc...
 ```
 
-Also, a project-specific `.storybook` folder is added in the root of the project.
+The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 
 ```treeview
 <project root>/
 ├── .storybook/
 │   ├── main.js
+│   ├── preview.js
 │   ├── tsconfig.json
-│   └── webpack.config.js
 ├── src/
 ├── README.md
 ├── tsconfig.json
 └── etc...
 ```
 
-### Running Storybook
+### Using Addons
 
-Serve Storybook using this command:
+To register a [Storybook addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
-```bash
-nx run project-name:storybook
-```
+1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
+   ```typescript
+   module.exports = {
+   stories: [...],
+   ...,
+   addons: [..., '@storybook/addon-essentials'],
+   };
+   ```
+2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js`, you can export an array called `decorators`.
 
-### Auto-generate Stories
+   ```typescript
+   import someDecorator from 'some-storybook-addon';
+   export const decorators = [someDecorator];
+   ```
+
+**-- OR --**
+
+To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
+
+1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
+   ```typescript
+   module.exports = {
+   stories: [...],
+   ...,
+   addons: [..., '@storybook/addon-essentials'],
+   };
+   ```
+2. If a decorator is required, in `preview.js` you can export an array called `decorators`.
+
+   ```typescript
+   import someDecorator from 'some-storybook-addon';
+   export const decorators = [someDecorator];
+   ```
+
+## Auto-generate Stories
 
 The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
@@ -68,7 +112,13 @@ The `@nrwl/angular:storybook-configuration` generator has the option to automati
 └── my.component.stories.ts
 ```
 
-### Run Cypress Tests Against a Storybook Instance
+You can re-run it at a later point using the following command:
+
+```bash
+nx g @nrwl/angular:stories <project-name>
+```
+
+## Cypress tests for Stories
 
 Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
@@ -135,50 +185,13 @@ describe('shared-ui', () => {
 });
 ```
 
-### Using Addons
+## More Information
 
-To register an [addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
+For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
-1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```typescript
-   module.exports = {
-   stories: [...],
-   ...,
-   addons: [..., '@storybook/addon-essentials'],
-   };
-   ```
-2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js`, you can export an array called `decorators`.
-
-   ```typescript
-   import someDecorator from 'some-storybook-addon';
-   export const decorators = [someDecorator];
-   ```
-
-**-- OR --**
-
-To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
-
-1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```typescript
-   module.exports = {
-   stories: [...],
-   ...,
-   addons: [..., '@storybook/addon-essentials'],
-   };
-   ```
-2. If a decorator is required, in `preview.js` you can export an array called `decorators`.
-
-   ```typescript
-   import someDecorator from 'some-storybook-addon';
-   export const decorators = [someDecorator];
-   ```
-
-## Migrations
+## Migration Scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
 - [Upgrading to Storybook 6](/angular/storybook/upgrade-storybook-v6)
-
-## More Information
-
-For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
+- [Migrate to the new Storybook `webpackFinal` config](/angular/storybook/migrate-webpack-final)
