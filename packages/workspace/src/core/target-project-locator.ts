@@ -60,8 +60,9 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
-    if (this.paths && this.paths[normalizedImportExpr]) {
-      for (let p of this.paths[normalizedImportExpr]) {
+    const paths = this.findPaths(normalizedImportExpr);
+    if (paths) {
+      for (let p of paths) {
         const maybeResolvedProject = this.findProjectOfResolvedModule(p);
         if (maybeResolvedProject) {
           return maybeResolvedProject;
@@ -69,6 +70,63 @@ export class TargetProjectLocator {
       }
     }
 
+    // try to find npm package before using expensive typescript resolution
+    const npmProject = this.findNpmPackage(normalizedImportExpr);
+    if (npmProject) {
+      return npmProject;
+    }
+
+    // TODO(meeroslav): this block is probably obsolete
+    // and existed only because of the incomplete `paths` matching
+    // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
+    const resolvedProject = this.resolveImportWithTypescript(
+      normalizedImportExpr,
+      filePath
+    );
+    if (resolvedProject) {
+      return resolvedProject;
+    }
+
+    // TODO(meeroslav): this block should be removed as it's going around typescript paths
+    // unless we want to support local JS projects
+    const importedProject = this.sortedWorkspaceProjects.find((p) => {
+      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
+      return (
+        normalizedImportExpr === projectImport ||
+        normalizedImportExpr.startsWith(`${projectImport}/`)
+      );
+    });
+    if (importedProject) {
+      return importedProject.name;
+    }
+
+    // nothing found, cache for later
+    this.npmResolutionCache.set(normalizedImportExpr, undefined);
+    return null;
+  }
+
+  private findPaths(normalizedImportExpr: string): string[] | undefined {
+    if (!this.paths) {
+      return undefined;
+    }
+    if (this.paths[normalizedImportExpr]) {
+      return this.paths[normalizedImportExpr];
+    }
+    const wildcardPath = Object.keys(this.paths).find(
+      (path) =>
+        path.endsWith('/*') &&
+        normalizedImportExpr.startsWith(path.replace(/\/\*$/, ''))
+    );
+    if (wildcardPath) {
+      return this.paths[wildcardPath];
+    }
+    return undefined;
+  }
+
+  private resolveImportWithTypescript(
+    normalizedImportExpr: string,
+    filePath: string
+  ): string | undefined {
     let resolvedModule: string;
     if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
       resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
@@ -91,28 +149,7 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
-
-    // try to find npm package before using expensive typescript resolution
-    const npmProject = this.findNpmPackage(importExpr);
-    if (npmProject || this.npmResolutionCache.has(importExpr)) {
-      return npmProject;
-    }
-
-    // TODO: meeroslav this block should be probably removed
-    const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
-      return (
-        normalizedImportExpr === projectImport ||
-        normalizedImportExpr.startsWith(`${projectImport}/`)
-      );
-    });
-    if (importedProject) {
-      return importedProject.name;
-    }
-
-    // nothing found, cache for later
-    this.npmResolutionCache.set(importExpr, undefined);
-    return null;
+    return;
   }
 
   private findNpmPackage(npmImport: string): string | undefined {
@@ -131,21 +168,28 @@ export class TargetProjectLocator {
     }
   }
 
-  private findProjectOfResolvedModule(resolvedModule: string) {
+  private findProjectOfResolvedModule(
+    resolvedModule: string
+  ): string | undefined {
+    const normalizedModulePath = this.getAbsolutePath(resolvedModule);
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      return resolvedModule.startsWith(p.data.root);
+      return normalizedModulePath.startsWith(this.getAbsolutePath(p.data.root));
     });
 
     return importedProject ? importedProject.name : void 0;
   }
 
+  private getAbsolutePath(path: string) {
+    return join(appRootPath, path);
+  }
+
   private getRootTsConfig() {
     let path = 'tsconfig.base.json';
-    let absolutePath = join(appRootPath, path);
+    let absolutePath = this.getAbsolutePath(path);
     let content = readFileIfExisting(absolutePath);
     if (!content) {
       path = 'tsconfig.json';
-      absolutePath = join(appRootPath, path);
+      absolutePath = this.getAbsolutePath(path);
       content = readFileIfExisting(absolutePath);
     }
     return { path, absolutePath, config: parseJson(content) };
