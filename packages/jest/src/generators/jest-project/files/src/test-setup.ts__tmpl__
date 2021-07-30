@@ -1,1 +1,0 @@
-<% if (setupFile === 'web-components') { %>import 'document-register-element';<% } %>

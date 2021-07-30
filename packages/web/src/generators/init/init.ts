@@ -10,10 +10,7 @@ import {
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Schema } from './schema';
-import {
-  documentRegisterElementVersion,
-  nxVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { jestInitGenerator } from '@nrwl/jest';
 
@@ -27,7 +24,6 @@ function updateDependencies(tree: Tree) {
     tree,
     {
       'core-js': '^3.6.5',
-      'document-register-element': documentRegisterElementVersion,
       'regenerator-runtime': '0.13.7',
       tslib: '^2.0.0',
     },
