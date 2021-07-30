@@ -42,7 +42,7 @@ function hasTag(proj: ProjectGraphNode, tag: string) {
 }
 
 function removeExt(file: string): string {
-  return file.replace(/\.[^/.]+$/, '');
+  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
 }
 
 export function matchImportWithWildcard(

@@ -47,7 +47,7 @@ export function readCachedProjectGraph(): ProjectGraph {
   if (!projectGraphCache) {
     throw new Error(`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
-      
+
       If you are leveraging \`readCachedProjectGraph()\` directly then you will need to refactor your usage to first ensure that
       the ProjectGraph is created by calling \`await createProjectGraphAsync()\` somewhere before attempting to read the data.
 
