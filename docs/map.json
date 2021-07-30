@@ -596,6 +596,11 @@
             "file": "angular/guides/storybook-plugin"
           },
           {
+            "id": "upgrade-storybook-v6",
+            "name": "Upgrading to Storybook 6",
+            "file": "angular/guides/storybook/storybook-v6"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "angular/api-storybook/generators/configuration"
@@ -1765,6 +1770,11 @@
             "name": "Overview",
             "searchResultsName": "@nrwl/storybook Overview",
             "file": "react/guides/storybook-plugin"
+          },
+          {
+            "id": "upgrade-storybook-v6",
+            "name": "Upgrading to Storybook 6",
+            "file": "react/guides/storybook-migration/storybook-v6"
           },
           {
             "name": "configuration generator",
