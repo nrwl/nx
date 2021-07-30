@@ -53,4 +53,33 @@ describe('next library', () => {
       plugins: [],
     });
   });
+
+  it('should use @nrwl/next images.d.ts file', async () => {
+    const baseOptions: Schema = {
+      name: '',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    };
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      ...baseOptions,
+      name: 'myLib',
+    });
+    const tsconfigFiles = readJson(
+      appTree,
+      'libs/my-lib/tsconfig.lib.json'
+    ).files;
+
+    expect(tsconfigFiles).toContain(
+      '../../node_modules/@nrwl/next/typings/image.d.ts'
+    );
+    expect(tsconfigFiles).not.toContain(
+      '../../node_modules/@nrwl/react/typings/image.d.ts'
+    );
+  });
 });
