@@ -77,6 +77,33 @@ describe('@nrwl/storybook:configuration', () => {
     ).toBeFalsy();
   });
 
+  it('should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    expect(
+      tree.read('libs/test-ui-lib/.storybook/main.js', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should reference the "old" webpack.config.js if there - for backwards compatibility', async () => {
+    // create a root webpack.config.js as in "old" storybook workspaces
+    tree.write('.storybook/webpack.config.js', 'export const test ="hi"');
+
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    expect(
+      tree.read('libs/test-ui-lib/.storybook/main.js', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
   it('should not update root files after generating them once', async () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',

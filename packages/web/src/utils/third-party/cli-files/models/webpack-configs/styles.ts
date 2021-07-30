@@ -13,7 +13,7 @@ import {
   RemoveHashPlugin,
   SuppressExtractedTextChunksWebpackPlugin,
 } from '../../plugins/webpack';
-import { WebpackConfigOptions } from '../build-options';
+import { BuildOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
 import { RemoveEmptyScriptsPlugin } from '../../plugins/remove-empty-scripts-plugin';
 import { sassImplementation } from '../../../../sass';
@@ -39,7 +39,8 @@ type RuleSetRule = any;
  */
 // tslint:disable-next-line:no-big-function
 export function getStylesConfig(
-  wco: WebpackConfigOptions,
+  root: string,
+  buildOptions: BuildOptions,
   includePaths: string[]
 ) {
   // TODO(jack): Remove this in Nx 13 and go back to proper imports
@@ -48,7 +49,6 @@ export function getStylesConfig(
     MiniCssExtractPlugin,
   } = require('../../../../../webpack/entry');
 
-  const { root, buildOptions } = wco;
   const entryPoints: { [key: string]: string[] } = {};
   const globalStylePaths: string[] = [];
   const extraPlugins = [];

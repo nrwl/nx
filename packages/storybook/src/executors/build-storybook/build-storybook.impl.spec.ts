@@ -47,9 +47,9 @@ describe('Build storybook', () => {
         __dirname,
         `/../../generators/configuration/root-files/.storybook/main.js`
       ),
-      configPath: join(
+      configFolder: join(
         __dirname,
-        `/../../generators/configuration/root-files/.storybook/webpack.config.js`
+        `/../../generators/configuration/root-files/.storybook`
       ),
       srcRoot: join(
         __dirname,

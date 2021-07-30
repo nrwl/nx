@@ -26,7 +26,6 @@ import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
-
 export async function configurationGenerator(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
@@ -148,6 +147,7 @@ function createProjectStorybookDir(
     offsetFromRoot: offsetFromRoot(root),
     projectType: projectDirectory,
     useWebpack5: uiFramework === '@storybook/angular',
+    existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
   });
 
   if (js) {
