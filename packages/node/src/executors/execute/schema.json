@@ -23,7 +23,7 @@
     },
     "port": {
       "type": "number",
-      "default": 0,
+      "default": 9229,
       "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes."
     },
     "watch": {
