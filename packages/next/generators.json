@@ -48,6 +48,12 @@
       "factory": "./src/generators/component/component#componentGenerator",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a component"
+    },
+    "library": {
+      "factory": "./src/generators/library/library#libraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a library"
     }
   }
 }
