@@ -9,7 +9,7 @@ import type {
   ProjectGraphProcessorContext,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { ProjectGraphBuilder, readJsonFile } from '@nrwl/devkit';
+import { ProjectGraphBuilder, readJsonFile, logger } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -200,18 +200,31 @@ function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
-  const plugins = (context.workspace.plugins || []).map((path) => {
-    const pluginPath = require.resolve(path, {
-      paths: [appRootPath],
-    });
-    return require(pluginPath) as NxPlugin;
-  });
+  return (context.workspace.plugins || []).reduce((graph, path) => {
+    try {
+      const pluginPath = require.resolve(path, {
+        paths: [appRootPath],
+      });
 
-  return plugins.reduce((graph, plugin) => {
-    if (!plugin.processProjectGraph) {
+      const pluginModule = require(pluginPath) as NxPlugin;
+
+      if (!pluginModule.processProjectGraph) {
+        return graph;
+      }
+
+      return pluginModule.processProjectGraph(graph, context);
+    } catch (e) {
+      const message = `Failed to process the project graph with "${path}". This will error in the future!`;
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(e);
+        logger.error(message);
+        return graph;
+      } else {
+        logger.warn(message);
+        logger.warn(`Run with NX_VERBOSE_LOGGING=true to see the error.`);
+      }
       return graph;
     }
-    return plugin.processProjectGraph(graph, context);
   }, initProjectGraph);
 }
 
