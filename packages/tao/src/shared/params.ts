@@ -4,9 +4,12 @@ import { logger } from './logger';
 
 type PropertyDescription = {
   type?: string;
+  required?: string[];
   enum?: string[];
   properties?: any;
-  oneOf?: any;
+  oneOf?: PropertyDescription[];
+  anyOf?: PropertyDescription[];
+  allOf?: PropertyDescription[];
   items?: any;
   alias?: string;
   aliases?: string[];
@@ -16,10 +19,23 @@ type PropertyDescription = {
   default?: string | number | boolean | string[];
   $ref?: string;
   $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
+  additionalProperties?: boolean;
   'x-prompt'?:
     | string
     | { message: string; type: string; items: any[]; multiselect?: boolean };
   'x-deprecated'?: boolean | string;
+
+  // Numbers Only
+  multipleOf?: number;
+  minimum?: number;
+  exclusiveMinimum?: number;
+  maximum?: number;
+  exclusiveMaximum?: number;
+
+  // Strings Only
+  pattern?: string;
+  minLength?: number;
+  maxLength?: number;
 };
 
 type Properties = {
@@ -205,7 +221,7 @@ export function validateObject(
 function validateProperty(
   propName: string,
   value: any,
-  schema: any,
+  schema: PropertyDescription,
   definitions: Properties
 ) {
   if (!schema) return;
@@ -218,8 +234,26 @@ function validateProperty(
     if (!Array.isArray(schema.oneOf))
       throw new Error(`Invalid schema file. oneOf must be an array.`);
 
+    const passes =
+      schema.oneOf.filter((r) => {
+        try {
+          const rule = { type: schema.type, ...r };
+          validateProperty(propName, value, rule, definitions);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }).length === 1;
+    if (!passes) throwInvalidSchema(propName, schema);
+    return;
+  }
+
+  if (schema.anyOf) {
+    if (!Array.isArray(schema.anyOf))
+      throw new Error(`Invalid schema file. anyOf must be an array.`);
+
     let passes = false;
-    schema.oneOf.forEach((r) => {
+    schema.anyOf.forEach((r) => {
       try {
         const rule = { type: schema.type, ...r };
         validateProperty(propName, value, rule, definitions);
@@ -227,6 +261,26 @@ function validateProperty(
       } catch (e) {}
     });
     if (!passes) throwInvalidSchema(propName, schema);
+    return;
+  }
+
+  if (schema.allOf) {
+    if (!Array.isArray(schema.allOf))
+      throw new Error(`Invalid schema file. anyOf must be an array.`);
+
+    if (
+      !schema.allOf.every((r) => {
+        try {
+          const rule = { type: schema.type, ...r };
+          validateProperty(propName, value, rule, definitions);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      })
+    ) {
+      throwInvalidSchema(propName, schema);
+    }
     return;
   }
 
@@ -246,10 +300,50 @@ function validateProperty(
       );
     }
 
-    if (schema.type === 'string' && schema.pattern) {
-      if (!new RegExp(schema.pattern).test(value)) {
+    if (schema.type === 'number') {
+      if (schema.multipleOf && value % schema.multipleOf !== 0) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. ${value} should be a multiple of ${schema.multipleOf}.`
+        );
+      }
+      if (schema.minimum && value < schema.minimum) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. ${value} should be at least ${schema.minimum}`
+        );
+      }
+      if (schema.exclusiveMinimum && value <= schema.exclusiveMinimum) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. ${value} should be greater than ${schema.exclusiveMinimum}`
+        );
+      }
+      if (schema.maximum && value > schema.maximum) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. ${value} should be at most ${schema.maximum}`
+        );
+      }
+      if (schema.exclusiveMaximum && value >= schema.exclusiveMaximum) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. ${value} should be less than ${schema.exclusiveMaximum}`
+        );
+      }
+    }
+
+    if (schema.type === 'string') {
+      if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. '${value}' should match the pattern '${schema.pattern}'.`
+        );
+      }
+
+      if (schema.minLength && value.length < schema.minLength) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at least ${schema.minLength} character(s).`
+        );
+      }
+
+      if (schema.maxLength && value.length > schema.maxLength) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at most ${schema.maxLength} character(s).`
         );
       }
     }

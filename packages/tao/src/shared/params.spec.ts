@@ -499,36 +499,209 @@ describe('params', () => {
       ).toThrow("'b' is not found in schema");
     });
 
-    it("should throw if the type doesn't match (primitive types)", () => {
-      expect(() =>
-        validateOptsAgainstSchema(
-          { a: 'string' },
-          {
-            properties: {
-              a: {
-                type: 'boolean',
+    describe('primitive types', () => {
+      it("should throw if the type doesn't match", () => {
+        expect(() =>
+          validateOptsAgainstSchema(
+            { a: 'string' },
+            {
+              properties: {
+                a: {
+                  type: 'boolean',
+                },
               },
-            },
-          }
-        )
-      ).toThrow(
-        "Property 'a' does not match the schema. 'string' should be a 'boolean'."
-      );
-    });
+            }
+          )
+        ).toThrow(
+          "Property 'a' does not match the schema. 'string' should be a 'boolean'."
+        );
+      });
 
-    it('should not throw if the schema type is absent (primitive types)', () => {
-      expect(() =>
-        validateOptsAgainstSchema(
-          { a: 'string' },
-          {
+      it('should not throw if the schema type is absent', () => {
+        expect(() =>
+          validateOptsAgainstSchema(
+            { a: 'string' },
+            {
+              properties: {
+                a: {
+                  default: false,
+                },
+              },
+            }
+          )
+        ).not.toThrow();
+      });
+
+      describe('string', () => {
+        it('should handle validating patterns', () => {
+          const schema = {
             properties: {
               a: {
-                default: false,
+                type: 'string',
+                pattern: '^a',
               },
             },
-          }
-        )
-      ).not.toThrow();
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'abc' }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'xyz' }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`
+          );
+        });
+
+        it('should handle validating minLength', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'string',
+                minLength: 2,
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'a' }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 'a' (1 character(s)) should have at least 2 character(s)."`
+          );
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'abc' }, schema)
+          ).not.toThrow();
+        });
+        it('should handle validating maxLength', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'string',
+                pattern: '^a',
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'abc' }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'xyz' }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`
+          );
+        });
+      });
+
+      describe('number', () => {
+        it('should handle validating multiples of', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'number',
+                multipleOf: 3,
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 6 }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 5 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 5 should be a multiple of 3."`
+          );
+        });
+
+        it('should handle validating minimum', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'number',
+                minimum: 3,
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 2 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 2 should be at least 3"`
+          );
+          expect(() =>
+            validateOptsAgainstSchema({ a: 3 }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 4 }, schema)
+          ).not.toThrow();
+        });
+
+        it('should handle validating exclusive minimum', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'number',
+                exclusiveMinimum: 3,
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 2 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 2 should be greater than 3"`
+          );
+          expect(() =>
+            validateOptsAgainstSchema({ a: 3 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 3 should be greater than 3"`
+          );
+          expect(() =>
+            validateOptsAgainstSchema({ a: 4 }, schema)
+          ).not.toThrow();
+        });
+
+        it('should handle validating maximum', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'number',
+                maximum: 3,
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 2 }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 3 }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 4 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 4 should be at most 3"`
+          );
+        });
+
+        it('should handle vavlidating exclusive maximum', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: 'number',
+                exclusiveMaximum: 3,
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 2 }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 3 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 3 should be less than 3"`
+          );
+          expect(() =>
+            validateOptsAgainstSchema({ a: 4 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. 4 should be less than 3"`
+          );
+        });
+      });
     });
 
     it('should handle one of', () => {
@@ -554,19 +727,44 @@ describe('params', () => {
     });
 
     it('should handle oneOf with factorized type', () => {
-      expect(() =>
-        validateOptsAgainstSchema(
-          { a: 10 },
-          {
-            properties: {
-              a: {
-                type: 'number',
-                oneOf: [{ multipleOf: 5 }, { multipleOf: 3 }],
-              },
-            },
-          }
-        )
-      ).not.toThrow();
+      const schema = {
+        properties: {
+          a: {
+            type: 'number',
+            oneOf: [{ multipleOf: 5 }, { multipleOf: 3 }],
+          },
+        },
+      };
+      expect(() => validateOptsAgainstSchema({ a: 10 }, schema)).not.toThrow();
+      expect(() => validateOptsAgainstSchema({ a: 15 }, schema)).toThrow();
+    });
+
+    it('should handle anyOf', () => {
+      const schema = {
+        properties: {
+          a: {
+            type: 'number',
+            anyOf: [{ multipleOf: 5 }, { multipleOf: 3 }],
+          },
+        },
+      };
+      expect(() => validateOptsAgainstSchema({ a: 4 }, schema)).toThrow();
+      expect(() => validateOptsAgainstSchema({ a: 10 }, schema)).not.toThrow();
+      expect(() => validateOptsAgainstSchema({ a: 15 }, schema)).not.toThrow();
+    });
+
+    it('should handle all of', () => {
+      const schema = {
+        properties: {
+          a: {
+            type: 'number',
+            allOf: [{ multipleOf: 5 }, { multipleOf: 3 }],
+          },
+        },
+      };
+      expect(() => validateOptsAgainstSchema({ a: 4 }, schema)).toThrow();
+      expect(() => validateOptsAgainstSchema({ a: 10 }, schema)).toThrow();
+      expect(() => validateOptsAgainstSchema({ a: 15 }, schema)).not.toThrow();
     });
 
     it('should handle oneOf properties explicit types', () => {
