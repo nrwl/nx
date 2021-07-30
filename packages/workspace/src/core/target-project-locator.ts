@@ -171,20 +171,25 @@ export class TargetProjectLocator {
   private findProjectOfResolvedModule(
     resolvedModule: string
   ): string | undefined {
+    const normalizedModulePath = this.getAbsolutePath(resolvedModule);
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      return resolvedModule.startsWith(p.data.root);
+      return normalizedModulePath.startsWith(this.getAbsolutePath(p.data.root));
     });
 
     return importedProject ? importedProject.name : void 0;
   }
 
+  private getAbsolutePath(path: string) {
+    return join(appRootPath, path);
+  }
+
   private getRootTsConfig() {
     let path = 'tsconfig.base.json';
-    let absolutePath = join(appRootPath, path);
+    let absolutePath = this.getAbsolutePath(path);
     let content = readFileIfExisting(absolutePath);
     if (!content) {
       path = 'tsconfig.json';
-      absolutePath = join(appRootPath, path);
+      absolutePath = this.getAbsolutePath(path);
       content = readFileIfExisting(absolutePath);
     }
     return { path, absolutePath, config: parseJson(content) };
