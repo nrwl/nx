@@ -1774,7 +1774,7 @@
           {
             "id": "upgrade-storybook-v6",
             "name": "Upgrading to Storybook 6",
-            "file": "react/guides/storybook-migration/storybook-v6"
+            "file": "react/guides/storybook/storybook-v6"
           },
           {
             "name": "configuration generator",
