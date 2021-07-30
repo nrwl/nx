@@ -1,9 +1,5 @@
 import {
-  babelCoreVersion,
   babelJestVersion,
-  babelPresetEnvVersion,
-  babelPresetReactVersion,
-  babelPresetTypescriptVersion,
   jestTypesVersion,
   jestVersion,
   nxVersion,
@@ -11,11 +7,11 @@ import {
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 import {
-  Tree,
-  updateJson,
   addDependenciesToPackageJson,
   convertNxGenerator,
   stripIndents,
+  Tree,
+  updateJson,
 } from '@nrwl/devkit';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
@@ -67,10 +63,6 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   };
 
   if (options.babelJest) {
-    devDeps['@babel/core'] = babelCoreVersion;
-    devDeps['@babel/preset-env'] = babelPresetEnvVersion;
-    devDeps['@babel/preset-typescript'] = babelPresetTypescriptVersion;
-    devDeps['@babel/preset-react'] = babelPresetReactVersion;
     devDeps['babel-jest'] = babelJestVersion;
   }
 
