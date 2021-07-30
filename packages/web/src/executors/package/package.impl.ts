@@ -1,21 +1,10 @@
-import { readJsonFile, writeJsonFile, logger, names } from '@nrwl/devkit';
 import type { ExecutorContext, ProjectGraphNode } from '@nrwl/devkit';
+import { logger, names, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as localResolve from 'rollup-plugin-local-resolve';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
-
-// These use require because the ES import isn't correct.
-const resolve = require('@rollup/plugin-node-resolve');
-const commonjs = require('@rollup/plugin-commonjs');
-const typescript = require('rollup-plugin-typescript2');
-const image = require('@rollup/plugin-image');
-const json = require('@rollup/plugin-json');
-const copy = require('rollup-plugin-copy');
-const postcss = require('rollup-plugin-postcss');
-const filesize = require('rollup-plugin-filesize');
-
 import { join, relative } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, tap } from 'rxjs/operators';
@@ -39,6 +28,16 @@ import {
 import { deleteOutputDir } from '../../utils/delete-output-dir';
 import { runRollup } from './run-rollup';
 
+// These use require because the ES import isn't correct.
+const resolve = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
+const typescript = require('rollup-plugin-typescript2');
+const image = require('@rollup/plugin-image');
+const json = require('@rollup/plugin-json');
+const copy = require('rollup-plugin-copy');
+const postcss = require('rollup-plugin-postcss');
+const filesize = require('rollup-plugin-filesize');
+
 interface OutputConfig {
   format: rollup.ModuleFormat;
   extension: string;
@@ -57,9 +56,10 @@ export default async function* run(
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
+  const projectGraph = readCachedProjectGraph();
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(),
+    projectGraph,
     context.root,
     context.projectName,
     context.targetName,
@@ -85,12 +85,17 @@ export default async function* run(
   const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
   const packageJson = readJsonFile(options.project);
 
+  const npmDeps = (projectGraph[context.projectName] ?? [])
+    .filter((d) => d.target.startsWith('npm:'))
+    .map((d) => d.target.substr(4));
+
   const rollupOptions = createRollupOptions(
     options,
     dependencies,
     context,
     packageJson,
-    sourceRoot
+    sourceRoot,
+    npmDeps
   );
 
   if (options.watch) {
@@ -166,7 +171,8 @@ export function createRollupOptions(
   dependencies: DependentBuildableProjectNode[],
   context: ExecutorContext,
   packageJson: any,
-  sourceRoot: string
+  sourceRoot: string,
+  npmDeps: string[]
 ): rollup.InputOptions[] {
   return outputConfigs.map((config) => {
     const compilerOptions = createCompilerOptions(
@@ -253,7 +259,9 @@ export function createRollupOptions(
         file: `${options.outputPath}/${context.projectName}.${config.extension}.js`,
         name: options.umdName || names(context.projectName).className,
       },
-      external: (id) => externalPackages.includes(id),
+      external: (id) =>
+        externalPackages.includes(id) ||
+        npmDeps.some((name) => id === name || id.startsWith(`${name}/`)), // Could be a deep import
       plugins,
     };
 
