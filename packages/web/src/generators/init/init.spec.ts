@@ -30,7 +30,6 @@ describe('init', () => {
     expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies['@nrwl/web']).toBeUndefined();
-    expect(packageJson.dependencies['document-register-element']).toBeDefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
   });
 

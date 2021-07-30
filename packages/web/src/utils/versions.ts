@@ -1,2 +1,2 @@
 export const nxVersion = '*';
-export const documentRegisterElementVersion = '1.13.1';
+export const coreJsVersion = '^3.16.0';
