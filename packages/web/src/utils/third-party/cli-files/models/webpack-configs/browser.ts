@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import { WebpackConfigOptions } from '../build-options';
+import { WebpackConfigOptions, BuildOptions } from '../build-options';
 import {
   getSourceMapDevTool,
   isPolyfillsEntry,

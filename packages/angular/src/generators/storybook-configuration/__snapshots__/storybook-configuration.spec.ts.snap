@@ -3,13 +3,31 @@
 exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
 "const rootMain = require('../../../.storybook/main');
 
-rootMain.core = { ...rootMain.core, builder: 'webpack5' };
 
-// Use the following syntax to add addons!
-// rootMain.addons.push('');
-rootMain.stories.push(...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'])
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
 
-module.exports = rootMain;
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
 "
 `;
 
@@ -19,7 +37,6 @@ Array [
   ".prettierrc",
   ".storybook/main.js",
   ".storybook/tsconfig.json",
-  ".storybook/webpack.config.js",
   "apps/one/two/test-ui-lib-e2e/.eslintrc.json",
   "apps/one/two/test-ui-lib-e2e/cypress.json",
   "apps/one/two/test-ui-lib-e2e/src/fixtures/example.json",
@@ -40,7 +57,6 @@ Array [
   "libs/test-ui-lib/.storybook/main.js",
   "libs/test-ui-lib/.storybook/preview.js",
   "libs/test-ui-lib/.storybook/tsconfig.json",
-  "libs/test-ui-lib/.storybook/webpack.config.js",
   "libs/test-ui-lib/jest.config.js",
   "libs/test-ui-lib/README.md",
   "libs/test-ui-lib/src/index.ts",
@@ -96,7 +112,6 @@ Array [
   ".prettierrc",
   ".storybook/main.js",
   ".storybook/tsconfig.json",
-  ".storybook/webpack.config.js",
   "apps/test-ui-lib-e2e/.eslintrc.json",
   "apps/test-ui-lib-e2e/cypress.json",
   "apps/test-ui-lib-e2e/src/fixtures/example.json",
@@ -117,7 +132,6 @@ Array [
   "libs/test-ui-lib/.storybook/main.js",
   "libs/test-ui-lib/.storybook/preview.js",
   "libs/test-ui-lib/.storybook/tsconfig.json",
-  "libs/test-ui-lib/.storybook/webpack.config.js",
   "libs/test-ui-lib/jest.config.js",
   "libs/test-ui-lib/README.md",
   "libs/test-ui-lib/src/index.ts",

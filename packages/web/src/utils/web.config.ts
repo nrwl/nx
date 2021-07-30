@@ -56,8 +56,13 @@ export function getWebConfig(
       tsConfig.options.emitDecoratorMetadata,
       configuration
     ),
-    getPolyfillsPartial(options, esm, isScriptOptimizeOn),
-    getStylesPartial(wco, options),
+    getPolyfillsPartial(
+      options.polyfills,
+      options.es2015Polyfills,
+      esm,
+      isScriptOptimizeOn
+    ),
+    getStylesPartial(wco.root, wco.buildOptions, options.extractCss),
     getCommonPartial(wco),
     getBrowserPartial(wco, options, isScriptOptimizeOn),
   ]);
@@ -136,9 +141,10 @@ function getCommonPartial(wco: any): Configuration {
   return commonConfig;
 }
 
-function getStylesPartial(
-  wco: any,
-  options: WebBuildBuilderOptions
+export function getStylesPartial(
+  root: string,
+  options: any,
+  extractCss: boolean
 ): Configuration {
   // TODO(jack): Remove this in Nx 13 and go back to proper imports
   const { MiniCssExtractPlugin } = require('../webpack/entry');
@@ -148,11 +154,11 @@ function getStylesPartial(
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
       (includePath: string) =>
-        includePaths.push(path.resolve(wco.root, includePath))
+        includePaths.push(path.resolve(root, includePath))
     );
   }
 
-  const partial = getStylesConfig(wco, includePaths);
+  const partial = getStylesConfig(root, options, includePaths);
   const rules = partial.module.rules.map((rule) => {
     if (!Array.isArray(rule.use)) {
       return rule;
@@ -187,7 +193,7 @@ function getStylesPartial(
           test: /\.module\.css$/,
           use: [
             {
-              loader: options.extractCss
+              loader: extractCss
                 ? MiniCssExtractPlugin.loader
                 : require.resolve('style-loader'),
             },
@@ -233,7 +239,7 @@ function getStylesPartial(
           test: /\.module\.(scss|sass)$/,
           use: [
             {
-              loader: options.extractCss
+              loader: extractCss
                 ? MiniCssExtractPlugin.loader
                 : require.resolve('style-loader'),
             },
@@ -258,7 +264,7 @@ function getStylesPartial(
           test: /\.module\.less$/,
           use: [
             {
-              loader: options.extractCss
+              loader: extractCss
                 ? MiniCssExtractPlugin.loader
                 : require.resolve('style-loader'),
             },
@@ -278,7 +284,7 @@ function getStylesPartial(
           test: /\.module\.styl$/,
           use: [
             {
-              loader: options.extractCss
+              loader: extractCss
                 ? MiniCssExtractPlugin.loader
                 : require.resolve('style-loader'),
             },
@@ -301,8 +307,9 @@ function getStylesPartial(
   return partial;
 }
 
-function getPolyfillsPartial(
-  options: WebBuildBuilderOptions,
+export function getPolyfillsPartial(
+  polyfills: string,
+  es2015Polyfills: string,
   esm: boolean,
   isScriptOptimizeOn: boolean
 ): Configuration {
@@ -310,26 +317,26 @@ function getPolyfillsPartial(
     entry: {} as { [key: string]: string[] },
   };
 
-  if (options.polyfills && esm && isScriptOptimizeOn) {
+  if (polyfills && esm && isScriptOptimizeOn) {
     // Safari 10.1 supports <script type="module"> but not <script nomodule>.
     // Need to patch it up so the browser doesn't load both sets.
     config.entry.polyfills = [
       require.resolve(
         '@nrwl/web/src/utils/third-party/cli-files/models/safari-nomodule.js'
       ),
-      ...(options.polyfills ? [options.polyfills] : []),
+      ...(polyfills ? [polyfills] : []),
     ];
-  } else if (options.es2015Polyfills && !esm && isScriptOptimizeOn) {
+  } else if (es2015Polyfills && !esm && isScriptOptimizeOn) {
     config.entry.polyfills = [
-      options.es2015Polyfills,
-      ...(options.polyfills ? [options.polyfills] : []),
+      es2015Polyfills,
+      ...(polyfills ? [polyfills] : []),
     ];
   } else {
-    if (options.polyfills) {
-      config.entry.polyfills = [options.polyfills];
+    if (polyfills) {
+      config.entry.polyfills = [polyfills];
     }
-    if (options.es2015Polyfills) {
-      config.entry['polyfills-es5'] = [options.es2015Polyfills];
+    if (es2015Polyfills) {
+      config.entry['polyfills-es5'] = [es2015Polyfills];
     }
   }
 

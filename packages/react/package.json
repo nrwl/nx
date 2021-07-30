@@ -46,6 +46,8 @@
     "eslint-plugin-react-hooks": "^4.2.0",
     "react-refresh": "^0.9.0",
     "url-loader": "^3.0.0",
-    "webpack": "4.46.0"
+    "webpack": "4.46.0",
+    "webpack-merge": "4.2.1",
+    "@storybook/node-logger": "6.1.20"
   }
 }
