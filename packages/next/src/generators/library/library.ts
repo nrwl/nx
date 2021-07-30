@@ -36,6 +36,26 @@ export async function libraryGenerator(host: Tree, options: Schema) {
     return json;
   });
 
+  updateJson(
+    host,
+    joinPathFragments(projectRoot, 'tsconfig.lib.json'),
+    (json) => {
+      if (!json.files) {
+        json.files = [];
+      }
+      json.files = json.files.map((path: string) => {
+        if (path.endsWith('react/typings/image.d.ts')) {
+          return path.replace(
+            '@nrwl/react/typings/image.d.ts',
+            '@nrwl/next/typings/image.d.ts'
+          );
+        }
+        return path;
+      });
+      return json;
+    }
+  );
+
   return task;
 }
 
