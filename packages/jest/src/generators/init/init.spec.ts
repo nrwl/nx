@@ -41,12 +41,6 @@ describe('jest', () => {
     it('should add babel dependencies', async () => {
       jestInitGenerator(tree, { babelJest: true });
       const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['@babel/core']).toBeDefined();
-      expect(packageJson.devDependencies['@babel/preset-env']).toBeDefined();
-      expect(
-        packageJson.devDependencies['@babel/preset-typescript']
-      ).toBeDefined();
-      expect(packageJson.devDependencies['@babel/preset-react']).toBeDefined();
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
     });
   });
