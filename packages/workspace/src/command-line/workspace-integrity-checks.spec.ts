@@ -1,7 +1,6 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as chalk from 'chalk';
 import { ProjectType } from '../core/project-graph';
-import { extname } from 'path';
 
 describe('WorkspaceIntegrityChecks', () => {
   describe('workspace.json is in sync with the filesystem', () => {
@@ -106,5 +105,5 @@ describe('WorkspaceIntegrityChecks', () => {
 });
 
 function createFile(f) {
-  return { file: f, ext: extname(f), hash: '' };
+  return { file: f, hash: '' };
 }

@@ -10,6 +10,7 @@ import {
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
+import { FileData } from 'packages/devkit/src/project-graph/interfaces';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({ appRootPath: '/root' }));
@@ -1155,8 +1156,8 @@ describe('Enforce Module Boundaries (tslint)', () => {
   });
 });
 
-function createFile(f) {
-  return { file: f, ext: extname(f), hash: '' };
+function createFile(f): FileData {
+  return { file: f, hash: '' };
 }
 
 function runRule(

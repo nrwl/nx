@@ -9,7 +9,6 @@ import type {
 export interface FileData {
   file: string;
   hash: string;
-  ext: string;
   deps?: string[];
 }
 

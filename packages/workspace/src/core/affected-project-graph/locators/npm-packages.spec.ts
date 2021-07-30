@@ -67,7 +67,6 @@ describe('getTouchedNpmPackages', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [
             {
               type: DiffType.Modified,
@@ -98,7 +97,6 @@ describe('getTouchedNpmPackages', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [
             {
               type: DiffType.Deleted,
@@ -137,7 +135,6 @@ describe('getTouchedNpmPackages', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [
             {
               type: DiffType.Added,
@@ -177,7 +174,6 @@ describe('getTouchedNpmPackages', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [new WholeFileChange()],
         },
       ],

@@ -114,7 +114,6 @@ function getFileData(filePath: string): FileData {
   return {
     file,
     hash: defaultFileHasher.hashFile(filePath),
-    ext: extname(filePath),
   };
 }
 

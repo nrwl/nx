@@ -385,7 +385,6 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
 export function getFileDataInHost(host: Tree, path: Path): FileData {
   return {
     file: path,
-    ext: extname(normalize(path)),
     hash: '',
   };
 }

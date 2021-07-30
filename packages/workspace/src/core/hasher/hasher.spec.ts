@@ -44,7 +44,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/file', ext: '.ts', hash: 'file.hash' }],
+              files: [{ file: '/file.ts', hash: 'file.hash' }],
             },
           },
         },
@@ -75,7 +75,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      proj: '/file|file.hash|{"root":"proj-from-workspace.json"}|"proj-from-nx.json"',
+      proj: '/file.ts|file.hash|{"root":"proj-from-workspace.json"}|"proj-from-nx.json"',
     });
     expect(hash.details.implicitDeps).toEqual({
       'yarn.lock': 'yarn.lock.hash',
@@ -99,7 +99,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }],
+              files: [{ file: '/file.ts', hash: 'some-hash' }],
             },
           },
         },
@@ -143,7 +143,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/filea', ext: '.ts', hash: 'a.hash' }],
+              files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
           child: {
@@ -151,7 +151,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/fileb', ext: '.ts', hash: 'b.hash' }],
+              files: [{ file: '/fileb.ts', hash: 'b.hash' }],
             },
           },
         },
@@ -172,8 +172,8 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(hash.details.nodes).toEqual({
-      parent: '/filea|a.hash|""|""',
-      child: '/fileb|b.hash|""|""',
+      parent: '/filea.ts|a.hash|""|""',
+      child: '/fileb.ts|b.hash|""|""',
     });
   });
 
@@ -188,7 +188,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/filea', ext: '.ts', hash: 'a.hash' }],
+              files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
           projb: {
@@ -196,7 +196,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/fileb', ext: '.ts', hash: 'b.hash' }],
+              files: [{ file: '/fileb.ts', hash: 'b.hash' }],
             },
           },
         },
@@ -223,8 +223,8 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('proj'); //project
     expect(tasksHash.value).toContain('build'); //target
     expect(tasksHash.details.nodes).toEqual({
-      proja: '/filea|a.hash|""|""',
-      projb: '/fileb|b.hash|""|""',
+      proja: '/filea.ts|a.hash|""|""',
+      projb: '/fileb.ts|b.hash|""|""',
     });
 
     const hashb = await hasher.hashTaskWithDepsAndContext({
@@ -240,8 +240,8 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('proj'); //project
     expect(hashb.value).toContain('build'); //target
     expect(hashb.details.nodes).toEqual({
-      proja: '/filea|a.hash|""|""',
-      projb: '/fileb|b.hash|""|""',
+      proja: '/filea.ts|a.hash|""|""',
+      projb: '/fileb.ts|b.hash|""|""',
     });
   });
 
@@ -265,12 +265,10 @@ describe('Hasher', () => {
           {
             file: 'global1',
             hash: 'hash1',
-            ext: '',
           },
           {
             file: 'global2',
             hash: 'hash2',
-            ext: '',
           },
         ],
       },

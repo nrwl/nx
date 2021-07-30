@@ -200,8 +200,8 @@ export function mapProjectGraphFiles<T>(
   const nodes: Record<string, MappedProjectGraphNode> = {};
   Object.entries(projectGraph.nodes).forEach(([name, node]) => {
     const files: Record<string, FileData> = {};
-    node.data.files.forEach(({ file, hash, ext }) => {
-      files[file.slice(0, -ext.length)] = { file, hash, ext };
+    node.data.files.forEach(({ file, hash }) => {
+      files[removeExt(file)] = { file, hash };
     });
     const data = { ...node.data, files };
 

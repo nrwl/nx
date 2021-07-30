@@ -8,7 +8,6 @@ describe('getTouchedProjectsInNxJson', () => {
       [
         {
           file: 'source.ts',
-          ext: '.ts',
           hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
@@ -31,7 +30,6 @@ describe('getTouchedProjectsInNxJson', () => {
       [
         {
           file: 'nx.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
@@ -57,7 +55,6 @@ describe('getTouchedProjectsInNxJson', () => {
       [
         {
           file: 'nx.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {
@@ -92,7 +89,6 @@ describe('getTouchedProjectsInNxJson', () => {
       [
         {
           file: 'nx.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {
@@ -137,7 +133,6 @@ describe('getTouchedProjectsInNxJson', () => {
       [
         {
           file: 'nx.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {
@@ -174,7 +169,6 @@ describe('getTouchedProjectsInNxJson', () => {
       [
         {
           file: 'nx.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {

@@ -7,7 +7,6 @@ import {
 function getFileChanges(files: string[]) {
   return files.map((f) => ({
     file: f,
-    ext: `.${f.split('.').pop()}`,
     hash: 'some-hash',
     getChanges: () => [new WholeFileChange()],
   }));

@@ -41,7 +41,6 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [getModifiedChange(['some', 'deep-field'])],
         },
       ],
@@ -57,7 +56,6 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [
             getModifiedChange(['some', 'deep-glob-anything']),
             getModifiedChange(['match-anything']),
@@ -77,7 +75,6 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
         {
           file: 'package.json',
           hash: 'some-hash',
-          ext: '.json',
           getChanges: () => [new WholeFileChange()],
         },
       ],

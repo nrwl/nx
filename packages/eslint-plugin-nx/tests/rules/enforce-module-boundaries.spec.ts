@@ -1526,7 +1526,7 @@ linter.defineParser('@typescript-eslint/parser', parser);
 linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
 function createFile(f) {
-  return { file: f, ext: extname(f), hash: '' };
+  return { file: f, hash: '' };
 }
 
 function runRule(
