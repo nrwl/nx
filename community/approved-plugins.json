@@ -198,5 +198,10 @@
     "name": "@nx-extend/translations",
     "description": "Nx plugin to extract, pull, push and translate your apps translations",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
+  },
+  {
+    "name": "@nx-clean/plugin-core",
+    "description": "Nx Plugin to generate projects following Clean Architecture practices",
+    "url": "https://github.com/guiseek/nx-clean/tree/main/libs/plugin/core"
   }
 ]
