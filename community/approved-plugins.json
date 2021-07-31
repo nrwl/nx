@@ -203,5 +203,10 @@
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
+  },
+  {
+    "name": "@nx-clean/plugin-core",
+    "description": "Nx Plugin to generate projects following Clean Architecture practices",
+    "url": "https://github.com/guiseek/nx-clean/tree/main/libs/plugin/core"
   }
 ]
