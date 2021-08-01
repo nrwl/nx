@@ -43,6 +43,8 @@ const invalidTargetNames = [
   'affected:dep-graph',
   'affected:lint',
   'print-affected',
+  'daemon:start',
+  'daemon:stop',
   'format:check',
   'format',
   'format:write',

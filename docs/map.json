@@ -182,6 +182,16 @@
             "file": "angular/cli/run"
           },
           {
+            "name": "daemon:start",
+            "id": "daemon:start",
+            "file": "angular/cli/daemon-start"
+          },
+          {
+            "name": "daemon:stop",
+            "id": "daemon:stop",
+            "file": "angular/cli/daemon-stop"
+          },
+          {
             "name": "dep-graph",
             "id": "dep-graph",
             "file": "angular/cli/dep-graph"
@@ -1363,6 +1373,16 @@
             "file": "react/cli/run"
           },
           {
+            "name": "daemon:start",
+            "id": "daemon:start",
+            "file": "react/cli/daemon-start"
+          },
+          {
+            "name": "daemon:stop",
+            "id": "daemon:stop",
+            "file": "react/cli/daemon-stop"
+          },
+          {
             "name": "dep-graph",
             "id": "dep-graph",
             "file": "react/cli/dep-graph"
@@ -2511,6 +2531,16 @@
             "name": "run",
             "id": "run",
             "file": "node/cli/run"
+          },
+          {
+            "name": "daemon:start",
+            "id": "daemon:start",
+            "file": "node/cli/daemon-start"
+          },
+          {
+            "name": "daemon:stop",
+            "id": "daemon:stop",
+            "file": "node/cli/daemon-stop"
           },
           {
             "name": "dep-graph",

@@ -8,6 +8,8 @@ export const supportedNxCommands: string[] = [
   'affected:dep-graph',
   'affected:lint',
   'print-affected',
+  'daemon:start',
+  'daemon:stop',
   'dep-graph',
   'format',
   'format:check',
