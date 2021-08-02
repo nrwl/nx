@@ -1,7 +1,7 @@
 import {
   createProjectGraphAsync,
   onlyWorkspaceProjects,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import { readWorkspaceFiles, workspaceLayout } from '../core/file-utils';
@@ -10,7 +10,7 @@ import * as path from 'path';
 
 export async function workspaceLint(): Promise<void> {
   const graph = onlyWorkspaceProjects(
-    await createProjectGraphAsync(LATEST_GRAPH_VERSION)
+    await createProjectGraphAsync(NEXT_GRAPH_VERSION)
   );
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
@@ -28,7 +28,7 @@ export async function workspaceLint(): Promise<void> {
 
 function readAllFilesFromAppsAndLibs() {
   const wl = workspaceLayout();
-  return readWorkspaceFiles(LATEST_GRAPH_VERSION)
+  return readWorkspaceFiles(NEXT_GRAPH_VERSION)
     .map((f) => f.file)
     .filter(
       (f) => f.startsWith(`${wl.appsDir}/`) || f.startsWith(`${wl.libsDir}/`)

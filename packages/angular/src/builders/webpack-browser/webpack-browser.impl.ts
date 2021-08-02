@@ -15,7 +15,7 @@ import { joinPathFragments } from '@nrwl/devkit';
 import { join } from 'path';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
 import { switchMap } from 'rxjs/operators';
@@ -84,7 +84,7 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(LATEST_GRAPH_VERSION),
+    readCachedProjectGraph(NEXT_GRAPH_VERSION),
     context
   );
 

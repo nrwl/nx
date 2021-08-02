@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -20,7 +20,7 @@ export async function* delegateBuildExecutor(
   context: ExecutorContext
 ) {
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(LATEST_GRAPH_VERSION),
+    readCachedProjectGraph(NEXT_GRAPH_VERSION),
     context.root,
     context.projectName,
     context.targetName,

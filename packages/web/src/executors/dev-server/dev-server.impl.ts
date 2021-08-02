@@ -22,7 +22,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 
 export interface WebDevServerOptions {
@@ -71,7 +71,7 @@ export default async function* devServerExecutor(
 
   if (!buildOptions.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(LATEST_GRAPH_VERSION),
+      readCachedProjectGraph(NEXT_GRAPH_VERSION),
       context.root,
       context.projectName,
       'build', // should be generalized

@@ -1,7 +1,7 @@
 import { runCommand } from '../tasks-runner/run-command';
 import {
   createProjectGraphAsync,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '../core/project-graph';
 import type { ProjectGraph } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
@@ -34,7 +34,7 @@ export async function runOne(opts: {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync(LATEST_GRAPH_VERSION);
+  const projectGraph = await createProjectGraphAsync(NEXT_GRAPH_VERSION);
   const { projects, projectsMap } = getProjects(
     projectGraph,
     nxArgs.withDeps,

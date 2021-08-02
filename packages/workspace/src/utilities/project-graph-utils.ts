@@ -2,7 +2,7 @@ import { normalizePath, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { relative } from 'path';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '../core/project-graph';
 
 export function projectHasTarget(project: ProjectGraphNode, target: string) {
@@ -23,7 +23,7 @@ export function projectHasTargetAndConfiguration(
 
 export function getSourceDirOfDependentProjects(
   projectName: string,
-  projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION)
+  projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION)
 ): string[] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
@@ -44,7 +44,7 @@ export function getSourceDirOfDependentProjects(
  */
 export function getProjectNameFromDirPath(
   projRelativeDirPath: string,
-  projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION)
+  projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION)
 ) {
   let parentNodeName = null;
   for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
@@ -78,7 +78,7 @@ export function getProjectNameFromDirPath(
  */
 function findAllProjectNodeDependencies(
   parentNodeName: string,
-  projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION)
+  projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION)
 ): string[] {
   const dependencyNodeNames = new Set<string>();
 

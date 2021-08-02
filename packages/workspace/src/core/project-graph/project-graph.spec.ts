@@ -6,7 +6,8 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 }));
 import {
   createProjectGraphAsync,
-  DEPRECATED_GRAPH_VERSION,
+  CURRENT_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
   projectFileDataCompatAdapter,
   projectNodesCompatAdapter,
 } from './project-graph';
@@ -16,7 +17,6 @@ import {
   DependencyType,
 } from '@nrwl/devkit';
 import { defaultFileHasher } from '../hasher/file-hasher';
-import { LATEST_GRAPH_VERSION } from '.';
 
 describe('project graph', () => {
   let packageJson: any;
@@ -251,7 +251,7 @@ describe('project graph', () => {
       expect(
         projectFileDataCompatAdapter(
           { file: 'a.ts', hash: 'some hash' },
-          DEPRECATED_GRAPH_VERSION
+          CURRENT_GRAPH_VERSION
         )
       ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.ts' });
       expect(
@@ -273,13 +273,13 @@ describe('project graph', () => {
       expect(
         projectFileDataCompatAdapter(
           { file: 'a.ts', hash: 'some hash', ext: '.ts' },
-          LATEST_GRAPH_VERSION
+          NEXT_GRAPH_VERSION
         )
       ).toEqual({ file: 'a.ts', hash: 'some hash' });
       expect(
         projectFileDataCompatAdapter(
           { file: 'a.ts', hash: 'some hash', ext: '.ts', deps: [] },
-          LATEST_GRAPH_VERSION
+          NEXT_GRAPH_VERSION
         )
       ).toEqual({ file: 'a.ts', hash: 'some hash', deps: [] });
     });
@@ -325,12 +325,12 @@ describe('project graph', () => {
         },
       };
       expect(projectNodesCompatAdapter(nodes)).toEqual(result);
-      expect(
-        projectNodesCompatAdapter(nodes, DEPRECATED_GRAPH_VERSION)
-      ).toEqual(result);
-      expect(
-        projectNodesCompatAdapter(nodes, LATEST_GRAPH_VERSION)
-      ).not.toEqual(result);
+      expect(projectNodesCompatAdapter(nodes, CURRENT_GRAPH_VERSION)).toEqual(
+        result
+      );
+      expect(projectNodesCompatAdapter(nodes, NEXT_GRAPH_VERSION)).not.toEqual(
+        result
+      );
     });
     it('should map nodes to latest graph version', () => {
       const nodes = {
@@ -373,11 +373,11 @@ describe('project graph', () => {
           },
         },
       };
-      expect(projectNodesCompatAdapter(nodes, LATEST_GRAPH_VERSION)).toEqual(
+      expect(projectNodesCompatAdapter(nodes, NEXT_GRAPH_VERSION)).toEqual(
         result
       );
       expect(
-        projectNodesCompatAdapter(nodes, DEPRECATED_GRAPH_VERSION)
+        projectNodesCompatAdapter(nodes, CURRENT_GRAPH_VERSION)
       ).not.toEqual(result);
       expect(projectNodesCompatAdapter(nodes)).not.toEqual(result);
     });

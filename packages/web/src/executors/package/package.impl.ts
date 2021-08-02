@@ -13,7 +13,7 @@ import * as autoprefixer from 'autoprefixer';
 
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -59,7 +59,7 @@ export default async function* run(
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
-  const projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION);
+  const projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION);
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
     projectGraph,

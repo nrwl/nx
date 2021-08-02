@@ -3,7 +3,7 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { relative, resolve } from 'path';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,
@@ -20,7 +20,7 @@ export function createGlobPatternsForDependencies(
   fileGlobPattern: string
 ): string[] {
   const filenameRelativeToWorkspaceRoot = relative(appRootPath, dirPath);
-  const projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION);
+  const projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION);
 
   // find the project
   let projectName;

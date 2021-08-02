@@ -15,7 +15,7 @@ import {
 } from '../../utils/types';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -30,7 +30,7 @@ export default async function exportExecutor(
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(LATEST_GRAPH_VERSION),
+      readCachedProjectGraph(NEXT_GRAPH_VERSION),
       context.root,
       context.projectName,
       'build', // this should be generalized

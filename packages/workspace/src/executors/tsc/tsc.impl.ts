@@ -2,7 +2,7 @@ import { ExecutorContext, normalizePath } from '@nrwl/devkit';
 import { basename, dirname, join, relative } from 'path';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '../../core/project-graph';
 import { copyAssets } from '../../utilities/assets';
 import {
@@ -21,7 +21,7 @@ export async function tscExecutor(
   const normalizedOptions = normalizeOptions(options, context);
   // const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION);
+  const projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION);
   const { target, dependencies } = calculateProjectDependencies(
     projectGraph,
     context.root,

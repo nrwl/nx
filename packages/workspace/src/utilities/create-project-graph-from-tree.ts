@@ -1,7 +1,7 @@
 import { Tree } from '@nrwl/devkit';
 import {
   createProjectGraph,
-  DEPRECATED_GRAPH_VERSION,
+  CURRENT_GRAPH_VERSION,
 } from '../core/project-graph/project-graph';
 
 // TODO(v13): remove this deprecated method
@@ -13,6 +13,6 @@ export function createProjectGraphFromTree(tree: Tree) {
     undefined,
     undefined,
     undefined,
-    DEPRECATED_GRAPH_VERSION
+    CURRENT_GRAPH_VERSION
   );
 }

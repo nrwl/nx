@@ -26,7 +26,7 @@ import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
 import {
   readCachedProjectGraph,
-  LATEST_GRAPH_VERSION,
+  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -57,7 +57,7 @@ export default async function* serveExecutor(
   const root = resolve(context.root, buildOptions.root);
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(LATEST_GRAPH_VERSION),
+      readCachedProjectGraph(NEXT_GRAPH_VERSION),
       context.root,
       context.projectName,
       'build', // should be generalized

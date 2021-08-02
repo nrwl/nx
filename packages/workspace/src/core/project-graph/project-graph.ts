@@ -39,8 +39,8 @@ import {
   buildWorkspaceProjectNodes,
 } from './build-nodes';
 
-export const LATEST_GRAPH_VERSION = '4.0';
-export const DEPRECATED_GRAPH_VERSION = '3.0';
+export const NEXT_GRAPH_VERSION = '4.0';
+export const CURRENT_GRAPH_VERSION = '3.0';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -102,7 +102,7 @@ export function projectFileDataCompatAdapter(
   version?: string
 ): FileData {
   const { file, hash, ext, deps } = fileData;
-  if (version && version !== DEPRECATED_GRAPH_VERSION) {
+  if (version && version !== CURRENT_GRAPH_VERSION) {
     return { file, hash, ...{ deps } };
   } else {
     return { file, hash, ext: ext || extname(file), ...{ deps } };
@@ -151,7 +151,7 @@ export function createProjectGraph(
   let cachedFileData = {};
   if (
     cache &&
-    cache.version === '3.0' &&
+    cache.version === CURRENT_GRAPH_VERSION &&
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,
@@ -174,6 +174,9 @@ export function createProjectGraph(
   const projectGraph = buildProjectGraph(context, cachedFileData);
   if (cacheEnabled) {
     writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
+  }
+  if (projectGraphVersion) {
+    projectGraph.version = projectGraphVersion;
   }
   return addWorkspaceFiles(projectGraph, workspaceFiles);
 }
