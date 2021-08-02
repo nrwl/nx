@@ -1,6 +1,7 @@
 import * as yargsParser from 'yargs-parser';
 import { logger } from './logger';
 import {
+  applyVerbosity,
   coerceTypesInOptions,
   convertAliases,
   convertSmartDefaultsIntoNamedParams,
@@ -973,6 +974,44 @@ describe('params', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         'Option "a" is deprecated: Deprecated since version x.x.x. Use "b" instead.'
       );
+    });
+  });
+
+  describe('applyVerbosity', () => {
+    const isVerbose = true;
+
+    it('should not apply verbose if additionalProperties is false and verbose is not in schema', () => {
+      const options = {};
+      applyVerbosity(
+        options,
+        { additionalProperties: false, properties: {} },
+        isVerbose
+      );
+
+      expect(options).toEqual({});
+    });
+
+    it('should apply verbose if additionalProperties is true', () => {
+      const options = {};
+      applyVerbosity(
+        options,
+        { additionalProperties: true, properties: {} },
+        isVerbose
+      );
+      expect(options).toEqual({ verbose: isVerbose });
+    });
+
+    it('should apply verbose if additionalProperties is false but verbose is in schema', () => {
+      const options = {};
+      applyVerbosity(
+        options,
+        {
+          additionalProperties: false,
+          properties: { verbose: {} },
+        },
+        isVerbose
+      );
+      expect(options).toEqual({ verbose: isVerbose });
     });
   });
 });

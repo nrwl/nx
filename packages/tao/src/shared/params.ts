@@ -444,13 +444,24 @@ function resolveDefinition(ref: string, definitions: Properties) {
   return definitions[definition];
 }
 
+export function applyVerbosity(
+  options: Record<string, unknown>,
+  schema: Schema,
+  isVerbose: boolean
+) {
+  if (schema.additionalProperties || 'verbose' in schema.properties) {
+    options['verbose'] = isVerbose;
+  }
+}
+
 export function combineOptionsForExecutor(
   commandLineOpts: Options,
   config: string,
   target: TargetConfiguration,
   schema: Schema,
   defaultProjectName: string | null,
-  relativeCwd: string | null
+  relativeCwd: string | null,
+  isVerbose = false
 ) {
   const r = convertAliases(
     coerceTypesInOptions(commandLineOpts, schema),
@@ -470,6 +481,7 @@ export function combineOptionsForExecutor(
   warnDeprecations(combined, schema);
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
+  applyVerbosity(combined, schema, isVerbose);
   return combined;
 }
 
@@ -481,7 +493,8 @@ export async function combineOptionsForGenerator(
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
-  relativeCwd: string | null
+  relativeCwd: string | null,
+  isVerbose = false
 ) {
   const generatorDefaults = wc
     ? getGeneratorDefaults(
@@ -512,6 +525,7 @@ export async function combineOptionsForGenerator(
   setDefaults(combined, schema);
 
   validateOptsAgainstSchema(combined, schema);
+  applyVerbosity(combined, schema, isVerbose);
   return combined;
 }
 

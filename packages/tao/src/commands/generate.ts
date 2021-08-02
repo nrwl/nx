@@ -8,7 +8,7 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
-import { removeSync, ensureDirSync, writeFileSync } from 'fs-extra';
+import { ensureDirSync, removeSync, writeFileSync } from 'fs-extra';
 import * as path from 'path';
 import { FileChange, FsTree } from '../shared/tree';
 import { logger } from '../shared/logger';
@@ -173,7 +173,8 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
       schema,
       opts.interactive,
       null,
-      null
+      null,
+      isVerbose
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
@@ -235,7 +236,8 @@ export async function generate(
       schema,
       opts.interactive,
       ws.calculateDefaultProjectName(cwd, workspaceDefinition),
-      ws.relativeCwd(cwd)
+      ws.relativeCwd(cwd),
+      isVerbose
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
