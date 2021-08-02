@@ -11,7 +11,10 @@ import { catchError, concatMap, last, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  readCachedProjectGraph,
+  LATEST_GRAPH_VERSION,
+} from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -56,7 +59,7 @@ export default async function* run(
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
-  const projectGraph = readCachedProjectGraph();
+  const projectGraph = readCachedProjectGraph(LATEST_GRAPH_VERSION);
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
     projectGraph,
@@ -241,9 +244,9 @@ export function createRollupOptions(
 
     const globals = options.globals
       ? options.globals.reduce((acc, item) => {
-          acc[item.moduleId] = item.global;
-          return acc;
-        }, {})
+        acc[item.moduleId] = item.global;
+        return acc;
+      }, {})
       : {};
 
     const externalPackages = dependencies
@@ -338,8 +341,8 @@ function convertCopyAssetsToRollupOptions(
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({
-        src: join(a.input, a.glob).replace(/\\/g, '/'),
-        dest: join(outputPath, a.output).replace(/\\/g, '/'),
-      }))
+      src: join(a.input, a.glob).replace(/\\/g, '/'),
+      dest: join(outputPath, a.output).replace(/\\/g, '/'),
+    }))
     : undefined;
 }

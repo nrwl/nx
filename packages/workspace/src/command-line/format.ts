@@ -4,6 +4,7 @@ import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utilities/fileutils';
 import {
   createProjectGraphAsync,
+  LATEST_GRAPH_VERSION,
   onlyWorkspaceProjects,
 } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
@@ -85,7 +86,9 @@ async function getPatternsFromApps(
   affectedFiles: string[],
   matchAllPattern: string
 ): Promise<string[]> {
-  const graph = onlyWorkspaceProjects(await createProjectGraphAsync());
+  const graph = onlyWorkspaceProjects(
+    await createProjectGraphAsync(LATEST_GRAPH_VERSION)
+  );
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)

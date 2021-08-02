@@ -3,6 +3,7 @@ import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraphAsync,
+  LATEST_GRAPH_VERSION,
   onlyWorkspaceProjects,
   ProjectType,
   withDeps,
@@ -37,7 +38,7 @@ export async function affected(
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync(LATEST_GRAPH_VERSION);
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);

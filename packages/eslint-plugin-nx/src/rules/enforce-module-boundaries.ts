@@ -24,6 +24,7 @@ import {
   isNpmProject,
   ProjectType,
   readCachedProjectGraph,
+  LATEST_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
@@ -129,7 +130,7 @@ export default createESLintRule<Options, MessageIds>({
        */
       try {
         (global as any).projectGraph = mapProjectGraphFiles(
-          readCachedProjectGraph()
+          readCachedProjectGraph(LATEST_GRAPH_VERSION)
         );
       } catch {}
     }

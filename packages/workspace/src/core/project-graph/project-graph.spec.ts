@@ -4,13 +4,19 @@ jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
-import { createProjectGraphAsync } from './project-graph';
+import {
+  createProjectGraphAsync,
+  DEPRECATED_GRAPH_VERSION,
+  projectFileDataCompatAdapter,
+  projectNodesCompatAdapter,
+} from './project-graph';
 import {
   NxJsonConfiguration,
   stripIndents,
   DependencyType,
 } from '@nrwl/devkit';
 import { defaultFileHasher } from '../hasher/file-hasher';
+import { LATEST_GRAPH_VERSION } from '.';
 
 describe('project graph', () => {
   let packageJson: any;
@@ -238,5 +244,142 @@ describe('project graph', () => {
         target: 'lazy-lib',
       },
     ]);
+  });
+
+  describe('project graph adapters', () => {
+    it('should map FileData to deprecated graph version', () => {
+      expect(
+        projectFileDataCompatAdapter(
+          { file: 'a.ts', hash: 'some hash' },
+          DEPRECATED_GRAPH_VERSION
+        )
+      ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.ts' });
+      expect(
+        projectFileDataCompatAdapter({
+          file: 'a.ts',
+          hash: 'some hash',
+          deps: [],
+        })
+      ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.ts', deps: [] });
+      expect(
+        projectFileDataCompatAdapter({
+          file: 'a.ts',
+          hash: 'some hash',
+          ext: '.keepthis',
+        })
+      ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.keepthis' });
+    });
+    it('should map FileData to latest graph version', () => {
+      expect(
+        projectFileDataCompatAdapter(
+          { file: 'a.ts', hash: 'some hash', ext: '.ts' },
+          LATEST_GRAPH_VERSION
+        )
+      ).toEqual({ file: 'a.ts', hash: 'some hash' });
+      expect(
+        projectFileDataCompatAdapter(
+          { file: 'a.ts', hash: 'some hash', ext: '.ts', deps: [] },
+          LATEST_GRAPH_VERSION
+        )
+      ).toEqual({ file: 'a.ts', hash: 'some hash', deps: [] });
+    });
+    it('should map nodes to deprecated graph version', () => {
+      const nodes = {
+        node1: {
+          name: 'node1',
+          type: 'app',
+          data: {
+            files: [
+              { file: 'index.ts', hash: 'some hash' },
+              { file: 'node1.jpeg', hash: 'some hash', ext: '.keepextension' },
+            ],
+          },
+        },
+        node2: {
+          name: 'node2',
+          type: 'lib',
+          data: {
+            files: [{ file: 'node2.html', hash: 'some hash', deps: [] }],
+          },
+        },
+      };
+      const result = {
+        node1: {
+          name: 'node1',
+          type: 'app',
+          data: {
+            files: [
+              { file: 'index.ts', hash: 'some hash', ext: '.ts' },
+              { file: 'node1.jpeg', hash: 'some hash', ext: '.keepextension' },
+            ],
+          },
+        },
+        node2: {
+          name: 'node2',
+          type: 'lib',
+          data: {
+            files: [
+              { file: 'node2.html', hash: 'some hash', deps: [], ext: '.html' },
+            ],
+          },
+        },
+      };
+      expect(projectNodesCompatAdapter(nodes)).toEqual(result);
+      expect(
+        projectNodesCompatAdapter(nodes, DEPRECATED_GRAPH_VERSION)
+      ).toEqual(result);
+      expect(
+        projectNodesCompatAdapter(nodes, LATEST_GRAPH_VERSION)
+      ).not.toEqual(result);
+    });
+    it('should map nodes to latest graph version', () => {
+      const nodes = {
+        node1: {
+          name: 'node1',
+          type: 'app',
+          data: {
+            files: [
+              { file: 'index.ts', hash: 'some hash', ext: '.ts' },
+              { file: 'node1.jpeg', hash: 'some hash', ext: '.keepextension' },
+            ],
+          },
+        },
+        node2: {
+          name: 'node2',
+          type: 'lib',
+          data: {
+            files: [
+              { file: 'node2.html', hash: 'some hash', deps: [], ext: '.html' },
+            ],
+          },
+        },
+      };
+      const result = {
+        node1: {
+          name: 'node1',
+          type: 'app',
+          data: {
+            files: [
+              { file: 'index.ts', hash: 'some hash' },
+              { file: 'node1.jpeg', hash: 'some hash' },
+            ],
+          },
+        },
+        node2: {
+          name: 'node2',
+          type: 'lib',
+          data: {
+            files: [{ file: 'node2.html', hash: 'some hash', deps: [] }],
+          },
+        },
+      };
+      expect(projectNodesCompatAdapter(nodes, LATEST_GRAPH_VERSION)).toEqual(
+        result
+      );
+      expect(
+        projectNodesCompatAdapter(nodes, DEPRECATED_GRAPH_VERSION)
+      ).not.toEqual(result);
+      expect(projectNodesCompatAdapter(nodes)).not.toEqual(result);
+    });
   });
 });

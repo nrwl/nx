@@ -13,6 +13,7 @@ import { workspaceLayout } from '../core/file-utils';
 import { defaultFileHasher } from '../core/hasher/file-hasher';
 import {
   createProjectGraphAsync,
+  LATEST_GRAPH_VERSION,
   onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphDependency,
@@ -204,7 +205,9 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
+  let graph = onlyWorkspaceProjects(
+    await createProjectGraphAsync(LATEST_GRAPH_VERSION)
+  );
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];

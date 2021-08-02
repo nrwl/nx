@@ -1,6 +1,9 @@
 import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  readCachedProjectGraph,
+  LATEST_GRAPH_VERSION,
+} from '@nrwl/workspace/src/core/project-graph';
 import type { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import {
   calculateProjectDependencies,
@@ -51,7 +54,7 @@ export function createLibraryExecutor(
     context: ExecutorContext
   ) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      readCachedProjectGraph(LATEST_GRAPH_VERSION),
       context.root,
       context.projectName,
       context.targetName,

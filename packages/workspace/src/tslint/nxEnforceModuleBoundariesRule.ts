@@ -6,6 +6,7 @@ import {
   isNpmProject,
   ProjectType,
   readCachedProjectGraph,
+  LATEST_GRAPH_VERSION,
 } from '../core/project-graph';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
@@ -51,7 +52,7 @@ export class Rule extends Lint.Rules.AbstractRule {
          */
         try {
           (global as any).projectGraph = mapProjectGraphFiles(
-            readCachedProjectGraph()
+            readCachedProjectGraph(LATEST_GRAPH_VERSION)
           );
         } catch {}
       }

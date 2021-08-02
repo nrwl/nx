@@ -6,12 +6,13 @@ import type {
   ProjectConfiguration,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphNode,
   ProjectGraphProcessorContext,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { ProjectGraphBuilder, readJsonFile, logger } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { join } from 'path';
+import { join, extname } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap } from '../file-graph';
@@ -38,11 +39,19 @@ import {
   buildWorkspaceProjectNodes,
 } from './build-nodes';
 
+export const LATEST_GRAPH_VERSION = '4.0';
+export const DEPRECATED_GRAPH_VERSION = '3.0';
+
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
+
+ * @param {string} projectGraphVersion Version to map ProjectGraph to
+ * @returns {ProjectGraph}
  */
-export function readCachedProjectGraph(): ProjectGraph {
+export function readCachedProjectGraph(
+  projectGraphVersion?: string
+): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
   if (!projectGraphCache) {
     throw new Error(`
@@ -55,13 +64,60 @@ export function readCachedProjectGraph(): ProjectGraph {
     `);
   }
   return {
-    nodes: projectGraphCache.nodes,
+    version: projectGraphCache.version,
+    nodes: projectNodesCompatAdapter(
+      projectGraphCache.nodes,
+      projectGraphVersion || projectGraphCache.version
+    ),
     dependencies: projectGraphCache.dependencies,
   };
 }
 
-export async function createProjectGraphAsync(): Promise<ProjectGraph> {
-  return createProjectGraph();
+/**
+ * Backwards compatibility adapter for project Nodes
+ * @param {Record<string, ProjectGraphNode>} nodes
+ * @param {string?} version
+ * @returns
+ */
+export function projectNodesCompatAdapter(
+  nodes: Record<string, ProjectGraphNode>,
+  version?: string
+): Record<string, ProjectGraphNode> {
+  Object.values(nodes).forEach(({ data }) => {
+    data.files = data.files.map((fileData) =>
+      projectFileDataCompatAdapter(fileData, version)
+    );
+  });
+  return nodes;
+}
+
+/**
+ * Backwards compatibility adapter for FileData
+ * @param {FileData} fileData
+ * @param {string?} version
+ * @returns
+ */
+export function projectFileDataCompatAdapter(
+  fileData: FileData,
+  version?: string
+): FileData {
+  const { file, hash, ext, deps } = fileData;
+  if (version && version !== DEPRECATED_GRAPH_VERSION) {
+    return { file, hash, ...{ deps } };
+  } else {
+    return { file, hash, ext: ext || extname(file), ...{ deps } };
+  }
+}
+
+export async function createProjectGraphAsync(
+  projectGraphVersion?: string
+): Promise<ProjectGraph> {
+  return createProjectGraph(
+    undefined,
+    undefined,
+    undefined,
+    projectGraphVersion
+  );
 }
 
 function readCombinedDeps() {
@@ -74,10 +130,15 @@ function readCombinedDeps() {
  * @deprecated This function is deprecated in favor of the new asynchronous version {@link createProjectGraphAsync}
  */
 export function createProjectGraph(
-  workspaceJson = readWorkspaceJson(),
-  nxJson = readNxJson(),
-  workspaceFiles = readWorkspaceFiles()
+  workspaceJson?: WorkspaceJsonConfiguration,
+  nxJson?: NxJsonConfiguration,
+  workspaceFiles?: FileData[],
+  projectGraphVersion?: string
 ): ProjectGraph {
+  workspaceJson = workspaceJson || readWorkspaceJson();
+  nxJson = nxJson || readNxJson();
+  workspaceFiles = workspaceFiles || readWorkspaceFiles(projectGraphVersion);
+
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   let cache = cacheEnabled ? readCache() : false;
   assertWorkspaceValidity(workspaceJson, nxJson);
