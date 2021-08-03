@@ -13,10 +13,7 @@ import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
-import {
-  readCachedProjectGraph,
-  NEXT_GRAPH_VERSION,
-} from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -30,7 +27,7 @@ export default async function exportExecutor(
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(NEXT_GRAPH_VERSION),
+      readCachedProjectGraph('4.0'),
       context.root,
       context.projectName,
       'build', // this should be generalized

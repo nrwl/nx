@@ -1,8 +1,5 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import {
-  readCachedProjectGraph,
-  NEXT_GRAPH_VERSION,
-} from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { copyAssetFiles } from '@nrwl/workspace/src/utilities/assets';
 import {
   calculateProjectDependencies,
@@ -22,7 +19,7 @@ export async function packageExecutor(
   const libRoot = context.workspace.projects[context.projectName].root;
   const normalizedOptions = normalizeOptions(options, context, libRoot);
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(NEXT_GRAPH_VERSION),
+    readCachedProjectGraph('4.0'),
     context.root,
     context.projectName,
     context.targetName,

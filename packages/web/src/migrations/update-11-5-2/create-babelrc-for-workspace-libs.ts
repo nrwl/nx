@@ -1,14 +1,13 @@
 import { formatFiles, getProjects, Tree, writeJson } from '@nrwl/devkit';
 import {
   createProjectGraphAsync,
-  NEXT_GRAPH_VERSION,
   reverse,
 } from '@nrwl/workspace/src/core/project-graph';
 import { hasDependentAppUsingWebBuild } from './utils';
 
 export async function createBabelrcForWorkspaceLibs(host: Tree) {
   const projects = getProjects(host);
-  const graph = reverse(await createProjectGraphAsync(NEXT_GRAPH_VERSION));
+  const graph = reverse(await createProjectGraphAsync('4.0'));
 
   for (const [name, p] of projects.entries()) {
     if (!hasDependentAppUsingWebBuild(name, graph, projects)) {

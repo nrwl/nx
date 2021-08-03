@@ -14,7 +14,6 @@ import { offsetFromRoot } from '@nrwl/devkit';
 import {
   createProjectGraphAsync,
   isNpmProject,
-  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 
 /**
@@ -46,7 +45,7 @@ function addHTMLPatternToBuilderConfig(
 async function updateProjectESLintConfigsAndBuilders(
   host: Tree
 ): Promise<Rule> {
-  const graph = await createProjectGraphAsync(NEXT_GRAPH_VERSION);
+  const graph = await createProjectGraphAsync('4.0');
 
   /**
    * Make sure user is already using ESLint and is up to date with

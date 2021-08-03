@@ -1,6 +1,5 @@
 import {
   createProjectGraphAsync,
-  NEXT_GRAPH_VERSION,
   onlyWorkspaceProjects,
   reverse,
 } from '../../../core/project-graph';
@@ -17,7 +16,7 @@ export async function checkDependencies(_, schema: Schema): Promise<void> {
     return;
   }
 
-  const graph: ProjectGraph = await createProjectGraphAsync(NEXT_GRAPH_VERSION);
+  const graph: ProjectGraph = await createProjectGraphAsync('4.0');
 
   const reverseGraph = onlyWorkspaceProjects(reverse(graph));
 

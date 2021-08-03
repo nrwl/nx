@@ -13,10 +13,7 @@ import {
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { joinPathFragments } from '@nrwl/devkit';
 import { join } from 'path';
-import {
-  readCachedProjectGraph,
-  NEXT_GRAPH_VERSION,
-} from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
 import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
@@ -84,7 +81,7 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(NEXT_GRAPH_VERSION),
+    readCachedProjectGraph('4.0'),
     context
   );
 

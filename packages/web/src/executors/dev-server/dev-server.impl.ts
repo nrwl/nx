@@ -20,10 +20,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import {
-  readCachedProjectGraph,
-  NEXT_GRAPH_VERSION,
-} from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 export interface WebDevServerOptions {
   host: string;
@@ -71,7 +68,7 @@ export default async function* devServerExecutor(
 
   if (!buildOptions.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(NEXT_GRAPH_VERSION),
+      readCachedProjectGraph('4.0'),
       context.root,
       context.projectName,
       'build', // should be generalized

@@ -22,7 +22,6 @@ import {
   cacheDirectory,
   readCacheDirectoryProperty,
 } from '../../utilities/cache-directory';
-import { NEXT_GRAPH_VERSION } from '../project-graph/project-graph';
 
 export interface ProjectGraphCache {
   version: string;
@@ -93,7 +92,7 @@ export function writeCache(
     version: packageJsonDeps[p],
   }));
   const newValue: ProjectGraphCache = {
-    version: projectGraph.version || NEXT_GRAPH_VERSION,
+    version: projectGraph.version || '4.0',
     deps: packageJsonDeps,
     pathMappings: tsConfig.compilerOptions.paths || {},
     nxJsonPlugins,

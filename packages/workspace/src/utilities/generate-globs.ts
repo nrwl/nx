@@ -1,10 +1,7 @@
 import { joinPathFragments } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { relative, resolve } from 'path';
-import {
-  readCachedProjectGraph,
-  NEXT_GRAPH_VERSION,
-} from '../core/project-graph';
+import { readCachedProjectGraph } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
@@ -20,7 +17,7 @@ export function createGlobPatternsForDependencies(
   fileGlobPattern: string
 ): string[] {
   const filenameRelativeToWorkspaceRoot = relative(appRootPath, dirPath);
-  const projectGraph = readCachedProjectGraph(NEXT_GRAPH_VERSION);
+  const projectGraph = readCachedProjectGraph('4.0');
 
   // find the project
   let projectName;

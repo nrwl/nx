@@ -6,10 +6,9 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 }));
 import {
   createProjectGraphAsync,
-  CURRENT_GRAPH_VERSION,
-  NEXT_GRAPH_VERSION,
   projectFileDataCompatAdapter,
-  projectNodesCompatAdapter,
+  projectGraphMigrate3to4,
+  projectGraphCompat4to3,
 } from './project-graph';
 import {
   NxJsonConfiguration,
@@ -249,10 +248,7 @@ describe('project graph', () => {
   describe('project graph adapters', () => {
     it('should map FileData to deprecated graph version', () => {
       expect(
-        projectFileDataCompatAdapter(
-          { file: 'a.ts', hash: 'some hash' },
-          CURRENT_GRAPH_VERSION
-        )
+        projectFileDataCompatAdapter({ file: 'a.ts', hash: 'some hash' }, '3.0')
       ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.ts' });
       expect(
         projectFileDataCompatAdapter({
@@ -273,113 +269,139 @@ describe('project graph', () => {
       expect(
         projectFileDataCompatAdapter(
           { file: 'a.ts', hash: 'some hash', ext: '.ts' },
-          NEXT_GRAPH_VERSION
+          '4.0'
         )
       ).toEqual({ file: 'a.ts', hash: 'some hash' });
       expect(
         projectFileDataCompatAdapter(
           { file: 'a.ts', hash: 'some hash', ext: '.ts', deps: [] },
-          NEXT_GRAPH_VERSION
+          '4.0'
         )
       ).toEqual({ file: 'a.ts', hash: 'some hash', deps: [] });
     });
     it('should map nodes to deprecated graph version', () => {
-      const nodes = {
-        node1: {
-          name: 'node1',
-          type: 'app',
-          data: {
-            files: [
-              { file: 'index.ts', hash: 'some hash' },
-              { file: 'node1.jpeg', hash: 'some hash', ext: '.keepextension' },
-            ],
+      const source = {
+        nodes: {
+          node1: {
+            name: 'node1',
+            type: 'app',
+            data: {
+              files: [
+                { file: 'index.ts', hash: 'some hash' },
+                {
+                  file: 'node1.jpeg',
+                  hash: 'some hash',
+                  ext: '.keepextension',
+                },
+              ],
+            },
+          },
+          node2: {
+            name: 'node2',
+            type: 'lib',
+            data: {
+              files: [{ file: 'node2.html', hash: 'some hash', deps: [] }],
+            },
           },
         },
-        node2: {
-          name: 'node2',
-          type: 'lib',
-          data: {
-            files: [{ file: 'node2.html', hash: 'some hash', deps: [] }],
-          },
-        },
+        dependencies: {},
+        version: '4.0',
       };
       const result = {
-        node1: {
-          name: 'node1',
-          type: 'app',
-          data: {
-            files: [
-              { file: 'index.ts', hash: 'some hash', ext: '.ts' },
-              { file: 'node1.jpeg', hash: 'some hash', ext: '.keepextension' },
-            ],
+        nodes: {
+          node1: {
+            name: 'node1',
+            type: 'app',
+            data: {
+              files: [
+                { file: 'index.ts', hash: 'some hash', ext: '.ts' },
+                {
+                  file: 'node1.jpeg',
+                  hash: 'some hash',
+                  ext: '.keepextension',
+                },
+              ],
+            },
+          },
+          node2: {
+            name: 'node2',
+            type: 'lib',
+            data: {
+              files: [
+                {
+                  file: 'node2.html',
+                  hash: 'some hash',
+                  deps: [],
+                  ext: '.html',
+                },
+              ],
+            },
           },
         },
-        node2: {
-          name: 'node2',
-          type: 'lib',
-          data: {
-            files: [
-              { file: 'node2.html', hash: 'some hash', deps: [], ext: '.html' },
-            ],
-          },
-        },
+        dependencies: {},
+        version: '3.0',
       };
-      expect(projectNodesCompatAdapter(nodes)).toEqual(result);
-      expect(projectNodesCompatAdapter(nodes, CURRENT_GRAPH_VERSION)).toEqual(
-        result
-      );
-      expect(projectNodesCompatAdapter(nodes, NEXT_GRAPH_VERSION)).not.toEqual(
-        result
-      );
+      expect(projectGraphCompat4to3(source)).toEqual(result);
     });
     it('should map nodes to latest graph version', () => {
-      const nodes = {
-        node1: {
-          name: 'node1',
-          type: 'app',
-          data: {
-            files: [
-              { file: 'index.ts', hash: 'some hash', ext: '.ts' },
-              { file: 'node1.jpeg', hash: 'some hash', ext: '.keepextension' },
-            ],
+      const source = {
+        nodes: {
+          node1: {
+            name: 'node1',
+            type: 'app',
+            data: {
+              files: [
+                { file: 'index.ts', hash: 'some hash', ext: '.ts' },
+                {
+                  file: 'node1.jpeg',
+                  hash: 'some hash',
+                  ext: '.keepextension',
+                },
+              ],
+            },
+          },
+          node2: {
+            name: 'node2',
+            type: 'lib',
+            data: {
+              files: [
+                {
+                  file: 'node2.html',
+                  hash: 'some hash',
+                  deps: [],
+                  ext: '.html',
+                },
+              ],
+            },
           },
         },
-        node2: {
-          name: 'node2',
-          type: 'lib',
-          data: {
-            files: [
-              { file: 'node2.html', hash: 'some hash', deps: [], ext: '.html' },
-            ],
-          },
-        },
+        dependencies: {},
+        version: '3.0',
       };
       const result = {
-        node1: {
-          name: 'node1',
-          type: 'app',
-          data: {
-            files: [
-              { file: 'index.ts', hash: 'some hash' },
-              { file: 'node1.jpeg', hash: 'some hash' },
-            ],
+        nodes: {
+          node1: {
+            name: 'node1',
+            type: 'app',
+            data: {
+              files: [
+                { file: 'index.ts', hash: 'some hash' },
+                { file: 'node1.jpeg', hash: 'some hash' },
+              ],
+            },
+          },
+          node2: {
+            name: 'node2',
+            type: 'lib',
+            data: {
+              files: [{ file: 'node2.html', hash: 'some hash', deps: [] }],
+            },
           },
         },
-        node2: {
-          name: 'node2',
-          type: 'lib',
-          data: {
-            files: [{ file: 'node2.html', hash: 'some hash', deps: [] }],
-          },
-        },
+        dependencies: {},
+        version: '4.0',
       };
-      expect(projectNodesCompatAdapter(nodes, NEXT_GRAPH_VERSION)).toEqual(
-        result
-      );
-      expect(
-        projectNodesCompatAdapter(nodes, CURRENT_GRAPH_VERSION)
-      ).not.toEqual(result);
-      expect(projectNodesCompatAdapter(nodes)).not.toEqual(result);
+      expect(projectGraphMigrate3to4(source)).toEqual(result);
     });
   });
 });

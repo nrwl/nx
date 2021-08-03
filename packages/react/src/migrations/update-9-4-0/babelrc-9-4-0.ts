@@ -13,7 +13,6 @@ import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
 import {
   createProjectGraphAsync,
   isNpmProject,
-  NEXT_GRAPH_VERSION,
 } from '@nrwl/workspace/src/core/project-graph';
 
 let addedEmotionPreset = false;
@@ -29,7 +28,7 @@ export default function update(): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = await createProjectGraphAsync(NEXT_GRAPH_VERSION);
+    const projectGraph = await createProjectGraphAsync('4.0');
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `

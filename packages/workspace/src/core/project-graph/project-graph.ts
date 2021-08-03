@@ -39,9 +39,6 @@ import {
   buildWorkspaceProjectNodes,
 } from './build-nodes';
 
-export const NEXT_GRAPH_VERSION = '4.0';
-export const CURRENT_GRAPH_VERSION = '3.0';
-
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
@@ -50,7 +47,7 @@ export const CURRENT_GRAPH_VERSION = '3.0';
  * @returns {ProjectGraph}
  */
 export function readCachedProjectGraph(
-  projectGraphVersion?: string
+  projectGraphVersion = '3.0'
 ): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
   if (!projectGraphCache) {
@@ -63,32 +60,80 @@ export function readCachedProjectGraph(
       If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
     `);
   }
-  return {
+  let projectGraph: ProjectGraph = {
     version: projectGraphCache.version,
-    nodes: projectNodesCompatAdapter(
-      projectGraphCache.nodes,
-      projectGraphVersion || projectGraphCache.version
-    ),
+    nodes: projectGraphCache.nodes,
     dependencies: projectGraphCache.dependencies,
+  };
+  if (projectGraphVersion !== projectGraph.version) {
+    projectGraph =
+      projectGraphVersion === '3.0'
+        ? projectGraphCompat4to3(projectGraph)
+        : projectGraphMigrate3to4(projectGraph);
+  }
+  return projectGraph;
+}
+
+/**
+ * Migrate project graph from v3 to v4
+ * @param {ProjectGraph} projectGraph
+ */
+export function projectGraphMigrate3to4(
+  projectGraph: ProjectGraph
+): ProjectGraph {
+  const nodes: Record<string, ProjectGraphNode> = {};
+  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
+    const files = node.data.files.map(({ file, hash, deps }) => ({
+      file,
+      hash,
+      ...(deps && { deps }),
+    }));
+    nodes[name] = {
+      ...node,
+      data: {
+        ...node.data,
+        files,
+      },
+    };
+  });
+
+  return {
+    ...projectGraph,
+    nodes,
+    version: '4.0',
   };
 }
 
 /**
  * Backwards compatibility adapter for project Nodes
- * @param {Record<string, ProjectGraphNode>} nodes
- * @param {string?} version
- * @returns
+ * @param {ProjectGraph} projectGraph
+ * @returns {ProjectGraph}
  */
-export function projectNodesCompatAdapter(
-  nodes: Record<string, ProjectGraphNode>,
-  version?: string
-): Record<string, ProjectGraphNode> {
-  Object.values(nodes).forEach(({ data }) => {
-    data.files = data.files.map((fileData) =>
-      projectFileDataCompatAdapter(fileData, version)
-    );
+export function projectGraphCompat4to3(
+  projectGraph: ProjectGraph
+): ProjectGraph {
+  const nodes: Record<string, ProjectGraphNode> = {};
+  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
+    const files = node.data.files.map(({ file, hash, ext, deps }) => ({
+      file,
+      hash,
+      ext: ext || extname(file),
+      ...(deps && { deps }),
+    }));
+    nodes[name] = {
+      ...node,
+      data: {
+        ...node.data,
+        files,
+      },
+    };
   });
-  return nodes;
+
+  return {
+    ...projectGraph,
+    nodes,
+    version: '3.0',
+  };
 }
 
 /**
@@ -102,7 +147,7 @@ export function projectFileDataCompatAdapter(
   version?: string
 ): FileData {
   const { file, hash, ext, deps } = fileData;
-  if (version && version !== CURRENT_GRAPH_VERSION) {
+  if (version && version !== '3.0') {
     return { file, hash, ...{ deps } };
   } else {
     return { file, hash, ext: ext || extname(file), ...{ deps } };
@@ -110,7 +155,7 @@ export function projectFileDataCompatAdapter(
 }
 
 export async function createProjectGraphAsync(
-  projectGraphVersion?: string
+  projectGraphVersion = '3.0'
 ): Promise<ProjectGraph> {
   return createProjectGraph(
     undefined,
@@ -135,6 +180,7 @@ export function createProjectGraph(
   workspaceFiles?: FileData[],
   projectGraphVersion?: string
 ): ProjectGraph {
+  projectGraphVersion = projectGraphVersion || '3.0';
   workspaceJson = workspaceJson || readWorkspaceJson();
   nxJson = nxJson || readNxJson();
   workspaceFiles = workspaceFiles || readWorkspaceFiles(projectGraphVersion);
@@ -151,15 +197,14 @@ export function createProjectGraph(
   let cachedFileData = {};
   if (
     cache &&
-    cache.version === CURRENT_GRAPH_VERSION &&
+    cache.version === '3.0' &&
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,
       workspaceJson,
       normalizedNxJson,
       rootTsConfig
-    ) &&
-    cacheEnabled
+    )
   ) {
     const fromCache = extractCachedFileData(projectFileMap, cache);
     filesToProcess = fromCache.filesToProcess;
@@ -172,11 +217,9 @@ export function createProjectGraph(
     filesToProcess
   );
   const projectGraph = buildProjectGraph(context, cachedFileData);
+  projectGraph.version = projectGraphVersion;
   if (cacheEnabled) {
     writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
-  }
-  if (projectGraphVersion) {
-    projectGraph.version = projectGraphVersion;
   }
   return addWorkspaceFiles(projectGraph, workspaceFiles);
 }

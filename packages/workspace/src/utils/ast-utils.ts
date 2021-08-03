@@ -34,7 +34,6 @@ import type {
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from '../utilities/typescript/find-nodes';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
-import { CURRENT_GRAPH_VERSION } from '../core/project-graph/project-graph';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -369,7 +368,7 @@ export function readJsonInTree<T extends object = any>(
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
   return onlyWorkspaceProjects(
-    createProjectGraph(undefined, undefined, undefined, CURRENT_GRAPH_VERSION)
+    createProjectGraph(undefined, undefined, undefined, '3.0')
   );
 }
 
@@ -378,12 +377,7 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
  * @deprecated This method is deprecated and `await {@link createProjectGraphAsync}()` should be used instead
  */
 export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
-  return createProjectGraph(
-    undefined,
-    undefined,
-    undefined,
-    CURRENT_GRAPH_VERSION
-  );
+  return createProjectGraph(undefined, undefined, undefined, '3.0');
 }
 
 // TODO(v13): remove this deprecated method

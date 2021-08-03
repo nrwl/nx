@@ -5,7 +5,6 @@ import type { NxArgs, RawNxArgs } from './utils';
 import {
   createProjectGraphAsync,
   isWorkspaceProject,
-  NEXT_GRAPH_VERSION,
   withDeps,
 } from '../core/project-graph';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
@@ -27,7 +26,7 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync(NEXT_GRAPH_VERSION);
+  const projectGraph = await createProjectGraphAsync('4.0');
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
