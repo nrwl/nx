@@ -80,12 +80,12 @@ interface NpmDepShareConfig {
   };
  */
 
-  /**
-   * Find the intersection of two sets
-   * @param s1
-   * @param s2 
-   * @returns 
-   */
+/**
+ * Find the intersection of two sets
+ * @param s1
+ * @param s2
+ * @returns
+ */
 function setIntersection<T>(s1: Set<T>, s2: Set<T>): Set<T> {
   return new Set([...s1].filter((x) => s2.has(x)));
 }
