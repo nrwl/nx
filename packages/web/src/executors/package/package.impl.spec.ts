@@ -1,13 +1,12 @@
-import { ExecutorContext } from '@nrwl/devkit';
-
 let mockCopyPlugin = jest.fn();
 jest.mock('rollup-plugin-copy', () => mockCopyPlugin);
-
 jest.mock('tsconfig-paths-webpack-plugin');
 
+import { ExecutorContext } from '@nrwl/devkit';
 import { createRollupOptions } from './package.impl';
 import { PackageBuilderOptions } from '../../utils/types';
 import { normalizePackageOptions } from '../../utils/normalize';
+import * as rollup from 'rollup';
 
 describe('packageExecutor', () => {
   let context: ExecutorContext;
@@ -41,7 +40,8 @@ describe('packageExecutor', () => {
         [],
         context,
         { name: 'example' },
-        '/root/src'
+        '/root/src',
+        []
       );
       expect(result.map((x) => x.output)).toEqual([
         {
@@ -74,7 +74,8 @@ describe('packageExecutor', () => {
         [],
         context,
         { name: 'example' },
-        '/root/src'
+        '/root/src',
+        []
       );
       expect(result.map((x) => x.prop)).toEqual(['my-val', 'my-val']);
     });
@@ -109,7 +110,8 @@ describe('packageExecutor', () => {
         [],
         context,
         { name: 'example' },
-        '/root/src'
+        '/root/src',
+        []
       );
       expect(result.map((x) => x.prop1)).toEqual([
         'my-val-my-val-2',
@@ -133,11 +135,29 @@ describe('packageExecutor', () => {
         [],
         context,
         { name: 'example' },
-        '/root/src'
+        '/root/src',
+        []
       );
       expect(mockCopyPlugin).toHaveBeenCalledWith({
         targets: [{ dest: '/root/dist/ui', src: 'C:/windows/path/README.md' }],
       });
+    });
+
+    it(`should treat npm dependencies as external`, () => {
+      const options = createRollupOptions(
+        normalizePackageOptions(testOptions, '/root', '/root/src'),
+        [],
+        context,
+        { name: 'example' },
+        '/root/src',
+        ['lodash']
+      );
+
+      const external = options[0].external as rollup.IsExternal;
+
+      expect(external('lodash', '', false)).toBe(true);
+      expect(external('lodash/fp', '', false)).toBe(true);
+      expect(external('rxjs', '', false)).toBe(false);
     });
   });
 });
