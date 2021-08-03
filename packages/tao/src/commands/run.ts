@@ -217,7 +217,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
     targetConfig,
     schema,
     project,
-    ws.relativeCwd(cwd)
+    ws.relativeCwd(cwd),
+    isVerbose
   );
 
   if (ws.isNxExecutor(nodeModule, executor)) {
