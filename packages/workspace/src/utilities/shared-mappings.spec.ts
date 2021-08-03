@@ -1,9 +1,5 @@
-import { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
-import { ProjectGraph } from '@nrwl/devkit';
-import {
-  getSharedNpmDeps,
-  getSharedNxDeps,
-} from '@nrwl/angular/src/generators/setup-mfe/lib/shared-mappings';
+import { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
+import { getSharedNpmDeps, getSharedNxDeps } from './shared-mappings';
 
 describe('SharedMappings', () => {
   const nxJson: NxJsonConfiguration = {

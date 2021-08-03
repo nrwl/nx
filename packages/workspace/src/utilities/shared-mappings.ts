@@ -1,18 +1,12 @@
-import {
-  share,
-  SharedMappings,
-} from '@angular-architects/module-federation/webpack';
-import {
-  ProjectGraph,
-  readCachedProjectGraph,
-} from '@nrwl/workspace/src/core/project-graph';
+import { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
+import * as path from 'path';
+import { readNxJson } from '../core/file-utils';
+import { readCachedProjectGraph } from '../core/project-graph';
 import {
   findAllProjectNodeDependencies,
   findAllProjectNpmDependencies,
-} from '@nrwl/workspace/src/utilities/project-graph-utils';
-import { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
-import * as path from 'path';
-import { readNxJson } from '@nrwl/workspace';
+} from './project-graph-utils';
+import { SharedMappings } from '@angular-architects/module-federation/webpack';
 
 interface NpmDepShareConfig {
   singleton: boolean;
@@ -52,11 +46,78 @@ interface NpmDepShareConfig {
   ],
 };
  *
- * TODO: Functions for configuring the remote side of things
+ * remote1 `webpack.config.js`
+  const sharedMappings = getSharedMappingsRemote('remote1', 'shell');
+
+  module.exports = {
+    output: {
+      uniqueName: 'remote1',
+      publicPath: 'auto',
+    },
+    optimization: {
+      runtimeChunk: false,
+      minimize: false,
+    },
+    resolve: {
+      alias: {
+        ...sharedMappings.getAliases(),
+      },
+    },
+    plugins: [
+      new ModuleFederationPlugin({
+        name: 'remote1',
+        filename: 'remoteEntry.js',
+        exposes: {
+          './Module': 'apps/remote1/src/app/remote-entry/entry.module.ts',
+        },
+        shared: {
+          ...getSharedNpmDepsRemote('remote1', 'host'),
+          ...sharedMappings.getDescriptors(),
+        },
+      }),
+      sharedMappings.getPlugin(),
+    ],
+  };
  */
 
+  /**
+   * Find the intersection of two sets
+   * @param s1
+   * @param s2 
+   * @returns 
+   */
 function setIntersection<T>(s1: Set<T>, s2: Set<T>): Set<T> {
   return new Set([...s1].filter((x) => s2.has(x)));
+}
+
+/**
+ * Find the path to the root tsconfig.base.json
+ * @returns path to the root tsconfig.base.json
+ */
+function getTsConfigPath(): string {
+  return `${process.cwd()}/tsconfig.base.json`;
+}
+
+function initSharedMappings(projectName: string): {
+  nxJson: NxJsonConfiguration;
+  projectGraph: ProjectGraph;
+  sharedMappings: SharedMappings;
+  tsConfigPath: string;
+} {
+  const nxJson = readNxJson();
+
+  const projectGraph = readCachedProjectGraph();
+
+  const tsConfigPath = getTsConfigPath();
+
+  const sharedMappings = new SharedMappings();
+
+  return {
+    nxJson,
+    projectGraph,
+    sharedMappings,
+    tsConfigPath,
+  };
 }
 
 /**
@@ -96,25 +157,28 @@ export function getSharedMappingsShell(
   shellName: string,
   remotes: string[]
 ): SharedMappings {
-  const nxJson = readNxJson();
-
-  const projectGraph = readCachedProjectGraph();
-
-  const shellRoot = projectGraph.nodes[shellName].data.root;
-
-  const tsConfigPath = path.join(
-    __dirname,
-    shellRoot
-      .split('/')
-      .map(() => '../')
-      .join('')
-  );
-
-  const sharedMappings = new SharedMappings();
+  const { sharedMappings, nxJson, projectGraph, tsConfigPath } =
+    initSharedMappings(shellName);
 
   sharedMappings.register(
     tsConfigPath,
     getSharedNxDeps(nxJson, projectGraph, shellName, remotes)
+  );
+
+  return sharedMappings;
+}
+
+export function getSharedMappingsRemote(
+  remoteName: string,
+  shellName: string
+): SharedMappings {
+  const { sharedMappings, nxJson, projectGraph, tsConfigPath } =
+    initSharedMappings(shellName);
+
+  // Uses the same function as when calculating shared with one shell and many remotes
+  sharedMappings.register(
+    tsConfigPath,
+    getSharedNxDeps(nxJson, projectGraph, shellName, [remoteName])
   );
 
   return sharedMappings;
@@ -149,16 +213,16 @@ export function getSharedNpmDeps(
   return [...sharedNpmDeps].map((dep) => dep.replace('npm:', ''));
 }
 
-export function getSharedNpmDepsShell(
-  shellName: string,
-  remotes: string[],
-  defaultConfig: Partial<NpmDepShareConfig> = {}
+export function getSharedNpmDepConfigs(
+  source: string,
+  targets: string[],
+  defaultConfig: Partial<NpmDepShareConfig>
 ): Record<string, NpmDepShareConfig> {
   const nxJson = readNxJson();
 
   const projectGraph = readCachedProjectGraph();
 
-  const npmDeps = getSharedNpmDeps(nxJson, projectGraph, shellName, remotes);
+  const npmDeps = getSharedNpmDeps(nxJson, projectGraph, source, targets);
 
   return npmDeps.reduce(
     (prev, depName) => ({
@@ -166,11 +230,28 @@ export function getSharedNpmDepsShell(
       [depName]: {
         singleton: true,
         strictVersion: true,
-        requiredVersion: true,
-        includeSecondaries: false,
+        requiredVersion: 'auto',
         ...defaultConfig,
       },
     }),
     {}
   );
+}
+
+// Currently getSharedNpmDepsRemote and getSharedNpmDepsShell do essentially the same thing but are different functions in expectation they might need to be configured separately in the future.
+
+export function getSharedNpmDepsRemote(
+  remoteName: string,
+  shellName: string,
+  defaultConfig: Partial<NpmDepShareConfig> = {}
+): Record<string, NpmDepShareConfig> {
+  return getSharedNpmDepConfigs(shellName, [remoteName], defaultConfig);
+}
+
+export function getSharedNpmDepsShell(
+  shellName: string,
+  remotes: string[],
+  defaultConfig: Partial<NpmDepShareConfig> = {}
+): Record<string, NpmDepShareConfig> {
+  return getSharedNpmDepConfigs(shellName, remotes, defaultConfig);
 }

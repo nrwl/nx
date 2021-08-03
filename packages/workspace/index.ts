@@ -63,6 +63,13 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
+export {
+  getSharedMappingsShell,
+  getSharedMappingsRemote,
+  getSharedNpmDepsRemote,
+  getSharedNpmDepsShell,
+} from './src/utilities/shared-mappings';
+
 export { unparse } from './src/tasks-runner/utils';
 
 export {
