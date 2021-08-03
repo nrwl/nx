@@ -157,7 +157,8 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
       schema,
       opts.interactive,
       null,
-      null
+      null,
+      isVerbose
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
@@ -219,7 +220,8 @@ export async function generate(
       schema,
       opts.interactive,
       ws.calculateDefaultProjectName(cwd, workspaceDefinition),
-      ws.relativeCwd(cwd)
+      ws.relativeCwd(cwd),
+      isVerbose
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
