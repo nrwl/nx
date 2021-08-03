@@ -2,8 +2,7 @@
  * NOTE: This file is intended to be executed as a script by utilities found in ./index.ts
  */
 import { logger } from '@nrwl/devkit';
-import { existsSync, readJson, unlinkSync } from 'fs-extra';
-import { DaemonJson, daemonJsonPath } from '../cache';
+import { deleteDaemonJsonCache, readDaemonJsonCache } from '../cache';
 import { stopServer } from '../server';
 
 (async () => {
@@ -11,12 +10,12 @@ import { stopServer } from '../server';
     await stopServer();
 
     // Clean up any orphaned background process and clear cached metadata
-    if (existsSync(daemonJsonPath)) {
-      const daemonJson: DaemonJson = await readJson(daemonJsonPath);
-      if (daemonJson?.backgroundProcessId) {
-        process.kill(daemonJson?.backgroundProcessId);
+    const cachedDaemonJson = await readDaemonJsonCache();
+    if (cachedDaemonJson) {
+      if (cachedDaemonJson.backgroundProcessId) {
+        process.kill(cachedDaemonJson.backgroundProcessId);
       }
-      unlinkSync(daemonJsonPath);
+      deleteDaemonJsonCache();
     }
   } catch (err) {
     logger.error(err);

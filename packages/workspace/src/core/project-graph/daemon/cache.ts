@@ -1,9 +1,6 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { existsSync, readJson, unlinkSync, writeJson } from 'fs-extra';
 import { join } from 'path';
-import {
-  cacheDirectory,
-  readCacheDirectoryProperty,
-} from '../../../utilities/cache-directory';
+import { ensureCacheDirectory, nxDepsDir } from '../../nx-deps/nx-deps-cache';
 
 /**
  * Because daemon server utilities will be executed across completely different processes,
@@ -17,8 +14,25 @@ export interface DaemonJson {
   backgroundProcessId: number;
 }
 
-const nxDepsDir = cacheDirectory(
-  appRootPath,
-  readCacheDirectoryProperty(appRootPath)
-);
-export const daemonJsonPath = join(nxDepsDir, 'daemon.json');
+const daemonJsonPath = join(nxDepsDir, 'daemon.json');
+
+export async function readDaemonJsonCache(): Promise<DaemonJson | null> {
+  ensureCacheDirectory();
+  if (!existsSync(daemonJsonPath)) {
+    return null;
+  }
+  return await readJson(daemonJsonPath);
+}
+
+export async function writeDaemonJsonCache(
+  daemonJson: DaemonJson
+): Promise<void> {
+  ensureCacheDirectory();
+  await writeJson(daemonJsonPath, daemonJson);
+}
+
+export function deleteDaemonJsonCache(): void {
+  try {
+    unlinkSync(daemonJsonPath);
+  } catch {}
+}

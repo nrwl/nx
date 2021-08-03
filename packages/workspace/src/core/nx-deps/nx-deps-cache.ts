@@ -35,14 +35,13 @@ export interface ProjectGraphCache {
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
-const nxDepsDir = cacheDirectory(
+export const nxDepsDir = cacheDirectory(
   appRootPath,
   readCacheDirectoryProperty(appRootPath)
 );
 const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
 
-export function readCache(): false | ProjectGraphCache {
-  performance.mark('read cache:start');
+export function ensureCacheDirectory(): void {
   try {
     if (!existsSync(nxDepsDir)) {
       ensureDirSync(nxDepsDir);
@@ -62,6 +61,11 @@ export function readCache(): false | ProjectGraphCache {
       throw new Error(`Failed to create directory: ${nxDepsDir}`);
     }
   }
+}
+
+export function readCache(): false | ProjectGraphCache {
+  performance.mark('read cache:start');
+  ensureCacheDirectory();
 
   let data = null;
   try {

@@ -22,7 +22,11 @@ describe('run-one', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));
-  afterAll(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => {
+    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
+    runCLI('daemon:stop');
+    removeProject({ onlyOnCI: true });
+  });
 
   it('should build a specific project', () => {
     const myapp = uniq('app');
@@ -36,6 +40,18 @@ describe('run-one', () => {
     runCLI(`generate @nrwl/react:app ${myapp}`);
 
     runCLI(`build ${myapp}`);
+  }, 10000);
+
+  it('should build a specific project with the daemon enabled', () => {
+    const myapp = uniq('app');
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    const buildWithDaemon = runCLI(`build ${myapp}`, {
+      env: { ...process.env, NX_DAEMON: 'true' },
+    });
+
+    expect(buildWithDaemon).toContain(`Daemon Client - Resolved ProjectGraph`);
+    expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
   }, 10000);
 
   it('should build the project when within the project root', () => {
@@ -170,7 +186,11 @@ describe('run-many', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => {
+    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
+    runCLI('daemon:stop');
+    removeProject({ onlyOnCI: true });
+  });
 
   it('should build specific and all projects', () => {
     // This fails with pnpm due to incompatibilities with ngcc for buildable libraries.
@@ -248,6 +268,13 @@ describe('run-many', () => {
     expect(buildConfig).toContain(`run ${libA}:build:production`);
     expect(buildConfig).toContain(`run ${libC}:build:production`);
     expect(buildConfig).toContain('Running target "build" succeeded');
+
+    // testing run many with daemon enabled
+    const buildWithDaemon = runCLI(`run-many --target=build --all`, {
+      env: { ...process.env, NX_DAEMON: 'true' },
+    });
+    expect(buildWithDaemon).toContain(`Daemon Client - Resolved ProjectGraph`);
+    expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
   }, 1000000);
 
   it('should run only failed projects', () => {
