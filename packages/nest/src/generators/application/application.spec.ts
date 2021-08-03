@@ -59,6 +59,7 @@ describe('application generator', () => {
 
       await applicationGenerator(tree, { name: appName, skipFormat: true });
 
+      expect(1).toEqual(2);
       expect(devkit.formatFiles).not.toHaveBeenCalled();
     });
   });
