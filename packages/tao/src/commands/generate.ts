@@ -8,9 +8,7 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
-import { removeSync, ensureDirSync, writeFileSync } from 'fs-extra';
-import * as path from 'path';
-import { FileChange, FsTree } from '../shared/tree';
+import { FileChange, flushChanges, FsTree } from '../shared/tree';
 import { logger } from '../shared/logger';
 import * as chalk from 'chalk';
 
@@ -129,20 +127,6 @@ export function printGenHelp(opts: GenerateOptions, schema: Schema) {
 
 function readDefaultCollection(workspace: WorkspaceJsonConfiguration) {
   return workspace.cli ? workspace.cli.defaultCollection : null;
-}
-
-export function flushChanges(root: string, fileChanges: FileChange[]) {
-  fileChanges.forEach((f) => {
-    const fpath = path.join(root, f.path);
-    if (f.type === 'CREATE') {
-      ensureDirSync(path.dirname(fpath));
-      writeFileSync(fpath, f.content);
-    } else if (f.type === 'UPDATE') {
-      writeFileSync(fpath, f.content);
-    } else if (f.type === 'DELETE') {
-      removeSync(fpath);
-    }
-  });
 }
 
 function printChanges(fileChanges: FileChange[]) {
