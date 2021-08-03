@@ -7,8 +7,7 @@ import { dirSync } from 'tmp';
 import { logger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import { getPackageManagerCommand } from '../shared/package-manager';
-import { FsTree } from '../shared/tree';
-import { flushChanges } from './generate';
+import { flushChanges, FsTree } from '../shared/tree';
 import {
   JsonReadOptions,
   readJsonFile,
