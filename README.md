@@ -143,7 +143,7 @@ help you get started.
 | ![Colum Ferry](https://avatars.githubusercontent.com/u/12140467?s=150) | ![Emily Xiong](https://avatars.githubusercontent.com/u/16211801?s=150) | ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=150) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=150) |
 | [Coly010](https://github.com/Coly010)                                  | [xiongemi](https://github.com/xiongemi)                                | [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   |
 
-| Zachary DeRose                                                           | Craigory Coppola                                                           |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=150) | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=150) |
-| [ZackDeRose](https://github.com/ZackDeRose)                              | [AgentEnder](https://github.com/AgentEnder)                                |
+| Zachary DeRose                                                           | Craigory Coppola                                                           | Chau Tran                                                            |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=150) | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=150) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=150) |
+| [ZackDeRose](https://github.com/ZackDeRose)                              | [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    |
