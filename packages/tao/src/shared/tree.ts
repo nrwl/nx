@@ -83,6 +83,14 @@ export interface Tree {
    * Returns the list of currently recorded changes.
    */
   listChanges(): FileChange[];
+
+  /**
+   * Changes permissions of a file.
+   * @param filePath A path to a file.
+   * @param mode The permission to be granted on the file, given as a string (e.g `755`) or octal integer (e.g `0o755`).
+   * See https://nodejs.org/api/fs.html#fs_file_modes.
+   */
+  changePermissions(filePath: string, mode: string | number): void;
 }
 
 /**
@@ -270,6 +278,35 @@ export class FsTree implements Tree {
       }
     });
     return res;
+  }
+
+  changePermissions(filePath: string, mode: string | number): void {
+    filePath = this.normalize(filePath);
+    const filePathChangeKey = this.rp(filePath);
+    if (this.recordedChanges[filePathChangeKey]) {
+      if (this.recordedChanges[filePathChangeKey].isDeleted) {
+        throw new Error(
+          `Cannot change permissions of deleted file ${filePath}.`
+        );
+      }
+
+      this.recordedChanges[filePathChangeKey].options = { mode };
+    } else if (!this.fsExists(filePath)) {
+      throw new Error(
+        `Cannot change permissions of non-existing file ${filePath}.`
+      );
+    } else if (!this.fsIsFile(filePath)) {
+      // To fully support directories we'd need to change how we store
+      // changes to keep a record of directories so we can associate
+      // permissions to them.
+      throw new Error(`Cannot change permissions of non-file ${filePath}.`);
+    } else {
+      this.recordedChanges[filePathChangeKey] = {
+        content: this.fsReadFile(filePath),
+        isDeleted: false,
+        options: { mode },
+      };
+    }
   }
 
   private normalize(path: string) {

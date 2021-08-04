@@ -8,6 +8,7 @@ describe('tree', () => {
   describe('FsTree', () => {
     let dir: string;
     let tree: FsTree;
+
     beforeEach(() => {
       dir = dirSync().name;
       ensureDirSync(path.join(dir, 'parent/child'));
@@ -385,6 +386,83 @@ describe('tree', () => {
 
     it('should be able to rename dirs', () => {
       // not supported yet
+    });
+
+    describe('changePermissions', () => {
+      it('should throw when the file is deleted', () => {
+        const filePath = 'root-file.txt';
+        tree.delete(filePath);
+
+        expect(() => tree.changePermissions(filePath, '755')).toThrowError(
+          `Cannot change permissions of deleted file ${filePath}.`
+        );
+      });
+
+      it('should throw when the file does not exist', () => {
+        const filePath = 'non-existent-file.txt';
+
+        expect(() => tree.changePermissions(filePath, '755')).toThrowError(
+          `Cannot change permissions of non-existing file ${filePath}.`
+        );
+      });
+
+      it('should throw when the path provided is not a file', () => {
+        const dirPath = 'parent';
+
+        expect(() => tree.changePermissions(dirPath, '755')).toThrowError(
+          `Cannot change permissions of non-file ${dirPath}.`
+        );
+      });
+
+      it('should change files permissions', () => {
+        const mode = '755';
+        const changePermissionsFilePath = 'root-file.txt';
+        const updatedContentFilePath = 'parent/parent-file.txt';
+        const newFilePath = 'some-new-file.txt';
+        tree.write(
+          updatedContentFilePath,
+          'file path with new updated content'
+        );
+        tree.write(newFilePath, 'new file created');
+
+        tree.changePermissions(changePermissionsFilePath, mode);
+        tree.changePermissions(updatedContentFilePath, mode);
+        tree.changePermissions(newFilePath, mode);
+        const changes = tree.listChanges();
+        flushChanges(dir, changes);
+
+        // unchanged file with permissions changed
+        expect(s(changes)).toContainEqual({
+          path: changePermissionsFilePath,
+          type: 'UPDATE',
+          content: 'root content',
+          options: { mode },
+        });
+        expect(
+          lstatSync(path.join(dir, changePermissionsFilePath)).mode &
+            octal(mode)
+        ).toEqual(octal(mode));
+        // updated file content with permissions changed
+        expect(s(changes)).toContainEqual({
+          path: updatedContentFilePath,
+          type: 'UPDATE',
+          content: 'file path with new updated content',
+          options: { mode },
+        });
+        expect(
+          lstatSync(path.join(dir, updatedContentFilePath)).mode & octal(mode)
+        ).toEqual(octal(mode));
+        // new file with permissions changed
+        expect(s(changes)).toContainEqual({
+          path: newFilePath,
+          type: 'CREATE',
+          content: 'new file created',
+          options: { mode },
+        });
+        expect(
+          lstatSync(path.join(dir, newFilePath)).mode & octal(mode)
+        ).toEqual(octal(mode));
+      });
     });
   });
 
