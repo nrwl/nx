@@ -1,11 +1,22 @@
 import * as wp from '@cypress/webpack-preprocessor';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { stripIndents } from '@nrwl/devkit';
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 
+/**
+ * @deprecated This function is no longer necessary and will be removed in Nx 14
+ */
 export function preprocessTypescript(
   config: any,
   customizeWebpackConfig?: (webpackConfig: any) => any
 ) {
+  if (installedCypressVersion() >= 7) {
+    console.log(stripIndents`
+    preprocessTypescript is now deprecated since Cypress has added typescript support.
+    If you would still like preprocess files with webpack, use the "@cypress/webpack-preprocessor" package.`);
+  }
+
   if (!config.env.tsConfig) {
     throw new Error(
       'Please provide an absolute path to a tsconfig.json as cypressConfig.env.tsConfig'

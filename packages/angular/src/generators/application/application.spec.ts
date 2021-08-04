@@ -96,9 +96,9 @@ describe('app', () => {
 
       expect(appTree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = parseJson(
-        appTree.read('apps/my-app-e2e/tsconfig.e2e.json', 'utf-8')
+        appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8')
       );
-      expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
+      expect(tsconfigE2E).toMatchSnapshot();
     });
 
     it('should setup jest with serializers', async () => {
@@ -675,7 +675,7 @@ describe('app', () => {
       // define all the tsconfig files to update
       const configFiles = [
         'apps/my-app/tsconfig.json',
-        'apps/my-app-e2e/tsconfig.e2e.json',
+        'apps/my-app-e2e/tsconfig.json',
       ];
 
       for (const configFile of configFiles) {

@@ -56,7 +56,6 @@ describe('schematic:cypress-project', () => {
       });
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      expect(tree.exists('apps/my-app-e2e/tsconfig.e2e.json')).toBeTruthy();
 
       expect(
         tree.exists('apps/my-app-e2e/src/fixtures/example.json')
@@ -64,12 +63,25 @@ describe('schematic:cypress-project', () => {
       expect(
         tree.exists('apps/my-app-e2e/src/integration/app.spec.ts')
       ).toBeTruthy();
-      expect(tree.exists('apps/my-app-e2e/src/plugins/index.js')).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/src/support/app.po.ts')).toBeTruthy();
       expect(
         tree.exists('apps/my-app-e2e/src/support/commands.ts')
       ).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/src/support/index.ts')).toBeTruthy();
+    });
+
+    it('should generate a plugin file if cypress is below version 7', async () => {
+      jest.mock('cypress/package.json', () => ({
+        version: '6.0.0',
+      }));
+
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-app-e2e',
+        project: 'my-app',
+      });
+
+      expect(tree.exists('apps/my-app-e2e/src/plugins/index.js')).toBeTruthy();
     });
 
     it('should add update `workspace.json` file', async () => {
@@ -87,7 +99,7 @@ describe('schematic:cypress-project', () => {
       expect(project.architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
-          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
+          tsConfig: ['apps/my-app-e2e/tsconfig.json'],
           exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
         },
       });
@@ -96,7 +108,7 @@ describe('schematic:cypress-project', () => {
         options: {
           cypressConfig: 'apps/my-app-e2e/cypress.json',
           devServerTarget: 'my-app:serve',
-          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+          tsConfig: 'apps/my-app-e2e/tsconfig.json',
         },
         configurations: {
           production: {
@@ -126,7 +138,7 @@ describe('schematic:cypress-project', () => {
       expect(project.architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
-          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
+          tsConfig: ['apps/my-app-e2e/tsconfig.json'],
           exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
         },
       });
@@ -135,7 +147,7 @@ describe('schematic:cypress-project', () => {
         options: {
           cypressConfig: 'apps/my-app-e2e/cypress.json',
           devServerTarget: 'my-app:serve:development',
-          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+          tsConfig: 'apps/my-app-e2e/tsconfig.json',
         },
         configurations: {
           production: {
@@ -217,10 +229,8 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
       });
-      const tsconfigJson = readJson(tree, 'apps/my-app-e2e/tsconfig.e2e.json');
-
-      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
-      expect(tsconfigJson.compilerOptions.outDir).toEqual('../../dist/out-tsc');
+      const tsconfigJson = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
+      expect(tsconfigJson).toMatchSnapshot();
     });
 
     describe('nested', () => {
@@ -240,7 +250,7 @@ describe('schematic:cypress-project', () => {
         expect(projectConfig.architect.lint).toEqual({
           builder: '@angular-devkit/build-angular:tslint',
           options: {
-            tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.e2e.json'],
+            tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.json'],
             exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**/*'],
           },
         });
@@ -250,7 +260,7 @@ describe('schematic:cypress-project', () => {
           options: {
             cypressConfig: 'apps/my-dir/my-app-e2e/cypress.json',
             devServerTarget: 'my-dir-my-app:serve',
-            tsConfig: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
+            tsConfig: 'apps/my-dir/my-app-e2e/tsconfig.json',
           },
           configurations: {
             production: {
@@ -296,12 +306,10 @@ describe('schematic:cypress-project', () => {
         });
         const tsconfigJson = readJson(
           tree,
-          'apps/my-dir/my-app-e2e/tsconfig.e2e.json'
+          'apps/my-dir/my-app-e2e/tsconfig.json'
         );
 
-        expect(tsconfigJson.compilerOptions.outDir).toEqual(
-          '../../../dist/out-tsc'
-        );
+        expect(tsconfigJson).toMatchSnapshot();
       });
     });
 

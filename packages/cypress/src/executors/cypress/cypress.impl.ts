@@ -65,7 +65,9 @@ function normalizeOptions(
 ) {
   options.env = options.env || {};
   if (options.tsConfig) {
-    options.env.tsConfig = join(context.root, options.tsConfig);
+    const tsConfigPath = join(context.root, options.tsConfig);
+    options.env.tsConfig = tsConfigPath;
+    process.env.TS_NODE_PROJECT = tsConfigPath;
   }
   checkSupportedBrowser(options);
   return options;

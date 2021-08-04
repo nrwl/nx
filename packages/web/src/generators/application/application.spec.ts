@@ -72,9 +72,25 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      const tsconfigE2E = readJson(tree, 'apps/my-app-e2e/tsconfig.e2e.json');
-      expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../dist/out-tsc');
-      expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
+      const tsconfigE2E = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E).toMatchInlineSnapshot(`
+Object {
+  "compilerOptions": Object {
+    "allowJs": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+  ],
+}
+`);
 
       const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
       expect(eslintJson).toMatchInlineSnapshot(`
@@ -181,7 +197,7 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
+          path: 'apps/my-dir/my-app-e2e/tsconfig.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc',
         },

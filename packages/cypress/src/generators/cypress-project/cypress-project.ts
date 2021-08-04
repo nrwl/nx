@@ -12,6 +12,8 @@ import {
   toJS,
   Tree,
   updateJson,
+  ProjectConfiguration,
+  NxJsonProjectConfiguration,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -21,14 +23,15 @@ import { join } from 'path';
 import { Schema } from './schema';
 import { eslintPluginCypressVersion } from '../../utils/versions';
 import { filePathPrefix } from '../../utils/project-name';
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
   projectRoot: string;
 }
 
-function createFiles(host: Tree, options: CypressProjectSchema) {
-  generateFiles(host, join(__dirname, './files'), options.projectRoot, {
+function createFiles(tree: Tree, options: CypressProjectSchema) {
+  generateFiles(tree, join(__dirname, './files'), options.projectRoot, {
     tmpl: '',
     ...options,
     project: options.project || 'Project',
@@ -36,8 +39,18 @@ function createFiles(host: Tree, options: CypressProjectSchema) {
     offsetFromRoot: offsetFromRoot(options.projectRoot),
   });
 
+  const cypressVersion = installedCypressVersion();
+  if (!cypressVersion || cypressVersion >= 7) {
+    tree.delete(join(options.projectRoot, 'src/plugins/index.js'));
+  } else {
+    updateJson(tree, join(options.projectRoot, 'cypress.json'), (json) => {
+      json.pluginsFile = './src/plugins/index';
+      return json;
+    });
+  }
+
   if (options.js) {
-    toJS(host);
+    toJS(tree);
   }
 }
 
@@ -51,37 +64,37 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
         : devServerTarget;
   }
 
-  addProjectConfiguration(
-    tree,
-    options.projectName,
-    {
-      root: options.projectRoot,
-      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-      projectType: 'application',
-      targets: {
-        e2e: {
-          executor: '@nrwl/cypress:cypress',
-          options: {
-            cypressConfig: joinPathFragments(
-              options.projectRoot,
-              'cypress.json'
-            ),
-            tsConfig: joinPathFragments(
-              options.projectRoot,
-              'tsconfig.e2e.json'
-            ),
-            devServerTarget,
-          },
-          configurations: {
-            production: {
-              devServerTarget: `${options.project}:serve:production`,
-            },
+  const project: ProjectConfiguration & NxJsonProjectConfiguration = {
+    root: options.projectRoot,
+    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    projectType: 'application',
+    targets: {
+      e2e: {
+        executor: '@nrwl/cypress:cypress',
+        options: {
+          cypressConfig: joinPathFragments(options.projectRoot, 'cypress.json'),
+          devServerTarget,
+        },
+        configurations: {
+          production: {
+            devServerTarget: `${options.project}:serve:production`,
           },
         },
       },
-      tags: [],
-      implicitDependencies: options.project ? [options.project] : undefined,
     },
+    tags: [],
+    implicitDependencies: options.project ? [options.project] : undefined,
+  };
+  if (installedCypressVersion() < 7) {
+    project.targets.e2e.options.tsConfig = joinPathFragments(
+      options.projectRoot,
+      'tsconfig.json'
+    );
+  }
+  addProjectConfiguration(
+    tree,
+    options.projectName,
+    project,
     options.standaloneConfig
   );
 }
@@ -95,9 +108,7 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
     project: options.projectName,
     linter: options.linter,
     skipFormat: true,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.e2e.json'),
-    ],
+    tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : '{js,ts}'}`,
     ],
@@ -148,18 +159,21 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
          */
         rules: {},
       },
+    ];
+
+    if (installedCypressVersion() < 7) {
       /**
        * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
        * That however leads to issues with the CommonJS Cypress plugin file.
        */
-      {
+      json.overrides.push({
         files: ['src/plugins/index.js'],
         rules: {
           '@typescript-eslint/no-var-requires': 'off',
           'no-undef': 'off',
         },
-      },
-    ];
+      });
+    }
 
     return json;
   });
