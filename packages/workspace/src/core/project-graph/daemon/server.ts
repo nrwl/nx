@@ -1,6 +1,6 @@
 import { logger, ProjectGraph } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { appendFileSync, statSync, unlinkSync } from 'fs';
+import { appendFileSync, existsSync, statSync, unlinkSync } from 'fs';
 import { connect, createServer, Server } from 'net';
 import { platform } from 'os';
 import { join, resolve } from 'path';
@@ -31,9 +31,11 @@ const fullOSSocketPath = isWindows
   : resolve(workspaceSocketPath);
 
 /**
- * We have two different use-cases for the daemon server:
- * 1) Running in a background process so that the daemon is purely an implmentation detail.
- * 2) Running in the main process in order to aid with development/debugging.
+ * We have two different use-cases for the "daemon" server:
+ * 1) Running in a background process so that the daemon is purely an implementation detail.
+ * 2) Running in the main process in order to aid with development/debugging (technically, of course, in this case
+ * it isn't actually a daemon server at all, but for simplicity we stick with the same general name as its primary
+ * reason for existence is to be run in a background process).
  *
  * For (1) we do not want to log things from the daemon server to stdout/stderr, so we instead write to a file.
  *
@@ -159,6 +161,13 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
       let errorMessage: string | undefined;
       if (err.message.startsWith('connect ENOENT')) {
         errorMessage = 'Error: The Daemon Server is not running';
+      }
+      if (err.message.startsWith('connect ECONNREFUSED')) {
+        // If somehow the file descriptor had not been released during a previous shut down.
+        if (existsSync(fullOSSocketPath)) {
+          errorMessage = `Error: A server instance had not been fully shut down. Please try running the command again.`;
+          killSocketOrPath();
+        }
       }
       logger.error(`NX Daemon Client - ${errorMessage || err}`);
       return reject(new Error(errorMessage) || err);

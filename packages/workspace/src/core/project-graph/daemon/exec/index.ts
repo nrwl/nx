@@ -2,7 +2,7 @@ import { logger } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { spawn, spawnSync } from 'child_process';
 import { ensureFileSync } from 'fs-extra';
-import { join } from 'path';
+import { join, sep } from 'path';
 import { dirSync } from 'tmp';
 import {
   DaemonJson,
@@ -17,7 +17,11 @@ export async function startInBackground(): Promise<void> {
    * starting the server, as well as providing a reference to where any subsequent
    * log files can be found.
    */
-  const tmpDirPrefix = `nx-daemon--${appRootPath.replace(/\//g, '-')}`;
+  const tmpDirPrefix = `nx-daemon--${appRootPath.replace(
+    // Replace the occurrences of / on unix systems, the \ on windows, with a -
+    new RegExp(escapeRegExp(sep), 'g'),
+    '-'
+  )}`;
   const serverLogOutputDir = dirSync({
     prefix: tmpDirPrefix,
   }).name;
@@ -89,4 +93,9 @@ export function stop(): void {
     cwd: __dirname,
     stdio: 'inherit',
   });
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
