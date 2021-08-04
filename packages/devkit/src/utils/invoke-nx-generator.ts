@@ -1,9 +1,14 @@
-import { join, relative } from 'path';
-import type { FileChange, Tree } from '@nrwl/tao/src/shared/tree';
+import { logger, stripIndent } from '@nrwl/tao/src/shared/logger';
+import type {
+  FileChange,
+  Tree,
+  TreeWriteOptions,
+} from '@nrwl/tao/src/shared/tree';
 import type {
   Generator,
   GeneratorCallback,
 } from '@nrwl/tao/src/shared/workspace';
+import { join, relative } from 'path';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -148,11 +153,33 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     this.tree.rename(from, to);
   }
 
-  write(filePath: string, content: Buffer | string): void {
+  write(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void {
+    if (options?.mode) {
+      this.warnUnsupportedFilePermissionsChange(filePath, options.mode);
+    }
+
     if (this.tree.exists(filePath)) {
       this.tree.overwrite(filePath, content);
     } else {
       this.tree.create(filePath, content);
     }
+  }
+
+  changePermissions(filePath: string, mode: string | number): void {
+    this.warnUnsupportedFilePermissionsChange(filePath, mode);
+  }
+
+  private warnUnsupportedFilePermissionsChange(
+    filePath: string,
+    mode: string | number
+  ) {
+    logger.warn(
+      stripIndent(`The Angular DevKit tree does not support changing a file permissions.
+                  Ignoring changing ${filePath} permissions to ${mode}.`)
+    );
   }
 }
