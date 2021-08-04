@@ -27,6 +27,20 @@ describe('update 12.6.0', () => {
     prettier.resolveConfig = mockResolveConfig as any;
   });
 
+  test('no projects key configured', async () => {
+    tree.write('jest.config.js', 'module.exports = {}');
+
+    await update(tree);
+
+    const result = tree.read('jest.config.js').toString();
+    expect(result).toMatchInlineSnapshot(`
+      "const { getJestProjects } = require('@nrwl/jest');
+
+      module.exports = { projects: getJestProjects() };
+      "
+    `);
+  });
+
   test('all jest projects covered', async () => {
     mockGetJestProjects.mockImplementation(() => ['<rootDir>/test-1']);
     await update(tree);
