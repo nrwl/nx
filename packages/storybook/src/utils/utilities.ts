@@ -16,6 +16,7 @@ export const Constants = {
     html: '@storybook/html',
     'web-components': '@storybook/web-components',
     vue: '@storybook/vue',
+    vue3: '@storybook/vue3',
   } as const,
 };
 type Constants = typeof Constants;
@@ -46,6 +47,10 @@ export function isFramework(
   }
 
   if (type === 'vue' && schema.uiFramework === '@storybook/vue') {
+    return true;
+  }
+
+  if (type === 'vue3' && schema.uiFramework === '@storybook/vue3') {
     return true;
   }
 
