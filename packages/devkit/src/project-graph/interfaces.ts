@@ -9,7 +9,8 @@ import type {
 export interface FileData {
   file: string;
   hash: string;
-  ext: string;
+  /** @deprecated this field will be removed in v13. Use {@link path.extname} to parse extension */
+  ext?: string;
   deps?: string[];
 }
 
@@ -29,6 +30,7 @@ export interface ProjectGraph<T = any> {
 
   // this is optional otherwise it might break folks who use project graph creation
   allWorkspaceFiles?: FileData[];
+  version?: string;
 }
 
 /**

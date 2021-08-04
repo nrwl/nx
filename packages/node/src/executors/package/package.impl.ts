@@ -19,7 +19,7 @@ export async function packageExecutor(
   const libRoot = context.workspace.projects[context.projectName].root;
   const normalizedOptions = normalizeOptions(options, context, libRoot);
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(),
+    readCachedProjectGraph('4.0'),
     context.root,
     context.projectName,
     context.targetName,

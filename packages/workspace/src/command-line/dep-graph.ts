@@ -204,7 +204,7 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
+  let graph = onlyWorkspaceProjects(await createProjectGraphAsync('4.0'));
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];

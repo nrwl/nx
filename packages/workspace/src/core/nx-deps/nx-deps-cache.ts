@@ -92,7 +92,7 @@ export function writeCache(
     version: packageJsonDeps[p],
   }));
   const newValue: ProjectGraphCache = {
-    version: '3.0',
+    version: projectGraph.version || '4.0',
     deps: packageJsonDeps,
     pathMappings: tsConfig.compilerOptions.paths || {},
     nxJsonPlugins,
@@ -119,7 +119,9 @@ export function shouldRecomputeWholeGraph(
   if (
     Object.keys(cache.nodes).some(
       (p) =>
-        (cache.nodes[p].type === 'app' || cache.nodes[p].type === 'lib') &&
+        (cache.nodes[p].type === 'app' ||
+          cache.nodes[p].type === 'lib' ||
+          cache.nodes[p].type === 'e2e') &&
         !workspaceJson.projects[p]
     )
   ) {

@@ -51,7 +51,7 @@ export class Rule extends Lint.Rules.AbstractRule {
          */
         try {
           (global as any).projectGraph = mapProjectGraphFiles(
-            readCachedProjectGraph()
+            readCachedProjectGraph('4.0')
           );
         } catch {}
       }

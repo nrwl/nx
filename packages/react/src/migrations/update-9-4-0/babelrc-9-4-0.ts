@@ -28,7 +28,7 @@ export default function update(): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = await createProjectGraphAsync();
+    const projectGraph = await createProjectGraphAsync('4.0');
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `

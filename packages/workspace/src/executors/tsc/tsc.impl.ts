@@ -18,7 +18,7 @@ export async function tscExecutor(
   const normalizedOptions = normalizeOptions(options, context);
   // const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const projectGraph = readCachedProjectGraph();
+  const projectGraph = readCachedProjectGraph('4.0');
   const { target, dependencies } = calculateProjectDependencies(
     projectGraph,
     context.root,

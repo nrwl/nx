@@ -51,7 +51,7 @@ export function createLibraryExecutor(
     context: ExecutorContext
   ) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      readCachedProjectGraph('4.0'),
       context.root,
       context.projectName,
       context.targetName,

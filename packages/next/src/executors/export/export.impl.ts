@@ -27,7 +27,7 @@ export default async function exportExecutor(
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      readCachedProjectGraph('4.0'),
       context.root,
       context.projectName,
       'build', // this should be generalized

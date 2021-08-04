@@ -1,4 +1,8 @@
-import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
+import {
+  toOldFormatOrNull,
+  WorkspaceJsonConfiguration,
+  Workspaces,
+} from '@nrwl/tao/src/shared/workspace';
 import type {
   FileData,
   NxJsonConfiguration,
@@ -17,6 +21,7 @@ import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
 import type { Environment } from './shared-interfaces';
+import { projectFileDataCompatAdapter } from './project-graph/project-graph';
 
 const ignore = require('ignore');
 
@@ -114,13 +119,13 @@ function getFileData(filePath: string): FileData {
   return {
     file,
     hash: defaultFileHasher.hashFile(filePath),
-    ext: extname(filePath),
   };
 }
 
 export function allFilesInDir(
   dirName: string,
-  recurse: boolean = true
+  recurse: boolean = true,
+  projectGraphVersion = '3.0'
 ): FileData[] {
   const ignoredGlobs = getIgnoredGlobs();
   const relDirName = relative(appRootPath, dirName);
@@ -139,9 +144,14 @@ export function allFilesInDir(
         const s = statSync(child);
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push(getFileData(child));
+          res.push(
+            projectFileDataCompatAdapter(
+              getFileData(child),
+              projectGraphVersion
+            )
+          );
         } else if (s.isDirectory() && recurse) {
-          res = [...res, ...allFilesInDir(child)];
+          res = [...res, ...allFilesInDir(child, true, projectGraphVersion)];
         }
       } catch (e) {}
     });
@@ -160,7 +170,7 @@ export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
-export function readWorkspaceJson() {
+export function readWorkspaceJson(): WorkspaceJsonConfiguration {
   return readWorkspaceConfig({
     format: 'nx',
     path: appRootPath,
@@ -234,20 +244,28 @@ export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
 }
 
-export function rootWorkspaceFileData(): FileData[] {
+export function rootWorkspaceFileData(projectGraphVersion = '3.0'): FileData[] {
   return rootWorkspaceFileNames().map((f) =>
-    getFileData(`${appRootPath}/${f}`)
+    projectFileDataCompatAdapter(
+      getFileData(`${appRootPath}/${f}`),
+      projectGraphVersion
+    )
   );
 }
 
-export function readWorkspaceFiles(): FileData[] {
+export function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
   performance.mark('read workspace files:start');
 
   if (defaultFileHasher.usesGitForHashing) {
     const ignoredGlobs = getIgnoredGlobs();
     const r = defaultFileHasher.workspaceFiles
       .filter((f) => !ignoredGlobs.ignores(f))
-      .map((f) => getFileData(`${appRootPath}/${f}`));
+      .map((f) =>
+        projectFileDataCompatAdapter(
+          getFileData(`${appRootPath}/${f}`),
+          projectGraphVersion
+        )
+      );
     performance.mark('read workspace files:end');
     performance.measure(
       'read workspace files',
@@ -258,15 +276,24 @@ export function readWorkspaceFiles(): FileData[] {
     return r;
   } else {
     const r = [];
-    r.push(...rootWorkspaceFileData());
+    r.push(...rootWorkspaceFileData(projectGraphVersion));
 
     // Add known workspace files and directories
-    appendArray(r, allFilesInDir(appRootPath, false));
-    appendArray(r, allFilesInDir(`${appRootPath}/tools`));
+    appendArray(r, allFilesInDir(appRootPath, false, projectGraphVersion));
+    appendArray(
+      r,
+      allFilesInDir(`${appRootPath}/tools`, true, projectGraphVersion)
+    );
     const wl = workspaceLayout();
-    appendArray(r, allFilesInDir(`${appRootPath}/${wl.appsDir}`));
+    appendArray(
+      r,
+      allFilesInDir(`${appRootPath}/${wl.appsDir}`, true, projectGraphVersion)
+    );
     if (wl.appsDir !== wl.libsDir) {
-      appendArray(r, allFilesInDir(`${appRootPath}/${wl.libsDir}`));
+      appendArray(
+        r,
+        allFilesInDir(`${appRootPath}/${wl.libsDir}`, true, projectGraphVersion)
+      );
     }
     performance.mark('read workspace files:end');
     performance.measure(

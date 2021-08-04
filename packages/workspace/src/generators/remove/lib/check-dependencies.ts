@@ -16,7 +16,7 @@ export async function checkDependencies(_, schema: Schema): Promise<void> {
     return;
   }
 
-  const graph: ProjectGraph = await createProjectGraphAsync();
+  const graph: ProjectGraph = await createProjectGraphAsync('4.0');
 
   const reverseGraph = onlyWorkspaceProjects(reverse(graph));
 

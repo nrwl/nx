@@ -8,7 +8,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'source.ts',
-          ext: '.ts',
           hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
@@ -31,7 +30,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'workspace.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
@@ -56,7 +54,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'workspace.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {
@@ -90,7 +87,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'workspace.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {
@@ -131,7 +127,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'workspace.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {
@@ -166,7 +161,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'workspace.json',
-          ext: '.json',
           hash: 'some-hash',
           getChanges: () => [
             {

@@ -6,5 +6,5 @@ import { createProjectGraph } from '../core/project-graph/project-graph';
  * @deprecated This method is deprecated and `await {@link createProjectGraphAsync}()` should be used instead
  */
 export function createProjectGraphFromTree(tree: Tree) {
-  return createProjectGraph(undefined, undefined, undefined);
+  return createProjectGraph(undefined, undefined, undefined, '3.0');
 }

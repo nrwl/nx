@@ -122,13 +122,11 @@ describe('project graph', () => {
     const affected = filterAffected(graph, [
       {
         file: 'something-for-api.txt',
-        ext: '.txt',
         hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
       {
         file: 'libs/ui/src/index.ts',
-        ext: '.ts',
         hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
@@ -182,7 +180,6 @@ describe('project graph', () => {
     const affected = filterAffected(graph, [
       {
         file: 'package.json',
-        ext: '.json',
         hash: 'some-hash',
         getChanges: () => jsonDiff(packageJson, updatedPackageJson),
       },
@@ -238,7 +235,6 @@ describe('project graph', () => {
     const affected = filterAffected(graph, [
       {
         file: 'package.json',
-        ext: '.json',
         hash: 'some-hash',
         getChanges: () => jsonDiff(packageJson, updatedPackageJson),
       },
@@ -259,7 +255,6 @@ describe('project graph', () => {
     const affected = filterAffected(graph, [
       {
         file: 'package.json',
-        ext: '.json',
         hash: 'some-hash',
         getChanges: () => jsonDiff(packageJson, updatedPackageJson),
       },

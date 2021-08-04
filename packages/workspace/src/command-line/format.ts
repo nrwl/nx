@@ -85,7 +85,7 @@ async function getPatternsFromApps(
   affectedFiles: string[],
   matchAllPattern: string
 ): Promise<string[]> {
-  const graph = onlyWorkspaceProjects(await createProjectGraphAsync());
+  const graph = onlyWorkspaceProjects(await createProjectGraphAsync('4.0'));
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)

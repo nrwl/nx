@@ -102,7 +102,6 @@ describe('nx deps utils', () => {
               files: [
                 {
                   file: 'index.ts',
-                  ext: 'ts',
                   hash: 'hash1',
                 },
               ],
@@ -116,7 +115,6 @@ describe('nx deps utils', () => {
           mylib: [
             {
               file: 'index.ts',
-              ext: 'ts',
               hash: 'hash1',
             },
           ],
@@ -131,7 +129,6 @@ describe('nx deps utils', () => {
         mylib: {
           'index.ts': {
             file: 'index.ts',
-            ext: 'ts',
             hash: 'hash1',
           },
         },
@@ -148,7 +145,6 @@ describe('nx deps utils', () => {
               files: [
                 {
                   file: 'index.ts',
-                  ext: 'ts',
                   hash: 'hash1',
                 },
               ],
@@ -162,14 +158,12 @@ describe('nx deps utils', () => {
           mylib: [
             {
               file: 'index.ts',
-              ext: 'ts',
               hash: 'hash1',
             },
           ],
           secondlib: [
             {
               file: 'index.ts',
-              ext: 'ts',
               hash: 'hash2',
             },
           ],
@@ -183,7 +177,6 @@ describe('nx deps utils', () => {
         secondlib: [
           {
             file: 'index.ts',
-            ext: 'ts',
             hash: 'hash2',
           },
         ],
@@ -192,13 +185,12 @@ describe('nx deps utils', () => {
         mylib: {
           'index.ts': {
             file: 'index.ts',
-            ext: 'ts',
             hash: 'hash1',
           },
         },
       });
       expect(r.filesToProcess).toEqual({
-        secondlib: [{ ext: 'ts', file: 'index.ts', hash: 'hash2' }],
+        secondlib: [{ file: 'index.ts', hash: 'hash2' }],
       });
     });
 
@@ -212,17 +204,14 @@ describe('nx deps utils', () => {
               files: [
                 {
                   file: 'index1.ts',
-                  ext: 'ts',
                   hash: 'hash1',
                 },
                 {
                   file: 'index2.ts',
-                  ext: 'ts',
                   hash: 'hash2',
                 },
                 {
                   file: 'index3.ts',
-                  ext: 'ts',
                   hash: 'hash3',
                 },
               ],
@@ -236,17 +225,14 @@ describe('nx deps utils', () => {
           mylib: [
             {
               file: 'index1.ts',
-              ext: 'ts',
               hash: 'hash1',
             },
             {
               file: 'index2.ts',
-              ext: 'ts',
               hash: 'hash2b',
             },
             {
               file: 'index4.ts',
-              ext: 'ts',
               hash: 'hash4',
             },
           ],
@@ -260,12 +246,10 @@ describe('nx deps utils', () => {
         mylib: [
           {
             file: 'index2.ts',
-            ext: 'ts',
             hash: 'hash2b',
           },
           {
             file: 'index4.ts',
-            ext: 'ts',
             hash: 'hash4',
           },
         ],
@@ -274,7 +258,6 @@ describe('nx deps utils', () => {
         mylib: {
           'index1.ts': {
             file: 'index1.ts',
-            ext: 'ts',
             hash: 'hash1',
           },
         },

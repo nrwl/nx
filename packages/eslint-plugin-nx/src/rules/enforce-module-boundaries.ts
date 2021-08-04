@@ -129,7 +129,7 @@ export default createESLintRule<Options, MessageIds>({
        */
       try {
         (global as any).projectGraph = mapProjectGraphFiles(
-          readCachedProjectGraph()
+          readCachedProjectGraph('4.0')
         );
       } catch {}
     }

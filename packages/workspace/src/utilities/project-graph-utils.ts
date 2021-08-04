@@ -20,7 +20,7 @@ export function projectHasTargetAndConfiguration(
 
 export function getSourceDirOfDependentProjects(
   projectName: string,
-  projectGraph = readCachedProjectGraph()
+  projectGraph = readCachedProjectGraph('4.0')
 ): string[] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
@@ -41,7 +41,7 @@ export function getSourceDirOfDependentProjects(
  */
 export function getProjectNameFromDirPath(
   projRelativeDirPath: string,
-  projectGraph = readCachedProjectGraph()
+  projectGraph = readCachedProjectGraph('4.0')
 ) {
   let parentNodeName = null;
   for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
@@ -75,7 +75,7 @@ export function getProjectNameFromDirPath(
  */
 function findAllProjectNodeDependencies(
   parentNodeName: string,
-  projectGraph = readCachedProjectGraph()
+  projectGraph = readCachedProjectGraph('4.0')
 ): string[] {
   const dependencyNodeNames = new Set<string>();
 

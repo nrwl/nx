@@ -26,7 +26,7 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync('4.0');
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
