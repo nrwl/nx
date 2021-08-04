@@ -35,6 +35,8 @@ function updateBaseJestConfig(
     return;
   }
   const currentConfig = jestConfigObject(tree, baseJestConfigPath);
+  currentConfig.projects ??= [];
+
   const uncoveredJestProjects = determineUncoveredJestProjects(
     currentConfig.projects as string[]
   );
