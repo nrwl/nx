@@ -241,9 +241,9 @@ export function createRollupOptions(
 
     const globals = options.globals
       ? options.globals.reduce((acc, item) => {
-        acc[item.moduleId] = item.global;
-        return acc;
-      }, {})
+          acc[item.moduleId] = item.global;
+          return acc;
+        }, {})
       : {};
 
     const externalPackages = dependencies
@@ -338,8 +338,8 @@ function convertCopyAssetsToRollupOptions(
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({
-      src: join(a.input, a.glob).replace(/\\/g, '/'),
-      dest: join(outputPath, a.output).replace(/\\/g, '/'),
-    }))
+        src: join(a.input, a.glob).replace(/\\/g, '/'),
+        dest: join(outputPath, a.output).replace(/\\/g, '/'),
+      }))
     : undefined;
 }

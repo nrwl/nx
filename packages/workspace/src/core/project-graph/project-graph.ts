@@ -139,15 +139,15 @@ export function projectGraphCompat4to3(
 /**
  * Backwards compatibility adapter for FileData
  * @param {FileData} fileData
- * @param {string?} version
+ * @param {string?} projectGraphVersion
  * @returns
  */
 export function projectFileDataCompatAdapter(
   fileData: FileData,
-  version?: string
+  projectGraphVersion: string
 ): FileData {
   const { file, hash, ext, deps } = fileData;
-  if (version && version !== '3.0') {
+  if (projectGraphVersion !== '3.0') {
     return { file, hash, ...{ deps } };
   } else {
     return { file, hash, ext: ext || extname(file), ...{ deps } };
@@ -197,7 +197,7 @@ export function createProjectGraph(
   let cachedFileData = {};
   if (
     cache &&
-    cache.version === '3.0' &&
+    (cache.version === '3.0' || cache.version === '4.0') &&
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,
@@ -216,8 +216,17 @@ export function createProjectGraph(
     projectFileMap,
     filesToProcess
   );
-  const projectGraph = buildProjectGraph(context, cachedFileData);
-  projectGraph.version = projectGraphVersion;
+  let projectGraph = buildProjectGraph(
+    context,
+    cachedFileData,
+    projectGraphVersion
+  );
+  if (cache && cache.version && projectGraphVersion !== cache.version) {
+    projectGraph =
+      projectGraphVersion === '3.0'
+        ? projectGraphCompat4to3(projectGraph)
+        : projectGraphMigrate3to4(projectGraph);
+  }
   if (cacheEnabled) {
     writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
   }
@@ -242,7 +251,8 @@ function addWorkspaceFiles(
 
 function buildProjectGraph(
   ctx: ProjectGraphProcessorContext,
-  cachedFileData: { [project: string]: { [file: string]: FileData } }
+  cachedFileData: { [project: string]: { [file: string]: FileData } },
+  projectGraphVersion: string
 ) {
   performance.mark('build project graph:start');
 
@@ -262,6 +272,7 @@ function buildProjectGraph(
   buildExplicitTypeScriptDependencies(ctx, builder);
   buildExplicitPackageJsonDependencies(ctx, builder);
   buildImplicitProjectDependencies(ctx, builder);
+  builder.setVersion(projectGraphVersion);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = updateProjectGraphWithPlugins(ctx, initProjectGraph);
@@ -282,16 +293,16 @@ function createContext(
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
-  const projects = Object.keys(workspaceJson.projects).reduce(
-    (map, projectName) => {
-      map[projectName] = {
-        ...workspaceJson.projects[projectName],
-        ...nxJson.projects[projectName],
-      };
-      return map;
-    },
-    {} as Record<string, ProjectConfiguration & NxJsonProjectConfiguration>
-  );
+  const projects: Record<
+    string,
+    ProjectConfiguration & NxJsonProjectConfiguration
+  > = Object.keys(workspaceJson.projects).reduce((map, projectName) => {
+    map[projectName] = {
+      ...workspaceJson.projects[projectName],
+      ...nxJson.projects[projectName],
+    };
+    return map;
+  }, {});
   return {
     workspace: {
       ...workspaceJson,

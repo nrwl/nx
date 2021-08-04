@@ -106,6 +106,13 @@ export class ProjectGraphBuilder {
     }
   }
 
+  /**
+   * Set version of the project graph
+   */
+  setVersion(version: string): void {
+    this.graph.version = version;
+  }
+
   getUpdatedProjectGraph(): ProjectGraph {
     for (const sourceProject of Object.keys(this.graph.nodes)) {
       const alreadySetTargetProjects =

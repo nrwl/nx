@@ -119,7 +119,9 @@ export function shouldRecomputeWholeGraph(
   if (
     Object.keys(cache.nodes).some(
       (p) =>
-        (cache.nodes[p].type === 'app' || cache.nodes[p].type === 'lib') &&
+        (cache.nodes[p].type === 'app' ||
+          cache.nodes[p].type === 'lib' ||
+          cache.nodes[p].type === 'e2e') &&
         !workspaceJson.projects[p]
     )
   ) {

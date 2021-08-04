@@ -125,7 +125,7 @@ function getFileData(filePath: string): FileData {
 export function allFilesInDir(
   dirName: string,
   recurse: boolean = true,
-  projectGraphVersion?: string
+  projectGraphVersion = '3.0'
 ): FileData[] {
   const ignoredGlobs = getIgnoredGlobs();
   const relDirName = relative(appRootPath, dirName);
@@ -244,9 +244,7 @@ export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
 }
 
-export function rootWorkspaceFileData(
-  projectGraphVersion?: string
-): FileData[] {
+export function rootWorkspaceFileData(projectGraphVersion = '3.0'): FileData[] {
   return rootWorkspaceFileNames().map((f) =>
     projectFileDataCompatAdapter(
       getFileData(`${appRootPath}/${f}`),
@@ -255,7 +253,7 @@ export function rootWorkspaceFileData(
   );
 }
 
-export function readWorkspaceFiles(projectGraphVersion?: string): FileData[] {
+export function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
   performance.mark('read workspace files:start');
 
   if (defaultFileHasher.usesGitForHashing) {

@@ -251,18 +251,24 @@ describe('project graph', () => {
         projectFileDataCompatAdapter({ file: 'a.ts', hash: 'some hash' }, '3.0')
       ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.ts' });
       expect(
-        projectFileDataCompatAdapter({
-          file: 'a.ts',
-          hash: 'some hash',
-          deps: [],
-        })
+        projectFileDataCompatAdapter(
+          {
+            file: 'a.ts',
+            hash: 'some hash',
+            deps: [],
+          },
+          '3.0'
+        )
       ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.ts', deps: [] });
       expect(
-        projectFileDataCompatAdapter({
-          file: 'a.ts',
-          hash: 'some hash',
-          ext: '.keepthis',
-        })
+        projectFileDataCompatAdapter(
+          {
+            file: 'a.ts',
+            hash: 'some hash',
+            ext: '.keepthis',
+          },
+          '3.0'
+        )
       ).toEqual({ file: 'a.ts', hash: 'some hash', ext: '.keepthis' });
     });
     it('should map FileData to latest graph version', () => {
