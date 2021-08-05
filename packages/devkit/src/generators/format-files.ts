@@ -33,7 +33,9 @@ export async function formatFiles(tree: Tree): Promise<void> {
         filepath: systemPath,
       };
 
-      const resolvedOptions = await prettier.resolveConfig(systemPath);
+      const resolvedOptions = await prettier.resolveConfig(systemPath, {
+        editorconfig: true,
+      });
       if (!resolvedOptions) {
         return;
       }
