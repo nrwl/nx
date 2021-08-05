@@ -143,12 +143,17 @@ if (parsedArgs.help) {
     nxCloud,
   });
 
+  let nxCloudInstallRes;
   if (nxCloud) {
-    await setupNxCloud(name, packageManager);
+    nxCloudInstallRes = await setupNxCloud(name, packageManager);
   }
 
   showNxWarning(name);
   pointToTutorialAndCourse(preset);
+
+  if (nxCloud && nxCloudInstallRes.code === 0) {
+    printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
+  }
 })().catch((error) => {
   const { version } = require('../package.json');
   output.error({
@@ -510,11 +515,12 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
   const nxCloudSpinner = ora(`Setting up NxCloud`).start();
   try {
     const pmc = getPackageManagerCommand(packageManager);
-    await execAndWait(
+    const res = await execAndWait(
       `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`,
       path.join(process.cwd(), name)
     );
     nxCloudSpinner.succeed('NxCloud has been set up successfully');
+    return res;
   } catch (e) {
     nxCloudSpinner.fail();
 
@@ -529,6 +535,14 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
   }
 }
 
+function printNxCloudSuccessMessage(nxCloudOut: string) {
+  const bodyLines = nxCloudOut.split('Nx Cloud has been enabled')[1].trim();
+  output.note({
+    title: `Nx Cloud has been enabled`,
+    bodyLines: bodyLines.split('\n').map((r) => r.trim()),
+  });
+}
+
 function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
     exec(command, { cwd }, (error, stdout, stderr) => {
@@ -537,7 +551,7 @@ function execAndWait(command: string, cwd: string) {
         writeFileSync(logFile, `${stdout}\n${stderr}`);
         rej({ code: error.code, logFile });
       } else {
-        res(null);
+        res({ code: 0, stdout });
       }
     });
   });
