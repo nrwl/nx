@@ -22,7 +22,7 @@ export function PluginCard({ name, description, url }: PluginCardProps) {
     };
   }, [copied]);
   return (
-    <div className="w-full flex flex-col place-content-between py-8 px-6 border border-gray-100 rounded">
+    <div className="w-full flex flex-col place-content-between py-8 px-6 border border-gray-100 rounded-md">
       <h3 className="text-lg font-semibold leading-tight mb-4">{name}</h3>
       <p className="sm:text-lg mb-6">{description}</p>
       <div className="grid grid-cols-3 justify-items-center">

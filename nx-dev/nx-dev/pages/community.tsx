@@ -109,6 +109,7 @@ export function Community(props: CommunityProps) {
                     target="_blank"
                     title="Join the Nx Community Slack"
                     href="http://go.nrwl.io/join-slack"
+                    rel="noreferrer"
                   >
                     Join the Nx Community Slack
                   </a>{' '}
@@ -129,6 +130,7 @@ export function Community(props: CommunityProps) {
                     className="underline cursor-pointer"
                     target="_blank"
                     href="https://www.youtube.com/nrwl_io"
+                    rel="noreferrer"
                   >
                     Nrwl YouTube channel
                   </a>
@@ -137,6 +139,7 @@ export function Community(props: CommunityProps) {
                     className="underline cursor-pointer"
                     target="_blank"
                     href="https://twitter.com/NxDevTools"
+                    rel="noreferrer"
                   >
                     @NxDevTools
                   </a>{' '}
@@ -247,7 +250,7 @@ export function Community(props: CommunityProps) {
                 </p>
               </div>
               <div className="w-full lg:w-3/5 flex flex-col justify-between items-start md:pl-16 pb-10 mt-8 md:mt-0">
-                <div className="py-4 px-6 bg-gray-50 rounded border border-gray-100">
+                <div className="py-4 px-6 bg-gray-50 border border-gray-100">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
                     How to Create Your Own
                   </h3>
