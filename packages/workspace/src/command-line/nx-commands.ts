@@ -135,6 +135,9 @@ export const commandsObject = yargs
     'EXPERIMENTAL: Start the project graph daemon server (either in the background or the current process)',
     (yargs) => withDaemonStartOptions(yargs),
     async (args) => {
+      // Always enable perf logging for the daemon server for now
+      process.env.NX_PERF_LOGGING = 'true';
+
       if (args.background) {
         return startInBackground();
       }

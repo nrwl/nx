@@ -4,6 +4,7 @@ import { appendFileSync, existsSync, statSync, unlinkSync } from 'fs';
 import { connect, createServer, Server } from 'net';
 import { platform } from 'os';
 import { join, resolve } from 'path';
+import { performance, PerformanceObserver } from 'perf_hooks';
 import { createProjectGraph } from '../project-graph';
 
 /**
@@ -46,16 +47,29 @@ const fullOSSocketPath = isWindows
  * For (2) we simply log to stdout.
  */
 let _serverLogOutputFile: string | undefined;
-function log(...s: string[]) {
+function serverLog(...s) {
   /**
    * If _serverLogOutputFile has not be set when starting the server, it means we are
    * running it in the current process and we should log to stdout.
    */
   if (!_serverLogOutputFile) {
-    console.log(...s);
+    console.log(formatLogMessage(`${s.join(' ')}`));
     return;
   }
-  appendFileSync(_serverLogOutputFile, `${s.join(' ')}\n`);
+  appendFileSync(_serverLogOutputFile, formatLogMessage(`${s.join(' ')}\n`));
+}
+
+function formatLogMessage(message) {
+  return `[NX Daemon Server] - ${new Date().toISOString()} - ${message}`;
+}
+
+if (process.env.NX_PERF_LOGGING) {
+  const obs = new PerformanceObserver((list) => {
+    const entry = list.getEntries()[0];
+    // Slight indentation to improve readability of the overall log file
+    serverLog(`  Time taken for '${entry.name}'`, `${entry.duration}ms`);
+  });
+  obs.observe({ entryTypes: ['measure'], buffered: false });
 }
 
 /**
@@ -63,7 +77,8 @@ function log(...s: string[]) {
  * graph upon connection to the server
  */
 const server = createServer((socket) => {
-  log('NX Daemon Server - Connection Received');
+  performance.mark('server-connection');
+  serverLog('Connection Received');
 
   const projectGraph = createProjectGraph(
     undefined,
@@ -71,17 +86,32 @@ const server = createServer((socket) => {
     undefined,
     '4.0'
   );
-  log('NX Daemon Server - Project Graph Created');
+  performance.mark('project-graph-created');
+  performance.measure(
+    'createProjectGraph() total',
+    'server-connection',
+    'project-graph-created'
+  );
 
   const serializedProjectGraph = JSON.stringify(projectGraph);
-
   socket.write(serializedProjectGraph, () => {
-    log('NX Daemon Server - Closed Connection to Client');
+    serverLog('Closed Connection to Client');
     /**
      * Close the connection once all data has been written to the socket so that the client
      * knows when to read it.
      */
     socket.end();
+    performance.mark('serialized-project-graph-written-to-client');
+    performance.measure(
+      'serialize and write project graph to client',
+      'project-graph-created',
+      'serialized-project-graph-written-to-client'
+    );
+    performance.measure(
+      'server response total',
+      'server-connection',
+      'serialized-project-graph-written-to-client'
+    );
   });
 });
 
@@ -100,7 +130,7 @@ export async function startServer({
   }
   return new Promise((resolve) => {
     server.listen(fullOSSocketPath, () => {
-      log(`NX Daemon Server - Started`);
+      serverLog(`Started`);
       return resolve(server);
     });
   });
