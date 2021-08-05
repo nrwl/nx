@@ -63,7 +63,7 @@ export function ConfPage() {
           className="w-full overflow-hidden bg-blue-nx-base"
           style={{
             background:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Crect width='2' height='2' fill='white' fill-opacity='0.15'/%3E%3C/svg%3E\"), linear-gradient(180deg, #143055 0%, #0b1a2d 100%)",
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 -17 34 17'%3E%3Crect width='2' height='2' fill='white' fill-opacity='0.15'/%3E%3C/svg%3E\"), linear-gradient(180deg, #143055 0%, #0b1a2d 100%)",
           }}
         >
           {/*Nx conf*/}
@@ -121,7 +121,7 @@ export function ConfPage() {
                       y2="657.518"
                       gradientUnits="userSpaceOnUse"
                     >
-                      <stop stopColor="#70C6A6" />
+                      <stop stopColor="#48C4E5" />
                       <stop offset="1" stopColor="#45BC98" stopOpacity="0" />
                     </linearGradient>
                     <linearGradient
@@ -132,7 +132,7 @@ export function ConfPage() {
                       y2="456.644"
                       gradientUnits="userSpaceOnUse"
                     >
-                      <stop stopColor="#70C6A6" />
+                      <stop stopColor="#48C4E5" />
                       <stop offset="1" stopColor="#45BC98" stopOpacity="0" />
                     </linearGradient>
                     <linearGradient
@@ -143,7 +143,7 @@ export function ConfPage() {
                       y2="433.154"
                       gradientUnits="userSpaceOnUse"
                     >
-                      <stop stopColor="#70C6A6" />
+                      <stop stopColor="#48C4E5" />
                       <stop offset="1" stopColor="#45BC98" stopOpacity="0" />
                     </linearGradient>
                     <linearGradient
@@ -154,7 +154,7 @@ export function ConfPage() {
                       y2="619.339"
                       gradientUnits="userSpaceOnUse"
                     >
-                      <stop stopColor="#70C6A6" />
+                      <stop stopColor="#48C4E5" />
                       <stop offset="1" stopColor="#45BC98" stopOpacity="0" />
                     </linearGradient>
                   </defs>
@@ -218,7 +218,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/jeffbcross"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       Jeff Cross
@@ -227,7 +227,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/victorsavkin"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       Victor Savkin
@@ -239,7 +239,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/ManfredSteyer"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       Manfred Steyer
@@ -251,7 +251,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/wwwalkerrun"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       Nathan Walker
@@ -262,7 +262,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/yallen011"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       Yvonne Allen
@@ -273,7 +273,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/MrJamesHenry"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       James Henry
@@ -285,7 +285,7 @@ export function ConfPage() {
                     <a
                       href="https://twitter.com/cotufa82"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noreferrer"
                       className="underline pointer"
                     >
                       Diana Rodriguez

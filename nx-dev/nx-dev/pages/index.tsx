@@ -72,7 +72,7 @@ export function Index() {
 
                   <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
                     <Link href="/getting-started/intro">
-                      <a className="w-full sm:w-auto flex-none bg-purple-nx-base text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-purple-nx-base focus:outline-none transition-colors duration-180">
+                      <a className="w-full sm:w-auto flex-none bg-blue-nx-twilight text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-nx-twilight focus:outline-none transition-colors duration-180">
                         Get Started
                       </a>
                     </Link>
@@ -352,7 +352,7 @@ export function Index() {
                     <div className="inline-flex rounded-md shadow">
                       <a
                         href="https://nx.app/?utm_source=nx.dev"
-                        className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-base"
+                        className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-twilight"
                       >
                         Learn About Nx Cloud
                       </a>
@@ -577,7 +577,7 @@ export function Index() {
                     <a
                       target="_blank"
                       href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco?utm_source=nx.dev"
-                      className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-base"
+                      className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-twilight"
                       rel="noreferrer"
                     >
                       Watch Nx Workspaces Course

@@ -86,14 +86,14 @@ export function FeatureList() {
           {data.map((tile) => (
             <div key={tile.link} className="p-4 lg:w-1/3 md:w-1/2 w-full">
               <Link href={tile.link}>
-                <div className="h-full px-4 py-8 rounded-lg border border-gray-50 shadow flex flex-col relative overflow-hidden cursor-pointer group hover:bg-purple-nx-base hover:text-white transition">
-                  <h2 className="text-center text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4 relative text-purple-nx-base group-hover:text-white">
+                <div className="h-full px-4 py-8 rounded-lg border border-gray-50 shadow flex flex-col relative overflow-hidden cursor-pointer group hover:bg-blue-nx-twilight hover:text-white transition">
+                  <h2 className="text-center text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4 relative text-blue-nx-twilight group-hover:text-white">
                     {tile.icon}
                     {tile.title}
                   </h2>
                   {tile.items.map((item, index) => (
                     <p key={index} className="flex items-start mt-4">
-                      <span className="w-4 h-4 mr-2 mt-1 inline-flex items-center justify-center text-purple-nx-base group-hover:text-white">
+                      <span className="w-4 h-4 mr-2 mt-1 inline-flex items-center justify-center text-blue-nx-twilight group-hover:text-white">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-6 w-6"
