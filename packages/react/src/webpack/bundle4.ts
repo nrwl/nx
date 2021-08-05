@@ -8,7 +8,7 @@ module.exports = function (useShim = true) {
       }
     };
     return webpackInstance;
-  }
+  };
 
   return {
     ReactRefreshPlugin: require('@pmmmwh/react-refresh-webpack-plugin'),

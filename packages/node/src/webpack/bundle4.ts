@@ -8,7 +8,7 @@ module.exports = function (useShim = true) {
       }
     };
     return webpackInstance;
-  }
+  };
 
   return {
     webpack,

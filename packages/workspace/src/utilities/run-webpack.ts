@@ -26,7 +26,7 @@ export function runWebpack(config: any, webpack: any): Observable<any> {
     } else {
       webpackCompiler.run((err, stats) => {
         callback(err, stats);
-        
+
         webpackCompiler.close(() => {
           subscriber.complete();
         });
