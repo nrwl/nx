@@ -221,6 +221,7 @@ export function readNxJson(): NxJsonConfiguration {
   const workspace = readWorkspaceConfig({ format: 'nx', path: appRootPath });
   Object.entries(workspace.projects).forEach(
     ([project, projectConfig]: [string, NxJsonProjectConfiguration]) => {
+      config.projects ??= {};
       if (!config.projects[project]) {
         const { tags, implicitDependencies } = projectConfig;
         config.projects[project] = { tags, implicitDependencies };
