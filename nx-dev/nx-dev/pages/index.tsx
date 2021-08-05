@@ -133,13 +133,13 @@ export function Index() {
             </div>
           </div>
           {/* BANNER */}
-          <div className="bg-green-nx-base">
+          <div className="bg-blue-nx-primary">
             <div className="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
               <div className="flex items-center flex-col sm:flex-row justify-between flex-wrap">
                 <div className="flex-1 flex flex-row items-center">
                   <span className="flex p-2 rounded-lg bg-white">
                     <svg
-                      className="h-6 w-6 text-green-nx-base"
+                      className="h-6 w-6 text-blue-nx-base"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"

@@ -14,6 +14,9 @@ module.exports = {
         blue: {
           'nx-dark': 'hsla(214, 61%, 11%, 1)',
           'nx-base': 'hsla(214, 62%, 21%, 1)',
+          'nx-twilight': 'hsla(200, 90%, 33%, 1)',
+          'nx-primary': 'hsla(193, 75%, 59%, 1)',
+          'nx-primary-light': 'hsla(192, 36%, 91%, 1)',
         },
         purple: {
           'nx-base': 'hsla(258, 76%, 62%, 1)',
