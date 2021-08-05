@@ -13,6 +13,7 @@ import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularVersion,
+  angularDevkitVersion,
   jestPresetAngularVersion,
   rxjsVersion,
 } from '../../utils/versions';
@@ -91,7 +92,7 @@ function updateDependencies(host: Tree) {
     {
       '@angular/compiler-cli': angularVersion,
       '@angular/language-service': angularVersion,
-      '@angular-devkit/build-angular': angularVersion,
+      '@angular-devkit/build-angular': angularDevkitVersion,
     }
   );
 }
