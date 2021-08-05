@@ -37,7 +37,7 @@ export function InlineCommand({
       >
         <button
           type="button"
-          className="max-w-full text-sm flex-none bg-white text-gray-400 hover:text-gray-900 font-input-mono leading-6 py-1 sm:px-3 border border-gray-200 rounded-xl flex items-center justify-center space-x-2 sm:space-x-4 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-gray-300 focus:outline-none transition-colors duration-180"
+          className="max-w-full text-sm flex-none bg-white text-gray-400 hover:text-gray-900 font-input-mono leading-6 py-1 sm:px-3 border border-gray-200 rounded-md flex items-center justify-center space-x-2 sm:space-x-4 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-gray-300 focus:outline-none transition-colors duration-180"
         >
           <span className="overflow-auto flex items-center text-gray-900">
             <span className="hidden sm:inline text-gray-500" aria-hidden="true">
