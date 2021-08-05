@@ -1,10 +1,14 @@
 module.exports = function (useShim = true) {
-  const webpack = require('webpack');
-  webpack.close = (callback) => {
-    if (typeof callback === 'function') {
-      callback();
-    }
-  };
+  const initialWebpack = require('webpack');
+  const webpack = (config) => {
+    const webpackInstance = initialWebpack(config);
+    webpackInstance.close = (callback) => {
+      if (typeof callback === 'function') {
+        callback();
+      }
+    };
+    return webpackInstance;
+  }
 
   return {
     webpack,
