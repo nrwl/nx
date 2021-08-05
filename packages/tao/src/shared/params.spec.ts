@@ -991,7 +991,7 @@ describe('params', () => {
       expect(options).toEqual({});
     });
 
-    it('should apply verbose if additionalProperties is true', () => {
+    it('should apply verbose if additionalProperties is true and isVerbose is truthy', () => {
       const options = {};
       applyVerbosity(
         options,
@@ -1001,7 +1001,7 @@ describe('params', () => {
       expect(options).toEqual({ verbose: isVerbose });
     });
 
-    it('should apply verbose if additionalProperties is false but verbose is in schema', () => {
+    it('should apply verbose if additionalProperties is false but verbose is in schema and isVerbose  is truthy', () => {
       const options = {};
       applyVerbosity(
         options,
@@ -1012,6 +1012,19 @@ describe('params', () => {
         isVerbose
       );
       expect(options).toEqual({ verbose: isVerbose });
+    });
+
+    it('should not apply verbose if isVerbose is falsy', () => {
+      const options = {};
+      applyVerbosity(
+        options,
+        {
+          additionalProperties: false,
+          properties: { verbose: {} },
+        },
+        false
+      );
+      expect(options).toEqual({});
     });
   });
 });

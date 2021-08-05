@@ -449,8 +449,11 @@ export function applyVerbosity(
   schema: Schema,
   isVerbose: boolean
 ) {
-  if (schema.additionalProperties || 'verbose' in schema.properties) {
-    options['verbose'] = isVerbose;
+  if (
+    (schema.additionalProperties || 'verbose' in schema.properties) &&
+    isVerbose
+  ) {
+    options['verbose'] = true;
   }
 }
 
