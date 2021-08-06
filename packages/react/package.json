@@ -28,8 +28,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@babel/core": "7.12.13",
-    "@babel/preset-react": "7.12.13",
+    "@babel/core": "^7.15.0",
+    "@babel/preset-react": "^7.14.5",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
