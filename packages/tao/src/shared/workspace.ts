@@ -3,7 +3,6 @@ import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
-import type { PackageManager } from './package-manager';
 import { TaskGraph } from './tasks';
 
 export interface Workspace
@@ -23,40 +22,13 @@ export interface WorkspaceJsonConfiguration {
   /**
    * Projects' configurations
    */
-  projects: { [projectName: string]: ProjectConfiguration };
+  projects: { [projectName: string]: ProjectConfiguration & NxJsonProjectConfiguration };
 
   /**
    * Default project. When project isn't provided, the default project
    * will be used. Convenient for small workspaces with one main application.
    */
   defaultProject?: string;
-
-  /**
-   * List of default values used by generators.
-   *
-   * These defaults are global. They are used when no other defaults are configured.
-   *
-   * Example:
-   *
-   * ```
-   * {
-   *   "@nrwl/react": {
-   *     "library": {
-   *       "style": "scss"
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  generators?: { [collectionName: string]: { [generatorName: string]: any } };
-
-  /**
-   * Default generator collection. It is used when no collection is provided.
-   */
-  cli?: {
-    packageManager?: PackageManager;
-    defaultCollection?: string;
-  };
 }
 
 export interface RawWorkspaceJsonConfiguration
@@ -298,6 +270,10 @@ export class Workspaces {
       path.join(this.root, workspaceConfigName(this.root))
     );
     return resolveNewFormatWithInlineProjects(w, this.root);
+  }
+
+  readNxConfiguration(): NxJsonConfiguration {
+    return readJsonFile<NxJsonConfiguration>(path.join(this.root, 'nx.json'))
   }
 
   isNxExecutor(nodeModule: string, executor: string) {

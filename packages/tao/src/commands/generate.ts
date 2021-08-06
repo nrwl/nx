@@ -7,10 +7,11 @@ import {
   Schema,
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
-import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
+import { Workspaces } from '../shared/workspace';
 import { FileChange, flushChanges, FsTree } from '../shared/tree';
 import { logger } from '../shared/logger';
 import * as chalk from 'chalk';
+import { NxJsonConfiguration } from '../shared/nx';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -125,8 +126,8 @@ export function printGenHelp(opts: GenerateOptions, schema: Schema) {
   });
 }
 
-function readDefaultCollection(workspace: WorkspaceJsonConfiguration) {
-  return workspace.cli ? workspace.cli.defaultCollection : null;
+function readDefaultCollection(nxConfig: NxJsonConfiguration) {
+  return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
 }
 
 function printChanges(fileChanges: FileChange[]) {
@@ -153,6 +154,7 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
       opts.generatorOptions,
       opts.collectionName,
       normalizedGeneratorName,
+      null,
       null,
       schema,
       opts.interactive,
@@ -199,10 +201,11 @@ export async function generate(
 
   return handleErrors(isVerbose, async () => {
     const workspaceDefinition = ws.readWorkspaceConfiguration();
+    const nxConfig = ws.readNxConfiguration();
     const opts = parseGenerateOpts(
       args,
       'generate',
-      readDefaultCollection(workspaceDefinition)
+      readDefaultCollection(nxConfig)
     );
 
     const { normalizedGeneratorName, schema, implementationFactory } =
@@ -216,6 +219,7 @@ export async function generate(
       opts.generatorOptions,
       opts.collectionName,
       normalizedGeneratorName,
+      nxConfig,
       workspaceDefinition,
       schema,
       opts.interactive,

@@ -73,7 +73,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 }> {
   const nxJson = readNxJson();
   assertWorkspaceValidity(workspaceJson, nxJson);
-  const normalizedNxJson = normalizeNxJson(nxJson);
+  const normalizedNxJson = normalizeNxJson(nxJson, workspaceJson);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 

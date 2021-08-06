@@ -26,6 +26,7 @@ import type {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
   ProjectGraph,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from '../utilities/typescript/find-nodes';
@@ -458,6 +459,10 @@ export function updateNxJsonInTree(
   };
 }
 
+/**
+ * Sets former nx.json options on projects which are already in workspace.json
+ * @deprecated project options are no longer stored in nx.json, this should not be used.
+ */
 export function addProjectToNxJsonInTree(
   projectName: string,
   options: NxJsonProjectConfiguration
@@ -465,8 +470,8 @@ export function addProjectToNxJsonInTree(
   const defaultOptions = {
     tags: [],
   };
-  return updateNxJsonInTree((json) => {
-    json.projects[projectName] = { ...defaultOptions, ...options };
+  return updateWorkspaceInTree((json: WorkspaceJsonConfiguration) => {
+    json.projects[projectName] = {  ...json.projects[projectName], ...defaultOptions, ...options };
     return json;
   });
 }

@@ -5,7 +5,7 @@ import {
   readPackageJson,
   readWorkspaceJson,
 } from '../file-utils';
-import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
+import type { NxJsonConfiguration, ProjectGraph, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
@@ -17,25 +17,23 @@ import {
   TouchedProjectLocator,
 } from './affected-project-graph-models';
 import { normalizeNxJson } from '../normalize-nx-json';
-import { getTouchedProjectsInNxJson } from './locators/nx-json-changes';
 import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
 
 export function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
-  workspaceJson: any = readWorkspaceJson(),
+  workspaceJson: WorkspaceJsonConfiguration = readWorkspaceJson(),
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
-  const normalizedNxJson = normalizeNxJson(nxJson);
+  const normalizedNxJson = normalizeNxJson(nxJson, workspaceJson);
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
     getImplicitlyTouchedProjects,
     getTouchedNpmPackages,
     getImplicitlyTouchedProjectsByJsonChanges,
-    getTouchedProjectsInNxJson,
     getTouchedProjectsInWorkspaceJson,
     getTouchedProjectsFromTsConfig,
   ];

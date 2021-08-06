@@ -10,6 +10,7 @@ import {
   getPackageManagerCommand,
   WorkspaceJsonConfiguration,
   PackageManager,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -356,9 +357,9 @@ function setDefaultPackageManager(host: Tree, options: Schema) {
     return;
   }
 
-  updateJson<WorkspaceJsonConfiguration>(
+  updateJson<NxJsonConfiguration>(
     host,
-    getWorkspacePath(host, options),
+    'nx.json',
     (json) => {
       if (!json.cli) {
         json.cli = {};

@@ -130,6 +130,7 @@ It only uses language primitives and immutable objects
 - [updateProjectConfiguration](../../node/nx-devkit/index#updateprojectconfiguration)
 - [updateTsConfigsToJs](../../node/nx-devkit/index#updatetsconfigstojs)
 - [updateWorkspaceConfiguration](../../node/nx-devkit/index#updateworkspaceconfiguration)
+- [updateWorkspaceJson](../../node/nx-devkit/index#updateworkspacejson)
 - [visitNotIgnoredFiles](../../node/nx-devkit/index#visitnotignoredfiles)
 - [writeJson](../../node/nx-devkit/index#writejson)
 - [writeJsonFile](../../node/nx-devkit/index#writejsonfile)
@@ -1509,6 +1510,23 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 | :---------------- | :---------------------------------------------------------------------------- |
 | `tree`            | [`Tree`](../../node/nx-devkit/index#tree)                                     |
 | `workspaceConfig` | [`WorkspaceConfiguration`](../../node/nx-devkit/index#workspaceconfiguration) |
+
+#### Returns
+
+`void`
+
+---
+
+### updateWorkspaceJson
+
+▸ **updateWorkspaceJson**(`tree`, `updater`): `void`
+
+#### Parameters
+
+| Name      | Type                                                                                                                                                                                              |
+| :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tree`    | [`Tree`](../../node/nx-devkit/index#tree)                                                                                                                                                         |
+| `updater` | (`workspaceJson`: [`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration)) => [`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration) |
 
 #### Returns
 

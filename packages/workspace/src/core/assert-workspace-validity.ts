@@ -1,34 +1,16 @@
-import { workspaceFileName } from './file-utils';
 import type {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { output } from '../utilities/output';
 
 export function assertWorkspaceValidity(
-  workspaceJson,
+  workspaceJson: WorkspaceJsonConfiguration,
   nxJson: NxJsonConfiguration
 ) {
-  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
-  const nxJsonProjects = Object.keys(nxJson.projects);
-
-  if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
-    output.error({
-      title: 'Configuration Error',
-      bodyLines: [
-        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in ${workspaceFileName()}: ${minus(
-          nxJsonProjects,
-          workspaceJsonProjects
-        ).join(', ')}`,
-      ],
-    });
-
-    process.exit(1);
-  }
-
   const projects = {
     ...workspaceJson.projects,
-    ...nxJson.projects,
   };
 
   const invalidImplicitDependencies = new Map<string, string[]>();
@@ -38,11 +20,9 @@ export function assertWorkspaceValidity(
   )
     .reduce((acc, entry) => {
       function recur(value, acc = [], path: string[]) {
-        if (value === '*') {
-          // do nothing since '*' is calculated and always valid.
-        } else if (typeof value === 'string') {
+        // do nothing if '*' , calculated and always valid.
+        if (value !== '*' && typeof value === 'string') {
           // This is invalid because the only valid string is '*'
-
           output.error({
             title: 'Configuration Error',
             bodyLines: [
@@ -68,16 +48,16 @@ export function assertWorkspaceValidity(
       return map;
     }, invalidImplicitDependencies);
 
-  nxJsonProjects
-    .filter((nxJsonProjectName) => {
-      const project = nxJson.projects[nxJsonProjectName];
+  Object.keys(projects)
+    .filter((projectName) => {
+      const project = workspaceJson.projects[projectName];
       return !!project.implicitDependencies;
     })
-    .reduce((map, nxJsonProjectName) => {
-      const project = nxJson.projects[nxJsonProjectName];
+    .reduce((map, projectName) => {
+      const project = workspaceJson.projects[projectName];
       detectAndSetInvalidProjectValues(
         map,
-        nxJsonProjectName,
+        projectName,
         project.implicitDependencies,
         projects
       );

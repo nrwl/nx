@@ -354,7 +354,6 @@ class ProjectHasher {
         const workspaceJson = JSON.stringify(
           this.workspaceJson.projects[projectName] ?? ''
         );
-        const nxJson = JSON.stringify(this.nxJson.projects[projectName] ?? '');
 
         let tsConfig: string;
 
@@ -369,7 +368,6 @@ class ProjectHasher {
             ...fileNames,
             ...values,
             workspaceJson,
-            nxJson,
             tsConfig,
           ])
         );
@@ -423,7 +421,7 @@ class ProjectHasher {
       res.projects ??= {};
       return res;
     } catch {
-      return { projects: {}, npmScope: '' };
+      return { npmScope: '' };
     }
   }
 }

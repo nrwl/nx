@@ -100,6 +100,7 @@ export {
   updateProjectConfiguration,
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
+  updateWorkspaceJson,
   getProjects,
   isStandaloneProject,
 } from './src/generators/project-configuration';

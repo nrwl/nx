@@ -76,11 +76,6 @@ To upgrade change the version number at the top of ${getWorkspacePath(
       value.projects[project] = normalizePath(dirname(configPath));
       return value;
     });
-
-    updateJson(host, 'nx.json', (value: NxJsonConfiguration) => {
-      delete value.projects[project];
-      return value;
-    });
   }
 
   await formatFiles(host);
