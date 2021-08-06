@@ -1,14 +1,16 @@
+import { workspaceFileName } from './file-utils';
 import type {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
-  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { output } from '../utilities/output';
 
 export function assertWorkspaceValidity(
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson,
   nxJson: NxJsonConfiguration
 ) {
+  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
+
   const projects = {
     ...workspaceJson.projects,
   };
@@ -20,9 +22,11 @@ export function assertWorkspaceValidity(
   )
     .reduce((acc, entry) => {
       function recur(value, acc = [], path: string[]) {
-        // do nothing if '*' , calculated and always valid.
-        if (value !== '*' && typeof value === 'string') {
+        if (value === '*') {
+          // do nothing since '*' is calculated and always valid.
+        } else if (typeof value === 'string') {
           // This is invalid because the only valid string is '*'
+
           output.error({
             title: 'Configuration Error',
             bodyLines: [
@@ -48,13 +52,13 @@ export function assertWorkspaceValidity(
       return map;
     }, invalidImplicitDependencies);
 
-  Object.keys(projects)
+  workspaceJsonProjects
     .filter((projectName) => {
-      const project = workspaceJson.projects[projectName];
+      const project = projects[projectName];
       return !!project.implicitDependencies;
     })
     .reduce((map, projectName) => {
-      const project = workspaceJson.projects[projectName];
+      const project = projects[projectName];
       detectAndSetInvalidProjectValues(
         map,
         projectName,
