@@ -169,7 +169,6 @@ export function newProject({ name = uniq('proj') } = {}): string {
       }
 
       const packages = [
-        `@nrwl/cypress`,
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
