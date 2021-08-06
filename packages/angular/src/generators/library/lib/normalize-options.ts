@@ -27,7 +27,7 @@ export function normalizeOptions(
     ? `${names(options.directory).fileName}/${name}`
     : name;
 
-  const { libsDir, npmScope } = getWorkspaceLayout(host);
+  const { libsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = options.simpleModuleName ? name : projectName;
@@ -39,6 +39,8 @@ export function normalizeOptions(
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
   const defaultPrefix = npmScope;
+
+  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
 
   const importPath =
     options.importPath || `@${defaultPrefix}/${projectDirectory}`;
