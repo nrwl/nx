@@ -399,4 +399,14 @@ describe('app', () => {
       expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
     });
   });
+
+  it('should add a .gitkeep file to the public directory', async () => {
+    await applicationGenerator(tree, {
+      name: 'myApp',
+      style: 'css',
+      standaloneConfig: false,
+    });
+
+    expect(tree.exists('apps/my-app/public/.gitkeep')).toBe(true);
+  });
 });
