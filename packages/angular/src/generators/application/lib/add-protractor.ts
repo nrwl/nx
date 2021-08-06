@@ -1,12 +1,7 @@
-import {
-  Tree,
-} from '@nrwl/devkit';
+import { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import {
-  moveFilesToNewDirectory,
-  joinPathFragments,
-} from '@nrwl/devkit';
+import { moveFilesToNewDirectory, joinPathFragments } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export async function addProtractor(host: Tree, options: NormalizedSchema) {

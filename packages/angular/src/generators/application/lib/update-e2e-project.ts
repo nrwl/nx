@@ -1,4 +1,8 @@
-import type { NxJsonProjectConfiguration, ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type {
+  NxJsonProjectConfiguration,
+  ProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   offsetFromRoot,
@@ -31,7 +35,7 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
       e2e: proj.targets.e2e,
     },
     implicitDependencies: [options.name],
-    tags: []
+    tags: [],
   };
   project.targets.e2e.options.protractorConfig = `${options.e2eProjectRoot}/protractor.conf.js`;
   // update workspace.json / angular.json

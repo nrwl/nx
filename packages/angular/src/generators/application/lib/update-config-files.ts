@@ -21,7 +21,7 @@ export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
 
 function addProjectToNx(host: Tree, options: NormalizedSchema) {
   // tags, implicit dependencies
-  const projectConfig = readProjectConfiguration(host, options.name)
+  const projectConfig = readProjectConfiguration(host, options.name);
   const resultJson = {
     ...projectConfig,
     tags: options.parsedTags,

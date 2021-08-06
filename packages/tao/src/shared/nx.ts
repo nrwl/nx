@@ -58,7 +58,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
       options?: any;
     };
   };
-    /**
+  /**
    * List of default values used by generators.
    *
    * These defaults are global. They are used when no other defaults are configured.
@@ -75,15 +75,15 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * }
    * ```
    */
-     generators?: { [collectionName: string]: { [generatorName: string]: any } };
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
 
-     /**
-      * Default generator collection. It is used when no collection is provided.
-      */
-     cli?: {
-       packageManager?: PackageManager;
-       defaultCollection?: string;
-     };
+  /**
+   * Default generator collection. It is used when no collection is provided.
+   */
+  cli?: {
+    packageManager?: PackageManager;
+    defaultCollection?: string;
+  };
   /**
    * Plugins for extending the project graph
    */

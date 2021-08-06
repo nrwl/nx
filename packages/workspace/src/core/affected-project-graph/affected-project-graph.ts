@@ -5,7 +5,11 @@ import {
   readPackageJson,
   readWorkspaceJson,
 } from '../file-utils';
-import type { NxJsonConfiguration, ProjectGraph, WorkspaceJsonConfiguration } from '@nrwl/devkit';
+import type {
+  NxJsonConfiguration,
+  ProjectGraph,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,

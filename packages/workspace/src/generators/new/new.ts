@@ -357,17 +357,13 @@ function setDefaultPackageManager(host: Tree, options: Schema) {
     return;
   }
 
-  updateJson<NxJsonConfiguration>(
-    host,
-    'nx.json',
-    (json) => {
-      if (!json.cli) {
-        json.cli = {};
-      }
-      json.cli.packageManager = options.packageManager;
-      return json;
+  updateJson<NxJsonConfiguration>(host, 'nx.json', (json) => {
+    if (!json.cli) {
+      json.cli = {};
     }
-  );
+    json.cli.packageManager = options.packageManager;
+    return json;
+  });
 }
 
 function setDefault(

@@ -1035,9 +1035,7 @@ describe('lib', () => {
 
       // check to see if the workspace configuration has been updated to use strict
       // mode by default in future libraries
-      expect(
-        generators['@nrwl/angular:library'].strict
-      ).not.toBeDefined();
+      expect(generators['@nrwl/angular:library'].strict).not.toBeDefined();
     });
 
     it('should set defaults when --strict=false', async () => {

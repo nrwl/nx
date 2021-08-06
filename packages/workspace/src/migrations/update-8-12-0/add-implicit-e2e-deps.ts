@@ -11,9 +11,7 @@ import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
 import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
-const addE2eImplicitDependencies: Rule = (
-  tree: Tree,
-) =>
+const addE2eImplicitDependencies: Rule = (tree: Tree) =>
   updateJsonInTree<WorkspaceJsonConfiguration>(
     workspaceConfigName(tree.root.path),
     (json) => {

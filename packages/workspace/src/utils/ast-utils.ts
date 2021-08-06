@@ -471,7 +471,11 @@ export function addProjectToNxJsonInTree(
     tags: [],
   };
   return updateWorkspaceInTree((json: WorkspaceJsonConfiguration) => {
-    json.projects[projectName] = {  ...json.projects[projectName], ...defaultOptions, ...options };
+    json.projects[projectName] = {
+      ...json.projects[projectName],
+      ...defaultOptions,
+      ...options,
+    };
     return json;
   });
 }

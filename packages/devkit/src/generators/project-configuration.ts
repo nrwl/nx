@@ -399,7 +399,7 @@ function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
  * @returns file path if separate from root config, null otherwise.
  */
 function getProjectFileLocation(tree: Tree, project: string): string | null {
-  const rawWorkspace = readRawWorkspaceJson(tree)
+  const rawWorkspace = readRawWorkspaceJson(tree);
   const projectConfig = rawWorkspace.projects?.[project];
   return typeof projectConfig === 'string'
     ? joinPathFragments(projectConfig, 'project.json')
@@ -414,17 +414,23 @@ export function updateWorkspaceJson(
 ): void {
   const rawWorkspaceJson = readRawWorkspaceJson(tree);
   const resolvedWorkspaceJson = inlineProjectConfigurationsWithTree(tree);
-  const updatedWorkspaceJson: RawWorkspaceJsonConfiguration = updater(resolvedWorkspaceJson);
+  const updatedWorkspaceJson: RawWorkspaceJsonConfiguration = updater(
+    resolvedWorkspaceJson
+  );
   Object.entries(updatedWorkspaceJson.projects).forEach(
     ([projectName, projectConfig]) => {
-      if (typeof rawWorkspaceJson.projects[projectName] === 'string' && typeof projectConfig !== 'string') {
+      if (
+        typeof rawWorkspaceJson.projects[projectName] === 'string' &&
+        typeof projectConfig !== 'string'
+      ) {
         if (
           JSON.stringify(projectConfig) !==
           JSON.stringify(resolvedWorkspaceJson.projects[projectName])
         ) {
           updateProjectConfiguration(tree, projectName, projectConfig);
         }
-        updatedWorkspaceJson.projects[projectName] = rawWorkspaceJson.projects[projectName];
+        updatedWorkspaceJson.projects[projectName] =
+          rawWorkspaceJson.projects[projectName];
       }
     }
   );

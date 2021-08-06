@@ -22,7 +22,9 @@ export interface WorkspaceJsonConfiguration {
   /**
    * Projects' configurations
    */
-  projects: { [projectName: string]: ProjectConfiguration & NxJsonProjectConfiguration };
+  projects: {
+    [projectName: string]: ProjectConfiguration & NxJsonProjectConfiguration;
+  };
 
   /**
    * Default project. When project isn't provided, the default project
@@ -273,7 +275,7 @@ export class Workspaces {
   }
 
   readNxConfiguration(): NxJsonConfiguration {
-    return readJsonFile<NxJsonConfiguration>(path.join(this.root, 'nx.json'))
+    return readJsonFile<NxJsonConfiguration>(path.join(this.root, 'nx.json'));
   }
 
   isNxExecutor(nodeModule: string, executor: string) {

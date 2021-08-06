@@ -527,15 +527,16 @@ export async function combineOptionsForGenerator(
   relativeCwd: string | null,
   isVerbose = false
 ) {
-  const generatorDefaults = (wc || nxConfig)
-    ? getGeneratorDefaults(
-        defaultProjectName,
-        nxConfig,
-        wc,
-        collectionName,
-        generatorName
-      )
-    : {};
+  const generatorDefaults =
+    wc || nxConfig
+      ? getGeneratorDefaults(
+          defaultProjectName,
+          nxConfig,
+          wc,
+          collectionName,
+          generatorName
+        )
+      : {};
   let combined = convertAliases(
     coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,

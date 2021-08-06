@@ -1,4 +1,8 @@
-import type { NxJsonConfiguration, NxJsonProjectConfiguration, Tree } from '@nrwl/devkit';
+import type {
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -163,7 +167,10 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const projectConfig: NxJsonProjectConfiguration = readProjectConfiguration(host, 'app1');
+    const projectConfig: NxJsonProjectConfiguration = readProjectConfiguration(
+      host,
+      'app1'
+    );
 
     expect(projectConfig.implicitDependencies).toContain('remote1');
   });

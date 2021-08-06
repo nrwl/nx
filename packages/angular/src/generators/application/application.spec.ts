@@ -605,7 +605,7 @@ describe('app', () => {
             },
           },
           implicitDependencies: ['my-app'],
-          tags: []
+          tags: [],
         });
       });
 
@@ -742,9 +742,7 @@ describe('app', () => {
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
-      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(
-        false
-      );
+      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(false);
     });
   });
 
