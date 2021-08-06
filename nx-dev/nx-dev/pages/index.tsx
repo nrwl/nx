@@ -65,9 +65,14 @@ export function Index() {
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight sm:mt-10 mb-8 sm:mt-14 sm:mb-10">
                     Smart, Extensible Build Framework
                   </h1>
-                  <p className="max-w-screen-lg text-lg sm:text-2xl sm:leading-10 font-medium mb-10 sm:mb-11">
-                    Build full-stack applications with modern tools and
-                    reinforce best practices for your entire development team.
+                  <h2 className="text-2xl font-medium mb-1">
+                    Nx helps architect, test, and build at any scale:
+                  </h2>
+                  <p className="max-w-screen-lg text-lg font-medium mb-10 sm:mb-11">
+                    integrations with modern frameworks, distributed task
+                    execution, computation caching, smart rebuilds of affected
+                    projects, powerful code generators, editor support, GitHub
+                    apps, and more.
                   </p>
 
                   <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
