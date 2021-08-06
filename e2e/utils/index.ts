@@ -244,6 +244,10 @@ export function isNotWindows() {
   return !isWindows();
 }
 
+export function isOSX() {
+  return process.platform === 'darwin';
+}
+
 export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {

@@ -17,13 +17,20 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - macos-latest
           # - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
+          - os: macos-latest
+            os-name: mac
           # - os: windows-latest
           #  os-name: windows
-        # exclude:
+        exclude:
+          - os: macos-latest
+            package_manager: npm
+          - os: macos-latest
+            package_manager: pnpm
         #   - os: windows-latest
         #     package_manager: npm
         #   - os: windows-latest
