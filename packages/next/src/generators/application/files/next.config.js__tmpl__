@@ -9,9 +9,9 @@ const withLess = require('@zeit/next-less');
  **/
 const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR
+    // Set this to true if you would like to to use SVGR
     // See: https://github.com/gregberge/svgr
-    svgr: true,
+    svgr: false,
   },
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
@@ -29,9 +29,9 @@ const withStylus = require('@zeit/next-stylus');
  **/
 const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR
+    // Set this to true if you would like to to use SVGR
     // See: https://github.com/gregberge/svgr
-    svgr: true,
+    svgr: false,
   },
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
@@ -52,9 +52,9 @@ module.exports = withStylus(withNx(nextConfig));
  **/
 const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR
+    // Set this to true if you would like to to use SVGR
     // See: https://github.com/gregberge/svgr
-    svgr: true,
+    svgr: false,
   },
 };
 
@@ -66,9 +66,9 @@ module.exports = withNx(nextConfig);
  **/
 const nextConfig = {
   nx: {
-    // Set this to false if you do not want to use SVGR
+    // Set this to true if you would like to to use SVGR
     // See: https://github.com/gregberge/svgr
-    svgr: true,
+    svgr: false,
   },
 };
 
