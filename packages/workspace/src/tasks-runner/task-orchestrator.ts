@@ -8,7 +8,7 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output, TaskCacheStatus } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { AffectedEventType } from './tasks-runner';
+import { AffectedEvent, AffectedEventType } from './tasks-runner';
 import {
   calculateReverseDeps,
   getCommandArgsForTask,
@@ -485,7 +485,7 @@ export class TaskOrchestrator {
   }
 
   private covertCompletedTasksToOutputFormat() {
-    return Object.keys(this.completedTasks).map((taskId) => {
+    return Object.keys(this.completedTasks).map((taskId): AffectedEvent => {
       const taskStatus = this.completedTasks[taskId];
       if (taskStatus === 'cache') {
         return {

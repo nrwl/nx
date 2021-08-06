@@ -13,11 +13,11 @@ export enum AffectedEventType {
 export interface AffectedEvent {
   task: Task;
   type: AffectedEventType;
+  success: boolean;
 }
 
 export interface TaskCompleteEvent extends AffectedEvent {
   type: AffectedEventType.TaskComplete;
-  success: boolean;
 }
 
 export type TasksRunner<T = unknown> = (
