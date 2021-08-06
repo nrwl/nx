@@ -6,6 +6,12 @@ Options can be configured in `angular.json` when defining the executor, or when 
 
 ## Options
 
+### buildTarget (_**required**_)
+
+Type: `string`
+
+Target which builds the application
+
 ### buildLibsFromSource
 
 Default: `true`
@@ -13,12 +19,6 @@ Default: `true`
 Type: `boolean`
 
 Read buildable libraries from source instead of building them separately.
-
-### buildTarget
-
-Type: `string`
-
-Target which builds the application
 
 ### customServerPath
 

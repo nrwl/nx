@@ -7,6 +7,12 @@ Read more about how to use executors and the CLI here: https://nx.dev/getting-st
 
 ## Options
 
+### buildTarget (_**required**_)
+
+Type: `string`
+
+Target which builds the application
+
 ### buildLibsFromSource
 
 Default: `true`
@@ -14,12 +20,6 @@ Default: `true`
 Type: `boolean`
 
 Read buildable libraries from source instead of building them separately.
-
-### buildTarget
-
-Type: `string`
-
-Target which builds the application
 
 ### customServerPath
 

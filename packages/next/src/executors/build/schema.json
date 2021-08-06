@@ -43,5 +43,5 @@
       "default": true
     }
   },
-  "required": []
+  "required": ["root", "outputPath"]
 }
