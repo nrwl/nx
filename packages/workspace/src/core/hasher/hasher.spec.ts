@@ -1,7 +1,16 @@
-import { Hasher } from './hasher';
+// This must come before the Hasher import
+jest.doMock('../../utils/app-root', () => {
+  return {
+    appRootPath: '',
+  };
+});
+
 import fs = require('fs');
+import { Hasher } from './hasher';
 
 jest.mock('fs');
+
+fs.existsSync = () => true;
 
 describe('Hasher', () => {
   const nxJson = {
