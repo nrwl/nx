@@ -18,7 +18,6 @@ import {
 
 import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
-import { eachValueFrom } from 'rxjs-for-await';
 
 export interface Target {
   project: string;
@@ -257,7 +256,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
       },
       isVerbose
     );
-    return eachValueFrom<T>(observable as any);
+    const { eachValueFrom } = require('rxjs-for-await');
+    return eachValueFrom(observable as any);
   }
 }
 

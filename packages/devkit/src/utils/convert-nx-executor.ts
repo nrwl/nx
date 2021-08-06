@@ -1,4 +1,4 @@
-import { from, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import type { Executor, ExecutorContext } from '@nrwl/tao/src/shared/workspace';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
@@ -41,9 +41,9 @@ function toObservable<T extends { success: boolean }>(
   promiseOrAsyncIterator: Promise<T> | AsyncIterableIterator<T>
 ): Observable<T> {
   if (typeof (promiseOrAsyncIterator as any).then === 'function') {
-    return from(promiseOrAsyncIterator as Promise<T>);
+    return require('rxjs').from(promiseOrAsyncIterator as Promise<T>);
   } else {
-    return new Observable((subscriber) => {
+    return new (require('rxjs').Observable)((subscriber) => {
       let asyncIterator = promiseOrAsyncIterator as AsyncIterableIterator<T>;
 
       function recurse(iterator: AsyncIterableIterator<T>) {

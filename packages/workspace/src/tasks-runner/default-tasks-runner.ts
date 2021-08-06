@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/internal/Observable';
 import { TaskCompleteEvent, TasksRunner } from './tasks-runner';
 import type { ProjectGraph, NxJsonConfiguration, Task } from '@nrwl/devkit';
 import { TaskOrchestrator } from './task-orchestrator';

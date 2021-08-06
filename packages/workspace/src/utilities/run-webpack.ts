@@ -1,6 +1,6 @@
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/internal/Observable';
 
 import { extname } from 'path';
 import * as url from 'url';
