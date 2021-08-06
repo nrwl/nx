@@ -23,7 +23,7 @@ jobs:
           - os: ubuntu-latest
             os-name: ubuntu
           - os: macos-latest
-            os-name: mac
+            os-name: osx
           # - os: windows-latest
           #  os-name: windows
         exclude:
