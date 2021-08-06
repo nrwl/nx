@@ -8,7 +8,7 @@ import {
   TaskId,
   Tree,
 } from '@angular-devkit/schematics';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/internal/Observable';
 import { fork } from 'child_process';
 import { join } from 'path';
 import { readJsonInTree } from './ast-utils';
