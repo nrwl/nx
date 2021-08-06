@@ -35,6 +35,7 @@
     "@babel/plugin-proposal-decorators": "7.12.13",
     "@nrwl/react": "*",
     "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/web": "*",
