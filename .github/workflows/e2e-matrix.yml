@@ -28,7 +28,7 @@ jobs:
           #  os-name: windows
         exclude:
           - os: macos-latest
-            package_manager: npm
+            package_manager: yarn
           - os: macos-latest
             package_manager: pnpm
         #   - os: windows-latest
