@@ -42,21 +42,25 @@ describe('app', () => {
       expect(workspaceJson.projects['my-app'].architect.e2e).not.toBeDefined();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags + implicit dependencies', async () => {
       // ACT
       await generateApp(appTree, 'myApp', { tags: 'one,two,my-app' });
 
       // ASSERT
-      const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-app': {
-          tags: ['one', 'two', 'my-app'],
-        },
-        'my-app-e2e': {
-          implicitDependencies: ['my-app'],
-          tags: [],
-        },
-      });
+      const projects = devkit.getProjects(appTree);
+      expect(projects).toEqual(
+        new Map(
+          Object.entries({
+            'my-app': expect.objectContaining({
+              tags: ['one', 'two', 'my-app'],
+            }),
+            'my-app-e2e': expect.objectContaining({
+              implicitDependencies: ['my-app'],
+              tags: [],
+            }),
+          })
+        )
+      );
     });
 
     it('should generate files', async () => {
@@ -187,21 +191,25 @@ describe('app', () => {
       expect(workspaceJson.projects['my-dir-my-app-e2e']).toMatchSnapshot();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags + implicit dependencies', async () => {
       await generateApp(appTree, 'myApp', {
         directory: 'myDir',
         tags: 'one,two,my-dir-my-app',
       });
-      const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-dir-my-app': {
-          tags: ['one', 'two', 'my-dir-my-app'],
-        },
-        'my-dir-my-app-e2e': {
-          implicitDependencies: ['my-dir-my-app'],
-          tags: [],
-        },
-      });
+      const projects = devkit.getProjects(appTree);
+      expect(projects).toEqual(
+        new Map(
+          Object.entries({
+            'my-dir-my-app': expect.objectContaining({
+              tags: ['one', 'two', 'my-dir-my-app'],
+            }),
+            'my-dir-my-app-e2e': expect.objectContaining({
+              implicitDependencies: ['my-dir-my-app'],
+              tags: [],
+            }),
+          })
+        )
+      );
     });
 
     it('should generate files', async () => {
@@ -596,6 +604,8 @@ describe('app', () => {
               },
             },
           },
+          implicitDependencies: ['my-app'],
+          tags: []
         });
       });
 
@@ -720,9 +730,9 @@ describe('app', () => {
       }
 
       // should not update workspace configuration since --strict=true is the default
-      const workspaceJson = readJson(appTree, 'workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(
-        workspaceJson.schematics['@nrwl/angular:application'].strict
+        nxJson.generators['@nrwl/angular:application'].strict
       ).not.toBeDefined();
     });
 
@@ -731,8 +741,8 @@ describe('app', () => {
 
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
-      const workspaceJson = readJson(appTree, 'workspace.json');
-      expect(workspaceJson.schematics['@nrwl/angular:application'].strict).toBe(
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
+      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(
         false
       );
     });

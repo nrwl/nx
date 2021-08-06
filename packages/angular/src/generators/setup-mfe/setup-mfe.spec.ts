@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { NxJsonConfiguration, NxJsonProjectConfiguration, Tree } from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -163,9 +163,9 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const nxJson: NxJsonConfiguration = readJson(host, 'nx.json');
+    const projectConfig: NxJsonProjectConfiguration = readProjectConfiguration(host, 'app1');
 
-    expect(nxJson.projects['app1'].implicitDependencies).toContain('remote1');
+    expect(projectConfig.implicitDependencies).toContain('remote1');
   });
 
   it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {

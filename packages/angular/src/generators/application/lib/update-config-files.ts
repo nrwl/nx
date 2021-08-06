@@ -11,6 +11,7 @@ import {
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { readWorkspace } from 'packages/devkit/src/generators/project-configuration';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   addProjectToNx(host, options);
@@ -19,23 +20,13 @@ export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
 }
 
 function addProjectToNx(host: Tree, options: NormalizedSchema) {
-  // nx.json
-  updateJson(host, '/nx.json', (json) => {
-    const resultJson = {
-      ...json,
-      projects: {
-        ...json.projects,
-        [options.name]: { tags: options.parsedTags },
-      },
-    };
-    if (options.e2eTestRunner === 'protractor') {
-      resultJson.projects[options.e2eProjectName] = { tags: [] };
-      resultJson.projects[options.e2eProjectName].implicitDependencies = [
-        options.name,
-      ];
-    }
-    return resultJson;
-  });
+  // tags, implicit dependencies
+  const projectConfig = readProjectConfiguration(host, options.name)
+  const resultJson = {
+    ...projectConfig,
+    tags: options.parsedTags,
+  };
+  updateProjectConfiguration(host, options.name, resultJson);
 }
 
 function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {

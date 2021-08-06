@@ -104,13 +104,13 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { schematics } = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(schematics['@nrwl/angular:application'].unitTestRunner).toEqual(
+        expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
           'karma'
         );
-        expect(schematics['@nrwl/angular:library'].unitTestRunner).toEqual(
+        expect(generators['@nrwl/angular:library'].unitTestRunner).toEqual(
           'karma'
         );
       });
@@ -155,13 +155,13 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { schematics } = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(schematics['@nrwl/angular:application'].unitTestRunner).toEqual(
+        expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
           'jest'
         );
-        expect(schematics['@nrwl/angular:library'].unitTestRunner).toEqual(
+        expect(generators['@nrwl/angular:library'].unitTestRunner).toEqual(
           'jest'
         );
       });
@@ -195,10 +195,10 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { schematics } = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
+        expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'cypress'
         );
       });
@@ -233,10 +233,10 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { schematics } = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
+        expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'protractor'
         );
       });
@@ -253,15 +253,13 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const workspaceJson = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(
-          workspaceJson.schematics['@nrwl/angular:application'].linter
-        ).toEqual('eslint');
-        expect(
-          workspaceJson.schematics['@nrwl/angular:library'].linter
-        ).toEqual('eslint');
+        expect(generators['@nrwl/angular:application'].linter).toEqual(
+          'eslint'
+        );
+        expect(generators['@nrwl/angular:library'].linter).toEqual('eslint');
       });
     });
 
@@ -274,15 +272,11 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const workspaceJson = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(
-          workspaceJson.schematics['@nrwl/angular:application'].linter
-        ).toEqual('none');
-        expect(
-          workspaceJson.schematics['@nrwl/angular:library'].linter
-        ).toEqual('none');
+        expect(generators['@nrwl/angular:application'].linter).toEqual('none');
+        expect(generators['@nrwl/angular:library'].linter).toEqual('none');
       });
     });
   });
@@ -297,10 +291,10 @@ describe('init', () => {
         skipFormat: false,
       });
 
-      const workspaceJson = readJson(host, 'workspace.json');
+      const { cli } = readJson(host, 'nx.json');
 
       // ASSERT
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
+      expect(cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
     it.each(['css', 'scss', 'less'])(
@@ -315,12 +309,10 @@ describe('init', () => {
           style,
         });
 
-        const workspaceJson = readJson(host, 'workspace.json');
+        const { generators } = readJson(host, 'nx.json');
 
         // ASSERT
-        expect(
-          workspaceJson.schematics['@nrwl/angular:component']['style']
-        ).toBe(style);
+        expect(generators['@nrwl/angular:component']['style']).toBe(style);
       }
     );
   });
