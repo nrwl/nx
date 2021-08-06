@@ -52,8 +52,8 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
     );
   } else {
     checkForInvalidProjects(nxArgs, allProjects);
-    let selectedProjects = allProjects.filter(
-      (p) => nxArgs.projects.indexOf(p.name) > -1
+    let selectedProjects = nxArgs.projects.map((name) =>
+      allProjects.find((project) => project.name === name)
     );
     if (nxArgs.withDeps) {
       selectedProjects = Object.values(
