@@ -45,6 +45,7 @@ export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
+const publishedVersion = `9999.0.2`;
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
@@ -116,10 +117,14 @@ export function runCreateWorkspace(
   return create ? create.toString() : '';
 }
 
-export function packageInstall(pkg: string, projName?: string) {
+export function packageInstall(
+  pkg: string,
+  projName?: string,
+  version = publishedVersion
+) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const install = execSync(`${pm.addDev} ${pkg}`, {
+  const install = execSync(`${pm.addDev} ${pkg}@${version}`, {
     cwd,
     stdio: [0, 1, 2],
     env: process.env,
@@ -606,8 +611,6 @@ export function getPackageManagerCommand({
   const scriptsPrependNodePathFlag = scriptsPrependNodePath
     ? ' --scripts-prepend-node-path '
     : '';
-
-  const publishedVersion = `9999.0.2`;
 
   const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
 
