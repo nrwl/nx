@@ -18,6 +18,7 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
+import { checkPublicDirectory } from './lib/check-project';
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
@@ -27,6 +28,8 @@ export default async function buildExecutor(
   process.env.NODE_ENV ||= 'production';
 
   const root = resolve(context.root, options.root);
+
+  checkPublicDirectory(root);
 
   if (!options.buildLibsFromSource && context.targetName) {
     const result = calculateProjectDependencies(
