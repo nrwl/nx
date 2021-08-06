@@ -304,7 +304,6 @@ describe('nx deps utils', () => {
   function createNxJson(p: Partial<NxJsonConfiguration>): NxJsonConfiguration {
     const defaults: NxJsonConfiguration = {
       npmScope: '',
-      projects: { mylib: {} },
       workspaceLayout: {} as any,
       targetDependencies: {},
       plugins: ['plugin'],

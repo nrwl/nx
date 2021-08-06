@@ -1,4 +1,10 @@
-import { getProjects, readJson, Tree, updateJson } from '@nrwl/devkit';
+import {
+  getProjects,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from './library';
 import { Linter } from '@nrwl/linter';
@@ -39,14 +45,14 @@ describe('lib', () => {
       });
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, tags: 'one,two' });
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-lib': {
+      const project = readProjectConfiguration(appTree, 'my-lib');
+      expect(project).toEqual(
+        expect.objectContaining({
           tags: ['one', 'two'],
-        },
-      });
+        })
+      );
     });
 
     it('should add react and react-dom packages to package.json if not already present', async () => {
@@ -170,18 +176,18 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
-    it('should update nx.json', async () => {
+    it('should update tags and implicitDependencies', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         directory: 'myDir',
         tags: 'one',
       });
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-dir-my-lib': {
+      const myLib = readProjectConfiguration(appTree, 'my-dir-my-lib');
+      expect(myLib).toEqual(
+        expect.objectContaining({
           tags: ['one'],
-        },
-      });
+        })
+      );
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
@@ -190,15 +196,12 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const nxJson2 = readJson(appTree, '/nx.json');
-      expect(nxJson2.projects).toEqual({
-        'my-dir-my-lib': {
-          tags: ['one'],
-        },
-        'my-dir-my-lib2': {
+      const myLib2 = readProjectConfiguration(appTree, 'my-dir-my-lib2');
+      expect(myLib2).toEqual(
+        expect.objectContaining({
           tags: ['one', 'two'],
-        },
-      });
+        })
+      );
     });
 
     it('should generate files', async () => {
