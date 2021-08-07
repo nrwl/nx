@@ -63,20 +63,18 @@ function formatLogMessage(message) {
   return `[NX Daemon Server] - ${new Date().toISOString()} - ${message}`;
 }
 
-if (process.env.NX_PERF_LOGGING) {
+/**
+ * For now we just invoke the existing `createProjectGraph()` utility and return the project
+ * graph upon connection to the server
+ */
+const server = createServer((socket) => {
   const obs = new PerformanceObserver((list) => {
     const entry = list.getEntries()[0];
     // Slight indentation to improve readability of the overall log file
     serverLog(`  Time taken for '${entry.name}'`, `${entry.duration}ms`);
   });
   obs.observe({ entryTypes: ['measure'], buffered: false });
-}
 
-/**
- * For now we just invoke the existing `createProjectGraph()` utility and return the project
- * graph upon connection to the server
- */
-const server = createServer((socket) => {
   performance.mark('server-connection');
   serverLog('Connection Received');
 

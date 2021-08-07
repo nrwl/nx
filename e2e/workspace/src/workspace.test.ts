@@ -165,6 +165,11 @@ describe('run-one', () => {
             target: 'build',
             projects: 'dependencies',
           },
+          /**
+           * At the time of writing, the above object is also the default in nx.json, so we need to make an additional change to ensure
+           * that the JSON is structurally different and the build results are therefore not read from the cache as part of this test.
+           */
+          { target: 'e2e-extra-entry-to-bust-cache', projects: 'dependencies' },
         ],
       };
       updateFile('nx.json', JSON.stringify(nxJson));
