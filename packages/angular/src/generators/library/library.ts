@@ -69,10 +69,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   setStrictMode(host, options);
   await addLinting(host, options);
 
-  if (
-    options.standaloneConfig ||
-    getWorkspaceLayout(host).standaloneAsDefault
-  ) {
+  if (options.standaloneConfig) {
     await convertToNxProjectGenerator(host, {
       project: options.name,
       all: false,

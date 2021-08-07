@@ -10,7 +10,7 @@ export function normalizeOptions(
   host: Tree,
   options: Partial<Schema>
 ): NormalizedSchema {
-  const { appsDir, npmScope } = getWorkspaceLayout(host);
+  const { appsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
 
   const appDirectory = options.directory
     ? `${names(options.directory).fileName}/${names(options.name).fileName}`
@@ -30,6 +30,8 @@ export function normalizeOptions(
     : [];
 
   const defaultPrefix = npmScope;
+
+  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
 
   // Set defaults and then overwrite with user options
   return {
