@@ -28,7 +28,9 @@ export function normalizeOptions(
 
   const { libsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = projectDirectory
+    .replace(new RegExp('/', 'g'), '-')
+    .replace(/-\d+/g, '');
   const fileName = options.simpleModuleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
