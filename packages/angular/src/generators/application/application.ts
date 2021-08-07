@@ -101,10 +101,7 @@ export async function applicationGenerator(
     setApplicationStrictDefault(host, false);
   }
 
-  if (
-    options.standaloneConfig ||
-    getWorkspaceLayout(host).standaloneAsDefault
-  ) {
+  if (options.standaloneConfig) {
     await convertToNxProjectGenerator(host, {
       project: options.name,
       all: false,
