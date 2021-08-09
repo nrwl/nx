@@ -92,6 +92,7 @@ describe('Run Commands', () => {
     const result = runCLI(
       `run ${myapp}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
     );
+    console.log(result);
     expect(result).toContain('var1: a');
     expect(result).toContain('var2: b');
     expect(result).toContain('hyphen: c');
@@ -100,6 +101,7 @@ describe('Run Commands', () => {
     const resultArgs = runCLI(
       `run ${myapp}:echo --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`
     );
+    console.log(resultArgs);
     expect(resultArgs).toContain('var1: a');
     expect(resultArgs).toContain('var2: b');
     expect(resultArgs).toContain('hyphen: c');
