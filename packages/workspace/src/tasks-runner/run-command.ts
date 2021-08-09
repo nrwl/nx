@@ -10,6 +10,8 @@ import type {
   NxJsonConfiguration,
   Task,
 } from '@nrwl/devkit';
+import { logger } from '@nrwl/devkit';
+import { stripIndent } from '@nrwl/tao/src/shared/logger';
 import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '../command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
@@ -34,7 +36,10 @@ export async function runCommand<T extends RunArgs>(
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  const defaultDependencyConfigs = nxJson.targetDependencies ?? {};
+  // Doing this for backwards compatibility, should be removed in v14
+  ensureTargetDependenciesBackwardCompatibility(nxJson, nxArgs);
+
+  const defaultDependencyConfigs = nxJson.targetDependencies;
   const tasks = createTasksForProjectToRun(
     projectsToRun,
     {
@@ -447,4 +452,25 @@ function interpolateOverrides<T = any>(
     }
   });
   return interpolatedArgs;
+}
+
+function ensureTargetDependenciesBackwardCompatibility(
+  nxJson: NxJsonConfiguration,
+  nxArgs: NxArgs
+): void {
+  nxJson.targetDependencies ??= {};
+  if (nxArgs.withDeps) {
+    logger.warn(
+      stripIndent(`
+        DEPRECATION WARNING: --with-deps is deprecated and it will be removed in v14.
+        Configure target dependencies instead: https://nx.dev/latest/angular/core-concepts/configuration#target-dependencies.
+      `)
+    );
+
+    if (!nxJson.targetDependencies[nxArgs.target]) {
+      nxJson.targetDependencies[nxArgs.target] = [
+        { target: nxArgs.target, projects: 'dependencies' },
+      ];
+    }
+  }
 }
