@@ -1,8 +1,5 @@
 version: 2.1
 
-# Variables
-var_1: &working_directory ~/repo
-
 machine:
   pre:
     - mkdir ~/.cache/yarn
@@ -11,22 +8,54 @@ dependencies:
   cache_directories:
     - ~/.cache/yarn
 
+# -------------------------
+#        ORBS
+# -------------------------
 orbs:
   nx: nrwl/nx@1.0.0
 
+# -------------------------
+#        DEFAULTS
+# -------------------------
+defaults: &defaults
+  working_directory: ~/repo
+
+# -------------------------
+#        EXECUTORS
+# -------------------------
 executors:
   linux:
-    working_directory: *working_directory
+    <<: *defaults
     docker:
       - image: cimg/node:14.17-browsers
 
   windows:
-    working_directory: *working_directory
+    <<: *defaults
     resource_class: windows.medium
     machine:
       image: windows-server-2019-vs2019:stable
     shell: cmd.exe
 
+  macos:
+    <<: *defaults
+    macos:
+      xcode: &_XCODE_VERSION '12.5.0'
+
+  android:
+    <<: *defaults
+    docker:
+      - image: reactnativecommunity/react-native-android:4.0
+    resource_class: 'large'
+    environment:
+      - TERM: 'dumb'
+      - ADB_INSTALL_TIMEOUT: 10
+      - _JAVA_OPTIONS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
+      - GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-XX:+HeapDumpOnOutOfMemoryError"'
+      - BUILD_THREADS: 2
+
+# -------------------------
+#        COMMANDS
+# -------------------------
 commands:
   setup:
     parameters:
@@ -70,7 +99,13 @@ commands:
                 name: Install PNPM
                 command: npm install -g pnpm@6.9.1
 
+# -------------------------
+#          JOBS
+# -------------------------
 jobs:
+  # -------------------------
+  #     JOBS: Agent
+  # -------------------------
   agent:
     parameters:
       os:
@@ -98,6 +133,9 @@ jobs:
           name: Agent
           command: npx nx-cloud start-agent
           no_output_timeout: 60m
+  # -------------------------
+  #     JOBS: Pull request
+  # -------------------------
   pr-main:
     parameters:
       os:
@@ -151,6 +189,9 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+  # -------------------------
+  #     JOBS: Commit on main
+  # -------------------------
   trunk-main:
     parameters:
       os:
@@ -189,7 +230,13 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+
+# -------------------------
+#        Workflows
+# -------------------------
 workflows:
+  version: 2
+
   build:
     jobs:
       - agent:
