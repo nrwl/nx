@@ -13,7 +13,7 @@ export function karmaGenerator(tree: Tree) {
   }
 
   generateFiles(tree, joinPathFragments(__dirname, 'files'), '.', { tmpl: '' });
-  addDependenciesToPackageJson(
+  return addDependenciesToPackageJson(
     tree,
     {},
     {

@@ -1,14 +1,14 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
-import type { Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  readJson,
   readWorkspaceConfiguration,
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -20,18 +20,22 @@ import {
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
 
-export default async function (host: Tree, options: Schema) {
+export default async function (
+  host: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   setDefaults(host, options);
   addPostInstall(host);
-  updateDependencies(host);
 
-  addUnitTestRunner(host, options);
-
-  addE2ETestRunner(host, options);
+  const depsTask = updateDependencies(host);
+  const unitTestTask = addUnitTestRunner(host, options);
+  const e2eTask = addE2ETestRunner(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  return runTasksInSerial(depsTask, unitTestTask, e2eTask);
 }
 
 function setDefaults(host: Tree, options: Schema) {
@@ -73,7 +77,7 @@ function addPostInstall(host: Tree) {
   });
 }
 
-function updateDependencies(host: Tree) {
+function updateDependencies(host: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
     host,
     {
@@ -100,10 +104,10 @@ function updateDependencies(host: Tree) {
 function addUnitTestRunner(
   host: Tree,
   options: Pick<Schema, 'unitTestRunner'>
-) {
+): GeneratorCallback {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      karmaGenerator(host);
+      return karmaGenerator(host);
     case UnitTestRunner.Jest:
       addDependenciesToPackageJson(
         host,
@@ -112,38 +116,32 @@ function addUnitTestRunner(
           'jest-preset-angular': jestPresetAngularVersion,
         }
       );
-
-      const pkgJson = readJson(host, 'package.json');
-      if (!pkgJson.devDependencies['@nrwl/jest']) {
-        jestInitGenerator(host, {});
-      }
+      return jestInitGenerator(host, {});
     default:
-      return;
+      return () => {};
   }
 }
 
-function addE2ETestRunner(host: Tree, options: Pick<Schema, 'e2eTestRunner'>) {
-  const pkgJson = readJson(host, 'package.json');
+function addE2ETestRunner(
+  host: Tree,
+  options: Pick<Schema, 'e2eTestRunner'>
+): GeneratorCallback {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
-      if (!pkgJson.devDependencies['protractor']) {
-        addDependenciesToPackageJson(
-          host,
-          {},
-          {
-            protractor: '~7.0.0',
-            'jasmine-core': '~3.6.0',
-            'jasmine-spec-reporter': '~5.0.0',
-            '@types/jasmine': '~3.6.0',
-            '@types/jasminewd2': '~2.0.3',
-          }
-        );
-      }
+      return addDependenciesToPackageJson(
+        host,
+        {},
+        {
+          protractor: '~7.0.0',
+          'jasmine-core': '~3.6.0',
+          'jasmine-spec-reporter': '~5.0.0',
+          '@types/jasmine': '~3.6.0',
+          '@types/jasminewd2': '~2.0.3',
+        }
+      );
     case E2eTestRunner.Cypress:
-      if (!pkgJson.devDependencies['@nrwl/cypress']) {
-        cypressInitGenerator(host);
-      }
+      return cypressInitGenerator(host);
     default:
-      return;
+      return () => {};
   }
 }
