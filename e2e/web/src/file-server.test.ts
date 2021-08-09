@@ -10,6 +10,7 @@ import {
   promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { serializeJson } from '@nrwl/workspace';
+import * as http from 'http';
 
 describe('file-server', () => {
   it('should serve folder of files', async () => {
@@ -27,10 +28,15 @@ describe('file-server', () => {
       `serve ${appName} --port=${port}`,
       (output) => {
         return (
-          output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
+          output.indexOf('Built at') > -1 &&
+          output.indexOf(`localhost:${port}`) > -1
         );
       }
     );
+
+    const data = await getData(port);
+    expect(data).toContain(`Welcome to ${appName}`);
+
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
       await killPorts(port);
@@ -40,3 +46,18 @@ describe('file-server', () => {
     }
   }, 300000);
 });
+
+function getData(port: number): Promise<any> {
+  return new Promise((resolve) => {
+    http.get(`http://localhost:${port}`, (res) => {
+      expect(res.statusCode).toEqual(200);
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.once('end', () => {
+        resolve(data);
+      });
+    });
+  });
+}
