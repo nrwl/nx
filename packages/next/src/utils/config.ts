@@ -111,6 +111,14 @@ export function createWebpackConfig(
               },
             ],
           },
+          // Fallback to plain URL loader if someone just imports the SVG and references it on the <img src> tag
+          {
+            loader: require.resolve('url-loader'),
+            options: {
+              limit: 10000, // 10kB
+              name: '[name].[hash:7].[ext]',
+            },
+          },
         ],
       });
     }
