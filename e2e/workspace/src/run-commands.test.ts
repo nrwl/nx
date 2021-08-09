@@ -80,10 +80,10 @@ describe('Run Commands', () => {
       executor: '@nrwl/workspace:run-commands',
       options: {
         commands: [
-          `echo 'var1: {args.var1}'`,
-          `echo 'var2: {args.var2}'`,
-          `echo 'hyphen: {args.var-hyphen}'`,
-          `echo 'camel: {args.varCamelCase}'`,
+          `echo "var1: {args.var1}"`,
+          `echo "var2: {args.var2}"`,
+          `echo "hyphen: {args.var-hyphen}"`,
+          `echo "camel: {args.varCamelCase}"`,
         ],
       },
     };
