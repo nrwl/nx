@@ -278,7 +278,7 @@ export function runCommandAsync(
         }
         resolve({
           stdout: stripConsoleColors(stdout),
-          stderr: stripConsoleColors(stdout),
+          stderr: stripConsoleColors(stderr),
           combinedOutput: stripConsoleColors(`${stdout}${stderr}`),
         });
       }

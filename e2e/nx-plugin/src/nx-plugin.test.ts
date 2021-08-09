@@ -7,7 +7,6 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
-  runCypressTests,
   uniq,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
