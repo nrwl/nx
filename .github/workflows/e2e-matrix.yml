@@ -17,19 +17,19 @@ jobs:
       matrix:
         os:
           # - ubuntu-latest
-          - macos-11
+          - macos-latest
           # - windows-latest
         include:
           # - os: ubuntu-latest
           #   os-name: ubuntu
-          - os: macos-11
+          - os: macos-latest
             os-name: osx
           # - os: windows-latest
           #  os-name: windows
         # exclude:
-        #   - os: macos-11
+        #   - os: macos-latest
         #     package_manager: npm
-        #   - os: macos-11
+        #   - os: macos-latest
         #     package_manager: pnpm
         #   - os: windows-latest
         #     package_manager: npm
@@ -97,7 +97,7 @@ jobs:
       if: ${{ matrix.package_manager == 'pnpm' }}
       uses: pnpm/action-setup@v2.0.1
       with:
-        version: 6.9.1
+        version: 6.12.0
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
