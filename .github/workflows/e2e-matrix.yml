@@ -16,12 +16,12 @@ jobs:
     strategy:
       matrix:
         os:
-          # - ubuntu-latest
+          - ubuntu-latest
           - macos-latest
           # - windows-latest
         include:
-          # - os: ubuntu-latest
-          #   os-name: ubuntu
+          - os: ubuntu-latest
+            os-name: ubuntu
           - os: macos-latest
             os-name: osx
           # - os: windows-latest
@@ -29,8 +29,8 @@ jobs:
         exclude:
           - os: macos-latest
             package_manager: yarn
-        #   - os: macos-latest
-        #     package_manager: pnpm
+          - os: macos-latest
+            package_manager: pnpm
         #   - os: windows-latest
         #     package_manager: npm
         #   - os: windows-latest
@@ -43,14 +43,14 @@ jobs:
           - yarn
           - pnpm
         packages:
-          # - e2e-angular-core,e2e-angular-extensions
-          # - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
-          # - e2e-cypress
-          # - e2e-gatsby,e2e-react
-          # - e2e-next
-          # - e2e-node
+          - e2e-angular-core,e2e-angular-extensions
+          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          - e2e-cypress
+          - e2e-gatsby,e2e-react
+          - e2e-next
+          - e2e-node
           - e2e-web
-          # - e2e-storybook
+          - e2e-storybook
           - e2e-workspace
       fail-fast: false
 
@@ -97,7 +97,7 @@ jobs:
       if: ${{ matrix.package_manager == 'pnpm' }}
       uses: pnpm/action-setup@v2.0.1
       with:
-        version: 6.12.0
+        version: 6.9.1
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
@@ -110,6 +110,7 @@ jobs:
         NX_E2E_RUN_CYPRESS: ${{ 'true' }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
+        npm_config_registry: http://localhost:4872
         YARN_REGISTRY: http://localhost:4872
 
     - name: Setup tmate session
