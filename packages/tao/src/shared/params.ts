@@ -649,7 +649,7 @@ async function promptForValues(opts: Options, schema: Schema) {
         question.message = v['x-prompt'];
         if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
           question.type = 'select';
-          question.choices = v.enum;
+          question.choices = [...v.enum];
         } else {
           question.type = v.type === 'boolean' ? 'confirm' : 'input';
         }
