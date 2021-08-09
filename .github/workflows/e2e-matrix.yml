@@ -27,10 +27,10 @@ jobs:
           # - os: windows-latest
           #  os-name: windows
         exclude:
-          - os: macos-latest
-            package_manager: yarn
-          - os: macos-latest
-            package_manager: pnpm
+          # - os: macos-latest
+          #   package_manager: yarn
+          # - os: macos-latest
+          #   package_manager: pnpm
         #   - os: windows-latest
         #     package_manager: npm
         #   - os: windows-latest
@@ -49,7 +49,7 @@ jobs:
           # - e2e-gatsby,e2e-react
           # - e2e-next
           # - e2e-node
-          - e2e-web
+          # - e2e-web
           # - e2e-storybook
           - e2e-workspace
       fail-fast: false
