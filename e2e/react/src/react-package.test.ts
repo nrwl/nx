@@ -173,7 +173,9 @@ describe('Build React libraries and apps', () => {
     });
 
     it('should build the library when it does not have any deps', () => {
-      const output = runCLI(`build ${childLib}`);
+      const output = runCLI(`build ${childLib}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
       expect(output).toContain(`${childLib}.esm.js`);
       expect(output).toContain(`Bundle complete: ${childLib}`);
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
@@ -186,9 +188,15 @@ describe('Build React libraries and apps', () => {
     });
 
     it('should properly add references to any dependency into the parent package.json', () => {
-      const childLibOutput = runCLI(`build ${childLib}`);
-      const childLib2Output = runCLI(`build ${childLib2}`);
-      const parentLibOutput = runCLI(`build ${parentLib}`);
+      const childLibOutput = runCLI(`build ${childLib}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
+      const childLib2Output = runCLI(`build ${childLib2}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
+      const parentLibOutput = runCLI(`build ${parentLib}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
 
       expect(childLibOutput).toContain(`${childLib}.esm.js`);
       expect(childLibOutput).toContain(`${childLib}.umd.js`);
