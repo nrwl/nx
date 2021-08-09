@@ -11,7 +11,9 @@ removeOld(cachedFiles());
 
 function terminalOutputs() {
   try {
-    return readdirSync(join(folder, 'terminalOutputs'));
+    return readdirSync(join(folder, 'terminalOutputs')).map((f) =>
+      join(folder, 'terminalOutputs', f)
+    );
   } catch (e) {
     return [];
   }
@@ -19,7 +21,9 @@ function terminalOutputs() {
 
 function cachedFiles() {
   try {
-    return readdirSync(folder).filter((f) => !f.endsWith('terminalOutputs'));
+    return readdirSync(folder)
+      .filter((f) => !f.endsWith('terminalOutputs'))
+      .map((f) => join(folder, f));
   } catch (e) {
     return [];
   }
@@ -30,16 +34,15 @@ function removeOld(records: string[]) {
     const time = mostRecentMTime(records);
 
     records.forEach((r) => {
-      const child = join(folder, r);
       try {
-        const s = statSync(child);
+        const s = statSync(r);
         if (time - s.mtimeMs > WEEK_IN_MS) {
           if (s.isDirectory()) {
             try {
-              removeSync(`${child}.commit`);
+              removeSync(`${r}.commit`);
             } catch (e) {}
           }
-          removeSync(child);
+          removeSync(r);
         }
       } catch (e) {}
     });
@@ -49,9 +52,8 @@ function removeOld(records: string[]) {
 function mostRecentMTime(records: string[]) {
   let mostRecentTime = 0;
   records.forEach((r) => {
-    const child = join(folder, r);
     try {
-      const s = statSync(child);
+      const s = statSync(r);
       if (s.mtimeMs > mostRecentTime) {
         mostRecentTime = s.mtimeMs;
       }
