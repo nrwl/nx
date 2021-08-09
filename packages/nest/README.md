@@ -12,7 +12,7 @@
 
 ```
 ? Workspace name (e.g., org name)     happyorg
-? What to create in the new workspace angular-preset    [a workspace with a full stack application (Angular + Nest)]
+? What to create in the new workspace nest
 ? Application name                    myapp
 ? Default stylesheet format           CSS
 ```
