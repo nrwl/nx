@@ -26,11 +26,11 @@ jobs:
             os-name: osx
           # - os: windows-latest
           #  os-name: windows
-        exclude:
-          # - os: macos-latest
-          #   package_manager: yarn
-          # - os: macos-latest
-          #   package_manager: pnpm
+        # exclude:
+        #   - os: macos-latest
+        #     package_manager: yarn
+        #   - os: macos-latest
+        #     package_manager: pnpm
         #   - os: windows-latest
         #     package_manager: npm
         #   - os: windows-latest
