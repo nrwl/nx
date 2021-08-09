@@ -256,6 +256,7 @@ export function rootWorkspaceFileData(projectGraphVersion = '3.0'): FileData[] {
 
 export function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
   performance.mark('read workspace files:start');
+  defaultFileHasher.ensureInitialized();
 
   if (defaultFileHasher.usesGitForHashing) {
     const ignoredGlobs = getIgnoredGlobs();

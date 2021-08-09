@@ -43,7 +43,7 @@ export class FileHasher {
     return this.fileHashes[relativePath];
   }
 
-  private ensureInitialized(): void {
+  ensureInitialized(): void {
     if (!this.isInitialized) {
       this.init();
     }
