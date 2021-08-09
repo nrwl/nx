@@ -16,12 +16,12 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
+          # - ubuntu-latest
           - macos-latest
           # - windows-latest
         include:
-          - os: ubuntu-latest
-            os-name: ubuntu
+          # - os: ubuntu-latest
+          #   os-name: ubuntu
           - os: macos-latest
             os-name: osx
           # - os: windows-latest
@@ -43,14 +43,14 @@ jobs:
           - yarn
           - pnpm
         packages:
-          - e2e-angular-core,e2e-angular-extensions
-          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
-          - e2e-cypress
-          - e2e-gatsby,e2e-react
-          - e2e-next
-          - e2e-node
+          # - e2e-angular-core,e2e-angular-extensions
+          # - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          # - e2e-cypress
+          # - e2e-gatsby,e2e-react
+          # - e2e-next
+          # - e2e-node
           - e2e-web
-          - e2e-storybook
+          # - e2e-storybook
           - e2e-workspace
       fail-fast: false
 
@@ -112,6 +112,7 @@ jobs:
         SELECTED_PM: ${{ matrix.package_manager }}
         npm_config_registry: http://localhost:4872
         YARN_REGISTRY: http://localhost:4872
+        VERBOSE_OUTPUT: ${{ 'true' }}
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
