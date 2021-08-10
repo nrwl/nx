@@ -47,7 +47,10 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": ["none", "all"]
+          "enum": [
+            "none",
+            "all"
+          ]
         },
         {
           "type": "array",
@@ -109,7 +112,10 @@
           }
         },
         "additionalProperties": false,
-        "required": ["replace", "with"]
+        "required": [
+          "replace",
+          "with"
+        ]
       },
       "default": []
     },
@@ -136,10 +142,20 @@
       "type": "boolean",
       "description": "Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.",
       "default": false
+    },
+    "tsPlugins": {
+      "type": "array",
+      "description": "List of TypeScript Compiler Plugins.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/tsPluginPattern"
+      }
     }
   },
-  "required": ["tsConfig", "main"],
-
+  "required": [
+    "tsConfig",
+    "main"
+  ],
   "definitions": {
     "assetPattern": {
       "oneOf": [
@@ -167,10 +183,37 @@
             }
           },
           "additionalProperties": false,
-          "required": ["glob", "input", "output"]
+          "required": [
+            "glob",
+            "input",
+            "output"
+          ]
         },
         {
           "type": "string"
+        }
+      ]
+    },
+    "tsPluginPattern": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name"
+          ]
         }
       ]
     }

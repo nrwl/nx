@@ -1,3 +1,5 @@
+import ts = require('typescript');
+
 export interface FileReplacement {
   replace: string;
   with: string;
@@ -13,6 +15,36 @@ export interface SourceMapOptions {
   styles: boolean;
   vendors: boolean;
   hidden: boolean;
+}
+
+type Transformer = ts.TransformerFactory<ts.Node> | ts.CustomTransformerFactory;
+
+export interface TsPlugin {
+  name: string;
+  options: Record<string, unknown>;
+}
+
+export type TsPluginEntry = string | TsPlugin;
+
+export interface CompilerPlugin {
+  before?: (
+    options?: Record<string, unknown>,
+    program?: ts.Program
+  ) => Transformer;
+  after?: (
+    options?: Record<string, unknown>,
+    program?: ts.Program
+  ) => Transformer;
+  afterDeclarations?: (
+    options?: Record<string, unknown>,
+    program?: ts.Program
+  ) => Transformer;
+}
+
+export interface CompilerPluginHooks {
+  beforeHooks: Array<(program?: ts.Program) => Transformer>;
+  afterHooks: Array<(program?: ts.Program) => Transformer>;
+  afterDeclarationsHooks: Array<(program?: ts.Program) => Transformer>;
 }
 
 export interface BuildBuilderOptions {
@@ -40,6 +72,8 @@ export interface BuildBuilderOptions {
   root?: string;
   sourceRoot?: string;
   projectRoot?: string;
+
+  tsPlugins?: TsPluginEntry[];
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {

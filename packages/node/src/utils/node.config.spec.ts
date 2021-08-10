@@ -1,14 +1,14 @@
 import { join } from 'path';
+import { getNodeWebpackConfig } from './node.config';
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { BuildNodeBuilderOptions } from './types';
+
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   get appRootPath() {
     return join(__dirname, '../../../..');
   },
 }));
-
-import { getNodeWebpackConfig } from './node.config';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { BuildNodeBuilderOptions } from './types';
 
 describe('getNodePartial', () => {
   let input: BuildNodeBuilderOptions;

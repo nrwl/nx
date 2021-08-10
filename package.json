@@ -52,6 +52,7 @@
     "@nestjs/core": "^7.0.0",
     "@nestjs/platform-express": "^7.0.0",
     "@nestjs/schematics": "^7.0.0",
+    "@nestjs/swagger": "^4.8.2",
     "@nestjs/testing": "^7.0.0",
     "@ngrx/component-store": "12.2.0",
     "@ngrx/effects": "12.2.0",
