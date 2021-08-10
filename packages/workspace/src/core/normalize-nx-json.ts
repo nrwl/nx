@@ -8,7 +8,7 @@ import { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
  */
 export function normalizeNxJson(
   nxJson: NxJsonConfiguration,
-  workspaceJson: WorkspaceJsonConfiguration
+  projects: string[]
 ): NxJsonConfiguration<string[]> {
   return nxJson.implicitDependencies
     ? {
@@ -16,7 +16,7 @@ export function normalizeNxJson(
         implicitDependencies: Object.entries(
           nxJson.implicitDependencies
         ).reduce((acc, [key, val]) => {
-          acc[key] = recur(workspaceJson, val);
+          acc[key] = recur(projects, val);
           return acc;
         }, {}),
       }
@@ -29,17 +29,14 @@ export function normalizeNxJson(
  * @param {'*' | string[] | {}} v
  * @returns {string[] | {}}
  */
-function recur(
-  workspaceJson: WorkspaceJsonConfiguration,
-  v: '*' | string[] | {}
-): string[] | {} {
+function recur(projects: string[], v: '*' | string[] | {}): string[] | {} {
   if (v === '*') {
-    return Object.keys(workspaceJson.projects);
+    return projects;
   } else if (Array.isArray(v)) {
     return v;
   } else {
     return Object.keys(v).reduce((acc, key) => {
-      acc[key] = recur(workspaceJson, v[key]);
+      acc[key] = recur(projects, v[key]);
       return acc;
     }, {});
   }

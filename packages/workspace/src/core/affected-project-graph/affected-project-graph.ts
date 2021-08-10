@@ -31,7 +31,10 @@ export function filterAffected(
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
-  const normalizedNxJson = normalizeNxJson(nxJson, workspaceJson);
+  const normalizedNxJson = normalizeNxJson(
+    nxJson,
+    Object.keys(workspaceJson.projects)
+  );
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,

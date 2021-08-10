@@ -20,14 +20,7 @@ describe('normalizeNxJson', () => {
           },
         },
       },
-      {
-        version: 2,
-        projects: {
-          demo: { tags: [] } as unknown as ProjectConfiguration,
-          ui: { tags: [] } as unknown as ProjectConfiguration,
-          util: { tags: [] } as unknown as ProjectConfiguration,
-        },
-      }
+      ['demo', 'ui', 'util']
     );
 
     expect(result.implicitDependencies).toEqual({
