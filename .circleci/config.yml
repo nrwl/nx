@@ -1,13 +1,5 @@
 version: 2.1
 
-machine:
-  pre:
-    - mkdir ~/.cache/yarn
-
-dependencies:
-  cache_directories:
-    - ~/.cache/yarn
-
 # -------------------------
 #        ORBS
 # -------------------------
@@ -17,6 +9,14 @@ orbs:
 # -------------------------
 #        DEFAULTS
 # -------------------------
+machine:
+  pre:
+    - mkdir ~/.cache/yarn
+
+dependencies:
+  cache_directories:
+    - ~/.cache/yarn
+
 defaults: &defaults
   working_directory: ~/repo
 
@@ -57,19 +57,23 @@ executors:
 #        COMMANDS
 # -------------------------
 commands:
+  windows_setup:
+    steps:
+      - run: nvm install 14.17
+      - run: nvm use 14.17
+      - run: npm install -g yarn@1.22.10
+
   setup:
     parameters:
       os:
         type: string
     steps:
       - checkout
-      - when:
-          condition:
-            equal: [<< parameters.os >>, windows]
-          steps:
-            - run: nvm install 14.17
-            - run: nvm use 14.17
-            - run: npm install -g yarn@1.22.10
+      - windows_setup:
+          when:
+            condition:
+              equal: [<< parameters.os >>, windows]
+
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
@@ -79,7 +83,6 @@ commands:
           command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
-          # Windows needs its own cache key because binaries in node_modules are different.
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
@@ -133,6 +136,7 @@ jobs:
           name: Agent
           command: npx nx-cloud start-agent
           no_output_timeout: 60m
+
   # -------------------------
   #     JOBS: Pull request
   # -------------------------
@@ -151,6 +155,7 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
+      SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
     steps:
       - setup:
@@ -189,6 +194,7 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+
   # -------------------------
   #     JOBS: Commit on main
   # -------------------------
@@ -207,6 +213,7 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
+      SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       NX_E2E_RUN_CYPRESS: 'true'
     steps:
@@ -232,7 +239,7 @@ jobs:
           command: npx nx-cloud stop-all-agents
 
 # -------------------------
-#        Workflows
+#        WORKFLOWS
 # -------------------------
 workflows:
   version: 2
