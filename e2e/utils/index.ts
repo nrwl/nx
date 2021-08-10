@@ -304,8 +304,8 @@ export function runCommandUntil(
     let complete = false;
 
     function checkCriteria(c) {
-      output += stripConsoleColors(c.toString());
-      if (criteria(output) && !complete) {
+      output += c.toString();
+      if (criteria(stripConsoleColors(output)) && !complete) {
         complete = true;
         res(p);
       }
