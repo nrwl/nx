@@ -5,7 +5,7 @@ import { updateWorkspace } from './workspace';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
 import { Architect } from '@angular-devkit/architect';
-import { MockBuilderContext } from '@nrwl/workspace/testing';
+import { MockBuilderContext } from './testing-utils';
 import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(

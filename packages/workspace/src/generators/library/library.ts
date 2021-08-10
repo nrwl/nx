@@ -14,8 +14,8 @@ import {
   ProjectConfiguration,
   NxJsonProjectConfiguration,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { join } from 'path';
+import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
 import { Schema } from './schema';
 
 // nx-ignore-next-line

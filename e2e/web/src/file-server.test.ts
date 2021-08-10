@@ -27,16 +27,17 @@ describe('file-server', () => {
       `serve ${appName} --port=${port}`,
       (output) => {
         return (
-          output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
+          output.indexOf('Built at') > -1 &&
+          output.indexOf(`localhost:${port}`) > -1
         );
       }
     );
+
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      await killPorts(port);
-      // expect(await killPorts(port)).toBeTruthy();
-    } catch {
-      expect('process running').toBeFalsy();
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
     }
-  }, 300000);
+  }, 1000000);
 });

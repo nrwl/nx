@@ -275,7 +275,11 @@ export function runCommandAsync(
         if (!opts.silenceError && err) {
           reject(err);
         }
-        resolve({ stdout, stderr, combinedOutput: `${stdout}${stderr}` });
+        resolve({
+          stdout: stripConsoleColors(stdout),
+          stderr: stripConsoleColors(stderr),
+          combinedOutput: stripConsoleColors(`${stdout}${stderr}`),
+        });
       }
     );
   });
@@ -301,7 +305,7 @@ export function runCommandUntil(
 
     function checkCriteria(c) {
       output += c.toString();
-      if (criteria(output) && !complete) {
+      if (criteria(stripConsoleColors(output)) && !complete) {
         complete = true;
         res(p);
       }
@@ -376,15 +380,13 @@ export function runCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    let r = execSync(`${pm.runNx} ${command}`, {
-      cwd: opts.cwd || tmpProjPath(),
-      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
-      encoding: 'utf-8',
-      maxBuffer: 50 * 1024 * 1024,
-    }).toString();
-    r = r.replace(
-      /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-      ''
+    let r = stripConsoleColors(
+      execSync(`${pm.runNx} ${command}`, {
+        cwd: opts.cwd || tmpProjPath(),
+        env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+        encoding: 'utf-8',
+        maxBuffer: 50 * 1024 * 1024,
+      })
     );
     if (process.env.VERBOSE_OUTPUT) {
       logInfo(`result of running: ${command}`, r);
@@ -407,6 +409,18 @@ export function runCLI(
       throw e;
     }
   }
+}
+
+/**
+ * Remove log colors for fail proof string search
+ * @param log
+ * @returns
+ */
+function stripConsoleColors(log: string): string {
+  return log.replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+    ''
+  );
 }
 
 export function expectTestsPass(v: { stdout: string; stderr: string }) {
