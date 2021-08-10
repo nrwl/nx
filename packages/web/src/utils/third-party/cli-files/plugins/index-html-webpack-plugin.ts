@@ -59,11 +59,21 @@ export class IndexHtmlWebpackPlugin extends IndexHtmlGenerator {
     });
 
     function addWarning(compilation: any, message: string): void {
-      compilation.warnings.push(new this.webpack.WebpackError(message));
+      //TODO: the else branch can be removed in NX 13
+      if (typeof this.webpack.WebpackError === 'function') {
+        compilation.warnings.push(new this.webpack.WebpackError(message));
+      } else {
+        compilation.warnings.push(message);
+      }
     }
 
     function addError(compilation: any, message: string): void {
-      compilation.errors.push(new this.webpack.WebpackError(message));
+      //TODO: the else branch can be removed in NX 13
+      if (typeof this.webpack.WebpackError === 'function') {
+        compilation.errors.push(new this.webpack.WebpackError(message));
+      } else {
+        compilation.errors.push(message);
+      }
     }
 
     const callback = async (assets: Record<string, unknown>) => {

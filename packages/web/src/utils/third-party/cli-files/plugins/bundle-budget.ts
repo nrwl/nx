@@ -87,14 +87,23 @@ export class BundleBudgetPlugin {
     if (threshold) {
       if (threshold > size.size) {
         const sizeDifference = formatSize(threshold - size.size);
-        messages.push(
-          new webpack.WebpackError(
+        if (typeof webpack.WebpackError === 'function') {
+          messages.push(
+            new webpack.WebpackError(
+              `budgets, minimum exceeded for ${size.label}. ` +
+                `Budget ${formatSize(
+                  threshold
+                )} was not reached by ${sizeDifference}.`
+            )
+          );
+        } else {
+          messages.push(
             `budgets, minimum exceeded for ${size.label}. ` +
               `Budget ${formatSize(
                 threshold
               )} was not reached by ${sizeDifference}.`
-          )
-        );
+          );
+        }
       }
     }
   }
@@ -111,14 +120,23 @@ export class BundleBudgetPlugin {
     if (threshold) {
       if (threshold < size.size) {
         const sizeDifference = formatSize(size.size - threshold);
-        messages.push(
-          new webpack.WebpackError(
+        if (typeof webpack === 'function') {
+          messages.push(
+            new webpack.WebpackError(
+              `budgets, maximum exceeded for ${size.label}. ` +
+                `Budget ${formatSize(
+                  threshold
+                )} was exceeded by ${sizeDifference}.`
+            )
+          );
+        } else {
+          messages.push(
             `budgets, maximum exceeded for ${size.label}. ` +
               `Budget ${formatSize(
                 threshold
               )} was exceeded by ${sizeDifference}.`
-          )
-        );
+          );
+        }
       }
     }
   }
