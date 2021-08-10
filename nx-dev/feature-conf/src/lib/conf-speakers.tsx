@@ -57,19 +57,40 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'wwwalkerrun',
     },
   ];
+
+  function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {
+    const result: Array<ITEM[]> = [];
+    for (let i = 0; i < itemList.length; i += chunkSize)
+      result.push(itemList.slice(i, i + chunkSize));
+    return result;
+  }
+  const rows = chunkList(speakers, 2);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 md:divide-y md:divide-gray-600 border border-r-0 border-l-0 border-gray-600">
-      {speakers.map((speaker) => (
+    <div className="border-t border-gray-600">
+      {rows.map((row, rowIndex) => (
         <div
-          key={speaker.name}
-          className="py-8 md:odd:pr-12 md:even:pl-12 md:odd:border md:odd:border-t-0 md:odd:border-b-0 md:odd:border-l-0 border-gray-600"
+          key={'speaker-row--' + rowIndex}
+          className="border-b border-gray-600"
         >
-          <MemberCard
-            imageUrl={speaker.imageUrl}
-            name={speaker.name}
-            description={speaker.description}
-            twitter={speaker.twitter}
-          />
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {row.map((speaker) => (
+                <div
+                  key={speaker.name}
+                  className="py-8 md:odd:pr-12 md:even:pl-12 odd:border-b md:odd:border-r md:odd:border-l-0 border-gray-600"
+                >
+                  <div className="px-5">
+                    <MemberCard
+                      imageUrl={speaker.imageUrl}
+                      name={speaker.name}
+                      description={speaker.description}
+                      twitter={speaker.twitter}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ))}
     </div>

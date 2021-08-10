@@ -10,7 +10,7 @@ export interface Member {
 export function MemberCard(data: Member): JSX.Element {
   return (
     <figure className="py-6 grid grid-cols-5 md:grid-cols-3 gap-12 align-center items-center justify-center">
-      <div className="rounded-full">
+      <div className="rounded-full col-span-2 md:col-span-1">
         <Image
           src={data.imageUrl}
           alt={data.name}
