@@ -31,13 +31,6 @@ describe('run-one', () => {
     runCLI(`build ${myapp}`);
   }, 10000);
 
-  it('should build a specific project', () => {
-    const myapp = uniq('app');
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-
-    runCLI(`build ${myapp}`);
-  }, 10000);
-
   it('should build the project when within the project root', () => {
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
