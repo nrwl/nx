@@ -13,7 +13,7 @@ import {
 import * as chalk from 'chalk';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { Stats } from 'fs';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { detectPackageManager } from '../shared/package-manager';
 import { GenerateOptions } from './generate';
 import { Tree } from '../shared/tree';
 import {

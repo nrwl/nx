@@ -5,12 +5,9 @@ import {
   Tree,
   Rule,
 } from '@angular-devkit/schematics';
-import { getWorkspace, visitNotIgnoredFiles } from '@nrwl/workspace';
-import {
-  findNodes,
-  insert,
-  ReplaceChange,
-} from '@nrwl/workspace/src/utils/ast-utils';
+import { getWorkspace } from '../workspace';
+import { visitNotIgnoredFiles } from './visit-not-ignored-files';
+import { findNodes, insert, ReplaceChange } from '../ast-utils';
 import { normalize } from '@angular-devkit/core';
 
 export interface PackageNameMapping {

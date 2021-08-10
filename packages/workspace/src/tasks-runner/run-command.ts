@@ -11,7 +11,7 @@ import type {
   Task,
 } from '@nrwl/devkit';
 import { Environment } from '../core/shared-interfaces';
-import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
+import { NxArgs } from '../command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
 import {
   projectHasTarget,
