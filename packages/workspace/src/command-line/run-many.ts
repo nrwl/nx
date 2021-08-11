@@ -5,7 +5,6 @@ import type { NxArgs, RawNxArgs } from './utils';
 import {
   createProjectGraphAsync,
   isWorkspaceProject,
-  withDeps,
 } from '../core/project-graph';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
@@ -55,11 +54,6 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
     let selectedProjects = nxArgs.projects.map((name) =>
       allProjects.find((project) => project.name === name)
     );
-    if (nxArgs.withDeps) {
-      selectedProjects = Object.values(
-        withDeps(projectGraph, selectedProjects).nodes
-      );
-    }
     return runnableForTarget(selectedProjects, nxArgs.target, true).reduce(
       (m, c) => ((m[c.name] = c), m),
       {}
