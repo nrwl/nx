@@ -74,20 +74,17 @@ export async function runCommand<T extends RunArgs>(
     nxJson,
     hideCachedOutput: nxArgs.hideCachedOutput,
   }).subscribe({
-    next: (event: any) => {
+    next: (event) => {
+      if (
+        projectsToRun
+          .map((project) => project.name)
+          .includes(event.task.target.project) &&
+        event.task.target.target === nxArgs.target
+      ) {
+        workspaceResults.setResult(event.task.target.project, event.success);
+      }
       switch (event.type) {
         case AffectedEventType.TaskComplete: {
-          if (
-            projectsToRun
-              .map((project) => project.name)
-              .includes(event.task.target.project) &&
-            event.task.target.target === nxArgs.target
-          ) {
-            workspaceResults.setResult(
-              event.task.target.project,
-              event.success
-            );
-          }
           if (!event.success) {
             failedTasks.push(event.task);
           }
@@ -98,17 +95,6 @@ export async function runCommand<T extends RunArgs>(
           break;
         }
         case AffectedEventType.TaskCacheRead: {
-          if (
-            projectsToRun
-              .map((project) => project.name)
-              .includes(event.task.target.project) &&
-            event.task.target.target === nxArgs.target
-          ) {
-            workspaceResults.setResult(
-              event.task.target.project,
-              event.success
-            );
-          }
           cachedTasks.push(event.task);
           if (!event.success) {
             failedTasks.push(event.task);
