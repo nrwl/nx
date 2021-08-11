@@ -57,23 +57,11 @@ executors:
 #        COMMANDS
 # -------------------------
 commands:
-  windows_setup:
-    steps:
-      - run: nvm install 14.17
-      - run: nvm use 14.17
-      - run: npm install -g yarn@1.22.10
-
-  setup:
+  run-yarn:
     parameters:
       os:
         type: string
     steps:
-      - checkout
-      - windows_setup:
-          when:
-            condition:
-              equal: [<< parameters.os >>, windows]
-
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
@@ -87,6 +75,11 @@ commands:
           paths:
             - ~/.cache/yarn
 
+  install-pnpm:
+    parameters:
+      os:
+        type: string
+    steps:
       - when:
           condition:
             equal: [<< parameters.os >>, linux]
@@ -101,6 +94,25 @@ commands:
             - run:
                 name: Install PNPM
                 command: npm install -g pnpm@6.9.1
+
+  setup:
+    parameters:
+      os:
+        type: string
+    steps:
+      - checkout
+      - when:
+          condition:
+            equal: [<< parameters.os >>, windows]
+          steps:
+            - run: nvm install 14.17
+            - run: nvm use 14.17
+            - run: npm install -g yarn@1.22.10
+
+      - run-yarn:
+          os: << parameters.os >>
+      - install-pnpm:
+          os: << parameters.os >>
 
 # -------------------------
 #          JOBS
@@ -258,6 +270,14 @@ workflows:
           name: 'agent5'
       - agent:
           name: 'agent6'
+      - agent:
+          name: 'agent7'
+      - agent:
+          name: 'agent8'
+      - agent:
+          name: 'agent9'
+      - agent:
+          name: 'agent10'
       - pr-main:
           filters:
             branches:
