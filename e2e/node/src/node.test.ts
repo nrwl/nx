@@ -238,7 +238,7 @@ describe('Build Node apps', () => {
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
       // TODO: update to v5 when Nest8 is supported
-      packageInstall('@nestjs/swagger', nestapp, '4.8.2');
+      packageInstall('@nestjs/swagger', undefined, '4.8.2');
 
       updateWorkspaceConfig((workspace) => {
         workspace.projects[nestapp].targets.build.options.tsPlugins = [
