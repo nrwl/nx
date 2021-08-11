@@ -5,6 +5,7 @@
     <% if(uiFramework === '@storybook/react') { %>, "outDir": "" <% } %>
   },
   <% if(uiFramework === '@storybook/react') { %>"files": [
+    "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
     "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/cssmodule.d.ts",
     "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/image.d.ts"
   ],<% } %>

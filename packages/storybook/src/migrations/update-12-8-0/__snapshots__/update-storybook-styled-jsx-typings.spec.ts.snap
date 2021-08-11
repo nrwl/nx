@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Add styled-jsx typings to Storybook tsconfig should add styled-jsx typings 1`] = `
+Object {
+  "compilerOptions": Object {
+    "emitDecoratorMetadata": true,
+  },
+  "exclude": Array [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx",
+  ],
+  "extends": "../tsconfig.json",
+  "files": Array [
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts",
+    "../../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+  ],
+  "include": Array [
+    "../src/**/*",
+    "*.js",
+  ],
+}
+`;
