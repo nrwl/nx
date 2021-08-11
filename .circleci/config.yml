@@ -1,8 +1,14 @@
 version: 2.1
 
-# Variables
-var_1: &working_directory ~/repo
+# -------------------------
+#        ORBS
+# -------------------------
+orbs:
+  nx: nrwl/nx@1.0.0
 
+# -------------------------
+#        DEFAULTS
+# -------------------------
 machine:
   pre:
     - mkdir ~/.cache/yarn
@@ -11,36 +17,51 @@ dependencies:
   cache_directories:
     - ~/.cache/yarn
 
-orbs:
-  nx: nrwl/nx@1.0.0
+defaults: &defaults
+  working_directory: ~/repo
 
+# -------------------------
+#        EXECUTORS
+# -------------------------
 executors:
   linux:
-    working_directory: *working_directory
+    <<: *defaults
     docker:
       - image: cimg/node:14.17-browsers
 
   windows:
-    working_directory: *working_directory
+    <<: *defaults
     resource_class: windows.medium
     machine:
       image: windows-server-2019-vs2019:stable
     shell: cmd.exe
 
+  macos:
+    <<: *defaults
+    macos:
+      xcode: &_XCODE_VERSION '12.5.0'
+
+  android:
+    <<: *defaults
+    docker:
+      - image: reactnativecommunity/react-native-android:4.0
+    resource_class: 'large'
+    environment:
+      - TERM: 'dumb'
+      - ADB_INSTALL_TIMEOUT: 10
+      - _JAVA_OPTIONS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
+      - GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-XX:+HeapDumpOnOutOfMemoryError"'
+      - BUILD_THREADS: 2
+
+# -------------------------
+#        COMMANDS
+# -------------------------
 commands:
-  setup:
+  run-yarn:
     parameters:
       os:
         type: string
     steps:
-      - checkout
-      - when:
-          condition:
-            equal: [<< parameters.os >>, windows]
-          steps:
-            - run: nvm install 14.17
-            - run: nvm use 14.17
-            - run: npm install -g yarn@1.22.10
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
@@ -50,11 +71,15 @@ commands:
           command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
-          # Windows needs its own cache key because binaries in node_modules are different.
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
 
+  install-pnpm:
+    parameters:
+      os:
+        type: string
+    steps:
       - when:
           condition:
             equal: [<< parameters.os >>, linux]
@@ -70,7 +95,32 @@ commands:
                 name: Install PNPM
                 command: npm install -g pnpm@6.9.1
 
+  setup:
+    parameters:
+      os:
+        type: string
+    steps:
+      - checkout
+      - when:
+          condition:
+            equal: [<< parameters.os >>, windows]
+          steps:
+            - run: nvm install 14.17
+            - run: nvm use 14.17
+            - run: npm install -g yarn@1.22.10
+
+      - run-yarn:
+          os: << parameters.os >>
+      - install-pnpm:
+          os: << parameters.os >>
+
+# -------------------------
+#          JOBS
+# -------------------------
 jobs:
+  # -------------------------
+  #     JOBS: Agent
+  # -------------------------
   agent:
     parameters:
       os:
@@ -98,6 +148,10 @@ jobs:
           name: Agent
           command: npx nx-cloud start-agent
           no_output_timeout: 60m
+
+  # -------------------------
+  #     JOBS: Pull request
+  # -------------------------
   pr-main:
     parameters:
       os:
@@ -113,6 +167,7 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
+      SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
     steps:
       - setup:
@@ -151,6 +206,10 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+
+  # -------------------------
+  #     JOBS: Commit on main
+  # -------------------------
   trunk-main:
     parameters:
       os:
@@ -166,6 +225,7 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
+      SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       NX_E2E_RUN_CYPRESS: 'true'
     steps:
@@ -189,7 +249,13 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+
+# -------------------------
+#        WORKFLOWS
+# -------------------------
 workflows:
+  version: 2
+
   build:
     jobs:
       - agent:
@@ -204,6 +270,14 @@ workflows:
           name: 'agent5'
       - agent:
           name: 'agent6'
+      - agent:
+          name: 'agent7'
+      - agent:
+          name: 'agent8'
+      - agent:
+          name: 'agent9'
+      - agent:
+          name: 'agent10'
       - pr-main:
           filters:
             branches:
