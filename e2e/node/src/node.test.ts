@@ -247,14 +247,6 @@ describe('Build Node apps', () => {
         return workspace;
       });
 
-      const packageJson = JSON.parse(readFile(`apps/${nestapp}/package.json`));
-
-      expect(packageJson).toEqual(
-        expect.objectContaining({
-          '@nestjs/swagger': '4.8.2',
-        })
-      );
-
       updateFile(
         `apps/${nestapp}/src/app/foo.dto.ts`,
         `
