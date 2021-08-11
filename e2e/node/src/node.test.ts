@@ -276,7 +276,7 @@ export class AppController {
       await runCLIAsync(`build ${nestapp}`);
 
       const mainJs = readFile(`dist/apps/${nestapp}/main.js`);
-      expect(stripIndents`${mainJs}`).toContainEqual(
+      expect(stripIndents`${mainJs}`).toContain(
         stripIndents`
 class FooDto {
     static _OPENAPI_METADATA_FACTORY() {
@@ -286,7 +286,7 @@ class FooDto {
 exports.FooDto = FooDto;
         `
       );
-    });
+    }, 300000);
   });
 });
 
