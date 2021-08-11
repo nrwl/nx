@@ -196,7 +196,7 @@
     "react-refresh": "^0.9.0",
     "react-router-dom": "5.1.2",
     "regenerator-runtime": "0.13.7",
-    "release-it": "^7.4.0",
+    "release-it": "^14.11.3",
     "rollup": "1.31.1",
     "rollup-plugin-copy": "3.3.0",
     "rollup-plugin-filesize": "^9.0.0",
