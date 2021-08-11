@@ -31,6 +31,14 @@ module.exports = {
 "
 `;
 
+exports[`@nrwl/storybook:configuration should have the proper typings 1`] = `
+Array [
+  "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+  "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+  "../../../node_modules/@nrwl/react/typings/image.d.ts",
+]
+`;
+
 exports[`@nrwl/storybook:configuration should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
 "const rootMain = require('../../../.storybook/main');
 const rootWebpackConfig = require('../../../.storybook/webpack.config'); 

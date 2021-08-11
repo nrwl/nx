@@ -236,4 +236,22 @@ describe('@nrwl/storybook:configuration', () => {
       }
     `);
   });
+
+  it('should have the proper typings', async () => {
+    await libraryGenerator(tree, {
+      name: 'test-ui-lib2',
+      linter: Linter.EsLint,
+      standaloneConfig: false,
+    });
+
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib2',
+      uiFramework: '@storybook/react',
+      standaloneConfig: false,
+    });
+
+    expect(
+      readJson(tree, 'libs/test-ui-lib2/.storybook/tsconfig.json').files
+    ).toMatchSnapshot();
+  });
 });
