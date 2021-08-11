@@ -1,4 +1,9 @@
-import ts = require('typescript');
+import type {
+  CustomTransformerFactory,
+  Node,
+  Program,
+  TransformerFactory,
+} from 'typescript';
 
 export interface FileReplacement {
   replace: string;
@@ -17,7 +22,7 @@ export interface SourceMapOptions {
   hidden: boolean;
 }
 
-type Transformer = ts.TransformerFactory<ts.Node> | ts.CustomTransformerFactory;
+type Transformer = TransformerFactory<Node> | CustomTransformerFactory;
 
 export interface TsPlugin {
   name: string;
@@ -29,22 +34,19 @@ export type TsPluginEntry = string | TsPlugin;
 export interface CompilerPlugin {
   before?: (
     options?: Record<string, unknown>,
-    program?: ts.Program
+    program?: Program
   ) => Transformer;
-  after?: (
-    options?: Record<string, unknown>,
-    program?: ts.Program
-  ) => Transformer;
+  after?: (options?: Record<string, unknown>, program?: Program) => Transformer;
   afterDeclarations?: (
     options?: Record<string, unknown>,
-    program?: ts.Program
+    program?: Program
   ) => Transformer;
 }
 
 export interface CompilerPluginHooks {
-  beforeHooks: Array<(program?: ts.Program) => Transformer>;
-  afterHooks: Array<(program?: ts.Program) => Transformer>;
-  afterDeclarationsHooks: Array<(program?: ts.Program) => Transformer>;
+  beforeHooks: Array<(program?: Program) => Transformer>;
+  afterHooks: Array<(program?: Program) => Transformer>;
+  afterDeclarationsHooks: Array<(program?: Program) => Transformer>;
 }
 
 export interface BuildBuilderOptions {
