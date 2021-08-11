@@ -546,16 +546,19 @@ export function Index() {
             {/*LEARNING MATERIALS*/}
             <div className="my-32 flex sm:flex-row flex-col">
               <div className="w-full sm:w-1/2 flex flex-col justify-center items-center sm:pb-0 sm:pr-16 pb-10 mt-8 sm:mt-0">
-                <iframe
-                  width="560"
-                  height="315"
-                  src="https://www.youtube.com/embed/2mYLe9Kp9VM"
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full"
-                />
+                <a
+                  className="cursor-pointer underline"
+                  href="https://egghead.io/courses/scale-react-development-with-nx-4038?utm_source=nx.dev"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Image
+                    src="/images/nx-on-egghead.webp"
+                    alt="Nx on Eggheadio illustration"
+                    width={674}
+                    height={352}
+                  />
+                </a>
               </div>
               <div className="w-full sm:w-1/2 flex flex-col justify-center sm:pb-0 pb-10 sm:pl-16 mt-8 sm:mt-0">
                 <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
@@ -581,7 +584,7 @@ export function Index() {
                   <div className="inline-flex rounded-md shadow">
                     <a
                       target="_blank"
-                      href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco?utm_source=nx.dev"
+                      href="https://egghead.io/courses/scale-react-development-with-nx-4038?utm_source=nx.dev"
                       className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-base"
                       rel="noreferrer"
                     >
