@@ -37,3 +37,13 @@ export default Header;
 ```
 
 This method of import allow you to work with the SVG the same way you would with any other React component. You can style it using CSS, styled-components, etc. The SVG component accepts a `title` prop, as well as any other props that the `svg` element accepts.
+
+Note that if you are using Next.js, you have to opt into this behavior. To import SVGs as React components with Next.js, you need to make sure that `nx.svgr` value is set to `true` in your Next.js application's `next.config.js` file:
+
+```js
+module.exports = withNx({
+  nx: {
+    svgr: true,
+  },
+});
+```

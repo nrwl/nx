@@ -373,6 +373,7 @@ Tasks runners can accept different options. The following are the options suppor
 - `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
 - `encryptionKey` (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable.
 - `runtimeCacheInputs` defines the list of commands that are run by the runner to include into the computation hash value.
+- `selectivelyHashTsConfig` only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects). Defaults to `false`
 
 `runtimeCacheInputs` are set as follows:
 
