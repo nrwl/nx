@@ -156,6 +156,10 @@ const pkgFiles = [
   'build/npm/nx-plugin/package.json',
   'build/npm/nx/package.json',
 ];
+
+process.env.GITHUB_TOKEN = !parsedArgs.local
+  ? process.env.GITHUB_TOKEN_RELEASE_IT_NX
+  : 'dummy-gh-token';
 /**
  * Set the static options for release-it
  */
@@ -177,23 +181,17 @@ const options = {
   github: {
     preRelease: parsedVersion.isPrerelease,
     release: true,
-    assets: [],
-    /**
-     * The environment variable containing a valid GitHub
-     * auth token with "repo" access (no other permissions required)
-     */
-    token: !parsedArgs.local
-      ? process.env.GITHUB_TOKEN_RELEASE_IT_NX
-      : 'dummy-gh-token',
   },
   npm: {
     /**
      * We don't use release-it to do the npm publish, because it is not
      * able to understand our multi-package setup.
      */
-    release: false,
+    publish: false,
   },
-  requireCleanWorkingDir: false,
+  git: {
+    requireCleanWorkingDir: false,
+  },
 };
 
 if (parsedArgs.local) {
