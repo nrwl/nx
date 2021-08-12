@@ -94,7 +94,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('gatsby');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
-      preset: 'next',
+      preset: 'gatsby',
       style: 'css',
       appName,
       packageManager,
