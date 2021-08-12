@@ -6,7 +6,7 @@ import {
   runExecutor,
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
-import { PHASE_EXPORT } from 'next/dist/next-server/lib/constants';
+import { PHASE_EXPORT } from 'next/dist/shared/lib/constants';
 import { resolve } from 'path';
 import { prepareConfig } from '../../utils/config';
 import {

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
 
 import build from 'next/dist/build';
-import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
+import { PHASE_PRODUCTION_BUILD } from 'next/dist/shared/lib/constants';
 
 import { join, resolve } from 'path';
 import { copySync, mkdir } from 'fs-extra';

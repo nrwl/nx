@@ -1,4 +1,4 @@
-import type { NextConfig } from 'next/dist/next-server/server/config';
+import type { NextConfig } from 'next/dist/server/config';
 import { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');

@@ -8,7 +8,7 @@ import {
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_PRODUCTION_SERVER,
-} from 'next/dist/next-server/lib/constants';
+} from 'next/dist/shared/lib/constants';
 
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';

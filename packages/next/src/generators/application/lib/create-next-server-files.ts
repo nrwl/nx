@@ -67,10 +67,10 @@ export function createNextServerFiles(host: Tree, options: NormalizedSchema) {
        */
 
       /**
-       * @typedef {import('next/dist/next-server/server/next-server').default} Server
+       * @typedef {import('next/dist/server/next-server').default} Server
        */
 
-      const NextServer = require('next/dist/next-server/server/next-server').default;
+      const NextServer = require('next/dist/server/next-server').default;
       const express = require('express');
 
       const nextApp = new NextServer({

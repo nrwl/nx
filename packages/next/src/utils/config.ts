@@ -4,9 +4,9 @@ import {
   PHASE_EXPORT,
   PHASE_PRODUCTION_BUILD,
   PHASE_PRODUCTION_SERVER,
-} from 'next/dist/next-server/lib/constants';
-import loadConfig from 'next/dist/next-server/server/config';
-import { NextConfig } from 'next/dist/next-server/server/config-shared';
+} from 'next/dist/shared/lib/constants';
+import loadConfig from 'next/dist/server/config';
+import { NextConfig } from 'next/dist/server/config-shared';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
