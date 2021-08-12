@@ -70,7 +70,7 @@ describe('Jest', () => {
     expect(appResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-  }, 90000);
+  }, 300000);
 
   it('should set the NODE_ENV to `test`', async () => {
     const mylib = uniq('mylib');

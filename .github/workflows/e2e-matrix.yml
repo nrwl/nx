@@ -36,8 +36,8 @@ jobs:
         #   - os: windows-latest
         #     package_manager: yarn
         node_version:
-          - '14'
-          # - '15'
+          # - '14'
+          - '15'
         package_manager:
           - npm
           - yarn
