@@ -15,11 +15,7 @@ fs.existsSync = () => true;
 
 describe('Hasher', () => {
   const nxJson = {
-    npmScope: 'nrwl',
-    projects: {
-      parent: { implicitDependencies: [], tags: [] },
-      child: { implicitDependencies: [], tags: [] },
-    },
+    npmScope: 'nrwl'
   };
 
   const workSpaceJson = {

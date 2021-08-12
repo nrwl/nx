@@ -758,7 +758,6 @@ describe('getRunner', () => {
   beforeEach(() => {
     nxJson = {
       npmScope: 'proj',
-      projects: {},
     };
     mockRunner = jest.fn();
   });

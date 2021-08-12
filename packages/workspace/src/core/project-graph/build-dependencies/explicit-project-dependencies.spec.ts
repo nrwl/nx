@@ -41,10 +41,7 @@ describe('explicit project dependencies', () => {
       },
     };
     const nxJson = {
-      npmScope: 'proj',
-      projects: {
-        proj1: {},
-      },
+      npmScope: 'proj'
     };
     const tsConfig = {
       compilerOptions: {

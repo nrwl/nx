@@ -115,7 +115,7 @@ describe('convert-to-nx-project', () => {
     }
   });
 
-  it('should extract tags from nx.json into project.json', async () => {
+  it('should include tags in project.json', async () => {
     const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {

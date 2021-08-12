@@ -172,13 +172,3 @@ function updateProjectTsConfig(host: Tree, options: NormalizedSchema) {
     };
   });
 }
-
-function updateNxConfigWithProject(host: Tree, options: NormalizedSchema) {
-  updateJson(host, `/nx.json`, (json) => ({
-    ...json,
-    projects: {
-      ...json.projects,
-      [options.name]: { tags: options.parsedTags },
-    },
-  }));
-}

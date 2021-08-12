@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { getProjects, Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   ProjectConfiguration,
@@ -181,9 +181,7 @@ describe('moveProjectConfiguration', () => {
     expect(similarProject.root).toBe('apps/my-source-e2e');
   });
 
-  it('should update nx.json', () => {
-    setupWorkspace();
-
+  it('should update tags and implicitDependencies', () => {
     moveProjectConfiguration(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
@@ -192,7 +190,8 @@ describe('moveProjectConfiguration', () => {
     );
     expect(actualProject.tags).toEqual(['type:ui']);
     expect(actualProject.implicitDependencies).toEqual(['my-other-lib']);
-    expect(readJson(tree, 'nx.json').projects['my-source']).not.toBeDefined();
+    const projects = Object.fromEntries(getProjects(tree));
+    expect(projects['my-source']).not.toBeDefined();
   });
 
   it('should support moving a standalone project', () => {

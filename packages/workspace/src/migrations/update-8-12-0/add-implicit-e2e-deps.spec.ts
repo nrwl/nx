@@ -11,7 +11,7 @@ describe('Update 8.12.0', () => {
     tree = Tree.empty();
     tree = createEmptyWorkspace(tree);
     tree = await callRule(
-      updateJsonInTree<NxJsonConfiguration>('nx.json', (json) => {
+      updateJsonInTree('workspace.json', (json) => {
         json.projects['my-app'] = {
           tags: [],
         };
@@ -30,7 +30,8 @@ describe('Update 8.12.0', () => {
   it('should add implicit dependencies for e2e projects', async () => {
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
-    const nxJson = readJsonInTree<NxJsonConfiguration>(result, 'nx.json');
+    const nxJson = readJsonInTree(result, 'workspace.json');
+    console.log(nxJson)
 
     expect(nxJson.projects['my-app-e2e']).toEqual({
       tags: [],
@@ -44,7 +45,7 @@ describe('Update 8.12.0', () => {
 
   it('should not add duplicate implicit dependencies for e2e projects', async () => {
     tree = await callRule(
-      updateJsonInTree<NxJsonConfiguration>('nx.json', (json) => {
+      updateJsonInTree('nx.json', (json) => {
         json.projects['my-app-e2e'].implicitDependencies = ['my-app'];
         return json;
       }),
@@ -52,7 +53,7 @@ describe('Update 8.12.0', () => {
     );
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
-    const nxJson = readJsonInTree<NxJsonConfiguration>(result, 'nx.json');
+    const nxJson = readJsonInTree(result, 'nx.json');
 
     expect(nxJson.projects['my-app-e2e']).toEqual({
       tags: [],

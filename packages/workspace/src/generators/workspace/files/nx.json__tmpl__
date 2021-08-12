@@ -3,6 +3,10 @@
   "affected": {
     "defaultBase": "<%= defaultBase %>"
   },
+  "cli": {
+    "defaultCollection": "@nrwl/workspace"<% if (packageManager) { %>,
+    "packageManager": "<%=packageManager%>" <% } %>
+  },
   "implicitDependencies": {
     "package.json": {
       "dependencies": "*",
@@ -30,6 +34,5 @@
         "projects": "dependencies"
       }
     ]
-  },
-  "projects": {}
+  }
 }

@@ -9,12 +9,13 @@ import {
   NxJsonConfiguration,
   stripIndents,
   DependencyType,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { defaultFileHasher } from '../hasher/file-hasher';
 
 describe('project graph', () => {
   let packageJson: any;
-  let workspaceJson: any;
+  let workspaceJson: WorkspaceJsonConfiguration;
   let nxJson: NxJsonConfiguration;
   let tsConfigJson: any;
   let filesJson: any;
@@ -31,41 +32,50 @@ describe('project graph', () => {
       },
     };
     workspaceJson = {
+      version: 2,
       projects: {
         demo: {
           root: 'apps/demo/',
           sourceRoot: 'apps/demo/src',
           projectType: 'application',
+          implicitDependencies: ['api'],
+          targets: {}
         },
         'demo-e2e': {
           root: 'apps/demo-e2e/',
           sourceRoot: 'apps/demo-e2e/src',
           projectType: 'application',
+          targets: {}
         },
         ui: {
           root: 'libs/ui/',
           sourceRoot: 'libs/ui/src',
           projectType: 'library',
+          targets: {}
         },
         'shared-util': {
           root: 'libs/shared/util/',
           sourceRoot: 'libs/shared/util/src',
           projectType: 'library',
+          targets: {}
         },
         'shared-util-data': {
           root: 'libs/shared/util/data',
           sourceRoot: 'libs/shared/util/data/src',
           projectType: 'library',
+          targets: {}
         },
         'lazy-lib': {
           root: 'libs/lazy-lib',
           sourceRoot: 'libs/lazy-lib',
           projectType: 'library',
+          targets: {}
         },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
           projectType: 'application',
+          targets: {}
         },
       },
     };
@@ -77,16 +87,7 @@ describe('project graph', () => {
             deploy: '*',
           },
         },
-      },
-      projects: {
-        api: { tags: [] },
-        demo: { tags: [], implicitDependencies: ['api'] },
-        'demo-e2e': { tags: [] },
-        ui: { tags: [] },
-        'shared-util': { tags: [] },
-        'shared-util-data': { tags: [] },
-        'lazy-lib': { tags: [] },
-      },
+      }
     };
     tsConfigJson = {
       compilerOptions: {

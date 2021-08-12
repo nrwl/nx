@@ -216,7 +216,7 @@ describe('lib', () => {
 
     it('should check for existence of spec files before deleting them', async () => {
       // ARRANGE
-      updateJson(appTree, '/nx.json', (nxJson) => {
+      updateJson<NxJsonConfiguration, NxJsonConfiguration>(appTree, '/nx.json', (nxJson) => {
         nxJson.generators = {
           '@schematics/angular:service': {
             skipTests: true,

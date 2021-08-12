@@ -1,5 +1,6 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, readNxJson, Tree } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
+
 import { initGenerator } from './init';
 
 describe('workspace', () => {
@@ -138,9 +139,7 @@ describe('workspace', () => {
 
     it('should set the default collection to @nrwl/angular', async () => {
       await initGenerator(tree, { name: 'myApp' });
-      expect(readJson(tree, 'angular.json').cli.defaultCollection).toBe(
-        '@nrwl/angular'
-      );
+      expect(readNxJson(tree).cli.defaultCollection).toBe('@nrwl/angular');
     });
 
     it('should create nx.json', async () => {
@@ -350,7 +349,6 @@ describe('workspace', () => {
       });
 
       const nxJson = readJson(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({ myproj: { tags: [] } });
       expect(nxJson.npmScope).toEqual('myproj');
     });
 

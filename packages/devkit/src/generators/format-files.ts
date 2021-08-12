@@ -16,7 +16,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
   } catch {}
 
   sortWorkspaceJson(tree);
-  sortNxJson(tree);
   sortTsConfig(tree);
 
   if (!prettier) return;
@@ -74,19 +73,6 @@ function sortWorkspaceJson(tree: Tree) {
         projects: sortedProjects,
       });
     }
-  } catch (e) {
-    // catch noop
-  }
-}
-
-function sortNxJson(tree: Tree) {
-  try {
-    const nxJson = readJson(tree, 'nx.json');
-    const sortedProjects = sortObjectByKeys(nxJson.projects);
-    writeJson(tree, 'nx.json', {
-      ...nxJson,
-      projects: sortedProjects,
-    });
   } catch (e) {
     // catch noop
   }

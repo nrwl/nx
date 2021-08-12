@@ -38,7 +38,6 @@ export async function format(
     case 'write':
       updateWorkspaceJsonToMatchFormatVersion();
       sortWorkspaceJson();
-      sortNxJson();
       sortTsConfig();
       chunkList.push([workspaceJsonPath, 'nx.json', 'tsconfig.base.json']);
       chunkList.forEach((chunk) => write(chunk));
@@ -158,18 +157,6 @@ function sortWorkspaceJson() {
       workspaceJson.projects = sortedProjects;
       writeJsonFile(workspaceJsonPath, workspaceJson);
     }
-  } catch (e) {
-    // catch noop
-  }
-}
-
-function sortNxJson() {
-  try {
-    const nxJsonPath = path.join(appRootPath, 'nx.json');
-    const nxJson = readJsonFile(nxJsonPath);
-    const sortedProjects = sortObjectByKeys(nxJson.projects);
-    nxJson.projects = sortedProjects;
-    writeJsonFile(nxJsonPath, nxJson);
   } catch (e) {
     // catch noop
   }

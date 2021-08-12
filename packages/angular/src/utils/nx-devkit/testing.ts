@@ -97,17 +97,11 @@ export function createApp(
               options: {},
             },
           },
+          tags: []
         },
       },
     })
   );
-  updateJson(tree, './nx.json', (json) => ({
-    ...json,
-    projects: {
-      ...json.projects,
-      [appName]: { tags: [] },
-    },
-  }));
 }
 
 export function createLib(tree: Tree, libName: string) {

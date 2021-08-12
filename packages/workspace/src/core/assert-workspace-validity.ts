@@ -72,7 +72,7 @@ export function assertWorkspaceValidity(
     return;
   }
 
-  let message = `The following implicitDependencies specified in nx.json are invalid:
+  let message = `The following implicitDependencies specified in project configurations are invalid:
   `;
   invalidImplicitDependencies.forEach((projectNames, key) => {
     const str = `  ${key}

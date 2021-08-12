@@ -14,6 +14,7 @@ import {
   writeJsonFile,
 } from '../utils/fileutils';
 import { appRootPath } from '../utils/app-root';
+import { NxJsonConfiguration } from '../shared/nx';
 
 type Dependencies = 'dependencies' | 'devDependencies';
 
@@ -618,7 +619,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = readJsonFile('nx.json');
+    const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
     const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
       (r: any) => r.runner == '@nrwl/workspace/tasks-runners/default'
     );

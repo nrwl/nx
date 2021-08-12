@@ -26,7 +26,6 @@ describe('Update implicitDependencies within nx.json to include root .eslintrc.j
         workspaceLayout: {
           libsDir: 'packages',
         },
-        projects: {},
         affected: {
           defaultBase: 'main',
         },

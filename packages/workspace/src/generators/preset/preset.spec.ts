@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { Tree, readNxJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
@@ -55,7 +55,7 @@ describe('preset', () => {
     expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
 
     expect(
-      JSON.parse(tree.read('/workspace.json').toString()).cli.defaultCollection
+      readNxJson(tree).cli.defaultCollection
     ).toBe('@nrwl/angular');
   });
 
@@ -67,7 +67,7 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+    expect(readNxJson(tree).cli.defaultCollection).toBe(
       '@nrwl/web'
     );
   });
@@ -82,7 +82,7 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+    expect(readNxJson(tree).cli.defaultCollection).toBe(
       '@nrwl/react'
     );
   });
@@ -97,7 +97,7 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+    expect(readNxJson(tree).cli.defaultCollection).toBe(
       '@nrwl/next'
     );
   });
@@ -162,7 +162,7 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/pages/index.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+    expect(readNxJson(tree).cli.defaultCollection).toBe(
       '@nrwl/gatsby'
     );
   });

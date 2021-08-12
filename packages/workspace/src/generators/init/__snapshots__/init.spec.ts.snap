@@ -5,6 +5,9 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
+  "cli": Object {
+    "defaultCollection": "@nrwl/angular",
+  },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
     "angular.json": "*",
@@ -14,17 +17,6 @@ Object {
     "tslint.json": "*",
   },
   "npmScope": "my-app",
-  "projects": Object {
-    "myApp": Object {
-      "tags": Array [],
-    },
-    "myApp-e2e": Object {
-      "implicitDependencies": Array [
-        "myApp",
-      ],
-      "tags": Array [],
-    },
-  },
 }
 `;
 

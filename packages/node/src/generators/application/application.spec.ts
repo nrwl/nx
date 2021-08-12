@@ -84,14 +84,14 @@ describe('app', () => {
       expect(workspaceJson.defaultProject).toEqual('my-node-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(devkit.getProjects(tree));
+      expect(projects).toMatchObject({
         'my-node-app': {
           tags: ['one', 'two'],
         },
@@ -193,15 +193,15 @@ describe('app', () => {
       expect(workspaceJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(devkit.getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-node-app': {
           tags: ['one', 'two'],
         },

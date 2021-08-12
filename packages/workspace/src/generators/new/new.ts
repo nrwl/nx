@@ -181,9 +181,6 @@ export async function newGenerator(host: Tree, options: Schema) {
 
   await workspaceGenerator(host, { ...options, nxCloud: undefined } as any);
 
-  if (options.cli === 'angular') {
-    setDefaultPackageManager(host, options);
-  }
   setDefaultLinter(host, options);
   addPresetDependencies(host, options);
   addCloudDependencies(host, options);

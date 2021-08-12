@@ -42,7 +42,7 @@ describe('assertWorkspaceValidity', () => {
     expect(output.error).toHaveBeenCalledWith({
       title: 'Configuration Error',
       bodyLines: [
-        `The following implicitDependencies specified in nx.json are invalid:
+        `The following implicitDependencies specified in project configurations are invalid:
     README.md
         invalidproj`,
       ],
@@ -63,7 +63,7 @@ describe('assertWorkspaceValidity', () => {
     expect(output.error).toHaveBeenCalledWith({
       title: 'Configuration Error',
       bodyLines: [
-        `The following implicitDependencies specified in nx.json are invalid:
+        `The following implicitDependencies specified in project configurations are invalid:
     app2
         invalidproj`,
       ],

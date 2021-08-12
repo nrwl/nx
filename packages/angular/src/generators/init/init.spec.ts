@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 
@@ -104,7 +104,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
@@ -155,7 +155,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
@@ -195,7 +195,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
@@ -233,7 +233,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
@@ -253,7 +253,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].linter).toEqual(
@@ -272,7 +272,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].linter).toEqual('none');
@@ -291,7 +291,7 @@ describe('init', () => {
         skipFormat: false,
       });
 
-      const { cli } = readJson(host, 'nx.json');
+      const { cli } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
       // ASSERT
       expect(cli.defaultCollection).toEqual('@nrwl/angular');
@@ -309,7 +309,7 @@ describe('init', () => {
           style,
         });
 
-        const { generators } = readJson(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:component']['style']).toBe(style);
