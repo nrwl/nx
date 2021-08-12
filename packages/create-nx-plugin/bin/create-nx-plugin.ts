@@ -2,6 +2,7 @@
 
 // we can't import from '@nrwl/workspace' because it will require typescript
 import {
+  detectInvokedPackageManager,
   getPackageManagerCommand,
   PackageManager,
 } from '@nrwl/tao/src/shared/package-manager';
@@ -10,10 +11,10 @@ import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
-import enquirer = require('enquirer');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
+import enquirer = require('enquirer');
 import yargsParser = require('yargs-parser');
 
 const tsVersion = 'TYPESCRIPT_VERSION';
@@ -63,7 +64,7 @@ function createWorkspace(
     ...process.argv.slice(parsedArgs._[2] ? 3 : 2).map((a) => `"${a}"`),
   ].join(' ');
 
-  const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
+  const command = `new ${args} --preset=empty --packageManager=${packageManager} --collection=@nrwl/workspace`;
   console.log(command);
 
   const pmc = getPackageManagerCommand(packageManager);
@@ -198,7 +199,8 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
+const packageManager: PackageManager =
+  parsedArgs.packageManager || detectInvokedPackageManager();
 determineWorkspaceName(parsedArgs).then((workspaceName) => {
   return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);
