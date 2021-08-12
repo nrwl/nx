@@ -47,6 +47,41 @@ childProcess.execSync('git fetch --all', {
   stdio: [0, 1, 2],
 });
 
+function updatePackageJsonFiles(parsedVersion, isLocal) {
+  let pkgFiles = [
+    'package.json',
+    'build/npm/create-nx-workspace/package.json',
+    'build/npm/create-nx-plugin/package.json',
+    'build/npm/jest/package.json',
+    'build/npm/cypress/package.json',
+    'build/npm/storybook/package.json',
+    'build/npm/angular/package.json',
+    'build/npm/react/package.json',
+    'build/npm/next/package.json',
+    'build/npm/gatsby/package.json',
+    'build/npm/web/package.json',
+    'build/npm/node/package.json',
+    'build/npm/express/package.json',
+    'build/npm/nest/package.json',
+    'build/npm/workspace/package.json',
+    'build/npm/cli/package.json',
+    'build/npm/tao/package.json',
+    'build/npm/devkit/package.json',
+    'build/npm/eslint-plugin-nx/package.json',
+    'build/npm/linter/package.json',
+    'build/npm/nx-plugin/package.json',
+    'build/npm/nx/package.json',
+  ];
+  if (isLocal) {
+    pkgFiles = pkgFiles.filter((f) => f !== 'package.json');
+  }
+  pkgFiles.forEach((p) => {
+    const content = JSON.parse(fs.readFileSync(p).toString());
+    content.version = parsedVersion.version;
+    fs.writeFileSync(p, JSON.stringify(content, null, 2));
+  });
+}
+
 function parseVersion(version) {
   if (!version || !version.length) {
     return {
@@ -132,31 +167,6 @@ childProcess.execSync(`find build/npm -maxdepth 1 -name "*.tgz" -delete`, {
  */
 const DRY_RUN = !!parsedArgs['dry-run'];
 
-const pkgFiles = [
-  'package.json',
-  'build/npm/create-nx-workspace/package.json',
-  'build/npm/create-nx-plugin/package.json',
-  'build/npm/jest/package.json',
-  'build/npm/cypress/package.json',
-  'build/npm/storybook/package.json',
-  'build/npm/angular/package.json',
-  'build/npm/react/package.json',
-  'build/npm/next/package.json',
-  'build/npm/gatsby/package.json',
-  'build/npm/web/package.json',
-  'build/npm/node/package.json',
-  'build/npm/express/package.json',
-  'build/npm/nest/package.json',
-  'build/npm/workspace/package.json',
-  'build/npm/cli/package.json',
-  'build/npm/tao/package.json',
-  'build/npm/devkit/package.json',
-  'build/npm/eslint-plugin-nx/package.json',
-  'build/npm/linter/package.json',
-  'build/npm/nx-plugin/package.json',
-  'build/npm/nx/package.json',
-];
-
 process.env.GITHUB_TOKEN = !parsedArgs.local
   ? process.env.GITHUB_TOKEN_RELEASE_IT_NX
   : 'dummy-gh-token';
@@ -171,35 +181,20 @@ const options = {
    * the changelog
    */
   safeBump: false,
-  /**
-   * All the package.json files that will have their version updated
-   * by release-it
-   */
-  pkgFiles: pkgFiles,
   increment: parsedVersion.version,
   requireUpstream: false,
   github: {
     preRelease: parsedVersion.isPrerelease,
     release: true,
   },
-  npm: {
-    /**
-     * We don't use release-it to do the npm publish, because it is not
-     * able to understand our multi-package setup.
-     */
-    publish: false,
-  },
+  npm: false,
   git: {
     requireCleanWorkingDir: false,
   },
 };
 
+updatePackageJsonFiles(parsedVersion, parsedArgs.local);
 if (parsedArgs.local) {
-  pkgFiles.forEach((p) => {
-    const content = JSON.parse(fs.readFileSync(p).toString());
-    content.version = parsedVersion.version;
-    fs.writeFileSync(p, JSON.stringify(content, null, 2));
-  });
   childProcess.execSync(
     `./scripts/publish.sh ${parsedVersion.version} latest --local`,
     {
