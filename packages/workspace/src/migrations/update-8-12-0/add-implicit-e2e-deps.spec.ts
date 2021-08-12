@@ -30,22 +30,22 @@ describe('Update 8.12.0', () => {
   it('should add implicit dependencies for e2e projects', async () => {
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
-    const nxJson = readJsonInTree(result, 'workspace.json');
-    console.log(nxJson)
+    const workspaceJson = readJsonInTree(result, 'workspace.json');
+    console.log(workspaceJson)
 
-    expect(nxJson.projects['my-app-e2e']).toEqual({
+    expect(workspaceJson.projects['my-app-e2e']).toEqual({
       tags: [],
       implicitDependencies: ['my-app'],
     });
 
-    expect(nxJson.projects['my-non-existent-app-e2e']).toEqual({
+    expect(workspaceJson.projects['my-non-existent-app-e2e']).toEqual({
       tags: [],
     });
   });
 
   it('should not add duplicate implicit dependencies for e2e projects', async () => {
     tree = await callRule(
-      updateJsonInTree('nx.json', (json) => {
+      updateJsonInTree('workspace.json', (json) => {
         json.projects['my-app-e2e'].implicitDependencies = ['my-app'];
         return json;
       }),
@@ -53,14 +53,14 @@ describe('Update 8.12.0', () => {
     );
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
-    const nxJson = readJsonInTree(result, 'nx.json');
+    const workspaceJson = readJsonInTree(result, 'workspace.json');
 
-    expect(nxJson.projects['my-app-e2e']).toEqual({
+    expect(workspaceJson.projects['my-app-e2e']).toMatchObject({
       tags: [],
       implicitDependencies: ['my-app'],
     });
 
-    expect(nxJson.projects['my-non-existent-app-e2e']).toEqual({
+    expect(workspaceJson.projects['my-non-existent-app-e2e']).toMatchObject({
       tags: [],
     });
   });

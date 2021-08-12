@@ -109,7 +109,7 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       parent:
-        '/file|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/file|file.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -166,7 +166,7 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       parent:
-        '/file.ts|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
+        '/file.ts|file.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -263,9 +263,9 @@ describe('Hasher', () => {
     // note that the parent hash is based on parent source files only!
     expect(hash.details.nodes).toEqual({
       child:
-        '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
@@ -363,9 +363,9 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('build'); //target
     expect(tasksHash.details.nodes).toEqual({
       child:
-        '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
 
     const hashb = await hasher.hashTaskWithDepsAndContext({
@@ -382,9 +382,9 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('build'); //target
     expect(hashb.details.nodes).toEqual({
       child:
-        '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
