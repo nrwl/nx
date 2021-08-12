@@ -42,7 +42,6 @@ function updateDependencies(host: Tree) {
   });
 
   const isPnpm = host.exists('pnpm-lock.yaml');
-  process.env.npm_config_legacy_peer_deps = 'false';
   return addDependenciesToPackageJson(
     host,
     {
