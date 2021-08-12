@@ -1,4 +1,4 @@
-import { readProjectConfiguration } from '@nrwl/devkit';
+import { readNxJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from './application';
 import { readJson, Tree } from '@nrwl/devkit';
@@ -84,9 +84,9 @@ describe('app', () => {
         `import * as styles from './index.module.scss'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree);
       expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
+        nxJson.generators['@nrwl/gatsby'].application.style
       ).toEqual('scss');
     });
   });
@@ -109,9 +109,9 @@ describe('app', () => {
         `import * as styles from './index.module.less'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree)
       expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
+        nxJson.generators['@nrwl/gatsby'].application.style
       ).toEqual('less');
     });
   });
@@ -134,9 +134,9 @@ describe('app', () => {
         `import * as styles from './index.module.styl'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree)
       expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
+        nxJson.generators['@nrwl/gatsby'].application.style
       ).toEqual('styl');
     });
   });
@@ -160,9 +160,9 @@ describe('app', () => {
       );
       expect(indexContent).toContain(`import styled from 'styled-components'`);
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree);
       expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
+        nxJson.generators['@nrwl/gatsby'].application.style
       ).toEqual('styled-components');
     });
   });
@@ -186,9 +186,9 @@ describe('app', () => {
       );
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree)
       expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
+        nxJson.generators['@nrwl/gatsby'].application.style
       ).toEqual('@emotion/styled');
     });
   });
@@ -217,9 +217,9 @@ describe('app', () => {
         `import styled from 'styled-components'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree);
       expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
+        nxJson.generators['@nrwl/gatsby'].application.style
       ).toEqual('styled-jsx');
     });
   });

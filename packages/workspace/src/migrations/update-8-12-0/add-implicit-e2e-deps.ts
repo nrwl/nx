@@ -15,7 +15,6 @@ const addE2eImplicitDependencies: Rule = (tree: Tree) =>
   updateJsonInTree<WorkspaceJsonConfiguration>(
     workspaceConfigName(tree.root.path),
     (json) => {
-      console.log(json)
       Object.keys(json.projects).forEach((proj) => {
         const implicitE2eName = proj.replace(/-e2e$/, '');
         if (proj.endsWith('-e2e') && json.projects[implicitE2eName]) {

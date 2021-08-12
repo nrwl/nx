@@ -1,4 +1,4 @@
-import { readJson, readWorkspaceConfiguration, Tree } from '@nrwl/devkit';
+import { readJson, readNxJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import reactInitGenerator from './init';
 import { InitSchema } from './schema';
@@ -28,9 +28,9 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await reactInitGenerator(tree, schema);
-      const workspace = readWorkspaceConfiguration(tree);
-      expect(workspace.cli.defaultCollection).toEqual('@nrwl/react');
-      expect(workspace.generators['@nrwl/react'].application.babel).toBe(true);
+      const { cli, generators } = readNxJson(tree);
+      expect(cli.defaultCollection).toEqual('@nrwl/react');
+      expect(generators['@nrwl/react'].application.babel).toBe(true);
     });
   });
 

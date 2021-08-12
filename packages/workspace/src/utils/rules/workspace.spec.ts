@@ -21,6 +21,7 @@ describe('Workspace', () => {
       '/workspace.json',
       JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
     );
+    tree.create('nx.json', JSON.stringify({}));
   });
 
   describe('setDefaultCollection', () => {
@@ -28,17 +29,15 @@ describe('Workspace', () => {
       const result = new UnitTestTree(
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
+      const nxJson = readJsonInTree(result, 'nx.json');
 
-      expect(workspaceJson.cli.defaultCollection).toEqual(
-        defaultCollectionName
-      );
+      expect(nxJson.cli.defaultCollection).toEqual(defaultCollectionName);
     });
 
     it(`should be set if ${nrwlWorkspaceName} was set before`, async () => {
       tree = new UnitTestTree(
         await callRule(
-          updateJsonInTree(workspaceJsonFileName, (json) => {
+          updateJsonInTree('nx.json', (json) => {
             json.cli = {
               defaultCollection: nrwlWorkspaceName,
             };
@@ -51,8 +50,8 @@ describe('Workspace', () => {
       const result = new UnitTestTree(
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
-      const workspaceJson = readJsonInTree(result, workspaceJsonFileName);
-      expect(workspaceJson.cli.defaultCollection).toEqual(
+      const nxJson = readJsonInTree(result, 'nx.json');
+      expect(nxJson.cli.defaultCollection).toEqual(
         defaultCollectionName
       );
     });
@@ -61,7 +60,7 @@ describe('Workspace', () => {
       const otherCollection = '@nrwl/angular';
       tree = new UnitTestTree(
         await callRule(
-          updateJsonInTree(workspaceJsonFileName, (json) => {
+          updateJsonInTree('nx.json', (json) => {
             json.cli = {
               defaultCollection: otherCollection,
             };
@@ -76,8 +75,8 @@ describe('Workspace', () => {
       const result = new UnitTestTree(
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
-      const workspaceJson = readJsonInTree(result, workspaceJsonFileName);
-      expect(workspaceJson.cli.defaultCollection).toEqual(otherCollection);
+      const nxJson = readJsonInTree(result, 'nx.json');
+      expect(nxJson.cli.defaultCollection).toEqual(otherCollection);
     });
   });
 });

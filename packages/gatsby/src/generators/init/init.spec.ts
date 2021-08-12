@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, readNxJson, Tree } from '@nrwl/devkit';
 
 import { gatsbyInitGenerator } from './init';
 
@@ -21,8 +21,8 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await gatsbyInitGenerator(tree, {});
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/gatsby');
+      const { cli } = readNxJson(tree);
+      expect(cli.defaultCollection).toEqual('@nrwl/gatsby');
     });
   });
 

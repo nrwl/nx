@@ -11,7 +11,6 @@ import {
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
-import { readWorkspace } from 'packages/devkit/src/generators/project-configuration';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   addProjectToNx(host, options);
