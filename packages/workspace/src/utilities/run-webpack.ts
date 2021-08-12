@@ -27,9 +27,14 @@ export function runWebpack(config: any, webpack: any): Observable<any> {
       webpackCompiler.run((err, stats) => {
         callback(err, stats);
 
-        webpackCompiler.close(() => {
+        // TODO: Delete for Nx 13 and leave only the call to close method
+        if (typeof webpackCompiler.close === 'function') {
+          webpackCompiler.close(() => {
+            subscriber.complete();
+          });
+        } else {
           subscriber.complete();
-        });
+        }
       });
     }
   });
