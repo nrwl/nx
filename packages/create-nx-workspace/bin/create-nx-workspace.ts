@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { exec, execSync } from 'child_process';
+import { exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
 import * as path from 'path';
@@ -11,6 +11,7 @@ import { output } from './output';
 import * as ora from 'ora';
 
 import {
+  detectInvokedPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
@@ -119,7 +120,8 @@ if (parsedArgs.help) {
 }
 
 (async function main() {
-  const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
+  const packageManager: PackageManager =
+    parsedArgs.packageManager || detectInvokedPackageManager();
   const { name, cli, preset, appName, style, nxCloud } = await getConfiguration(
     parsedArgs
   );
@@ -470,7 +472,7 @@ async function createApp(
   const args = unparse(restArgs).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
-  const command = `new ${name} ${args} --collection=@nrwl/workspace`;
+  const command = `new ${name} ${args} --packageManager=${packageManager} --collection=@nrwl/workspace`;
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
 

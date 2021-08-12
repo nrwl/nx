@@ -242,4 +242,40 @@ describe('create-nx-workspace', () => {
     checkFilesDoNotExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;
   });
+
+  describe('Use detected package manager', () => {
+    const wsName = uniq('pm');
+
+    function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
+      process.env.SELECTED_PM = envPm;
+      runCreateWorkspace(wsName, {
+        preset: 'empty',
+        packageManager: envPm,
+        useDetectedPm: true,
+      });
+    }
+
+    afterEach(() => {
+      process.env.SELECTED_PM = packageManager;
+    });
+
+    it('should use npm when invoked with npx', () => {
+      setupProject('npm');
+      checkFilesExist(`package-lock.json`);
+      checkFilesDoNotExist(`yarn.lock`, `pnpm-lock.yam`);
+    }, 90000);
+
+    it('should use pnpm when invoked with pnpx', () => {
+      setupProject('pnpm');
+      checkFilesExist(`pnpm-lock.yaml`);
+      checkFilesDoNotExist(`yarn.lock`, `package-lock.json`);
+    }, 90000);
+
+    // skipping due to packageManagerCommand for createWorkspace not using yarn create nx-workspace
+    xit('should use yarn when invoked with yarn create', () => {
+      setupProject('yarn');
+      checkFilesExist(`yarn.lock`);
+      checkFilesDoNotExist(`pnpm-lock.yaml`, `package-lock.json`);
+    }, 90000);
+  });
 });
