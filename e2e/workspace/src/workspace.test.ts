@@ -1,7 +1,6 @@
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
-  getSelectedPackageManager,
   isNotWindows,
   listFiles,
   newProject,
@@ -166,22 +165,17 @@ describe('run-many', () => {
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should build specific and all projects', () => {
-    // This fails with pnpm due to incompatibilities with ngcc for buildable libraries.
-    if (getSelectedPackageManager() === 'pnpm') {
-      return;
-    }
-
     const appA = uniq('appa-rand');
     const libA = uniq('liba-rand');
     const libB = uniq('libb-rand');
     const libC = uniq('libc-rand');
     const libD = uniq('libd-rand');
 
-    runCLI(`generate @nrwl/angular:app ${appA}`);
-    runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
+    runCLI(`generate @nrwl/react:app ${appA}`);
+    runCLI(`generate @nrwl/react:lib ${libA} --buildable --defaults`);
+    runCLI(`generate @nrwl/react:lib ${libB} --buildable --defaults`);
+    runCLI(`generate @nrwl/react:lib ${libC} --buildable --defaults`);
+    runCLI(`generate @nrwl/react:lib ${libD} --defaults`);
 
     // libA depends on libC
     updateFile(
@@ -223,9 +217,11 @@ describe('run-many', () => {
     const buildWithDeps = runCLI(
       `run-many --target=build --projects="${libA}" --with-deps`
     );
-    expect(buildWithDeps).toContain(`Running target build for 2 project(s):`);
+    expect(buildWithDeps).toContain(
+      `Running target build for 1 project(s) and 1 task(s) they depend on:`
+    );
     expect(buildWithDeps).toContain(`- ${libA}`);
-    expect(buildWithDeps).toContain(`- ${libC}`);
+    expect(buildWithDeps).toContain(`${libC}`); // build should include libC as dependency
     expect(buildWithDeps).not.toContain(`- ${libB}`);
     expect(buildWithDeps).not.toContain(`- ${libD}`);
     expect(buildWithDeps).toContain('Running target "build" succeeded');
@@ -238,8 +234,8 @@ describe('run-many', () => {
       `Running target build for 2 project(s) and 1 task(s) they depend on:`
     );
     expect(buildConfig).toContain(`run ${appA}:build:production`);
-    expect(buildConfig).toContain(`run ${libA}:build:production`);
-    expect(buildConfig).toContain(`run ${libC}:build:production`);
+    expect(buildConfig).toContain(`run ${libA}:build`);
+    expect(buildConfig).toContain(`run ${libC}:build`);
     expect(buildConfig).toContain('Running target "build" succeeded');
   }, 1000000);
 
