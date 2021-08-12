@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "update-8.2.0": {
       "version": "8.2.0-beta.1",
       "description": "Add exclusions to lint config",
@@ -181,6 +181,12 @@
       "description": "Add default base to nx.json if its not currently set",
       "factory": "./src/migrations/update-13-0-0/set-default-base-if-not-set",
       "cli": "nx"
+    },
+    "13-0-0-config-locations": {
+      "version": "13.0.0-beta.3",
+      "description": "Move global settings into nx.json, and project specific settings into workspace.json",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-0-0/config-locations/config-locations"
     }
   },
   "packageJsonUpdates": {
