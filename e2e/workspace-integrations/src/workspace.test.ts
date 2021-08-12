@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
@@ -540,10 +540,10 @@ describe('affected (with git)', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const nxJson: NxJsonConfiguration = readJson('nx.json');
+      const workspaceJson: WorkspaceJsonConfiguration = readJson('workspace.json');
 
-      nxJson.projects[myapp].tags = ['tag'];
-      updateFile('nx.json', JSON.stringify(nxJson));
+      workspaceJson.projects[myapp].tags = ['tag'];
+      updateFile('nx.json', JSON.stringify(workspaceJson));
 
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);

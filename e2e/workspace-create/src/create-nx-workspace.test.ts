@@ -236,8 +236,8 @@ describe('create-nx-workspace', () => {
       cli: 'angular',
     });
 
-    const workspaceJson = readJson('angular.json');
-    expect(workspaceJson.cli.packageManager).toEqual('yarn');
+    const nxJson = readJson('nx.json');
+    expect(nxJson.cli.packageManager).toEqual('yarn');
     checkFilesExist('yarn.lock');
     checkFilesDoNotExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;
