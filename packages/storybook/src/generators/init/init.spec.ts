@@ -1,4 +1,10 @@
-import { addDependenciesToPackageJson, NxJsonConfiguration, NxJsonProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  readJson,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { storybookVersion } from '../../utils/versions';

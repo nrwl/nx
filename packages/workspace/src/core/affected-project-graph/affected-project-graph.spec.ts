@@ -3,8 +3,11 @@ import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { filterAffected } from './affected-project-graph';
 import { WholeFileChange } from '../file-utils';
-import type { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import { buildProjectGraph } from '../project-graph/build-project-graph';
+import type {
+  NxJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -40,31 +43,31 @@ describe('project graph', () => {
           sourceRoot: 'apps/demo/src',
           projectType: 'application',
           implicitDependencies: ['api'],
-          targets: {}
+          targets: {},
         },
         'demo-e2e': {
           root: 'apps/demo-e2e/',
           sourceRoot: 'apps/demo-e2e/src',
           projectType: 'application',
-          targets: {}
+          targets: {},
         },
         ui: {
           root: 'libs/ui/',
           sourceRoot: 'libs/ui/src',
           projectType: 'library',
-          targets: {}
+          targets: {},
         },
         util: {
           root: 'libs/util/',
           sourceRoot: 'libs/util/src',
           projectType: 'library',
-          targets: {}
+          targets: {},
         },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
           projectType: 'application',
-          targets: {}
+          targets: {},
         },
       },
     };
@@ -80,7 +83,7 @@ describe('project graph', () => {
           },
         },
         'something-for-api.txt': ['api'],
-      }
+      },
     };
     tsConfigJson = {
       compilerOptions: {

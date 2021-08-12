@@ -97,7 +97,7 @@ export function createApp(
               options: {},
             },
           },
-          tags: []
+          tags: [],
         },
       },
     })

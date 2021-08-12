@@ -31,7 +31,7 @@ describe('Update 8.12.0', () => {
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
     const workspaceJson = readJsonInTree(result, 'workspace.json');
-    console.log(workspaceJson)
+    console.log(workspaceJson);
 
     expect(workspaceJson.projects['my-app-e2e']).toEqual({
       tags: [],

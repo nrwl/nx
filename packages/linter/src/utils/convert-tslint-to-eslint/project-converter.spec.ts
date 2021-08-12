@@ -349,15 +349,15 @@ describe('ProjectConverter', () => {
       expect(readJson(host, 'nx.json')).toMatchSnapshot();
 
       expect(readProjectConfiguration(host, projectName)).toMatchSnapshot();
-      
+
       await projectConverter.removeTSLintFromWorkspace()();
-      
+
       // AFTER - it should remove tslint and codelyzer
       expect(readJson(host, 'package.json')).toMatchSnapshot();
-      
+
       // AFTER - generators config from global project-level settings removed (because eslint is always default)
       expect(readJson(host, 'nx.json')).toMatchSnapshot();
-      
+
       // AFTER - generators config from project-level settings removed (because eslint is always default)
       expect(readProjectConfiguration(host, projectName)).toMatchSnapshot();
     });

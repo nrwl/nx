@@ -103,7 +103,7 @@ export {
   updateWorkspaceJson,
   getProjects,
   isStandaloneProject,
-  readNxJson
+  readNxJson,
 } from './src/generators/project-configuration';
 
 /**

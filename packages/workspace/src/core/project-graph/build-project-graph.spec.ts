@@ -39,43 +39,43 @@ describe('project graph', () => {
           sourceRoot: 'apps/demo/src',
           projectType: 'application',
           implicitDependencies: ['api'],
-          targets: {}
+          targets: {},
         },
         'demo-e2e': {
           root: 'apps/demo-e2e/',
           sourceRoot: 'apps/demo-e2e/src',
           projectType: 'application',
-          targets: {}
+          targets: {},
         },
         ui: {
           root: 'libs/ui/',
           sourceRoot: 'libs/ui/src',
           projectType: 'library',
-          targets: {}
+          targets: {},
         },
         'shared-util': {
           root: 'libs/shared/util/',
           sourceRoot: 'libs/shared/util/src',
           projectType: 'library',
-          targets: {}
+          targets: {},
         },
         'shared-util-data': {
           root: 'libs/shared/util/data',
           sourceRoot: 'libs/shared/util/data/src',
           projectType: 'library',
-          targets: {}
+          targets: {},
         },
         'lazy-lib': {
           root: 'libs/lazy-lib',
           sourceRoot: 'libs/lazy-lib',
           projectType: 'library',
-          targets: {}
+          targets: {},
         },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
           projectType: 'application',
-          targets: {}
+          targets: {},
         },
       },
     };
@@ -87,7 +87,7 @@ describe('project graph', () => {
             deploy: '*',
           },
         },
-      }
+      },
     };
     tsConfigJson = {
       compilerOptions: {

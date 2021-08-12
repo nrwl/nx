@@ -433,12 +433,9 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
       'tslint.json': '*',
       '.eslintrc.json': '*',
       'nx.json': '*',
-    }
-  }
-  host.write(
-    'nx.json',
-    serializeJson(nxJson)
-  );
+    },
+  };
+  host.write('nx.json', serializeJson(nxJson));
   host.write('libs/.gitkeep', '');
 
   const recommendations = [

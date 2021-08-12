@@ -23,7 +23,7 @@ describe('getTouchedNpmPackages', () => {
           },
         },
       },
-      npmScope: 'scope'
+      npmScope: 'scope',
     };
     projectGraph = {
       nodes: {

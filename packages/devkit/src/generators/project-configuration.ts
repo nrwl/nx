@@ -28,7 +28,7 @@ export type WorkspaceConfiguration = Omit<
 /**
  * Adds project configuration to the Nx workspace.
  *
- * The project configuration is stored in workspace.json or the associated project.json file. 
+ * The project configuration is stored in workspace.json or the associated project.json file.
  * The utility will update either files.
  *
  * @param tree - the file system tree
@@ -55,7 +55,7 @@ export function addProjectConfiguration(
 /**
  * Updates the configuration of an existing project.
  *
- * The project configuration is stored in workspace.json or the associated project.json file. 
+ * The project configuration is stored in workspace.json or the associated project.json file.
  * The utility will update either files.
  *
  * @param tree - the file system tree
@@ -73,7 +73,7 @@ export function updateProjectConfiguration(
 /**
  * Removes the configuration of an existing project.
  *
- * The project configuration is stored in workspace.json or the associated project.json file. 
+ * The project configuration is stored in workspace.json or the associated project.json file.
  * The utility will update either file.
  */
 export function removeProjectConfiguration(
@@ -220,7 +220,7 @@ function readNxJsonExtends(tree: Tree, nxJson: { extends?: string }) {
 /**
  * Reads a project configuration.
  *
- * The project configuration is stored in workspace.json or the associated project.json file. 
+ * The project configuration is stored in workspace.json or the associated project.json file.
  * The utility will read from either file.
  *
  * @param tree - the file system tree

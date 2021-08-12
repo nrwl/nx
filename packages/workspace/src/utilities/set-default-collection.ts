@@ -1,8 +1,4 @@
-import {
-  Tree,
-  readNxJson,
-  writeJson,
-} from '@nrwl/devkit';
+import { Tree, readNxJson, writeJson } from '@nrwl/devkit';
 
 /**
  * Sets the default collection within the workspace.

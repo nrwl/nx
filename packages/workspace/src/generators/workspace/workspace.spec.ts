@@ -40,7 +40,7 @@ describe('@nrwl/workspace:workspace', () => {
         defaultBase: 'main',
       },
       cli: {
-        defaultCollection: "@nrwl/workspace"
+        defaultCollection: '@nrwl/workspace',
       },
       implicitDependencies: {
         'package.json': {

@@ -329,7 +329,7 @@ describe('schematic:cypress-project', () => {
           );
           const projectConfig = workspaceJson.projects['my-app-e2e'];
           expect(projectConfig.implicitDependencies).not.toBeDefined();
-          expect(projectConfig.tags).toEqual([])
+          expect(projectConfig.tags).toEqual([]);
         });
       });
     });

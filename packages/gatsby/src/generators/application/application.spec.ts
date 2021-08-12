@@ -85,9 +85,9 @@ describe('app', () => {
       );
 
       const nxJson = readNxJson(tree);
-      expect(
-        nxJson.generators['@nrwl/gatsby'].application.style
-      ).toEqual('scss');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'scss'
+      );
     });
   });
 
@@ -109,10 +109,10 @@ describe('app', () => {
         `import * as styles from './index.module.less'`
       );
 
-      const nxJson = readNxJson(tree)
-      expect(
-        nxJson.generators['@nrwl/gatsby'].application.style
-      ).toEqual('less');
+      const nxJson = readNxJson(tree);
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'less'
+      );
     });
   });
 
@@ -134,10 +134,10 @@ describe('app', () => {
         `import * as styles from './index.module.styl'`
       );
 
-      const nxJson = readNxJson(tree)
-      expect(
-        nxJson.generators['@nrwl/gatsby'].application.style
-      ).toEqual('styl');
+      const nxJson = readNxJson(tree);
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'styl'
+      );
     });
   });
 
@@ -161,9 +161,9 @@ describe('app', () => {
       expect(indexContent).toContain(`import styled from 'styled-components'`);
 
       const nxJson = readNxJson(tree);
-      expect(
-        nxJson.generators['@nrwl/gatsby'].application.style
-      ).toEqual('styled-components');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'styled-components'
+      );
     });
   });
 
@@ -186,10 +186,10 @@ describe('app', () => {
       );
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
 
-      const nxJson = readNxJson(tree)
-      expect(
-        nxJson.generators['@nrwl/gatsby'].application.style
-      ).toEqual('@emotion/styled');
+      const nxJson = readNxJson(tree);
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        '@emotion/styled'
+      );
     });
   });
 
@@ -218,9 +218,9 @@ describe('app', () => {
       );
 
       const nxJson = readNxJson(tree);
-      expect(
-        nxJson.generators['@nrwl/gatsby'].application.style
-      ).toEqual('styled-jsx');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'styled-jsx'
+      );
     });
   });
 

@@ -15,7 +15,7 @@ fs.existsSync = () => true;
 
 describe('Hasher', () => {
   const nxJson = {
-    npmScope: 'nrwl'
+    npmScope: 'nrwl',
   };
 
   const workSpaceJson = {

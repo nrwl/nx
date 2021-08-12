@@ -216,18 +216,22 @@ describe('lib', () => {
 
     it('should check for existence of spec files before deleting them', async () => {
       // ARRANGE
-      updateJson<NxJsonConfiguration, NxJsonConfiguration>(appTree, '/nx.json', (nxJson) => {
-        nxJson.generators = {
-          '@schematics/angular:service': {
-            skipTests: true,
-          },
-          '@schematics/angular:component': {
-            skipTests: true,
-          },
-        };
+      updateJson<NxJsonConfiguration, NxJsonConfiguration>(
+        appTree,
+        '/nx.json',
+        (nxJson) => {
+          nxJson.generators = {
+            '@schematics/angular:service': {
+              skipTests: true,
+            },
+            '@schematics/angular:component': {
+              skipTests: true,
+            },
+          };
 
-        return nxJson;
-      });
+          return nxJson;
+        }
+      );
 
       // ACT
       await runLibraryGeneratorWithOpts();

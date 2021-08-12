@@ -51,9 +51,7 @@ describe('Workspace', () => {
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
       const nxJson = readJsonInTree(result, 'nx.json');
-      expect(nxJson.cli.defaultCollection).toEqual(
-        defaultCollectionName
-      );
+      expect(nxJson.cli.defaultCollection).toEqual(defaultCollectionName);
     });
 
     it('should not be set if something else was set before', async () => {

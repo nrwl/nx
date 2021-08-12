@@ -73,7 +73,7 @@ function createFiles(host: Tree, options: Schema) {
     ...(options as object),
     nxVersion,
     npmScope,
-    packageManager: options.packageManager
+    packageManager: options.packageManager,
   });
 }
 
