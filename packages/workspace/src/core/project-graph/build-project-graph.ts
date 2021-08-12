@@ -318,7 +318,6 @@ function createContext(
   > = Object.keys(workspaceJson.projects).reduce((map, projectName) => {
     map[projectName] = {
       ...workspaceJson.projects[projectName],
-      ...nxJson.projects[projectName],
     };
     return map;
   }, {});
