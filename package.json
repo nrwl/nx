@@ -5,6 +5,7 @@
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
+    "echo": "echo 123",
     "build": "./scripts/package.sh --local",
     "commit": "git-cz",
     "check-commit": "node ./scripts/commit-lint.js",
