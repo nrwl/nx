@@ -14,11 +14,8 @@ export async function runOne(opts: {
   parsedArgs: any;
 }): Promise<void> {
   performance.mark('command-execution-begins');
-  performance.measure(
-    'code-loading-and-file-hashing',
-    'init-local',
-    'command-execution-begins'
-  );
+  performance.measure('code-loading', 'init-local', 'command-execution-begins');
+
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
       ...opts.parsedArgs,

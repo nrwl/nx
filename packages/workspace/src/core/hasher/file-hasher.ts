@@ -1,17 +1,15 @@
-import { getFileHashes } from './git-hasher';
-import { readFileSync } from 'fs';
-import { defaultHashing, HashingImpl } from './hashing-impl';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
+import { getFileHashes } from './git-hasher';
+import { defaultHashing, HashingImpl } from './hashing-impl';
 
 export class FileHasher {
   fileHashes: { [path: string]: string } = {};
   workspaceFiles: string[] = [];
   usesGitForHashing = false;
+  private isInitialized = false;
 
-  constructor(private readonly hashing: HashingImpl) {
-    this.init();
-  }
+  constructor(private readonly hashing: HashingImpl) {}
 
   clear(): void {
     this.fileHashes = {};
@@ -24,6 +22,7 @@ export class FileHasher {
     this.clear();
     this.getHashesFromGit();
     this.usesGitForHashing = Object.keys(this.fileHashes).length > 0;
+    this.isInitialized = true;
     performance.mark('init hashing:end');
     performance.measure(
       'init hashing',
@@ -32,14 +31,22 @@ export class FileHasher {
     );
   }
 
-  hashFile(path: string, transformer?: (content: string) => string): string {
+  hashFile(path: string): string {
+    this.ensureInitialized();
+
     const relativePath = path.startsWith(appRootPath)
       ? path.substr(appRootPath.length + 1)
       : path;
     if (!this.fileHashes[relativePath]) {
-      this.fileHashes[relativePath] = this.processPath(path, transformer);
+      this.fileHashes[relativePath] = this.processPath(path);
     }
     return this.fileHashes[relativePath];
+  }
+
+  ensureInitialized(): void {
+    if (!this.isInitialized) {
+      this.init();
+    }
   }
 
   private getHashesFromGit(): void {
@@ -54,17 +61,9 @@ export class FileHasher {
     });
   }
 
-  private processPath(
-    path: string,
-    transformer?: (content: string) => string
-  ): string {
+  private processPath(path: string): string {
     try {
-      if (transformer) {
-        const transformedFile = transformer(readFileSync(path, 'utf-8'));
-        return this.hashing.hashArray([transformedFile]);
-      } else {
-        return this.hashing.hashFile(path);
-      }
+      return this.hashing.hashFile(path);
     } catch {
       return '';
     }

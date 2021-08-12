@@ -1,18 +1,20 @@
-import type {
+import {
   FileData,
+  logger,
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
   NxPlugin,
   ProjectConfiguration,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphBuilder,
   ProjectGraphNode,
   ProjectGraphProcessorContext,
+  readJsonFile,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { ProjectGraphBuilder, readJsonFile, logger } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { join, extname } from 'path';
+import { extname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap } from '../file-graph';
@@ -23,8 +25,8 @@ import {
 } from '../file-utils';
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
-  ProjectGraphCache,
   extractCachedFileData,
+  ProjectGraphCache,
   readCache,
   shouldRecomputeWholeGraph,
   writeCache,
@@ -38,6 +40,8 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
+import * as serverExec from './daemon/exec';
+import { getProjectGraphFromServer, isServerAvailable } from './daemon/server';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -157,12 +161,28 @@ export function projectFileDataCompatAdapter(
 export async function createProjectGraphAsync(
   projectGraphVersion = '3.0'
 ): Promise<ProjectGraph> {
-  return createProjectGraph(
-    undefined,
-    undefined,
-    undefined,
-    projectGraphVersion
-  );
+  /**
+   * Using the daemon is currently an undocumented, opt-in feature while we build out its capabilities.
+   * If the environment variable is not set to true, fallback to using the existing in-process logic.
+   */
+  if (process.env.NX_DAEMON !== 'true') {
+    return createProjectGraph(
+      undefined,
+      undefined,
+      undefined,
+      projectGraphVersion
+    );
+  }
+
+  if (!isServerAvailable()) {
+    logger.warn(
+      '\nWARNING: You set NX_DAEMON=true but the Daemon Server is not running. Starting Daemon Server in the background...'
+    );
+    await serverExec.startInBackground();
+  }
+
+  const projectGraph = await getProjectGraphFromServer();
+  return projectGraph;
 }
 
 function readCombinedDeps() {

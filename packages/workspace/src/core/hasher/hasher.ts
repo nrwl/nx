@@ -1,17 +1,20 @@
-import { workspaceFileName } from '../file-utils';
-import { exec } from 'child_process';
-import { defaultFileHasher, FileHasher } from './file-hasher';
-import { defaultHashing, HashingImpl } from './hashing-impl';
-import * as minimatch from 'minimatch';
-import { performance } from 'perf_hooks';
-import { parseJson, readJsonFile } from '@nrwl/devkit';
 import {
   NxJsonConfiguration,
+  parseJson,
   ProjectGraph,
+  readJsonFile,
   Task,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
+import { exec } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
+import * as minimatch from 'minimatch';
+import { join } from 'path';
+import { performance } from 'perf_hooks';
+import { appRootPath } from '../../utils/app-root';
+import { workspaceFileName } from '../file-utils';
+import { defaultHashing, HashingImpl } from './hashing-impl';
 
 export interface Hash {
   value: string;
@@ -50,7 +53,6 @@ export class Hasher {
   static version = '2.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
-  private fileHasher: FileHasher;
   private projectHashes: ProjectHasher;
   private hashing: HashingImpl;
 
@@ -62,12 +64,9 @@ export class Hasher {
   ) {
     if (!hashing) {
       this.hashing = defaultHashing;
-      this.fileHasher = defaultFileHasher;
     } else {
       // this is only used for testing
       this.hashing = hashing;
-      this.fileHasher = new FileHasher(hashing);
-      this.fileHasher.clear();
     }
     this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing, {
       selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false,
@@ -230,11 +229,20 @@ export class Hasher {
       ];
 
       const fileHashes = [
-        ...fileNames.map((file) => {
-          const hash = this.fileHasher.hashFile(file);
-          return { file, hash };
-        }),
-        ...this.hashGlobalConfig(),
+        ...fileNames
+          .map((maybeRelativePath) => {
+            // Normalize the path to always be absolute and starting with appRootPath so we can check it exists
+            if (!maybeRelativePath.startsWith(appRootPath)) {
+              return join(appRootPath, maybeRelativePath);
+            }
+            return maybeRelativePath;
+          })
+          .filter((file) => existsSync(file))
+          .map((file) => {
+            const hash = this.hashing.hashFile(file);
+            return { file, hash };
+          }),
+        ...this.hashNxJson(),
       ];
 
       const combinedHash = this.hashing.hashArray(
@@ -257,18 +265,23 @@ export class Hasher {
     return this.implicitDependencies;
   }
 
-  private hashGlobalConfig() {
+  private hashNxJson() {
+    const nxJsonPath = join(appRootPath, 'nx.json');
+    if (!existsSync(nxJsonPath)) {
+      return [];
+    }
+
+    let nxJsonContents = '{}';
+    try {
+      const fileContents = readFileSync(nxJsonPath, 'utf-8');
+      const r = parseJson(fileContents);
+      delete r.projects;
+      nxJsonContents = JSON.stringify(r);
+    } catch {}
+
     return [
       {
-        hash: this.fileHasher.hashFile('nx.json', (file) => {
-          try {
-            const r = parseJson(file);
-            delete r.projects;
-            return JSON.stringify(r);
-          } catch {
-            return '';
-          }
-        }),
+        hash: this.hashing.hashArray([nxJsonContents]),
         file: 'nx.json',
       },
     ];

@@ -1,8 +1,13 @@
-import { execSync } from 'child_process';
 import { getPackageManagerCommand, writeJsonFile } from '@nrwl/devkit';
-import * as yargs from 'yargs';
-import { nxVersion } from '../utils/versions';
+import { execSync } from 'child_process';
 import * as path from 'path';
+import * as yargs from 'yargs';
+import {
+  startInBackground,
+  startInCurrentProcess,
+  stop,
+} from '../core/project-graph/daemon/exec';
+import { nxVersion } from '../utils/versions';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -124,6 +129,25 @@ export const commandsObject = yargs
         target: 'lint',
       })
   )
+
+  .command(
+    'daemon:start',
+    'EXPERIMENTAL: Start the project graph daemon server (either in the background or the current process)',
+    (yargs) => withDaemonStartOptions(yargs),
+    async (args) => {
+      if (args.background) {
+        return startInBackground();
+      }
+      return startInCurrentProcess();
+    }
+  )
+  .command(
+    'daemon:stop',
+    'EXPERIMENTAL: Stop the project graph daemon server',
+    (yargs) => yargs,
+    async () => stop()
+  )
+
   .command(
     'dep-graph',
     'Graph dependencies within workspace',
@@ -223,6 +247,10 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
     .conflicts({
       all: 'projects',
     });
+}
+
+function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('background', { type: 'boolean', default: true });
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {

@@ -255,6 +255,7 @@ export function rootWorkspaceFileData(projectGraphVersion = '3.0'): FileData[] {
 }
 
 export function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
+  defaultFileHasher.ensureInitialized();
   performance.mark('read workspace files:start');
 
   if (defaultFileHasher.usesGitForHashing) {
