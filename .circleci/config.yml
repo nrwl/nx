@@ -356,14 +356,26 @@ workflows:
           run-unit-tests: false
           run-linting: false
           e2e-test-filter: 'MACOS-Tests'
-          requires:
-            - pull-request
+          filters:
+            branches:
+              ignore: master
+      - main:
+          name: pull-request-android
+          pm: 'yarn'
+          os: 'android'
+          run-checks: false
+          run-builds: false
+          run-unit-tests: false
+          run-linting: false
+          e2e-test-filter: 'Android-Tests'
           filters:
             branches:
               ignore: master
       - agent-cleanup:
           requires:
+            - pull-request
             - pull-request-osx
+            - pull-request-android
           filters:
             branches:
               ignore: master
