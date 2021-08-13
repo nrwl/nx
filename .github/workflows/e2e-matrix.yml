@@ -153,7 +153,7 @@ jobs:
           message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
           notification_title: '{workflow} has {status_message}'
           footer: '<{run_url}|View Run>'
-          mention_users: 'U01UELKLYF2'
+          mention_users: 'U01UELKLYF2,U9NPA6C90'
           mention_users_when: 'failure,warnings'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
