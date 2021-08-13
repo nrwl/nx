@@ -103,7 +103,9 @@ export function convertToCamelCase(parsed: Arguments): Options {
  */
 export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
   Object.keys(opts).forEach((k) => {
-    opts[k] = coerceType(schema.properties[k], opts[k]);
+    const prop = findSchemaForProperty(k, schema);
+
+    opts[k] = coerceType(prop?.description, opts[k]);
   });
   return opts;
 }
@@ -150,26 +152,19 @@ export function convertAliases(
   excludeUnmatched: boolean
 ): Options {
   return Object.keys(opts).reduce((acc, k) => {
-    if (schema.properties[k]) {
-      acc[k] = opts[k];
-    } else {
-      const found = Object.entries(schema.properties).find(
-        ([_, d]) =>
-          d.alias === k || (Array.isArray(d.aliases) && d.aliases.includes(k))
-      );
-      if (found) {
-        acc[found[0]] = opts[k];
-      } else if (excludeUnmatched) {
-        if (!acc['--']) {
-          acc['--'] = [];
-        }
-        acc['--'].push({
-          name: k,
-          possible: [],
-        });
-      } else {
-        acc[k] = opts[k];
+    const prop = findSchemaForProperty(k, schema);
+    if (prop) {
+      acc[prop.name] = opts[k];
+    } else if (excludeUnmatched) {
+      if (!acc['--']) {
+        acc['--'] = [];
       }
+      acc['--'].push({
+        name: k,
+        possible: [],
+      });
+    } else {
+      acc[k] = opts[k];
     }
     return acc;
   }, {});
@@ -471,9 +466,12 @@ export function combineOptionsForExecutor(
     schema,
     false
   );
-  const configOpts =
-    config && target.configurations ? target.configurations[config] || {} : {};
-  const combined = { ...target.options, ...configOpts, ...r };
+  let combined = target.options || {};
+  if (config && target.configurations && target.configurations[config]) {
+    Object.assign(combined, target.configurations[config]);
+  }
+  combined = convertAliases(combined, schema, false);
+  Object.assign(combined, r);
   convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
@@ -711,6 +709,28 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
     });
   }
   return opts;
+}
+
+function findSchemaForProperty(
+  propName: string,
+  schema: Schema
+): { name: string; description: PropertyDescription } | null {
+  if (propName in schema.properties) {
+    return {
+      name: propName,
+      description: schema.properties[propName],
+    };
+  }
+  const found = Object.entries(schema.properties).find(
+    ([_, d]) =>
+      d.alias === propName ||
+      (Array.isArray(d.aliases) && d.aliases.includes(propName))
+  );
+  if (found) {
+    const [name, description] = found;
+    return { name, description };
+  }
+  return null;
 }
 
 function levenshtein(a: string, b: string) {

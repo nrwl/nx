@@ -3,6 +3,7 @@ import { logger } from './logger';
 import {
   applyVerbosity,
   coerceTypesInOptions,
+  combineOptionsForExecutor,
   convertAliases,
   convertSmartDefaultsIntoNamedParams,
   convertToCamelCase,
@@ -12,8 +13,185 @@ import {
   validateOptsAgainstSchema,
   warnDeprecations,
 } from './params';
+import { TargetConfiguration } from './workspace';
 
 describe('params', () => {
+  describe('combineOptionsForExecutor', () => {
+    let schema: Schema;
+    beforeEach(() => {
+      schema = {
+        properties: {
+          overriddenOpt: {
+            type: 'string',
+            alias: 'overriddenOptAlias',
+          },
+        },
+      };
+    });
+
+    it('should use target options', () => {
+      const commandLineOpts = {};
+      const target: TargetConfiguration = {
+        executor: '@nrwl/do:stuff',
+        options: {
+          overriddenOpt: 'target value',
+        },
+        configurations: {
+          production: {},
+        },
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        schema,
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({
+        overriddenOpt: 'target value',
+      });
+    });
+
+    it('should combine target, configuration', () => {
+      const commandLineOpts = {};
+      const target: TargetConfiguration = {
+        executor: '@nrwl/do:stuff',
+        options: {
+          overriddenOpt: 'target value',
+        },
+        configurations: {
+          production: {
+            overriddenOpt: 'config value',
+          },
+        },
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        schema,
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({
+        overriddenOpt: 'config value',
+      });
+    });
+
+    it('should combine target, configuration, and passed options', () => {
+      const commandLineOpts = {
+        overriddenOpt: 'command value',
+      };
+      const target: TargetConfiguration = {
+        executor: '@nrwl/do:stuff',
+        options: {
+          overriddenOpt: 'target value',
+        },
+        configurations: {
+          production: {
+            overriddenOpt: 'config value',
+          },
+        },
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        schema,
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({
+        overriddenOpt: 'command value',
+      });
+    });
+
+    it('should convert aliases in target configuration', () => {
+      const commandLineOpts = {
+        overriddenOpt: 'command value',
+      };
+      const target: TargetConfiguration = {
+        executor: '@nrwl/do:stuff',
+        options: {
+          overriddenOptAlias: 'target value',
+        },
+        configurations: {
+          production: {
+            overriddenOptAlias: 'config value',
+          },
+        },
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        schema,
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({
+        overriddenOpt: 'command value',
+      });
+    });
+
+    it('should convert aliases in command line arguments', () => {
+      const commandLineOpts = {
+        overriddenOptAlias: 'command value',
+      };
+      const target: TargetConfiguration = {
+        executor: '@nrwl/do:stuff',
+        options: {
+          overriddenOpt: 'target value',
+        },
+        configurations: {
+          production: {
+            overriddenOpt: 'config value',
+          },
+        },
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        schema,
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({
+        overriddenOpt: 'command value',
+      });
+    });
+
+    it('should handle targets without options', () => {
+      const commandLineOpts = {};
+      const target: TargetConfiguration = {
+        executor: '@nrwl/do:stuff',
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        schema,
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({});
+    });
+  });
+
   describe('coerceTypes', () => {
     it('should handle booleans', () => {
       const opts = coerceTypesInOptions(
@@ -75,6 +253,19 @@ describe('params', () => {
       expect(opts2).toEqual({
         a: [1, 2],
         b: [true, false],
+      });
+    });
+
+    it('should handle options with aliases', () => {
+      const schema: Schema = {
+        properties: {
+          name: { type: 'array', alias: 'n' },
+        },
+      };
+      const opts = coerceTypesInOptions({ n: 'one,two' }, schema);
+
+      expect(opts).toEqual({
+        n: ['one', 'two'],
       });
     });
 
