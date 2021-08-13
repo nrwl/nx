@@ -114,6 +114,68 @@ commands:
       - install-pnpm:
           os: << parameters.os >>
 
+  run-checks:
+    steps:
+      - run:
+          name: Check Documentation
+          command: yarn documentation
+      - run:
+          name: Check Imports
+          command: yarn check-imports
+      - run:
+          name: Check Formatting
+          command: yarn check-format
+      - run:
+          name: Check Package dependencies
+          command: yarn depcheck
+
+  run-targets:
+    parameters:
+      run-builds:
+        type: boolean
+        default: true
+      run-unit-tests:
+        type: boolean
+        default: true
+      run-linting:
+        type: boolean
+        default: true
+      run-e2e-tests:
+        type: boolean
+        default: true
+    steps:
+      - nx/set-shas:
+          main-branch-name: 'master'
+      - when:
+          condition: << parameters.run-builds >>
+          steps:
+            - run:
+                name: Run Builds
+                command: |
+                  npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
+      - when:
+          condition: << parameters.run-unit-tests >>
+          steps:
+            - run:
+                name: Run Unit Tests
+                command: |
+                  npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
+      - when:
+          condition: << parameters.run-linting >>
+          steps:
+            - run:
+                name: Run Linting
+                command: |
+                  npx nx affected --target=lint --base=$NX_BASE --parallel --max-parallel=4
+      - when:
+          condition: << parameters.run-e2e-tests >>
+          steps:
+            - run:
+                name: Run E2E Tests
+                command: |
+                  npx nx affected --target=e2e --base=$NX_BASE
+                no_output_timeout: 45m
+
 # -------------------------
 #          JOBS
 # -------------------------
@@ -150,67 +212,18 @@ jobs:
           no_output_timeout: 60m
 
   # -------------------------
-  #     JOBS: Pull request
+  #     JOBS: Agent cleanup
   # -------------------------
-  pr-main:
-    parameters:
-      os:
-        type: string
-        default: 'linux'
-      cli:
-        type: string
-        default: ''
-      pm:
-        type: string
-        default: pnpm
-    executor: << parameters.os >>
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      SELECTED_CLI: << parameters.cli >>
-      SELECTED_PM: << parameters.pm >>
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+  agent-cleanup:
     steps:
-      - setup:
-          os: << parameters.os >>
-      - run:
-          name: Check Documentation
-          command: yarn documentation
-      - run:
-          name: Check Imports
-          command: yarn check-imports
-      - run:
-          name: Check Formatting
-          command: yarn check-format
-      - run:
-          name: Check Package dependencies
-          command: yarn depcheck
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Run Builds
-          command: |
-            npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
-      - run:
-          name: Run Unit Tests
-          command: |
-            npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
-      - run:
-          name: Run Linting
-          command: |
-            npx nx affected --target=lint --base=$NX_BASE --parallel --max-parallel=4
-      - run:
-          name: Run E2E Tests
-          command: |
-            npx nx affected --target=e2e --base=$NX_BASE
-          no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
 
   # -------------------------
-  #     JOBS: Commit on main
+  #     JOBS: Main
   # -------------------------
-  trunk-main:
+  main:
     parameters:
       os:
         type: string
@@ -221,34 +234,43 @@ jobs:
       pm:
         type: string
         default: pnpm
+      run-checks:
+        type: boolean
+        default: true
+      run-builds:
+        type: boolean
+        default: true
+      run-unit-tests:
+        type: boolean
+        default: true
+      run-linting:
+        type: boolean
+        default: true
+      run-e2e-tests:
+        type: boolean
+        default: true
+      run-cypress-tests:
+        type: boolean
+        default: false
     executor: << parameters.os >>
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
-      NX_E2E_RUN_CYPRESS: 'true'
+      NX_E2E_RUN_CYPRESS: << parameters.run-cypress-tests >>
     steps:
       - setup:
           os: << parameters.os >>
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Run Builds
-          command: npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
-      - run:
-          name: Run Unit Tests
-          command: npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
-      - run:
-          name: Run Linting
-          command: npx nx affected --target=lint --base=$NX_BASE --parallel --max-parallel=4
-      - run:
-          name: Run E2E Tests
-          command: npx nx affected --target=e2e --base=$NX_BASE
-          no_output_timeout: 45m
-      - run:
-          name: Stop All Running Agents for This CI Run
-          command: npx nx-cloud stop-all-agents
+      - when:
+          condition: << parameters.run-checks >>
+          steps:
+            - run-checks
+      - run-targets:
+          run-builds: << parameters.run-builds >>
+          run-unit-tests: << parameters.run-unit-tests >>
+          run-linting: << parameters.run-linting >>
+          run-e2e-tests: << parameters.run-e2e-tests >>
 
 # -------------------------
 #        WORKFLOWS
@@ -278,11 +300,30 @@ workflows:
           name: 'agent9'
       - agent:
           name: 'agent10'
-      - pr-main:
+      - main:
+          name: 'Pull request'
+          run-checks: true
           filters:
             branches:
               ignore: master
-      - trunk-main:
+      - main:
+          name: 'Commit to master'
+          run-cypress-tests: true
           filters:
             branches:
               only: master
+      - main:
+          name: 'Partial Test'
+          pm: 'yarn'
+          run-checks: false
+          run-builds: false
+          run-unit-tests: false
+          run-linting: true
+          run-e2e-tests: false
+          filters:
+            branches:
+              ignore: master
+
+      - agent-cleanup:
+          requires:
+            - main
