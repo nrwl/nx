@@ -473,7 +473,7 @@ async function createApp(
   // Ensure to use packageManager for args
   // if it's not already passed in from previous process
   if (!restArgs.packageManager) {
-    restArgs.packageManage = packageManager;
+    restArgs.packageManager = packageManager;
   }
 
   const args = unparse(restArgs).join(' ');
