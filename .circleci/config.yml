@@ -168,7 +168,7 @@ commands:
             - run:
                 name: Run Unit Tests
                 command: |
-                  npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 --t="<< parameters.unit-test-filter >>"
+                  npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 -- --t="<< parameters.unit-test-filter >>"
       - when:
           condition:
             equal: [<< parameters.run-linting >>, 'true']
@@ -184,7 +184,7 @@ commands:
             - run:
                 name: Run E2E Tests
                 command: |
-                  npx nx affected --target=e2e --base=$NX_BASE --t="<< parameters.e2e-test-filter >>"
+                  npx nx affected --target=e2e --base=$NX_BASE -- --t="<< parameters.e2e-test-filter >>"
                 no_output_timeout: 45m
 
 # -------------------------
@@ -355,35 +355,35 @@ workflows:
           filters:
             branches:
               ignore: master
-      - main:
-          name: pull-request-osx
-          pm: 'yarn'
-          os: 'macos'
-          run-checks: 'false'
-          run-builds: 'false'
-          run-unit-tests: 'false'
-          run-linting: 'false'
-          e2e-test-filter: 'MACOS-Tests'
-          filters:
-            branches:
-              ignore: master
-      - main:
-          name: pull-request-android
-          pm: 'yarn'
-          os: 'android'
-          run-checks: 'false'
-          run-builds: 'false'
-          run-unit-tests: 'false'
-          run-linting: 'false'
-          e2e-test-filter: 'Android-Tests'
-          filters:
-            branches:
-              ignore: master
+      # - main:
+      #     name: pull-request-osx
+      #     pm: 'yarn'
+      #     os: 'macos'
+      #     run-checks: 'false'
+      #     run-builds: 'false'
+      #     run-unit-tests: 'false'
+      #     run-linting: 'false'
+      #     e2e-test-filter: 'MACOS-Tests'
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - main:
+      #     name: pull-request-android
+      #     pm: 'yarn'
+      #     os: 'android'
+      #     run-checks: 'false'
+      #     run-builds: 'false'
+      #     run-unit-tests: 'false'
+      #     run-linting: 'false'
+      #     e2e-test-filter: 'Android-Tests'
+      #     filters:
+      #       branches:
+      #         ignore: master
       - agent-cleanup:
           requires:
             - pull-request
-            - pull-request-osx
-            - pull-request-android
+            # - pull-request-osx
+            # - pull-request-android
           filters:
             branches:
               ignore: master
