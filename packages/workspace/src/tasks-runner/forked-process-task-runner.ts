@@ -28,8 +28,7 @@ export class ForkedProcessTaskRunner {
   public forkProcessForBatch({ executorName, taskGraph }: Batch) {
     return new Promise<BatchResults>((res, rej) => {
       try {
-        const env = this.envForForkedProcessForTarget(
-          taskGraph.tasks[0].target.target,
+        const env = this.envForForkedProcess(
           process.env.FORCE_COLOR === undefined
             ? 'true'
             : process.env.FORCE_COLOR
@@ -50,7 +49,10 @@ export class ForkedProcessTaskRunner {
 
         const p = fork(workerPath, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env,
+          env: {
+            ...env,
+            ...process.env,
+          },
         });
         this.processes.add(p);
 
@@ -113,7 +115,10 @@ export class ForkedProcessTaskRunner {
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-          env,
+          env: {
+            ...env,
+            ...process.env,
+          },
         });
         this.processes.add(p);
         let out = [];
@@ -173,7 +178,10 @@ export class ForkedProcessTaskRunner {
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env,
+          env: {
+            ...env,
+            ...process.env,
+          },
         });
         this.processes.add(p);
         p.on('exit', (code, signal) => {
@@ -216,9 +224,14 @@ export class ForkedProcessTaskRunner {
     outputPath?: string,
     forwardOutput?: boolean
   ) {
+    const envsFromFiles = {
+      ...parseEnv('.env'),
+      ...parseEnv('.local.env'),
+      ...parseEnv('.env.local'),
+    };
     const env: NodeJS.ProcessEnv = {
+      ...envsFromFiles,
       FORCE_COLOR: forceColor,
-      ...process.env,
       NX_INVOKED_BY_RUNNER: 'true',
       NX_WORKSPACE_ROOT: this.workspaceRoot,
     };
@@ -236,27 +249,6 @@ export class ForkedProcessTaskRunner {
     return env;
   }
 
-  private envForForkedProcessForTarget(
-    target: string,
-    forceColor: string,
-    outputPath?: string,
-    forwardOutput?: boolean
-  ) {
-    const envsFromFiles = {
-      ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv(`.${target}.env`),
-      ...parseEnv(`.env.${target}`),
-    };
-
-    const env: NodeJS.ProcessEnv = {
-      ...envsFromFiles,
-      ...this.envForForkedProcess(forceColor, outputPath, forwardOutput),
-    };
-
-    return env;
-  }
-
   private envForForkedProcessForTask(
     task: Task,
     forceColor: string,
@@ -264,9 +256,6 @@ export class ForkedProcessTaskRunner {
     forwardOutput: boolean
   ) {
     const envsFromFiles = {
-      ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv('.env.local'),
       ...parseEnv(`.${task.target.target}.env`),
       ...parseEnv(`.env.${task.target.target}`),
       ...parseEnv(`${task.projectRoot}/.env`),
@@ -277,8 +266,8 @@ export class ForkedProcessTaskRunner {
     };
 
     const env: NodeJS.ProcessEnv = {
-      ...envsFromFiles,
       ...this.envForForkedProcess(forceColor, outputPath, forwardOutput),
+      ...envsFromFiles,
       NX_TASK_TARGET_PROJECT: task.target.project,
       NX_TASK_HASH: task.hash,
     };
