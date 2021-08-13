@@ -143,6 +143,13 @@ commands:
       run-e2e-tests:
         type: boolean
         default: true
+      # Filters for tests
+      unit-test-filter:
+        type: string
+        default: ''
+      e2e-test-filter:
+        type: string
+        default: ''
     steps:
       - nx/set-shas:
           main-branch-name: 'master'
@@ -159,7 +166,7 @@ commands:
             - run:
                 name: Run Unit Tests
                 command: |
-                  npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
+                  npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 --t="<< parameters.unit-test-filter >>"
       - when:
           condition: << parameters.run-linting >>
           steps:
@@ -173,7 +180,7 @@ commands:
             - run:
                 name: Run E2E Tests
                 command: |
-                  npx nx affected --target=e2e --base=$NX_BASE
+                  npx nx affected --target=e2e --base=$NX_BASE --t="<< parameters.e2e-test-filter >>"
                 no_output_timeout: 45m
 
 # -------------------------
@@ -215,15 +222,6 @@ jobs:
   #     JOBS: Agent cleanup
   # -------------------------
   agent-cleanup:
-    steps:
-      - run:
-          name: Stop All Running Agents for This CI Run
-          command: npx nx-cloud stop-all-agents
-
-  # -------------------------
-  #     JOBS: Main
-  # -------------------------
-  main:
     parameters:
       os:
         type: string
@@ -234,6 +232,34 @@ jobs:
       pm:
         type: string
         default: pnpm
+    executor: << parameters.os >>
+    environment:
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+    steps:
+      - run:
+          name: Stop All Running Agents for This CI Run
+          command: npx nx-cloud stop-all-agents
+
+  # -------------------------
+  #     JOBS: Main
+  # -------------------------
+  main:
+    parameters:
+      # -------------------------
+      #  Environment setup
+      # -------------------------
+      os:
+        type: string
+        default: 'linux'
+      cli:
+        type: string
+        default: ''
+      pm:
+        type: string
+        default: pnpm
+      # -------------------------
+      #      Flags
+      # -------------------------
       run-checks:
         type: boolean
         default: true
@@ -252,6 +278,15 @@ jobs:
       run-cypress-tests:
         type: boolean
         default: false
+      # -------------------------
+      #     Filters for tests
+      # -------------------------
+      unit-test-filter:
+        type: string
+        default: ''
+      e2e-test-filter:
+        type: string
+        default: ''
     executor: << parameters.os >>
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
@@ -271,6 +306,8 @@ jobs:
           run-unit-tests: << parameters.run-unit-tests >>
           run-linting: << parameters.run-linting >>
           run-e2e-tests: << parameters.run-e2e-tests >>
+          unit-test-filter: << parameters.unit-test-filter >>
+          e2e-test-filter: << parameters.e2e-test-filter >>
 
 # -------------------------
 #        WORKFLOWS
@@ -300,30 +337,48 @@ workflows:
           name: 'agent9'
       - agent:
           name: 'agent10'
+          os: 'macos'
+      # -------------------------
+      #     Pull request logic
+      # -------------------------
       - main:
-          name: 'Pull request'
+          name: pull-request
           run-checks: true
           filters:
             branches:
               ignore: master
       - main:
-          name: 'Commit to master'
+          name: pull-request-osx
+          pm: 'yarn'
+          os: 'macos'
+          run-checks: false
+          run-builds: false
+          run-unit-tests: false
+          run-linting: false
+          e2e-test-filter: 'MACOS-Tests'
+          requires:
+            - pull-request
+          filters:
+            branches:
+              ignore: master
+      - agent-cleanup:
+          requires:
+            - pull-request-osx
+          filters:
+            branches:
+              ignore: master
+      # -------------------------
+      #     Commit to master
+      # -------------------------
+      - main:
+          name: commit-to-master
           run-cypress-tests: true
           filters:
             branches:
               only: master
-      - main:
-          name: 'Partial Test'
-          pm: 'yarn'
-          run-checks: false
-          run-builds: false
-          run-unit-tests: false
-          run-linting: true
-          run-e2e-tests: false
-          filters:
-            branches:
-              ignore: master
-
       - agent-cleanup:
           requires:
-            - main
+            - commit-to-master
+          filters:
+            branches:
+              only: master
