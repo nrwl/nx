@@ -26,17 +26,8 @@ jobs:
             os-name: osx
           # - os: windows-latest
           #  os-name: windows
-        exclude:
-          - os: macos-latest
-            package_manager: yarn
-          - os: macos-latest
-            package_manager: pnpm
-        #   - os: windows-latest
-        #     package_manager: npm
-        #   - os: windows-latest
-        #     package_manager: yarn
         node_version:
-          # - '14'
+          - '14'
           - '15'
         package_manager:
           - npm
@@ -52,6 +43,23 @@ jobs:
           - e2e-web
           - e2e-storybook
           - e2e-workspace
+        exclude:
+          - os: ubuntu-latest
+            node_version: '14'
+            package_manager: pnpm
+          - os: ubuntu-latest
+            node_version: '14'
+            package_manager: yarn
+          - os: macos-latest
+            node_version: '14'
+          - os: macos-latest
+            package_manager: yarn
+          - os: macos-latest
+            package_manager: pnpm
+        #   - os: windows-latest
+        #     package_manager: npm
+        #   - os: windows-latest
+        #     package_manager: yarn
       fail-fast: false
 
     name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
