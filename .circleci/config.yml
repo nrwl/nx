@@ -132,17 +132,17 @@ commands:
   run-targets:
     parameters:
       run-builds:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-unit-tests:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-linting:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-e2e-tests:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       # Filters for tests
       unit-test-filter:
         type: string
@@ -154,28 +154,32 @@ commands:
       - nx/set-shas:
           main-branch-name: 'master'
       - when:
-          condition: << parameters.run-builds >>
+          condition:
+            equal: [<< parameters.run-builds >>, 'true']
           steps:
             - run:
                 name: Run Builds
                 command: |
                   npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
       - when:
-          condition: << parameters.run-unit-tests >>
+          condition:
+            equal: [<< parameters.run-unit-tests >>, 'true']
           steps:
             - run:
                 name: Run Unit Tests
                 command: |
                   npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 --t="<< parameters.unit-test-filter >>"
       - when:
-          condition: << parameters.run-linting >>
+          condition:
+            equal: [<< parameters.run-linting >>, 'true']
           steps:
             - run:
                 name: Run Linting
                 command: |
                   npx nx affected --target=lint --base=$NX_BASE --parallel --max-parallel=4
       - when:
-          condition: << parameters.run-e2e-tests >>
+          condition:
+            equal: [<< parameters.run-e2e-tests >>, 'true']
           steps:
             - run:
                 name: Run E2E Tests
@@ -261,23 +265,23 @@ jobs:
       #      Flags
       # -------------------------
       run-checks:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-builds:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-unit-tests:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-linting:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-e2e-tests:
-        type: boolean
-        default: true
+        type: string
+        default: 'true'
       run-cypress-tests:
-        type: boolean
-        default: false
+        type: string
+        default: 'false'
       # -------------------------
       #     Filters for tests
       # -------------------------
@@ -298,7 +302,8 @@ jobs:
       - setup:
           os: << parameters.os >>
       - when:
-          condition: << parameters.run-checks >>
+          condition:
+            equal: [<< parameters.run-checks >>, 'true']
           steps:
             - run-checks
       - run-targets:
@@ -343,7 +348,7 @@ workflows:
       # -------------------------
       - main:
           name: pull-request
-          run-checks: true
+          run-checks: 'true'
           filters:
             branches:
               ignore: master
@@ -351,10 +356,10 @@ workflows:
           name: pull-request-osx
           pm: 'yarn'
           os: 'macos'
-          run-checks: false
-          run-builds: false
-          run-unit-tests: false
-          run-linting: false
+          run-checks: 'false'
+          run-builds: 'false'
+          run-unit-tests: 'false'
+          run-linting: 'false'
           e2e-test-filter: 'MACOS-Tests'
           filters:
             branches:
@@ -363,10 +368,10 @@ workflows:
           name: pull-request-android
           pm: 'yarn'
           os: 'android'
-          run-checks: false
-          run-builds: false
-          run-unit-tests: false
-          run-linting: false
+          run-checks: 'false'
+          run-builds: 'false'
+          run-unit-tests: 'false'
+          run-linting: 'false'
           e2e-test-filter: 'Android-Tests'
           filters:
             branches:
@@ -384,7 +389,7 @@ workflows:
       # -------------------------
       - main:
           name: commit-to-master
-          run-cypress-tests: true
+          run-cypress-tests: 'true'
           filters:
             branches:
               only: master
