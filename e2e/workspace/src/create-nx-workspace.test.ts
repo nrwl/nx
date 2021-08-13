@@ -244,11 +244,9 @@ describe('create-nx-workspace', () => {
   });
 
   describe('Use detected package manager', () => {
-    const wsName = uniq('pm');
-
     function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
       process.env.SELECTED_PM = envPm;
-      runCreateWorkspace(wsName, {
+      runCreateWorkspace(uniq('pm'), {
         preset: 'empty',
         packageManager: envPm,
         useDetectedPm: true,
