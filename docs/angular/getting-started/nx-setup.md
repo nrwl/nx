@@ -8,7 +8,7 @@ Creating an Nx workspace is done with a single command. Run the following comman
 npx create-nx-workspace --preset=angular
 ```
 
-## Nx Setup with an Existing Project
+## Adding Nx to an Existing Angular CLI Project
 
 If you have an existing Angular CLI project, you can gain the benefits of Nx's computation cache without modifying the file structure by running this command:
 
