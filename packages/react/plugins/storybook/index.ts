@@ -89,13 +89,13 @@ export const webpack = async (
     resolve: {
       ...storybookWebpackConfig.resolve,
       plugins: mergePlugins(
-        ...storybookWebpackConfig.resolve.plugins,
-        ...finalConfig.resolve.plugins
+        ...(storybookWebpackConfig.resolve.plugins ?? []),
+        ...(finalConfig.resolve.plugins ?? [])
       ),
     },
     plugins: mergePlugins(
-      ...storybookWebpackConfig.plugins,
-      ...finalConfig.plugins
+      ...(storybookWebpackConfig.plugins ?? []),
+      ...(finalConfig.plugins ?? [])
     ),
   };
 };
