@@ -5,10 +5,6 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
-import {
-  PHASE_DEVELOPMENT_SERVER,
-  PHASE_PRODUCTION_SERVER,
-} from 'next/dist/shared/lib/constants';
 
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
@@ -30,6 +26,9 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
+import { importConstants } from '../../utils/require-shim';
+
+const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_SERVER } = importConstants();
 
 const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
 const readyPrefix = `[ ${chalk.green('ready')} ]`;

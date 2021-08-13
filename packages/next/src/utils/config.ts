@@ -1,12 +1,14 @@
 import { ExecutorContext, offsetFromRoot } from '@nrwl/devkit';
-import {
+// ignoring while we support both Next 11.1.0 and versions before it
+// @ts-ignore
+import type { NextConfig } from 'next/dist/server/config-shared';
+// @ts-ignore
+import type {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
   PHASE_PRODUCTION_BUILD,
   PHASE_PRODUCTION_SERVER,
-} from 'next/dist/shared/lib/constants';
-import loadConfig from 'next/dist/server/config';
-import { NextConfig } from 'next/dist/server/config-shared';
+} from 'next/dist/next-server/lib/constants';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
@@ -19,10 +21,11 @@ import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
 import { WithNxOptions } from '../../plugins/with-nx';
 import {
-  computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { importConfig } from './require-shim';
+const loadConfig = importConfig();
 
 export function createWebpackConfig(
   workspaceRoot: string,

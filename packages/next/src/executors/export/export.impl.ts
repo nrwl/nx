@@ -6,7 +6,6 @@ import {
   runExecutor,
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
-import { PHASE_EXPORT } from 'next/dist/shared/lib/constants';
 import { resolve } from 'path';
 import { prepareConfig } from '../../utils/config';
 import {
@@ -19,6 +18,9 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
+import { importConstants } from '../../utils/require-shim';
+
+const { PHASE_EXPORT } = importConstants();
 
 export default async function exportExecutor(
   options: NextExportBuilderOptions,

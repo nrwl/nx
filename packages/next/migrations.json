@@ -48,19 +48,6 @@
       "version": "12.6.0-beta.0",
       "description": "Add 'next' eslint config",
       "factory": "./src/migrations/update-12-6-0/add-next-eslint"
-    },
-    "update-12.7.2": {
-      "version": "12.7.2-beta.0",
-      "packages": {
-        "next": {
-          "version": "11.1.0",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-config-next": {
-          "version": "11.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
     }
   },
   "packageJsonUpdates": {
@@ -149,6 +136,19 @@
         "eslint-config-next": {
           "version": "11.0.1",
           "addToPackageJson": "devDependencies"
+        }
+      }
+    },
+    "update-12.7.2": {
+      "version": "12.7.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

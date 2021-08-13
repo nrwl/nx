@@ -1,11 +1,12 @@
-import { PHASE_PRODUCTION_BUILD } from 'next/dist/shared/lib/constants';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
+import { importConstants } from './require-shim';
+const { PHASE_PRODUCTION_BUILD } = importConstants();
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('next/dist/server/config', () => ({
+jest.mock('next/dist/next-server/server/config', () => ({
   __esModule: true,
   default: () => ({
     webpack: () => ({}),
