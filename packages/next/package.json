@@ -29,7 +29,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "next": "^11.0.1"
+    "next": "^11.1.0"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.14.5",
