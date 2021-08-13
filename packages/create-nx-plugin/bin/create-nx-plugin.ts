@@ -59,12 +59,18 @@ function createWorkspace(
   parsedArgs: any,
   name: string
 ) {
+  // Ensure to use packageManager for args
+  // if it's not already passed in from previous process
+  if (!parsedArgs.packageManager) {
+    parsedArgs.packageManager = packageManager;
+  }
+
   const args = [
     name,
     ...process.argv.slice(parsedArgs._[2] ? 3 : 2).map((a) => `"${a}"`),
   ].join(' ');
 
-  const command = `new ${args} --preset=empty --packageManager=${packageManager} --collection=@nrwl/workspace`;
+  const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
   console.log(command);
 
   const pmc = getPackageManagerCommand(packageManager);

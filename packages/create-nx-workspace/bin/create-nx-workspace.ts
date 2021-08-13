@@ -469,10 +469,17 @@ async function createApp(
   parsedArgs: any
 ) {
   const { _, cli, ...restArgs } = parsedArgs;
+
+  // Ensure to use packageManager for args
+  // if it's not already passed in from previous process
+  if (!restArgs.packageManager) {
+    restArgs.packageManage = packageManager;
+  }
+
   const args = unparse(restArgs).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
-  const command = `new ${name} ${args} --packageManager=${packageManager} --collection=@nrwl/workspace`;
+  const command = `new ${name} ${args} --collection=@nrwl/workspace`;
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
 
