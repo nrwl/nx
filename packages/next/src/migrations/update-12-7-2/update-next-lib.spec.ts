@@ -29,7 +29,7 @@ describe('Update Next to 11.1.0', () => {
     );
 
     tree = await schematicRunner
-      .runSchematicAsync('update-12.7.1', {}, tree)
+      .runSchematicAsync('update-12.7.2', {}, tree)
       .toPromise();
 
     const packageJson = readJsonInTree(tree, '/package.json');

@@ -49,11 +49,11 @@
       "description": "Add 'next' eslint config",
       "factory": "./src/migrations/update-12-6-0/add-next-eslint"
     },
-    "update-12.7.1": {
+    "update-12.7.2": {
       "cli": "nx",
-      "version": "12.7.1-beta.0",
+      "version": "12.7.2-beta.0",
       "description": "Update Next.js libraries",
-      "factory": "./src/migrations/update-12-7-1/update-next-lib"
+      "factory": "./src/migrations/update-12-7-2/update-next-lib"
     }
   },
   "packageJsonUpdates": {
