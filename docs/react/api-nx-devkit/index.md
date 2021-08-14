@@ -1197,7 +1197,7 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](.
 
 ### removeDependenciesFromPackageJson
 
-▸ **removeDependenciesFromPackageJson**(`tree`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../react/nx-devkit/index#generatorcallback)
+▸ **removeDependenciesFromPackageJson**(`tree`, `dependencies`, `devDependencies?`, `packageJsonPath?`): [`GeneratorCallback`](../../react/nx-devkit/index#generatorcallback)
 
 Remove Dependencies and Dev Dependencies from package.json
 
@@ -1215,7 +1215,7 @@ This will **remove** `react` and `jest` from the dependencies and devDependencie
 | :---------------- | :----------------------------------------- | :--------------- | :-------------------------------------------------------------------------- |
 | `tree`            | [`Tree`](../../react/nx-devkit/index#tree) | `undefined`      | -                                                                           |
 | `dependencies`    | `string`[]                                 | `undefined`      | Dependencies to be removed from the dependencies section of package.json    |
-| `devDependencies` | `string`[]                                 | `undefined`      | Dependencies to be removed from the devDependencies section of package.json |
+| `devDependencies` | `string`[]                                 | `[]`             | Dependencies to be removed from the devDependencies section of package.json |
 | `packageJsonPath` | `string`                                   | `'package.json'` | -                                                                           |
 
 #### Returns

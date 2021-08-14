@@ -67,7 +67,7 @@ export function addDependenciesToPackageJson(
 export function removeDependenciesFromPackageJson(
   tree: Tree,
   dependencies: string[],
-  devDependencies: string[],
+  devDependencies: string[] = [],
   packageJsonPath: string = 'package.json'
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
@@ -80,6 +80,9 @@ export function removeDependenciesFromPackageJson(
     )
   ) {
     updateJson(tree, packageJsonPath, (json) => {
+      json.dependencies ??= {};
+      json.devDependencies ??= {};
+
       for (const dep of dependencies) {
         delete json.dependencies[dep];
       }
@@ -97,7 +100,7 @@ export function removeDependenciesFromPackageJson(
   };
 }
 
-function sortObjectByKeys(obj: unknown): unknown {
+function sortObjectByKeys(obj: Object): Object {
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {

@@ -32,6 +32,12 @@
       "version": "11.5.2-beta.1",
       "description": "Update existing .babelrc files to add missing '@nrwl/web/babel' preset if necessary.",
       "factory": "./src/migrations/update-11-5-2/update-existing-babelrc-files"
+    },
+    "remove-document-register-element-package-12.7.3": {
+      "cli": "nx",
+      "version": "12.7.3-beta.0",
+      "description": "Remove document-register-element package from package.json",
+      "factory": "./src/migrations/update-12-7.3/remove-document-register-element-package"
     }
   },
   "packageJsonUpdates": {
