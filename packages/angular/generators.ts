@@ -1,6 +1,7 @@
 export * from './src/generators/application/application';
 export * from './src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint';
 export * from './src/generators/downgrade-module/downgrade-module';
+export * from './src/generators/init/init';
 export * from './src/generators/karma/karma';
 export * from './src/generators/karma-project/karma-project';
 export * from './src/generators/library/library';
