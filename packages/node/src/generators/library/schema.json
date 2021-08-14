@@ -23,7 +23,7 @@
     "directory": {
       "type": "string",
       "description": "A directory where the lib is placed",
-      "alias": "d"
+      "alias": "dir"
     },
     "simpleModuleName": {
       "description": "Keep the module name simple (when using --directory)",

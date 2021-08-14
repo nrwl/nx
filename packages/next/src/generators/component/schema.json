@@ -78,7 +78,7 @@
     "directory": {
       "type": "string",
       "description": "Create the component under this directory (can be nested).",
-      "alias": "d"
+      "alias": "dir"
     },
     "export": {
       "type": "boolean",

@@ -26,7 +26,7 @@
     "directory": {
       "description": "Directory where the generated files are placed.",
       "type": "string",
-      "aliases": ["d", "path"]
+      "aliases": ["dir", "path"]
     },
     "skipFormat": {
       "type": "boolean",

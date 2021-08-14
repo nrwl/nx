@@ -44,7 +44,7 @@ The application project to add the slice to.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 

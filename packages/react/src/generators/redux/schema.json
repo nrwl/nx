@@ -23,7 +23,7 @@
     },
     "directory": {
       "type": "string",
-      "alias": "d",
+      "alias": "dir",
       "default": "",
       "description": "The name of the folder used to contain/group the generated Redux files."
     },

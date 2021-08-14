@@ -36,7 +36,7 @@
     "directory": {
       "type": "string",
       "description": "Create the page under this directory (can be nested). Will be created under 'pages/'.",
-      "alias": "d"
+      "alias": "dir"
     },
     "style": {
       "description": "The file extension to be used for style files.",

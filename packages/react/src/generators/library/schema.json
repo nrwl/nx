@@ -28,7 +28,7 @@
     "directory": {
       "type": "string",
       "description": "A directory where the lib is placed.",
-      "alias": "d"
+      "alias": "dir"
     },
     "style": {
       "description": "The file extension to be used for style files.",

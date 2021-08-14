@@ -60,7 +60,7 @@ Use class components instead of functional component.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
