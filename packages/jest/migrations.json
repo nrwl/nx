@@ -89,6 +89,12 @@
       "cli": "nx",
       "description": "Uses `getJestProjects()` to populate projects array in root level `jest.config.js` file.",
       "factory": "./src/migrations/update-12-6-0/update-base-jest-config"
+    },
+    "remove-babel-related-packages-12.7.3": {
+      "cli": "nx",
+      "version": "12.7.3-beta.0",
+      "description": "Remove babel related packages from package.json since we moved to @nrwl/web/babel & nrwl/react/babel",
+      "factory": "./src/migrations/update-12-7.3/remove-babel-related-packages"
     }
   },
   "packageJsonUpdates": {
