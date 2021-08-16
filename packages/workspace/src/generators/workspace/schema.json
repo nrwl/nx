@@ -44,11 +44,9 @@
       "description": "The directory name to create the workspace in.",
       "default": ""
     },
-    "layout": {
+    "preset": {
       "type": "string",
-      "description": "Layout of the workspace",
-      "default": "apps-and-libs",
-      "enum": ["apps-and-libs", "packages"]
+      "description": "Preset of the workspace"
     },
     "npmScope": {
       "type": "string",

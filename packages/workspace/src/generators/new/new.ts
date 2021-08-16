@@ -182,15 +182,7 @@ export async function newGenerator(host: Tree, options: Schema) {
     );
   }
 
-  const layout: 'packages' | 'apps-and-libs' =
-    options.preset === 'oss' ? 'packages' : 'apps-and-libs';
-  const workspaceOpts = {
-    ...options,
-    layout,
-    preset: undefined,
-    nxCloud: undefined,
-  };
-  await workspaceGenerator(host, workspaceOpts);
+  await workspaceGenerator(host, { ...options, nxCloud: undefined } as any);
 
   if (options.cli === 'angular') {
     setDefaultPackageManager(host, options);

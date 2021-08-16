@@ -15,7 +15,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/nx.json')).toBe(true);
@@ -29,7 +29,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'master',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
@@ -70,7 +70,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'main',
     });
     expect(tree.read('proj/.prettierrc', 'utf-8')).toMatchSnapshot();
@@ -81,7 +81,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'main',
     });
     const recommendations = readJson<{ recommendations: string[] }>(
@@ -97,7 +97,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'angular',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'main',
     });
     const recommendations = readJson<{ recommendations: string[] }>(
@@ -113,7 +113,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'angular',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);
@@ -128,7 +128,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      layout: 'apps-and-libs',
+      preset: 'empty',
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(false);
@@ -141,16 +141,13 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      layout: 'packages',
+      preset: 'oss',
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/packages/.gitkeep')).toBe(true);
     expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
-    expect(nx.workspaceLayout).toEqual({
-      appsDir: 'packages',
-      libsDir: 'packages',
-    });
+    expect(nx.extends).toEqual('@nrwl/workspace/presets/npm.json');
   });
 });
