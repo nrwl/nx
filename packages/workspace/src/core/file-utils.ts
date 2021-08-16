@@ -229,7 +229,25 @@ export function readNxJson(): NxJsonConfiguration {
     }
   );
 
-  return config;
+  const nxJsonExtends = readNxJsonExtends(config as any);
+  if (nxJsonExtends) {
+    return { ...nxJsonExtends, ...config };
+  } else {
+    return config;
+  }
+}
+
+function readNxJsonExtends(nxJson: { extends?: string }) {
+  if (nxJson.extends) {
+    const extendsPath = nxJson.extends;
+    try {
+      return readJsonFile(require.resolve(extendsPath));
+    } catch (e) {
+      throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
+    }
+  } else {
+    return null;
+  }
 }
 
 export function workspaceLayout(): { appsDir: string; libsDir: string } {

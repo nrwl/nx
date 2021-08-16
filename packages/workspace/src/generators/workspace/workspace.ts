@@ -29,20 +29,24 @@ function decorateAngularClI(host: Tree, options: Schema) {
   host.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
 }
 
-function setWorkspaceLayoutProperties(tree: Tree, options: Schema) {
+function setPresetProperty(tree: Tree, options: Schema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.layout === 'packages') {
-      json.workspaceLayout = {
-        appsDir: 'packages',
-        libsDir: 'packages',
-      };
+    if (options.preset === 'oss') {
+      addPropertyWithStableKeys(
+        json,
+        'extends',
+        '@nrwl/workspace/presets/npm.json'
+      );
+      delete json.implicitDependencies;
+      delete json.targetDependencies;
+      delete json.workspaceLayout;
     }
     return json;
   });
 }
 
 function createAppsAndLibsFolders(host: Tree, options: Schema) {
-  if (options.layout === 'packages') {
+  if (options.preset === 'oss') {
     host.write(join(options.directory, 'packages/.gitkeep'), '');
   } else {
     host.write(join(options.directory, 'apps/.gitkeep'), '');
@@ -107,7 +111,7 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   if (options.cli === 'angular') {
     decorateAngularClI(host, options);
   }
-  setWorkspaceLayoutProperties(host, options);
+  setPresetProperty(host, options);
   createAppsAndLibsFolders(host, options);
 
   await formatFiles(host);
@@ -115,3 +119,14 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
 }
 
 export const workspaceSchematic = convertNxGenerator(workspaceGenerator);
+
+function addPropertyWithStableKeys(obj: any, key: string, value: string) {
+  const copy = { ...obj };
+  Object.keys(obj).forEach((k) => {
+    delete obj[k];
+  });
+  obj[key] = value;
+  Object.keys(copy).forEach((k) => {
+    obj[k] = copy[k];
+  });
+}

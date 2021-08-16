@@ -171,6 +171,15 @@ describe('project configuration', () => {
       expect(readJson(tree, 'workspace.json').$schema).not.toBeDefined();
       expect(readJson(tree, 'nx.json').$schema).not.toBeDefined();
     });
+
+    it('should skip properties that are identical to the extends property', () => {
+      workspaceConfiguration['$schema'] = 'schema';
+
+      updateWorkspaceConfiguration(tree, workspaceConfiguration);
+
+      expect(readJson(tree, 'workspace.json').$schema).not.toBeDefined();
+      expect(readJson(tree, 'nx.json').$schema).not.toBeDefined();
+    });
   });
 
   describe('without nx.json', () => {

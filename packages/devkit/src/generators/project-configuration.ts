@@ -112,14 +112,19 @@ export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
   const workspace = readWorkspace(tree);
   delete workspace.projects;
 
-  const nxJson = readNxJson(tree);
-  if (nxJson !== null) {
-    delete nxJson.projects;
+  let nxJson = readNxJson(tree);
+  if (nxJson === null) {
+    return workspace;
+  }
+
+  const nxJsonExtends = readNxJsonExtends(tree, nxJson as any);
+  if (nxJsonExtends) {
+    nxJson = { ...nxJsonExtends, ...nxJson };
   }
 
   return {
     ...workspace,
-    ...(nxJson === null ? {} : nxJson),
+    ...nxJson,
   };
 }
 
@@ -174,8 +179,37 @@ export function updateWorkspaceConfiguration(
 
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      return { ...json, ...nxJson };
+      const nxJsonExtends = readNxJsonExtends(tree, nxJson as any);
+      if (nxJsonExtends) {
+        const changedPropsOfNxJson = {};
+        Object.keys(nxJson).forEach((prop) => {
+          if (
+            JSON.stringify([prop], null, 2) !=
+            JSON.stringify(nxJsonExtends[prop], null, 2)
+          ) {
+            changedPropsOfNxJson[prop] = nxJson[prop];
+          }
+        });
+        return { ...json, ...changedPropsOfNxJson };
+      } else {
+        return { ...json, ...nxJson };
+      }
     });
+  }
+}
+
+function readNxJsonExtends(tree: Tree, nxJson: { extends?: string }) {
+  if (nxJson.extends) {
+    const extendsPath = nxJson.extends;
+    try {
+      return JSON.parse(
+        tree.read(joinPathFragments('node_modules', extendsPath), 'utf-8')
+      );
+    } catch (e) {
+      throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
+    }
+  } else {
+    return null;
   }
 }
 
@@ -211,7 +245,12 @@ export function readNxJson(tree: Tree): NxJsonConfiguration | null {
   if (!tree.exists('nx.json')) {
     return null;
   }
-  return readJson<NxJsonConfiguration>(tree, 'nx.json');
+  let nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+  const nxJsonExtends = readNxJsonExtends(tree, nxJson as any);
+  if (nxJsonExtends) {
+    nxJson = { ...nxJsonExtends, ...nxJson };
+  }
+  return nxJson;
 }
 
 /**

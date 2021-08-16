@@ -21,10 +21,7 @@ describe('custom workspace layout', () => {
     packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
 
     const nxJson = readJson('nx.json');
-    expect(nxJson.workspaceLayout).toEqual({
-      libsDir: 'packages',
-      appsDir: 'packages',
-    });
+    expect(nxJson.extends).toEqual('@nrwl/workspace/presets/npm.json');
 
     const reactApp = uniq('reactapp');
     const reactLib = uniq('reactlib');
