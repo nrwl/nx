@@ -32,7 +32,30 @@ export interface NodeExecuteBuilderOptions {
 }
 
 let subProcess: ChildProcess = null;
-
+/**
+ * Ensure subprocess is cleaned up when parent process exits as a result of
+ * process.exit() rather than from a signal (like from <ctrl-c>).
+ *
+ * When the process is killed by a signal, that signal is forwarded to any
+ * forked processes ensuring the children are also shut down. But with
+ * process.exit() there is no signal to forward so the forked process is
+ * left running.
+ *
+ * This currently happens in our testcafe builder where we start the server
+ * using the execute builder and then run our tests against that server. At
+ * the end of the test run, we complete the builder observable using `take(1)`,
+ * resulting in the Nx cli calling `process.exit(builderOutput.succes ? 0 : 1)`
+ * orphaning our server process.
+ *
+ * NOTE: We can't use treeKill(subProcess.pid, 'SIGTERM') because it performs
+ *       async operations which are disallowed in  the `exit` event.
+ */
+ process.on('exit', () => {
+  if (subProcess) {
+      subProcess.kill('SIGTERM')
+      subProcess = null
+  }
+})
 export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
   context: ExecutorContext
@@ -63,8 +86,15 @@ export async function* executeExecutor(
       logger.info(`${event.outfile} was not restarted.`);
     }
     await handleBuildEvent(event, options);
-    yield event;
+    const subProcessMessage = await getSubProcessURL();
+    yield {...event,subProcessMessage};
   }
+}
+
+async function getSubProcessURL(){
+  return new Promise(resolve=>{
+    subProcess.on("message",(message)=>resolve(message))
+  })
 }
 
 function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
