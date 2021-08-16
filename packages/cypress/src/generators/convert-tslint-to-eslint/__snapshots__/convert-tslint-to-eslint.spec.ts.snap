@@ -264,15 +264,6 @@ Object {
       ],
       "rules": Object {},
     },
-    Object {
-      "files": Array [
-        "src/plugins/index.js",
-      ],
-      "rules": Object {
-        "@typescript-eslint/no-var-requires": "off",
-        "no-undef": "off",
-      },
-    },
   ],
   "plugins": Array [
     "@typescript-eslint",

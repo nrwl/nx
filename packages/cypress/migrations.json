@@ -24,6 +24,12 @@
       "version": "9.4.0-beta.1",
       "description": "Add Cypress ESLint plugin",
       "factory": "./src/migrations/update-9-4-0/add-cypress-eslint-plugin-9-4-0"
+    },
+    "remove-typescript-plugin": {
+      "cli": "nx",
+      "version": "12.8.0-beta.0",
+      "description": "Remove Typescript Preprocessor Plugin",
+      "factory": "./src/migrations/update-12-8-0/remove-typescript-plugin"
     }
   },
   "packageJsonUpdates": {

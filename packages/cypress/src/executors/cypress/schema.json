@@ -100,5 +100,5 @@
     }
   },
   "additionalProperties": true,
-  "required": ["cypressConfig", "tsConfig"]
+  "required": ["cypressConfig"]
 }

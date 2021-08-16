@@ -13,12 +13,6 @@ Type: `string`
 
 The path of the Cypress configuration json file.
 
-### tsConfig (_**required**_)
-
-Type: `string`
-
-The path of the Cypress tsconfig configuration json file.
-
 ### baseUrl
 
 Type: `string`
@@ -134,6 +128,12 @@ Type: `string`
 Possible values: `component`, `e2e`
 
 Specify the type of tests to execute
+
+### tsConfig
+
+Type: `string`
+
+The path of the Cypress tsconfig configuration json file.
 
 ### watch
 

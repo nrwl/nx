@@ -291,7 +291,6 @@ Object {
       "options": Object {
         "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
         "devServerTarget": "my-dir-my-app:serve:development",
-        "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
       },
     },
     "lint": Object {
@@ -306,6 +305,34 @@ Object {
   "projectType": "application",
   "root": "apps/my-dir/my-app-e2e",
   "sourceRoot": "apps/my-dir/my-app-e2e/src",
+}
+`;
+
+exports[`app not nested should generate files 1`] = `
+Object {
+  "angularCompilerOptions": Object {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": Object {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+  ],
 }
 `;
 
@@ -423,7 +450,6 @@ Object {
       "options": Object {
         "cypressConfig": "apps/my-app-e2e/cypress.json",
         "devServerTarget": "my-app:serve:development",
-        "tsConfig": "apps/my-app-e2e/tsconfig.e2e.json",
       },
     },
     "lint": Object {
