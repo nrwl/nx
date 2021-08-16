@@ -68,6 +68,8 @@ jobs:
             package_manager: yarn
           - os: macos-latest
             package_manager: pnpm
+          - os: macos-latest
+            packages: e2e-workspace
         #   - os: windows-latest
         #     package_manager: npm
         #   - os: windows-latest
