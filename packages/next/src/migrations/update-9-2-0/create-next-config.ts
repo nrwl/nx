@@ -1,7 +1,8 @@
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import { formatFiles, readWorkspace } from '@nrwl/workspace';
-import { CONFIG_FILE } from 'next/dist/next-server/lib/constants';
 import { join } from 'path';
+import { importConstants } from '../../utils/require-shim';
+const { CONFIG_FILE } = importConstants();
 
 const defaultConfig = `const withSass = require('@zeit/next-sass');
 const withLess = require('@zeit/next-less');

@@ -138,6 +138,19 @@
           "addToPackageJson": "devDependencies"
         }
       }
+    },
+    "update-12.7.2": {
+      "version": "12.7.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

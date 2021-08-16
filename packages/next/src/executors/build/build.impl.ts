@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
 
 import build from 'next/dist/build';
-import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 
 import { join, resolve } from 'path';
 import { copySync, mkdir } from 'fs-extra';
@@ -19,6 +18,9 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { checkPublicDirectory } from './lib/check-project';
+import { importConstants } from '../../utils/require-shim';
+
+const { PHASE_PRODUCTION_BUILD } = importConstants();
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
