@@ -165,10 +165,22 @@ commands:
           condition:
             equal: [<< parameters.run-unit-tests >>, 'true']
           steps:
-            - run:
-                name: Run Unit Tests
-                command: |
-                  npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 -- --t="<< parameters.unit-test-filter >>"
+            - when:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, '']
+                steps:
+                  - run:
+                      name: Run Unit Tests
+                      command: |
+                        npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
+            - unless:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, '']
+                steps:
+                  - run:
+                      name: Run Unit Tests with Filter "<< parameters.e2e-test-filter >>"
+                      command: |
+                        npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 -- --t="<< parameters.e2e-test-filter >>"
       - when:
           condition:
             equal: [<< parameters.run-linting >>, 'true']
@@ -181,11 +193,24 @@ commands:
           condition:
             equal: [<< parameters.run-e2e-tests >>, 'true']
           steps:
-            - run:
-                name: Run E2E Tests
-                command: |
-                  npx nx affected --target=e2e --base=$NX_BASE -- --t="<< parameters.e2e-test-filter >>"
-                no_output_timeout: 45m
+            - when:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, '']
+                steps:
+                  - run:
+                      name: Run E2E Tests
+                      command: |
+                        npx nx affected --target=e2e --base=$NX_BASE
+                      no_output_timeout: 45m
+            - unless:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, '']
+                steps:
+                  - run:
+                      name: Run E2E Tests with Filter "<< parameters.e2e-test-filter >>"
+                      command: |
+                        npx nx affected --target=e2e --base=$NX_BASE -- --t="<< parameters.e2e-test-filter >>"
+                      no_output_timeout: 45m
 
 # -------------------------
 #          JOBS
@@ -239,9 +264,17 @@ jobs:
         default: pnpm
     executor: << parameters.os >>
     environment:
+      GIT_AUTHOR_NAME: test@test.com
+      GIT_AUTHOR_EMAIL: Test
+      GIT_COMMITTER_EMAIL: test@test.com
+      GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      SELECTED_PM: << parameters.pm >>
+      SELECTED_CLI: << parameters.cli >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
+      - setup:
+          os: << parameters.os >>
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -343,9 +376,9 @@ workflows:
           name: 'agent8'
       - agent:
           name: 'agent9'
-      - agent:
-          name: 'agent10'
-          os: 'macos'
+      # - agent:
+      #     name: 'agent10'
+      #     os: 'macos'
       # -------------------------
       #     Pull request logic
       # -------------------------
