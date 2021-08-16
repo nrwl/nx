@@ -71,6 +71,10 @@
       "description": "Attempts to identify which tests to run based on which files have changed in the current repository. Only works if you're running tests in a git or hg repository at the moment. (https://jestjs.io/docs/cli#--onlychanged)",
       "type": "boolean"
     },
+    "changedSince": {
+      "description": "Runs tests related to the changes since the provided branch or commit hash. If the current branch has diverged from the given branch, then only changes made locally will be tested. (https://jestjs.io/docs/cli#--changedsince)",
+      "type": "string"
+    },
     "outputFile": {
       "description": "Write test results to a file when the --json option is also specified. (https://jestjs.io/docs/cli#--outputfilefilename)",
       "type": "string"

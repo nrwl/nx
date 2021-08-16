@@ -54,6 +54,7 @@ export function jestConfigParser(
     json: options.json,
     maxWorkers: options.maxWorkers,
     onlyChanged: options.onlyChanged,
+    changedSince: options.changedSince,
     outputFile: options.outputFile,
     passWithNoTests: options.passWithNoTests,
     runInBand: options.runInBand,
