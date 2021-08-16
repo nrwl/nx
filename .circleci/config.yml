@@ -80,9 +80,9 @@ commands:
       os:
         type: string
     steps:
-      - when:
+      - unless:
           condition:
-            equal: [<< parameters.os >>, linux]
+            equal: [<< parameters.os >>, windows]
           steps:
             - run:
                 name: Install PNPM
