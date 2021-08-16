@@ -2,6 +2,15 @@ import { NormalizedSchema } from './normalize-options';
 import { getWorkspaceLayout, joinPathFragments, Tree } from '@nrwl/devkit';
 import { dirname } from 'path';
 
+let isOldNext: boolean;
+
+try {
+  require('next/dist/next-server/server/next-server');
+  isOldNext = true;
+} catch {
+  isOldNext = false;
+}
+
 export function createNextServerFiles(host: Tree, options: NormalizedSchema) {
   if (options.server) {
     const directory = dirname(
@@ -67,10 +76,18 @@ export function createNextServerFiles(host: Tree, options: NormalizedSchema) {
        */
 
       /**
-       * @typedef {import('next/dist/next-server/server/next-server').default} Server
+       * @typedef {import(${
+         isOldNext
+           ? 'next/dist/next-server/server/next-server'
+           : 'next/dist/server/next-server'
+       }).default} Server
        */
 
-      const NextServer = require('next/dist/next-server/server/next-server').default;
+      const NextServer = require(${
+        isOldNext
+          ? 'next/dist/next-server/server/next-server'
+          : 'next/dist/server/next-server'
+      }).default;
       const express = require('express');
 
       const nextApp = new NextServer({
