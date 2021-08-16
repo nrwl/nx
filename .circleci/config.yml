@@ -379,9 +379,10 @@ workflows:
           name: 'agent8'
       - agent:
           name: 'agent9'
-      # - agent:
-      #     name: 'agent10'
-      #     os: 'macos'
+          os: 'macos'
+      - agent:
+          name: 'agent10'
+          os: 'android'
       # -------------------------
       #     Pull request logic
       # -------------------------
@@ -391,18 +392,18 @@ workflows:
           filters:
             branches:
               ignore: master
-      # - main:
-      #     name: pull-request-osx
-      #     pm: 'yarn'
-      #     os: 'macos'
-      #     run-checks: 'false'
-      #     run-builds: 'false'
-      #     run-unit-tests: 'false'
-      #     run-linting: 'false'
-      #     e2e-test-filter: 'MACOS-Tests'
-      #     filters:
-      #       branches:
-      #         ignore: master
+      - main:
+          name: pull-request-osx
+          pm: 'yarn'
+          os: 'macos'
+          run-checks: 'false'
+          run-builds: 'false'
+          run-unit-tests: 'false'
+          run-linting: 'false'
+          e2e-test-filter: 'MACOS-Tests'
+          filters:
+            branches:
+              ignore: master
       # - main:
       #     name: pull-request-android
       #     pm: 'yarn'
@@ -418,7 +419,7 @@ workflows:
       - agent-cleanup:
           requires:
             - pull-request
-            # - pull-request-osx
+            - pull-request-osx
             # - pull-request-android
           filters:
             branches:
