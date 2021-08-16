@@ -50,12 +50,12 @@ let subProcess: ChildProcess = null;
  * NOTE: We can't use treeKill(subProcess.pid, 'SIGTERM') because it performs
  *       async operations which are disallowed in  the `exit` event.
  */
- process.on('exit', () => {
+process.on('exit', () => {
   if (subProcess) {
-      subProcess.kill('SIGTERM')
-      subProcess = null
+    subProcess.kill('SIGTERM');
+    subProcess = null;
   }
-})
+});
 export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
   context: ExecutorContext
@@ -87,14 +87,14 @@ export async function* executeExecutor(
     }
     await handleBuildEvent(event, options);
     const subProcessMessage = await getSubProcessURL();
-    yield {...event,subProcessMessage};
+    yield { ...event, subProcessMessage };
   }
 }
 
-async function getSubProcessURL(){
-  return new Promise(resolve=>{
-    subProcess.on("message",(message)=>resolve(message))
-  })
+async function getSubProcessURL() {
+  return new Promise((resolve) => {
+    subProcess.on('message', (message) => resolve(message));
+  });
 }
 
 function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
