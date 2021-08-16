@@ -175,7 +175,6 @@ process.env.GITHUB_TOKEN = !parsedArgs.local
  */
 const options = {
   'dry-run': DRY_RUN,
-  changelogCommand: 'conventional-changelog -p angular | tail -n +3',
   /**
    * Needed so that we can leverage conventional-changelog to generate
    * the changelog
@@ -190,6 +189,7 @@ const options = {
   npm: false,
   git: {
     requireCleanWorkingDir: false,
+    changelog: 'conventional-changelog -p angular | tail -n +3',
   },
 };
 
