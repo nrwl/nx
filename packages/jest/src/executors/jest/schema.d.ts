@@ -13,6 +13,7 @@ export interface JestExecutorOptions {
   json?: boolean;
   maxWorkers?: number | string;
   onlyChanged?: boolean;
+  changedSince?: string;
   outputFile?: string;
   passWithNoTests?: boolean;
   runInBand?: boolean;
