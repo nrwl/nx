@@ -14,7 +14,6 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
-import * as http from 'http';
 
 // TODO: Check why this fails on yarn and npm
 describe('Angular Package', () => {
@@ -94,13 +93,7 @@ describe('Angular Package', () => {
 describe('Angular MFE App Serve', () => {
   let hostApp;
   let remoteApp1;
-  let remoteApp2;
   let proj: string;
-
-  beforeAll(() => {
-    // Increase the timeout as there are 3 apps to build and serve
-    jest.setTimeout(300000);
-  });
 
   beforeEach(() => {
     hostApp = uniq('app');
@@ -133,11 +126,10 @@ describe('Angular MFE App Serve', () => {
     // port and process cleanup
     try {
       await promisifiedTreeKill(process.pid, 'SIGKILL');
-      await killPorts(4200);
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  });
+  }, 300000);
 });
 
 describe('Angular App Build and Serve Ops', () => {
@@ -163,7 +155,7 @@ describe('Angular App Build and Serve Ops', () => {
 
     // ASSERT
     expect(serveOutput).toContain('Running target "build" succeeded');
-  });
+  }, 100000);
 
   it('should serve the app successfully', async () => {
     // ACT
@@ -184,5 +176,5 @@ describe('Angular App Build and Serve Ops', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  });
+  }, 300000);
 });
