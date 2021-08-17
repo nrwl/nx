@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import {
-  detectInvokedPackageManager,
-  getPackageManagerCommand,
-  PackageManager,
-} from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
 import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
 import { output } from '@nrwl/workspace/src/utilities/output';
@@ -14,6 +10,10 @@ import { removeSync } from 'fs-extra';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
+import {
+  detectInvokedPackageManager,
+  PackageManager,
+} from './detect-invoked-package-manager';
 import enquirer = require('enquirer');
 import yargsParser = require('yargs-parser');
 
