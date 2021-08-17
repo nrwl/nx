@@ -547,6 +547,11 @@ export function readFile(f: string) {
   return readFileSync(ff, 'utf-8');
 }
 
+export function removeFile(f: string) {
+  const ff = f.startsWith('/') ? f : tmpProjPath(f);
+  removeSync(ff);
+}
+
 export function rmDist() {
   removeSync(`${tmpProjPath()}/dist`);
 }

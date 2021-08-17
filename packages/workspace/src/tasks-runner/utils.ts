@@ -105,6 +105,11 @@ export function getOutputsForTargetAndConfiguration(
     );
   }
 
+  // Add linter `outputFile` to outputs
+  if (options.outputFile) {
+    return [options.outputFile];
+  }
+
   // Keep backwards compatibility in case `outputs` doesn't exist
   if (options.outputPath) {
     return Array.isArray(options.outputPath)

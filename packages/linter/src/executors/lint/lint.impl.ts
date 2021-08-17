@@ -60,7 +60,6 @@ export default async function run(
       createProgram(path.resolve(systemRoot, tsConfig))
     );
 
-    let i = 0;
     for (const program of allPrograms) {
       lintReports = [
         ...lintReports,

@@ -4,6 +4,7 @@ import {
   newProject,
   readFile,
   readJson,
+  removeFile,
   runCLI,
   uniq,
   updateFile,
@@ -187,5 +188,24 @@ describe('Linter', () => {
     expect(outputForApp.messages[0].message).toBe(
       'Unexpected console statement.'
     );
+  }, 1000000);
+
+  it('linting should cache the output file', () => {
+    newProject();
+    const myapp = uniq('myapp');
+    const outputFile = 'a/b/c/lint-output.json';
+
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    expect(() => checkFilesExist(outputFile)).toThrow();
+    runCLI(`lint ${myapp} --output-file="${outputFile}" --format=json`, {
+      silenceError: true,
+    });
+    expect(() => checkFilesExist(outputFile)).not.toThrow();
+    removeFile(outputFile);
+    runCLI(`lint ${myapp} --output-file="${outputFile}" --format=json`, {
+      silenceError: true,
+    });
+    expect(() => checkFilesExist(outputFile)).not.toThrow();
   }, 1000000);
 });
