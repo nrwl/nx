@@ -28,20 +28,21 @@ import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
 export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   // Do some validation checks
-  const options = normalizeOptions(host, schema);
-  if (!options.routing && options.lazy) {
+  if (!schema.routing && schema.lazy) {
     throw new Error(`To use --lazy option, --routing must also be set.`);
   }
 
-  if (options.enableIvy === true && !options.buildable) {
+  if (schema.enableIvy === true && !schema.buildable) {
     throw new Error('enableIvy must only be used with buildable.');
   }
 
-  if (options.publishable === true && !options.importPath) {
+  if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
+
+  const options = normalizeOptions(host, schema);
 
   await init(host, {
     ...options,
