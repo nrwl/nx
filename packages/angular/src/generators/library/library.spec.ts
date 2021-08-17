@@ -987,6 +987,21 @@ describe('lib', () => {
 
       expect.assertions(1);
     });
+
+    it('should fail if no importPath has been used', async () => {
+      try {
+        // ACT
+        await runLibraryGeneratorWithOpts({
+          publishable: true,
+        });
+      } catch (e) {
+        expect(e.message).toContain(
+          'For publishable libs you have to provide a proper "--importPath"'
+        );
+      }
+
+      expect.assertions(1);
+    });
   });
 
   describe('--strict', () => {
