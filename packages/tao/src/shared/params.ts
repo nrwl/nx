@@ -296,27 +296,36 @@ function validateProperty(
     }
 
     if (schema.type === 'number') {
-      if (schema.multipleOf && value % schema.multipleOf !== 0) {
+      if (
+        typeof schema.multipleOf === 'number' &&
+        value % schema.multipleOf !== 0
+      ) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. ${value} should be a multiple of ${schema.multipleOf}.`
         );
       }
-      if (schema.minimum && value < schema.minimum) {
+      if (typeof schema.minimum === 'number' && value < schema.minimum) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. ${value} should be at least ${schema.minimum}`
         );
       }
-      if (schema.exclusiveMinimum && value <= schema.exclusiveMinimum) {
+      if (
+        typeof schema.exclusiveMinimum === 'number' &&
+        value <= schema.exclusiveMinimum
+      ) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. ${value} should be greater than ${schema.exclusiveMinimum}`
         );
       }
-      if (schema.maximum && value > schema.maximum) {
+      if (typeof schema.maximum === 'number' && value > schema.maximum) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. ${value} should be at most ${schema.maximum}`
         );
       }
-      if (schema.exclusiveMaximum && value >= schema.exclusiveMaximum) {
+      if (
+        typeof schema.exclusiveMaximum === 'number' &&
+        value >= schema.exclusiveMaximum
+      ) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. ${value} should be less than ${schema.exclusiveMaximum}`
         );
@@ -330,13 +339,19 @@ function validateProperty(
         );
       }
 
-      if (schema.minLength && value.length < schema.minLength) {
+      if (
+        typeof schema.minLength === 'number' &&
+        value.length < schema.minLength
+      ) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at least ${schema.minLength} character(s).`
         );
       }
 
-      if (schema.maxLength && value.length > schema.maxLength) {
+      if (
+        typeof schema.maxLength === 'number' &&
+        value.length > schema.maxLength
+      ) {
         throw new SchemaError(
           `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at most ${schema.maxLength} character(s).`
         );
