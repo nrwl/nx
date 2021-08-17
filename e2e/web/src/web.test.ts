@@ -12,13 +12,11 @@ import {
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
-  beforeEach(() => newProject());
-
   it('should be able to generate a web app', async () => {
+    newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -71,6 +69,7 @@ describe('Web Components Applications', () => {
   }, 500000);
 
   it('should be able to generate a web app with standaloneConfig', async () => {
+    newProject();
     const appName = uniq('app');
     runCLI(
       `generate @nrwl/web:app ${appName} --no-interactive --standalone-config`
@@ -83,6 +82,7 @@ describe('Web Components Applications', () => {
   }, 120000);
 
   it('should remove previous output before building', async () => {
+    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -115,6 +115,7 @@ describe('Web Components Applications', () => {
   }, 120000);
 
   it('should do another build if differential loading is needed', async () => {
+    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
@@ -130,6 +131,7 @@ describe('Web Components Applications', () => {
   }, 120000);
 
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
+    newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -355,7 +357,8 @@ describe('Build Options', () => {
 });
 
 describe('index.html interpolation', () => {
-  test('should interpolate environment variables', () => {
+  it('should interpolate environment variables', () => {
+    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);

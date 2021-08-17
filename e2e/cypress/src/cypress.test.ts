@@ -10,8 +10,6 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Cypress E2E Test runner', () => {
-  beforeEach(() => newProject());
-
   it('should generate an app with the Cypress as e2e test runner', () => {
     newProject();
     const myapp = uniq('myapp');

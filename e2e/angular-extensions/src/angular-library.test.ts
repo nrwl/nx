@@ -12,7 +12,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
-describe('Angular Package', () => {
+describe('Angular Extensions', () => {
   ['publishable', 'buildable'].forEach((testConfig) => {
     describe(`library builder - ${testConfig}`, () => {
       /**

@@ -11,12 +11,12 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 
-describe('Angular Package', () => {
+describe('Angular Core', () => {
   describe('config compat', () => {
-    beforeEach(() => newProject());
     afterEach(() => removeProject({ onlyOnCI: true }));
 
     it('should work', async () => {
+      newProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 

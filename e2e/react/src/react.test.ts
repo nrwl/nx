@@ -19,9 +19,8 @@ import {
 describe('React Applications', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
-
   it('should be able to generate a react app + lib', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -51,6 +50,7 @@ describe('React Applications', () => {
   }, 500000);
 
   it('should support vendor sourcemaps', () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
@@ -73,6 +73,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should be able to generate a publishable react lib', async () => {
+    proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
@@ -109,6 +110,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should be able to generate a react lib with no components', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -135,6 +137,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should not create a dist folder if there is an error', async () => {
+    proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
@@ -153,6 +156,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should generate app with routing', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
@@ -166,6 +170,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should generate app with different style options', async () => {
+    proj = newProject();
     const styledComponentsApp = uniq('app');
 
     runCLI(
@@ -246,6 +251,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should generate app with legacy-ie support', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
@@ -273,6 +279,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should be able to add a redux slice', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -293,6 +300,7 @@ describe('React Applications', () => {
   }, 250000);
 
   it('should be able to use JSX', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -404,8 +412,6 @@ describe('React Applications', () => {
 });
 
 describe('--style option', () => {
-  beforeAll(() => newProject());
-
   it.each`
     style
     ${'css'}
@@ -413,6 +419,7 @@ describe('--style option', () => {
     ${'less'}
     ${'styl'}
   `('should support global and css modules', ({ style }) => {
+    newProject();
     const appName = uniq('app');
     runCLI(
       `generate @nrwl/react:app ${appName} --style=${style} --no-interactive`

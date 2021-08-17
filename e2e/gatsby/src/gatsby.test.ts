@@ -10,9 +10,8 @@ import {
 describe('Gatsby Applications', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
-
   it('should generate a valid gatsby application', async () => {
+    proj = newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/gatsby:app ${appName}`);
     runCLI(`generate @nrwl/gatsby:component header --project ${appName}`);
@@ -44,6 +43,7 @@ describe('Gatsby Applications', () => {
   }, 600000);
 
   it('should support styled-jsx', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/gatsby:app ${appName} --style styled-jsx`);
@@ -58,6 +58,7 @@ describe('Gatsby Applications', () => {
   }, 300000);
 
   it('should support scss', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/gatsby:app ${appName} --style scss`);
@@ -72,6 +73,7 @@ describe('Gatsby Applications', () => {
   }, 300000);
 
   it('should support --js option', async () => {
+    proj = newProject();
     const app = uniq('app');
     runCLI(`generate @nrwl/gatsby:app ${app} --js`);
 

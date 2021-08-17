@@ -7,12 +7,12 @@ import {
 } from '@nrwl/e2e/utils';
 import * as path from 'path';
 
-describe('Angular Package', () => {
+describe('Angular Core', () => {
   describe('linting', () => {
-    beforeEach(() => newProject());
     afterEach(() => removeProject({ onlyOnCI: true }));
 
     it('should support eslint and pass linting on the standard generated code', async () => {
+      newProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
       expect(runCLI(`lint ${myapp}`)).toContain('All files pass linting.');
@@ -23,6 +23,7 @@ describe('Angular Package', () => {
     });
 
     it('should support eslint and successfully lint external HTML files and inline templates', async () => {
+      newProject();
       const myapp = uniq('myapp');
 
       runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);

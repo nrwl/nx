@@ -14,14 +14,14 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Angular Package', () => {
+describe('Angular Extensions', () => {
   describe('storybook schematics', () => {
     let proj: string;
 
-    beforeEach(() => (proj = newProject()));
     afterAll(() => removeProject({ onlyOnCI: true }));
 
     it('should not overwrite global storybook config files', () => {
+      proj = newProject();
       const angularStorybookLib = uniq('test-ui-lib-angular');
       runCLI(
         `generate @nrwl/angular:lib ${angularStorybookLib} --no-interactive`
@@ -60,6 +60,7 @@ describe('Angular Package', () => {
     describe('build storybook', () => {
       it('should execute e2e tests using Cypress running against Storybook', async () => {
         if (isNotWindows()) {
+          proj = newProject();
           const myapp = uniq('myapp');
           runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -201,6 +202,7 @@ describe('Angular Package', () => {
       }, 1000000);
 
       xit('should build an Angular based storybook', () => {
+        proj = newProject();
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
         runCLI(
@@ -216,6 +218,7 @@ describe('Angular Package', () => {
       }, 1000000);
 
       xit('should build an Angular based storybook that references another lib', () => {
+        proj = newProject();
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
         runCLI(

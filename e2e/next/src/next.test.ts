@@ -21,9 +21,8 @@ import * as http from 'http';
 describe('Next.js Applications', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
-
   it('should be able to serve with a proxy configuration', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const port = 4201;
 
@@ -88,6 +87,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const buildableLibName = uniq('lib');
     const nonBuildableLibName = uniq('lib');
@@ -136,6 +136,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should be able to dynamically load a lib', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -164,6 +165,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should compile when using a workspace and react lib written in TypeScript', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     const tsLibName = uniq('tslib');
@@ -268,6 +270,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should support Less', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=less`);
@@ -280,6 +283,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should support Stylus', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=styl`);
@@ -292,6 +296,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should support --style=styled-components', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(
@@ -306,6 +311,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should support --style=@emotion/styled', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(
@@ -320,6 +326,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should build with public folder', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(
@@ -351,6 +358,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should build with a next.config.js file in the dist folder', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
@@ -377,6 +385,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should support --js flag', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
@@ -391,6 +400,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('should fail the build when TS errors are present', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(
@@ -418,6 +428,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should be able to consume a react lib written in JavaScript', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -459,6 +470,7 @@ describe('Next.js Applications', () => {
 
   it('webpack4 - should be able to consume a react libs (buildable and non-buildable)', async () => {
     if (isNotWindows()) {
+      proj = newProject();
       const appName = uniq('app');
       const buildableLibName = uniq('lib');
       const nonBuildableLibName = uniq('lib');
@@ -525,6 +537,7 @@ describe('Next.js Applications', () => {
   }, 300000);
 
   it('webpack4 - should build with a next.config.js file in the dist folder', async () => {
+    proj = newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
@@ -552,6 +565,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should allow using a custom server implementation in TypeScript', async () => {
+    proj = newProject();
     const appName = uniq('app');
     const port = 4202;
 

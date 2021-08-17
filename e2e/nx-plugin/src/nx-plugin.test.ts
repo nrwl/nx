@@ -12,9 +12,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugin', () => {
-  beforeEach(() => newProject());
-
   it('should be able to generate a Nx Plugin ', async () => {
+    newProject();
     const plugin = uniq('plugin');
 
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
@@ -57,6 +56,7 @@ describe('Nx Plugin', () => {
   // doesn't use the collection we are building
   // we should change it to point to the right collection using relative path
   it(`should run the plugin's e2e tests`, async () => {
+    newProject();
     const plugin = uniq('plugin-name');
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
 
@@ -68,6 +68,7 @@ describe('Nx Plugin', () => {
   }, 250000);
 
   it('should be able to generate a migration', async () => {
+    newProject();
     const plugin = uniq('plugin');
     const version = '1.0.0';
 
@@ -101,6 +102,7 @@ describe('Nx Plugin', () => {
   }, 90000);
 
   it('should be able to generate a generator', async () => {
+    newProject();
     const plugin = uniq('plugin');
     const generator = uniq('generator');
 
@@ -138,6 +140,7 @@ describe('Nx Plugin', () => {
   }, 90000);
 
   it('should be able to generate a executor', async () => {
+    newProject();
     const plugin = uniq('plugin');
     const executor = uniq('executor');
 
@@ -174,6 +177,7 @@ describe('Nx Plugin', () => {
 
   describe('--directory', () => {
     it('should create a plugin in the specified directory', () => {
+      newProject();
       const plugin = uniq('plugin');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir`
@@ -189,6 +193,7 @@ describe('Nx Plugin', () => {
   });
   describe('--tags', () => {
     it('should add tags to nx.json', async () => {
+      newProject();
       const plugin = uniq('plugin');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage`

@@ -9,10 +9,10 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
-  beforeAll(() => newProject());
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not override environment variables already set when setting a custom env file path', async () => {
+    newProject();
     const nodeapp = uniq('nodeapp');
     updateFile(
       `.env`,
@@ -47,6 +47,7 @@ describe('Run Commands', () => {
   }, 120000);
 
   it('should pass options', async () => {
+    newProject();
     const myapp = uniq('myapp1');
 
     runCLI(`generate @nrwl/web:app ${myapp}`);
@@ -71,6 +72,7 @@ describe('Run Commands', () => {
   }, 120000);
 
   it('should interpolate provided arguments', async () => {
+    newProject();
     const myapp = uniq('myapp1');
 
     runCLI(`generate @nrwl/web:app ${myapp}`);
@@ -109,6 +111,7 @@ describe('Run Commands', () => {
   }, 120000);
 
   it('should fail when a process exits non-zero', () => {
+    newProject();
     const myapp = uniq('myapp1');
 
     runCLI(`generate @nrwl/web:app ${myapp}`);

@@ -8,9 +8,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Node Applications', () => {
-  beforeEach(() => newProject());
-
   it('should be able to generate an empty application', async () => {
+    newProject();
     const appName = uniq('nodeapp');
 
     runCLI(`generate @nrwl/node:app ${appName} --linter=eslint`);

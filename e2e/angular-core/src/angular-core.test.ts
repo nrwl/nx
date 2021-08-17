@@ -16,14 +16,14 @@ import {
 
 import { names } from '@nrwl/devkit';
 
-describe('Angular Package', () => {
+describe('Angular Core', () => {
   describe('core', () => {
     let proj: string;
 
-    beforeEach(() => (proj = newProject()));
     afterEach(() => removeProject({ onlyOnCI: true }));
 
     it('should work', async () => {
+      proj = newProject();
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
       runCLI(
@@ -85,6 +85,7 @@ describe('Angular Package', () => {
         // TODO: This tests fails with pnpm but we should still enable this for other package managers
         return;
       }
+      proj = newProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp}`);
@@ -94,6 +95,7 @@ describe('Angular Package', () => {
     });
 
     it('should support Ivy', async () => {
+      proj = newProject();
       const myapp = uniq('myapp');
       runCLI(
         `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`

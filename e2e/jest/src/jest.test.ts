@@ -8,9 +8,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {
-  beforeEach(() => newProject());
-
   it('should be able test projects using jest', async () => {
+    newProject();
     const mylib = uniq('mylib');
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner jest`);
@@ -35,6 +34,7 @@ describe('Jest', () => {
   }, 500000);
 
   it('should merge with jest config globals', async () => {
+    newProject();
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
@@ -73,6 +73,7 @@ describe('Jest', () => {
   }, 300000);
 
   it('should set the NODE_ENV to `test`', async () => {
+    newProject();
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
 
@@ -91,6 +92,7 @@ describe('Jest', () => {
   }, 90000);
 
   it('should support multiple `coverageReporters` through CLI', async () => {
+    newProject();
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
 

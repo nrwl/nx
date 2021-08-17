@@ -20,7 +20,6 @@ import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 describe('run-one', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
   afterAll(() => {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
     runCLI('daemon:stop');
@@ -28,6 +27,7 @@ describe('run-one', () => {
   });
 
   it('should build a specific project', () => {
+    proj = newProject();
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
 
@@ -35,6 +35,7 @@ describe('run-one', () => {
   }, 10000);
 
   it('should build a specific project with the daemon enabled', () => {
+    proj = newProject();
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
 
@@ -47,6 +48,7 @@ describe('run-one', () => {
   }, 10000);
 
   it('should build the project when within the project root', () => {
+    proj = newProject();
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
 
@@ -57,6 +59,7 @@ describe('run-one', () => {
   }, 10000);
 
   it('should error for invalid configurations', () => {
+    proj = newProject();
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
     // configuration has to be valid for the initiating project
@@ -68,6 +71,7 @@ describe('run-one', () => {
     let mylib1;
     let mylib2;
     beforeAll(() => {
+      proj = newProject();
       myapp = uniq('myapp');
       mylib1 = uniq('mylib1');
       mylib2 = uniq('mylib1');
@@ -110,6 +114,7 @@ describe('run-one', () => {
     let mylib1;
     let mylib2;
     beforeAll(() => {
+      proj = newProject();
       myapp = uniq('myapp');
       mylib1 = uniq('mylib1');
       mylib2 = uniq('mylib1');
@@ -181,8 +186,6 @@ describe('run-one', () => {
 
 describe('run-many', () => {
   let proj: string;
-
-  beforeEach(() => (proj = newProject()));
   afterEach(() => {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
     runCLI('daemon:stop');
@@ -190,6 +193,7 @@ describe('run-many', () => {
   });
 
   it('should build specific and all projects', () => {
+    proj = newProject();
     const appA = uniq('appa-rand');
     const libA = uniq('liba-rand');
     const libB = uniq('libb-rand');
@@ -272,6 +276,7 @@ describe('run-many', () => {
   }, 1000000);
 
   it('should run only failed projects', () => {
+    proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nrwl/angular:app ${myapp}`);
@@ -325,11 +330,10 @@ describe('run-many', () => {
 
 describe('affected:*', () => {
   let proj: string;
-
-  beforeEach(() => (proj = newProject()));
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should print, build, and test affected apps', async () => {
+    proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     const mylib = uniq('mylib');
@@ -586,10 +590,10 @@ describe('affected (with git)', () => {
 describe('print-affected', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should print information about affected projects', async () => {
+    proj = newProject();
     const myapp = uniq('myapp-a');
     const myapp2 = uniq('myapp-b');
     const mylib = uniq('mylib');
@@ -736,11 +740,10 @@ describe('print-affected', () => {
 });
 
 describe('cache', () => {
-  beforeEach(() => newProject());
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should cache command execution', async () => {
+    newProject();
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nrwl/web:app ${myapp1}`);
@@ -878,6 +881,7 @@ describe('cache', () => {
   }, 120000);
 
   it('should only cache specific files if build outputs is configured with specific files', async () => {
+    newProject();
     const mylib1 = uniq('mylib1');
     runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
 

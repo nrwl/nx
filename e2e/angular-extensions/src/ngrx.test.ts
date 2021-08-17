@@ -8,12 +8,12 @@ import {
   uniq,
 } from '@nrwl/e2e/utils';
 
-describe('Angular Package', () => {
+describe('Angular Extensions', () => {
   describe('ngrx', () => {
-    beforeEach(() => newProject());
     afterAll(() => removeProject({ onlyOnCI: true }));
 
     it('should work', async () => {
+      newProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -40,6 +40,7 @@ describe('Angular Package', () => {
     }, 1000000);
 
     it('should work with creators', async () => {
+      newProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);
 

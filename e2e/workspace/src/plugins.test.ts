@@ -7,10 +7,10 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugins', () => {
-  beforeAll(() => newProject());
   afterAll(() => removeProject({ onlyOnCI: true }));
 
-  it('vvvshould use plugins defined in nx.json', () => {
+  it('should use plugins defined in nx.json', () => {
+    newProject();
     const nxJson = readJson('nx.json');
     nxJson.plugins = ['./tools/plugin'];
     updateFile('nx.json', JSON.stringify(nxJson));

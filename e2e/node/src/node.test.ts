@@ -36,9 +36,8 @@ function getData(port): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  beforeEach(() => newProject());
-
   it('should be able to generate an empty application', async () => {
+    newProject();
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
@@ -58,6 +57,7 @@ describe('Node Applications', () => {
 
   // TODO: This test fails in CI, but succeeds locally. It should be re-enabled once the reasoning is understood.
   xit('should be able to generate an empty application with standalone configuration', async () => {
+    newProject();
     const nodeapp = uniq('nodeapp');
 
     runCLI(
@@ -75,6 +75,7 @@ describe('Node Applications', () => {
   }, 300000);
 
   xit('should be able to generate an express application', async () => {
+    newProject();
     const nodeapp = uniq('nodeapp');
     const port = 3334;
 
@@ -141,6 +142,7 @@ describe('Node Applications', () => {
   }, 120000);
 
   xit('should be able to generate a nest application', async () => {
+    newProject();
     const nestapp = uniq('nestapp');
     const port = 3335;
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
@@ -201,8 +203,6 @@ describe('Node Applications', () => {
 });
 
 describe('Build Node apps', () => {
-  beforeEach(() => newProject());
-
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
     newProject();
     const nestapp = uniq('nestapp');
@@ -405,9 +405,8 @@ describe('Node Libraries', () => {
 });
 
 describe('nest libraries', function () {
-  beforeEach(() => newProject());
-
   it('should be able to generate a nest library', async () => {
+    newProject();
     const nestlib = uniq('nestlib');
     runCLI(`generate @nrwl/nest:lib ${nestlib}`);
 
@@ -437,6 +436,7 @@ describe('nest libraries', function () {
   }, 60000);
 
   it('should be able to generate a nest library w/ service', async () => {
+    newProject();
     const nestlib = uniq('nestlib');
 
     runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
@@ -451,6 +451,7 @@ describe('nest libraries', function () {
   }, 200000);
 
   it('should be able to generate a nest library w/ controller', async () => {
+    newProject();
     const nestlib = uniq('nestlib');
 
     runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
@@ -465,6 +466,7 @@ describe('nest libraries', function () {
   }, 200000);
 
   it('should be able to generate a nest library w/ controller and service', async () => {
+    newProject();
     const nestlib = uniq('nestlib');
 
     runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);

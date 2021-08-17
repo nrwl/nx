@@ -12,9 +12,9 @@ import {
 
 describe('Webpack 5: React Apps', () => {
   it('should successfully build and run E2E tests', async () => {
+    newProject();
     const appName = uniq('app');
 
-    newProject();
     runCLI(`generate @nrwl/react:app ${appName}`);
     runCLI(`generate @nrwl/web:webpack5`);
 

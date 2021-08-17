@@ -8,13 +8,13 @@ import {
   uniq,
 } from '@nrwl/e2e/utils';
 
-describe('Angular Package', () => {
+describe('Angular Extensions', () => {
   describe('router config', () => {
-    beforeEach(() => newProject());
     afterEach(() => removeProject({ onlyOnCI: true }));
 
     it('should support router config generation (lazy)', async () => {
       if (getSelectedPackageManager() !== 'npm') {
+        newProject();
         const myapp = uniq('myapp');
         const mylib = uniq('mylib');
         runCLI(
@@ -33,6 +33,7 @@ describe('Angular Package', () => {
       // TODO: npm build is failing for Angular because of webpack 4
       // remove this condition once `node` is migrated to webpack 5
       if (getSelectedPackageManager() !== 'npm') {
+        newProject();
         const myapp = uniq('myapp');
         runCLI(
           `generate @nrwl/angular:app ${myapp} --directory=myDir --routing`

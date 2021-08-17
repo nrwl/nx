@@ -20,12 +20,9 @@ import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;
 
-beforeAll(() => {
-  proj = newProject();
-});
-
 describe('lint', () => {
   it('lint should ensure module boundaries', () => {
+    proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     const mylib = uniq('mylib');
@@ -92,6 +89,7 @@ describe('lint', () => {
 
   describe('nx workspace-lint', () => {
     it('should identify issues with the workspace', () => {
+      proj = newProject();
       const appBefore = uniq('before');
       const appAfter = uniq('after');
 
@@ -118,6 +116,7 @@ describe('lint', () => {
 describe('format', () => {
   it('should check and reformat the code', async () => {
     if (isNotWindows()) {
+      proj = newProject();
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
@@ -251,6 +250,7 @@ describe('workspace-generator', () => {
   let failing: string;
 
   beforeEach(() => {
+    proj = newProject();
     custom = uniq('custom');
     failing = uniq('custom-failing');
     runCLI(`g workspace-generator ${custom} --no-interactive`);

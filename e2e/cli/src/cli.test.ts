@@ -13,9 +13,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Cli', () => {
-  beforeEach(() => newProject());
-
   it('should execute long running tasks', () => {
+    newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -38,6 +37,7 @@ describe('Cli', () => {
   });
 
   it('should run npm scripts', async () => {
+    newProject();
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
 
@@ -62,6 +62,7 @@ describe('Cli', () => {
   }, 1000000);
 
   it('should show help', async () => {
+    newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -89,22 +90,18 @@ describe('Cli', () => {
   }, 120000);
 });
 
-describe('report', () => {
-  beforeEach(() => newProject());
+it(`should report package versions`, async () => {
+  newProject();
+  const reportOutput = runCLI('report');
 
-  it(`should report package versions`, async () => {
-    const reportOutput = runCLI('report');
-
-    packagesWeCareAbout.forEach((p) => {
-      expect(reportOutput).toContain(p);
-    });
-  }, 120000);
-});
+  packagesWeCareAbout.forEach((p) => {
+    expect(reportOutput).toContain(p);
+  });
+}, 120000);
 
 describe('list', () => {
-  beforeEach(() => newProject());
-
   it(`should work`, async () => {
+    newProject();
     let listOutput = runCLI('list');
 
     expect(listOutput).toContain('NX  Installed plugins');
@@ -157,9 +154,8 @@ describe('list', () => {
 });
 
 describe('migrate', () => {
-  beforeEach(() => newProject());
-
   it('should run migrations', () => {
+    newProject();
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({

@@ -13,7 +13,7 @@ import {
 } from '@nrwl/e2e/utils';
 
 // TODO: Check why generated angular app is different
-xdescribe('Angular Package', () => {
+xdescribe('Angular Core', () => {
   describe('convert to Nx workspace', () => {
     let proj;
 
