@@ -1,16 +1,15 @@
-let mockCopyPlugin = jest.fn();
-jest.mock('rollup-plugin-copy', () => mockCopyPlugin);
-jest.mock('tsconfig-paths-webpack-plugin');
-
 import { ExecutorContext } from '@nrwl/devkit';
-import { createRollupOptions } from './package.impl';
-import { PackageBuilderOptions } from '../../utils/types';
-import { normalizePackageOptions } from '../../utils/normalize';
 import * as rollup from 'rollup';
+import { WebPackageOptions } from './schema';
+import { createRollupOptions } from './package.impl';
+import { normalizePackageOptions } from './lib/normalize';
+
+jest.mock('rollup-plugin-copy', () => jest.fn());
+jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('packageExecutor', () => {
   let context: ExecutorContext;
-  let testOptions: PackageBuilderOptions;
+  let testOptions: WebPackageOptions;
 
   beforeEach(async () => {
     context = {
@@ -30,11 +29,12 @@ describe('packageExecutor', () => {
       project: 'libs/ui/package.json',
       tsConfig: 'libs/ui/tsconfig.json',
       watch: false,
+      format: ['esm', 'umd'],
     };
   });
 
   describe('createRollupOptions', () => {
-    it('should work', () => {
+    it('should create rollup options for valid config', () => {
       const result: any = createRollupOptions(
         normalizePackageOptions(testOptions, '/root', '/root/src'),
         [],
@@ -43,17 +43,18 @@ describe('packageExecutor', () => {
         '/root/src',
         []
       );
+
       expect(result.map((x) => x.output)).toEqual([
-        {
-          file: '/root/dist/ui/example.umd.js',
-          format: 'umd',
-          globals: {},
-          name: 'Example',
-        },
         {
           file: '/root/dist/ui/example.esm.js',
           format: 'esm',
-          globals: {},
+          globals: { 'react/jsx-runtime': 'jsxRuntime' },
+          name: 'Example',
+        },
+        {
+          file: '/root/dist/ui/example.umd.js',
+          format: 'umd',
+          globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
         },
       ]);
@@ -138,7 +139,8 @@ describe('packageExecutor', () => {
         '/root/src',
         []
       );
-      expect(mockCopyPlugin).toHaveBeenCalledWith({
+
+      expect(require('rollup-plugin-copy')).toHaveBeenCalledWith({
         targets: [{ dest: '/root/dist/ui', src: 'C:/windows/path/README.md' }],
       });
     });

@@ -40,7 +40,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
         // All other options will fail in Jest since Node does not support some ES features
         // such as import syntax.
         process.env.NODE_ENV === 'test'
-          ? { targets: { node: 'current' } }
+          ? { targets: { node: 'current' }, loose: true }
           : {
               // Allow importing core-js in entrypoint and use browserlist to select polyfills.
               // This is needed for differential loading as well.

@@ -1,9 +1,5 @@
-import type { ExecutorContext, ProjectGraphNode } from '@nrwl/devkit';
-import { logger, names, readJsonFile, writeJsonFile } from '@nrwl/devkit';
-
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import * as localResolve from 'rollup-plugin-local-resolve';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { join, relative } from 'path';
 import { from, Observable, of } from 'rxjs';
@@ -11,6 +7,8 @@ import { catchError, concatMap, last, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 
+import type { ExecutorContext, ProjectGraphNode } from '@nrwl/devkit';
+import { logger, names, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -19,17 +17,18 @@ import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import resolve from '@rollup/plugin-node-resolve';
 
-import { AssetGlobPattern, PackageBuilderOptions } from '../../utils/types';
-import {
-  NormalizedBundleBuilderOptions,
-  normalizePackageOptions,
-} from '../../utils/normalize';
+import { AssetGlobPattern } from '../../utils/types';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
-import { runRollup } from './run-rollup';
+import { WebPackageOptions } from './schema';
+import { runRollup } from './lib/run-rollup';
+import {
+  NormalizedWebPackageOptions,
+  normalizePackageOptions,
+} from './lib/normalize';
 
 // These use require because the ES import isn't correct.
-const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('rollup-plugin-typescript2');
 const image = require('@rollup/plugin-image');
@@ -38,21 +37,10 @@ const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 const filesize = require('rollup-plugin-filesize');
 
-interface OutputConfig {
-  format: rollup.ModuleFormat;
-  extension: string;
-  declaration?: boolean;
-}
-
-const outputConfigs: OutputConfig[] = [
-  { format: 'umd', extension: 'umd' },
-  { format: 'esm', extension: 'esm' },
-];
-
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
 export default async function* run(
-  rawOptions: PackageBuilderOptions,
+  rawOptions: WebPackageOptions,
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
@@ -167,20 +155,14 @@ export default async function* run(
 // -----------------------------------------------------------------------------
 
 export function createRollupOptions(
-  options: NormalizedBundleBuilderOptions,
+  options: NormalizedWebPackageOptions,
   dependencies: DependentBuildableProjectNode[],
   context: ExecutorContext,
   packageJson: any,
   sourceRoot: string,
   npmDeps: string[]
 ): rollup.InputOptions[] {
-  return outputConfigs.map((config) => {
-    const compilerOptions = createCompilerOptions(
-      config,
-      options,
-      dependencies
-    );
-
+  return options.format.map((format) => {
     const plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -193,7 +175,7 @@ export function createRollupOptions(
         check: true,
         tsconfig: options.tsConfig,
         tsconfigOverride: {
-          compilerOptions,
+          compilerOptions: createCompilerOptions(format, options, dependencies),
         },
       }),
       peerDepsExternal({
@@ -205,7 +187,6 @@ export function createRollupOptions(
         autoModules: true,
         plugins: [autoprefixer],
       }),
-      localResolve(),
       resolve({
         preferBuiltins: true,
         extensions: fileExtensions,
@@ -213,6 +194,8 @@ export function createRollupOptions(
       getBabelInputPlugin({
         // Let's `@nrwl/web/babel` preset know that we are packaging.
         caller: {
+          // Ignored since this is for our custom babel-loader + babel preset
+          // @ts-ignore
           isNxPackage: true,
         },
         cwd: join(context.root, sourceRoot),
@@ -222,29 +205,25 @@ export function createRollupOptions(
         babelHelpers: 'bundled',
         exclude: /node_modules/,
         plugins: [
-          config.format === 'esm'
+          format === 'esm'
             ? undefined
             : require.resolve('babel-plugin-transform-async-to-promises'),
         ].filter(Boolean),
       }),
-      commonjs({
-        namedExports: {
-          // This is needed because `react/jsx-runtime` exports `jsx` on the module export.
-          // Without this mapping the transformed import `import {jsx as _jsx} from 'react/jsx-runtime'` will fail.
-          'react/jsx-runtime': ['jsx', 'jsxs', 'Fragment'],
-          'react/jsx-dev-runtime': ['jsxDEV', 'Fragment'],
-        },
-      }),
+      commonjs(),
       filesize(),
       json(),
     ];
 
     const globals = options.globals
-      ? options.globals.reduce((acc, item) => {
-          acc[item.moduleId] = item.global;
-          return acc;
-        }, {})
-      : {};
+      ? options.globals.reduce(
+          (acc, item) => {
+            acc[item.moduleId] = item.global;
+            return acc;
+          },
+          { 'react/jsx-runtime': 'jsxRuntime' }
+        )
+      : { 'react/jsx-runtime': 'jsxRuntime' };
 
     const externalPackages = dependencies
       .map((d) => d.name)
@@ -255,8 +234,8 @@ export function createRollupOptions(
       input: options.entryFile,
       output: {
         globals,
-        format: config.format,
-        file: `${options.outputPath}/${context.projectName}.${config.extension}.js`,
+        format,
+        file: `${options.outputPath}/${context.projectName}.${format}.js`,
         name: options.umdName || names(context.projectName).className,
       },
       external: (id) =>
@@ -271,31 +250,31 @@ export function createRollupOptions(
   });
 }
 
-function createCompilerOptions(config, options, dependencies) {
+function createCompilerOptions(format, options, dependencies) {
   const compilerOptionPaths = computeCompilerOptionsPaths(
     options.tsConfig,
     dependencies
   );
 
-  const baseCompilerOptions = {
+  const compilerOptions = {
     rootDir: options.entryRoot,
     allowJs: false,
     declaration: true,
     paths: compilerOptionPaths,
   };
 
-  if (config.format !== 'esm') {
+  if (format !== 'esm') {
     return {
-      ...baseCompilerOptions,
+      ...compilerOptions,
       target: 'es5',
     };
   }
 
-  return baseCompilerOptions;
+  return compilerOptions;
 }
 
 function updatePackageJson(
-  options: NormalizedBundleBuilderOptions,
+  options: NormalizedWebPackageOptions,
   context: ExecutorContext,
   target: ProjectGraphNode,
   dependencies: DependentBuildableProjectNode[],

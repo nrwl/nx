@@ -25,6 +25,16 @@
       "type": "string",
       "description": "The path to tsconfig file."
     },
+    "format": {
+      "type": "array",
+      "description": "Only build the specified comma-separated formats (esm,umd,cjs)",
+      "alias": "f",
+      "items": {
+        "type": "string",
+        "enum": ["esm", "umd", "cjs"]
+      },
+      "default": ["esm", "umd"]
+    },
     "external": {
       "type": "array",
       "description": "A list of external modules that will not be bundled (react, react-dom, etc.).",
