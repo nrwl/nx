@@ -959,6 +959,29 @@ describe('params', () => {
       expect(() => validateOptsAgainstSchema({ a: 15 }, schema)).not.toThrow();
     });
 
+    it('should handle one of with string lengths', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'nrwl' },
+          {
+            properties: {
+              a: {
+                type: 'string',
+                oneOf: [
+                  {
+                    maxLength: 0,
+                  },
+                  {
+                    minLength: 1,
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
     it('should handle oneOf properties explicit types', () => {
       expect(() =>
         validateOptsAgainstSchema(
