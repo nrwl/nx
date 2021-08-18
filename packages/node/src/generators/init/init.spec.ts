@@ -29,6 +29,7 @@ describe('init', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['@nrwl/node']).toBeUndefined();
+    expect(packageJson.dependencies['tslib']).toBeDefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/node']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();

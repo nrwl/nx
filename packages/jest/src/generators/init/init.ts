@@ -3,6 +3,7 @@ import {
   jestTypesVersion,
   jestVersion,
   nxVersion,
+  tslibVersion,
   tsJestVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
@@ -55,6 +56,9 @@ function createJestConfig(host: Tree) {
 }
 
 function updateDependencies(tree: Tree, options: NormalizedSchema) {
+  const dependencies = {
+    tslib: tslibVersion,
+  };
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
@@ -66,7 +70,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     devDeps['babel-jest'] = babelJestVersion;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDeps);
+  return addDependenciesToPackageJson(tree, dependencies, devDeps);
 }
 
 function updateExtensions(host: Tree) {
