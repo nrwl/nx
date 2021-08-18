@@ -637,6 +637,34 @@ describe('lib', () => {
     });
   });
 
+  describe('--swc', () => {
+    it('should use SWC to build the library when --swc=true', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+        swc: true,
+      });
+
+      const packageJson = readJson(appTree, '/package.json');
+      const config = readProjectConfiguration(appTree, 'my-lib');
+      expect(packageJson.devDependencies['@swc/core']).toMatch(
+        /\^?\d+\.\d+\.\d+$/
+      );
+      expect(config.targets.build.options.swc).toBe(true);
+    });
+
+    it('should not use SWC to build the library when --swc=false', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+        swc: false,
+      });
+
+      const config = readProjectConfiguration(appTree, 'my-lib');
+      expect(config.targets.build.options.swc).not.toBeDefined();
+    });
+  });
+
   it.each`
     style
     ${'styled-components'}

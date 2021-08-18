@@ -184,6 +184,14 @@ Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/s
 
 The file extension to be used for style files.
 
+### swc
+
+Default: `false`
+
+Type: `boolean`
+
+Use SWC to transpile code instead of Babel and TSC. Note that this will skip type-checking.
+
 ### tags
 
 Alias(es): t

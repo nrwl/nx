@@ -6,6 +6,10 @@
     "declaration": true,
     "types": ["node"]
   },
-  "exclude": ["**/*.spec.ts", "**/*_spec.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*_spec.ts",
+    "./src/utils/typescript/test-fixtures/**/*.ts"
+  ],
   "include": ["**/*.ts"]
 }

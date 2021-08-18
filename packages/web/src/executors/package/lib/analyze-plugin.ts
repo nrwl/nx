@@ -17,6 +17,7 @@ export function analyze() {
       const sourceBytes = formatBytes(source.length);
       const fileName = chunk.fileName;
       logger.info(`  ${chalk.bold(fileName)} ${chalk.cyan(sourceBytes)}`);
+      return null;
     },
   };
 }

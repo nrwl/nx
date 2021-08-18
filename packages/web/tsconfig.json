@@ -4,6 +4,7 @@
     "types": ["node", "jest"]
   },
   "include": [],
+  "exclude": ["./src/utils/typescript/test-fixtures/**/*.ts"],
   "files": [],
   "references": [
     {

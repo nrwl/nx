@@ -19,4 +19,5 @@ export interface WebPackageOptions {
   umdName?: string;
   deleteOutputPath?: boolean;
   format: string[];
+  swc?: boolean;
 }

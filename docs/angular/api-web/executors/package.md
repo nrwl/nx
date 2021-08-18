@@ -100,6 +100,14 @@ Type: `array[] | string `
 
 Path to a function which takes a rollup config and returns an updated rollup config
 
+### swc
+
+Default: `false`
+
+Type: `boolean`
+
+Use SWC to transpile code instead of Babel and TSC. Note that this will skip type-checking.
+
 ### umdName
 
 Type: `string`

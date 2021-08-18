@@ -3,7 +3,7 @@ import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { join, relative } from 'path';
 import { from, Observable, of } from 'rxjs';
-import { catchError, concatMap, last, tap } from 'rxjs/operators';
+import { catchError, last, mergeMap, scan, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 
@@ -12,7 +12,6 @@ import { logger, names, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
@@ -28,6 +27,7 @@ import {
 } from './lib/normalize';
 import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
+import { swc } from './lib/swc-plugin';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -53,17 +53,6 @@ export default async function* run(
     context.targetName,
     context.configurationName
   );
-  if (
-    !checkDependentProjectsHaveBeenBuilt(
-      context.root,
-      context.projectName,
-      context.targetName,
-      dependencies
-    )
-  ) {
-    throw new Error();
-  }
-
   const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
   const packageJson = readJsonFile(options.project);
 
@@ -118,13 +107,24 @@ export default async function* run(
 
     return from(rollupOptions)
       .pipe(
-        concatMap((opts) =>
+        mergeMap((opts) =>
           runRollup(opts).pipe(
             catchError((e) => {
               logger.error(`Error during bundle: ${e}`);
               return of({ success: false });
             })
           )
+        )
+      )
+      .pipe(
+        scan(
+          (acc, result) => {
+            if (acc.success && !result.success) {
+              acc.success = false;
+            }
+            return acc;
+          },
+          { success: true }
         ),
         last(),
         tap({
@@ -163,7 +163,7 @@ export function createRollupOptions(
   sourceRoot: string,
   npmDeps: string[]
 ): rollup.InputOptions[] {
-  return options.format.map((format) => {
+  return options.format.map((format, idx) => {
     const plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -172,13 +172,25 @@ export function createRollupOptions(
         ),
       }),
       image(),
-      typescript({
-        check: true,
-        tsconfig: options.tsConfig,
-        tsconfigOverride: {
-          compilerOptions: createCompilerOptions(format, options, dependencies),
-        },
-      }),
+      options.swc &&
+        swc({
+          check: idx === 0,
+          workspaceRoot: context.root,
+          projectRoot: options.projectRoot,
+          tsconfig: options.tsConfig,
+        }),
+      !options.swc &&
+        typescript({
+          check: idx === 0,
+          tsconfig: options.tsConfig,
+          tsconfigOverride: {
+            compilerOptions: createCompilerOptions(
+              format,
+              options,
+              dependencies
+            ),
+          },
+        }),
       peerDepsExternal({
         packageJsonPath: options.project,
       }),
@@ -192,29 +204,30 @@ export function createRollupOptions(
         preferBuiltins: true,
         extensions: fileExtensions,
       }),
-      getBabelInputPlugin({
-        // Let's `@nrwl/web/babel` preset know that we are packaging.
-        caller: {
-          // @ts-ignore
-          // Ignoring type checks for caller since we have custom attributes
-          isNxPackage: true,
-          // Always target esnext and let rollup handle cjs/umd
-          supportsStaticESM: true,
-          isModern: true,
-        },
-        cwd: join(context.root, sourceRoot),
-        rootMode: 'upward',
-        babelrc: true,
-        extensions: fileExtensions,
-        babelHelpers: 'bundled',
-        skipPreflightCheck: true, // pre-flight check may yield false positives and also slows down the build
-        exclude: /node_modules/,
-        plugins: [
-          format === 'esm'
-            ? undefined
-            : require.resolve('babel-plugin-transform-async-to-promises'),
-        ].filter(Boolean),
-      }),
+      !options.swc &&
+        getBabelInputPlugin({
+          // Let's `@nrwl/web/babel` preset know that we are packaging.
+          caller: {
+            // @ts-ignore
+            // Ignoring type checks for caller since we have custom attributes
+            isNxPackage: true,
+            // Always target esnext and let rollup handle cjs/umd
+            supportsStaticESM: true,
+            isModern: true,
+          },
+          cwd: join(context.root, sourceRoot),
+          rootMode: 'upward',
+          babelrc: true,
+          extensions: fileExtensions,
+          babelHelpers: 'bundled',
+          skipPreflightCheck: true, // pre-flight check may yield false positives and also slows down the build
+          exclude: /node_modules/,
+          plugins: [
+            format === 'esm'
+              ? undefined
+              : require.resolve('babel-plugin-transform-async-to-promises'),
+          ].filter(Boolean),
+        }),
       commonjs(),
       analyze(),
       json(),

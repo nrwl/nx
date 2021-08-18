@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 
 import { AssetGlobPattern } from '../../../utils/shared-models';
 import { normalizeAssets, normalizePluginPath } from '../../../utils/normalize';
@@ -16,11 +16,11 @@ export function normalizePackageOptions(
   root: string,
   sourceRoot: string
 ): NormalizedWebPackageOptions {
-  const entryFile = `${root}/${options.entryFile}`;
+  const entryFile = join(root, options.entryFile);
   const entryRoot = dirname(entryFile);
-  const project = `${root}/${options.project}`;
+  const project = join(root, options.project);
   const projectRoot = dirname(project);
-  const outputPath = `${root}/${options.outputPath}`;
+  const outputPath = join(root, options.outputPath);
 
   if (options.buildableProjectDepsInPackageJsonType == undefined) {
     options.buildableProjectDepsInPackageJsonType = 'peerDependencies';

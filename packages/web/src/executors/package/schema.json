@@ -1,5 +1,5 @@
 {
-  "title": "Web Library Package Target (Experimental)",
+  "title": "Web Library Package Target",
   "description": "Packages a library for web different web usages (UMD, ESM, CJS).",
   "cli": "nx",
   "type": "object",
@@ -108,6 +108,11 @@
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
+    },
+    "swc": {
+      "type": "boolean",
+      "description": "Use SWC to transpile code instead of Babel and TSC. Note that this will skip type-checking.",
+      "default": false
     }
   },
   "required": ["tsConfig", "project", "entryFile", "outputPath"],

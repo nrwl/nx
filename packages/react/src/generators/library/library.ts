@@ -14,9 +14,11 @@ import {
   reactDomVersion,
   reactRouterDomVersion,
   reactVersion,
+  swcCoreVersion,
   typesReactRouterDomVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
+
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -119,7 +121,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       react: reactVersion,
       'react-dom': reactDomVersion,
     },
-    {}
+    options.swc ? { '@swc/core': swcCoreVersion } : {}
   );
   tasks.push(installTask);
 
@@ -198,6 +200,10 @@ function addProject(host: Tree, options: NormalizedSchema) {
         ],
       },
     };
+
+    if (options.swc) {
+      targets.build.options.swc = true;
+    }
   }
 
   addProjectConfiguration(

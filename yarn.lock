@@ -7243,6 +7243,11 @@ character-reference-invalid@^1.0.0:
   resolved "https://registry.yarnpkg.com/character-reference-invalid/-/character-reference-invalid-1.1.4.tgz#083329cda0eae272ab3dbbf37e9a382c13af1560"
   integrity sha512-mKKUkUbhPpQlCOfIuZkvSEgktjPFIsZKRRbC6KWVEMvlzblj3i3asQv5ODsrwt0N3pHAEvjP8KTQPHkp0+6jOg==
 
+charcodes@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/charcodes/-/charcodes-0.2.0.tgz#5208d327e6cc05f99eb80ffc814707572d1f14e4"
+  integrity sha512-Y4kiDb+AM4Ecy58YkuZrrSRJBDQdQ2L+NyS1vHHFtNtUjgutcZfx3yp1dAONI/oPaPmyGfCLx5CxL+zauIMyKQ==
+
 chardet@^0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
@@ -13854,12 +13859,11 @@ jest-pnp-resolver@^1.2.2:
   resolved "https://registry.yarnpkg.com/jest-pnp-resolver/-/jest-pnp-resolver-1.2.2.tgz#b704ac0ae028a89108a4d040b3f919dfddc8e33c"
   integrity sha512-olV41bKSMm8BdnuMsewT4jqlZ8+3TCARAXjZGT9jcoSnrfUnRCqnMoF9XEeoWjbzObpqF9dRhHQj0Xb9QdF6/w==
 
-jest-preset-angular@11.0.0-rc.3:
-  version "11.0.0-rc.3"
-  resolved "https://registry.yarnpkg.com/jest-preset-angular/-/jest-preset-angular-11.0.0-rc.3.tgz#ef689b19c23574bad4627b43d669096d6d924370"
-  integrity sha512-BI3qDaGraDYKi0SgphBRz0MdHbiX6RpJL/Yq1MYeddLHjcVpQtOWcDaM5K7157ZuSyn7gRGKKMPxvIriIjL38g==
+jest-preset-angular@10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/jest-preset-angular/-/jest-preset-angular-10.0.1.tgz#fb9f12ae3ccad0c586079da1df92b6ac003cd218"
+  integrity sha512-+Rxi47jRJTX5BDhB4DqIELCWnJ319vHGI4MGcIVl+AXVXUKXe7zZiy7yC2Pdbs6SNUrwHObWq3yFkSt6jFtEPQ==
   dependencies:
-    esbuild "0.13.12"
     jest-environment-jsdom "^27.0.0"
     pretty-format "^27.0.0"
     ts-jest "^27.0.0"
