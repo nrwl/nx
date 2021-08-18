@@ -12,17 +12,18 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
-const kill = require('kill-port');
-const isWindows = require('is-windows');
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
+import { promisify } from 'util';
+import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
-import { promisify } from 'util';
+
+const kill = require('kill-port');
+const isWindows = require('is-windows');
 
 export const promisifiedTreeKill: (
   pid: number,
@@ -72,6 +73,7 @@ export function runCreateWorkspace(
     packageManager,
     cli,
     extraArgs,
+    useDetectedPm = false,
   }: {
     preset: string;
     appName?: string;
@@ -80,6 +82,7 @@ export function runCreateWorkspace(
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     cli?: string;
     extraArgs?: string;
+    useDetectedPm?: boolean;
   }
 ) {
   projName = name;
@@ -100,7 +103,7 @@ export function runCreateWorkspace(
     command += ` --defaultBase="${base}"`;
   }
 
-  if (packageManager) {
+  if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
   }
 
@@ -161,7 +164,10 @@ export function newProject({ name = uniq('proj') } = {}): string {
     const projScope = useBackupProject ? 'proj' : name;
 
     if (!useBackupProject || !directoryExists(tmpBackupProjPath())) {
-      runCreateWorkspace(projScope, { preset: 'empty', packageManager });
+      runCreateWorkspace(projScope, {
+        preset: 'empty',
+        packageManager,
+      });
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -201,6 +207,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
 }
 
 const KILL_PORT_DELAY = 5000;
+
 async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
     try {
