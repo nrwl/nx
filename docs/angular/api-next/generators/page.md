@@ -54,7 +54,7 @@ The name of the project.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 

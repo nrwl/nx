@@ -60,7 +60,7 @@ Generate a buildable library.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 

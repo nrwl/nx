@@ -32,7 +32,7 @@
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
-      "alias": "d"
+      "alias": "dir"
     },
     "style": {
       "description": "The file extension to be used for style files.",

@@ -60,7 +60,7 @@ Include a controller with the library.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
