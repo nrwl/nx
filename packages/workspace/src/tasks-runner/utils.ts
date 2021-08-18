@@ -100,14 +100,9 @@ export function getOutputsForTargetAndConfiguration(
   };
 
   if (targets?.outputs) {
-    return targets.outputs.map((output: string) =>
-      interpolateOutputs(output, options)
-    );
-  }
-
-  // Add linter `outputFile` to outputs
-  if (options.outputFile) {
-    return [options.outputFile];
+    return targets.outputs
+      .map((output: string) => interpolateOutputs(output, options))
+      .filter((output) => !!output);
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -174,7 +169,7 @@ function interpolateOutputs(template: string, data: any): string {
     let path = match.slice(1, -1).trim().split('.').slice(1);
     for (let idx = 0; idx < path.length; idx++) {
       if (!value[path[idx]]) {
-        throw new Error(`Could not interpolate output {${match}}!`);
+        return;
       }
       value = value[path[idx]];
     }

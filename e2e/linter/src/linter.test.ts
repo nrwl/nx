@@ -190,12 +190,17 @@ describe('Linter', () => {
     );
   }, 1000000);
 
-  it('linting should cache the output file', () => {
+  it('linting should cache the output file if defined in outputs', () => {
     newProject();
     const myapp = uniq('myapp');
     const outputFile = 'a/b/c/lint-output.json';
 
     runCLI(`generate @nrwl/react:app ${myapp}`);
+    const workspaceJson = readJson(`workspace.json`);
+    workspaceJson.projects[myapp].targets.lint.outputs = [
+      '{options.outputFile}',
+    ];
+    updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
 
     expect(() => checkFilesExist(outputFile)).toThrow();
     runCLI(`lint ${myapp} --output-file="${outputFile}" --format=json`, {
