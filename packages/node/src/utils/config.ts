@@ -1,10 +1,11 @@
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
+import { loadTsPlugins } from './load-ts-plugins';
+import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export const OUT_FILENAME = 'main.js';
@@ -25,6 +26,9 @@ export function getBaseWebpackPartial(
     compilerOptions.target !== ts.ScriptTarget.ES5;
   const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
+
+  const { compilerPluginHooks, hasPlugin } = loadTsPlugins(options.tsPlugins);
+
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main],
@@ -43,9 +47,20 @@ export function getBaseWebpackPartial(
           exclude: /node_modules/,
           options: {
             configFile: options.tsConfig,
-            transpileOnly: true,
+            transpileOnly: !hasPlugin,
             // https://github.com/TypeStrong/ts-loader/pull/685
             experimentalWatchApi: true,
+            getCustomTransformers: (program) => ({
+              before: compilerPluginHooks.beforeHooks.map((hook) =>
+                hook(program)
+              ),
+              after: compilerPluginHooks.afterHooks.map((hook) =>
+                hook(program)
+              ),
+              afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
+                (hook) => hook(program)
+              ),
+            }),
           },
         },
       ],

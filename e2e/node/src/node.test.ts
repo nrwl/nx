@@ -7,6 +7,8 @@ import {
   createFile,
   killPorts,
   newProject,
+  packageInstall,
+  promisifiedTreeKill,
   readFile,
   readJson,
   runCLI,
@@ -16,7 +18,6 @@ import {
   uniq,
   updateFile,
   updateWorkspaceConfig,
-  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
 
@@ -229,6 +230,64 @@ describe('Build Node apps', () => {
       })
     );
   }, 300000);
+
+  describe('NestJS', () => {
+    it('should have plugin output if specified in `tsPlugins`', async () => {
+      newProject();
+      const nestapp = uniq('nestapp');
+      runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+      // TODO: update to v5 when Nest8 is supported
+      packageInstall('@nestjs/swagger', undefined, '4.8.2');
+
+      updateWorkspaceConfig((workspace) => {
+        workspace.projects[nestapp].targets.build.options.tsPlugins = [
+          '@nestjs/swagger/plugin',
+        ];
+        return workspace;
+      });
+
+      updateFile(
+        `apps/${nestapp}/src/app/foo.dto.ts`,
+        `
+export class FooDto {
+  foo: string;
+  bar: number;
+}`
+      );
+      updateFile(
+        `apps/${nestapp}/src/app/app.controller.ts`,
+        `
+import { Controller, Get } from '@nestjs/common';
+import { FooDto } from './foo.dto';
+
+@Controller()
+export class AppController {
+  @Get('foo')
+  getFoo(): Promise<FooDto> {
+    return Promise.resolve({
+      foo: 'foo',
+      bar: 123
+    })
+  }
+}`
+      );
+
+      await runCLIAsync(`build ${nestapp}`);
+
+      const mainJs = readFile(`dist/apps/${nestapp}/main.js`);
+      expect(stripIndents`${mainJs}`).toContain(
+        stripIndents`
+class FooDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+    }
+}
+exports.FooDto = FooDto;
+        `
+      );
+    }, 300000);
+  });
 });
 
 describe('Node Libraries', () => {
