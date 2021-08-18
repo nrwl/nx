@@ -76,7 +76,7 @@ export interface ProjectConfiguration {
   /**
    * Project's targets
    */
-  targets: { [targetName: string]: TargetConfiguration };
+  targets?: { [targetName: string]: TargetConfiguration };
 
   /**
    * Project's location relative to the root of the workspace

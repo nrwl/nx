@@ -124,3 +124,14 @@ describe('@nrwl/workspace:library', () => {
     expect(json.typings).toEqual('./src/index.d.ts');
   });
 });
+
+describe('@nrwl/workspace:npm-package', () => {
+  it('should create a minimal npm package', () => {
+    const npmPackage = uniq('npm-package');
+
+    runCLI(`generate @nrwl/workspace:npm-package ${npmPackage}`);
+
+    const result = runCLI(`test ${npmPackage}`);
+    expect(result).toContain('Hello World');
+  });
+});

@@ -69,6 +69,12 @@
       "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectSchematic",
       "schema": "./src/generators/convert-to-nx-project/schema.json",
       "description": "Moves a project's configuration outside of workspace.json"
+    },
+
+    "npm-package": {
+      "factory": "./src/generators/npm-package/npm-package#npmPackageSchematic",
+      "schema": "./src/generators/npm-package/schema.json",
+      "description": "Create a minimal npm package"
     }
   },
   "generators": {
@@ -139,6 +145,12 @@
       "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator",
       "schema": "./src/generators/convert-to-nx-project/schema.json",
       "description": "Moves a project's configuration outside of workspace.json"
+    },
+
+    "npm-package": {
+      "factory": "./src/generators/npm-package/npm-package#npmPackageGenerator",
+      "schema": "./src/generators/npm-package/schema.json",
+      "description": "Create a minimal npm package"
     }
   }
 }
