@@ -6,7 +6,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, tslibVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -17,7 +17,13 @@ function updateDependencies(tree: Tree) {
     return json;
   });
 
-  return addDependenciesToPackageJson(tree, {}, { '@nrwl/node': nxVersion });
+  return addDependenciesToPackageJson(
+    tree,
+    {
+      tslib: tslibVersion,
+    },
+    { '@nrwl/node': nxVersion }
+  );
 }
 
 function normalizeOptions(schema: Schema) {
