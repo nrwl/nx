@@ -155,6 +155,11 @@
       "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
       "type": "boolean",
       "default": false
+    },
+    "experimentalSwc": {
+      "description": "Use SWC to transpile code instead of Babel and TSC. Note that this will skip type-checking.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["name"]

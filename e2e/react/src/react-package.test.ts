@@ -107,7 +107,7 @@ describe('Build React libraries and apps', () => {
       `generate @nrwl/react:library ${buildableChildLib} --buildable --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:library ${buildableChildLib2} --buildable --no-interactive`
+      `generate @nrwl/react:library ${buildableChildLib2} --buildable --no-interactive --swc`
     );
 
     createDep(buildableParentLib, [buildableChildLib, buildableChildLib2]);

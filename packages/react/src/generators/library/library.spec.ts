@@ -1,4 +1,10 @@
-import { getProjects, readJson, Tree, updateJson } from '@nrwl/devkit';
+import {
+  getProjects,
+  readJson,
+  Tree,
+  updateJson,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from './library';
 import { Linter } from '@nrwl/linter';
@@ -612,6 +618,34 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).not.toBeDefined();
+    });
+  });
+
+  describe('--swc', () => {
+    it('should use SWC to build the library when --swc=true', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+        experimentalSwc: true,
+      });
+
+      const packageJson = readJson(appTree, '/package.json');
+      const config = readProjectConfiguration(appTree, 'my-lib');
+      expect(packageJson.devDependencies['@swc/core']).toMatch(
+        /\^?\d+\.\d+\.\d+$/
+      );
+      expect(config.targets.build.options.swc).toBe(true);
+    });
+
+    it('should not use SWC to build the library when --swc=false', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+        experimentalSwc: false,
+      });
+
+      const config = readProjectConfiguration(appTree, 'my-lib');
+      expect(config.targets.build.options.swc).not.toBeDefined();
     });
   });
 

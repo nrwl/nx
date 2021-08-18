@@ -27,6 +27,7 @@ import {
   NormalizedWebPackageOptions,
   normalizePackageOptions,
 } from './lib/normalize';
+import { swc } from './lib/swc-plugin';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -171,13 +172,6 @@ export function createRollupOptions(
         ),
       }),
       image(),
-      typescript({
-        check: true,
-        tsconfig: options.tsConfig,
-        tsconfigOverride: {
-          compilerOptions: createCompilerOptions(format, options, dependencies),
-        },
-      }),
       peerDepsExternal({
         packageJsonPath: options.project,
       }),
@@ -191,29 +185,43 @@ export function createRollupOptions(
         preferBuiltins: true,
         extensions: fileExtensions,
       }),
-      getBabelInputPlugin({
-        // Let's `@nrwl/web/babel` preset know that we are packaging.
-        caller: {
-          // Ignored since this is for our custom babel-loader + babel preset
-          // @ts-ignore
-          isNxPackage: true,
-        },
-        cwd: join(context.root, sourceRoot),
-        rootMode: 'upward',
-        babelrc: true,
-        extensions: fileExtensions,
-        babelHelpers: 'bundled',
-        exclude: /node_modules/,
-        plugins: [
-          format === 'esm'
-            ? undefined
-            : require.resolve('babel-plugin-transform-async-to-promises'),
-        ].filter(Boolean),
-      }),
+      options.experimentalSwc && swc(),
+      !options.experimentalSwc &&
+        typescript({
+          check: true,
+          tsconfig: options.tsConfig,
+          tsconfigOverride: {
+            compilerOptions: createCompilerOptions(
+              format,
+              options,
+              dependencies
+            ),
+          },
+        }),
+      !options.experimentalSwc &&
+        getBabelInputPlugin({
+          // Let's `@nrwl/web/babel` preset know that we are packaging.
+          caller: {
+            // Ignored since this is for our custom babel-loader + babel preset
+            // @ts-ignore
+            isNxPackage: true,
+          },
+          cwd: join(context.root, sourceRoot),
+          rootMode: 'upward',
+          babelrc: true,
+          extensions: fileExtensions,
+          babelHelpers: 'bundled',
+          exclude: /node_modules/,
+          plugins: [
+            format === 'esm'
+              ? undefined
+              : require.resolve('babel-plugin-transform-async-to-promises'),
+          ].filter(Boolean),
+        }),
       commonjs(),
       filesize(),
       json(),
-    ];
+    ].filter(Boolean);
 
     const globals = options.globals
       ? options.globals.reduce(

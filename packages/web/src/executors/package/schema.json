@@ -113,6 +113,11 @@
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
+    },
+    "experimentalSwc": {
+      "type": "boolean",
+      "description": "Use SWC to transpile code instead of Babel and TSC. Note that this will skip type-checking.",
+      "default": false
     }
   },
   "required": ["tsConfig", "project", "entryFile", "outputPath"],

@@ -1,24 +1,4 @@
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-
 import * as ts from 'typescript';
-import { assertValidStyle } from '../../utils/assertion';
-import {
-  addBrowserRouter,
-  addInitialRoutes,
-  addRoute,
-  findComponentImportPath,
-} from '../../utils/ast-utils';
-import {
-  extraEslintDependencies,
-  createReactEslintJson,
-} from '../../utils/lint';
-import {
-  reactDomVersion,
-  reactRouterDomVersion,
-  reactVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
-import { Schema } from './schema';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -37,6 +17,25 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { assertValidStyle } from '../../utils/assertion';
+import {
+  addBrowserRouter,
+  addInitialRoutes,
+  addRoute,
+  findComponentImportPath,
+} from '../../utils/ast-utils';
+import {
+  createReactEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
+import {
+  reactDomVersion,
+  reactRouterDomVersion,
+  reactVersion,
+  swcCoreVersion,
+  typesReactRouterDomVersion,
+} from '../../utils/versions';
+import { Schema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import init from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
@@ -121,7 +120,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       react: reactVersion,
       'react-dom': reactDomVersion,
     },
-    {}
+    options.experimentalSwc ? { '@swc/core': swcCoreVersion } : {}
   );
   tasks.push(installTask);
 
@@ -200,6 +199,10 @@ function addProject(host: Tree, options: NormalizedSchema) {
         ],
       },
     };
+
+    if (options.experimentalSwc) {
+      targets.build.options.swc = true;
+    }
   }
 
   addProjectConfiguration(
