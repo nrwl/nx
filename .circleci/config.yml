@@ -44,14 +44,12 @@ executors:
   android:
     <<: *defaults
     docker:
-      - image: reactnativecommunity/react-native-android:4.0
+      - image: reactnativecommunity/react-native-android
     resource_class: 'large'
     environment:
-      - TERM: 'dumb'
       - ADB_INSTALL_TIMEOUT: 10
-      - _JAVA_OPTIONS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
-      - GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-XX:+HeapDumpOnOutOfMemoryError"'
-      - BUILD_THREADS: 2
+      - _JAVA_OPTIONS: '-Xmx1024m -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
+      - GRADLE_OPTS: '-Xmx2014m -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-XX:+UnlockExperimentalVMOptions -XX:+HeapDumpOnOutOfMemoryError"'
 
 # -------------------------
 #        COMMANDS
@@ -242,6 +240,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - setup:
@@ -274,6 +273,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - setup:
@@ -335,6 +335,7 @@ jobs:
       SELECTED_CLI: << parameters.cli >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>
       NX_E2E_RUN_CYPRESS: << parameters.run-cypress-tests >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
@@ -380,9 +381,9 @@ workflows:
       - agent:
           name: 'agent9'
           os: 'macos'
-      - agent:
-          name: 'agent10'
-          os: 'android'
+      # - agent:
+      #     name: 'agent10'
+      #     os: 'android'
       # -------------------------
       #     Pull request logic
       # -------------------------
@@ -419,11 +420,26 @@ workflows:
       - agent-cleanup:
           requires:
             - pull-request
-            - pull-request-osx
-            # - pull-request-android
           filters:
             branches:
               ignore: master
+      - agent-cleanup:
+          os: 'macos'
+          requires:
+            - pull-request
+            - pull-request-osx
+          filters:
+            branches:
+              ignore: master
+      # - agent-cleanup:
+      #     os: 'android'
+      #     requires:
+      #       - pull-request
+      #       - pull-request-osx
+      #       - pull-request-android
+      #     filters:
+      #       branches:
+      #         ignore: master
       # -------------------------
       #     Commit to master
       # -------------------------
