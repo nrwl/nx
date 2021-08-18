@@ -251,38 +251,6 @@ jobs:
           no_output_timeout: 60m
 
   # -------------------------
-  #     JOBS: Agent cleanup
-  # -------------------------
-  agent-cleanup:
-    parameters:
-      os:
-        type: string
-        default: 'linux'
-      cli:
-        type: string
-        default: ''
-      pm:
-        type: string
-        default: pnpm
-    executor: << parameters.os >>
-    environment:
-      GIT_AUTHOR_NAME: test@test.com
-      GIT_AUTHOR_EMAIL: Test
-      GIT_COMMITTER_EMAIL: test@test.com
-      GIT_COMMITTER_NAME: Test
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
-      SELECTED_PM: << parameters.pm >>
-      SELECTED_CLI: << parameters.cli >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>>-${CIRCLE_WORKFLOW_ID}
-      NX_VERBOSE_LOGGING: 'true'
-    steps:
-      - setup:
-          os: << parameters.os >>
-      - run:
-          name: Stop All Running Agents for This CI Run
-          command: npx nx-cloud stop-all-agents
-
-  # -------------------------
   #     JOBS: Main
   # -------------------------
   main:
@@ -353,6 +321,9 @@ jobs:
           run-e2e-tests: << parameters.run-e2e-tests >>
           unit-test-filter: << parameters.unit-test-filter >>
           e2e-test-filter: << parameters.e2e-test-filter >>
+      - run:
+          name: Stop All Running Agents for This CI Run
+          command: npx nx-cloud stop-all-agents
 
 # -------------------------
 #        WORKFLOWS
@@ -382,10 +353,10 @@ workflows:
           name: 'agent9'
           pm: 'npm'
           os: 'macos'
-      - agent:
-          name: 'agent10'
-          pm: 'npm'
-          os: 'android'
+      # - agent:
+      #     name: 'agent10'
+      #     pm: 'npm'
+      #     os: 'android'
       # -------------------------
       #     Pull request logic
       # -------------------------
@@ -395,64 +366,36 @@ workflows:
           filters:
             branches:
               ignore: master
-      - main:
-          name: pull-request-osx
-          pm: 'npm'
-          os: 'macos'
-          run-checks: 'false'
-          run-builds: 'false'
-          run-unit-tests: 'false'
-          run-linting: 'false'
-          e2e-test-filter: 'MACOS-Tests'
-          filters:
-            branches:
-              ignore: master
-      - main:
-          name: pull-request-android
-          pm: 'npm'
-          os: 'android'
-          run-checks: 'false'
-          run-builds: 'false'
-          run-unit-tests: 'false'
-          run-linting: 'false'
-          e2e-test-filter: 'Android-Tests'
-          filters:
-            branches:
-              ignore: master
-      - agent-cleanup:
-          requires:
-            - pull-request
-          filters:
-            branches:
-              ignore: master
-      - agent-cleanup:
-          os: 'macos'
-          pm: 'npm'
-          requires:
-            - pull-request-osx
-          filters:
-            branches:
-              ignore: master
-      - agent-cleanup:
-          os: 'android'
-          pm: 'npm'
-          requires:
-            - pull-request-android
-          filters:
-            branches:
-              ignore: master
+      # - main:
+      #     name: pull-request-osx
+      #     pm: 'npm'
+      #     os: 'macos'
+      #     run-checks: 'false'
+      #     run-builds: 'false'
+      #     run-unit-tests: 'false'
+      #     run-linting: 'false'
+      #     e2e-test-filter: 'MACOS-Tests'
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - main:
+      #     name: pull-request-android
+      #     pm: 'npm'
+      #     os: 'android'
+      #     run-checks: 'false'
+      #     run-builds: 'false'
+      #     run-unit-tests: 'false'
+      #     run-linting: 'false'
+      #     e2e-test-filter: 'Android-Tests'
+      #     filters:
+      #       branches:
+      #         ignore: master
       # -------------------------
       #     Commit to master
       # -------------------------
       - main:
           name: commit-to-master
           run-cypress-tests: 'true'
-          filters:
-            branches:
-              only: master
-      - agent-cleanup:
-          requires:
-            - commit-to-master
           filters:
             branches:
               only: master
