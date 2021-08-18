@@ -131,10 +131,8 @@ export class TaskOrchestrator {
 
   private async applyCachedResult(t: TaskWithCachedResult) {
     const outputs = getOutputs(this.projectGraph.nodes, t.task);
-    const shouldCopyOutputsFromCache = this.cache.shouldCopyOutputsFromCache(
-      t,
-      outputs
-    );
+    const shouldCopyOutputsFromCache =
+      !!outputs.length && this.cache.shouldCopyOutputsFromCache(t, outputs);
     if (shouldCopyOutputsFromCache) {
       this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
     }

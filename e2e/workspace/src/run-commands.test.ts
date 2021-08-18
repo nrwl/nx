@@ -131,4 +131,21 @@ describe('Run Commands', () => {
       );
     }
   });
+
+  it('run command should not break if output property is missing in options and arguments', () => {
+    const myapp = uniq('myapp');
+
+    runCLI(`generate @nrwl/web:app ${myapp}`);
+    const workspaceJson = readJson(`workspace.json`);
+    workspaceJson.projects[myapp].targets.lint.outputs = [
+      '{options.outputFile}',
+    ];
+    updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
+
+    expect(() =>
+      runCLI(`run ${myapp}:lint --format=json`, {
+        silenceError: true,
+      })
+    ).not.toThrow();
+  }, 1000000);
 });
