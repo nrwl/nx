@@ -12,6 +12,12 @@ import {
 import * as ts from 'typescript';
 
 describe('Linter', () => {
+  it('should run this MACOS-Tests', () => {
+    newProject();
+
+    expect(true).toBeTruthy();
+  });
+
   it('linting should error when rules are not followed', () => {
     newProject();
     const myapp = uniq('myapp');

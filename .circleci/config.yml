@@ -395,7 +395,7 @@ workflows:
               ignore: master
       - main:
           name: pull-request-osx
-          pm: 'yarn'
+          pm: 'npm'
           os: 'macos'
           run-checks: 'false'
           run-builds: 'false'
