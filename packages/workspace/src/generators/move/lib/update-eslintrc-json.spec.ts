@@ -9,6 +9,7 @@ import { Linter } from '../../../utils/lint';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
+import { updateProjectRootFiles } from './update-project-root-files';
 
 describe('updateEslint', () => {
   let tree: Tree;
@@ -54,6 +55,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
+    updateProjectRootFiles(tree, schema, projectConfig);
     updateEslintrcJson(tree, schema, projectConfig);
 
     expect(
@@ -61,6 +63,36 @@ describe('updateEslint', () => {
     ).toEqual(
       expect.objectContaining({
         extends: ['../../../.eslintrc.json'],
+      })
+    );
+  });
+
+  it('should update .eslintrc.json extends path when project is moved from subdirectory', async () => {
+    await libraryGenerator(tree, {
+      name: 'test',
+      directory: 'api',
+      linter: Linter.EsLint,
+      standaloneConfig: false,
+    });
+    // This step is usually handled elsewhere
+    tree.rename('libs/api/test/.eslintrc.json', 'libs/test/.eslintrc.json');
+    const projectConfig = readProjectConfiguration(tree, 'api-test');
+
+    const newSchema = {
+      projectName: 'api-test',
+      destination: 'test',
+      importPath: '@proj/test',
+      updateImportPath: true,
+      newProjectName: 'test',
+      relativeToRootDestination: 'libs/test',
+    };
+
+    updateProjectRootFiles(tree, newSchema, projectConfig);
+    updateEslintrcJson(tree, newSchema, projectConfig);
+
+    expect(readJson(tree, '/libs/test/.eslintrc.json')).toEqual(
+      expect.objectContaining({
+        extends: ['../../.eslintrc.json'],
       })
     );
   });
@@ -86,6 +118,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
+    updateProjectRootFiles(tree, schema, projectConfig);
     updateEslintrcJson(tree, schema, projectConfig);
 
     expect(
@@ -115,6 +148,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
+    updateProjectRootFiles(tree, schema, projectConfig);
     updateEslintrcJson(tree, schema, projectConfig);
 
     expect(
