@@ -240,7 +240,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>>-${CIRCLE_WORKFLOW_ID}
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - setup:
@@ -273,7 +273,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>>-${CIRCLE_WORKFLOW_ID}
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - setup:
@@ -335,7 +335,7 @@ jobs:
       SELECTED_CLI: << parameters.cli >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-${CIRCLE_WORKFLOW_ID}
       NX_E2E_RUN_CYPRESS: << parameters.run-cypress-tests >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
@@ -380,6 +380,7 @@ workflows:
           name: 'agent8'
       - agent:
           name: 'agent9'
+          pm: 'npm'
           os: 'macos'
       # - agent:
       #     name: 'agent10'
@@ -426,7 +427,6 @@ workflows:
       - agent-cleanup:
           os: 'macos'
           requires:
-            - pull-request
             - pull-request-osx
           filters:
             branches:
