@@ -1,6 +1,14 @@
 # Nx Setup
 
-## Nx Setup with a New Project
+## Install Nx
+
+Install Nx with npm:
+
+```bash
+npm install -g nx
+```
+
+## Setup a New Nx Workspace
 
 Creating an Nx workspace is done with a single command. Run the following command to set up an Nx workspace with an NestJS app in it.
 
@@ -11,17 +19,10 @@ npx create-nx-workspace --preset=nest
 To create an Nx workspace with an Express app run:
 
 ```bash
-npx create-nx-workspace --preset=empty
+npx create-nx-workspace --preset=express
 ```
 
-cd into the folder and run:
-
-```
-npm i @nrwl/express
-npx nx g @nrwl/express:app myapp
-```
-
-## Nx Setup with an Existing Project
+## Add Nx to an Existing Project
 
 If you have an existing Lerna or Yarn workspaces repo, you can gain the benefits of Nx's computation cache without modifying the file structure by running this command:
 

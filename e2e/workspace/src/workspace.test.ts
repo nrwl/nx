@@ -893,7 +893,7 @@ describe('cache', () => {
       options: {
         commands: [
           {
-            command: `npm run nx run ${mylib1}:build-base`,
+            command: `npx nx run ${mylib1}:build-base`,
           },
         ],
         parallel: false,

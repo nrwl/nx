@@ -56,7 +56,8 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
       \\"rules\\": {}
     }
   ]
-}"
+}
+"
 `;
 
 exports[`@nrwl/linter:init --linter tslint should generate the global tslint config 1`] = `
@@ -148,5 +149,6 @@ exports[`@nrwl/linter:init --linter tslint should generate the global tslint con
       }
     ]
   }
-}"
+}
+"
 `;

@@ -1,6 +1,14 @@
 # Nx Setup
 
-## Nx Setup with a New Project
+## Install Nx
+
+Install Nx with npm:
+
+```bash
+npm install -g nx
+```
+
+## Setup a New Nx Workspace
 
 Creating an Nx workspace is done with a single command. Run the following command to set up an Nx workspace with a React app in it.
 
@@ -8,7 +16,7 @@ Creating an Nx workspace is done with a single command. Run the following comman
 npx create-nx-workspace --preset=react
 ```
 
-## Nx Setup with an Existing Project
+## Add Nx to an Existing Project
 
 If you have an existing Create React App project, you can gain the benefits of Nx's computation cache without modifying the file structure by running this command:
 

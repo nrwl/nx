@@ -3,7 +3,8 @@
 exports[`@nrwl/workspace:workspace should create a prettierrc file 1`] = `
 "{
   \\"singleQuote\\": true
-}"
+}
+"
 `;
 
 exports[`@nrwl/workspace:workspace should recommend vscode extensions (angular) 1`] = `

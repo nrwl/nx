@@ -48,12 +48,12 @@ if (localNx === require.resolve('@nrwl/cli/bin/nx.js')) {
   if (packageManager === 'pnpm') {
     const tip =
       process.platform === 'win32'
-        ? 'doskey pnx=pnpm run nx -- $*'
-        : `alias pnx="pnpm run nx --"`;
+        ? 'doskey pnx=pnpm nx -- $*'
+        : `alias pnx="pnpm nx --"`;
     output.warn({
       title: `Running global Nx CLI with PNPM may have issues.`,
       bodyLines: [
-        `Prefer to use "pnpm run" (https://pnpm.js.org/en/cli/run) to execute commands in this workspace.`,
+        `Prefer to use "pnpm" (https://pnpm.io/cli/exec) to execute commands in this workspace.`,
         `${chalk.reset.inverse.bold.cyan(
           ' TIP '
         )} create a shortcut such as: ${chalk.bold.white(tip)}`,

@@ -79,7 +79,7 @@ yarn global add nx
 Or you can prepend every command with `npm run`:
 
 ```bash
-npm run nx -- serve todos
+npx nx serve todos
 ```
 
 or
