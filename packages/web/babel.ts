@@ -27,6 +27,10 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
     (caller) => caller?.emitDecoratorMetadata ?? true
   );
 
+  // Determine settings  for `@babel/plugin-proposal-class-properties`,
+  // so that we can sync the `loose` option with `@babel/preset-env`.
+  const classProperties = options.classProperties ?? { loose: true };
+
   return {
     presets: [
       // Support module/nomodule pattern.
@@ -48,6 +52,8 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
               bugfixes: true,
               // Exclude transforms that make all code slower
               exclude: ['transform-typeof-symbol'],
+              // This must match the setting for `@babel/plugin-proposal-class-properties`
+              loose: classProperties.loose,
             },
       ],
       require.resolve('@babel/preset-typescript'),
@@ -78,7 +84,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
       ],
       [
         require.resolve('@babel/plugin-proposal-class-properties'),
-        options.classProperties ?? { loose: true },
+        classProperties,
       ],
     ].filter(Boolean),
     overrides: [
