@@ -28,7 +28,7 @@ export default async function updateAngularConfig(host: Tree) {
   const projects = getProjects(host);
 
   for (const [name, project] of projects) {
-    for (const target of Object.values(project.targets)) {
+    for (const target of Object.values(project.targets || {})) {
       if (target.executor === '@nrwl/angular:webpack-browser') {
         updateOptions(target, optionsToUpdate);
 
