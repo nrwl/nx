@@ -125,7 +125,7 @@ export function Node() {
                     viewBox="0 0 400 400"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="fill-current hidden md:block text-green-nx-base absolute -top-40 -left-72"
+                    className="fill-current hidden md:block text-blue-nx-dark absolute -top-40 -left-72"
                   >
                     <circle cx="200" cy="200" r="200" />
                   </svg>
@@ -194,7 +194,7 @@ export function Node() {
                     viewBox="0 0 400 400"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="fill-current hidden md:block text-green-nx-base absolute -top-20 -right-32"
+                    className="fill-current hidden md:block text-blue-nx-dark absolute -top-20 -right-32"
                   >
                     <circle cx="200" cy="200" r="200" />
                   </svg>
@@ -435,6 +435,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://www.typescriptlang.org/"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       TypeScript
                     </a>{' '}
@@ -446,6 +447,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://jestjs.io/"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Jest
                     </a>{' '}
@@ -459,6 +461,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://eslint.org/"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       ESLint
                     </a>{' '}
@@ -525,6 +528,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://egghead.io/playlists/scale-react-development-with-nx-4038"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Free Nx Workspaces video course
                     </a>
@@ -534,6 +538,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://www.youtube.com/watch?v=h5FIGDn5YM0"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Nx Explainer: Dev Tools for Monorepos, In-Depth with
                       Victor Savkin
@@ -544,6 +549,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://go.nrwl.io/nx-office-hours"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Tune into regular Nx Office Hours livestreams
                     </a>
@@ -553,6 +559,7 @@ export function Node() {
                       className="underline pointer"
                       href="https://nx.app"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Nx Cloud
                     </a>
@@ -564,6 +571,7 @@ export function Node() {
                     className="underline pointer"
                     href="https://twitter.com/NxDevTools"
                     target="_blank"
+                    rel="noreferrer"
                   >
                     follow Nx Dev Tools on Twitter
                   </a>{' '}

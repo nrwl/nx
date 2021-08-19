@@ -11,12 +11,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        black: '#222222',
         blue: {
-          'nx-dark': 'hsla(214, 61%, 11%, 1)',
+          'nx-dark': '#0B1A2D',
           'nx-base': 'hsla(214, 62%, 21%, 1)',
-        },
-        purple: {
-          'nx-base': 'hsla(258, 76%, 62%, 1)',
         },
         green: {
           'nx-base': 'hsla(162, 47%, 50%, 1)',
@@ -43,7 +41,9 @@ module.exports = {
     },
   },
   variants: {
-    extend: {},
+    extend: {
+      marginRight: ['hover'],
+    },
   },
   plugins: [require('@tailwindcss/typography')],
 };

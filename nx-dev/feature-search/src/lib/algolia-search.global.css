@@ -304,7 +304,7 @@
 
 .DocSearch-Hits mark {
   background: none;
-  color: theme('colors.purple.nx-base');
+  color: theme('colors.blue.nx-dark');
 }
 
 .DocSearch-Hit[aria-selected='true'] mark {
