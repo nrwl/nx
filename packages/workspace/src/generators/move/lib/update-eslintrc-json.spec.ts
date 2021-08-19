@@ -9,7 +9,6 @@ import { Linter } from '../../../utils/lint';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
-import { updateProjectRootFiles } from './update-project-root-files';
 
 describe('updateEslint', () => {
   let tree: Tree;
@@ -55,7 +54,6 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateProjectRootFiles(tree, schema, projectConfig);
     updateEslintrcJson(tree, schema, projectConfig);
 
     expect(
@@ -87,7 +85,6 @@ describe('updateEslint', () => {
       relativeToRootDestination: 'libs/test',
     };
 
-    updateProjectRootFiles(tree, newSchema, projectConfig);
     updateEslintrcJson(tree, newSchema, projectConfig);
 
     expect(readJson(tree, '/libs/test/.eslintrc.json')).toEqual(
@@ -118,7 +115,6 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateProjectRootFiles(tree, schema, projectConfig);
     updateEslintrcJson(tree, schema, projectConfig);
 
     expect(
@@ -148,7 +144,6 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateProjectRootFiles(tree, schema, projectConfig);
     updateEslintrcJson(tree, schema, projectConfig);
 
     expect(

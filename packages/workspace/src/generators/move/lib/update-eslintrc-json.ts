@@ -1,4 +1,9 @@
-import { ProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
+import {
+  offsetFromRoot,
+  ProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';
 
@@ -13,6 +18,19 @@ interface PartialEsLintRcJson {
   overrides?: PartialEsLintrcOverride[];
 }
 
+function offsetFilePath(
+  project: ProjectConfiguration,
+  pathToFile: string,
+  offset: string
+): string {
+  if (!pathToFile.startsWith('..')) {
+    // not a relative path
+    return pathToFile;
+  }
+  const pathFromRoot = join(project.root, pathToFile);
+  return join(offset, pathFromRoot);
+}
+
 /**
  * Update the .eslintrc file of the project if it exists.
  *
@@ -23,14 +41,28 @@ export function updateEslintrcJson(
   schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  tree['recordedChanges'];
   const eslintRcPath = join(schema.relativeToRootDestination, '.eslintrc.json');
+
   if (!tree.exists(eslintRcPath)) {
     // no .eslintrc found. nothing to do
     return;
   }
 
+  const offset = offsetFromRoot(schema.relativeToRootDestination);
+
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
+    if (typeof eslintRcJson.extends === 'string') {
+      eslintRcJson.extends = offsetFilePath(
+        project,
+        eslintRcJson.extends,
+        offset
+      );
+    } else {
+      eslintRcJson.extends = eslintRcJson.extends.map((extend: string) =>
+        offsetFilePath(project, extend, offset)
+      );
+    }
+
     eslintRcJson.overrides?.forEach((o) => {
       if (o.parserOptions?.project) {
         o.parserOptions.project = [
