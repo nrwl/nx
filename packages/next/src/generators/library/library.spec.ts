@@ -29,6 +29,11 @@ describe('next library', () => {
     });
     await libraryGenerator(appTree, {
       ...baseOptions,
+      name: 'myLib-styled-jsx',
+      style: 'styled-jsx',
+    });
+    await libraryGenerator(appTree, {
+      ...baseOptions,
       name: 'myLib3',
       directory: 'myDir',
     });
@@ -47,6 +52,10 @@ describe('next library', () => {
         },
       ],
       plugins: ['@emotion/babel-plugin'],
+    });
+    expect(readJson(appTree, 'libs/my-lib-styled-jsx/.babelrc')).toEqual({
+      presets: ['next/babel'],
+      plugins: [],
     });
     expect(readJson(appTree, 'libs/my-dir/my-lib3/.babelrc')).toEqual({
       presets: ['next/babel'],

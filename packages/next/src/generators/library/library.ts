@@ -30,6 +30,13 @@ export async function libraryGenerator(host: Tree, options: Schema) {
           },
         },
       ];
+    } else if (options.style === 'styled-jsx') {
+      // next.js doesn't require the `styled-jsx/babel' plugin as it is already
+      // built-into the `next/babel` preset
+      json.presets = ['next/babel'];
+      json.plugins = (json.plugins || []).filter(
+        (x) => x !== 'styled-jsx/babel'
+      );
     } else {
       json.presets = ['next/babel'];
     }
