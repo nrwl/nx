@@ -23,12 +23,14 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   updateJson(host, joinPathFragments(projectRoot, '.babelrc'), (json) => {
     if (options.style === '@emotion/styled') {
       json.presets = [
-        'next/babel',
-        {
-          'preset-react': {
-            importSource: '@emotion/react',
+        [
+          'next/babel',
+          {
+            'preset-react': {
+              importSource: '@emotion/react',
+            },
           },
-        },
+        ],
       ];
     } else if (options.style === 'styled-jsx') {
       // next.js doesn't require the `styled-jsx/babel' plugin as it is already
