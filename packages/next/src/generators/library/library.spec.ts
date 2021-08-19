@@ -39,12 +39,14 @@ describe('next library', () => {
     });
     expect(readJson(appTree, 'libs/my-lib2/.babelrc')).toEqual({
       presets: [
-        'next/babel',
-        {
-          'preset-react': {
-            importSource: '@emotion/react',
+        [
+          'next/babel',
+          {
+            'preset-react': {
+              importSource: '@emotion/react',
+            },
           },
-        },
+        ],
       ],
       plugins: ['@emotion/babel-plugin'],
     });

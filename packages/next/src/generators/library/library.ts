@@ -23,12 +23,14 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   updateJson(host, joinPathFragments(projectRoot, '.babelrc'), (json) => {
     if (options.style === '@emotion/styled') {
       json.presets = [
-        'next/babel',
-        {
-          'preset-react': {
-            importSource: '@emotion/react',
+        [
+          'next/babel',
+          {
+            'preset-react': {
+              importSource: '@emotion/react',
+            },
           },
-        },
+        ],
       ];
     } else {
       json.presets = ['next/babel'];
