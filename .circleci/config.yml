@@ -240,7 +240,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>>-${CIRCLE_WORKFLOW_ID}
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-${CIRCLE_WORKFLOW_ID}
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - setup:
@@ -349,10 +349,10 @@ workflows:
           name: 'agent7'
       - agent:
           name: 'agent8'
-      - agent:
-          name: 'agent9'
-          pm: 'npm'
-          os: 'macos'
+      # - agent:
+      #     name: 'agent9'
+      #     pm: 'npm'
+      #     os: 'macos'
       # - agent:
       #     name: 'agent10'
       #     pm: 'npm'
