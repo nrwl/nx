@@ -17,7 +17,7 @@ describe('custom workspace layout', () => {
   it('should work', async () => {
     const proj = uniq('custom-layout-proj');
     const packageManager = getSelectedPackageManager();
-    runCreateWorkspace(proj, { preset: 'oss', packageManager });
+    runCreateWorkspace(proj, { preset: 'npm', packageManager });
     packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
 
     const nxJson = readJson('nx.json');

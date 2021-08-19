@@ -17,6 +17,7 @@ import {
 import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
+import { Preset } from '../utils/presets';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
@@ -31,7 +32,7 @@ function decorateAngularClI(host: Tree, options: Schema) {
 
 function setPresetProperty(tree: Tree, options: Schema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.preset === 'oss') {
+    if (options.preset === Preset.NPM) {
       addPropertyWithStableKeys(
         json,
         'extends',
@@ -46,7 +47,7 @@ function setPresetProperty(tree: Tree, options: Schema) {
 }
 
 function createAppsAndLibsFolders(host: Tree, options: Schema) {
-  if (options.preset === 'oss') {
+  if (options.preset === Preset.NPM) {
     host.write(join(options.directory, 'packages/.gitkeep'), '');
   } else {
     host.write(join(options.directory, 'apps/.gitkeep'), '');

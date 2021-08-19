@@ -25,15 +25,16 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
 ```
 ? What to create in the new workspace (Use arrow keys)
 ❯ empty             [an empty workspace with a layout that works best for building apps]
-  oss               [an empty workspace with a layout that works best for open-source projects]
+  npm               [an empty workspace set up to publish npm packages (similar to and compatible with yarn workspaces)]
   react             [a workspace with a single React application]
-  next.js           [a workspace with a single Next.js application]
   angular           [a workspace with a single Angular application]
-  express           [a workspace with a single Express application]
+  next.js           [a workspace with a single Next.js application]
+  gatsby            [a workspace with a single Gatsby application]
   nest              [a workspace with a single Nest application]
+  express           [a workspace with a single Express application]
+  web components    [a workspace with a single app built using web components]
   react-express     [a workspace with a full stack application (React + Express)]
   angular-nest      [a workspace with a full stack application (Angular + Nest)]
-  web components    [a workspace with a single app built using web components]
 ```
 
 Select the preset that works best for you.

@@ -1,7 +1,8 @@
 import { createTree } from '@nrwl/devkit/testing';
 import { readJson, Tree, writeJson, PackageManager } from '@nrwl/devkit';
-import { newGenerator, Preset, Schema } from './new';
+import { newGenerator, Schema } from './new';
 import { Linter } from '../../utils/lint';
+import { Preset } from '../utils/presets';
 
 const defaultOptions: Omit<Schema, 'name' | 'directory' | 'appName'> = {
   cli: 'nx',

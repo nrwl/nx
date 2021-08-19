@@ -34,7 +34,7 @@ export function Node() {
       title: 'Open Source Tool',
       content: [
         'Create a workspace that puts emphasis on packages rather than',
-        'libs and apps by using the "oss" preset with "create-nx-workspace".\n\n',
+        'libs and apps by using the "npm" preset with "create-nx-workspace".\n\n',
         'Use TypeScript to build out projects that can scale infinitely.',
       ].join(' '),
     },
