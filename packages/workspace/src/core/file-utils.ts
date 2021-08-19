@@ -209,8 +209,10 @@ export function readPackageJson(): any {
   return readJsonFile(`${appRootPath}/package.json`);
 }
 
-export function readNxJson(): NxJsonConfiguration {
-  const config = readJsonFile<NxJsonConfiguration>(`${appRootPath}/nx.json`);
+export function readNxJson(
+  path: string = `${appRootPath}/nx.json`
+): NxJsonConfiguration {
+  const config = readJsonFile<NxJsonConfiguration>(path);
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
