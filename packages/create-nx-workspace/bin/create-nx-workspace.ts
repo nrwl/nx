@@ -19,7 +19,7 @@ import {
 
 export enum Preset {
   Empty = 'empty',
-  OSS = 'oss',
+  NPM = 'npm',
   WebComponents = 'web-components',
   Angular = 'angular',
   AngularWithNest = 'angular-nest',
@@ -36,6 +36,11 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.Empty,
     message:
       'empty             [an empty workspace with a layout that works best for building apps]',
+  },
+  {
+    name: Preset.NPM,
+    message:
+      'npm               [an empty workspace set up to publish npm packages (similar to and compatible with yarn workspaces)]',
   },
   {
     name: Preset.React,
@@ -78,11 +83,6 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.AngularWithNest,
     message:
       'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
-  },
-  {
-    name: Preset.OSS,
-    message:
-      'oss               [an empty workspace with a layout that works best for open-source projects]',
   },
 ];
 
@@ -280,7 +280,7 @@ function determinePreset(parsedArgs: any): Promise<Preset> {
 }
 
 function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
-  if (preset === Preset.Empty || preset === Preset.OSS) {
+  if (preset === Preset.Empty || preset === Preset.NPM) {
     return Promise.resolve('');
   }
 
@@ -337,7 +337,7 @@ function determineCli(
 function determineStyle(preset: Preset, parsedArgs: any) {
   if (
     preset === Preset.Empty ||
-    preset === Preset.OSS ||
+    preset === Preset.NPM ||
     preset === Preset.Nest ||
     preset === Preset.Express
   ) {

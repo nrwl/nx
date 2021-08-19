@@ -2,6 +2,7 @@ import { readJson } from '@nrwl/devkit';
 import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 import { workspaceGenerator } from './workspace';
 import { createTree } from '@nrwl/devkit/testing';
+import { Preset } from '../utils/presets';
 
 describe('@nrwl/workspace:workspace', () => {
   let tree: Tree;
@@ -15,7 +16,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/nx.json')).toBe(true);
@@ -29,7 +30,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'master',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
@@ -70,7 +71,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'main',
     });
     expect(tree.read('proj/.prettierrc', 'utf-8')).toMatchSnapshot();
@@ -81,7 +82,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'main',
     });
     const recommendations = readJson<{ recommendations: string[] }>(
@@ -97,7 +98,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'angular',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'main',
     });
     const recommendations = readJson<{ recommendations: string[] }>(
@@ -113,7 +114,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'angular',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);
@@ -128,7 +129,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      preset: 'empty',
+      preset: Preset.Empty,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(false);
@@ -141,7 +142,7 @@ describe('@nrwl/workspace:workspace', () => {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
-      preset: 'oss',
+      preset: Preset.NPM,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/packages/.gitkeep')).toBe(true);

@@ -3,6 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
 import * as path from 'path';
+import { Preset } from '../utils/presets';
 
 describe('preset', () => {
   let tree: Tree;
@@ -40,10 +41,10 @@ describe('preset', () => {
     overrideCollectionResolutionForTesting(null);
   });
 
-  it('should create files (preset = angular)', async () => {
+  it(`should create files (preset = ${Preset.Angular})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'angular',
+      preset: Preset.Angular,
       cli: 'nx',
       style: 'css',
       linter: 'eslint',
@@ -58,10 +59,10 @@ describe('preset', () => {
     ).toBe('@nrwl/angular');
   });
 
-  it('should create files (preset = web-components)', async () => {
+  it(`should create files (preset = ${Preset.WebComponents})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'web-components',
+      preset: Preset.WebComponents,
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -71,10 +72,10 @@ describe('preset', () => {
     );
   });
 
-  it('should create files (preset = react)', async () => {
+  it(`should create files (preset = ${Preset.React})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'react',
+      preset: Preset.React,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
@@ -86,10 +87,10 @@ describe('preset', () => {
     );
   });
 
-  it('should create files (preset = next)', async () => {
+  it(`should create files (preset = ${Preset.NextJs})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'next',
+      preset: Preset.NextJs,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
@@ -101,10 +102,10 @@ describe('preset', () => {
     );
   });
 
-  it('should create files (preset = angular-nest)', async () => {
+  it(`should create files (preset = ${Preset.AngularWithNest})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'angular-nest',
+      preset: Preset.AngularWithNest,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
@@ -118,10 +119,10 @@ describe('preset', () => {
     );
   });
 
-  it('should create files (preset = react-express)', async () => {
+  it(`should create files (preset = ${Preset.ReactWithExpress})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'react-express',
+      preset: Preset.ReactWithExpress,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
@@ -137,10 +138,10 @@ describe('preset', () => {
     expect(tree.exists('/libs/api-interfaces/.eslintrc.json')).toBe(true);
   });
 
-  it('should create files (preset = express)', async () => {
+  it(`should create files (preset = ${Preset.Express})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'express',
+      preset: Preset.Express,
       linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,
@@ -150,10 +151,10 @@ describe('preset', () => {
     expect(tree.exists('apps/proj/.eslintrc.json')).toBe(true);
   });
 
-  it('should create files (preset = gatsby)', async () => {
+  it(`should create files (preset = ${Preset.Gatsby})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: 'gatsby',
+      preset: Preset.Gatsby,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',

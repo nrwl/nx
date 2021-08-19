@@ -43,10 +43,10 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an oss workspace', () => {
-    const wsName = uniq('oss');
+  it('should be able to create an npm workspace', () => {
+    const wsName = uniq('npm');
     runCreateWorkspace(wsName, {
-      preset: 'oss',
+      preset: 'npm',
       packageManager,
     });
 

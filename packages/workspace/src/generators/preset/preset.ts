@@ -14,6 +14,7 @@ import { libraryGenerator } from '../library/library';
 
 import { insertImport } from '../utils/insert-import';
 import { insertStatement } from '../utils/insert-statement';
+import { Preset } from '../utils/presets';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
@@ -28,11 +29,11 @@ export const presetSchematic = convertNxGenerator(presetGenerator);
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (options.preset === 'empty') {
+  if (options.preset === Preset.Empty) {
     return;
-  } else if (options.preset === 'oss') {
+  } else if (options.preset === Preset.NPM) {
     return;
-  } else if (options.preset === 'angular') {
+  } else if (options.preset === Preset.Angular) {
     const {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nrwl' + '/angular/src/generators/application/application');
@@ -44,7 +45,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/angular');
-  } else if (options.preset === 'react') {
+  } else if (options.preset === Preset.React) {
     const {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
@@ -56,7 +57,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/react');
-  } else if (options.preset === 'next') {
+  } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
       '/next');
 
@@ -67,7 +68,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/next');
-  } else if (options.preset === 'web-components') {
+  } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
       '/web');
 
@@ -90,7 +91,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ['@ungap/custom-elements']
     );
     setDefaultCollection(tree, '@nrwl/web');
-  } else if (options.preset === 'angular-nest') {
+  } else if (options.preset === Preset.AngularWithNest) {
     const {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nrwl' + '/angular/src/generators/application/application');
@@ -118,7 +119,7 @@ async function createPreset(tree: Tree, options: Schema) {
     });
     setDefaultCollection(tree, '@nrwl/angular');
     connectAngularAndNest(tree, options);
-  } else if (options.preset === 'react-express') {
+  } else if (options.preset === Preset.ReactWithExpress) {
     const {
       applicationGenerator: expressApplicationGenerator,
     } = require('@nrwl' + '/express');
@@ -146,7 +147,7 @@ async function createPreset(tree: Tree, options: Schema) {
     });
     setDefaultCollection(tree, '@nrwl/react');
     connectReactAndExpress(tree, options);
-  } else if (options.preset === 'nest') {
+  } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 
@@ -155,7 +156,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
     setDefaultCollection(tree, '@nrwl/nest');
-  } else if (options.preset === 'express') {
+  } else if (options.preset === Preset.Express) {
     const {
       applicationGenerator: expressApplicationGenerator,
     } = require('@nrwl' + '/express');
@@ -165,7 +166,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/express');
-  } else if (options.preset === 'gatsby') {
+  } else if (options.preset === Preset.Gatsby) {
     const {
       applicationGenerator: gatsbyApplicationGenerator,
     } = require('@nrwl' + '/gatsby');

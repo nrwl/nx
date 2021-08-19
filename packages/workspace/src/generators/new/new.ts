@@ -18,20 +18,7 @@ import { spawn, SpawnOptions } from 'child_process';
 
 import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
-
-export enum Preset {
-  Empty = 'empty',
-  OSS = 'oss',
-  WebComponents = 'web-components',
-  Angular = 'angular',
-  AngularWithNest = 'angular-nest',
-  React = 'react',
-  ReactWithExpress = 'react-express',
-  NextJs = 'next',
-  Gatsby = 'gatsby',
-  Nest = 'nest',
-  Express = 'express',
-}
+import { Preset } from '../utils/presets';
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -155,8 +142,8 @@ async function initializeGitRepo(
 export async function newGenerator(host: Tree, options: Schema) {
   if (
     options.skipInstall &&
-    options.preset !== 'empty' &&
-    options.preset !== 'oss'
+    options.preset !== Preset.Empty &&
+    options.preset !== Preset.NPM
   ) {
     throw new Error(`Cannot select a preset when skipInstall is set to true.`);
   }
@@ -220,7 +207,7 @@ const presetDependencies: Omit<
     Preset,
     { dependencies: Record<string, string>; dev: Record<string, string> }
   >,
-  Preset.Empty | Preset.OSS
+  Preset.Empty | Preset.NPM
 > = {
   [Preset.WebComponents]: { dependencies: {}, dev: { '@nrwl/web': nxVersion } },
   [Preset.Angular]: { dependencies: { '@nrwl/angular': nxVersion }, dev: {} },
@@ -268,7 +255,7 @@ const presetDependencies: Omit<
 };
 
 function addPresetDependencies(host: Tree, options: Schema) {
-  if (options.preset === Preset.Empty || options.preset === Preset.OSS) {
+  if (options.preset === Preset.Empty || options.preset === Preset.NPM) {
     return;
   }
   const { dependencies, dev } = presetDependencies[options.preset];
@@ -292,7 +279,7 @@ function normalizeOptions(options: Schema): Schema {
 function setDefaultLinter(host: Tree, options: Schema) {
   const { linter, preset } = options;
   // Don't do anything if someone doesn't pick angular
-  if (preset !== 'angular' && preset !== 'angular-nest') {
+  if (preset !== Preset.Angular && preset !== Preset.AngularWithNest) {
     return;
   }
 
