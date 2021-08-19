@@ -47,7 +47,9 @@ export async function affected(
     switch (command) {
       case 'apps':
         const apps = filteredProjects
-          .filter((p) => p.type === ProjectType.app)
+          .filter(
+            (p) => p.type === ProjectType.app || p.type === ProjectType.e2e
+          )
           .map((p) => p.name);
         if (parsedArgs.plain) {
           console.log(apps.join(' '));
