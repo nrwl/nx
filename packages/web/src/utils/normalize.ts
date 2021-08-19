@@ -1,55 +1,12 @@
 import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { normalizePath } from '@nrwl/devkit';
-import { resolve, dirname, relative, basename } from 'path';
-import {
-  AssetGlobPattern,
-  BuildBuilderOptions,
-  PackageBuilderOptions,
-} from './types';
+import { basename, dirname, relative, resolve } from 'path';
+import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { statSync } from 'fs';
 
 export interface FileReplacement {
   replace: string;
   with: string;
-}
-
-export interface NormalizedBundleBuilderOptions extends PackageBuilderOptions {
-  entryRoot: string;
-  projectRoot: string;
-  assets: AssetGlobPattern[];
-  rollupConfig: string[];
-}
-
-export function normalizePackageOptions(
-  options: PackageBuilderOptions,
-  root: string,
-  sourceRoot: string
-): NormalizedBundleBuilderOptions {
-  const entryFile = `${root}/${options.entryFile}`;
-  const entryRoot = dirname(entryFile);
-  const project = `${root}/${options.project}`;
-  const projectRoot = dirname(project);
-  const outputPath = `${root}/${options.outputPath}`;
-
-  if (options.buildableProjectDepsInPackageJsonType == undefined) {
-    options.buildableProjectDepsInPackageJsonType = 'peerDependencies';
-  }
-
-  return {
-    ...options,
-    rollupConfig: []
-      .concat(options.rollupConfig)
-      .filter(Boolean)
-      .map((p) => normalizePluginPath(p, root)),
-    assets: options.assets
-      ? normalizeAssets(options.assets, root, sourceRoot)
-      : undefined,
-    entryFile,
-    entryRoot,
-    project,
-    projectRoot,
-    outputPath,
-  };
 }
 
 export function normalizeBuildOptions<T extends BuildBuilderOptions>(
@@ -70,7 +27,7 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   };
 }
 
-function normalizePluginPath(pluginPath: void | string, root: string) {
+export function normalizePluginPath(pluginPath: void | string, root: string) {
   if (!pluginPath) {
     return '';
   }

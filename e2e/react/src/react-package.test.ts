@@ -5,6 +5,7 @@ import {
   newProject,
   readFile,
   readJson,
+  rmDist,
   runCLI,
   uniq,
   updateFile,
@@ -118,9 +119,65 @@ describe('Build React libraries and apps', () => {
       return JSON.stringify(json, null, 2);
     });
   });
+
   afterEach(() => killPorts());
 
   describe('Publishable libraries', () => {
+    it('should build libraries with and without dependencies', () => {
+      /*
+       * 1. Without dependencies
+       */
+      const childLibOutput = runCLI(`build ${childLib}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
+      const childLib2Output = runCLI(`build ${childLib2}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
+
+      expect(childLibOutput).toContain(`${childLib}.umd.js`);
+      expect(childLibOutput).toContain(`${childLib}.esm.js`);
+      expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
+
+      expect(childLib2Output).toContain(`${childLib2}.esm.js`);
+      expect(childLib2Output).toContain(`${childLib2}.umd.js`);
+      expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
+
+      checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
+      checkFilesExist(`dist/libs/${childLib2}/README.md`);
+
+      /*
+       * 2. With dependencies
+       */
+      let parentLibOutput = runCLI(`build ${parentLib}`)
+        // FIX for windows and OSX where output names might get broken to multipleline
+        .replace(/\s\s\s││\s\s\s/gm, '');
+
+      expect(parentLibOutput).toContain(`${parentLib}.esm.js`);
+      expect(parentLibOutput).toContain(`${parentLib}.umd.js`);
+      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
+
+      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+      expect(jsonFile.peerDependencies).toEqual(
+        expect.objectContaining({
+          [`@${proj}/${childLib}`]: '0.0.1',
+          [`@${proj}/${childLib2}`]: '0.0.1',
+        })
+      );
+
+      /*
+       * 3. With dependencies without existing dist
+       */
+      rmDist();
+
+      parentLibOutput = runCLI(
+        `build ${parentLib} --with-deps --skip-nx-cache`
+      ).replace(/\s\s\s││\s\s\s/gm, '');
+
+      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
+      expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
+      expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
+    });
+
     it('should preserve the tsconfig target set by user', () => {
       // Setup
       const myLib = uniq('my-lib');
@@ -172,53 +229,6 @@ describe('Build React libraries and apps', () => {
       expect(content).toContain('function __generator(thisArg, body) {');
     });
 
-    it('should build the library when it does not have any deps', () => {
-      const output = runCLI(`build ${childLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      expect(output).toContain(`${childLib}.esm.js`);
-      expect(output).toContain(`Bundle complete: ${childLib}`);
-      checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
-    });
-
-    it('should copy the README to dist', () => {
-      const output = runCLI(`build ${childLib2}`);
-      expect(output).toContain(`Bundle complete: ${childLib2}`);
-      checkFilesExist(`dist/libs/${childLib2}/README.md`);
-    });
-
-    it('should properly add references to any dependency into the parent package.json', () => {
-      const childLibOutput = runCLI(`build ${childLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      const childLib2Output = runCLI(`build ${childLib2}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      const parentLibOutput = runCLI(`build ${parentLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-
-      expect(childLibOutput).toContain(`${childLib}.esm.js`);
-      expect(childLibOutput).toContain(`${childLib}.umd.js`);
-      expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
-
-      expect(childLib2Output).toContain(`${childLib2}.esm.js`);
-      expect(childLib2Output).toContain(`${childLib2}.umd.js`);
-      expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
-
-      expect(parentLibOutput).toContain(`${parentLib}.esm.js`);
-      expect(parentLibOutput).toContain(`${parentLib}.umd.js`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
-
-      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.peerDependencies).toEqual(
-        expect.objectContaining({
-          [`@${proj}/${childLib}`]: '0.0.1',
-          [`@${proj}/${childLib2}`]: '0.0.1',
-        })
-      );
-    });
-
     it('should build an app composed out of publishable libs', () => {
       const buildWithDeps = runCLI(
         `build ${app} --with-deps --buildLibsFromSource=false`
@@ -234,15 +244,5 @@ describe('Build React libraries and apps', () => {
       );
       expect(failedBuild).toContain(`Can't resolve`);
     }, 1000000);
-  });
-
-  describe('Buildable libraries', () => {
-    it('should build dependent libraries', () => {
-      const parentLibOutput = runCLI(`build ${parentLib} --with-deps`);
-
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
-    });
   });
 });
