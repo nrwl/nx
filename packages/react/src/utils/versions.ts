@@ -21,6 +21,7 @@ export const reactRouterDomVersion = '5.2.0';
 export const typesReactRouterDomVersion = '5.1.7';
 
 export const testingLibraryReactVersion = '11.2.6';
+export const testingLibraryReactHooksVersion = '7.0.1';
 
 export const reduxjsToolkitVersion = '1.5.1';
 export const reactReduxVersion = '7.2.3';

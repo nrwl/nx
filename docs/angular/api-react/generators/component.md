@@ -108,6 +108,16 @@ Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
 
+### pascalCaseDirectory
+
+Alias(es): R
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case directory name (e.g. App/App.tsx).
+
 ### pascalCaseFiles
 
 Alias(es): P

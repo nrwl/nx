@@ -72,6 +72,13 @@
       "schema": "./src/generators/component-cypress-spec/schema.json",
       "description": "Create a cypress spec for a ui component that has a story",
       "hidden": false
+    },
+
+    "hook": {
+      "factory": "./src/generators/hook/hook#chookSchematic",
+      "schema": "./src/generators/hook/schema.json",
+      "description": "Create a hook",
+      "aliases": "h"
     }
   },
   "generators": {
@@ -144,6 +151,13 @@
       "schema": "./src/generators/component-cypress-spec/schema.json",
       "description": "Create a cypress spec for a ui component that has a story",
       "hidden": false
+    },
+
+    "hook": {
+      "factory": "./src/generators/hook/hook#hookGenerator",
+      "schema": "./src/generators/hook/schema.json",
+      "description": "Create a hook",
+      "aliases": "c"
     }
   }
 }
