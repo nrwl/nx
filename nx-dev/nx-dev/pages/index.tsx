@@ -60,7 +60,7 @@ export function Index() {
           {/*INTRO COMPONENT*/}
           <div className="bg-blue-nx-base text-white">
             <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
-              <div className="sm:mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
+              <div className="mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
                 <div className="w-full lg:w-1/2 flex flex-col">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight sm:mt-10 mb-8 sm:mt-14 sm:mb-10">
                     Smart, Extensible Build Framework
@@ -115,9 +115,9 @@ export function Index() {
             <div className="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
               <div className="flex items-center flex-col sm:flex-row justify-between flex-wrap">
                 <div className="flex-1 flex flex-row items-center">
-                  <span className="flex p-2 rounded-lg bg-white">
+                  <span className="flex p-2 rounded-lg bg-green-nx-base sm:bg-white">
                     <svg
-                      className="h-6 w-6 text-green-nx-base"
+                      className="h-6 w-6 text-white sm:text-green-nx-base"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -137,7 +137,7 @@ export function Index() {
                     September 16th-17th
                   </p>
                 </div>
-                <div className="w-full sm:w-auto">
+                <div className="w-full sm:w-auto pt-4 sm:pt-0">
                   <Link href="/conf">
                     <a className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-nx-base bg-white">
                       Learn more
@@ -155,8 +155,8 @@ export function Index() {
 
           {/*SELECTION COMPONENT*/}
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
-            <div className="mt-24 mb-20 flex sm:flex-row flex-col justify-center">
-              <div className="w-full sm:w-1/2 grid grid-cols-3 gap-4 sm:gap-10 items-center">
+            <div className="mt-6 md:mt-24 mb-20 flex md:flex-row flex-col justify-center">
+              <div className="w-full md:w-1/2 grid grid-cols-3 gap-4 sm:gap-10 items-center">
                 <Link href="/react">
                   <a className="w-full bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ease-out duration-180 rounded-md py-4 px-3 space-x-1 text-base tracking-tight font-bold leading-tight text-center flex flex-col justify-center items-center px-2 py-4 space-y-4">
                     <svg viewBox="0 0 24 24" className="w-1/2" fill="#52C1DE">
@@ -188,7 +188,7 @@ export function Index() {
                   </a>
                 </Link>
               </div>
-              <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <div className="w-full md:w-1/2 flex flex-col justify-between items-start md:pl-16 md:pb-0 pb-10 mt-8 md:mt-0">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold tracking-tight mb-4 relative">
                   <svg
                     width={42}
@@ -228,8 +228,8 @@ export function Index() {
             <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               {/*GRAPH AND COMPUTATION CACHING*/}
               <div id="monorepos" className="flex sm:flex-row flex-col">
-                <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
-                  <div className="w-full sm:w-2/5 flex flex-col justify-center items-center sm:pr-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
+                <div className="py-16 md:py-32 flex md:flex-row flex-col items-center justify-center">
+                  <div className="w-full md:w-2/5 flex flex-col justify-center items-center md:pr-16 md:pb-0 mt-8 md:mt-0">
                     <Image
                       src="/images/distributed-tasks.png"
                       alt="Distributed Graph-Based Task Execution and Computation Caching illustration"
@@ -237,15 +237,15 @@ export function Index() {
                       height={300}
                     />
                   </div>
-                  <div className="w-full sm:w-3/5 flex flex-col justify-center sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
-                    <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
+                  <div className="w-full md:w-3/5 flex flex-col justify-center md:pl-16 md:pb-0 mt-8 md:mt-0">
+                    <h2 className="text-xl md:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
                       Best-in-Class Support for Monorepos
                     </h2>
-                    <p className="sm:text-lg mb-6">
+                    <p className="md:text-lg mb-6">
                       <span className="font-bold">Nx</span> provides distributed
                       graph-based task execution and computation caching.
                     </p>
-                    <p className="sm:text-lg mb-6">
+                    <p className="md:text-lg mb-6">
                       <span className="font-bold">Nx</span> is smart. It
                       analyzes your workspace and figures out what can be
                       affected by every code change. That's why Nx doesn't
@@ -255,7 +255,7 @@ export function Index() {
                       </span>
                       .
                     </p>
-                    <p className="sm:text-lg mb-6">
+                    <p className="md:text-lg mb-6">
                       <span className="font-bold">Nx</span> partitions commands
                       into a graph of smaller tasks. Nx then runs those tasks in
                       parallel, and it can{' '}
@@ -265,7 +265,7 @@ export function Index() {
                       </span>
                       .
                     </p>
-                    <p className="sm:text-lg mb-6">
+                    <p className="md:text-lg mb-6">
                       <span className="font-bold">
                         Nx also uses a distributed computation cache
                       </span>
@@ -277,9 +277,9 @@ export function Index() {
                 </div>
               </div>
               {/*DEV EXPERIENCE*/}
-              <div id="integrated-dx" className="flex sm:flex-row flex-col">
-                <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
-                  <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <div id="integrated-dx" className="flex md:flex-row flex-col">
+                <div className="py-16 md:py-32 flex md:flex-row flex-col-reverse items-center justify-center">
+                  <div className="w-full md:w-2/5 flex flex-col justify-between items-start md:pb-0 pb-10 mt-8 md:mt-0">
                     <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
                       Nx Integrated Development Experience
                     </h2>
@@ -318,10 +318,9 @@ export function Index() {
               {/* NXCLOUD AD */}
               <div
                 style={{ background: '#122B4D', border: '1px solid #0f2440' }}
-                className="text-white my-32 rounded-xl"
+                className="text-white my-16 md:my-32 rounded-xl"
               >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:py-10 lg:px-8 lg:flex lg:items-center lg:justify-between relative">
-                  <span className="absolute text-xs top-3">Sponsor</span>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:py-10 py-6 lg:px-8 lg:flex lg:items-center lg:justify-between relative">
                   <h2 className="text-2xl tracking-tight sm:text-4xl">
                     <span className="block">See how much more time</span>
                     <span className="block">you can save with Nx Cloud.</span>
@@ -339,12 +338,12 @@ export function Index() {
                 </div>
               </div>
               {/*RICH PLUGIN ECOSYSTEM*/}
-              <div className="flex sm:flex-row flex-col">
+              <div className="flex md:flex-row flex-col">
                 <div
                   id="ecosystem"
-                  className="py-32 flex sm:flex-row flex-col items-center justify-center"
+                  className="my-16 md:my-32 flex md:flex-row flex-col items-center justify-center"
                 >
-                  <div className="w-full sm:w-2/5 flex flex-col justify-between items-center sm:pb-0 pb-10 mt-8 sm:mt-0">
+                  <div className="max-w-md md:w-2/5 flex flex-col justify-between items-center md:pb-0 pb-10 mt-8 md:mt-0">
                     <div className="grid grid-cols-4 gap-16">
                       <svg
                         id="nextjs-logo"
@@ -445,11 +444,11 @@ export function Index() {
                       </svg>
                     </div>
                   </div>
-                  <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
+                  <div className="w-full md:w-3/5 flex flex-col justify-between items-start md:pl-16 sm:pb-0 pb-10 mt-8 md:mt-0">
                     <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
                       Rich Plugin Ecosystem
                     </h2>
-                    <p className="sm:text-lg mb-6">
+                    <p className="md:text-lg mb-6">
                       <b>
                         Nx is an open platform with plugins for many modern
                         tools and frameworks.
@@ -460,8 +459,8 @@ export function Index() {
                       Nx, you get a consistent dev experience regardless of the
                       tools used.
                     </p>
-                    <p className="sm:text-lg mb-6">For instance:</p>
-                    <ul className="sm:text-lg list-disc list-inside">
+                    <p className="md:text-lg mb-6">For instance:</p>
+                    <ul className="md:text-lg list-disc list-inside">
                       <li className="mt-4">
                         Use{' '}
                         <a
@@ -517,7 +516,7 @@ export function Index() {
 
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*LEARNING MATERIALS*/}
-            <div className="my-32 flex sm:flex-row flex-col">
+            <div className="my-16 md:my-32 flex sm:flex-row flex-col">
               <div className="w-full sm:w-1/2 flex flex-col justify-center items-center sm:pb-0 sm:pr-16 pb-10 mt-8 sm:mt-0">
                 <a
                   className="cursor-pointer underline"
@@ -572,7 +571,7 @@ export function Index() {
           <div className="bg-blue-nx-base text-white">
             <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               {/*MORE*/}
-              <div className="my-32 flex sm:flex-row flex-col">
+              <div className="my-16 md:my-32 flex sm:flex-row flex-col">
                 <div className="w-full sm:w-1/2 flex flex-col justify-center sm:pr-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl leading-none tracking-tight mb-4">
                     Nx and Nx Console

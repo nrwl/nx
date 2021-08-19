@@ -8,7 +8,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
   return (
     <footer
       className={cx(
-        'pt-32 text-white body-font',
+        'pt-16 md:pt-32 text-white body-font',
         useDarkBackground ? 'bg-blue-nx-dark' : 'bg-blue-nx-base'
       )}
     >
