@@ -240,9 +240,11 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-${CIRCLE_WORKFLOW_ID}
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID
       NX_VERBOSE_LOGGING: 'true'
     steps:
+      - run:
+          command: echo $NX_RUN_GROUP
       - setup:
           os: << parameters.os >>
       - run:
@@ -303,10 +305,12 @@ jobs:
       SELECTED_CLI: << parameters.cli >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-${CIRCLE_WORKFLOW_ID}
+      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID
       NX_E2E_RUN_CYPRESS: << parameters.run-cypress-tests >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
+      - run:
+          command: echo $NX_RUN_GROUP
       - setup:
           os: << parameters.os >>
       - when:
@@ -349,10 +353,10 @@ workflows:
           name: 'agent7'
       - agent:
           name: 'agent8'
-      # - agent:
-      #     name: 'agent9'
-      #     pm: 'npm'
-      #     os: 'macos'
+      - agent:
+          name: 'agent9'
+          pm: 'npm'
+          os: 'macos'
       # - agent:
       #     name: 'agent10'
       #     pm: 'npm'
@@ -366,18 +370,18 @@ workflows:
           filters:
             branches:
               ignore: master
-      # - main:
-      #     name: pull-request-osx
-      #     pm: 'npm'
-      #     os: 'macos'
-      #     run-checks: 'false'
-      #     run-builds: 'false'
-      #     run-unit-tests: 'false'
-      #     run-linting: 'false'
-      #     e2e-test-filter: 'MACOS-Tests'
-      #     filters:
-      #       branches:
-      #         ignore: master
+      - main:
+          name: pull-request-osx
+          pm: 'npm'
+          os: 'macos'
+          run-checks: 'false'
+          run-builds: 'false'
+          run-unit-tests: 'false'
+          run-linting: 'false'
+          e2e-test-filter: 'MACOS-Tests'
+          filters:
+            branches:
+              ignore: master
       # - main:
       #     name: pull-request-android
       #     pm: 'npm'
@@ -395,6 +399,19 @@ workflows:
       # -------------------------
       - main:
           name: commit-to-master
+          run-cypress-tests: 'true'
+          filters:
+            branches:
+              only: master
+      - main:
+          name: commit-to-master-osx
+          pm: 'npm'
+          os: 'macos'
+          run-checks: 'false'
+          run-builds: 'false'
+          run-unit-tests: 'false'
+          run-linting: 'false'
+          e2e-test-filter: 'MACOS-Tests'
           run-cypress-tests: 'true'
           filters:
             branches:
