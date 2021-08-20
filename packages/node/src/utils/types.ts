@@ -49,6 +49,11 @@ export interface CompilerPluginHooks {
   afterDeclarationsHooks: Array<(program?: Program) => Transformer>;
 }
 
+export interface AdditionalEntryPoint {
+  entryName: string;
+  entryPath: string;
+}
+
 export interface BuildBuilderOptions {
   main: string;
   outputPath: string;
@@ -76,6 +81,8 @@ export interface BuildBuilderOptions {
   projectRoot?: string;
 
   tsPlugins?: TsPluginEntry[];
+
+  additionalEntryPoints?: AdditionalEntryPoint[];
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
