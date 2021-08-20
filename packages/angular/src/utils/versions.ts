@@ -6,3 +6,4 @@ export const ngrxVersion = '~12.4.0';
 export const rxjsVersion = '~6.6.0';
 export const jestPresetAngularVersion = '10.0.1';
 export const angularEslintVersion = '~12.3.0';
+export const webpackVersion = '5.45.1';

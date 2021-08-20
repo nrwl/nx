@@ -14,6 +14,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
+import { ChildProcess } from 'child_process';
 
 // TODO: Check why this fails on yarn and npm
 describe('Angular Package', () => {
@@ -95,6 +96,9 @@ describe('Angular MFE App Serve', () => {
   let remoteApp1;
   let proj: string;
 
+  const port1 = 4205;
+  const port2 = 4206;
+
   beforeEach(() => {
     hostApp = uniq('app');
     remoteApp1 = uniq('remote');
@@ -103,29 +107,41 @@ describe('Angular MFE App Serve', () => {
 
     // generate host app
     runCLI(
-      `generate @nrwl/angular:app ${hostApp} --mfe --mfeType=host --routing --style=css --no-interactive`
+      `generate @nrwl/angular:app ${hostApp} -- --mfe --mfeType=host --port=4205 --routing --style=css --no-interactive`
     );
 
     // generate remote apps
     runCLI(
-      `generate @nrwl/angular:app ${remoteApp1} --mfe --mfeType=remote --host=${hostApp} --port=4201 --routing --style=css --no-interactive`
+      `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=4206 --routing --style=css --no-interactive`
     );
   });
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => {
+    removeProject({ onlyOnCI: true });
+  });
 
   it('should serve the host and remote apps successfully', async () => {
     // ACT + ASSERT
-    const process = await runCommandUntil(
-      `serve-mfe ${hostApp}`,
-      (output) =>
-        output.includes('listening on localhost:4200') &&
-        output.includes('listening on localhost:4201')
-    );
+    let process: ChildProcess;
+
+    try {
+      process = await runCommandUntil(`serve-mfe ${hostApp}`, (output) => {
+        return (
+          output.includes(`listening on localhost:4206`) &&
+          output.includes(`listening on localhost:4205`)
+        );
+      });
+    } catch (err) {
+      console.error(err);
+    }
 
     // port and process cleanup
     try {
-      await promisifiedTreeKill(process.pid, 'SIGKILL');
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+      }
+      await killPorts(4205);
+      await killPorts(4206);
     } catch (err) {
       expect(err).toBeFalsy();
     }
@@ -155,7 +171,7 @@ describe('Angular App Build and Serve Ops', () => {
 
     // ASSERT
     expect(serveOutput).toContain('Running target "build" succeeded');
-  }, 100000);
+  }, 1000000);
 
   it('should serve the app successfully', async () => {
     // ACT
@@ -163,10 +179,8 @@ describe('Angular App Build and Serve Ops', () => {
 
     // ASSERT
     const process = await runCommandUntil(
-      `serve ${app} --port=${port}`,
-      (output) =>
-        output.includes(`listening on localhost:${port}`) &&
-        output.includes('Compiled successfully')
+      `serve ${app} -- --port=${port}`,
+      (output) => output.includes(`listening on localhost:${port}`)
     );
 
     // port and process cleanup
@@ -176,5 +190,5 @@ describe('Angular App Build and Serve Ops', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 300000);
+  }, 3000000);
 });
