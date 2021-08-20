@@ -65,6 +65,35 @@ describe('updateEslint', () => {
     );
   });
 
+  it('should update .eslintrc.json extends path when project is moved from subdirectory', async () => {
+    await libraryGenerator(tree, {
+      name: 'test',
+      directory: 'api',
+      linter: Linter.EsLint,
+      standaloneConfig: false,
+    });
+    // This step is usually handled elsewhere
+    tree.rename('libs/api/test/.eslintrc.json', 'libs/test/.eslintrc.json');
+    const projectConfig = readProjectConfiguration(tree, 'api-test');
+
+    const newSchema = {
+      projectName: 'api-test',
+      destination: 'test',
+      importPath: '@proj/test',
+      updateImportPath: true,
+      newProjectName: 'test',
+      relativeToRootDestination: 'libs/test',
+    };
+
+    updateEslintrcJson(tree, newSchema, projectConfig);
+
+    expect(readJson(tree, '/libs/test/.eslintrc.json')).toEqual(
+      expect.objectContaining({
+        extends: ['../../.eslintrc.json'],
+      })
+    );
+  });
+
   it('should preserve .eslintrc.json non-relative extends when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',

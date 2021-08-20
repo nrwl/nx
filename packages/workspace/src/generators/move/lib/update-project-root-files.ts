@@ -40,6 +40,9 @@ export function updateProjectRootFiles(
     if (!extname(file).startsWith('.js')) {
       continue;
     }
+    if (file === '.eslintrc.json') {
+      continue;
+    }
 
     const oldContent = tree.read(
       join(schema.relativeToRootDestination, file),
