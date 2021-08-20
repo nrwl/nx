@@ -66,7 +66,7 @@ export function compileTypeScriptWatcher(
   return new Promise(() => {});
 }
 
-function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
+export function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
   const tsConfig = readTsConfig(options.tsConfig);
   tsConfig.options.outDir = options.outputPath;
   tsConfig.options.noEmitOnError = true;
@@ -105,7 +105,7 @@ function createProgram(
   }
 }
 
-function normalizeOptions(
+export function normalizeOptions(
   options: TypeScriptCompilationOptions
 ): TypeScriptCompilationOptions {
   return {
