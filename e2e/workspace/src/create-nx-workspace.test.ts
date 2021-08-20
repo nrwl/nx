@@ -253,35 +253,41 @@ describe('create-nx-workspace', () => {
       });
     }
 
-    it('should use npm when invoked with npx', () => {
-      setupProject('npm');
-      checkFilesExist(packageManagerLockFile['npm']);
-      checkFilesDoNotExist(
-        packageManagerLockFile['yarn'],
-        packageManagerLockFile['pnpm']
-      );
-      process.env.SELECTED_PM = packageManager;
-    }, 90000);
+    if (packageManager === 'npm') {
+      it('should use npm when invoked with npx', () => {
+        setupProject('npm');
+        checkFilesExist(packageManagerLockFile['npm']);
+        checkFilesDoNotExist(
+          packageManagerLockFile['yarn'],
+          packageManagerLockFile['pnpm']
+        );
+        process.env.SELECTED_PM = packageManager;
+      }, 90000);
+    }
 
-    it('should use pnpm when invoked with pnpx', () => {
-      setupProject('pnpm');
-      checkFilesExist(packageManagerLockFile['pnpm']);
-      checkFilesDoNotExist(
-        packageManagerLockFile['yarn'],
-        packageManagerLockFile['npm']
-      );
-      process.env.SELECTED_PM = packageManager;
-    }, 90000);
+    if (packageManager === 'pnpm') {
+      it('should use pnpm when invoked with pnpx', () => {
+        setupProject('pnpm');
+        checkFilesExist(packageManagerLockFile['pnpm']);
+        checkFilesDoNotExist(
+          packageManagerLockFile['yarn'],
+          packageManagerLockFile['npm']
+        );
+        process.env.SELECTED_PM = packageManager;
+      }, 90000);
+    }
 
     // skipping due to packageManagerCommand for createWorkspace not using yarn create nx-workspace
-    xit('should use yarn when invoked with yarn create', () => {
-      setupProject('yarn');
-      checkFilesExist(packageManagerLockFile['yarn']);
-      checkFilesDoNotExist(
-        packageManagerLockFile['pnpm'],
-        packageManagerLockFile['npm']
-      );
-      process.env.SELECTED_PM = packageManager;
-    }, 90000);
+    if (packageManager === 'yarn') {
+      xit('should use yarn when invoked with yarn create', () => {
+        setupProject('yarn');
+        checkFilesExist(packageManagerLockFile['yarn']);
+        checkFilesDoNotExist(
+          packageManagerLockFile['pnpm'],
+          packageManagerLockFile['npm']
+        );
+        process.env.SELECTED_PM = packageManager;
+      }, 90000);
+    }
   });
 });
