@@ -3,7 +3,6 @@ import {
   ChangeType,
   formatFiles,
   getProjects,
-  logger,
   ProjectConfiguration,
   readJson,
   StringDeletion,
@@ -117,6 +116,9 @@ function getCypressConfigs(target: TargetConfiguration): string[] {
 }
 
 function getCypressTargets(proj: ProjectConfiguration) {
+  if (!proj.targets) {
+    return [];
+  }
   return Object.values(proj.targets).filter(
     (target) => target.executor === '@nrwl/cypress:cypress'
   );
