@@ -48,6 +48,7 @@
     "url-loader": "^3.0.0",
     "webpack": "4.46.0",
     "webpack-merge": "4.2.1",
-    "@storybook/node-logger": "6.1.20"
+    "@storybook/node-logger": "6.1.20",
+    "semver": "7.3.4"
   }
 }
