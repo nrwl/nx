@@ -309,6 +309,11 @@
             "file": "angular/api-workspace/generators/library"
           },
           {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "file": "angular/api-workspace/generators/npm-package"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "angular/api-workspace/generators/move"
@@ -1505,6 +1510,11 @@
             "file": "react/api-workspace/generators/library"
           },
           {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "file": "react/api-workspace/generators/npm-package"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "react/api-workspace/generators/move"
@@ -2668,6 +2678,11 @@
             "name": "library generator",
             "id": "library",
             "file": "node/api-workspace/generators/library"
+          },
+          {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "file": "node/api-workspace/generators/npm-package"
           },
           {
             "name": "move generator",
