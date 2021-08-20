@@ -32,8 +32,6 @@ module.exports = function (onFallback) {
   }
 
   return {
-    webpack: requireShim('webpack'),
     nodeExternals: requireShim('webpack-node-externals'),
-    version: requireShim('webpack/package.json').version,
   };
 };
