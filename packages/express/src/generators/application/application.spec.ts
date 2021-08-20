@@ -126,4 +126,20 @@ describe('app', () => {
       expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
     });
   });
+
+  describe('--swc flag', () => {
+    it('should generate swcrc file', async () => {
+      await applicationGenerator(appTree, {
+        name: 'mySwcNodeApp',
+        swc: true,
+      } as Schema);
+
+      expect(appTree.exists('.swcrc')).toBeTruthy();
+
+      const workspaceJson = readJson(appTree, 'workspace.json');
+      const project = workspaceJson.projects['my-swc-node-app'];
+      const buildTarget = project.architect.build;
+      expect(buildTarget.options.swc).toEqual(true);
+    });
+  });
 });

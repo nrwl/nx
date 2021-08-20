@@ -16,6 +16,7 @@ import {
 import { Schema } from './schema';
 import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
 import { join } from 'path';
+import { addSwcConfig, addSwcDevDependencies } from '@nrwl/node/src/utils/swc';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -33,6 +34,11 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
+  }
+
+  if (options.swc && options.buildable) {
+    addSwcConfig(tree);
+    addSwcDevDependencies(tree);
   }
 
   const libraryInstall = await workspaceLibraryGenerator(tree, {
@@ -131,6 +137,10 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
       assets: [`${options.projectRoot}/*.md`],
     },
   };
+
+  if (options.swc) {
+    project.targets.build.options.swc = true;
+  }
 
   if (options.rootDir) {
     project.targets.build.options.srcRootForCompilationRoot = options.rootDir;

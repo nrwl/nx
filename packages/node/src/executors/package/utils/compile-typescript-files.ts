@@ -9,6 +9,7 @@ import {
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join } from 'path';
 import { NormalizedBuilderOptions } from './models';
+import { transformTypeScript } from '@nrwl/node/src/utils/swc';
 
 export default async function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
@@ -45,6 +46,12 @@ export default async function compileTypeScriptFiles(
       }
     });
   } else {
+    if (options.swc) {
+      const result = transformTypeScript(tcsOptions);
+      await postCompleteAction();
+      return result;
+    }
+
     const result = compileTypeScript(tcsOptions);
     await postCompleteAction();
     return result;

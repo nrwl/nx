@@ -83,6 +83,7 @@ export interface BuildBuilderOptions {
   tsPlugins?: TsPluginEntry[];
 
   additionalEntryPoints?: AdditionalEntryPoint[];
+  swc?: boolean;
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
