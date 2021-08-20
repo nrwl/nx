@@ -33,7 +33,7 @@
           {
             "input": "packages/linter",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
