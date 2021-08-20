@@ -61,10 +61,14 @@
     "cli": {
       "type": "boolean",
       "description": "Adds a CLI wrapper to main entry-point file."
+    },
+    "swc": {
+      "type": "boolean",
+      "description": "Use swc as TypeScript loader instead of tsc and babel",
+      "default": false
     }
   },
   "required": ["tsConfig", "main"],
-
   "definitions": {
     "assetPattern": {
       "oneOf": [

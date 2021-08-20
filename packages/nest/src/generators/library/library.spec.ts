@@ -367,4 +367,19 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
   });
+
+  describe('--swc', () => {
+    it('should set  build.options.swc to true for buildable', async () => {
+      await libraryGenerator(tree, {
+        name: libName,
+        swc: true,
+        buildable: true,
+      });
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      const project = workspaceJson.projects[libFileName];
+      const buildTarget = project.architect.build;
+      expect(buildTarget.options.swc).toEqual(true);
+    });
+  });
 });
