@@ -46,7 +46,8 @@ describe('@nrwl/workspace:npm-package', () => {
         \\"scripts\\": {
           \\"test\\": \\"node index.js\\"
         }
-      }"
+      }
+      "
     `);
     expect(tree.read('packages/my-package/index.js').toString())
       .toMatchInlineSnapshot(`
@@ -74,10 +75,10 @@ describe('@nrwl/workspace:npm-package', () => {
 
       const { projects } = readJson(tree, 'workspace.json');
       expect(projects['my-package']).toMatchInlineSnapshot(`
-      Object {
-        "root": "packages/my-package",
-      }
-    `);
+              Object {
+                "root": "packages/my-package",
+              }
+          `);
 
       expect(readJson(tree, 'packages/my-package/package.json')).toEqual(
         existingPackageJson
