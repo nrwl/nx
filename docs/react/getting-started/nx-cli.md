@@ -24,6 +24,8 @@ Nx creates and maintains a dependency graph between projects based on import sta
 
 ## Common Commands
 
+> For a full list of commands you can run `nx help` or visit the [CLI reference](/{{framework}}/cli/overview).
+
 **Invoke a generator:**
 
 ```bash

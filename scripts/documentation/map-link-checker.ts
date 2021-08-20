@@ -5,7 +5,7 @@ import * as chalk from 'chalk';
 console.log(`${chalk.blue('i')} Documentation Map Check`);
 
 const basePath = 'docs';
-const sharedFilesPattern = 'shared/cli';
+const sharedFilesPattern = 'shared/cli/';
 
 const readmePathList: string[] = glob
   .sync(`${basePath}/**/*.md`)

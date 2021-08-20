@@ -401,8 +401,91 @@ const sharedCommands = [
   'test',
 ];
 
+async function parseCommandInstance(name, command) {
+  // It is not a function return a strip down version of the command
+  if (
+    !(
+      command.builder &&
+      command.builder.constructor &&
+      command.builder.call &&
+      command.builder.apply
+    )
+  ) {
+    return {
+      command: name,
+      description: command['description'],
+    };
+  }
+  // Show all the options we can get from yargs
+  const builder = await command.builder(importFresh('yargs')().resetOptions());
+  const builderDescriptions = builder.getUsageInstance().getDescriptions();
+  const builderDefaultOptions = builder.getOptions().default;
+  return {
+    command: name,
+    description: command['description'],
+    options:
+      Object.keys(builderDescriptions).map((key) => ({
+        command: '--'.concat(key),
+        description: builderDescriptions[key]
+          ? builderDescriptions[key].replace('__yargsString__:', '')
+          : '',
+        default: builderDefaultOptions[key],
+      })) || null,
+  };
+}
+
+function getDescriptionFirstLine(description) {
+  return description?.trim().split('\n')[0].trim();
+}
+
+async function generateCLIOverview(commands) {
+  let template = dedent`
+    # CLI Overview
+
+    The Nx CLI provides the following commands:
+   
+    - [generate](/{{framework}}/cli/generate): Runs a generator that creates and/or modifies files based on a generator from a collection.
+    - [serve](/{{framework}}/cli/serve): Builds and serves an application, rebuilding on file changes.
+    - [build](/{{framework}}/cli/build): Compiles an application into an output directory named dist/ at the given output path. Must be executed from within a workspace directory.
+    - [test](/{{framework}}/cli/test): Runs unit tests in a project using the configured unit test runner.
+    - [lint](/{{framework}}/cli/lint): Runs linting tools on application code in a given project folder using the configured linter.
+    - [e2e](/{{framework}}/cli/e2e): Builds and serves an app, then runs end-to-end tests using the configured E2E test runner.
+    - [run](/{{framework}}/cli/run): Runs an Architect target with an optional custom builder configuration defined in your project.
+  `;
+
+  commands
+    .filter((command) => !sharedCommands.includes(command.command))
+    .forEach((command) => {
+      const { command: name, description } = command;
+      template += dedent`
+      - [${name}](/{{framework}}/cli/${name.replace(
+        ':',
+        '-'
+      )}): ${getDescriptionFirstLine(description)}
+    `;
+    });
+
+  const overviewFileName = 'cli-overview';
+  const sharedOutput = join(__dirname, '../../docs/shared');
+  const templateObject = { name: overviewFileName, template };
+
+  return generateMarkdownFile(sharedOutput, templateObject);
+}
+
 export async function generateCLIDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
+
+  function getCommands(command) {
+    return command.getCommandInstance().getCommandHandlers();
+  }
+  const nxCommands = getCommands(commandsObject);
+  const commands = await Promise.all(
+    Object.keys(nxCommands)
+      .filter((name) => !sharedCommands.includes(name))
+      .map((name) => parseCommandInstance(name, nxCommands[name]))
+  );
+
+  await generateCLIOverview(commands);
 
   await Promise.all(
     Frameworks.map(async (framework: Framework) => {
@@ -413,45 +496,6 @@ export async function generateCLIDocumentation() {
         'cli'
       );
       removeSync(commandsOutputDirectory);
-      function getCommands(command) {
-        return command.getCommandInstance().getCommandHandlers();
-      }
-      async function parseCommandInstance(name, command) {
-        // It is not a function return a strip down version of the command
-        if (
-          !(
-            command.builder &&
-            command.builder.constructor &&
-            command.builder.call &&
-            command.builder.apply
-          )
-        ) {
-          return {
-            command: name,
-            description: command['description'],
-          };
-        }
-        // Show all the options we can get from yargs
-        const builder = await command.builder(
-          importFresh('yargs')().resetOptions()
-        );
-        const builderDescriptions = builder
-          .getUsageInstance()
-          .getDescriptions();
-        const builderDefaultOptions = builder.getOptions().default;
-        return {
-          command: name,
-          description: command['description'],
-          options:
-            Object.keys(builderDescriptions).map((key) => ({
-              command: '--'.concat(key),
-              description: builderDescriptions[key]
-                ? builderDescriptions[key].replace('__yargsString__:', '')
-                : '',
-              default: builderDefaultOptions[key],
-            })) || null,
-        };
-      }
       function generateMarkdown(command) {
         let template = dedent`
 # ${command.command}
@@ -512,16 +556,11 @@ nx ${command.command}
       }
 
       // TODO: Try to add option's type, examples, and group?
-      const nxCommands = getCommands(commandsObject);
-      await Promise.all(
-        Object.keys(nxCommands)
-          .filter((name) => !sharedCommands.includes(name))
-          .map((name) => parseCommandInstance(name, nxCommands[name]))
-          .map(async (command) => generateMarkdown(await command))
-          .map(async (templateObject) =>
-            generateMarkdownFile(commandsOutputDirectory, await templateObject)
-          )
-      );
+      commands
+        .map((command) => generateMarkdown(command))
+        .map((templateObject) =>
+          generateMarkdownFile(commandsOutputDirectory, templateObject)
+        );
 
       await Promise.all(
         sharedCommands.map((command) => {
