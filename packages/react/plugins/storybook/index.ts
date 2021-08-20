@@ -1,13 +1,16 @@
-import { Configuration } from 'webpack';
-const reactWebpackConfig = require('../webpack');
-import { logger } from '@storybook/node-logger';
-import { mergePlugins } from './merge-plugins';
-import * as mergeWebpack from 'webpack-merge';
-import { join } from 'path';
-import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
-import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
-import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import { joinPathFragments } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
+import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
+import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { logger } from '@storybook/node-logger';
+import { join } from 'path';
+import { gte } from 'semver';
+import { Configuration } from 'webpack';
+import * as mergeWebpack from 'webpack-merge';
+import { mergePlugins } from './merge-plugins';
+const reactWebpackConfig = require('../webpack');
 
 export const babelDefault = (): Record<
   string,
@@ -77,25 +80,71 @@ export const webpack = async (
   // run it through the React customizations
   const finalConfig = reactWebpackConfig(baseWebpackConfig);
 
-  return {
-    ...storybookWebpackConfig,
-    module: {
-      ...storybookWebpackConfig.module,
-      rules: [
-        ...storybookWebpackConfig.module.rules,
-        ...finalConfig.module.rules,
-      ],
-    },
-    resolve: {
-      ...storybookWebpackConfig.resolve,
+  // Check whether the project .babelrc uses @emotion/babel-plugin. There's currently
+  // a Storybook issue (https://github.com/storybookjs/storybook/issues/13277) which apparently
+  // doesn't work with `@emotion/*` >= v11
+  // this is a workaround to fix that
+  let resolvedEmotionAliases = {};
+  const packageJson = readJsonFile(join(appRootPath, 'package.json'));
+  const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+
+  const emotionReactVersion = deps['@emotion/react'];
+  if (
+    emotionReactVersion &&
+    gte(
+      checkAndCleanWithSemver('@emotion/react', emotionReactVersion),
+      '11.0.0'
+    )
+  ) {
+    const babelrc = readJsonFile(
+      joinPathFragments(options.configDir, '../', '.babelrc')
+    );
+    if (babelrc.plugins.includes('@emotion/babel-plugin')) {
+      resolvedEmotionAliases = {
+        resolve: {
+          alias: {
+            '@emotion/core': joinPathFragments(
+              appRootPath,
+              'node_modules',
+              '@emotion/react'
+            ),
+            '@emotion/styled': joinPathFragments(
+              appRootPath,
+              'node_modules',
+              '@emotion/styled'
+            ),
+            'emotion-theming': joinPathFragments(
+              appRootPath,
+              'node_modules',
+              '@emotion/react'
+            ),
+          },
+        },
+      };
+    }
+  }
+  return mergeWebpack(
+    {
+      ...storybookWebpackConfig,
+      module: {
+        ...storybookWebpackConfig.module,
+        rules: [
+          ...storybookWebpackConfig.module.rules,
+          ...finalConfig.module.rules,
+        ],
+      },
+      resolve: {
+        ...storybookWebpackConfig.resolve,
+        plugins: mergePlugins(
+          ...(storybookWebpackConfig.resolve.plugins ?? []),
+          ...(finalConfig.resolve.plugins ?? [])
+        ),
+      },
       plugins: mergePlugins(
-        ...(storybookWebpackConfig.resolve.plugins ?? []),
-        ...(finalConfig.resolve.plugins ?? [])
+        ...(storybookWebpackConfig.plugins ?? []),
+        ...(finalConfig.plugins ?? [])
       ),
     },
-    plugins: mergePlugins(
-      ...(storybookWebpackConfig.plugins ?? []),
-      ...(finalConfig.plugins ?? [])
-    ),
-  };
+    resolvedEmotionAliases
+  );
 };
