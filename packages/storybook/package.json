@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@nrwl/cypress": "*",
+    "@nrwl/web": "*",
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
     "@nrwl/workspace": "*",

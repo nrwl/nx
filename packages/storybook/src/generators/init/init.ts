@@ -7,6 +7,7 @@ import {
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { isFramework, isReactUsingWebpack5 } from '../../utils/utilities';
 import {
   babelCoreVersion,
   babelLoaderVersion,
@@ -16,7 +17,6 @@ import {
   svgrVersion,
   urlLoaderVersion,
 } from '../../utils/versions';
-import { isFramework } from '../../utils/utilities';
 import { Schema } from './schema';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
@@ -85,8 +85,23 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     ) {
       devDependencies['@storybook/react'] = storybookVersion;
     }
-  }
 
+    if (isReactUsingWebpack5()) {
+      if (
+        !packageJson.dependencies['@storybook/builder-webpack5'] &&
+        !packageJson.devDependencies['@storybook/builder-webpack5']
+      ) {
+        devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+      }
+
+      if (
+        !packageJson.dependencies['@storybook/manager-webpack5'] &&
+        !packageJson.devDependencies['@storybook/manager-webpack5']
+      ) {
+        devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+      }
+    }
+  }
   if (isFramework('html', schema)) {
     devDependencies['@storybook/html'] = storybookVersion;
   }

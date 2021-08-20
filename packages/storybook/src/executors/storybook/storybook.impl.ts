@@ -1,30 +1,25 @@
 import 'dotenv/config';
 import { basename, join, sep } from 'path';
 import { tmpdir } from 'os';
-import { constants, copyFileSync, existsSync, mkdtempSync, statSync } from 'fs';
+import {
+  constants,
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  statSync,
+} from 'fs';
 
 import { buildDevStandalone } from '@storybook/core/server';
 
-import { getStorybookFrameworkPath, setStorybookAppProject } from '../utils';
+import {
+  getStorybookFrameworkPath,
+  runStorybookSetupCheck,
+  setStorybookAppProject,
+} from '../utils';
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
-
-export interface StorybookConfig {
-  configFolder?: string;
-  configPath?: string;
-  pluginPath?: string;
-  srcRoot?: string;
-}
-
-export interface StorybookExecutorOptions {
-  uiFramework:
-    | '@storybook/angular'
-    | '@storybook/react'
-    | '@storybook/html'
-    | '@storybook/web-components'
-    | '@storybook/vue'
-    | '@storybook/vue3';
-  projectBuildConfig?: string;
-  config: StorybookConfig;
+import { CommonNxStorybookConfig, StorybookConfig } from '../models';
+export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   host?: string;
   port?: number;
   quiet?: boolean;
@@ -46,7 +41,7 @@ export default async function* storybookExecutor(
   const option = storybookOptionMapper(options, frameworkOptions, context);
 
   // print warnings
-  runStorybookSetupCheck(options, context);
+  runStorybookSetupCheck(options);
 
   await runInstance(option);
 
@@ -108,15 +103,13 @@ function storybookOptionMapper(
   setStorybookAppProject(context, builderOptions.projectBuildConfig);
 
   const storybookConfig = findOrCreateConfig(builderOptions.config, context);
-  const optionsWithFramework = {
+  return {
     ...builderOptions,
     mode: 'dev',
     configDir: storybookConfig,
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
   };
-  optionsWithFramework.config;
-  return optionsWithFramework;
 }
 
 function findOrCreateConfig(
@@ -169,45 +162,4 @@ function createStorybookConfig(
     constants.COPYFILE_EXCL
   );
   return tmpFolder;
-}
-
-function runStorybookSetupCheck(
-  options: StorybookExecutorOptions,
-  context: ExecutorContext
-) {
-  let placesToCheck = [
-    {
-      path: joinPathFragments('.storybook', 'webpack.config.js'),
-      result: false,
-    },
-    {
-      path: joinPathFragments(options.config.configFolder, 'webpack.config.js'),
-      result: false,
-    },
-  ];
-
-  placesToCheck = placesToCheck
-    .map((entry) => {
-      return {
-        ...entry,
-        result: existsSync(entry.path),
-      };
-    })
-    .filter((x) => x.result === true);
-
-  if (placesToCheck.length > 0) {
-    logger.warn(
-      `
-  You have a webpack.config.js files in your Storybook configuration:
-  ${placesToCheck.map((x) => `- "${x.path}"`).join('\n  ')}
-
-  Consider switching to the "webpackFinal" property declared in "main.js" instead.
-  ${
-    options.uiFramework === '@storybook/react'
-      ? 'https://nx.dev/latest/react/storybook/migrate-webpack-final'
-      : 'https://nx.dev/latest/angular/storybook/migrate-webpack-final'
-  }
-    `
-    );
-  }
 }
