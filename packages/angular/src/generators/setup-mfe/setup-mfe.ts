@@ -17,6 +17,7 @@ import {
   getRemotesWithPorts,
   setupServeTarget,
 } from './lib';
+import { webpackVersion } from '../../utils/versions';
 
 export async function setupMfe(host: Tree, options: Schema) {
   const projectConfig = readProjectConfiguration(host, options.appName);
@@ -37,7 +38,7 @@ export async function setupMfe(host: Tree, options: Schema) {
   const installPackages = addDependenciesToPackageJson(
     host,
     { '@angular-architects/module-federation': '^12.2.0' },
-    {}
+    { webpack: webpackVersion }
   );
 
   // format files
