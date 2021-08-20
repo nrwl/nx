@@ -5,20 +5,15 @@ import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 
 import * as build from '@storybook/core/standalone';
 
-import { getStorybookFrameworkPath, setStorybookAppProject } from '../utils';
+import {
+  getStorybookFrameworkPath,
+  runStorybookSetupCheck,
+  setStorybookAppProject,
+} from '../utils';
 import { ExecutorContext, logger } from '@nrwl/devkit';
+import { CommonNxStorybookConfig, StorybookConfig } from '../models';
 
-export interface StorybookConfig {
-  configFolder?: string;
-  configPath?: string;
-  pluginPath?: string;
-  srcRoot?: string;
-}
-
-export interface StorybookBuilderOptions {
-  uiFramework: string;
-  projectBuildConfig?: string;
-  config: StorybookConfig;
+export interface StorybookBuilderOptions extends CommonNxStorybookConfig {
   quiet?: boolean;
   outputPath?: string;
   docsMode?: boolean;
@@ -34,6 +29,10 @@ export default async function buildStorybookExecutor(
 
   const { default: frameworkOptions } = await import(frameworkPath);
   const option = storybookOptionMapper(options, frameworkOptions, context);
+
+  // print warnings
+  runStorybookSetupCheck(options);
+
   logger.info(`NX Storybook builder starting ...`);
   await runInstance(option);
   logger.info(`NX Storybook builder finished ...`);

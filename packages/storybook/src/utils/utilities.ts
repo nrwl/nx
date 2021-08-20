@@ -74,3 +74,8 @@ export type TsConfig = {
   exclude?: string[];
   references?: Array<{ path: string }>;
 };
+
+export function isReactUsingWebpack5(): boolean {
+  const { isWebpack5 } = require('@nrwl/web/src/webpack/entry');
+  return isWebpack5;
+}
