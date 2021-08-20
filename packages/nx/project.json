@@ -25,7 +25,7 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
             "output": "/"
           },
           {
@@ -47,7 +47,15 @@
       "executor": "@nrwl/workspace:run-commands",
       "outputs": ["build/packages/nx"],
       "options": {
-        "command": "node ./scripts/copy-readme.js nx"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js nx"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js tao nx@*"
+          }
+        ],
+        "parallel": false
       }
     },
     "lint": {

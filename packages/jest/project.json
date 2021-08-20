@@ -33,7 +33,7 @@
           {
             "input": "packages/jest",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {

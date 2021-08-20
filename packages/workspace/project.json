@@ -39,7 +39,7 @@
           {
             "input": "packages/workspace",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {

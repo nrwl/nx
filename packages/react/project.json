@@ -43,7 +43,7 @@
           {
             "input": "packages/react",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
