@@ -1,9 +1,4 @@
-import type { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript';
-import {
-  getNormalizedTsConfig,
-  normalizeOptions,
-} from '@nrwl/workspace/src/utilities/typescript/compilation';
-import { addDependenciesToPackageJson, logger, Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
 import {
   swcCoreVersion,
   swcHelpersVersion,
