@@ -103,6 +103,29 @@ function formatWorkspaceJson(host: Tree, options: Schema) {
   }
 }
 
+function addNpmScripts(host: Tree, options: Schema) {
+  if (options.cli === 'angular') {
+    updateJson(host, join(options.directory, 'package.json'), (json) => {
+      Object.assign(json.scripts, {
+        ng: 'nx',
+        postinstall: 'node ./decorate-angular-cli.js',
+      });
+      return json;
+    });
+  }
+
+  if (options.preset !== Preset.NPM) {
+    updateJson(host, join(options.directory, 'package.json'), (json) => {
+      Object.assign(json.scripts, {
+        start: 'nx serve',
+        build: 'nx build',
+        test: 'nx test',
+      });
+      return json;
+    });
+  }
+}
+
 export async function workspaceGenerator(host: Tree, options: Schema) {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
@@ -113,6 +136,7 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
     decorateAngularClI(host, options);
   }
   setPresetProperty(host, options);
+  addNpmScripts(host, options);
   createAppsAndLibsFolders(host, options);
 
   await formatFiles(host);

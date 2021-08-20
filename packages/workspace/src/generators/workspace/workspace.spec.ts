@@ -118,10 +118,17 @@ describe('@nrwl/workspace:workspace', () => {
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);
-    const packageJson = readJson(tree, '/proj/package.json');
-    expect(packageJson.scripts.postinstall).toEqual(
-      'node ./decorate-angular-cli.js'
-    );
+
+    const { scripts } = readJson(tree, '/proj/package.json');
+    expect(scripts).toMatchInlineSnapshot(`
+Object {
+  "build": "nx build",
+  "ng": "nx",
+  "postinstall": "node ./decorate-angular-cli.js",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`);
   });
 
   it('should not add decorate-angular-cli when used with nx cli', async () => {
@@ -133,8 +140,15 @@ describe('@nrwl/workspace:workspace', () => {
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(false);
-    const packageJson = readJson(tree, '/proj/package.json');
-    expect(packageJson.scripts.postinstall).toBeUndefined();
+
+    const { scripts } = readJson(tree, '/proj/package.json');
+    expect(scripts).toMatchInlineSnapshot(`
+Object {
+  "build": "nx build",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`);
   });
 
   it('should create a workspace using package layout', async () => {
@@ -150,5 +164,8 @@ describe('@nrwl/workspace:workspace', () => {
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
     expect(nx.extends).toEqual('@nrwl/workspace/presets/npm.json');
+
+    const { scripts } = readJson(tree, '/proj/package.json');
+    expect(scripts).toMatchInlineSnapshot(`Object {}`);
   });
 });

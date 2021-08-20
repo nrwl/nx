@@ -1,4 +1,5 @@
 import {
+  getPackageManagerCommand,
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
@@ -12,18 +13,16 @@ import { convertNpmScriptsToTargets } from '@nrwl/workspace/src/core/project-gra
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
-export function getCommandAsString(
-  cliCommand: string,
-  isYarn: boolean,
-  task: Task
-) {
-  return getCommand(cliCommand, isYarn, task).join(' ').trim();
+export function getCommandAsString(task: Task) {
+  return getCommand(task).join(' ').trim();
 }
 
-export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
+export function getCommand(task: Task) {
   const args = Object.entries(task.overrides || {}).map(
     ([prop, value]) => `--${prop}=${value}`
   );
+
+  const execCommand = getPackageManagerCommand().exec;
 
   if (commonCommands.includes(task.target.target)) {
     const config = task.target.configuration
@@ -31,8 +30,8 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       : [];
 
     return [
-      cliCommand,
-      ...(isYarn ? [] : ['--']),
+      execCommand,
+      'nx',
       task.target.target,
       task.target.project,
       ...config,
@@ -44,8 +43,8 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       : '';
 
     return [
-      cliCommand,
-      ...(isYarn ? [] : ['--']),
+      execCommand,
+      'nx',
       'run',
       `${task.target.project}:${task.target.target}${config}`,
       ...args,

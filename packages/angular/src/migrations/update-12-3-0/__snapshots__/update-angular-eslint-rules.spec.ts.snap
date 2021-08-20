@@ -19,7 +19,8 @@ exports[`12.3.1 - updateAngularEslintRules should add @angular-eslint/template/e
       }
     }
   ]
-}"
+}
+"
 `;
 
 exports[`12.3.1 - updateAngularEslintRules should migrate @angular-eslint/template/accessibility-label-for => @angular-eslint/template/accessibility-label-has-associated-control 1`] = `
@@ -37,7 +38,8 @@ exports[`12.3.1 - updateAngularEslintRules should migrate @angular-eslint/templa
       }
     }
   ]
-}"
+}
+"
 `;
 
 exports[`12.3.1 - updateAngularEslintRules should migrate to new @angular-eslint/template/accessibility-label-has-associated-control label-components config 1`] = `
@@ -68,5 +70,6 @@ exports[`12.3.1 - updateAngularEslintRules should migrate to new @angular-eslint
       }
     }
   ]
-}"
+}
+"
 `;

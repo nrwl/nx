@@ -5,6 +5,7 @@ import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import type { NxArgs } from './utils';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand } from '@nrwl/devkit';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
@@ -50,17 +51,11 @@ async function createTasks(
       })
   );
 
-  const pm = detectPackageManager();
-  const isYarn = pm === 'yarn';
   return tasks.map((task, index) => ({
     id: task.id,
     overrides,
     target: task.target,
-    command: `${isYarn ? 'yarn' : `${pm} run`} ${getCommandAsString(
-      'nx',
-      isYarn,
-      task
-    )}`,
+    command: getCommandAsString(task),
     outputs: getOutputs(projectGraph.nodes, task),
   }));
 }

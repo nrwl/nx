@@ -115,7 +115,7 @@ yarn global add nx
 Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
 
 ```bash
-npm run nx -- serve todos
+npx nx serve todos
 ```
 
 or
