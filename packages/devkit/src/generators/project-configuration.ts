@@ -288,7 +288,7 @@ function readWorkspaceSection(
 }
 
 function readNxJsonSection(nxJson: NxJsonConfiguration, projectName: string) {
-  return nxJson.projects[projectName];
+  return nxJson.projects?.[projectName];
 }
 
 function setProjectConfiguration(
