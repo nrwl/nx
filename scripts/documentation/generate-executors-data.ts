@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { removeSync, readJsonSync } from 'fs-extra';
+import { readJsonSync, removeSync } from 'fs-extra';
 import { join, relative } from 'path';
 import { parseJsonSchemaToOptions } from './json-parser';
 import { dedent } from 'tslint/lib/utils';
@@ -68,7 +68,9 @@ function generateSchematicList(
     return parseJsonSchemaToOptions(flattener, builder.rawSchema)
       .then((options) => ({ ...builder, options }))
       .catch((error) =>
-        console.error(`Can't parse schema option of ${builder.name}:\n${error}`)
+        console.error(
+          `Can't parse schema option of ${builder.collectionName}/${builder.name}:\n${error}`
+        )
       );
   });
 }

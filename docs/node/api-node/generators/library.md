@@ -154,6 +154,14 @@ Type: `boolean`
 
 Whether to enable tsconfig strict mode or not.
 
+### swc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### tags
 
 Alias(es): t

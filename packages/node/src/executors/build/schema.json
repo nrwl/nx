@@ -160,6 +160,11 @@
           }
         }
       }
+    },
+    "swc": {
+      "type": "boolean",
+      "description": "Use swc as TypeScript loader instead of tsc and babel",
+      "default": false
     }
   },
   "required": ["tsConfig", "main"],

@@ -11,6 +11,7 @@ export interface ApplicationGeneratorOptions {
   standaloneConfig?: boolean;
   tags?: string;
   unitTestRunner?: UnitTestRunner;
+  swc?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {
