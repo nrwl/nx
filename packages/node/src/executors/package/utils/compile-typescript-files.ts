@@ -9,7 +9,7 @@ import {
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join } from 'path';
 import { NormalizedBuilderOptions } from './models';
-import { transformTypeScript } from '@nrwl/node/src/utils/swc';
+import { transformTypeScript } from './swc';
 
 export default async function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
