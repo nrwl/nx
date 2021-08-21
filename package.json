@@ -124,7 +124,7 @@
     "conventional-changelog-cli": "^2.0.23",
     "copy-webpack-plugin": "6.4.1",
     "core-js": "^3.6.5",
-    "cypress": "^7.3.0",
+    "cypress": "^8.3.0",
     "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.3.2",
     "cytoscape-popper": "^2.0.0",
