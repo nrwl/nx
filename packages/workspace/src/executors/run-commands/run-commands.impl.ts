@@ -2,6 +2,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import { env as appendLocalEnv } from 'npm-run-path';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -227,7 +228,11 @@ function calculateCwd(
 }
 
 function processEnv(color: boolean) {
-  const env = { ...process.env };
+  const env = {
+    ...process.env,
+    ...appendLocalEnv(),
+  };
+
   if (color) {
     env.FORCE_COLOR = `${color}`;
   }
