@@ -32,7 +32,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 8"
+    "cypress": ">= 3 < 9"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
