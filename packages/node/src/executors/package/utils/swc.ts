@@ -15,13 +15,13 @@ export function transformTypeScript(tscOptions: TypeScriptCompilationOptions): {
     const normalizedTsConfig = getNormalizedTsConfig(normalizedTscOptions);
 
     logger.info(
-      `Compiling TypeScript files for project "${normalizedTscOptions.projectName}"...`
+      `Compiling TypeScript files for project "${normalizedTscOptions.projectName}" with swc...`
     );
     for (const fileName of normalizedTsConfig.fileNames) {
       transformFileSync(fileName);
     }
     logger.info(
-      `Done compiling TypeScript files for project "${normalizedTscOptions.projectName}".`
+      `Done compiling TypeScript files for project "${normalizedTscOptions.projectName}" with swc.`
     );
     return { success: true };
   } catch (e) {
