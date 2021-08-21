@@ -7,5 +7,4 @@ module.exports = {
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
   displayName: 'workspace',
   testEnvironment: 'node',
-  testMatch: ['**/run-commands/*.spec.ts'],
 };
