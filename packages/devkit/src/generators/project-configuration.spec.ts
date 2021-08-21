@@ -2,7 +2,7 @@ import { Tree } from '@nrwl/tao/src/shared/tree';
 import { ProjectConfiguration } from '@nrwl/tao/src/shared/workspace';
 
 import { createTreeWithEmptyWorkspace } from '../tests/create-tree-with-empty-workspace';
-import { readJson } from '../utils/json';
+import { readJson, updateJson } from '../utils/json';
 import {
   addProjectConfiguration,
   getProjects,
@@ -13,6 +13,7 @@ import {
   updateWorkspaceConfiguration,
   WorkspaceConfiguration,
 } from './project-configuration';
+import { getWorkspacePath } from '../utils/get-workspace-layout';
 
 const baseTestProjectConfig: ProjectConfiguration = {
   root: 'libs/test',
@@ -25,6 +26,61 @@ describe('project configuration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  describe('readProjectConfiguration', () => {
+    it('should get info from workspace.json', () => {
+      updateJson(tree, getWorkspacePath(tree), (json) => {
+        json.projects['proj1'] = {
+          root: 'proj1',
+        };
+        return json;
+      });
+
+      const config = readProjectConfiguration(tree, 'proj1');
+      expect(config).toEqual({
+        root: 'proj1',
+      });
+    });
+
+    it('should get info from nx.json', () => {
+      updateJson(tree, getWorkspacePath(tree), (json) => {
+        json.projects['proj1'] = {
+          root: 'proj1',
+        };
+        return json;
+      });
+      updateJson(tree, 'nx.json', (json) => {
+        json.projects['proj1'] = {
+          tags: ['tag1'],
+        };
+        return json;
+      });
+
+      const config = readProjectConfiguration(tree, 'proj1');
+      expect(config).toEqual({
+        root: 'proj1',
+        tags: ['tag1'],
+      });
+    });
+
+    it('should should not fail if projects is not defined in nx.json', () => {
+      updateJson(tree, getWorkspacePath(tree), (json) => {
+        json.projects['proj1'] = {
+          root: 'proj1',
+        };
+        return json;
+      });
+      updateJson(tree, 'nx.json', (json) => {
+        delete json.projects;
+        return json;
+      });
+
+      const config = readProjectConfiguration(tree, 'proj1');
+      expect(config).toEqual({
+        root: 'proj1',
+      });
+    });
   });
 
   describe('addProjectConfiguration', () => {
