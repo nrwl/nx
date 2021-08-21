@@ -671,7 +671,7 @@ describe('with dependencies', () => {
 
     const childLib2Output = runCLI(`build ${childLib2}`);
     expect(childLib2Output).toContain(
-      `Done compiling TypeScript files for project "${childLib2}" with swc`
+      `Done compiling TypeScript files for project "${childLib2}"`
     );
 
     const parentLibOutput = runCLI(`build ${parentLib}`);
