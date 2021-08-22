@@ -38,10 +38,6 @@ export default function normalizeOptions(
     options.buildableProjectDepsInPackageJsonType = 'dependencies';
   }
 
-  if (!options.swc && existsSync(`${context.root}/.swcrc`)) {
-    options.swc = true;
-  }
-
   return {
     ...options,
     files,
