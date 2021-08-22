@@ -630,7 +630,6 @@ export function logSuccess(title: string, body?: string) {
 export function getPackageManagerCommand({
   path = tmpProjPath(),
   packageManager = detectPackageManager(path),
-  scriptsPrependNodePath = true,
 } = {}): {
   createWorkspace: string;
   runNx: string;
@@ -638,10 +637,6 @@ export function getPackageManagerCommand({
   addDev: string;
   list: string;
 } {
-  const scriptsPrependNodePathFlag = scriptsPrependNodePath
-    ? ' --scripts-prepend-node-path '
-    : '';
-
   const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
 
   return {
@@ -649,8 +644,8 @@ export function getPackageManagerCommand({
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
-      runNx: `npx nx${scriptsPrependNodePathFlag} --`,
-      runNxSilent: `npx --silent nx${scriptsPrependNodePathFlag} --`,
+      runNx: `npx nx`,
+      runNxSilent: `npx nx`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },

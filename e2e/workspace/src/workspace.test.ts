@@ -648,9 +648,7 @@ describe('print-affected', () => {
       ).stdout.trim()
     );
 
-    const { runNx } = getPackageManagerCommand({
-      scriptsPrependNodePath: false,
-    });
+    const { runNx } = getPackageManagerCommand();
     expect(resWithTarget.tasks[0]).toMatchObject({
       id: `${myapp}:test`,
       overrides: {},
