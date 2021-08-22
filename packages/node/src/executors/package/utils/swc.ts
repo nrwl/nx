@@ -66,8 +66,10 @@ function moveToDist(
   const sourceFileName = fileName.split(`/${projectName}/`).pop();
 
   const codeFileName = sourceFileName.replace('ts', 'js');
-  const sourceMapFileName = sourceFileName.replace('ts', 'js.map');
-
   writeToFile(`${outputPath}/${codeFileName}`, code);
-  writeToFile(`${outputPath}/${sourceMapFileName}`, map);
+
+  if (map) {
+    const sourceMapFileName = sourceFileName.replace('ts', 'js.map');
+    writeToFile(`${outputPath}/${sourceMapFileName}`, map);
+  }
 }
