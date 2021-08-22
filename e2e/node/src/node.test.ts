@@ -616,7 +616,7 @@ describe('with dependencies', () => {
     runCLI(`generate @nrwl/express:app ${app}`);
     runCLI(`generate @nrwl/node:lib ${parentLib} --buildable=true`);
     runCLI(`generate @nrwl/node:lib ${childLib} --buildable=true`);
-    runCLI(`generate @nrwl/node:lib ${childLib2} --buildable=true`);
+    runCLI(`generate @nrwl/node:lib ${childLib2} --buildable=true --swc`);
 
     // create dependencies by importing
     const createDep = (parent, children: string[]) => {
@@ -671,7 +671,7 @@ describe('with dependencies', () => {
 
     const childLib2Output = runCLI(`build ${childLib2}`);
     expect(childLib2Output).toContain(
-      `Done compiling TypeScript files for project "${childLib2}"`
+      `Done compiling TypeScript files for project "${childLib2}" with swc`
     );
 
     const parentLibOutput = runCLI(`build ${parentLib}`);
