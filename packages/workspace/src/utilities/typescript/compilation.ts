@@ -78,26 +78,9 @@ function createProgram(
   tsconfig: ts.ParsedCommandLine,
   projectName: string
 ): { success: boolean } {
-  const host = ts.createCompilerHost(tsconfig.options);
-  const program = ts.createProgram({
-    rootNames: tsconfig.fileNames,
-    options: tsconfig.options,
-    host,
-  });
   logger.info(`Compiling TypeScript files for project "${projectName}"...`);
-  const results = program.emit();
-  if (results.emitSkipped) {
-    const diagnostics = ts.formatDiagnosticsWithColorAndContext(
-      results.diagnostics,
-      {
-        getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
-        getNewLine: () => ts.sys.newLine,
-        getCanonicalFileName: (name) => name,
-      }
-    );
-    logger.error(diagnostics);
-    throw new Error(diagnostics);
-  } else {
+  const results = emitTsProgram(tsconfig.options, tsconfig.fileNames);
+  if (results && !results.emitSkipped) {
     logger.info(
       `Done compiling TypeScript files for project "${projectName}".`
     );
@@ -113,4 +96,31 @@ export function normalizeOptions(
     deleteOutputPath: options.deleteOutputPath ?? true,
     rootDir: options.rootDir ?? options.projectRoot,
   };
+}
+
+export function emitTsProgram(
+  options: ts.CompilerOptions,
+  rootNames: string[]
+): ts.EmitResult | never {
+  const host = ts.createCompilerHost(options);
+  const program = ts.createProgram({
+    rootNames,
+    options,
+    host,
+  });
+  const results = program.emit();
+  if (results.emitSkipped) {
+    const diagnostics = ts.formatDiagnosticsWithColorAndContext(
+      results.diagnostics,
+      {
+        getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
+        getNewLine: () => ts.sys.newLine,
+        getCanonicalFileName: (name) => name,
+      }
+    );
+    logger.error(diagnostics);
+    throw new Error(diagnostics);
+  } else {
+    return results;
+  }
 }
