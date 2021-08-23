@@ -63,13 +63,14 @@ function moveToDist(
   projectName: string,
   outputPath: string
 ): void {
-  const sourceFileName = fileName.split(`/${projectName}/`).pop();
+  const destinationDir = outputPath.split('/dist/').pop();
+  const sourceFileName = fileName.split(`/${destinationDir}/`).pop();
 
   const codeFileName = sourceFileName.replace('ts', 'js');
-  writeToFile(`${outputPath}/${codeFileName}`, code);
+  writeToFile(`dist/${destinationDir}/${codeFileName}`, code);
 
   if (map) {
     const sourceMapFileName = sourceFileName.replace('ts', 'js.map');
-    writeToFile(`${outputPath}/${sourceMapFileName}`, map);
+    writeToFile(`dist/${destinationDir}/${sourceMapFileName}`, map);
   }
 }
