@@ -239,7 +239,7 @@
     "url-loader": "^3.0.0",
     "verdaccio": "^5.0.4",
     "webpack": "4.46.0",
-    "webpack-5": "npm:webpack@latest",
+    "webpack-5": "npm:webpack@^5.51.1",
     "webpack-dev-server": "3.11.2",
     "webpack-merge": "4.2.1",
     "webpack-node-externals": "1.7.2",
