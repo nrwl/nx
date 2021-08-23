@@ -5,6 +5,8 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+// TODO: import from 'webpack' in Nx 13
+import type { Module, ModuleGraph, ChunkGraph } from 'webpack-5';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { WebpackConfigOptions, BuildOptions } from '../build-options';
 import {
@@ -120,14 +122,32 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
               }
             : {}),
           vendors: false,
-          // TODO(jack): Support both 4 and 5
           vendor: !!buildOptions.vendorChunk && {
             name: 'vendor',
             chunks: isWebpack5 ? (chunk) => chunk.name === 'main' : 'initial',
             enforce: true,
             test: isWebpack5
-              ? /[\\/]node_modules[\\/]/
-              : (
+              ? (
+                  module: Module,
+                  // `CacheGroupsContext`, but it's not exported from webpack types
+                  context: { moduleGraph: ModuleGraph; chunkGraph: ChunkGraph }
+                ) => {
+                  const moduleName = module.nameForCondition
+                    ? module.nameForCondition()
+                    : '';
+                  const chunks = context.chunkGraph.getModuleChunks(module);
+
+                  return (
+                    /[\\/]node_modules[\\/]/.test(moduleName) &&
+                    !chunks.some(
+                      ({ name }) =>
+                        isPolyfillsEntry(name) ||
+                        globalStylesBundleNames.includes(name)
+                    )
+                  );
+                }
+              : // TODO(jack): Remove in Nx 13
+                (
                   module: { nameForCondition?: Function },
                   chunks: Array<{ name: string }>
                 ) => {
