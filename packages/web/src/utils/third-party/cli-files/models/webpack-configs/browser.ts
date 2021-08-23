@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 // TODO: import from 'webpack' in Nx 13
-import type { Module, ModuleGraph, ChunkGraph } from 'webpack-5';
+import type { Module, ModuleGraph, ChunkGraph, Chunk } from 'webpack-5';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { WebpackConfigOptions, BuildOptions } from '../build-options';
 import {
@@ -126,44 +126,28 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
             name: 'vendor',
             chunks: isWebpack5 ? (chunk) => chunk.name === 'main' : 'initial',
             enforce: true,
-            test: isWebpack5
-              ? (
-                  module: Module,
-                  // `CacheGroupsContext`, but it's not exported from webpack types
-                  context: { moduleGraph: ModuleGraph; chunkGraph: ChunkGraph }
-                ) => {
-                  const moduleName = module.nameForCondition
-                    ? module.nameForCondition()
-                    : '';
-                  const chunks = context.chunkGraph.getModuleChunks(module);
+            test: (
+              module: Module,
+              // `CacheGroupsContext`, but it's not exported from webpack types
+              context: { moduleGraph: ModuleGraph; chunkGraph: ChunkGraph }
+            ) => {
+              const moduleName = module.nameForCondition
+                ? module.nameForCondition()
+                : '';
+              // TODO(jack): Remove in Nx 13
+              const chunks = isWebpack5
+                ? context.chunkGraph.getModuleChunks(module)
+                : (context as unknown as Chunk[]);
 
-                  return (
-                    /[\\/]node_modules[\\/]/.test(moduleName) &&
-                    !chunks.some(
-                      ({ name }) =>
-                        isPolyfillsEntry(name) ||
-                        globalStylesBundleNames.includes(name)
-                    )
-                  );
-                }
-              : // TODO(jack): Remove in Nx 13
-                (
-                  module: { nameForCondition?: Function },
-                  chunks: Array<{ name: string }>
-                ) => {
-                  const moduleName = module.nameForCondition
-                    ? module.nameForCondition()
-                    : '';
-
-                  return (
-                    /[\\/]node_modules[\\/]/.test(moduleName) &&
-                    !chunks.some(
-                      ({ name }) =>
-                        isPolyfillsEntry(name) ||
-                        globalStylesBundleNames.includes(name)
-                    )
-                  );
-                },
+              return (
+                /[\\/]node_modules[\\/]/.test(moduleName) &&
+                !chunks.some(
+                  ({ name }) =>
+                    isPolyfillsEntry(name) ||
+                    globalStylesBundleNames.includes(name)
+                )
+              );
+            },
           },
         },
       },
