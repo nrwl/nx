@@ -186,7 +186,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `less`
+Possible values: `css`, `scss`, `sass`, `less`
 
 The file extension to be used for style files.
 

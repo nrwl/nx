@@ -313,6 +313,24 @@ describe('app', () => {
     });
   });
 
+  describe('--style sass', () => {
+    it('should generate sass styles', async () => {
+      await generateApp(appTree, 'myApp', { style: 'sass' });
+      expect(appTree.exists('apps/my-app/src/app/app.component.sass')).toEqual(
+        true
+      );
+    });
+  });
+
+  describe('--style less', () => {
+    it('should generate less styles', async () => {
+      await generateApp(appTree, 'myApp', { style: 'less' });
+      expect(appTree.exists('apps/my-app/src/app/app.component.less')).toEqual(
+        true
+      );
+    });
+  });
+
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
       const spy = jest.spyOn(devkit, 'formatFiles');

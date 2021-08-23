@@ -8,11 +8,12 @@ import { getDecoratorPropertyValueNode } from '../../../utils/nx-devkit/ast-util
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
 
 export function updateComponentStyles(host: Tree, options: NormalizedSchema) {
-  const content = nrwlHomeTemplate.css;
+  const content = nrwlHomeTemplate[options.style === 'sass' ? 'sass' : 'css'];
 
   if (!options.inlineStyle) {
     const filesMap = {
       css: `${options.appProjectRoot}/src/app/app.component.css`,
+      sass: `${options.appProjectRoot}/src/app/app.component.sass`,
       scss: `${options.appProjectRoot}/src/app/app.component.scss`,
       less: `${options.appProjectRoot}/src/app/app.component.less`,
     };
