@@ -179,7 +179,7 @@
     "mime": "2.4.4",
     "mini-css-extract-plugin": "0.8.0",
     "minimatch": "3.0.4",
-    "next": "11.1.0",
+    "next": "11.0.1",
     "next-sitemap": "^1.6.108",
     "ng-packagr": "~12.2.0",
     "ngrx-store-freeze": "0.2.4",
