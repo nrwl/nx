@@ -64,7 +64,7 @@ describe('application generator', () => {
     });
   });
 
-  describe('--swc', () => {
+  describe('--experimentalSwc', () => {
     it('should generate swcrc file', async () => {
       await applicationGenerator(tree, {
         name: 'mySwcNestApp',

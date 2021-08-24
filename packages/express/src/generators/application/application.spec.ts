@@ -127,7 +127,7 @@ describe('app', () => {
     });
   });
 
-  describe('--swc flag', () => {
+  describe('--experimentalSwc flag', () => {
     it('should generate swcrc file', async () => {
       await applicationGenerator(appTree, {
         name: 'mySwcNodeApp',

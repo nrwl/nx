@@ -528,7 +528,7 @@ describe('lib', () => {
     });
   });
 
-  describe('--swc', () => {
+  describe('--experimentalSwc', () => {
     it('should set  build.options.experimentalSwc to true for buildable', async () => {
       await libraryGenerator(tree, {
         name: 'mySwcLib',
