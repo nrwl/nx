@@ -27,12 +27,17 @@ The end result should look something like this:
 
 ### Create an Nx Workspace
 
-To start with, we need to create a new Nx Workspace. We can do this easily with:  
-**npm**  
-`npx create-nx-workspace ng-mfe`
+To start with, we need to create a new Nx Workspace. We can do this easily with:
 
-**Yarn**  
-`yarn create nx-workspace ng-mfe --packageManager=yarn`
+```bash
+# Npm
+npx create-nx-workspace ng-mfe
+```
+
+```bash
+# Yarn
+yarn create nx-workspace ng-mfe --packageManager=yarn
+```
 
 You'll be prompted for a preset. We recommend selecting `empty` as it will allow you finer control over your workspace configuration.
 
@@ -44,11 +49,15 @@ To add Angular-related features to our newly created monorepo we need to install
 
 _**NOTE:** Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mfe`_
 
-**npm**  
-`npm install --save-dev @nrwl/angular`
+```bash
+# Npm
+npm install --save-dev @nrwl/angular
+```
 
-**Yarn**  
-`yarn add -D @nrwl/angular`
+```bash
+# Yarn
+yarn add -D @nrwl/angular
+```
 
 Simple! You are now able to use Nx Generators to scaffold Angular applications and libraries.
 
@@ -58,22 +67,30 @@ We need to generate two applications. We also need to tell Nx that we want these
 
 We'll start with the Admin Dashboard application which will act as a host application for the MFE:
 
-**npm**  
-`npm run nx g @nrwl/angular:app dashboard --mfe --mfeType=host --routing=true`
+```bash
+# Npm
+npx nx g @nrwl/angular:app dashboard --mfe --mfeType=host --routing=true
+```
 
-**Yarn**  
-`yarn nx g @nrwl/angular:app dashboard --mfe --mfeType=host --routing=true`
+```bash
+# Yarn
+yarn nx g @nrwl/angular:app dashboard --mfe --mfeType=host --routing=true
+```
 
 You'll be prompted for some additional options. For this tutorial, just select the default options.
 The application generator will create and modify the files needed to setup an Angular application.
 
 Now, let's generate the Login application as a remote application.
 
-**npm**  
-`npm run nx g @nrwl/angular:app login --mfe --mfeType=remote --port=4201 --host=dashboard --routing=true`
+```bash
+# Npm
+npx nx g @nrwl/angular:app login --mfe --mfeType=remote --port=4201 --host=dashboard --routing=true
+```
 
-**Yarn**  
-`yarn nx g @nrwl/angular:app login --mfe --mfeType=remote --port=4201 --host=dashboard --routing=true`
+```bash
+# Yarn
+yarn nx g @nrwl/angular:app login --mfe --mfeType=remote --port=4201 --host=dashboard --routing=true
+```
 
 _**Note:** We provided `remote` as the `--mfeType`. This tells the generator to create a Webpack configuration file that is ready to be consumed by a Host application._
 
@@ -102,18 +119,18 @@ We see the following within Login's webpack configuration:
 
 ```js
 new ModuleFederationPlugin({
-    name: 'login',
-    filename: 'remoteEntry.js',
-    exposes: {
-        './Module': 'apps/login/src/app/remote-entry/entry.module.ts',
-    },
-    shared: {
-        '@angular/core': { singleton: true, strictVersion: true },
-        '@angular/common': { singleton: true, strictVersion: true },
-        '@angular/common/http': { singleton: true, strictVersion: true },
-        '@angular/router': { singleton: true, strictVersion: true },
-        ...sharedMappings.getDescriptors(),
-    },
+  name: 'login',
+  filename: 'remoteEntry.js',
+  exposes: {
+    './Module': 'apps/login/src/app/remote-entry/entry.module.ts',
+  },
+  shared: {
+    '@angular/core': { singleton: true, strictVersion: true },
+    '@angular/common': { singleton: true, strictVersion: true },
+    '@angular/common/http': { singleton: true, strictVersion: true },
+    '@angular/router': { singleton: true, strictVersion: true },
+    ...sharedMappings.getDescriptors(),
+  },
 }),
 ```
 
@@ -130,16 +147,16 @@ We can see the following in Dashboard's webpack configuration:
 
 ```js
 new ModuleFederationPlugin({
-    remotes: {
-      login: 'login@http://localhost:4201/remoteEntry.js',
-    },
-    shared: {
-      '@angular/core': { singleton: true, strictVersion: true },
-      '@angular/common': { singleton: true, strictVersion: true },
-      '@angular/common/http': { singleton: true, strictVersion: true },
-      '@angular/router': { singleton: true, strictVersion: true },
-      ...sharedMappings.getDescriptors(),
-    },
+  remotes: {
+    login: 'login@http://localhost:4201/remoteEntry.js',
+  },
+  shared: {
+    '@angular/core': { singleton: true, strictVersion: true },
+    '@angular/common': { singleton: true, strictVersion: true },
+    '@angular/common/http': { singleton: true, strictVersion: true },
+    '@angular/router': { singleton: true, strictVersion: true },
+    ...sharedMappings.getDescriptors(),
+  },
 }),
 ```
 
@@ -164,11 +181,17 @@ We'll start by building the Login app, which will consist of a login form and so
 
 Let's create a user data-access library that we will share between the host application and the remote application. This will be used to determine if there is an authenticated user as well as providing logic for authenticating the user.
 
-`nx g @nrwl/angular:lib shared/data-access-user`  
+```bash
+nx g @nrwl/angular:lib shared/data-access-user
+```
+
 This will scaffold a new library for us to use.
 
-We need an Angular Service that we will use to hold state:  
-`nx g @nrwl/angular:service user --project=shared-data-access-user`
+We need an Angular Service that we will use to hold state:
+
+```bash
+nx g @nrwl/angular:service user --project=shared-data-access-user
+```
 
 This will create a file `user.service.ts` under the `shared/data-access-user` library. Change it's contents to match:
 
@@ -304,8 +327,11 @@ RouterModule.forRoot(
 );
 ```
 
-Now let's serve the application and view it in a browser to check that the form renders correctly.  
-`nx run login:serve`
+Now let's serve the application and view it in a browser to check that the form renders correctly.
+
+```bash
+nx run login:serve
+```
 
 We can see if we navigate a browser to `http://localhost:4201` that we see the login form rendered:
 
@@ -370,7 +396,11 @@ export class AppComponent implements OnInit {
 }
 ```
 
-We can run both the dashboard app and the login app using: `nx run dashboard:serve-mfe` and you can try it out!
+We can run both the dashboard app and the login app and you can try it out using:
+
+```bash
+nx run dashboard:serve-mfe
+```
 
 ## Conclusion
 
