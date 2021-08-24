@@ -7,13 +7,16 @@
       "executor": "@nrwl/cypress:cypress",
       "options": {
         "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",
+        "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
         "devServerTarget": "dep-graph-dep-graph:serve"
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nrwl/linter:lint",
       "options": {
-        "lintFilePatterns": ["dep-graph/dep-graph-e2e/**/*.{js,ts}"]
+        "linter": "eslint",
+        "tsConfig": ["dep-graph/dep-graph-e2e/tsconfig.e2e.json"],
+        "exclude": ["**/node_modules/**", "!dep-graph/dep-graph-e2e/**/*"]
       }
     }
   },
