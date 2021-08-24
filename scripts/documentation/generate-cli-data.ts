@@ -5,40 +5,44 @@ import { join } from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { commandsObject } from '../../packages/workspace';
 import { Framework, Frameworks } from './frameworks';
-import { generateMarkdownFile, sortAlphabeticallyFunction } from './utils';
+import {
+  formatDeprecated,
+  generateMarkdownFile,
+  sortAlphabeticallyFunction,
+} from './utils';
 const importFresh = require('import-fresh');
 
-const examples = {
+interface Example {
+  command: string;
+  description: string;
+}
+
+const examples: Record<string, Example[]> = {
   'print-affected': [
     {
       command: 'print-affected',
       description:
-        'Print information about affected projects and the dependency graph.',
+        'Print information about affected projects and the dependency graph',
     },
     {
       command: 'print-affected --base=master --head=HEAD',
       description:
-        'Print information about the projects affected by the changes between master and HEAD (e.g,. PR).',
+        'Print information about the projects affected by the changes between master and HEAD (e.g,. PR)',
     },
     {
       command: 'print-affected --target=test',
       description:
-        'Prints information about the affected projects and a list of tasks to test them.',
-    },
-    {
-      command: 'print-affected --target=build --with-deps',
-      description:
-        'Prints information about the affected projects and a list of tasks to build them and their dependencies.',
+        'Prints information about the affected projects and a list of tasks to test them',
     },
     {
       command: 'print-affected --target=build --select=projects',
       description:
-        'Prints the projects property from the print-affected output.',
+        'Prints the projects property from the print-affected output',
     },
     {
       command: 'print-affected --target=build --select=tasks.target.project',
       description:
-        'Prints the tasks.target.project property from the print-affected output.',
+        'Prints the tasks.target.project property from the print-affected output',
     },
   ],
   affected: [
@@ -60,11 +64,6 @@ const examples = {
       description: 'Run the test target for all projects',
     },
     {
-      command: 'affected --target=test --with-deps',
-      description:
-        'Run the test target for the affected projects and also all the projects the affected projects depend on.',
-    },
-    {
       command: 'affected --target=test --files=libs/mylib/src/index.ts',
       description:
         'Run tests for all the projects affected by changing the index.ts file',
@@ -78,12 +77,6 @@ const examples = {
       command: 'affected --target=test --base=master~1 --head=master',
       description:
         'Run tests for all the projects affected by the last commit on master',
-    },
-    {
-      command:
-        'affected --target=build --base=master~1 --head=master --with-deps',
-      description:
-        'Run build for all the projects affected by the last commit on master and their dependencies',
     },
   ],
   'affected:test': [
@@ -131,11 +124,6 @@ const examples = {
       description: 'Run the build target for all projects',
     },
     {
-      command: 'affected:build --with-deps',
-      description:
-        'Run the build target for the affected projects and also all the projects the affected projects depend on.',
-    },
-    {
       command: 'affected:build --files=libs/mylib/src/index.ts',
       description:
         'Run build for all the projects affected by changing the index.ts file',
@@ -149,11 +137,6 @@ const examples = {
       command: 'affected:build --base=master~1 --head=master',
       description:
         'Run build for all the projects affected by the last commit on master',
-    },
-    {
-      command: 'affected:build --base=master~1 --head=master --with-deps',
-      description:
-        'Run build for all the projects affected by the last commit on master and their dependencies',
     },
   ],
   'affected:e2e': [
@@ -339,54 +322,50 @@ const examples = {
   'run-many': [
     {
       command: 'run-many --target=test --all',
-      description: 'Test all projects.',
+      description: 'Test all projects',
     },
     {
       command: 'run-many --target=test --projects=proj1,proj2',
-      description: 'Test proj1 and proj2.',
+      description: 'Test proj1 and proj2',
     },
     {
       command:
         'run-many --target=test --projects=proj1,proj2 --parallel --maxParallel=2',
-      description: 'Test proj1 and proj2 in parallel.',
-    },
-    {
-      command: 'run-many --target=test --projects=proj1,proj2 --with-deps',
-      description: 'Build proj1 and proj2 and all their dependencies.',
+      description: 'Test proj1 and proj2 in parallel',
     },
   ],
   migrate: [
     {
       command: 'migrate next',
       description:
-        'Update @nrwl/workspace to "next". This will update other packages and will generate migrations.json.',
+        'Update @nrwl/workspace to "next". This will update other packages and will generate migrations.json',
     },
     {
       command: 'migrate 9.0.0',
       description:
-        'Update @nrwl/workspace to "9.0.0". This will update other packages and will generate migrations.json.',
+        'Update @nrwl/workspace to "9.0.0". This will update other packages and will generate migrations.json',
     },
     {
       command:
         'migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"',
       description:
-        'Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally.',
+        'Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally',
     },
     {
       command:
         'migrate @nrwl/workspace@9.0.0 --to="@nrwl/react@9.0.1,@nrwl/angular@9.0.1"',
       description:
-        'Update @nrwl/workspace to "9.0.0". If it tries to update @nrwl/react or @nrwl/angular, use version "9.0.1".',
+        'Update @nrwl/workspace to "9.0.0". If it tries to update @nrwl/react or @nrwl/angular, use version "9.0.1"',
     },
     {
       command: 'migrate another-package@12.0.0',
       description:
-        'Update another-package to "12.0.0". This will update other packages and will generate migrations.json file.',
+        'Update another-package to "12.0.0". This will update other packages and will generate migrations.json file',
     },
     {
       command: 'migrate --run-migrations=migrations.json',
       description:
-        'Run migrations from the migrations.json file. You can modify migrations.json and run this command many times.',
+        'Run migrations from the migrations.json file. You can modify migrations.json and run this command many times',
     },
   ],
 };
@@ -401,6 +380,19 @@ const sharedCommands = [
   'test',
 ];
 
+interface ParsedCommandOption {
+  name: string;
+  description: string;
+  default: string;
+  deprecated: boolean | string;
+}
+
+interface ParsedCommand {
+  name: string;
+  description: string;
+  options?: Array<ParsedCommandOption>;
+}
+
 export async function generateCLIDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 
@@ -413,10 +405,14 @@ export async function generateCLIDocumentation() {
         'cli'
       );
       removeSync(commandsOutputDirectory);
+
       function getCommands(command) {
         return command.getCommandInstance().getCommandHandlers();
       }
-      async function parseCommandInstance(name, command) {
+      async function parseCommandInstance(
+        name: string,
+        command: any
+      ): Promise<ParsedCommand> {
         // It is not a function return a strip down version of the command
         if (
           !(
@@ -426,10 +422,7 @@ export async function generateCLIDocumentation() {
             command.builder.apply
           )
         ) {
-          return {
-            command: name,
-            description: command['description'],
-          };
+          return { name, description: command.description };
         }
         // Show all the options we can get from yargs
         const builder = await command.builder(
@@ -439,42 +432,45 @@ export async function generateCLIDocumentation() {
           .getUsageInstance()
           .getDescriptions();
         const builderDefaultOptions = builder.getOptions().default;
+        const builderDeprecatedOptions = builder.getDeprecatedOptions();
         return {
-          command: name,
-          description: command['description'],
+          name,
+          description: command.description,
           options:
             Object.keys(builderDescriptions).map((key) => ({
-              command: '--'.concat(key),
+              name: key,
               description: builderDescriptions[key]
                 ? builderDescriptions[key].replace('__yargsString__:', '')
                 : '',
               default: builderDefaultOptions[key],
+              deprecated: builderDeprecatedOptions[key],
             })) || null,
         };
       }
-      function generateMarkdown(command) {
+
+      function generateMarkdown(command: ParsedCommand) {
         let template = dedent`
-# ${command.command}
-      
+# ${command.name}
+
 ${command.description}
 
 ## Usage
 
 \`\`\`bash
-nx ${command.command}
+nx ${command.name}
 \`\`\`
 
 [Install \`nx\` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpx nx\`.\n`;
 
-        if (examples[command.command] && examples[command.command].length > 0) {
-          template += `### Examples`;
-          examples[command.command].forEach((example) => {
+        if (examples[command.name] && examples[command.name].length > 0) {
+          template += `\n### Examples`;
+          examples[command.name].forEach((example) => {
             template += dedent`
-        ${example.description}:
-        \`\`\`bash
-        nx ${example.command}
-        \`\`\`
-        `;
+              ${example.description}:
+              \`\`\`bash
+              nx ${example.command}
+              \`\`\`
+            `;
           });
         }
 
@@ -482,28 +478,24 @@ nx ${command.command}
           template += '\n## Options';
 
           command.options
-            .sort((a, b) =>
-              sortAlphabeticallyFunction(
-                a.command.replace('--', ''),
-                b.command.replace('--', '')
-              )
-            )
-            .forEach(
-              (option) =>
-                (template += dedent`
-            ### ${option.command.replace('--', '')}
-            ${
-              option.default === undefined || option.default === ''
-                ? ''
-                : `Default: \`${option.default}\`\n`
-            }
-            ${option.description}
-          `)
-            );
+            .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+            .forEach((option) => {
+              template += dedent`
+                ### ${option.deprecated ? `~~${option.name}~~` : option.name}
+                ${
+                  option.default === undefined || option.default === ''
+                    ? ''
+                    : `Default: \`${option.default}\`\n`
+                }
+              `;
+              template += dedent`
+                ${formatDeprecated(option.description, option.deprecated)}
+              `;
+            });
         }
 
         return {
-          name: command.command
+          name: command.name
             .replace(':', '-')
             .replace(' ', '-')
             .replace(/[\]\[.]+/gm, ''),

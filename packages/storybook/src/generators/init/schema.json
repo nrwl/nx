@@ -12,7 +12,8 @@
         "@storybook/react",
         "@storybook/html",
         "@storybook/web-components",
-        "@storybook/vue"
+        "@storybook/vue",
+        "@storybook/vue3"
       ],
       "x-prompt": "What UI framework plugin should storybook use?"
     }

@@ -165,7 +165,7 @@ describe('@nrwl/storybook:init', () => {
     expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
   });
 
-  it('should add vue related dependencies when using html as uiFramework', async () => {
+  it('should add vue related dependencies when using vue as uiFramework', async () => {
     const existing = 'existing';
     const existingVersion = '1.0.0';
     addDependenciesToPackageJson(
@@ -208,6 +208,52 @@ describe('@nrwl/storybook:init', () => {
     expect(packageJson.devDependencies['@storybook/vue']).toBeDefined();
   });
 
+  it('should add vue3 related dependencies when using vue3 as uiFramework', async () => {
+    const existing = 'existing';
+    const existingVersion = '1.0.0';
+    addDependenciesToPackageJson(
+      tree,
+      { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+      { [existing]: existingVersion }
+    );
+    await initGenerator(tree, {
+      uiFramework: '@storybook/vue3',
+    });
+    const packageJson = readJson(tree, 'package.json');
+
+    // general deps
+    expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
+    expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+    expect(packageJson.dependencies[existing]).toBeDefined();
+    expect(packageJson.devDependencies[existing]).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/addon-essentials']
+    ).toBeDefined();
+
+    // react specific
+    expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+    expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+    expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+
+    // angular specific
+    expect(packageJson.devDependencies['@storybook/angular']).not.toBeDefined();
+    expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+
+    // generic html specific
+    expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+
+    // generic vue specific
+    expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
+
+    // generic web-components specific
+    expect(
+      packageJson.devDependencies['@storybook/web-components']
+    ).not.toBeDefined();
+
+    // generic vue3 specific
+    expect(packageJson.devDependencies['@storybook/vue3']).toBeDefined();
+  });
+
   it('should add build-storybook to cacheable operations', async () => {
     await initGenerator(tree, {
       uiFramework: '@storybook/html',
@@ -231,6 +277,16 @@ describe('@nrwl/storybook:init', () => {
   it('should add build-storybook to cacheable operations for vue', async () => {
     await initGenerator(tree, {
       uiFramework: '@storybook/vue',
+    });
+    const nxJson = readJson(tree, 'nx.json');
+    expect(
+      nxJson.tasksRunnerOptions.default.options.cacheableOperations
+    ).toContain('build-storybook');
+  });
+
+  it('should add build-storybook to cacheable operations for vue3', async () => {
+    await initGenerator(tree, {
+      uiFramework: '@storybook/vue3',
     });
     const nxJson = readJson(tree, 'nx.json');
     expect(
