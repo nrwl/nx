@@ -14,5 +14,5 @@ export interface Schema {
   js: boolean;
   pascalCaseFiles: boolean;
   standaloneConfig?: boolean;
-  swc?: boolean;
+  experimentalSwc?: boolean;
 }

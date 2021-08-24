@@ -48,6 +48,14 @@ Type: `boolean`
 
 Read buildable libraries from source instead of building them separately.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### externalDependencies
 
 Default: `all`
@@ -155,14 +163,6 @@ Default: `false`
 Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
-
-### swc
-
-Default: `false`
-
-Type: `boolean`
-
-Use swc as TypeScript loader instead of tsc and babel
 
 ### tsPlugins
 

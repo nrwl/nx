@@ -26,8 +26,8 @@ export function addProject(tree: Tree, options: NormalizedOptions): void {
     },
   };
 
-  if (options.swc) {
-    project.targets.build.options.swc = true;
+  if (options.experimentalSwc) {
+    project.targets.build.options.experimentalSwc = true;
   }
 
   updateProjectConfiguration(tree, options.projectName, project);

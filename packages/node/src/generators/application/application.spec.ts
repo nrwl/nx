@@ -443,23 +443,32 @@ describe('app', () => {
 
   describe('--swc', () => {
     it('should generate swcrc file', async () => {
-      await applicationGenerator(tree, { name: 'mySwcNodeApp', swc: true });
+      await applicationGenerator(tree, {
+        name: 'mySwcNodeApp',
+        experimentalSwc: true,
+      });
 
       expect(tree.exists('.swcrc')).toBeTruthy();
     });
 
-    it('should set  build.options.swc to true', async () => {
-      await applicationGenerator(tree, { name: 'mySwcNodeApp', swc: true });
+    it('should set  build.options.experimentalSwc to true', async () => {
+      await applicationGenerator(tree, {
+        name: 'mySwcNodeApp',
+        experimentalSwc: true,
+      });
 
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-swc-node-app'];
       const buildTarget = project.architect.build;
 
-      expect(buildTarget.options.swc).toEqual(true);
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
     });
 
     it('should have swc dependencies in package.json', async () => {
-      await applicationGenerator(tree, { name: 'mySwcNodeApp', swc: true });
+      await applicationGenerator(tree, {
+        name: 'mySwcNodeApp',
+        experimentalSwc: true,
+      });
 
       const packageJson = readJson(tree, 'package.json');
       const dependencies = packageJson.devDependencies;

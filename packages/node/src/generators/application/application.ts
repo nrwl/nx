@@ -50,8 +50,8 @@ function getBuildConfig(
     assets: [joinPathFragments(project.sourceRoot, 'assets')],
   } as Record<string, unknown>;
 
-  if (options.swc) {
-    executorOptions.swc = true;
+  if (options.experimentalSwc) {
+    executorOptions.experimentalSwc = true;
   }
 
   return {
@@ -202,7 +202,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  if (options.swc) {
+  if (options.experimentalSwc) {
     addSwcConfig(tree);
     tasks.push(addSwcDevDependencies(tree));
   }

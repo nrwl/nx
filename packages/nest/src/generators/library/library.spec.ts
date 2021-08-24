@@ -369,17 +369,17 @@ describe('lib', () => {
   });
 
   describe('--swc', () => {
-    it('should set  build.options.swc to true for buildable', async () => {
+    it('should set  build.options.experimentalSwc to true for buildable', async () => {
       await libraryGenerator(tree, {
         name: libName,
-        swc: true,
+        experimentalSwc: true,
         buildable: true,
       });
 
       const workspaceJson = readJson(tree, '/workspace.json');
       const project = workspaceJson.projects[libFileName];
       const buildTarget = project.architect.build;
-      expect(buildTarget.options.swc).toEqual(true);
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
     });
   });
 });

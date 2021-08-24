@@ -38,6 +38,6 @@ export function toNodeApplicationGeneratorOptions(
     standaloneConfig: options.standaloneConfig,
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
-    swc: options.swc,
+    experimentalSwc: options.experimentalSwc,
   };
 }

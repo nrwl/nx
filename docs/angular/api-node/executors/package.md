@@ -48,6 +48,14 @@ Type: `boolean`
 
 Delete the output path before building.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### outputPath
 
 Type: `string`
@@ -73,14 +81,6 @@ Output sourcemaps.
 Type: `string`
 
 Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property
-
-### swc
-
-Default: `false`
-
-Type: `boolean`
-
-Use swc as TypeScript loader instead of tsc and babel
 
 ### updateBuildableProjectDepsInPackageJson
 

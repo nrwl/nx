@@ -131,7 +131,7 @@ describe('app', () => {
     it('should generate swcrc file', async () => {
       await applicationGenerator(appTree, {
         name: 'mySwcNodeApp',
-        swc: true,
+        experimentalSwc: true,
       } as Schema);
 
       expect(appTree.exists('.swcrc')).toBeTruthy();
@@ -139,7 +139,7 @@ describe('app', () => {
       const workspaceJson = readJson(appTree, 'workspace.json');
       const project = workspaceJson.projects['my-swc-node-app'];
       const buildTarget = project.architect.build;
-      expect(buildTarget.options.swc).toEqual(true);
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
     });
   });
 });

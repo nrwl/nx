@@ -40,6 +40,14 @@ Type: `string`
 
 The directory of the new application.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### frontendProject
 
 Type: `string`
@@ -79,14 +87,6 @@ Default: `false`
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json.
-
-### swc
-
-Default: `false`
-
-Type: `boolean`
-
-Use swc as TypeScript loader instead of tsc and babel
 
 ### tags
 

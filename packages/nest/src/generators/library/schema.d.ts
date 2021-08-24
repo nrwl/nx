@@ -27,7 +27,7 @@ export interface LibraryGeneratorOptions {
     | 'es2020';
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
-  swc?: boolean;
+  experimentalSwc?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

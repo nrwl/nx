@@ -53,7 +53,7 @@
       "type": "boolean",
       "default": false
     },
-    "swc": {
+    "experimentalSwc": {
       "type": "boolean",
       "description": "Use swc as TypeScript loader instead of tsc and babel",
       "default": false

@@ -32,7 +32,7 @@ export function getBaseWebpackPartial(
 
   let transpileRuleLoader: { loader: string; options?: object };
 
-  if (options.swc) {
+  if (options.experimentalSwc) {
     transpileRuleLoader = getSwcRuleLoader();
   } else {
     const { compilerPluginHooks, hasPlugin } = loadTsPlugins(options.tsPlugins);

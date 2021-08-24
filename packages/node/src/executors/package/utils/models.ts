@@ -16,7 +16,7 @@ export interface NodePackageBuilderOptions {
   srcRootForCompilationRoot?: string;
   deleteOutputPath: boolean;
   cli?: boolean;
-  swc?: boolean;
+  experimentalSwc?: boolean;
 }
 
 export interface NormalizedBuilderOptions extends NodePackageBuilderOptions {

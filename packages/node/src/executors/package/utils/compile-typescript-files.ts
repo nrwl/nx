@@ -46,7 +46,7 @@ export default async function compileTypeScriptFiles(
       }
     });
   } else {
-    if (options.swc) {
+    if (options.experimentalSwc) {
       const result = transformTypeScript(tcsOptions);
       await postCompleteAction();
       return result;

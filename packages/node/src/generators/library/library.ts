@@ -36,7 +36,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  if (options.swc && options.buildable) {
+  if (options.experimentalSwc && options.buildable) {
     addSwcConfig(tree);
     addSwcDevDependencies(tree);
   }
@@ -138,8 +138,8 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
     },
   };
 
-  if (options.swc) {
-    project.targets.build.options.swc = true;
+  if (options.experimentalSwc) {
+    project.targets.build.options.experimentalSwc = true;
   }
 
   if (options.rootDir) {

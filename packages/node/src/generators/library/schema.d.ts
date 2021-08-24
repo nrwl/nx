@@ -19,5 +19,5 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   strict?: boolean;
   standaloneConfig?: boolean;
-  swc?: boolean;
+  experimentalSwc?: boolean;
 }
