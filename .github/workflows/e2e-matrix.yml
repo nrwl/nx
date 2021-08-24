@@ -44,6 +44,7 @@ jobs:
           - e2e-web
           - e2e-storybook
           - e2e-workspace
+          - e2e-react-native,e2e-detox
         exclude:
           - os: ubuntu-latest
             node_version: '14'
@@ -120,6 +121,13 @@ jobs:
       uses: pnpm/action-setup@v2.0.1
       with:
         version: 6.9.1
+
+    - name: Install applesimutils, reset ios simulators
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+        brew install applesimutils
+        xcrun simctl shutdown all && xcrun simctl erase all
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"

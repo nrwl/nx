@@ -71,6 +71,8 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/linter/package.json',
     'build/npm/nx-plugin/package.json',
     'build/npm/nx/package.json',
+    'build/npm/react-native/package.json',
+    'build/npm/detox/package.json',
   ];
   if (isLocal) {
     pkgFiles = pkgFiles.filter((f) => f !== 'package.json');

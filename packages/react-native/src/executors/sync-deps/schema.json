@@ -1,0 +1,14 @@
+{
+  "cli": "nx",
+  "$id": "NxReactNativeSyncDeps",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Sync Deps for React Native",
+  "description": "Updates package.json with project dependencies",
+  "type": "object",
+  "properties": {
+    "include": {
+      "type": "string",
+      "description": "A comma-separated list of additional npm packages to include. e.g. 'nx sync-deps --include=react-native-gesture-handler,react-native-safe-area-context'"
+    }
+  }
+}

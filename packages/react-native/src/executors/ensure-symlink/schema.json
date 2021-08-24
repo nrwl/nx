@@ -1,0 +1,9 @@
+{
+  "cli": "nx",
+  "$id": "NxReactNativeEnsureSymlink",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Ensure Symlink for React Native",
+  "description": "Ensure workspace node_modules is symlink under app's node_modules folder.",
+  "type": "object",
+  "properties": {}
+}
