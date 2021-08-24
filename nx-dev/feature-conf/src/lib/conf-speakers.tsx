@@ -23,7 +23,8 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'MannIsaac',
     },
     {
-      description: 'Coming soon.',
+      description:
+        'From the faraway lands of Scotland (but without the Scottish accent), Rares works at Nrwl on NxCloud, helping teams speed up and scale their development. He enjoys learning by teaching and has Egghead.io courses on TypeScript and Reactive Programming.',
       imageUrl: '/images/conf/rares-matei.webp',
       name: 'Rares Matei',
       twitter: '__rares',
@@ -34,13 +35,6 @@ export function ConfSpeakers(): JSX.Element {
       imageUrl: '/images/conf/manfred-steyer.webp',
       name: 'Manfred Steyer',
       twitter: 'ManfredSteyer',
-    },
-    {
-      description:
-        "Diana Rodriguez is a Full Stack Developer & DevOps lover of all things web and cloud! With 20+ years experience and a strong background in back end and infrastructure Diana likes to bring together the best of both worlds. She's super enthusiastic about encouraging people to start a career in development and a fan of Python, IoT, Automation and things to nerd about.",
-      imageUrl: '/images/conf/diana-rodriguez.webp',
-      name: 'Diana Rodriguez',
-      twitter: 'cotufa82',
     },
     {
       description:
@@ -55,6 +49,45 @@ export function ConfSpeakers(): JSX.Element {
       imageUrl: '/images/conf/nathan-walker.webp',
       name: 'Nathan Walker',
       twitter: 'wwwalkerrun',
+    },
+    {
+      description:
+        "Juri Strumpflohner lives in the very northern part of Italy and is currently working as a JavaScript Architect and Engineering Manager at Nrwl, where he consults for some of the world's biggest companies around the globe. Juri is a Google Developer Expert in Web Technologies & Angular, speaks at international conferences, teaches on Egghead.io, or writes articles on [https://juri.dev](https://juri.dev/)/. He's also a core member of Nx.",
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Juri Strumpflohner',
+      twitter: 'juristr',
+    },
+    {
+      description: 'Kirils is a Software Engineer at Nrwl, working on Nx.',
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Kirils Ladovs',
+      twitter: 'kirjai',
+    },
+    {
+      description:
+        'Based in Atlanta, GA, Altan is an engineer on the Nx Cloud team. He enjoys web tech, mechanical keyboards, and drone photography.',
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Altan Stalker',
+      twitter: 'StalkAltan',
+    },
+    {
+      description: 'Coming soon.',
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Katerina Skroumpelou',
+      twitter: 'psybercity',
+    },
+    {
+      description: 'Coming soon.',
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Zack DeRose',
+      twitter: 'zackderose',
+    },
+    {
+      description:
+        'Jason is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Jason is also an enthusiast of board games and mechanical keyboards.',
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Jason Jean',
+      twitter: 'frozenpandaz',
     },
   ];
 
