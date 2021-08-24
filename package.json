@@ -23,7 +23,8 @@
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map && yarn check-internal-links",
     "submit-plugin": "node ./scripts/submit-plugin.js",
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "postinstall": "node update-cli.js"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.1202.0",
@@ -77,8 +78,8 @@
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "@popperjs/core": "^2.9.2",
     "@reduxjs/toolkit": "1.5.0",
-    "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-image": "^2.1.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
@@ -179,7 +180,7 @@
     "mime": "2.4.4",
     "mini-css-extract-plugin": "0.8.0",
     "minimatch": "3.0.4",
-    "next": "11.0.1",
+    "next": "^11.0.1",
     "next-sitemap": "^1.6.108",
     "ng-packagr": "~12.2.0",
     "ngrx-store-freeze": "0.2.4",

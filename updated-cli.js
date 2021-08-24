@@ -1,28 +1,42 @@
-import { writeFileSync, readdirSync } from 'fs';
-
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+const fs_1 = require('fs');
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
     process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
     process.env.NX_FORWARD_OUTPUT === 'true'
   );
 }
-
 if (!process.env.NX_WORKSPACE_ROOT) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
-requireCli();
 
 const getDirectories = (source) =>
-  readdirSync(source, { withFileTypes: true })
+  fs_1
+    .readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
+requireCli();
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
+
+  const dirs = getDirectories('node_modules/@nrwl');
+  console.log('DIRS', dirs);
+  console.log('INDEX file', fs_1.lstatSync('node_modules/@nrwl/tao/index.js'));
+  console.log('deleting require cache', process.env.NX_WORKSPACE_ROOT);
+  delete require.cache[require.resolve('@nrwl/tao/index.js')];
+
+  console.log('requiring', require.resolve('@nrwl/tao/index.js'));
+  console.log(
+    'requiring with paths',
+    require.resolve('@nrwl/tao/index.js', {
+      paths: [process.env.NX_WORKSPACE_ROOT],
+    })
+  );
+
   try {
-    const dirs = getDirectories('../../');
-    console.log('dirs', dirs);
     const cli = require.resolve('@nrwl/tao/index.js', {
       paths: [process.env.NX_WORKSPACE_ROOT],
     });
@@ -32,7 +46,6 @@ function requireCli() {
     process.exit(1);
   }
 }
-
 /**
  * We need to collect all stdout and stderr and store it, so the caching mechanism
  * could store it.
@@ -43,18 +56,12 @@ function requireCli() {
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
+function setUpOutputWatching(captureStderr, forwardOutput) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
-
   let out = [];
   let outWithErr = [];
-
-  process.stdout._write = (
-    chunk: any,
-    encoding: string,
-    callback: Function
-  ) => {
+  process.stdout._write = (chunk, encoding, callback) => {
     out.push(chunk.toString());
     outWithErr.push(chunk.toString());
     if (forwardOutput) {
@@ -63,12 +70,7 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
       callback();
     }
   };
-
-  process.stderr._write = (
-    chunk: any,
-    encoding: string,
-    callback: Function
-  ) => {
+  process.stderr._write = (chunk, encoding, callback) => {
     outWithErr.push(chunk.toString());
     if (forwardOutput) {
       stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
@@ -76,15 +78,18 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
       callback();
     }
   };
-
   process.on('exit', (code) => {
     if (code === 0) {
-      writeFileSync(
+      fs_1.writeFileSync(
         process.env.NX_TERMINAL_OUTPUT_PATH,
         captureStderr ? outWithErr.join('') : out.join('')
       );
     } else {
-      writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
+      fs_1.writeFileSync(
+        process.env.NX_TERMINAL_OUTPUT_PATH,
+        outWithErr.join('')
+      );
     }
   });
 }
+//# sourceMappingURL=run-cli.js.map

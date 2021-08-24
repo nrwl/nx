@@ -5,6 +5,8 @@ import { useRouter } from 'next/router';
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import '../styles/main.css';
 
+console.log('test');
+
 export default function CustomApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
