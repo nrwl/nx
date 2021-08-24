@@ -818,6 +818,34 @@
         "typescript": {
           "version": "~4.3.5",
           "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

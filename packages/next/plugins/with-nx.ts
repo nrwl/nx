@@ -1,4 +1,6 @@
-import type { NextConfig } from 'next/types';
+// ignoring while we support both Next 11.1.0 and versions before it
+// @ts-ignore
+import type { NextConfig } from 'next/dist/next-server/server/config';
 import { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');

@@ -1178,6 +1178,11 @@
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
+          },
+          {
+            "name": "Setup MFE with Angular and Nx",
+            "id": "setup-mfe-with-angular",
+            "file": "angular/guides/setup-mfe-with-angular"
           }
         ]
       },
