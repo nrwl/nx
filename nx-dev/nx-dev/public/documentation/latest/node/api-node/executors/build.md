@@ -19,6 +19,22 @@ Type: `string`
 
 The name of the Typescript configuration file.
 
+### additionalEntryPoints
+
+Type: `object[]`
+
+#### entryName
+
+Type: `string`
+
+Name of the additional entry file
+
+#### entryPath
+
+Type: `string`
+
+Path to the additional entry file
+
 ### assets
 
 Type: `array`
@@ -140,6 +156,12 @@ Default: `false`
 Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
+
+### tsPlugins
+
+Type: `array`
+
+List of TypeScript Compiler Plugins.
 
 ### verbose
 

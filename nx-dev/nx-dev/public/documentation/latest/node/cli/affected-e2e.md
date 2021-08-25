@@ -8,7 +8,7 @@ Run e2e tests for the applications affected by changes
 nx affected:e2e
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -82,7 +82,9 @@ Show help
 
 ### maxParallel
 
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)
+Default: `3`
+
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
 
 ### only-failed
 
@@ -92,7 +94,9 @@ Isolate projects which previously failed
 
 ### parallel
 
-Parallelize the command (default: false)
+Default: `false`
+
+Parallelize the command
 
 ### runner
 

@@ -20,7 +20,7 @@ Select `empty` when prompted:
 
 ```bash
 ? What to create in the new workspace (Use arrow keys)
-❯ empty             [an empty workspace]
+❯ empty             [an empty workspace with a layout that works best for building apps]
 ```
 
 ## Exploring your workspace
