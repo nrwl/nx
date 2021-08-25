@@ -496,3 +496,35 @@ The syntax is the same as a [`.gitignore` file](https://git-scm.com/book/en/v2/G
 
 1. Changes to that file are not taken into account in the `affected` calculations.
 2. Even if the file is outside an app or library, `nx workspace-lint` won't warn about it.
+
+## Keeping the configuration in sync
+
+When creating projects, the Nx generators make sure these configuration files are updated accordingly for the new projects. While development continues and the workspace grows, you might need to refactor projects by renaming them, moving them to a different folder, removing them, etc. When this is done manually, you need to ensure your configuration files are kept in sync and that's a cumbersome task. Fortunately, Nx provides some generators and executors to help you with these tasks.
+
+### Moving projects
+
+Projects can be moved or renamed using the [@nrwl/workspace:move](/{{framework}}/workspace/move) generator.
+
+For instance, if a library under the booking folder is now being shared by multiple apps, you can move it to the shared folder like this:
+
+```bash
+nx g @nrwl/workspace:move --project booking-some-library shared/some-library
+```
+
+### Removing projects
+
+Projects can be removed using the [@nrwl/workspace:remove](/{{framework}}/workspace/remove) generator.
+
+```bash
+nx g @nrwl/workspace:remove booking-some-library
+```
+
+### Validating the configuration
+
+If at any point in time you want to check if your configuration is in sync, you can use the [workspace-lint]({{framework}}/cli/workspace-lint) executor:
+
+```bash
+nx workspace-lint
+```
+
+This will identify any projects with no files in the configured project root folder, as well as any file that's not part of any project configured in the workspace.

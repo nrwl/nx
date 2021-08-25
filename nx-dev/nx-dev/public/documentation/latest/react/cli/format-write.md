@@ -8,7 +8,7 @@ Overwrite un-formatted files
 nx format:write
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ## Options
 
@@ -43,6 +43,8 @@ Latest commit of the current branch (usually HEAD)
 Show help
 
 ### libs-and-apps
+
+Format only libraries and applications files.
 
 ### only-failed
 

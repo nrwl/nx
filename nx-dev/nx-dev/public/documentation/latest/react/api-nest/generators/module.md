@@ -40,7 +40,7 @@ The Nest project to target.
 
 ### directory
 
-Alias(es): d,path
+Alias(es): dir,path
 
 Type: `string`
 

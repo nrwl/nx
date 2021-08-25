@@ -74,7 +74,7 @@ Generate a default component.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
