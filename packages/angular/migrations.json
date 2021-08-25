@@ -739,6 +739,90 @@
     "12.8.0": {
       "version": "12.8.0",
       "packages": {
+        "@angular/cli": {
+          "version": "~12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "^0.1202.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/elements": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-server": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/material": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "9.0.7",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~4.3.5",
+          "alwaysAddToPackageJson": false
+        },
         "@ngrx/store": {
           "version": "~12.4.0",
           "alwaysAddToPackageJson": false
