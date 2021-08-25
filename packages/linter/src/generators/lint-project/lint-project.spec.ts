@@ -57,6 +57,9 @@ describe('@nrwl/linter:lint-project', () => {
                 "**/*.ts",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
       });

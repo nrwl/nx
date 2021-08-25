@@ -169,6 +169,7 @@ describe('schematic:cypress-project', () => {
 
       expect(project.architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['apps/my-app-e2e/**/*.{js,ts}'],
         },

@@ -93,6 +93,7 @@ export async function lintProjectGenerator(
   if (options.linter === Linter.EsLint) {
     projectConfig.targets['lint'] = {
       executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: options.eslintFilePatterns,
       },
