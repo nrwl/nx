@@ -783,6 +783,10 @@
           "version": "^12.2.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/platform-server": {
+          "version": "^12.2.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/router": {
           "version": "^12.2.0",
           "alwaysAddToPackageJson": false
