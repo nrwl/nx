@@ -17,7 +17,8 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'victorsavkin',
     },
     {
-      description: 'Coming soon.',
+      description:
+        'Isaac is an Architect at Nrwl. He helps maintain the documentation for Nx at nx.dev and has created two video courses available at nxplaybook.com. Isaac is an Instructor at egghead.io and has written blog posts on Advanced Angular Component Design.',
       imageUrl: '/images/conf/isaac-mann.webp',
       name: 'Isaac Mann',
       twitter: 'MannIsaac',
