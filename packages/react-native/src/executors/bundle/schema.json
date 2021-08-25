@@ -1,0 +1,36 @@
+{
+  "cli": "nx",
+  "$id": "NxReactNativeBundle",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Offline JS Bundle for React Native",
+  "description": "JS Bundle target options",
+  "type": "object",
+  "properties": {
+    "dev": {
+      "type": "boolean",
+      "description": "Generate a development build.",
+      "default": true
+    },
+    "entryFile": {
+      "type": "string",
+      "description": "The entry file relative to project root."
+    },
+    "bundleOutput": {
+      "type": "string",
+      "description": "The output path of the generated files."
+    },
+    "maxWorkers": {
+      "type": "number",
+      "description": "The number of workers we should parallelize the transformer on."
+    },
+    "sourceMap": {
+      "type": "boolean",
+      "description": "Whether source maps should be generated or not."
+    },
+    "platform": {
+      "description": "Platform to build for (ios, android).",
+      "type": "string"
+    }
+  },
+  "required": ["platform", "entryFile", "bundleOutput"]
+}

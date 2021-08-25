@@ -25,6 +25,7 @@ export enum Preset {
   AngularWithNest = 'angular-nest',
   React = 'react',
   ReactWithExpress = 'react-express',
+  ReactNative = 'react-native',
   NextJs = 'next',
   Gatsby = 'gatsby',
   Nest = 'nest',
@@ -73,6 +74,11 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.WebComponents,
     message:
       'web components    [a workspace with a single app built using web components]',
+  },
+  {
+    name: Preset.ReactNative,
+    message:
+      'react-native      [a workspace with a single React Native application]',
   },
   {
     name: Preset.ReactWithExpress,
@@ -339,7 +345,8 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     preset === Preset.Empty ||
     preset === Preset.NPM ||
     preset === Preset.Nest ||
-    preset === Preset.Express
+    preset === Preset.Express ||
+    preset === Preset.ReactNative
   ) {
     return Promise.resolve(null);
   }

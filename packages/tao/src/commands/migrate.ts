@@ -239,6 +239,8 @@ export class Migrator {
           '@nrwl/storybook',
           '@nrwl/tao',
           '@nrwl/web',
+          '@nrwl/react-native',
+          '@nrwl/detox',
         ]
           .filter((pkg) => {
             const { dependencies, devDependencies } = this.packageJson;

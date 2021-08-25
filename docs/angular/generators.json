@@ -1,6 +1,7 @@
 [
   "angular",
   "cypress",
+  "detox",
   "express",
   "gatsby",
   "jest",
@@ -9,6 +10,7 @@
   "node",
   "nx-plugin",
   "react",
+  "react-native",
   "storybook",
   "web",
   "workspace"

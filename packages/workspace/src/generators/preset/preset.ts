@@ -177,6 +177,16 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/gatsby');
+  } else if (options.preset === 'react-native') {
+    const { reactNativeApplicationGenerator } = require('@nrwl' +
+      '/react-native');
+    await reactNativeApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
+      e2eTestRunner: 'detox',
+    });
+    setDefaultCollection(tree, '@nrwl/react-native');
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }

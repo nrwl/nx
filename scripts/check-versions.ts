@@ -26,7 +26,6 @@ const scoped = [
   'reduxjs',
   'testing-library',
   'types',
-
   'zeit',
 ];
 
