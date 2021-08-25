@@ -12,7 +12,6 @@ export function createEsLintConfiguration(
   const ignorePatterns = ['!**/*'];
 
   const configJson = {
-    extends: [rootConfig],
     ignorePatterns,
     overrides: [
       {
@@ -20,6 +19,7 @@ export function createEsLintConfiguration(
         extends: [
           'plugin:@nrwl/nx/angular',
           'plugin:@angular-eslint/template/process-inline-templates',
+          rootConfig,
         ],
         /**
          * NOTE: We no longer set parserOptions.project by default when creating new projects.
@@ -60,7 +60,7 @@ export function createEsLintConfiguration(
       },
       {
         files: ['*.html'],
-        extends: ['plugin:@nrwl/nx/angular-template'],
+        extends: ['plugin:@nrwl/nx/angular-template', rootConfig],
         /**
          * Having an empty rules object present makes it more obvious to the user where they would
          * extend things from if they needed to
