@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface ScheduleItem {
   description: string;
   speakers: Array<string>;
@@ -7,6 +9,8 @@ interface ScheduleItem {
 }
 
 export function ConfSchedule(): JSX.Element {
+  const [activeDay, setActiveDay] = useState(1);
+
   const scheduleItemsFor16: ScheduleItem[] = [
     {
       type: 'event',
@@ -224,12 +228,14 @@ export function ConfSchedule(): JSX.Element {
     },
   ];
 
-  return (
+  return activeDay === 1 ? (
     <div className="border-t border-gray-600">
       <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
         <div className="date-container-l grid grid-cols-2 font-input-mono divide-x divide-gray-600">
           <div className="p-8 text-center bg-blue-nx-dark">September 16</div>
-          <div className="p-8 text-center">September 17</div>
+          <div className="p-8 text-center" onClick={() => setActiveDay(2)}>
+            September 17
+          </div>
         </div>
       </div>
       <section className="w-full border-t border-b border-gray-600 divide-y divide-gray-600">
@@ -237,17 +243,24 @@ export function ConfSchedule(): JSX.Element {
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
       </section>
-      <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
-        <div className="date-container-r grid grid-cols-2 font-input-mono divide-x divide-gray-600">
-          <div className="p-8 text-center">September 16</div>
-          <div className="p-8 text-center bg-blue-nx-dark">September 17</div>
+    </div>
+  ) : (
+    <div>
+      <div className="border-t border-gray-600">
+        <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
+          <div className="date-container-r grid grid-cols-2 font-input-mono divide-x divide-gray-600">
+            <div className="p-8 text-center" onClick={() => setActiveDay(1)}>
+              September 16
+            </div>
+            <div className="p-8 text-center bg-blue-nx-dark">September 17</div>
+          </div>
         </div>
+        <section className="w-full border-t border-b border-gray-600 divide-y divide-gray-600">
+          {scheduleItemsFor17.map((item) =>
+            item.type === 'event' ? scheduleRow(item) : breakRow(item)
+          )}
+        </section>
       </div>
-      <section className="w-full border-t border-b border-gray-600 divide-y divide-gray-600">
-        {scheduleItemsFor17.map((item) =>
-          item.type === 'event' ? scheduleRow(item) : breakRow(item)
-        )}
-      </section>
     </div>
   );
 }

@@ -77,7 +77,8 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'psybercity',
     },
     {
-      description: 'Zack is a Senior Engineer and Engineering Manager at Nrwl, as well as a Google Developer Expert for Angular. When not in front of a computer screen, Zack enjoys a robust family life at scale, with his wife and 6 kids in San Tan Valley, AZ.',
+      description:
+        'Zack is a Senior Engineer and Engineering Manager at Nrwl, as well as a Google Developer Expert for Angular. When not in front of a computer screen, Zack enjoys a robust family life at scale, with his wife and 6 kids in San Tan Valley, AZ.',
       imageUrl: '/images/conf/nrwl-logo.webp',
       name: 'Zack DeRose',
       twitter: 'zackderose',
