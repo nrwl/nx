@@ -13,10 +13,11 @@ import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import * as prettier from 'prettier';
-import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import { NxJsonConfiguration, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
@@ -39,6 +40,7 @@ export async function format(
       updateWorkspaceJsonToMatchFormatVersion();
       sortWorkspaceJson();
       sortTsConfig();
+      movePropertiesToNewLocations();
       chunkList.push([workspaceJsonPath, 'nx.json', 'tsconfig.base.json']);
       chunkList.forEach((chunk) => write(chunk));
       break;
@@ -171,5 +173,22 @@ function sortTsConfig() {
     writeJsonFile(tsconfigPath, tsconfig);
   } catch (e) {
     // catch noop
+  }
+}
+
+function movePropertiesToNewLocations() {
+  const workspaceConfig = workspaceConfigName(appRootPath);
+  try {
+    const workspaceJson = readJsonFile<NxJsonConfiguration & WorkspaceJsonConfiguration>(workspaceConfig);
+    const nxJson = readJsonFile<NxJsonConfiguration & WorkspaceJsonConfiguration>('nx.json');
+    if (workspaceJson.cli || workspaceJson.generators || nxJson.projects || nxJson.defaultProject) {
+      const reformattedNxJson = {...nxJson, cli: workspaceJson.cli, generators: workspaceJson.generators} 
+      const reformattedWorkspaceJson = {...nxJson, cli: workspaceJson.cli, generators: workspaceJson.generators} 
+      writeJsonFile(workspaceConfig, reformattedWorkspaceJson);
+      writeJsonFile('nx.json', reformattedNxJson)
+    }
+  } catch (e) {
+    console.error(`Error moving properties between Nx.Json + ${workspaceConfig}`);
+    console.error(e);
   }
 }

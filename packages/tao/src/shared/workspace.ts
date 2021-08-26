@@ -85,6 +85,16 @@ export interface ProjectConfiguration {
    * ```
    */
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
+
+  /**
+   * List of projects which are added as a dependency
+   */
+  implicitDependencies?: string[];
+
+  /**
+   * List of tags used by nx-enforce-module-boundaries / dep-graph
+   */
+  tags?: string[];
 }
 
 export interface TargetDependencyConfig {
