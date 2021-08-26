@@ -167,7 +167,7 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+    expect(readNxJson(tree).cli.defaultCollection).toBe(
       '@nrwl/react-native'
     );
   });
