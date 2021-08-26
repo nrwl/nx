@@ -739,6 +739,43 @@
     "12.8.0": {
       "version": "12.8.0",
       "packages": {
+        "typescript": {
+          "version": "~4.3.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~12.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.9.0": {
+      "version": "12.9.0-beta.0",
+      "packages": {
         "@angular/cli": {
           "version": "~12.2.0",
           "alwaysAddToPackageJson": false
@@ -817,38 +854,6 @@
         },
         "ng-packagr": {
           "version": "~12.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "typescript": {
-          "version": "~4.3.5",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/store": {
-          "version": "~12.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/effects": {
-          "version": "~12.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/entity": {
-          "version": "~12.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/router-store": {
-          "version": "~12.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/schematics": {
-          "version": "~12.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/store-devtools": {
-          "version": "~12.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/component-store": {
-          "version": "~12.4.0",
           "alwaysAddToPackageJson": false
         }
       }
