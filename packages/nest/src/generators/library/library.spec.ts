@@ -27,6 +27,7 @@ describe('lib', () => {
       ).toBeUndefined();
       expect(workspaceJson.projects[libFileName].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${libFileName}/**/*.ts`],
         },
@@ -212,6 +213,7 @@ describe('lib', () => {
       expect(project.root).toEqual(`libs/${dirFileName}/${libFileName}`);
       expect(project.targets.lint).toEqual({
         executor: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${dirFileName}/${libFileName}/**/*.ts`],
         },

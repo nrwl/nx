@@ -360,6 +360,9 @@ describe('app', () => {
                 "apps/my-app-e2e/**/*.{js,ts}",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
       });
@@ -392,6 +395,9 @@ describe('app', () => {
                 "apps/my-app-e2e/**/*.ts",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
       });
@@ -566,6 +572,7 @@ describe('app', () => {
             },
             lint: {
               builder: '@nrwl/linter:eslint',
+              outputs: ['{options.outputFile}'],
               options: {
                 lintFilePatterns: ['apps/my-app-e2e/**/*.ts'],
               },

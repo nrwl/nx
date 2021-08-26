@@ -29,6 +29,7 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
         },
@@ -141,6 +142,7 @@ describe('lib', () => {
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
         },
@@ -196,6 +198,9 @@ describe('lib', () => {
               "libs/my-lib/**/*.{ts,tsx,js,jsx}",
             ],
           },
+          "outputs": Array [
+            "{options.outputFile}",
+          ],
         }
       `);
     });

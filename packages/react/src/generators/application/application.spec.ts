@@ -306,6 +306,7 @@ Object {
     const workspaceJson = getProjects(appTree);
     expect(workspaceJson.get('my-app').targets.lint).toEqual({
       executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-app/**/*.{ts,tsx,js,jsx}'],
       },
@@ -326,15 +327,18 @@ Object {
       const workspaceJson = getProjects(appTree);
       expect(workspaceJson.get('my-app').targets.test).toBeUndefined();
       expect(workspaceJson.get('my-app').targets.lint).toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
-              "apps/my-app/**/*.{ts,tsx,js,jsx}",
-            ],
-          },
-        }
-      `);
+Object {
+  "executor": "@nrwl/linter:eslint",
+  "options": Object {
+    "lintFilePatterns": Array [
+      "apps/my-app/**/*.{ts,tsx,js,jsx}",
+    ],
+  },
+  "outputs": Array [
+    "{options.outputFile}",
+  ],
+}
+`);
     });
   });
 
