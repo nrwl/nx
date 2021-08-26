@@ -33,8 +33,6 @@
     "glob": "7.1.4",
     "minimatch": "3.0.4",
     "tmp": "~0.2.1",
-    "ts-node": "^10.2.1",
-    "tsconfig-paths": "^3.11.0",
     "tslib": "^2.0.0"
   }
 }
