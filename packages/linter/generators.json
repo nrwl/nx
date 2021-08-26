@@ -1,0 +1,32 @@
+{
+  "name": "nx/linter",
+  "version": "0.1",
+  "schematics": {
+    "init-workspace-rules": {
+      "factory": "./src/generators/init-workspace-rules/init-workspace-rules#lintInitWorkspaceRulesSchematic",
+      "schema": "./src/generators/init-workspace-rules/schema.json",
+      "description": "Initialize workspace ESLint rules",
+      "hidden": true
+    },
+    "workspace-rule": {
+      "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleSchematic",
+      "schema": "./src/generators/workspace-rule/schema.json",
+      "description": "Create a new workspace ESLint rule",
+      "hidden": true
+    }
+  },
+  "generators": {
+    "init-workspace-rules": {
+      "factory": "./src/generators/init-workspace-rules/init-workspace-rules#lintInitWorkspaceRulesGenerator",
+      "schema": "./src/generators/init-workspace-rules/schema.json",
+      "description": "Initialize workspace ESLint rules",
+      "hidden": true
+    },
+    "workspace-rule": {
+      "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator",
+      "schema": "./src/generators/workspace-rule/schema.json",
+      "description": "Create a new workspace ESLint rule",
+      "hidden": true
+    }
+  }
+}

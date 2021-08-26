@@ -5,6 +5,7 @@
   "express",
   "gatsby",
   "jest",
+  "linter",
   "nest",
   "next",
   "node",

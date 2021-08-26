@@ -11,6 +11,9 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './rules/enforce-module-boundaries';
 
+// Resolve any custom rules that might exist in the current workspace
+import { workspaceRules } from './resolve-workspace-rules';
+
 module.exports = {
   configs: {
     typescript,
@@ -24,5 +27,6 @@ module.exports = {
   },
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
+    ...workspaceRules,
   },
 };
