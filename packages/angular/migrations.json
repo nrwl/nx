@@ -739,10 +739,6 @@
     "12.8.0": {
       "version": "12.8.0",
       "packages": {
-        "typescript": {
-          "version": "~4.3.5",
-          "alwaysAddToPackageJson": false
-        },
         "@ngrx/store": {
           "version": "~12.4.0",
           "alwaysAddToPackageJson": false
@@ -854,6 +850,10 @@
         },
         "ng-packagr": {
           "version": "~12.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~4.3.5",
           "alwaysAddToPackageJson": false
         }
       }
