@@ -539,7 +539,7 @@ describe('affected (with git)', () => {
     }
   }, 1000000);
 
-  it('should detect changes to projects based on the nx.json', () => {
+  it('should detect changes to projects based on tags changes', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
@@ -547,7 +547,7 @@ describe('affected (with git)', () => {
         readJson('workspace.json');
 
       workspaceJson.projects[myapp].tags = ['tag'];
-      updateFile('nx.json', JSON.stringify(workspaceJson));
+      updateFile('workspace.json', JSON.stringify(workspaceJson));
 
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);

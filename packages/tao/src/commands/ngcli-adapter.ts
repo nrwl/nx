@@ -498,7 +498,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       try {
         return this.readWorkspaceConfiguration(match.path, {
           workspace: of(match.content),
-          nx: nxJsonChange ? of(nxJsonChange.content) : null
+          nx: nxJsonChange ? of(nxJsonChange.content) : null,
         });
       } catch (e) {
         return super.read(path);

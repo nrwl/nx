@@ -179,16 +179,35 @@ function sortTsConfig() {
 function movePropertiesToNewLocations() {
   const workspaceConfig = workspaceConfigName(appRootPath);
   try {
-    const workspaceJson = readJsonFile<NxJsonConfiguration & WorkspaceJsonConfiguration>(workspaceConfig);
-    const nxJson = readJsonFile<NxJsonConfiguration & WorkspaceJsonConfiguration>('nx.json');
-    if (workspaceJson.cli || workspaceJson.generators || nxJson.projects || nxJson.defaultProject) {
-      const reformattedNxJson = {...nxJson, cli: workspaceJson.cli, generators: workspaceJson.generators} 
-      const reformattedWorkspaceJson = {...nxJson, cli: workspaceJson.cli, generators: workspaceJson.generators} 
+    const workspaceJson = readJsonFile<
+      NxJsonConfiguration & WorkspaceJsonConfiguration
+    >(workspaceConfig);
+    const nxJson = readJsonFile<
+      NxJsonConfiguration & WorkspaceJsonConfiguration
+    >('nx.json');
+    if (
+      workspaceJson.cli ||
+      workspaceJson.generators ||
+      nxJson.projects ||
+      nxJson.defaultProject
+    ) {
+      const reformattedNxJson = {
+        ...nxJson,
+        cli: workspaceJson.cli,
+        generators: workspaceJson.generators,
+      };
+      const reformattedWorkspaceJson = {
+        ...nxJson,
+        cli: workspaceJson.cli,
+        generators: workspaceJson.generators,
+      };
       writeJsonFile(workspaceConfig, reformattedWorkspaceJson);
-      writeJsonFile('nx.json', reformattedNxJson)
+      writeJsonFile('nx.json', reformattedNxJson);
     }
   } catch (e) {
-    console.error(`Error moving properties between Nx.Json + ${workspaceConfig}`);
+    console.error(
+      `Error moving properties between Nx.Json + ${workspaceConfig}`
+    );
     console.error(e);
   }
 }

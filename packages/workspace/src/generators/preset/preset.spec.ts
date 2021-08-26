@@ -167,8 +167,6 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
-    expect(readNxJson(tree).cli.defaultCollection).toBe(
-      '@nrwl/react-native'
-    );
+    expect(readNxJson(tree).cli.defaultCollection).toBe('@nrwl/react-native');
   });
 });

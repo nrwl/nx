@@ -436,18 +436,6 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
     checkFilesExist(rootClassPath);
 
-    expect(moveOutput).toContain('UPDATE nx.json');
-    workspaceJson = JSON.parse(
-      readFile('nx.json')
-    ) as WorkspaceJsonConfiguration;
-    expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
-    expect(workspaceJson.projects[newName]).toEqual({
-      tags: [],
-    });
-    expect(workspaceJson.projects[lib3].implicitDependencies).toEqual([
-      `shared-${lib1}-data-access`,
-    ]);
-
     expect(moveOutput).toContain('UPDATE tsconfig.base.json');
     const rootTsConfig = readJson('tsconfig.base.json');
     expect(
@@ -464,6 +452,10 @@ describe('move project', () => {
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
+    expect(project.tags).toEqual([]);
+    expect(project.implicitDependencies).toEqual([
+      `shared-${lib1}-data-access`,
+    ]);
 
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `libs/shared/${lib1}/data-access/**/*.ts`,
@@ -577,16 +569,6 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
     checkFilesExist(rootClassPath);
 
-    expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
-    expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
-    expect(nxJson.projects[newName]).toEqual({
-      tags: [],
-    });
-    expect(nxJson.projects[lib3].implicitDependencies).toEqual([
-      `shared-${lib1}-data-access`,
-    ]);
-
     expect(moveOutput).toContain('UPDATE tsconfig.base.json');
     const rootTsConfig = readJson('tsconfig.base.json');
     expect(
@@ -606,6 +588,7 @@ describe('move project', () => {
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `packages/shared/${lib1}/data-access/**/*.ts`,
     ]);
+    expect(project.tags).toEqual([]);
 
     /**
      * Check that the import in lib2 has been updated
