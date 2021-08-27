@@ -29,7 +29,6 @@ describe('workspace', () => {
     };
 
     const resolved = inlineProjectConfigurations(inlineConfig);
-    delete resolved.projects.lib1.configFilePath;
     expect(resolved).toEqual({
       ...inlineConfig,
       projects: {
