@@ -25,7 +25,11 @@ function requireCli() {
   const dirs = getDirectories('node_modules/@nrwl');
   console.log('DIRS', dirs);
   console.log('INDEX file', fs_1.lstatSync('node_modules/@nrwl/tao/index.js'));
-  console.log('deleting require cache', process.env.NX_WORKSPACE_ROOT);
+  console.log(
+    'deleting require cache',
+    process.env.NX_WORKSPACE_ROOT,
+    __filename
+  );
   delete require.cache[require.resolve('@nrwl/tao/index.js')];
 
   console.log('requiring', require.resolve('@nrwl/tao/index.js'));
