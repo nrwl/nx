@@ -17,7 +17,6 @@ describe('Cypress builder', () => {
     parallel: false,
     tsConfig: 'apps/my-app-e2e/tsconfig.json',
     devServerTarget: 'my-app:serve',
-    headless: true,
     exit: true,
     record: false,
     baseUrl: undefined,
@@ -125,6 +124,32 @@ describe('Cypress builder', () => {
     );
 
     expect(devkit.logger.warn).toHaveBeenCalled();
+  });
+
+  it('should show warnings if using v8 deprecated headless flag', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(8);
+    await cypressExecutor(
+      {
+        ...cypressOptions,
+        headless: true,
+      },
+      mockContext
+    );
+
+    expect(devkit.logger.warn).toHaveBeenCalled();
+  });
+
+  it('should skip warnings if using headless flag used on v7 and lower', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(7);
+    await cypressExecutor(
+      {
+        ...cypressOptions,
+        headless: true,
+      },
+      mockContext
+    );
+
+    expect(devkit.logger.warn).not.toHaveBeenCalled();
   });
 
   it('should call `Cypress.run` with provided baseUrl', async () => {
@@ -335,6 +360,22 @@ describe('Cypress builder', () => {
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         testingType: 'component',
+      })
+    );
+  });
+
+  it('should forward headed', async () => {
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        headed: true,
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headed: true,
       })
     );
   });
