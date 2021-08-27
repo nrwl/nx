@@ -398,18 +398,14 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
     : null;
 }
 
-export function updateWorkspaceJson(
+export function updateWorkspace(
   tree: Tree,
-  updater: (
-    workspaceJson: WorkspaceJsonConfiguration
-  ) => WorkspaceJsonConfiguration
+  workspaceJson: WorkspaceJsonConfiguration
 ): void {
   const rawWorkspaceJson = readRawWorkspaceJson(tree);
   const resolvedWorkspaceJson = inlineProjectConfigurationsWithTree(tree);
-  const updatedWorkspaceJson: RawWorkspaceJsonConfiguration = updater(
-    resolvedWorkspaceJson
-  );
-  Object.entries(updatedWorkspaceJson.projects).forEach(
+  const workspaceJsonToSave: RawWorkspaceJsonConfiguration = workspaceJson;
+  Object.entries(workspaceJson.projects).forEach(
     ([projectName, projectConfig]) => {
       if (
         typeof rawWorkspaceJson.projects[projectName] === 'string' &&
@@ -421,12 +417,12 @@ export function updateWorkspaceJson(
         ) {
           updateProjectConfiguration(tree, projectName, projectConfig);
         }
-        updatedWorkspaceJson.projects[projectName] =
+        workspaceJsonToSave.projects[projectName] =
           rawWorkspaceJson.projects[projectName];
       }
     }
   );
-  writeJson(tree, getWorkspacePath(tree), updatedWorkspaceJson);
+  writeJson(tree, getWorkspacePath(tree), workspaceJsonToSave);
 }
 
 function validateWorkspaceJsonOperations(
