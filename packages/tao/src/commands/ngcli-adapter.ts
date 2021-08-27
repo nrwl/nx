@@ -236,7 +236,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               ).pipe(
                 map((x) => {
                   if (workspaceJson.version === 2) {
-                    const formatted = toOldFormatOrNull(w);
+                    const formatted = toOldFormatOrNull(workspaceJson);
                     return formatted
                       ? Buffer.from(serializeJson(formatted))
                       : Buffer.from(serializeJson(x));
