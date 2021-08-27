@@ -592,8 +592,12 @@ export function inlineProjectConfigurations(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {
         const configFilePath = path.join(root, config, 'project.json');
+        const relativeConfigFilePath = path.relative(root, configFilePath);
         const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = { ...fileConfig, configFilePath };
+        w.projects[project] = {
+          ...fileConfig,
+          configFilePath: relativeConfigFilePath,
+        };
       }
     }
   );
