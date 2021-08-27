@@ -108,14 +108,13 @@ describe('workspace-generator', () => {
     );
     expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
     expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
-    expect(dryRunOutput).toContain('UPDATE nx.json');
 
     const output = runCLI(
       `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir`
     );
     checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
     expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
-    expect(output).toContain('UPDATE nx.json');
+    expect(output).not.toContain('UPDATE nx.json');
 
     const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
     jsonFailing.properties = {};
@@ -378,7 +377,7 @@ describe('move project', () => {
       readFile('workspace.json')
     ) as WorkspaceJsonConfiguration;
     workspaceJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`nx.json`, JSON.stringify(workspaceJson));
+    updateFile(`workspace.json`, JSON.stringify(workspaceJson));
 
     /**
      * Now try to move lib1
@@ -451,8 +450,8 @@ describe('move project', () => {
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.tags).toEqual([]);
-    expect(project.implicitDependencies).toEqual([
-      `shared-${lib1}-data-access`,
+    expect(workspaceJson.projects[lib3].implicitDependencies).toEqual([
+      newName,
     ]);
 
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -509,7 +508,9 @@ describe('move project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let workspaceJson = JSON.parse(readFile('workspace.json')) as WorkspaceJsonConfiguration;
+    let workspaceJson = JSON.parse(
+      readFile('workspace.json')
+    ) as WorkspaceJsonConfiguration;
     workspaceJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`workspace.json`, JSON.stringify(workspaceJson));
 
@@ -656,7 +657,7 @@ describe('remove project', () => {
 
     expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
     workspaceJson = JSON.parse(
-      readFile('nx.json')
+      readFile('workspace.json')
     ) as WorkspaceJsonConfiguration;
     expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
     expect(workspaceJson.projects[lib2].implicitDependencies).toEqual([]);
