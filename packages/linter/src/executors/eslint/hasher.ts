@@ -37,6 +37,13 @@ export default async function run(
   };
 }
 
-function allDeps(taskId: string, taskGraph: TaskGraph) {
-  return [...taskGraph.dependencies[taskId].map((d) => allDeps(d, taskGraph))];
+function allDeps(taskId: string, taskGraph: TaskGraph): string[] {
+  return [
+    ...taskGraph.dependencies[taskId].map(
+      (task) => taskGraph.tasks[task].target.project
+    ),
+    ...taskGraph.dependencies[taskId].flatMap((task) =>
+      allDeps(task, taskGraph)
+    ),
+  ];
 }
