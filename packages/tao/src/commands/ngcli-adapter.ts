@@ -357,8 +357,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       try {
         const w = parseJson(Buffer.from(content).toString());
         const formatted = toNewFormatOrNull(w);
-        const { cli, generators, ...workspaceJson } = formatted;
         if (formatted) {
+          const { cli, generators, ...workspaceJson } = formatted;
           return concat(
             this.writeWorkspaceConfigFiles(
               context,
@@ -366,10 +366,25 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             ),
             cli || generators ? this.saveNxJsonProps(cli, generators) : of(null)
           );
+        } else {
+          const { cli, schematics, ...angularJson } = w;
+          return concat(
+            this.writeWorkspaceConfigFiles(
+              context.actualConfigFileName,
+              angularJson
+            ),
+            cli || schematics ? this.saveNxJsonProps(cli, schematics) : of(null)
+          );
         }
       } catch (e) {}
     }
-    return this.writeWorkspaceConfigFiles(context, config);
+    const { cli, schematics, generators, ...angularJson } = config;
+    return concat(
+      this.writeWorkspaceConfigFiles(context, angularJson),
+      cli || schematics
+        ? this.saveNxJsonProps(cli, schematics || generators)
+        : of(null)
+    );
   }
 
   private saveNxJsonProps(cli, generators) {
@@ -942,7 +957,7 @@ export function wrapAngularDevkitSchematic(
           r.eventPath === 'angular.json' ||
           r.eventPath === 'workspace.json'
         ) {
-          splitProjectFileUpdatesFromWorkspaceUpdate(host, r);
+          saveWorkspaceConfigurationInWrappedSchematic(host, r);
         }
         host.write(r.eventPath, r.content);
       } else if (event.kind === 'create') {
@@ -1090,12 +1105,15 @@ const getTargetLogger = (
   return tslintExecutorLogger;
 };
 
-function splitProjectFileUpdatesFromWorkspaceUpdate(
+function saveWorkspaceConfigurationInWrappedSchematic(
   host: Tree,
   r: { eventPath: string; content: Buffer }
 ) {
   const workspace: {
     projects: { [key: string]: string | { configFilePath?: string } };
+    generators?: Record<string, unknown>;
+    schematics?: Record<string, unknown>;
+    cli?: unknown;
   } = parseJson(r.content.toString());
   for (const [project, config] of Object.entries(workspace.projects)) {
     if (typeof config === 'object' && config.configFilePath) {
@@ -1103,7 +1121,15 @@ function splitProjectFileUpdatesFromWorkspaceUpdate(
       workspace.projects[project] = normalize(dirname(path));
       delete config.configFilePath;
       host.write(path, serializeJson(config));
-      r.content = Buffer.from(serializeJson(workspace));
     }
   }
+  const nxJson: NxJsonConfiguration = parseJson(
+    host.read('nx.json').toString()
+  );
+  nxJson.generators = workspace.generators || workspace.schematics;
+  nxJson.cli = workspace.cli || nxJson.cli;
+  delete workspace.cli;
+  delete workspace.generators;
+  delete workspace.schematics;
+  r.content = Buffer.from(serializeJson(workspace));
 }
