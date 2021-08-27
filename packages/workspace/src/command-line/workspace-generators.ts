@@ -8,12 +8,10 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { fileExists } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 import type { CompilerOptions } from 'typescript';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import {
   logger,
   normalizePath,
   getPackageManagerCommand,
-  detectPackageManager,
   readJsonFile,
   writeJsonFile,
 } from '@nrwl/devkit';
@@ -42,34 +40,13 @@ export async function workspaceGenerators(args: string[]) {
     return listGenerators(collectionFile);
   }
   const generatorName = args[0];
-  const ws = new Workspaces(rootDirectory);
   args[0] = collectionFile + ':' + generatorName;
-  if (ws.isNxGenerator(collectionFile, generatorName)) {
-    process.exitCode = await generate(
-      process.cwd(),
-      rootDirectory,
-      args,
-      parsedArgs.verbose
-    );
-  } else {
-    const logger = require('@angular-devkit/core/node').createConsoleLogger(
-      parsedArgs.verbose,
-      process.stdout,
-      process.stderr
-    );
-    try {
-      const workflow = createWorkflow(ws, parsedArgs.dryRun);
-      await executeAngularDevkitSchematic(
-        generatorName,
-        parsedArgs,
-        workflow,
-        outDir,
-        logger
-      );
-    } catch {
-      process.exit(1);
-    }
-  }
+  process.exitCode = await generate(
+    process.cwd(),
+    rootDirectory,
+    args,
+    parsedArgs.verbose
+  );
 }
 
 // compile tools
@@ -134,28 +111,6 @@ function toolsTsConfig(): TsConfig {
   return readJsonFile<TsConfig>(toolsTsConfigPath);
 }
 
-function createWorkflow(workspace: Workspaces, dryRun: boolean) {
-  const { virtualFs, schema } = require('@angular-devkit/core');
-  const { NodeJsSyncHost } = require('@angular-devkit/core/node');
-  const { formats } = require('@angular-devkit/schematics');
-  const { NodeWorkflow } = require('@angular-devkit/schematics/tools');
-  const root = normalizePath(rootDirectory);
-  const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
-  const workflow = new NodeWorkflow(host, {
-    packageManager: detectPackageManager(),
-    dryRun,
-    registry: new schema.CoreSchemaRegistry(formats.standardFormats),
-    resolvePaths: [process.cwd(), rootDirectory],
-  });
-  workflow.registry.addSmartDefaultProvider('projectName', () =>
-    workspace.calculateDefaultProjectName(
-      process.cwd(),
-      workspace.readWorkspaceConfiguration()
-    )
-  );
-  return workflow;
-}
-
 function listGenerators(collectionFile: string) {
   try {
     const bodyLines: string[] = [];
@@ -182,200 +137,6 @@ function listGenerators(collectionFile: string) {
     return 1;
   }
   return 0;
-}
-
-function createPromptProvider() {
-  interface Prompt {
-    name: string;
-    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
-    message: string;
-    initial?: any;
-    choices?: (string | { name: string; message: string })[];
-    validate?: (value: string) => boolean | string;
-  }
-
-  return (definitions: Array<any>) => {
-    const questions: Prompt[] = definitions.map((definition) => {
-      const question: Prompt = {
-        name: definition.id,
-        message: definition.message,
-      } as any;
-
-      if (definition.default) {
-        question.initial = definition.default;
-      }
-
-      const validator = definition.validator;
-      if (validator) {
-        question.validate = (input) => validator(input);
-      }
-
-      switch (definition.type) {
-        case 'string':
-        case 'input':
-          return { ...question, type: 'input' };
-        case 'boolean':
-        case 'confirmation':
-        case 'confirm':
-          return { ...question, type: 'confirm' };
-        case 'number':
-        case 'numeral':
-          return { ...question, type: 'numeral' };
-        case 'list':
-          return {
-            ...question,
-            type: !!definition.multiselect ? 'multiselect' : 'select',
-            choices:
-              definition.items &&
-              definition.items.map((item) => {
-                if (typeof item == 'string') {
-                  return item;
-                } else {
-                  return {
-                    message: item.label,
-                    name: item.value,
-                  };
-                }
-              }),
-          };
-        default:
-          return { ...question, type: definition.type };
-      }
-    });
-
-    return require('enquirer').prompt(questions);
-  };
-}
-
-// execute schematic
-async function executeAngularDevkitSchematic(
-  schematicName: string,
-  options: { [p: string]: any },
-  workflow: any,
-  outDir: string,
-  logger: any
-) {
-  const { schema } = require('@angular-devkit/core');
-  const {
-    validateOptionsWithSchema,
-  } = require('@angular-devkit/schematics/tools');
-  const {
-    UnsuccessfulWorkflowExecution,
-  } = require('@angular-devkit/schematics');
-
-  output.logSingleLine(
-    `${output.colors.gray(`Executing your local schematic`)}: ${schematicName}`
-  );
-
-  let nothingDone = true;
-  let loggingQueue: string[] = [];
-  let hasError = false;
-
-  workflow.reporter.subscribe((event: any) => {
-    nothingDone = false;
-    const eventPath = event.path.startsWith('/')
-      ? event.path.substr(1)
-      : event.path;
-    switch (event.kind) {
-      case 'error':
-        hasError = true;
-
-        const desc =
-          event.description == 'alreadyExist'
-            ? 'already exists'
-            : 'does not exist.';
-        logger.warn(`ERROR! ${eventPath} ${desc}.`);
-        break;
-      case 'update':
-        loggingQueue.push(
-          `${chalk.white('UPDATE')} ${eventPath} (${
-            event.content.length
-          } bytes)`
-        );
-        break;
-      case 'create':
-        loggingQueue.push(
-          `${chalk.green('CREATE')} ${eventPath} (${
-            event.content.length
-          } bytes)`
-        );
-        break;
-      case 'delete':
-        loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
-        break;
-      case 'rename':
-        const eventToPath = event.to.startsWith('/')
-          ? event.to.substr(1)
-          : event.to;
-        loggingQueue.push(
-          `${chalk.blue('RENAME')} ${eventPath} => ${eventToPath}`
-        );
-        break;
-    }
-  });
-
-  workflow.lifeCycle.subscribe((event) => {
-    if (event.kind === 'workflow-end' || event.kind === 'post-tasks-start') {
-      if (!hasError) {
-        loggingQueue.forEach((log) => logger.info(log));
-      }
-
-      loggingQueue = [];
-      hasError = false;
-    }
-  });
-
-  const args = options._.slice(1);
-  workflow.registry.addSmartDefaultProvider('argv', (schema: any) => {
-    if ('index' in schema) {
-      return args[+schema.index];
-    } else {
-      return args;
-    }
-  });
-  delete options._;
-
-  if (options.defaults) {
-    workflow.registry.addPreTransform(schema.transforms.addUndefinedDefaults);
-  } else {
-    workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
-
-  workflow.engineHost.registerOptionsTransform(
-    validateOptionsWithSchema(workflow.registry)
-  );
-
-  // Add support for interactive prompts
-  if (options.interactive) {
-    workflow.registry.usePromptProvider(createPromptProvider());
-  }
-
-  try {
-    await workflow
-      .execute({
-        collection: path.join(outDir, 'workspace-generators.json'),
-        schematic: schematicName,
-        options,
-        logger,
-      })
-      .toPromise();
-
-    if (nothingDone) {
-      logger.info('Nothing to be done.');
-    }
-
-    if (options.dryRun) {
-      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
-    }
-  } catch (err) {
-    if (err instanceof UnsuccessfulWorkflowExecution) {
-      // "See above" because we already printed the error.
-      logger.fatal('The Schematic workflow failed. See above.');
-    } else {
-      logger.fatal(err.stack || err.message);
-    }
-    throw err;
-  }
 }
 
 function parseOptions(args: string[], outDir: string): { [k: string]: any } {
