@@ -206,30 +206,50 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       nx?: Observable<FileBuffer>;
     }
   ): Observable<FileBuffer> => {
-    return combineLatest([
-      overrides.workspace || super.read(configFileName),
-      overrides.nx || super.read('nx.json' as Path),
-    ]).pipe(
-      switchMap(([w, n]) => {
-        try {
-          const workspaceJson = parseJson(Buffer.from(w).toString());
-          const nxJson = parseJson(Buffer.from(n).toString());
-          workspaceJson.cli = nxJson.cli;
-          workspaceJson.generators = nxJson.generators;
-          return this.resolveInlineProjectConfigurations(workspaceJson).pipe(
-            map((x) => {
-              if (workspaceJson.version === 2) {
-                const formatted = toOldFormatOrNull(w);
-                return formatted
-                  ? Buffer.from(serializeJson(formatted))
-                  : Buffer.from(serializeJson(w));
-              }
-            })
-          );
-        } catch {
-          return of(w);
-        }
-      })
+    return super.exists('nx.json' as Path).pipe(
+      switchMap((nxJsonExists) =>
+        (!nxJsonExists // if no nxJson, let it be undefined
+          ? (overrides?.workspace || super.read(configFileName)).pipe(
+              map((x) => [x])
+            )
+          : combineLatest([
+              // read both values
+              overrides?.workspace || super.read(configFileName),
+              overrides?.nx || super.read('nx.json' as Path),
+            ])
+        ).pipe(
+          switchMap(([w, n]) => {
+            try {
+              // parse both from json, nxJson may be null
+              const workspaceJson = parseJson(Buffer.from(w).toString());
+              const nxJson: any = n
+                ? parseJson(Buffer.from(n).toString())
+                : null;
+
+              // assign props ng cli expects from nx json, if it exists
+              workspaceJson.cli ??= nxJson?.cli;
+              workspaceJson.generators ??= nxJson?.generators;
+
+              // resolve inline configurations and downlevel format
+              return this.resolveInlineProjectConfigurations(
+                workspaceJson
+              ).pipe(
+                map((x) => {
+                  if (workspaceJson.version === 2) {
+                    const formatted = toOldFormatOrNull(w);
+                    return formatted
+                      ? Buffer.from(serializeJson(formatted))
+                      : Buffer.from(serializeJson(x));
+                  }
+                  return Buffer.from(serializeJson(x));
+                })
+              );
+            } catch {
+              return of(w);
+            }
+          })
+        )
+      )
     );
   };
 

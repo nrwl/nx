@@ -60,27 +60,6 @@ describe('project configuration', () => {
         });
       });
 
-      it('should get info from nx.json', () => {
-        updateJson(tree, getWorkspacePath(tree), (json) => {
-          json.projects['proj1'] = {
-            root: 'proj1',
-          };
-          return json;
-        });
-        updateJson(tree, 'nx.json', (json) => {
-          json.projects['proj1'] = {
-            tags: ['tag1'],
-          };
-          return json;
-        });
-
-        const config = readProjectConfiguration(tree, 'proj1');
-        expect(config).toEqual({
-          root: 'proj1',
-          tags: ['tag1'],
-        });
-      });
-
       it('should should not fail if projects is not defined in nx.json', () => {
         updateJson(tree, getWorkspacePath(tree), (json) => {
           json.projects['proj1'] = {
@@ -220,27 +199,6 @@ describe('project configuration', () => {
         const config = readProjectConfiguration(tree, 'proj1');
         expect(config).toEqual({
           root: 'proj1',
-        });
-      });
-
-      it('should get info from nx.json', () => {
-        updateJson(tree, getWorkspacePath(tree), (json) => {
-          json.projects['proj1'] = {
-            root: 'proj1',
-          };
-          return json;
-        });
-        updateJson(tree, 'nx.json', (json) => {
-          json.projects['proj1'] = {
-            tags: ['tag1'],
-          };
-          return json;
-        });
-
-        const config = readProjectConfiguration(tree, 'proj1');
-        expect(config).toEqual({
-          root: 'proj1',
-          tags: ['tag1'],
         });
       });
 
