@@ -13,6 +13,7 @@
       "factory": "./src/generators/application/application#detoxApplicationSchematic",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Create a detox application"
     }
   },
@@ -27,6 +28,7 @@
       "factory": "./src/generators/application/application#detoxApplicationGenerator",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Create a detox application"
     }
   }

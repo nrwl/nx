@@ -13,6 +13,7 @@
       "factory": "./src/generators/application/application.compat#applicationSchematic",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Creates an Angular application."
     },
     "component-cypress-spec": {
@@ -58,6 +59,7 @@
       "factory": "./src/generators/library/library.compat#librarySchematic",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Creates an Angular library."
     },
     "move": {
@@ -120,6 +122,7 @@
       "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Creates an Angular application."
     },
     "setup-mfe": {
@@ -170,6 +173,7 @@
       "factory": "./src/generators/library/library",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Creates an Angular library."
     },
     "move": {

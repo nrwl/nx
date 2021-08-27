@@ -15,6 +15,7 @@
       "factory": "./src/generators/application/application#applicationSchematic",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Create an application"
     },
 
@@ -22,6 +23,7 @@
       "factory": "./src/generators/library/library#librarySchematic",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Create a library"
     },
 
@@ -94,6 +96,7 @@
       "factory": "./src/generators/application/application#applicationGenerator",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
+      "x-type": "application",
       "description": "Create an application"
     },
 
@@ -101,6 +104,7 @@
       "factory": "./src/generators/library/library#libraryGenerator",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Create a library"
     },
 
