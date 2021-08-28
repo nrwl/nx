@@ -20,7 +20,7 @@ import {
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
 
-export async function angularInitGenerator (
+export async function angularInitGenerator(
   host: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
