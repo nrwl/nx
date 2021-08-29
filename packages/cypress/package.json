@@ -32,13 +32,17 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 9"
+    "cypress": ">= 3 < 9",
+    "webpack": "^4 || ^5"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
     "@nrwl/workspace": "*",
-    "@cypress/webpack-preprocessor": "4.1.5",
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@cypress/webpack-preprocessor": "5.9.1",
+    "babel-loader": "8.1.0",
     "chalk": "4.1.0",
     "ts-loader": "5.4.5",
     "tsconfig-paths-webpack-plugin": "3.4.1",
