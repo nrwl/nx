@@ -2,10 +2,10 @@
   "name": "nx/linter",
   "version": "0.1",
   "schematics": {
-    "init-workspace-rules": {
-      "factory": "./src/generators/init-workspace-rules/init-workspace-rules#lintInitWorkspaceRulesSchematic",
-      "schema": "./src/generators/init-workspace-rules/schema.json",
-      "description": "Initialize workspace ESLint rules",
+    "workspace-rules-project": {
+      "factory": "./src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectSchematic",
+      "schema": "./src/generators/workspace-rules-project/schema.json",
+      "description": "Create the Workspace Lint Rules Project",
       "hidden": true
     },
     "workspace-rule": {
@@ -16,10 +16,10 @@
     }
   },
   "generators": {
-    "init-workspace-rules": {
-      "factory": "./src/generators/init-workspace-rules/init-workspace-rules#lintInitWorkspaceRulesGenerator",
-      "schema": "./src/generators/init-workspace-rules/schema.json",
-      "description": "Initialize workspace ESLint rules",
+    "workspace-rules-project": {
+      "factory": "./src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator",
+      "schema": "./src/generators/workspace-rules-project/schema.json",
+      "description": "Create the Workspace Lint Rules Project",
       "hidden": true
     },
     "workspace-rule": {
