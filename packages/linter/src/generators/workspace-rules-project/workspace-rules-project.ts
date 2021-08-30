@@ -45,7 +45,7 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
     ...workspaceConfig,
     implicitDependencies: {
       ...workspaceConfig.implicitDependencies,
-      'tools/eslint-rules/**/*': '*',
+      [`${WORKSPACE_PLUGIN_DIR}/**/*`]: '*',
     },
   });
 
