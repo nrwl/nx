@@ -28,6 +28,9 @@ Object {
           "apps/nest-app-1/**/*.ts",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
 }
@@ -314,6 +317,9 @@ Object {
           "libs/nest-lib-1/**/*.ts",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
 }

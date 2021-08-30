@@ -48,6 +48,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
     expect(project.targets.lint).toEqual({
       executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['libs/my-plugin/**/*.ts'],
       },

@@ -75,6 +75,7 @@ describe('app', () => {
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['apps/my-node-app/**/*.ts'],
         },
@@ -182,6 +183,7 @@ describe('app', () => {
         workspaceJson.projects['my-dir-my-node-app'].architect.lint
       ).toEqual({
         builder: '@nrwl/linter:eslint',
+        outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['apps/my-dir/my-node-app/**/*.ts'],
         },
@@ -272,6 +274,9 @@ describe('app', () => {
               "apps/my-node-app/**/*.ts",
             ],
           },
+          "outputs": Array [
+            "{options.outputFile}",
+          ],
         }
       `);
     });

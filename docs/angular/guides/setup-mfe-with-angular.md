@@ -228,7 +228,7 @@ First, add `FormsModule` to the `imports` array in your `remote-entry/entry.modu
 ```ts
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 import { RemoteEntryComponent } from './entry.component';
@@ -236,7 +236,7 @@ import { RemoteEntryComponent } from './entry.component';
 @NgModule({
   declarations: [RemoteEntryComponent],
   imports: [
-    BrowserModule,
+    CommonModule,
     FormsModule,
     RouterModule.forChild([
       {

@@ -246,7 +246,7 @@ Including the issue number that the PR relates to also helps with tracking.
 #### Example
 
 ```
-feat(generators): add an option to generate lazy-loadable modules
+feat(angular): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
 

@@ -29,6 +29,9 @@ Object {
           "apps/e2e-app-1/**/*.{js,ts}",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
 }

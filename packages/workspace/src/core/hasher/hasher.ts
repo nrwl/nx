@@ -15,6 +15,7 @@ import { performance } from 'perf_hooks';
 import { appRootPath } from '../../utils/app-root';
 import { workspaceFileName } from '../file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
+import { isNpmProject } from '../project-graph';
 
 export interface Hash {
   value: string;
@@ -341,6 +342,12 @@ class ProjectHasher {
     if (!this.sourceHashes[projectName]) {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
+
+        if (isNpmProject(p)) {
+          res(this.hashing.hashArray([p.data.version]));
+          return;
+        }
+
         const fileNames = p.data.files.map((f) => f.file);
         const values = p.data.files.map((f) => f.hash);
 

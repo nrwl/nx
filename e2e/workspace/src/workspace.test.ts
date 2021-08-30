@@ -815,7 +815,7 @@ describe('cache', () => {
     expect(outputWithBothLintTasksCached).toContain(
       'read the output from cache'
     );
-    expectMatchedOutput(outputWithBothLintTasksCached, [
+    expectCached(outputWithBothLintTasksCached, [
       myapp1,
       myapp2,
       `${myapp1}-e2e`,

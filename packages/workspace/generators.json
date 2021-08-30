@@ -48,6 +48,7 @@
       "factory": "./src/generators/library/library#librarySchematic",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Create a library"
     },
 
@@ -74,7 +75,8 @@
     "npm-package": {
       "factory": "./src/generators/npm-package/npm-package#npmPackageSchematic",
       "schema": "./src/generators/npm-package/schema.json",
-      "description": "Create a minimal npm package"
+      "description": "Create a minimal npm package",
+      "x-type": "library"
     }
   },
   "generators": {
@@ -124,6 +126,7 @@
       "factory": "./src/generators/library/library#libraryGenerator",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
+      "x-type": "library",
       "description": "Create a library"
     },
 
@@ -150,7 +153,8 @@
     "npm-package": {
       "factory": "./src/generators/npm-package/npm-package#npmPackageGenerator",
       "schema": "./src/generators/npm-package/schema.json",
-      "description": "Create a minimal npm package"
+      "description": "Create a minimal npm package",
+      "x-type": "library"
     }
   }
 }
