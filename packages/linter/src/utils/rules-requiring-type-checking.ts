@@ -53,12 +53,20 @@ export function removeParserOptionsProjectIfNotRequired(
   return json;
 }
 
+function determineEnabledRules(rules: Linter.RulesRecord): string[] {
+  return Object.entries(rules)
+    .filter(([key, value]) => {
+      return !(typeof value === 'string' && value === 'off');
+    })
+    .map(([ruleName]) => ruleName);
+}
+
 function getAllRulesInConfig(json: Linter.Config): string[] {
-  let allRules = json.rules ? Object.keys(json.rules) : [];
+  let allRules = json.rules ? determineEnabledRules(json.rules) : [];
   if (json.overrides?.length > 0) {
     for (const o of json.overrides) {
       if (o.rules) {
-        allRules = [...allRules, ...Object.keys(o.rules)];
+        allRules = allRules = [...allRules, ...determineEnabledRules(o.rules)];
       }
     }
   }
