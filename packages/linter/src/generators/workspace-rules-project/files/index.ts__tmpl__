@@ -1,22 +1,16 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`@nrwl/linter:init-workspace-rules should generate the required files 1`] = `
-"/**
+/**
  * Import your custom workspace rules at the top of this file.
  * 
  * For example:
  * 
- * import {
- *  RULE_NAME as myCustomRuleName,
- *  rule as myCustomRule
- * } from './my-custom-rule';
+ * import { RULE_NAME as myCustomRuleName, rule as myCustomRule } from './rules/my-custom-rule';
  * 
  * In order to quickly get started with writing rules you can use the
  * following generator command and provide your desired rule name:
  * 
- * \`\`\`sh
+ * ```sh
  * npx nx g @nrwl/linter:workspace-rule {{ NEW_RULE_NAME }}
- * \`\`\`
+ * ```
  */
 
 module.exports = {
@@ -31,15 +25,3 @@ module.exports = {
    */
   rules: {}
 };
-"
-`;
-
-exports[`@nrwl/linter:init-workspace-rules should generate the required files 2`] = `
-"{
-  \\"extends\\": \\"../../tsconfig.base.json\\",
-  \\"compilerOptions\\": {
-    \\"module\\": \\"commonjs\\"
-  }
-}
-"
-`;

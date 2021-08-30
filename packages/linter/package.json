@@ -30,6 +30,7 @@
   "schematics": "./generators.json",
   "dependencies": {
     "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
     "glob": "7.1.4",
     "minimatch": "3.0.4",
     "tmp": "~0.2.1",

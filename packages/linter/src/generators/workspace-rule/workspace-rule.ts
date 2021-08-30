@@ -12,19 +12,19 @@ import { camelize } from '@nrwl/workspace/src/utils/strings';
 import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
-import { lintInitWorkspaceRulesGenerator } from '../init-workspace-rules/init-workspace-rules';
+import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
 
 export interface LintWorkspaceRuleGeneratorOptions {
   name: string;
-  directory?: string;
+  directory: string;
 }
 
 export async function lintWorkspaceRuleGenerator(
   tree: Tree,
   options: LintWorkspaceRuleGeneratorOptions
 ) {
-  // Ensure that the workspace has been initialized for workspace lint rules
-  await lintInitWorkspaceRulesGenerator(tree);
+  // Ensure that the workspace rules project has been created
+  await lintWorkspaceRulesProjectGenerator(tree);
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,

@@ -27,8 +27,9 @@
     "directory": {
       "type": "string",
       "description": "Create the rule under this directory within tools/eslint-rules/ (can be nested).",
-      "alias": "dir"
+      "alias": "dir",
+      "default": "rules"
     }
   },
-  "required": ["name"]
+  "required": ["name", "directory"]
 }

@@ -42,6 +42,21 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 "
 `;
 
+exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory 2`] = `
+"import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { rule, RULE_NAME } from './another-rule';
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+});
+
+ruleTester.run(RULE_NAME, rule, {
+  valid: [\`const example = true;\`],
+  invalid: [],
+});
+"
+`;
+
 exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 1`] = `
 "/**
  * This file sets you up with with structure needed for an ESLint rule.
@@ -80,6 +95,21 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
   create(context) {
     return {};
   },
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 2`] = `
+"import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { rule, RULE_NAME } from './one-more-rule';
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+});
+
+ruleTester.run(RULE_NAME, rule, {
+  valid: [\`const example = true;\`],
+  invalid: [],
 });
 "
 `;
@@ -126,17 +156,29 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 "
 `;
 
+exports[`@nrwl/linter:workspace-rule should generate the required files 2`] = `
+"import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { rule, RULE_NAME } from './my-rule';
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+});
+
+ruleTester.run(RULE_NAME, rule, {
+  valid: [\`const example = true;\`],
+  invalid: [],
+});
+"
+`;
+
 exports[`@nrwl/linter:workspace-rule should update the plugin index.ts with the new rule 1`] = `
-"import { RULE_NAME as myRuleName, rule as myRule } from './my-rule';
+"import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
 /**
  * Import your custom workspace rules at the top of this file.
  * 
  * For example:
  * 
- * import {
- *  RULE_NAME as myCustomRuleName,
- *  rule as myCustomRule
- * } from './my-custom-rule';
+ * import { RULE_NAME as myCustomRuleName, rule as myCustomRule } from './rules/my-custom-rule';
  * 
  * In order to quickly get started with writing rules you can use the
  * following generator command and provide your desired rule name:
