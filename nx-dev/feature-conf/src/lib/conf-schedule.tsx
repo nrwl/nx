@@ -66,7 +66,7 @@ export function ConfSchedule(): JSX.Element {
     {
       type: 'break',
       time: '1:30-1:55pm',
-      title: 'Community Talk',
+      title: 'TBD',
       description: '',
       speakers: [],
     },
@@ -143,10 +143,11 @@ export function ConfSchedule(): JSX.Element {
       speakers: [''],
     },
     {
-      type: 'break',
+      type: 'event',
       time: '11:30-11:55am',
-      title: 'Community Talk',
-      description: 'Details coming soon.',
+      title: 'Debugging a NestJS Application',
+      description:
+        "In this talk, we'll discuss the process of debugging a NestJS application within Nx.",
       speakers: ['Yvonne Allen'],
     },
     {
