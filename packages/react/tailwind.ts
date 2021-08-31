@@ -7,7 +7,7 @@ import { createGlobPatternsForDependencies as workspaceGenerateGlobs } from '@nr
  */
 export function createGlobPatternsForDependencies(
   dirPath: string,
-  fileGlobPattern: string = '/**/!(*.stories|*.spec).{tsx,jsx,js}'
+  fileGlobPattern: string = '/**/!(*.stories|*.spec).{tsx,jsx,js,html}'
 ) {
   try {
     return workspaceGenerateGlobs(dirPath, fileGlobPattern);
