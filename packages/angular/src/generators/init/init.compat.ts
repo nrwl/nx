@@ -1,4 +1,4 @@
 import { convertNxGenerator } from '@nrwl/devkit';
-import init from './init';
+import { angularInitGenerator } from './init';
 
-export const initSchematic = convertNxGenerator(init);
+export const initSchematic = convertNxGenerator(angularInitGenerator);
