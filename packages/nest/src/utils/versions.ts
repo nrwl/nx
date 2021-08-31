@@ -1,7 +1,7 @@
 export const nxVersion = '*';
 
-export const nestJsVersion = '^7.0.0';
-export const nestJsSchematicsVersion = '^7.0.0';
+export const nestJsVersion = '^8.0.0';
+export const nestJsSchematicsVersion = '^8.0.0';
 
 export const rxjsVersion = '~6.6.3';
 
