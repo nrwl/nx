@@ -34,6 +34,15 @@ function withNx(nextConfig = {} as WithNxOptions) {
     nextConfig.target = 'experimental-serverless-trace';
   }
 
+  /**
+   * In Next.js 11.1.0 and above, it will throw when running an export if httpAgentOptions is not an object.
+   * Default value taken from next/server/config-shared.ts:
+   * https://github.com/vercel/next.js/blob/f6d8a112df76197362b407fc1e0fb6f323dccf39/packages/next/server/config-shared.ts#L189
+   */
+  nextConfig.httpAgentOptions ??= {
+    keepAlive: true,
+  };
+
   const userWebpack = nextConfig.webpack || ((x) => x);
   return {
     ...nextConfig,
