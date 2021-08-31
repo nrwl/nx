@@ -422,7 +422,7 @@ export function ConfPage() {
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
             <div className="mt-24">
               <h2 id="agenda" className="my-20 text-3xl font-input-mono">
-                Agenda
+                Agenda (EST)
               </h2>
             </div>
           </div>

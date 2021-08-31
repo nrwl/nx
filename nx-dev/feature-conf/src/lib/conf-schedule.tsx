@@ -267,7 +267,7 @@ export function ConfSchedule(): JSX.Element {
 }
 
 const scheduleRow = (item: ScheduleItem): JSX.Element => (
-  <div key={item.title} className="w-full">
+  <div key={item.title + item.time} className="w-full">
     <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
       <article className="w-full grid grid-cols-1 md:grid-cols-5 md:divide-x md:divide-gray-600">
         <div className="px-5 pt-12 pb-8 md:py-12 font-input-mono">
@@ -291,7 +291,7 @@ const scheduleRow = (item: ScheduleItem): JSX.Element => (
 );
 
 const breakRow = (item: ScheduleItem): JSX.Element => (
-  <div key={item.title} className="w-full">
+  <div key={item.title + item.time} className="w-full">
     <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
       <div className="w-full grid grid-cols-1 md:grid-cols-5">
         <div className="px-5 pt-12 pb-8 md:py-12 font-input-mono">
