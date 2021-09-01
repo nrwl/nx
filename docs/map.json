@@ -670,6 +670,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "angular/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "lint",
+            "file": "angular/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -1959,6 +1964,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "react/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "lint",
+            "file": "react/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -3210,6 +3220,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "node/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "lint",
+            "file": "node/api-linter/generators/workspace-rule"
           }
         ]
       },
