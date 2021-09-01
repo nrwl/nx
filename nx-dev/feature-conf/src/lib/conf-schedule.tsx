@@ -178,7 +178,7 @@ export function ConfSchedule(): JSX.Element {
       type: 'event',
       time: '2:00-2:25pm',
       title: 'ESLint: Your Nx Workspace Rules',
-      description: `In this talk we will cover what it takes to create and run lint rules directly in your Nx workspace which are specific to your workspace’s own requirements and best-practices. Want to avoid using developer time to police your contributing conventions in PR reviews? How to add auto fixing so the correct solutions are a command away? How to leverage existing utilities from the ESLint ecosystem to avoid writing invalid rules? Then this talk is for you!`,
+      description: `In this talk we will cover what it takes to create and run lint rules directly in your Nx workspace specific to your workspace’s own requirements and best practices. Want to learn how to avoid using developer time to police your contributing conventions in PR reviews? How to add auto fixing so the correct solutions are a command away? How to leverage existing utilities from the ESLint ecosystem to avoid writing invalid rules? Then this talk is for you!`,
       speakers: ['James Henry'],
     },
     {
