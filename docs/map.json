@@ -673,7 +673,7 @@
           },
           {
             "name": "workspace-rule generator",
-            "id": "lint",
+            "id": "workspace-rule",
             "file": "angular/api-linter/generators/workspace-rule"
           }
         ]
@@ -1967,7 +1967,7 @@
           },
           {
             "name": "workspace-rule generator",
-            "id": "lint",
+            "id": "workspace-rule",
             "file": "react/api-linter/generators/workspace-rule"
           }
         ]
@@ -3223,7 +3223,7 @@
           },
           {
             "name": "workspace-rule generator",
-            "id": "lint",
+            "id": "workspace-rule",
             "file": "node/api-linter/generators/workspace-rule"
           }
         ]
