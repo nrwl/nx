@@ -15,7 +15,7 @@ import { projectHasTarget } from '../utilities/project-graph-utils';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
-import { parseFiles } from './shared';
+import { applyInclude, parseFiles } from './shared';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import type { NxArgs, RawNxArgs } from './utils';
 import { performance } from 'perf_hooks';
@@ -39,7 +39,8 @@ export async function affected(
 
   const projectGraph = await createProjectGraphAsync('4.0');
   const projects = projectsToRun(nxArgs, projectGraph);
-  const projectsNotExcluded = applyExclude(projects, nxArgs);
+  let projectsNotExcluded = applyExclude(projects, nxArgs);
+  projectsNotExcluded = applyInclude(projectsNotExcluded, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
   const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 

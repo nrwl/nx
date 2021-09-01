@@ -314,6 +314,12 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
       default: [],
     })
+    .option('include', {
+      describe: 'Include certain projects for processing',
+      type: 'array',
+      coerce: parseCSV,
+      default: [],
+    })
     .options('runner', {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string',
@@ -395,6 +401,12 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
       default: [],
     })
+    .option('include', {
+      describe: 'Include certain projects for processing',
+      type: 'array',
+      coerce: parseCSV,
+      default: [],
+    })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
     })
@@ -418,6 +430,12 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('exclude', {
       describe:
         'List of projects delimited by commas to exclude from the dependency graph.',
+      type: 'array',
+      coerce: parseCSV,
+    })
+    .option('include', {
+      describe:
+        'List of projects delimited by commas to include in the dependency graph.',
       type: 'array',
       coerce: parseCSV,
     })

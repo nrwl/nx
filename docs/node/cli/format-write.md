@@ -42,6 +42,12 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
+### include
+
+Default: ``
+
+Include certain projects for processing
+
 ### libs-and-apps
 
 Format only libraries and applications files.

@@ -96,6 +96,12 @@ Show help
 
 Bind the dependency graph server to a specific ip address.
 
+### include
+
+Default: ``
+
+Include certain projects for processing
+
 ### only-failed
 
 Default: `false`

@@ -15,6 +15,7 @@ import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import type { Environment } from '../core/shared-interfaces';
+import { applyInclude } from './shared';
 
 export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   performance.mark('command-execution-begins');
@@ -27,7 +28,8 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
 
   const projectGraph = await createProjectGraphAsync('4.0');
   const projects = projectsToRun(nxArgs, projectGraph);
-  const projectsNotExcluded = applyExclude(projects, nxArgs);
+  let projectsNotExcluded = applyExclude(projects, nxArgs);
+  projectsNotExcluded = applyInclude(projectsNotExcluded, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
   const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 

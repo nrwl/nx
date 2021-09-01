@@ -80,6 +80,12 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
+### include
+
+Default: ``
+
+Include certain projects for processing
+
 ### maxParallel
 
 Default: `3`

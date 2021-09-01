@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
 import type { NxArgs } from './utils';
 
@@ -73,4 +74,16 @@ function parseGitOutput(command: string): string[] {
 export function getProjectRoots(projectNames: string[]): string[] {
   const { projects } = readWorkspaceJson();
   return projectNames.map((name) => projects[name].root);
+}
+
+export function applyInclude(
+  projects: Record<string, ProjectGraphNode>,
+  nxArgs: NxArgs
+) {
+  return Object.keys(projects)
+    .filter((key) => (nxArgs.include || []).includes(key))
+    .reduce((p, key) => {
+      p[key] = projects[key];
+      return p;
+    }, {} as Record<string, ProjectGraphNode>);
 }

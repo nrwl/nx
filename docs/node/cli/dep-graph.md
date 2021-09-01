@@ -86,6 +86,10 @@ Show help
 
 Bind the dependency graph server to a specific ip address.
 
+### include
+
+List of projects delimited by commas to include in the dependency graph.
+
 ### port
 
 Bind the dependecy graph server to a specific port.

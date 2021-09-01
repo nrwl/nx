@@ -50,6 +50,12 @@ Exclude certain projects from being processed
 
 Show help
 
+### include
+
+Default: ``
+
+Include certain projects for processing
+
 ### maxParallel
 
 Default: `3`
