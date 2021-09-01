@@ -84,6 +84,12 @@
       "version": "12.3.5-beta.0",
       "description": "Convert targets using @nrwl/angular:webpack-browser with the buildTarget option set to use the @nrwl/angular:delegate-build executor instead.",
       "factory": "./src/migrations/update-12-3-0/convert-webpack-browser-build-target-to-delegate-build"
+    },
+    "update-invalid-import-paths": {
+      "cli": "nx",
+      "version": "12.9.0",
+      "description": "Fixes invalid importPaths for buildable and publishable libs.",
+      "factory": "./src/migrations/update-12-9-0/update-invalid-import-paths"
     }
   },
   "packageJsonUpdates": {
