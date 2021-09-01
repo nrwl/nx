@@ -12,7 +12,7 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
-export const WORKSPACE_RULES_PROJECT_NAME = 'workspace-lint-rules';
+export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 
 const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 

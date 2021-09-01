@@ -24,7 +24,9 @@ export async function lintWorkspaceRuleGenerator(
   options: LintWorkspaceRuleGeneratorOptions
 ) {
   // Ensure that the workspace rules project has been created
-  await lintWorkspaceRulesProjectGenerator(tree);
+  const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
+    tree
+  );
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,
@@ -109,6 +111,8 @@ export async function lintWorkspaceRuleGenerator(
          "@nrwl/nx/workspace/${options.name}": "error"
        }
 `);
+
+  return projectGeneratorCallback;
 }
 
 export const lintWorkspaceRuleSchematic = convertNxGenerator(

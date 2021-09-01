@@ -9,6 +9,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import * as ts from 'typescript';
 
 describe('Linter', () => {
   it('linting should error when rules are not followed', () => {
@@ -213,4 +214,192 @@ describe('Linter', () => {
     });
     expect(() => checkFilesExist(outputFile)).not.toThrow();
   }, 1000000);
+
+  describe('workspace lint rules', () => {
+    it('should supporting creating, testing and using workspace lint rules', () => {
+      newProject({ name: uniq('myproj') });
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+
+      // Generate a new rule (should also scaffold the required workspace project and tests)
+      const newRuleName = 'e2e-test-rule-name';
+      runCLI(`generate @nrwl/linter:workspace-rule ${newRuleName}`);
+
+      // Ensure that the unit tests for the new rule are runnable
+      const unitTestsOutput = runCLI(`test eslint-rules`);
+      expect(unitTestsOutput).toContain('Running target "test" succeeded');
+
+      // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
+      const knownLintErrorMessage = 'e2e test known error message';
+      const newRulePath = `tools/eslint-rules/rules/${newRuleName}.ts`;
+      const newRuleGeneratedContents = readFile(newRulePath);
+      const updatedRuleContents = updateGeneratedRuleImplementation(
+        newRulePath,
+        newRuleGeneratedContents,
+        knownLintErrorMessage
+      );
+      updateFile(newRulePath, updatedRuleContents);
+
+      const newRuleNameForUsage = `@nrwl/nx/workspace/${newRuleName}`;
+
+      // Add the new workspace rule to the lint config and run linting
+      const eslintrc = readJson('.eslintrc.json');
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules[newRuleNameForUsage] = 'error';
+        }
+      });
+      updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+
+      const lintOutput = runCLI(`lint ${myapp}`, { silenceError: true });
+      expect(lintOutput).toContain(newRuleNameForUsage);
+      expect(lintOutput).toContain(knownLintErrorMessage);
+    }, 1000000);
+  });
 });
+
+/**
+ * Update the generated rule implementation to produce a known lint error from all files.
+ *
+ * It is important that we do this surgically via AST transformations, otherwise we will
+ * drift further and further away from the original generated code and therefore make our
+ * e2e test less accurate and less valuable.
+ */
+function updateGeneratedRuleImplementation(
+  newRulePath: string,
+  newRuleGeneratedContents: string,
+  knownLintErrorMessage: string
+): string {
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  const newRuleSourceFile = ts.createSourceFile(
+    newRulePath,
+    newRuleGeneratedContents,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const messageId = 'e2eMessageId';
+
+  const transformer =
+    <T extends ts.Node>(context: ts.TransformationContext) =>
+    (rootNode: T) => {
+      function visit(node: ts.Node): ts.Node {
+        /**
+         * Add an ESLint messageId which will show the knownLintErrorMessage
+         *
+         * i.e.
+         *
+         * messages: {
+         *   e2eMessageId: knownLintErrorMessage
+         * }
+         */
+        if (
+          ts.isPropertyAssignment(node) &&
+          ts.isIdentifier(node.name) &&
+          node.name.escapedText === 'messages'
+        ) {
+          return ts.factory.updatePropertyAssignment(
+            node,
+            node.name,
+            ts.factory.createObjectLiteralExpression([
+              ts.factory.createPropertyAssignment(
+                messageId,
+                ts.factory.createStringLiteral(knownLintErrorMessage)
+              ),
+            ])
+          );
+        }
+
+        /**
+         * Update the rule implementation to report the knownLintErrorMessage on every Program node
+         *
+         * i.e.
+         *
+         * create(context) {
+         *    return  {
+         *      Program(node) {
+         *        context.report({
+         *          messageId: 'e2eMessageId',
+         *          node,
+         *        });
+         *      }
+         *    }
+         *  }
+         */
+        if (
+          ts.isMethodDeclaration(node) &&
+          ts.isIdentifier(node.name) &&
+          node.name.escapedText === 'create'
+        ) {
+          return ts.factory.updateMethodDeclaration(
+            node,
+            node.decorators,
+            node.modifiers,
+            node.asteriskToken,
+            node.name,
+            node.questionToken,
+            node.typeParameters,
+            node.parameters,
+            node.type,
+            ts.factory.createBlock([
+              ts.factory.createReturnStatement(
+                ts.factory.createObjectLiteralExpression([
+                  ts.factory.createMethodDeclaration(
+                    [],
+                    [],
+                    undefined,
+                    'Program',
+                    undefined,
+                    [],
+                    [
+                      ts.factory.createParameterDeclaration(
+                        [],
+                        [],
+                        undefined,
+                        'node',
+                        undefined,
+                        undefined,
+                        undefined
+                      ),
+                    ],
+                    undefined,
+                    ts.factory.createBlock([
+                      ts.factory.createExpressionStatement(
+                        ts.factory.createCallExpression(
+                          ts.factory.createPropertyAccessExpression(
+                            ts.factory.createIdentifier('context'),
+                            'report'
+                          ),
+                          [],
+                          [
+                            ts.factory.createObjectLiteralExpression([
+                              ts.factory.createPropertyAssignment(
+                                'messageId',
+                                ts.factory.createStringLiteral(messageId)
+                              ),
+                              ts.factory.createShorthandPropertyAssignment(
+                                'node'
+                              ),
+                            ]),
+                          ]
+                        )
+                      ),
+                    ])
+                  ),
+                ])
+              ),
+            ])
+          );
+        }
+
+        return ts.visitEachChild(node, visit, context);
+      }
+      return ts.visitNode(rootNode, visit);
+    };
+
+  const result: ts.TransformationResult<ts.SourceFile> =
+    ts.transform<ts.SourceFile>(newRuleSourceFile, [transformer]);
+  const updatedSourceFile: ts.SourceFile = result.transformed[0];
+
+  return printer.printFile(updatedSourceFile);
+}

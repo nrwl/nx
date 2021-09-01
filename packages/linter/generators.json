@@ -11,8 +11,7 @@
     "workspace-rule": {
       "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleSchematic",
       "schema": "./src/generators/workspace-rule/schema.json",
-      "description": "Create a new workspace ESLint rule",
-      "hidden": true
+      "description": "Create a new workspace ESLint rule"
     }
   },
   "generators": {
@@ -25,8 +24,7 @@
     "workspace-rule": {
       "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator",
       "schema": "./src/generators/workspace-rule/schema.json",
-      "description": "Create a new workspace ESLint rule",
-      "hidden": true
+      "description": "Create a new workspace ESLint rule"
     }
   }
 }
