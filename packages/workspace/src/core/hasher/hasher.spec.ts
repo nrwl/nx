@@ -311,7 +311,7 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(hash.details.nodes).toEqual({
-      app: '/filea.ts|a.hash|""|""|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      app: '/filea.ts|a.hash|""|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '17.0.0',
     });
   });

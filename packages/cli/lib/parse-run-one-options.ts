@@ -111,7 +111,6 @@ export function parseRunOneOptions(
   if (parsedArgs.project) {
     project = parsedArgs.project;
   }
-  console.log(project, target);
   // we need both to be able to run a target, no tasks runner
   if (!project || !target) {
     return false;
