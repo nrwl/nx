@@ -89,10 +89,12 @@ function runOneOptions(
         workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
       )
     );
+    const nxJson = readJsonFile(path.join(workspace.dir, 'nx.json'));
 
     return parseRunOneOptions(
       workspace.dir,
       workspaceConfigJson,
+      nxJson,
       process.argv.slice(2)
     );
   } catch {

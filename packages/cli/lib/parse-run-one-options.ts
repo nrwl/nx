@@ -1,7 +1,12 @@
 import yargsParser = require('yargs-parser');
 import * as fs from 'fs';
 
-function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
+function calculateDefaultProjectName(
+  cwd: string,
+  root: string,
+  wc: any,
+  nxJson
+) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {
     relativeCwd = relativeCwd.startsWith('/')
@@ -17,11 +22,11 @@ function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
   }
   let defaultProjectName = null;
   try {
-    defaultProjectName = wc.cli.defaultProjectName;
+    defaultProjectName = nxJson.cli.defaultProjectName;
   } catch (e) {}
   try {
     if (!defaultProjectName) {
-      defaultProjectName = wc.defaultProject;
+      defaultProjectName = nxJson.defaultProject;
     }
   } catch (e) {}
   return defaultProjectName;
@@ -59,13 +64,15 @@ const invalidTargetNames = [
 
 export function parseRunOneOptions(
   root: string,
-  workspaceConfigJson: any,
+  workspaceJsonConfiguration: any,
+  nxJson: any,
   args: string[]
 ): false | { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     process.cwd(),
     root,
-    workspaceConfigJson
+    workspaceJsonConfiguration,
+    nxJson
   );
 
   const parsedArgs = yargsParser(args, {
@@ -104,7 +111,7 @@ export function parseRunOneOptions(
   if (parsedArgs.project) {
     project = parsedArgs.project;
   }
-
+  console.log(project, target);
   // we need both to be able to run a target, no tasks runner
   if (!project || !target) {
     return false;
@@ -112,7 +119,8 @@ export function parseRunOneOptions(
 
   // we need both to be able to run a target, no tasks runner
   const p =
-    workspaceConfigJson.projects && workspaceConfigJson.projects[project];
+    workspaceJsonConfiguration.projects &&
+    workspaceJsonConfiguration.projects[project];
   if (!p) return false;
 
   let targets;

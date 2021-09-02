@@ -1,4 +1,10 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  readNxJson,
+  readJson,
+  Tree,
+  getProjects,
+} from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -38,6 +44,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree);
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
@@ -81,7 +88,7 @@ describe('app', () => {
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
-      expect(workspaceJson.defaultProject).toEqual('my-node-app');
+      expect(nxJson.defaultProject).toEqual('my-node-app');
     });
 
     it('should update tags', async () => {
@@ -90,7 +97,7 @@ describe('app', () => {
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const projects = Object.fromEntries(devkit.getProjects(tree));
+      const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
         'my-node-app': {
           tags: ['one', 'two'],
@@ -174,6 +181,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readNxJson(tree);
 
       expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
@@ -190,7 +198,7 @@ describe('app', () => {
       });
 
       expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
-      expect(workspaceJson.defaultProject).toEqual('my-dir-my-node-app');
+      expect(nxJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
     it('should update tags', async () => {
@@ -200,7 +208,7 @@ describe('app', () => {
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const projects = Object.fromEntries(devkit.getProjects(tree));
+      const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
         'my-dir-my-node-app': {
           tags: ['one', 'two'],

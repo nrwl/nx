@@ -8,6 +8,7 @@ Object {
   "cli": Object {
     "defaultCollection": "@nrwl/angular",
   },
+  "defaultProject": "myApp",
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
     "angular.json": "*",

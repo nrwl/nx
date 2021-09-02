@@ -1,6 +1,6 @@
 import { Linter } from '@nrwl/linter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { getProjects, readJson, Tree } from '@nrwl/devkit';
+import { getProjects, readJson, readNxJson, Tree } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 
@@ -12,7 +12,7 @@ describe('app', () => {
   });
 
   describe('not nested', () => {
-    it('should update workspace.json', async () => {
+    it('should update workspace.json and set defaultProject', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
@@ -20,12 +20,13 @@ describe('app', () => {
       });
 
       const workspaceJson = readJson(tree, 'workspace.json');
+      const nxJson = readNxJson(tree);
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(workspaceJson.defaultProject).toEqual('my-app');
+      expect(nxJson.defaultProject).toEqual('my-app');
     });
 
     it('should update tags and implicit dependencies', async () => {

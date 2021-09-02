@@ -25,12 +25,6 @@ export interface WorkspaceJsonConfiguration {
   projects: {
     [projectName: string]: ProjectConfiguration & NxJsonProjectConfiguration;
   };
-
-  /**
-   * Default project. When project isn't provided, the default project
-   * will be used. Convenient for small workspaces with one main application.
-   */
-  defaultProject?: string;
 }
 
 export interface RawWorkspaceJsonConfiguration
@@ -262,7 +256,11 @@ export class Workspaces {
     return path.relative(this.root, cwd) || null;
   }
 
-  calculateDefaultProjectName(cwd: string, wc: WorkspaceJsonConfiguration) {
+  calculateDefaultProjectName(
+    cwd: string,
+    wc: WorkspaceJsonConfiguration,
+    nxJson: NxJsonConfiguration
+  ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
       const matchingProject = Object.keys(wc.projects).find((p) => {
@@ -274,7 +272,7 @@ export class Workspaces {
       });
       if (matchingProject) return matchingProject;
     }
-    return wc.defaultProject;
+    return nxJson.defaultProject;
   }
 
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration {

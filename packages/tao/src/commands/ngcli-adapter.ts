@@ -194,6 +194,10 @@ async function runSchematic(
   return { status: 0, loggingQueue: record.loggingQueue };
 }
 
+type AngularJsonConfiguration = WorkspaceJsonConfiguration &
+  Pick<NxJsonConfiguration, 'cli' | 'defaultProject' | 'generators'> & {
+    schematics?: NxJsonConfiguration['generators'];
+  };
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
   constructor(root: Path) {
     super(new NodeJsSyncHost(), root);
@@ -221,14 +225,17 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           switchMap(([w, n]) => {
             try {
               // parse both from json, nxJson may be null
-              const workspaceJson = parseJson(Buffer.from(w).toString());
-              const nxJson: any = n
+              const workspaceJson: AngularJsonConfiguration = parseJson(
+                Buffer.from(w).toString()
+              );
+              const nxJson: NxJsonConfiguration | null = n
                 ? parseJson(Buffer.from(n).toString())
                 : null;
 
               // assign props ng cli expects from nx json, if it exists
               workspaceJson.cli ??= nxJson?.cli;
               workspaceJson.generators ??= nxJson?.generators;
+              workspaceJson.defaultProject ??= nxJson?.defaultProject;
 
               // resolve inline configurations and downlevel format
               return this.resolveInlineProjectConfigurations(
@@ -356,44 +363,63 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     if (context.isNewFormat) {
       try {
         const w = parseJson(Buffer.from(content).toString());
-        const formatted = toNewFormatOrNull(w);
+        const formatted: AngularJsonConfiguration = toNewFormatOrNull(w);
         if (formatted) {
-          const { cli, generators, ...workspaceJson } = formatted;
+          const { cli, generators, defaultProject, ...workspaceJson } =
+            formatted;
           return concat(
             this.writeWorkspaceConfigFiles(
               context,
               workspaceJson
             ),
-            cli || generators ? this.saveNxJsonProps(cli, generators) : of(null)
+            cli || generators || defaultProject
+              ? this.saveNxJsonProps({ cli, generators, defaultProject })
+              : of(null)
           );
         } else {
-          const { cli, schematics, ...angularJson } = w;
+          const {
+            cli,
+            schematics,
+            generators,
+            defaultProject,
+            ...angularJson
+          } = w;
           return concat(
             this.writeWorkspaceConfigFiles(
               context.actualConfigFileName,
               angularJson
             ),
-            cli || schematics ? this.saveNxJsonProps(cli, schematics) : of(null)
+            cli || schematics
+              ? this.saveNxJsonProps({
+                  cli,
+                  defaultProject,
+                  generators: schematics || generators,
+                })
+              : of(null)
           );
         }
       } catch (e) {}
     }
-    const { cli, schematics, generators, ...angularJson } = config;
+    const { cli, schematics, generators, defaultProject, ...angularJson } =
+      config;
     return concat(
       this.writeWorkspaceConfigFiles(context, angularJson),
-      cli || schematics
-        ? this.saveNxJsonProps(cli, schematics || generators)
-        : of(null)
+      this.saveNxJsonProps({
+        cli,
+        defaultProject,
+        generators: schematics || generators,
+      })
     );
   }
 
-  private saveNxJsonProps(cli, generators) {
+  private saveNxJsonProps(
+    props: Partial<NxJsonConfiguration>
+  ): Observable<void> {
     const nxJsonPath = 'nx.json' as Path;
     return super.read(nxJsonPath).pipe(
-      map((buf) => {
+      switchMap((buf) => {
         const nxJson = parseJson(Buffer.from(buf).toString());
-        nxJson.cli = cli;
-        nxJson.generators = generators;
+        Object.assign(nxJson, props);
         return super.write(nxJsonPath, Buffer.from(serializeJson(nxJson)));
       })
     );
@@ -1109,11 +1135,8 @@ function saveWorkspaceConfigurationInWrappedSchematic(
   host: Tree,
   r: { eventPath: string; content: Buffer }
 ) {
-  const workspace: {
+  const workspace: Omit<AngularJsonConfiguration, 'projects'> & {
     projects: { [key: string]: string | { configFilePath?: string } };
-    generators?: Record<string, unknown>;
-    schematics?: Record<string, unknown>;
-    cli?: unknown;
   } = parseJson(r.content.toString());
   for (const [project, config] of Object.entries(workspace.projects)) {
     if (typeof config === 'object' && config.configFilePath) {
@@ -1128,6 +1151,7 @@ function saveWorkspaceConfigurationInWrappedSchematic(
   );
   nxJson.generators = workspace.generators || workspace.schematics;
   nxJson.cli = workspace.cli || nxJson.cli;
+  nxJson.defaultProject = workspace.defaultProject;
   delete workspace.cli;
   delete workspace.generators;
   delete workspace.schematics;

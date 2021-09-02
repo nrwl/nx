@@ -223,7 +223,7 @@ export async function generate(
       workspaceDefinition,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(cwd, workspaceDefinition),
+      ws.calculateDefaultProjectName(cwd, workspaceDefinition, nxConfig),
       ws.relativeCwd(cwd),
       isVerbose
     );

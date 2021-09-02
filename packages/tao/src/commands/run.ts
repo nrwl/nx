@@ -316,7 +316,12 @@ export async function run(
 
   return handleErrors(isVerbose, async () => {
     const workspace = ws.readWorkspaceConfiguration();
-    const defaultProjectName = ws.calculateDefaultProjectName(cwd, workspace);
+    const nxJson = ws.readNxConfiguration();
+    const defaultProjectName = ws.calculateDefaultProjectName(
+      cwd,
+      workspace,
+      nxJson
+    );
     const opts = parseRunOpts(cwd, args, defaultProjectName);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
