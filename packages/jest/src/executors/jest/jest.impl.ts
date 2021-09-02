@@ -16,18 +16,18 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const config = jestConfigParser(options, context);
+  const config = await jestConfigParser(options, context);
 
   const { results } = await runCLI(config, [options.jestConfig]);
 
   return { success: results.success };
 }
 
-export function jestConfigParser(
+export async function jestConfigParser(
   options: JestExecutorOptions,
   context: ExecutorContext,
   multiProjects = false
-): Config.Argv {
+): Promise<Config.Argv> {
   let jestConfig:
     | {
         transform: any;
@@ -35,12 +35,6 @@ export function jestConfigParser(
         setupFilesAfterEnv: any;
       }
     | undefined;
-
-  if (!multiProjects) {
-    options.jestConfig = path.resolve(context.root, options.jestConfig);
-
-    jestConfig = require(options.jestConfig);
-  }
 
   const config: Config.Argv = {
     $0: undefined,
@@ -72,6 +66,12 @@ export function jestConfigParser(
     watch: options.watch,
     watchAll: options.watchAll,
   };
+
+  if (!multiProjects) {
+    options.jestConfig = path.resolve(context.root, options.jestConfig);
+
+    jestConfig = (await readConfig(config, options.jestConfig)).projectConfig;
+  }
 
   // for backwards compatibility
   if (options.setupFile && !multiProjects) {
@@ -132,7 +132,7 @@ export async function batchJest(
   );
 
   const { globalConfig, results } = await runCLI(
-    jestConfigParser(overrides, context, true),
+    await jestConfigParser(overrides, context, true),
     [...configPaths]
   );
 
