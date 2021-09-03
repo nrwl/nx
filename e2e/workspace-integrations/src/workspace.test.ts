@@ -752,11 +752,21 @@ describe('cache', () => {
     expect(outputWithBuildApp2Cached).toContain('read the output from cache');
     expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
 
-    // touch package.json
+    // touch not relevant section in package.json
     // --------------------------------------------
     updateFile(`package.json`, (c) => {
       const r = JSON.parse(c);
       r.description = 'different';
+      return JSON.stringify(r);
+    });
+    const outputWithBuildCached = runCLI(`affected:build ${files}`);
+    expect(outputWithBuildCached).toContain('read the output from cache');
+
+    // touch relevant section in package.json
+    // --------------------------------------------
+    updateFile(`package.json`, (c) => {
+      const r = JSON.parse(c);
+      r.dependencies['some-package'] = '99.99.99';
       return JSON.stringify(r);
     });
     const outputWithNoBuildCached = runCLI(`affected:build ${files}`);

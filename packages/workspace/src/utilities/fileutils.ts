@@ -8,8 +8,9 @@ import {
   renameSync as fsRenameSync,
 } from 'fs';
 import { ensureDirSync } from 'fs-extra';
-import { basename, dirname, resolve as pathResolve } from 'path';
+import { basename, dirname, join, resolve as pathResolve } from 'path';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export function writeToFile(filePath: string, str: string) {
   ensureDirSync(dirname(filePath));
@@ -97,3 +98,7 @@ export function isRelativePath(path: string): boolean {
 }
 
 export const resolve = require.resolve;
+
+export function resolvePathFromRoot(path: string): string {
+  return join(appRootPath, path);
+}

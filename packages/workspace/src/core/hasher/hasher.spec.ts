@@ -1,5 +1,5 @@
 // This must come before the Hasher import
-jest.doMock('../../utils/app-root', () => {
+jest.doMock('@nrwl/tao/src/utils/app-root', () => {
   return {
     appRootPath: '',
   };
@@ -391,49 +391,153 @@ describe('Hasher', () => {
     });
   });
 
-  it('should hash implicit deps', async () => {
-    hashes['/filea'] = 'a.hash';
-    hashes['/fileb'] = 'b.hash';
+  it('should hash implicit dependencies', async () => {
+    const packageJson = {
+      name: '@myorg/package',
+      version: '0.0.1',
+      scripts: {
+        build: 'build script',
+        'check:1': 'check:1 script',
+        'check:2': 'check:2 script',
+        lint: 'lint script',
+        test: 'test script',
+      },
+      dependencies: { package1: '1.0.0', package2: '1.0.0' },
+      devDependencies: { package3: '1.0.0', mypackage: '1.0.0' },
+    };
+    const someConfig = { key1: 'value1', key2: 'value2' };
+    fs.readFileSync = (file) => {
+      if (file.endsWith('package.json')) {
+        return JSON.stringify(packageJson);
+      }
+      if (file.endsWith('some-config.json')) {
+        return JSON.stringify(someConfig);
+      }
+      return file;
+    };
+    hashes['globalFile1'] = 'globalFile1.hash';
+    hashes['globalFile2'] = 'globalFile2.hash';
+    hashes['styles/style1.css'] = 'styles/style1.css.hash';
+    hashes['styles/subfolder/style2.css'] = 'styles/subfolder/style2.css.hash';
+    hashes['some-config.json'] = 'some-config.json.hash';
     const hasher = new Hasher(
       {
         nodes: {
           parent: {
             name: 'parent',
             type: 'lib',
-            data: {
-              root: '',
-              files: [],
-            },
+            data: { root: '', files: [] },
           },
+          proja: { name: 'proja', type: 'lib', data: { root: '', files: [] } },
+          projb: { name: 'projb', type: 'lib', data: { root: '', files: [] } },
         },
         dependencies: {},
         allWorkspaceFiles: [
-          {
-            file: 'global1',
-            hash: 'hash1',
-          },
-          {
-            file: 'global2',
-            hash: 'hash2',
-          },
+          { file: 'angular.json', hash: 'hash1' },
+          { file: 'package.json', hash: 'hash2' },
+          { file: 'globalFile1', hash: 'hash3' },
+          { file: 'globalFile2', hash: 'hash4' },
+          { file: 'styles/style1.css', hash: 'hash5' },
+          { file: 'styles/subfolder/style2.css', hash: 'hash6' },
         ],
       },
       {
         implicitDependencies: {
-          'global*': '*',
+          'workspace.json': '*',
+          'package.json': {
+            dependencies: '*',
+            devDependencies: { mypackage: ['proja'] },
+            scripts: { 'check:*': '*', lint: ['proja'] },
+          },
+          globalFile1: ['parent'],
+          globalFile2: ['proja'],
+          'styles/**/*.css': ['parent'],
+          'some-config.json': { key1: ['parent'] },
         },
       } as any,
       {},
       createHashing()
     );
+    const parentPackageJson = {
+      dependencies: packageJson.dependencies,
+      scripts: {
+        'check:1': packageJson.scripts['check:1'],
+        'check:2': packageJson.scripts['check:2'],
+      },
+    };
+    const projAPackageJson = {
+      dependencies: packageJson.dependencies,
+      devDependencies: {
+        mypackage: packageJson.devDependencies['mypackage'],
+      },
+      scripts: {
+        'check:1': packageJson.scripts['check:1'],
+        'check:2': packageJson.scripts['check:2'],
+        lint: packageJson.scripts['lint'],
+      },
+    };
+    const projBPackageJson = parentPackageJson;
+    const parentSomeConfig = { key1: someConfig.key1 };
 
-    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+    const tasksHashParent = await hasher.hashTaskWithDepsAndContext({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
     });
+    const tasksHashProjectA = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
+    const tasksHashProjectB = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'projb', target: 'build' },
+      id: 'projb-build',
+      overrides: { prop: 'prop-value' },
+    });
 
-    expect(tasksHash.value).toContain('global1.hash');
-    expect(tasksHash.value).toContain('global2.hash');
+    // parent
+    expect(tasksHashParent.value).toContain('workspace.json.hash');
+    expect(tasksHashParent.value).toContain(JSON.stringify(parentPackageJson));
+    expect(tasksHashParent.details.implicitDeps['package.json']).toBe(
+      JSON.stringify(parentPackageJson)
+    );
+    expect(tasksHashParent.value).toContain('globalFile1.hash');
+    expect(tasksHashParent.value).not.toContain('globalFile2.hash');
+    expect(tasksHashParent.value).toContain('styles/style1.css.hash');
+    expect(tasksHashParent.value).toContain('styles/subfolder/style2.css.hash');
+    expect(tasksHashParent.value).toContain(JSON.stringify(parentSomeConfig));
+    expect(tasksHashParent.details.implicitDeps['some-config.json']).toBe(
+      JSON.stringify(parentSomeConfig)
+    );
+    // proja
+    expect(tasksHashProjectA.value).toContain('workspace.json.hash');
+    expect(tasksHashProjectA.value).toContain(JSON.stringify(projAPackageJson));
+    expect(tasksHashProjectA.details.implicitDeps['package.json']).toBe(
+      JSON.stringify(projAPackageJson)
+    );
+    expect(tasksHashProjectA.value).not.toContain('globalFile1.hash');
+    expect(tasksHashProjectA.value).toContain('globalFile2.hash');
+    expect(tasksHashProjectA.value).not.toContain('styles/style1.css.hash');
+    expect(tasksHashProjectA.value).not.toContain(
+      'styles/subfolder/style2.css.hash'
+    );
+    expect(
+      tasksHashProjectA.details.implicitDeps['some-config.json']
+    ).toBeUndefined();
+    // projb
+    expect(tasksHashProjectB.value).toContain('workspace.json.hash');
+    expect(tasksHashProjectB.value).toContain(JSON.stringify(projBPackageJson));
+    expect(tasksHashProjectB.details.implicitDeps['package.json']).toBe(
+      JSON.stringify(projBPackageJson)
+    );
+    expect(tasksHashProjectB.value).not.toContain('globalFile1.hash');
+    expect(tasksHashProjectB.value).not.toContain('globalFile2.hash');
+    expect(tasksHashProjectB.value).not.toContain('styles/style1.css.hash');
+    expect(tasksHashProjectB.value).not.toContain(
+      'styles/subfolder/style2.css.hash'
+    );
+    expect(
+      tasksHashProjectB.details.implicitDeps['some-config.json']
+    ).toBeUndefined();
   });
 });

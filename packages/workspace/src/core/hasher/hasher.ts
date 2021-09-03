@@ -1,6 +1,5 @@
 import {
   NxJsonConfiguration,
-  parseJson,
   ProjectGraph,
   readJsonFile,
   Task,
@@ -8,13 +7,11 @@ import {
 } from '@nrwl/devkit';
 import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
 import { exec } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
-import * as minimatch from 'minimatch';
-import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { appRootPath } from '../../utils/app-root';
+import { resolvePathFromRoot } from '../../utilities/fileutils';
 import { workspaceFileName } from '../file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
+import { ImplicitDepsHasher, ImplicitHashResult } from './implicit-deps-hasher';
 
 export interface Hash {
   value: string;
@@ -29,11 +26,7 @@ export interface Hash {
 interface ProjectHashResult {
   value: string;
   nodes: { [name: string]: string };
-}
-
-interface ImplicitHashResult {
-  value: string;
-  files: { [fileName: string]: string };
+  implicitDeps: { [fileName: string]: string };
 }
 
 interface RuntimeHashResult {
@@ -45,15 +38,15 @@ interface CompilerOptions {
   paths: Record<string, string[]>;
 }
 
-interface TsconfigJsonConfiguration {
+interface TsConfigJsonConfiguration {
   compilerOptions: CompilerOptions;
 }
 
 export class Hasher {
   static version = '2.0';
-  private implicitDependencies: Promise<ImplicitHashResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
-  private projectHashes: ProjectHasher;
+  private implicitDepsHasher: ImplicitDepsHasher;
+  private projectHasher: ProjectHasher;
   private hashing: HashingImpl;
 
   constructor(
@@ -68,26 +61,28 @@ export class Hasher {
       // this is only used for testing
       this.hashing = hashing;
     }
-    this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing, {
-      selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false,
-    });
+    this.implicitDepsHasher = new ImplicitDepsHasher(
+      this.projectGraph,
+      this.nxJson,
+      this.hashing
+    );
+    this.projectHasher = new ProjectHasher(
+      this.projectGraph,
+      this.hashing,
+      this.implicitDepsHasher,
+      { selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false }
+    );
   }
 
   async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
     const command = this.hashCommand(task);
 
     const values = (await Promise.all([
-      this.projectHashes.hashProject(task.target.project, [
+      this.projectHasher.hashProject(task.target.project, [
         task.target.project,
       ]),
-      this.implicitDepsHash(),
       this.runtimeInputsHash(),
-    ])) as [
-      ProjectHashResult,
-      ImplicitHashResult,
-      RuntimeHashResult
-      // NodeModulesResult
-    ];
+    ])) as [ProjectHashResult, RuntimeHashResult];
 
     const value = this.hashing.hashArray([
       Hasher.version,
@@ -100,8 +95,8 @@ export class Hasher {
       details: {
         command,
         nodes: values[0].nodes,
-        implicitDeps: values[1].files,
-        runtime: values[2].runtime,
+        implicitDeps: values[0].implicitDeps,
+        runtime: values[1].runtime,
       },
     };
   }
@@ -115,12 +110,12 @@ export class Hasher {
     ]);
   }
 
-  async hashContext(): Promise<{
+  async hashContext(task: Task): Promise<{
     implicitDeps: ImplicitHashResult;
     runtime: RuntimeHashResult;
   }> {
     const values = (await Promise.all([
-      this.implicitDepsHash(),
+      this.implicitDepsHasher.hashImplicitDeps(task.target.project),
       this.runtimeInputsHash(),
     ])) as [ImplicitHashResult, RuntimeHashResult];
 
@@ -131,7 +126,7 @@ export class Hasher {
   }
 
   async hashSource(task: Task): Promise<string> {
-    return this.projectHashes.hashProjectNodeSource(task.target.project);
+    return this.projectHasher.hashProjectNodeSource(task.target.project);
   }
 
   hashArray(values: string[]): string {
@@ -192,116 +187,24 @@ export class Hasher {
 
     return this.runtimeInputs;
   }
-
-  private async implicitDepsHash(): Promise<ImplicitHashResult> {
-    if (this.implicitDependencies) return this.implicitDependencies;
-
-    performance.mark('hasher:implicit deps hash:start');
-
-    this.implicitDependencies = new Promise((res) => {
-      const implicitDeps = Object.keys(this.nxJson.implicitDependencies ?? {});
-      const filesWithoutPatterns = implicitDeps.filter(
-        (p) => p.indexOf('*') === -1
-      );
-      const patterns = implicitDeps.filter((p) => p.indexOf('*') !== -1);
-
-      const implicitDepsFromPatterns =
-        patterns.length > 0
-          ? (this.projectGraph.allWorkspaceFiles ?? [])
-              .filter(
-                (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
-              )
-              .map((f) => f.file)
-          : [];
-
-      const fileNames = [
-        ...filesWithoutPatterns,
-        ...implicitDepsFromPatterns,
-
-        //TODO: vsavkin move the special cases into explicit ts support
-        'package-lock.json',
-        'yarn.lock',
-        'pnpm-lock.yaml',
-
-        // ignore files will change the set of inputs to the hasher
-        '.gitignore',
-        '.nxignore',
-      ];
-
-      const fileHashes = [
-        ...fileNames
-          .map((maybeRelativePath) => {
-            // Normalize the path to always be absolute and starting with appRootPath so we can check it exists
-            if (!maybeRelativePath.startsWith(appRootPath)) {
-              return join(appRootPath, maybeRelativePath);
-            }
-            return maybeRelativePath;
-          })
-          .filter((file) => existsSync(file))
-          .map((file) => {
-            // we should use default file hasher here
-            const hash = this.hashing.hashFile(file);
-            return { file, hash };
-          }),
-        ...this.hashNxJson(),
-      ];
-
-      const combinedHash = this.hashing.hashArray(
-        fileHashes.map((v) => v.hash)
-      );
-
-      performance.mark('hasher:implicit deps hash:end');
-      performance.measure(
-        'hasher:implicit deps hash',
-        'hasher:implicit deps hash:start',
-        'hasher:implicit deps hash:end'
-      );
-
-      res({
-        value: combinedHash,
-        files: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
-      });
-    });
-
-    return this.implicitDependencies;
-  }
-
-  private hashNxJson() {
-    const nxJsonPath = join(appRootPath, 'nx.json');
-    if (!existsSync(nxJsonPath)) {
-      return [];
-    }
-
-    let nxJsonContents = '{}';
-    try {
-      const fileContents = readFileSync(nxJsonPath, 'utf-8');
-      const r = parseJson(fileContents);
-      delete r.projects;
-      nxJsonContents = JSON.stringify(r);
-    } catch {}
-
-    return [
-      {
-        hash: this.hashing.hashArray([nxJsonContents]),
-        file: 'nx.json',
-      },
-    ];
-  }
 }
 
 class ProjectHasher {
   private sourceHashes: { [projectName: string]: Promise<string> } = {};
   private workspaceJson: WorkspaceJsonConfiguration;
   private nxJson: NxJsonConfiguration;
-  private tsConfigJson: TsconfigJsonConfiguration;
+  private tsConfigJson: TsConfigJsonConfiguration;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImpl,
+    private readonly implicitDepsHasher: ImplicitDepsHasher,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {
-    this.workspaceJson = this.readWorkspaceConfigFile(workspaceFileName());
-    this.nxJson = this.readNxJsonConfigFile('nx.json');
+    this.workspaceJson = this.readWorkspaceConfigFile(
+      resolvePathFromRoot(workspaceFileName())
+    );
+    this.nxJson = this.readNxJsonConfigFile(resolvePathFromRoot('nx.json'));
     this.tsConfigJson = this.readTsConfig();
   }
 
@@ -330,11 +233,22 @@ class ProjectHasher {
         },
         { [projectName]: projectHash }
       );
+
+      const implicitDeps = await this.implicitDepsHasher.hashImplicitDeps(
+        projectName
+      );
+
       const value = this.hashing.hashArray([
         ...depHashes.map((d) => d.value),
+        implicitDeps.value,
         projectHash,
       ]);
-      return { value, nodes };
+
+      return {
+        value,
+        nodes,
+        implicitDeps: implicitDeps.files,
+      };
     });
   }
 
@@ -357,7 +271,6 @@ class ProjectHasher {
         );
 
         let tsConfig: string;
-
         if (this.options.selectivelyHashTsConfig) {
           tsConfig = this.removeOtherProjectsPathRecords(projectName);
         } else {
@@ -396,7 +309,7 @@ class ProjectHasher {
 
   private readTsConfig() {
     try {
-      const res = readJsonFile('tsconfig.base.json');
+      const res = readJsonFile(resolvePathFromRoot('tsconfig.base.json'));
       res.compilerOptions.paths ??= {};
       return res;
     } catch {
