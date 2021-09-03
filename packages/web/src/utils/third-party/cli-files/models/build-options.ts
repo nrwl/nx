@@ -95,3 +95,10 @@ export interface WebpackConfigOptions<T = BuildOptions> {
   tsConfigPath: string;
   supportES2015: boolean;
 }
+
+// Stub types from webpack@5
+// TODO: import from 'webpack' in Nx 13 (see browser.ts)
+export type Module = any;
+export type ModuleGraph = any;
+export type ChunkGraph = any;
+export type Chunk = any;

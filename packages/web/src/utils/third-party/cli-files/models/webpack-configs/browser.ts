@@ -6,9 +6,16 @@
  * found in the LICENSE file at https://angular.io/license
  */
 // TODO: import from 'webpack' in Nx 13
-import type { Module, ModuleGraph, ChunkGraph, Chunk } from 'webpack-5';
+// import type { Module, ModuleGraph, ChunkGraph, Chunk } from 'webpack';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import { WebpackConfigOptions, BuildOptions } from '../build-options';
+import {
+  WebpackConfigOptions,
+  BuildOptions,
+  Module,
+  ModuleGraph,
+  ChunkGraph,
+  Chunk,
+} from '../build-options';
 import {
   getSourceMapDevTool,
   isPolyfillsEntry,
