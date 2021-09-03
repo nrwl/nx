@@ -76,6 +76,14 @@ Type: `boolean`
 
 CSS files will be extracted to the output folder.
 
+### format
+
+Alias(es): f
+
+Type: `array`
+
+Only build the specified comma-separated formats (esm,umd,cjs)
+
 ### globals
 
 Type: `object[]`

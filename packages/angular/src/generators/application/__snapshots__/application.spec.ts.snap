@@ -300,6 +300,9 @@ Object {
           "apps/my-dir/my-app-e2e/**/*.{js,ts}",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
   "projectType": "application",
@@ -459,6 +462,9 @@ Object {
           "apps/my-app-e2e/**/*.{js,ts}",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
   "projectType": "application",

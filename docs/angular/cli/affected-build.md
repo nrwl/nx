@@ -30,12 +30,6 @@ Run the build target for all projects:
 nx affected:build --all
 ```
 
-Run the build target for the affected projects and also all the projects the affected projects depend on.:
-
-```bash
-nx affected:build --with-deps
-```
-
 Run build for all the projects affected by changing the index.ts file:
 
 ```bash
@@ -52,12 +46,6 @@ Run build for all the projects affected by the last commit on master:
 
 ```bash
 nx affected:build --base=master~1 --head=master
-```
-
-Run build for all the projects affected by the last commit on master and their dependencies:
-
-```bash
-nx affected:build --base=master~1 --head=master --with-deps
 ```
 
 ## Options
@@ -94,7 +82,9 @@ Show help
 
 ### maxParallel
 
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)
+Default: `3`
+
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
 
 ### only-failed
 
@@ -104,7 +94,9 @@ Isolate projects which previously failed
 
 ### parallel
 
-Parallelize the command (default: false)
+Default: `false`
+
+Parallelize the command
 
 ### runner
 

@@ -21,7 +21,8 @@ export interface StorybookExecutorOptions {
     | '@storybook/react'
     | '@storybook/html'
     | '@storybook/web-components'
-    | '@storybook/vue';
+    | '@storybook/vue'
+    | '@storybook/vue3';
   projectBuildConfig?: string;
   config: StorybookConfig;
   host?: string;

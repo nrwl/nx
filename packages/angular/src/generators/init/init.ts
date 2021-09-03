@@ -20,7 +20,7 @@ import {
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
 
-export default async function (
+export async function angularInitGenerator(
   host: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
@@ -146,3 +146,5 @@ function addE2ETestRunner(
       return () => {};
   }
 }
+
+export default angularInitGenerator;

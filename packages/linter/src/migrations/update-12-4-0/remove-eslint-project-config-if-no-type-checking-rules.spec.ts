@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import removeESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
-
+import type { Linter } from 'eslint';
 const KNOWN_RULE_REQUIRING_TYPE_CHECKING = '@typescript-eslint/await-thenable';
 
 describe('Remove ESLint parserOptions.project config if no rules requiring type-checking are in use', () => {
@@ -28,6 +28,12 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     addProjectConfiguration(tree, 'some-lib', {
       root: 'libs/some-lib',
       sourceRoot: 'libs/some-lib/src',
+      projectType: 'library',
+      targets: {},
+    });
+    addProjectConfiguration(tree, 'another-lib', {
+      root: 'libs/another-lib',
+      sourceRoot: 'libs/another-lib/src',
       projectType: 'library',
       targets: {},
     });
@@ -123,7 +129,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     };
     writeJson(tree, '.eslintrc.json', rootEslintConfig);
 
-    const projectEslintConfig1 = {
+    const projectEslintConfig1: Linter.Config = {
       extends: '../../../.eslintrc.json',
       ignorePatterns: ['!**/*'],
       overrides: [
@@ -140,7 +146,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     };
     writeJson(tree, 'apps/react-app/.eslintrc.json', projectEslintConfig1);
 
-    const projectEslintConfig2 = {
+    const projectEslintConfig2: Linter.Config = {
       extends: '../../../.eslintrc.json',
       ignorePatterns: ['!**/*'],
       overrides: [
@@ -156,6 +162,23 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
       ],
     };
     writeJson(tree, 'libs/workspace-lib/.eslintrc.json', projectEslintConfig2);
+
+    const projectEslintConfig3: Linter.Config = {
+      extends: '../../../.eslintrc.json',
+      ignorePatterns: ['!**/*'],
+      overrides: [
+        {
+          files: ['*.ts', '*.tsx'],
+          parserOptions: {
+            project: 'some-path-to-tsconfig.json',
+          },
+          rules: {
+            [KNOWN_RULE_REQUIRING_TYPE_CHECKING]: 'off',
+          },
+        },
+      ],
+    };
+    writeJson(tree, 'libs/another-lib/.eslintrc.json', projectEslintConfig3);
 
     await removeESLintProjectConfigIfNoTypeCheckingRules(tree);
 
@@ -179,6 +202,28 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
               "*.tsx",
             ],
             "rules": Object {},
+          },
+        ],
+      }
+    `);
+
+    // Updated - no more parserOptions.project
+    expect(readJson(tree, 'libs/another-lib/.eslintrc.json'))
+      .toMatchInlineSnapshot(`
+      Object {
+        "extends": "../../../.eslintrc.json",
+        "ignorePatterns": Array [
+          "!**/*",
+        ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": Object {
+              "@typescript-eslint/await-thenable": "off",
+            },
           },
         ],
       }

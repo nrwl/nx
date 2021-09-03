@@ -6,6 +6,7 @@ jest.doMock('../../utils/app-root', () => {
 });
 
 import fs = require('fs');
+import { DependencyType } from '@nrwl/devkit';
 import { Hasher } from './hasher';
 
 jest.mock('fs');
@@ -269,6 +270,53 @@ describe('Hasher', () => {
         '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
         '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+    });
+  });
+
+  it('should hash dependent npm project versions', async () => {
+    hashes['/filea'] = 'a.hash';
+    hashes['/fileb'] = 'b.hash';
+    const hasher = new Hasher(
+      {
+        nodes: {
+          'npm:react': {
+            name: 'parent',
+            type: 'npm',
+            data: {
+              version: '17.0.0',
+            },
+          },
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: '',
+              files: [{ file: '/filea.ts', hash: 'a.hash' }],
+            },
+          },
+        },
+        dependencies: {
+          'npm:react': [],
+          app: [
+            { source: 'app', target: 'npm:react', type: DependencyType.static },
+          ],
+        },
+      },
+      {} as any,
+      {},
+      createHashing()
+    );
+
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'app', target: 'build' },
+      id: 'app-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    // note that the parent hash is based on parent source files only!
+    expect(hash.details.nodes).toEqual({
+      app: '/filea.ts|a.hash|""|""|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      'npm:react': '17.0.0',
     });
   });
 

@@ -648,9 +648,7 @@ describe('print-affected', () => {
       ).stdout.trim()
     );
 
-    const { runNx } = getPackageManagerCommand({
-      scriptsPrependNodePath: false,
-    });
+    const { runNx } = getPackageManagerCommand();
     expect(resWithTarget.tasks[0]).toMatchObject({
       id: `${myapp}:test`,
       overrides: {},
@@ -817,7 +815,7 @@ describe('cache', () => {
     expect(outputWithBothLintTasksCached).toContain(
       'read the output from cache'
     );
-    expectMatchedOutput(outputWithBothLintTasksCached, [
+    expectCached(outputWithBothLintTasksCached, [
       myapp1,
       myapp2,
       `${myapp1}-e2e`,

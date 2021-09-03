@@ -13,6 +13,7 @@ export function getStorybookFrameworkPath(uiFramework) {
     '@storybook/react': '@storybook/react/dist/cjs/server/options',
     '@storybook/html': '@storybook/html/dist/cjs/server/options',
     '@storybook/vue': '@storybook/vue/dist/cjs/server/options',
+    '@storybook/vue3': '@storybook/vue3/dist/cjs/server/options',
     '@storybook/web-components"':
       '@storybook/web-components"/dist/cjs/server/options',
   };

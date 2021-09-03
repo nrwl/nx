@@ -44,6 +44,8 @@ Show help
 
 ### libs-and-apps
 
+Format only libraries and applications files.
+
 ### only-failed
 
 Default: `false`

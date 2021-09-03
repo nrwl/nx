@@ -21,6 +21,12 @@ Type: `number | boolean `
 
 Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/cli#--bail)
 
+### changedSince
+
+Type: `string`
+
+Runs tests related to the changes since the provided branch or commit hash. If the current branch has diverged from the given branch, then only changes made locally will be tested. (https://jestjs.io/docs/cli#--changedsince)
+
 ### ci
 
 Type: `boolean`

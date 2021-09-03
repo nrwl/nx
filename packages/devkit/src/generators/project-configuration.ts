@@ -138,7 +138,7 @@ export function updateWorkspaceConfiguration(
   workspaceConfig: WorkspaceConfiguration
 ): void {
   const {
-    // Angular Json Properties
+    // Workspace Json Properties
     version,
     cli,
     defaultProject,
@@ -179,12 +179,12 @@ export function updateWorkspaceConfiguration(
 
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      const nxJsonExtends = readNxJsonExtends(tree, nxJson as any);
+      const nxJsonExtends = readNxJsonExtends(tree, json as any);
       if (nxJsonExtends) {
         const changedPropsOfNxJson = {};
         Object.keys(nxJson).forEach((prop) => {
           if (
-            JSON.stringify([prop], null, 2) !=
+            JSON.stringify(nxJson[prop], null, 2) !=
             JSON.stringify(nxJsonExtends[prop], null, 2)
           ) {
             changedPropsOfNxJson[prop] = nxJson[prop];

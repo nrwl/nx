@@ -74,23 +74,23 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
-Object {
-  "compilerOptions": Object {
-    "allowJs": true,
-    "outDir": "../../dist/out-tsc",
-    "sourceMap": false,
-    "types": Array [
-      "cypress",
-      "node",
-    ],
-  },
-  "extends": "../../tsconfig.base.json",
-  "include": Array [
-    "src/**/*.ts",
-    "src/**/*.js",
-  ],
-}
-`);
+        Object {
+          "compilerOptions": Object {
+            "allowJs": true,
+            "outDir": "../../dist/out-tsc",
+            "sourceMap": false,
+            "types": Array [
+              "cypress",
+              "node",
+            ],
+          },
+          "extends": "../../tsconfig.base.json",
+          "include": Array [
+            "src/**/*.ts",
+            "src/**/*.js",
+          ],
+        }
+      `);
 
       const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
       expect(eslintJson).toMatchInlineSnapshot(`
@@ -314,6 +314,7 @@ Object {
 
     expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
       builder: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-app/**/*.ts'],
       },
@@ -358,6 +359,9 @@ Object {
               "apps/my-app/**/*.ts",
             ],
           },
+          "outputs": Array [
+            "{options.outputFile}",
+          ],
         }
       `);
     });

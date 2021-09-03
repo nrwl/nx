@@ -73,7 +73,7 @@ export default async function* run(
   const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
   const packageJson = readJsonFile(options.project);
 
-  const npmDeps = (projectGraph[context.projectName] ?? [])
+  const npmDeps = (projectGraph.dependencies[context.projectName] ?? [])
     .filter((d) => d.target.startsWith('npm:'))
     .map((d) => d.target.substr(4));
 
@@ -239,8 +239,9 @@ export function createRollupOptions(
         name: options.umdName || names(context.projectName).className,
       },
       external: (id) =>
-        externalPackages.includes(id) ||
-        npmDeps.some((name) => id === name || id.startsWith(`${name}/`)), // Could be a deep import
+        externalPackages.some(
+          (name) => id === name || id.startsWith(`${name}/`)
+        ) || npmDeps.some((name) => id === name || id.startsWith(`${name}/`)), // Could be a deep import
       plugins,
     };
 

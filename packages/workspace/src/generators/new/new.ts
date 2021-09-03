@@ -252,6 +252,12 @@ const presetDependencies: Omit<
       '@nrwl/gatsby': nxVersion,
     },
   },
+  [Preset.ReactNative]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/react-native': nxVersion,
+    },
+  },
 };
 
 function addPresetDependencies(host: Tree, options: Schema) {

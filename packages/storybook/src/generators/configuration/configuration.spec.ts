@@ -158,6 +158,7 @@ describe('@nrwl/storybook:configuration', () => {
 
     expect(project.targets.lint).toEqual({
       executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['libs/test-ui-lib/**/*.ts'],
       },

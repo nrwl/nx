@@ -1,0 +1,61 @@
+{
+  "name": "Nx React Native",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#reactNativeInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/react-native plugin",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#reactNativeApplicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    },
+    "library": {
+      "factory": "./src/generators/library/library#reactNativeLibrarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+    "component": {
+      "factory": "./src/generators/component/component#reactNativeComponentSchematic",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a component",
+      "aliases": ["c"]
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#reactNativeInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/react-native plugin",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#reactNativeApplicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    },
+    "library": {
+      "factory": "./src/generators/library/library#reactNativeLibraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+    "component": {
+      "factory": "./src/generators/component/component#reactNativeComponentGenerator",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a component",
+      "aliases": ["c"]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "cli": "nx",
+  "$id": "NxReactNativeBuildAndroid",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Release Build for Android",
+  "description": "Build target options",
+  "type": "object",
+  "properties": {
+    "apk": {
+      "type": "boolean",
+      "description": "Generate apk file(s) rather than a bundle (.aab)."
+    }
+  },
+  "required": []
+}

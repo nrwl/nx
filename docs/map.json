@@ -670,6 +670,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "angular/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "file": "angular/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -905,6 +910,83 @@
             "name": "server executor",
             "id": "server",
             "file": "angular/api-gatsby/executors/server"
+          }
+        ]
+      },
+      {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "angular/api-detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "angular/api-react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-react-native/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "angular/api-react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "file": "angular/api-react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "angular/api-react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "file": "angular/api-react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "file": "angular/api-react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "angular/api-react-native/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "angular/api-react-native/executors/sync-deps"
           }
         ]
       },
@@ -1178,6 +1260,11 @@
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
+          },
+          {
+            "name": "Setup MFE with Angular and Nx",
+            "id": "setup-mfe-with-angular",
+            "file": "angular/guides/setup-mfe-with-angular"
           }
         ]
       },
@@ -1877,6 +1964,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "react/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "file": "react/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -2112,6 +2204,104 @@
             "name": "server executor",
             "id": "server",
             "file": "react/api-gatsby/executors/server"
+          }
+        ]
+      },
+      {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "react/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "react/api-detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "node/api-detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "react/api-react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-react-native/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "react/api-react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "file": "react/api-react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "react/api-react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "file": "react/api-react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "file": "react/api-react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "react/api-react-native/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "react/api-react-native/executors/sync-deps"
           }
         ]
       },
@@ -3030,6 +3220,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "node/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "file": "node/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -3265,6 +3460,62 @@
             "name": "server executor",
             "id": "server",
             "file": "node/api-gatsby/executors/server"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "node/api-react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-react-native/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "node/api-react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "file": "node/api-react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "node/api-react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "file": "node/api-react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "file": "node/api-react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "node/api-react-native/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "node/api-react-native/executors/sync-deps"
           }
         ]
       },

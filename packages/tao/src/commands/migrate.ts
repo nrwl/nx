@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { removeSync } from 'fs-extra';
+import { removeSync, copyFileSync, existsSync } from 'fs-extra';
 import * as yargsParser from 'yargs-parser';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
@@ -13,6 +13,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
+import { appRootPath } from '../utils/app-root';
 
 type Dependencies = 'dependencies' | 'devDependencies';
 
@@ -239,6 +240,8 @@ export class Migrator {
           '@nrwl/storybook',
           '@nrwl/tao',
           '@nrwl/web',
+          '@nrwl/react-native',
+          '@nrwl/detox',
         ]
           .filter((pkg) => {
             const { dependencies, devDependencies } = this.packageJson;
@@ -440,6 +443,14 @@ function createFetcher() {
   ): Promise<MigrationsJson> {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
+      const npmrc = checkForNPMRC();
+      if (npmrc) {
+        // Creating a package.json is needed for .npmrc to resolve
+        writeJsonFile(`${dir}/package.json`, {});
+        // Copy npmrc if it exists, so that npm still follows it.
+        copyFileSync(npmrc, `${dir}/.npmrc`);
+      }
+
       logger.info(`Fetching ${packageName}@${packageVersion}`);
       const pmc = getPackageManagerCommand();
       execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
@@ -738,4 +749,17 @@ export async function migrate(root: string, args: string[], isVerbose = false) {
       await runMigrations(root, opts, isVerbose);
     }
   });
+}
+
+/**
+ * Checks for a project level npmrc file by crawling up the file tree until
+ * hitting a package.json file, as this is how npm finds them as well.
+ */
+function checkForNPMRC(): string | null {
+  let directory = process.cwd();
+  while (!existsSync(join(directory, 'package.json'))) {
+    directory = dirname(directory);
+  }
+  const path = join(directory, '.npmrc');
+  return existsSync(path) ? path : null;
 }

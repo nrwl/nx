@@ -46,6 +46,18 @@
       "version": "12.4.0-beta.0",
       "description": "Remove ESLint parserOptions.project config if no rules requiring type-checking are in use",
       "factory": "./src/migrations/update-12-4-0/remove-eslint-project-config-if-no-type-checking-rules"
+    },
+    "add-outputs": {
+      "cli": "nx",
+      "version": "12.9.0-beta.0",
+      "description": "Add outputs for caching",
+      "factory": "./src/migrations/update-12-9-0/add-outputs"
+    },
+    "remove-eslint-project-config-if-no-type-checking-rules-again": {
+      "cli": "nx",
+      "version": "12.9.0-beta.0",
+      "description": "Remove ESLint parserOptions.project config if no rules requiring type-checking are in use",
+      "factory": "./src/migrations/update-12-4-0/remove-eslint-project-config-if-no-type-checking-rules"
     }
   },
   "packageJsonUpdates": {

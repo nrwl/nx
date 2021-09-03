@@ -4,5 +4,6 @@ export interface Schema {
     | '@storybook/react'
     | '@storybook/html'
     | '@storybook/web-components'
-    | '@storybook/vue';
+    | '@storybook/vue'
+    | '@storybook/vue3';
 }

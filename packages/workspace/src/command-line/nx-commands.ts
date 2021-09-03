@@ -203,9 +203,9 @@ export const commandsObject = yargs
   .command(
     'migrate',
     `Creates a migrations file or runs migrations from the migrations file.
-     - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-     - Run migrations (e.g., nx migrate --run-migrations=migrations.json)
-    `,
+- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
+`,
     (yargs) => yargs,
     () => {
       if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
@@ -237,6 +237,7 @@ export const commandsObject = yargs
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)
     .option('libs-and-apps', {
+      describe: 'Format only libraries and applications files.',
       type: 'boolean',
     })
     .option('projects', {
@@ -380,6 +381,8 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
         'Include dependencies of specified projects when computing what to run',
       type: 'boolean',
       default: false,
+      deprecated:
+        'Configure target dependencies instead. It will be removed in v14.',
     })
     .options('only-failed', {
       describe: 'Only run the target on projects which previously failed',
@@ -404,7 +407,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('file', {
       describe:
-        'output file (e.g. --file=output.json or --file=dep-graph.html)',
+        'Output file (e.g. --file=output.json or --file=dep-graph.html)',
       type: 'string',
     })
     .option('focus', {
@@ -419,19 +422,19 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
     })
     .option('groupByFolder', {
-      describe: 'Group projects by folder in dependency graph',
+      describe: 'Group projects by folder in the dependency graph',
       type: 'boolean',
     })
     .option('host', {
-      describe: 'Bind the dep graph server to a specific ip address.',
+      describe: 'Bind the dependency graph server to a specific ip address.',
       type: 'string',
     })
     .option('port', {
-      describe: 'Bind the dep graph server to a specific port.',
+      describe: 'Bind the dependecy graph server to a specific port.',
       type: 'number',
     })
     .option('watch', {
-      describe: 'Watch for changes to dep graph and update in-browser',
+      describe: 'Watch for changes to dependency graph and update in-browser',
       type: 'boolean',
       default: false,
     });
@@ -448,13 +451,15 @@ function parseCSV(args: string[]) {
 function withParallel(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('parallel', {
-      describe: 'Parallelize the command (default: false)',
+      describe: 'Parallelize the command',
       type: 'boolean',
+      default: false,
     })
     .option('maxParallel', {
       describe:
-        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)',
+        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
       type: 'number',
+      default: 3,
     });
 }
 

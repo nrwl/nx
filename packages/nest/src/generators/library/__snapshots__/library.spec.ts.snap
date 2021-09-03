@@ -59,6 +59,9 @@ Object {
       "libs/my-lib/**/*.ts",
     ],
   },
+  "outputs": Array [
+    "{options.outputFile}",
+  ],
 }
 `;
 
