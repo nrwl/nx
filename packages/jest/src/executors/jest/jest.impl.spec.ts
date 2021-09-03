@@ -1,8 +1,19 @@
 import { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
+import * as fs from 'fs';
 
 let runCLI = jest.fn();
 jest.mock('jest', () => ({
   runCLI,
+}));
+
+// Mocking these 2 functions is required for jest-config
+// Otherwise, jest throws with "Can't find a root directory while resolving a config file path"
+jest.mock('fs', () => ({
+  ...(jest.requireActual('fs') as typeof fs),
+  existsSync: () => true,
+  lstatSync: () => ({
+    isDirectory: () => false,
+  }),
 }));
 
 import { jestExecutor } from './jest.impl';
@@ -56,9 +67,7 @@ describe('Jest Executor', () => {
       jest.mock(
         '/root/jest.config.js',
         () => ({
-          transform: {
-            '^.+\\.[tj]sx?$': 'ts-jest',
-          },
+          transform: {},
         }),
         { virtual: true }
       );
@@ -172,7 +181,6 @@ describe('Jest Executor', () => {
           verbose: false,
           coverageReporters: ['test'],
           coverageDirectory: '/test/coverage',
-          testResultsProcessor: 'results-processor',
           updateSnapshot: true,
           useStderr: true,
           watch: false,
@@ -204,7 +212,6 @@ describe('Jest Executor', () => {
           reporters: ['/test/path'],
           coverageReporters: ['test'],
           coverageDirectory: '/root/test/coverage',
-          testResultsProcessor: 'results-processor',
           updateSnapshot: true,
           useStderr: true,
           watch: false,
@@ -322,6 +329,40 @@ describe('Jest Executor', () => {
           ['/root/jest.config.js']
         );
       });
+    });
+  });
+
+  describe('when using typescript config file', () => {
+    beforeEach(() => {
+      jest.doMock(
+        '/root/jest.config.ts',
+        () => ({
+          transform: {
+            '^.+\\.[tj]sx?$': 'babel-jest',
+          },
+        }),
+        { virtual: true }
+      );
+      // jest.spyOn(tsNode, 'register').mockReturnValue(null)
+    });
+
+    it('should send appropriate options to jestCLI', async () => {
+      await jestExecutor(
+        {
+          ...defaultOptions,
+          jestConfig: './jest.config.ts',
+          watch: false,
+        },
+        mockContext
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _: [],
+          testPathPattern: [],
+          watch: false,
+        }),
+        ['/root/jest.config.ts']
+      );
     });
   });
 });
