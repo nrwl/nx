@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import { WebpackConfigOptions, BuildOptions } from '../build-options';
+import { WebpackConfigOptions } from '../build-options';
 import {
   getSourceMapDevTool,
   isPolyfillsEntry,
@@ -111,14 +111,6 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
             enforce: true,
             priority: 5,
           },
-          ...(isWebpack5
-            ? {
-                styles: {
-                  type: 'css/mini-extract',
-                  chunks: 'all',
-                },
-              }
-            : {}),
           vendors: false,
           // TODO(jack): Support both 4 and 5
           vendor: !!buildOptions.vendorChunk && {

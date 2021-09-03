@@ -6,16 +6,16 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { Compiler } from 'webpack';
-// Webpack doesn't export these so the deep imports can potentially break.
-// There doesn't seem to exist any ergonomic way to alter chunk names for non-context lazy chunks
-// (https://github.com/webpack/webpack/issues/9075) so this is the best alternative for now.
-const ImportDependency = require('webpack/lib/dependencies/ImportDependency');
-const ImportDependenciesBlock = require('webpack/lib/dependencies/ImportDependenciesBlock');
-const Template = require('webpack/lib/Template');
 
 export class NamedLazyChunksPlugin {
   constructor() {}
   apply(compiler: Compiler): void {
+    // Webpack doesn't export these so the deep imports can potentially break.
+    // There doesn't seem to exist any ergonomic way to alter chunk names for non-context lazy chunks
+    // (https://github.com/webpack/webpack/issues/9075) so this is the best alternative for now.
+    const ImportDependency = require('webpack/lib/dependencies/ImportDependency');
+    const ImportDependenciesBlock = require('webpack/lib/dependencies/ImportDependenciesBlock');
+    const Template = require('webpack/lib/Template');
     compiler.hooks.compilation.tap(
       'named-lazy-chunks-plugin',
       (compilation) => {
