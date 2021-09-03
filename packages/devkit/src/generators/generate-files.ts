@@ -23,6 +23,7 @@ const binaryExts = new Set([
   '.jpx',
   '.heic',
   '.cur',
+  '.tgz',
 
   // Java files
   '.jar',
