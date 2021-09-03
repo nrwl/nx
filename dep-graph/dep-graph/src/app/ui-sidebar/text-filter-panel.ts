@@ -30,6 +30,9 @@ export class TextFilterPanel {
     const inputContainer = document.createElement('div');
     inputContainer.classList.add('flex');
 
+    const label = document.createElement('label');
+    label.appendChild(document.createTextNode('Text Filter'));
+
     this.textInput = document.createElement('input');
     this.textInput.type = 'text';
     this.textInput.name = 'filter';
@@ -65,6 +68,7 @@ export class TextFilterPanel {
       document.createTextNode('include projects in path')
     );
 
+    this.container.appendChild(label);
     this.container.appendChild(inputContainer);
     this.container.appendChild(includeProjectLabel);
   }
