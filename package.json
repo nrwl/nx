@@ -23,7 +23,8 @@
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map && yarn check-internal-links",
     "submit-plugin": "node ./scripts/submit-plugin.js",
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "postinstall": "node update-cli.js"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.1202.0",
