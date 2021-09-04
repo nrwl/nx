@@ -198,5 +198,10 @@
     "name": "@nx-extend/translations",
     "description": "Nx plugin to extract, pull, push and translate your apps translations",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
+  },
+  {
+    "name": "@nativescript/nx",
+    "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
+    "url": "https://github.com/nativescript/nx"
   }
 ]
