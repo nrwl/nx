@@ -365,7 +365,7 @@ export function addReduxStoreToMain(
   return [
     ...addImport(
       source,
-      `import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
+      `import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';`
     ),
     {
@@ -375,7 +375,7 @@ import { Provider } from 'react-redux';`
 const store = configureStore({
   reducer: {},
   // Additional middleware can be passed to this array
-  middleware: [...getDefaultMiddleware()],
+  middleware: getDefaultMiddleware => getDefaultMiddleware(),
   devTools: process.env.NODE_ENV !== 'production',
   // Optional Redux store enhancers
   enhancers: [],
