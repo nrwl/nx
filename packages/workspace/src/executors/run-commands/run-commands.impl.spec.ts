@@ -3,7 +3,9 @@ import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import runCommands, { LARGE_BUFFER } from './run-commands.impl';
 import { env } from 'npm-run-path';
-const { version } = require('package.json');
+const {
+  devDependencies: { '@nrwl/workspace': version },
+} = require('package.json');
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
