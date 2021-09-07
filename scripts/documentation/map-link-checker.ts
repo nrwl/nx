@@ -62,7 +62,7 @@ if (!!readmeMissList.length) {
   scriptError = true;
 } else {
   console.log(
-    `${chalk.green('🗸')} Markdown files are in sync with ${chalk.grey(
+    `${chalk.green('✓')} Markdown files are in sync with ${chalk.grey(
       'docs/maps.json'
     )}.`
   );
@@ -84,7 +84,7 @@ if (!!mapMissList.length) {
 } else {
   console.log(
     `${chalk.green(
-      '🗸'
+      '✓'
     )} The 'map.json' file and the documentation files are in sync.`
   );
 }
