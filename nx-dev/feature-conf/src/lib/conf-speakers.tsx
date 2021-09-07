@@ -46,6 +46,13 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
+        'Yvonne Allen is an Angular GDE and who has a passion for speaking on what she calls "the topics in the in between" at Conferences and meetups. Yvonne is a co-organizer for GDG Atlanta and a member of Women Who Code. She also has a passion for advising and mentoring new developers and is an open source contributor.',
+      imageUrl: '/images/conf/yvonne-allen.webp',
+      name: 'Yvonne Allen',
+      twitter: 'yallen011',
+    },
+    {
+      description:
         'Nathan Walker has enjoyed the opportunity to work in the web/mobile app development arena for over 15 years. His varied background rooted in the world of design and the arts provides him a unique approach to problem solving. In 2017, he co-founded nStudio to help work with others to achieve their creative ideas.',
       imageUrl: '/images/conf/nathan-walker.webp',
       name: 'Nathan Walker',
@@ -53,23 +60,30 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
-        "Juri Strumpflohner lives in the very northern part of Italy and is currently working as a JavaScript Architect and Engineering Manager at Nrwl, where he consults for some of the world's biggest companies around the globe. Juri is a Google Developer Expert in Web Technologies & Angular, speaks at international conferences, teaches on Egghead.io, or writes articles on [https://juri.dev](https://juri.dev/)/. He's also a core member of Nx.",
-      imageUrl: '/images/conf/nrwl-logo.webp',
+        "Juri Strumpflohner lives in the very northern part of Italy and is currently working as a JavaScript Architect and Engineering Manager at Nrwl, where he consults for some of the world's biggest companies around the globe. Juri is a Google Developer Expert in Web Technologies & Angular, speaks at international conferences, teaches on Egghead.io. He's also a core member of Nx.",
+      imageUrl: '/images/conf/juri-strumpflohner.webp',
       name: 'Juri Strumpflohner',
       twitter: 'juristr',
     },
     {
       description: 'Kirils is a Software Engineer at Nrwl, working on Nx.',
-      imageUrl: '/images/conf/nrwl-logo.webp',
+      imageUrl: '/images/conf/kirils-ladovs.webp',
       name: 'Kirils Ladovs',
       twitter: 'kirjai',
     },
     {
       description:
         'Based in Atlanta, GA, Altan is an engineer on the Nx Cloud team. He enjoys web tech, mechanical keyboards, and drone photography.',
-      imageUrl: '/images/conf/nrwl-logo.webp',
+      imageUrl: '/images/conf/altan-stalker.webp',
       name: 'Altan Stalker',
       twitter: 'StalkAltan',
+    },
+    {
+      description:
+        'Philip Fulcher is a senior engineer with Nrwl and an Nx core team member. He works with Fortune 500 clients to modernize their development practices with a monorepo approach. Philip lives in Colorado with his wife (who is much smarter than him) and two great kids.',
+      imageUrl: '/images/conf/philip-fulcher.webp',
+      name: 'Philip Fulcher',
+      twitter: 'PhilipJFulcher',
     },
     {
       description: 'Coming soon.',
@@ -80,14 +94,14 @@ export function ConfSpeakers(): JSX.Element {
     {
       description:
         'Zack is a Senior Engineer and Engineering Manager at Nrwl, as well as a Google Developer Expert for Angular. When not in front of a computer screen, Zack enjoys a robust family life at scale, with his wife and 6 kids in San Tan Valley, AZ.',
-      imageUrl: '/images/conf/nrwl-logo.webp',
+      imageUrl: '/images/conf/zack-derose.webp',
       name: 'Zack DeRose',
       twitter: 'zackderose',
     },
     {
       description:
         'Jason is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Jason is also an enthusiast of board games and mechanical keyboards.',
-      imageUrl: '/images/conf/nrwl-logo.webp',
+      imageUrl: '/images/conf/jason-jeans.webp',
       name: 'Jason Jean',
       twitter: 'frozenpandaz',
     },
