@@ -201,8 +201,6 @@ Nx provides two methods to exclude additional glob patterns (files and folders) 
 
 Affected and caching are used to solve the same problem: minimize the computation. But they do it differently, and the combination provides better results than one or the other.
 
-Affected and caching are used to solve the same problem: minimize the computation. But they do it differently, and the combination provides better results than one or the other.
-
 The affected command looks at the before and after states of the workspaces and figures out what can be broken by a change. Because it knows the two states, it can deduce the nature of the change. For instance, this repository uses React and Angular. If a PR updates the version of React in the root package.json, Nx knows that only half of the projects in the workspace can be affected. It knows what was changed--the version of React was bumped up.
 
 Caching simply looks at the current state of the workspace and the environment (such as the version of Node) and checks if somebody already ran the command against this state. Caching knows that something changed, but because there is no before and after states, it doesn't know the nature of the change. In other words, caching is a lot more conservative.
