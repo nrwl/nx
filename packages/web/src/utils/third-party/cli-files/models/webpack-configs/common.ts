@@ -364,19 +364,28 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           (differentialLoadingNeeded && fullDifferential)),
     };
 
+    const webpack4TerserOptionsNonGlobal = {
+      ...terserOptions,
+      // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
+      chunkFilter: (chunk: any) =>
+        !globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+    };
+
+    const webpack4TerserOptionsGlobal = {
+      ...terserOptions,
+      // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
+      chunkFilter: (chunk: any) =>
+        globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+    };
+
     extraMinimizers.push(
       new TerserPlugin({
         sourceMap: scriptsSourceMap,
         parallel: true,
         cache: true,
-        // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
-        chunkFilter: isWebpack5
-          ? undefined
-          : (chunk: any) =>
-              !globalScriptsByBundleName.some(
-                (s) => s.bundleName === chunk.name
-              ),
-        terserOptions,
+        terserOptions: isWebpack5
+          ? terserOptions
+          : webpack4TerserOptionsNonGlobal,
       }),
       // Script bundles are fully optimized here in one step since they are never downleveled.
       // They are shared between ES2015 & ES5 outputs so must support ES5.
@@ -384,7 +393,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
         sourceMap: scriptsSourceMap,
         parallel: true,
         cache: true,
-        // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
         chunkFilter: isWebpack5
           ? undefined
           : (chunk: any) =>
@@ -392,7 +400,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
                 (s) => s.bundleName === chunk.name
               ),
         terserOptions: {
-          ...terserOptions,
+          ...(isWebpack5 ? terserOptions : webpack4TerserOptionsGlobal),
           compress: {
             ...terserOptions.compress,
             ecma: 5,
