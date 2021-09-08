@@ -31,7 +31,7 @@ async function generate() {
   await generateExecutorsDocumentation();
   await generateCLIDocumentation();
 
-  console.log(`\n${chalk.green('🗸')} Generated Documentation\n`);
+  console.log(`\n${chalk.green('✓')} Generated Documentation\n`);
 }
 
 function checkDocumentation() {

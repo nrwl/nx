@@ -215,12 +215,12 @@ export async function generateExecutorsDocumentation() {
       );
 
       console.log(
-        `${chalk.green('🗸')} Generated ${chalk.blue(
+        `${chalk.green('✓')} Generated ${chalk.blue(
           framework
         )} executors.json at ${chalk.grey(`docs/${framework}/executors.json`)}`
       );
     })
   );
 
-  console.log(`\n${chalk.green('🗸')} Generated Documentation for Executors`);
+  console.log(`\n${chalk.green('✓')} Generated Documentation for Executors`);
 }

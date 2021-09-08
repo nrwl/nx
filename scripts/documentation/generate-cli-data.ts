@@ -544,5 +544,5 @@ nx ${command.name}
     })
   );
 
-  console.log(`${chalk.green('🗸')} Generated Documentation for Nx Commands`);
+  console.log(`${chalk.green('✓')} Generated Documentation for Nx Commands`);
 }
