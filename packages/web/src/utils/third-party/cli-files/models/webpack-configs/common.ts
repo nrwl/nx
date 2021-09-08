@@ -364,54 +364,51 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           (differentialLoadingNeeded && fullDifferential)),
     };
 
-    const webpack4TerserOptionsNonGlobal = {
+    const es5TerserOptions = {
       ...terserOptions,
-      // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
-      chunkFilter: (chunk: any) =>
-        !globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
-    };
-
-    const webpack4TerserOptionsGlobal = {
-      ...terserOptions,
-      // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
-      chunkFilter: (chunk: any) =>
-        globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+      compress: {
+        ...terserOptions.compress,
+        ecma: 5,
+      },
+      output: {
+        ...terserOptions.output,
+        ecma: 5,
+      },
+      mangle: !manglingDisabled && buildOptions.platform !== 'server',
     };
 
     extraMinimizers.push(
-      new TerserPlugin({
-        sourceMap: scriptsSourceMap,
-        parallel: true,
-        cache: true,
-        terserOptions: isWebpack5
-          ? terserOptions
-          : webpack4TerserOptionsNonGlobal,
-      }),
+      new TerserPlugin(
+        !isWebpack5
+          ? {
+              sourceMap: scriptsSourceMap,
+              parallel: true,
+              cache: true,
+              chunkFilter: (chunk: any) =>
+                !globalScriptsByBundleName.some(
+                  (s) => s.bundleName === chunk.name
+                ),
+              terserOptions,
+            }
+          : { terserOptions }
+      ),
+
       // Script bundles are fully optimized here in one step since they are never downleveled.
       // They are shared between ES2015 & ES5 outputs so must support ES5.
-      new TerserPlugin({
-        sourceMap: scriptsSourceMap,
-        parallel: true,
-        cache: true,
-        chunkFilter: isWebpack5
-          ? undefined
-          : (chunk: any) =>
-              globalScriptsByBundleName.some(
-                (s) => s.bundleName === chunk.name
-              ),
-        terserOptions: {
-          ...(isWebpack5 ? terserOptions : webpack4TerserOptionsGlobal),
-          compress: {
-            ...terserOptions.compress,
-            ecma: 5,
-          },
-          output: {
-            ...terserOptions.output,
-            ecma: 5,
-          },
-          mangle: !manglingDisabled && buildOptions.platform !== 'server',
-        },
-      })
+      new TerserPlugin(
+        !isWebpack5
+          ? {
+              sourceMap: scriptsSourceMap,
+              parallel: true,
+              cache: true,
+              chunkFilter: (chunk: any) =>
+                globalScriptsByBundleName.some(
+                  (s) => s.bundleName === chunk.name
+                ),
+              terserOptions: es5TerserOptions,
+            }
+          : { terserOptions: es5TerserOptions }
+      )
     );
   }
 
