@@ -86,8 +86,9 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'PhilipJFulcher',
     },
     {
-      description: 'Coming soon.',
-      imageUrl: '/images/conf/nrwl-logo.webp',
+      description:
+        'Software Engineer at Nrwl, Nx core team, GDE for Angular/Web Technologies/Google Maps platform, AngularAthens meetup and RevApp co-founder. Mentoring women into tech, speaking about the cool things I do, climbing mountains and serving cats for life.',
+      imageUrl: '/images/conf/katerina-skroumpelou.webp',
       name: 'Katerina Skroumpelou',
       twitter: 'psybercity',
     },
