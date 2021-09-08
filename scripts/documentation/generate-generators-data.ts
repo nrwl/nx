@@ -217,7 +217,7 @@ export async function generateGeneratorsDocumentation() {
         schematics
       ).then(() => {
         console.log(
-          `${chalk.green('🗸')} Generated ${chalk.blue(
+          `${chalk.green('✓')} Generated ${chalk.blue(
             framework
           )} generators.json at ${chalk.grey(
             `docs/${framework}/generators.json`
@@ -227,5 +227,5 @@ export async function generateGeneratorsDocumentation() {
     })
   );
 
-  console.log(`\n${chalk.green('🗸')} Generated Documentation for Generators`);
+  console.log(`\n${chalk.green('✓')} Generated Documentation for Generators`);
 }

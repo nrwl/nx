@@ -255,13 +255,13 @@ function checkInternalAnchoredLinks(
 }
 
 if (!erroneousInternalLinks) {
-  console.log(`${chalk.green('🗸')} All internal links appear to be valid!`);
+  console.log(`${chalk.green('✓')} All internal links appear to be valid!`);
   const erroneousAnchoredInternalLinks = checkInternalAnchoredLinks(
     validInternalLinksMap
   );
   if (!erroneousAnchoredInternalLinks) {
     console.log(
-      `${chalk.green('🗸')} All internal anchored links appear to be valid!`
+      `${chalk.green('✓')} All internal anchored links appear to be valid!`
     );
     process.exit(0);
   } else {
