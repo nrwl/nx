@@ -162,15 +162,20 @@ export function ConfWorkshop(): JSX.Element {
             <div className="px-5 pb-12 md:pl-12 md:w-4/5">
               <h3 className="mb-8 text-xl font-input-mono">Instructors</h3>
               <MemberCard
-                imageUrl="/images/conf/isaac-mann.webp"
-                name="Isaac Mann"
-                description="Architect / Nrwl"
+                imageUrl="/images/conf/kirils-ladovs.webp"
+                name="Kirils Ladovs"
+                description="Sr. Engineer / Nrwl"
               />
               <MemberCard
                 imageUrl="/images/conf/rares-matei.webp"
                 name="Rares Matei"
-                description="Sr. Angular Devloper / Nrwl"
+                description="Sr. JavaScript Engineer / Nrwl"
               />
+              {/* <MemberCard
+                imageUrl="/images/conf/craigory-coppola.webp"
+                name="Craigory Coppola"
+                description="Sr. JavaScript Engineer / Nrwl"
+              /> */}
             </div>
             <div className="workshop-border-r px-5 py-12 md:pl-12">
               <h3 className="mb-8 text-xl font-input-mono">
