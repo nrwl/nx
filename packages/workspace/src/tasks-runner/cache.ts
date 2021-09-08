@@ -1,5 +1,5 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { Task } from '@nrwl/devkit';
+import { logger, Task } from '@nrwl/devkit';
 import {
   existsSync,
   mkdirSync,
@@ -151,7 +151,12 @@ export class Cache {
   recordOutputsHash(outputs: string[], hash: string): void {
     outputs.forEach((output) => {
       const hashFile = this.getFileNameWithLatestRecordedHashForOutput(output);
-      writeToFile(hashFile, hash);
+      try {
+        writeToFile(hashFile, hash);
+      } catch (error) {
+        logger.log(`Error writing hashFile: ${hashFile}.`);
+        logger.log(error);
+      }
     });
   }
 
