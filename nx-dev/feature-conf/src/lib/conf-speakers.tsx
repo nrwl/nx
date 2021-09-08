@@ -18,13 +18,6 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
-        'Isaac is an Architect at Nrwl. He helps maintain the documentation for Nx at nx.dev and has created two video courses available at nxplaybook.com. Isaac is an Instructor at egghead.io and has written blog posts on Advanced Angular Component Design.',
-      imageUrl: '/images/conf/isaac-mann.webp',
-      name: 'Isaac Mann',
-      twitter: 'MannIsaac',
-    },
-    {
-      description:
         'From the faraway lands of Scotland (but without the Scottish accent), Rares works at Nrwl on NxCloud, helping teams speed up and scale their development. He enjoys learning by teaching and has Egghead.io courses on TypeScript and Reactive Programming.',
       imageUrl: '/images/conf/rares-matei.webp',
       name: 'Rares Matei',
@@ -104,6 +97,13 @@ export function ConfSpeakers(): JSX.Element {
       imageUrl: '/images/conf/jason-jeans.webp',
       name: 'Jason Jean',
       twitter: 'frozenpandaz',
+    },
+    {
+      description:
+        'Craigory is an engineer with Nrwl on the Nx core team. Before joining Nrwl, Craigory created the nx-dotnet plugin to integrate C# and .NET into Nx in monorepos alongside front end code.',
+      imageUrl: '/images/conf/nrwl-logo.webp',
+      name: 'Craigory Coppola',
+      twitter: 'enderagent',
     },
   ];
 

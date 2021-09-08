@@ -64,11 +64,11 @@ export function ConfSchedule(): JSX.Element {
       speakers: [],
     },
     {
-      type: 'break',
+      type: 'event',
       time: '1:30-1:55pm',
-      title: 'TBD',
-      description: '',
-      speakers: [],
+      title: 'Nx for your Stack',
+      description: `Take Nx beyond JavaScript incrementally, starting with only a few simple steps. From run-commands and shell scripts, up to a full custom plugin, Nx is capable of handling any language and tooling thrown at it. Experience the full benefits Nx provides in Angular, React, and Node, with the full stack of your choice.`,
+      speakers: ['Craigory Coppola / Nrwl'],
     },
     {
       type: 'event',
