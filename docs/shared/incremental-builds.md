@@ -17,13 +17,13 @@ This provides the best dev experience for small and medium-size applications, be
 
 Nx has **publishable libraries**. As the name suggests, such libraries are meant to be built and published to some package registry s.t. they can be consumed also from outside the Nx workspace. The executor for building a publishable library does more than just building. It makes sure the output is properly compressed and might even produce more bundles s.t. the package can be consumed in a variety of ways (e.g. also produces UMD bundles).
 
-```
+```bash
 nx g @nrwl/react:lib mylib --publishable --importPath=@myorg/mylib
 ```
 
 On the other hand, the executor of a **buildable library**, performs a subset of the operations compared to the publishable library's executor. That's because buildable libraries are not intended to be published and thus only produce the minimum necessary output for the incremental build scenario to work. For example, no UMD bundles or minification is being done. The main goal of the executor is to perform the build as fast as possible.
 
-```
+```bash
 nx g @nrwl/react:lib mylib --buildable
 ```
 
