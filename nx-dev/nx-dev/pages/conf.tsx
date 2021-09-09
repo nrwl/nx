@@ -5,6 +5,7 @@ import { Footer, Header } from '@nrwl/nx-dev/ui/common';
 import {
   ConfSchedule,
   ConfSpeakers,
+  ConfSponsors,
   ConfWorkshop,
 } from '@nrwl/nx-dev/feature-conf';
 import { useStorage } from '../lib/use-storage';
@@ -447,6 +448,16 @@ export function ConfPage() {
             </div>
           </div>
           <ConfWorkshop />
+
+          {/*SPONSORS*/}
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
+            <div className="mt-24">
+              <h2 id="speakers" className="my-20 text-3xl font-input-mono">
+                Sponsors
+              </h2>
+            </div>
+          </div>
+          <ConfSponsors />
 
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
             {/*SPONSORS*/}
