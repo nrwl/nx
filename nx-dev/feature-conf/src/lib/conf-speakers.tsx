@@ -127,7 +127,7 @@ export function ConfSpeakers(): JSX.Element {
               {row.map((speaker) => (
                 <div
                   key={speaker.name}
-                  className="py-8 md:odd:pr-12 md:even:pl-12 odd:border-b md:odd:border-r md:odd:border-l-0 border-gray-600"
+                  className="py-8 md:odd:pr-12 md:even:pl-12 odd:border-b md:odd:border-r md:odd:border-b-0 border-gray-600"
                 >
                   <div className="px-5">
                     <MemberCard

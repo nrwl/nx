@@ -234,7 +234,10 @@ export function ConfSchedule(): JSX.Element {
       <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
         <div className="date-container-l grid grid-cols-2 font-input-mono divide-x divide-gray-600">
           <div className="p-8 text-center bg-blue-nx-dark">September 16</div>
-          <div className="p-8 text-center" onClick={() => setActiveDay(2)}>
+          <div
+            className="p-8 text-center cursor-pointer"
+            onClick={() => setActiveDay(2)}
+          >
             September 17
           </div>
         </div>
@@ -250,7 +253,10 @@ export function ConfSchedule(): JSX.Element {
       <div className="border-t border-gray-600">
         <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
           <div className="date-container-r grid grid-cols-2 font-input-mono divide-x divide-gray-600">
-            <div className="p-8 text-center" onClick={() => setActiveDay(1)}>
+            <div
+              className="p-8 text-center cursor-pointer"
+              onClick={() => setActiveDay(1)}
+            >
               September 16
             </div>
             <div className="p-8 text-center bg-blue-nx-dark">September 17</div>
