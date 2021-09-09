@@ -25,13 +25,12 @@ export const flavorList: {
 export class DocumentsApi {
   constructor(
     private readonly options: {
-      previewRoot: string;
       archiveRoot: string;
       versions: VersionMetadata[];
       documentsMap: Map<string, DocumentMetadata[]>;
     }
   ) {
-    if (!options.archiveRoot || !options.previewRoot) {
+    if (!options.archiveRoot) {
       throw new Error('archive and preview roots cannot be undefined');
     }
   }
@@ -61,12 +60,7 @@ export class DocumentsApi {
     }
 
     return {
-      filePath: relative(
-        versionId === 'preview'
-          ? this.options.previewRoot
-          : this.options.archiveRoot,
-        docPath
-      ),
+      filePath: relative(this.options.archiveRoot, docPath),
       data: file.data,
       content: file.content,
       excerpt: file.excerpt,
@@ -117,10 +111,6 @@ export class DocumentsApi {
   }
 
   getDocumentsRoot(version: string): string {
-    if (version === 'preview') {
-      return this.options.previewRoot;
-    }
-
     const versionPath = this.options.versions.find(
       (x) => x.id === version
     )?.path;

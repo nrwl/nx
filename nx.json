@@ -14,15 +14,7 @@
       "runner": "@nrwl/nx-cloud",
       "options": {
         "accessToken": "YzVhYjFiNzAtYTYxZS00OWM3LTlkOGYtZjRmOGRlNDY4MTJhfHJlYWQtd3JpdGU=",
-        "cacheableOperations": [
-          "build",
-          "build-base",
-          "test",
-          "lint",
-          "e2e",
-          "copy-preview",
-          "sitemap"
-        ],
+        "cacheableOperations": ["build", "test", "lint", "e2e", "sitemap"],
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
         "runtimeCacheInputs": [
@@ -32,20 +24,6 @@
         "cacheDirectory": "/tmp/nx-cache"
       }
     }
-  },
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build-base",
-        "projects": "self"
-      }
-    ],
-    "build-base": [
-      {
-        "target": "build-base",
-        "projects": "dependencies"
-      }
-    ]
   },
   "workspaceLayout": {
     "libsDir": "",

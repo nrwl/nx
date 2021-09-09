@@ -12,7 +12,6 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../packages/tao/src/utils/fileutils';
-import { execSync } from 'child_process';
 
 /**
  * Available colours
@@ -31,6 +30,10 @@ const argv = yargs
   .example(
     '$0',
     'Will update the nx.dev content with Nx releases for the current releases in the `nx-dev/nx-dev/public/documentation/versions.json`'
+  )
+  .example(
+    '$0 --latestRelease master',
+    'Will update the nx.dev content with the latest master as "latest" version'
   )
   .option('previousRelease', {
     alias: 'p',

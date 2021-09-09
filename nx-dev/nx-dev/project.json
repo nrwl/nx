@@ -4,60 +4,37 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        },
-        {
-          "target": "copy-preview",
-          "projects": "self"
-        },
-        {
-          "target": "sitemap",
-          "projects": "self"
-        }
-      ],
       "executor": "@nrwl/workspace:run-commands",
       "options": {
         "root": "nx-dev/nx-dev",
         "outputPath": "dist/nx-dev/nx-dev",
-        "command": "echo Build complete!"
+        "commands": [
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts",
+          "nx run nx-dev:build-nextjs",
+          "nx run nx-dev:sitemap"
+        ],
+        "parallel": false
       }
     },
     "sitemap": {
-      "dependsOn": [
-        {
-          "target": "copy-preview",
-          "projects": "self"
-        }
-      ],
       "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/nx-dev/nx-dev/public"],
+      "outputs": [],
       "options": {
         "command": "npx next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
       }
     },
-    "copy-preview": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ],
+    "serve": {
       "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/nx-dev/nx-dev/public"],
+      "outputs": [],
       "options": {
-        "command": "rm -rf dist/nx-dev/nx-dev/public/documentation/preview && cp -r docs dist/nx-dev/nx-dev/public/documentation/preview"
+        "commands": [
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts --watch",
+          "nx run nx-dev:serve-nextjs"
+        ],
+        "parallel": true
       }
     },
-    "build-base": {
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
+    "build-nextjs": {
       "executor": "@nrwl/next:build",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -68,10 +45,10 @@
         "production": {}
       }
     },
-    "serve": {
+    "serve-nextjs": {
       "executor": "@nrwl/next:server",
       "options": {
-        "buildTarget": "nx-dev:build",
+        "buildTarget": "nx-dev:build-nextjs",
         "dev": true
       },
       "configurations": {
