@@ -16,7 +16,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/detox"
   },
   "license": "MIT",
   "author": "Victor Savkin",

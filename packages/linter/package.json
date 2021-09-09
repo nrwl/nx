@@ -4,7 +4,8 @@
   "description": "Lint Plugin for Nx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/linter"
   },
   "keywords": [
     "Monorepo",

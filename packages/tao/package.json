@@ -4,7 +4,8 @@
   "description": "CLI for generating code and running commands",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/tao"
   },
   "keywords": [
     "Monorepo",
