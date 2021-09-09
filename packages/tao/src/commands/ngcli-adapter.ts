@@ -604,6 +604,9 @@ export async function generate(
   const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const workflow = createWorkflow(fsHost, root, opts);
+  if (opts.interactive) {
+    workflow.registry.usePromptProvider(createPromptProvider());
+  }
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
@@ -616,6 +619,69 @@ export async function generate(
       schematic
     )
   ).status;
+}
+
+function createPromptProvider() {
+  interface Prompt {
+    name: string;
+    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    message: string;
+    initial?: any;
+    choices?: (string | { name: string; message: string })[];
+    validate?: (value: string) => boolean | string;
+  }
+
+  return (definitions: Array<any>) => {
+    const questions: Prompt[] = definitions.map((definition) => {
+      const question: Prompt = {
+        name: definition.id,
+        message: definition.message,
+      } as any;
+
+      if (definition.default) {
+        question.initial = definition.default;
+      }
+
+      const validator = definition.validator;
+      if (validator) {
+        question.validate = (input) => validator(input);
+      }
+
+      switch (definition.type) {
+        case 'string':
+        case 'input':
+          return { ...question, type: 'input' };
+        case 'boolean':
+        case 'confirmation':
+        case 'confirm':
+          return { ...question, type: 'confirm' };
+        case 'number':
+        case 'numeral':
+          return { ...question, type: 'numeral' };
+        case 'list':
+          return {
+            ...question,
+            type: !!definition.multiselect ? 'multiselect' : 'select',
+            choices:
+              definition.items &&
+              definition.items.map((item) => {
+                if (typeof item == 'string') {
+                  return item;
+                } else {
+                  return {
+                    message: item.label,
+                    name: item.value,
+                  };
+                }
+              }),
+          };
+        default:
+          return { ...question, type: definition.type };
+      }
+    });
+
+    return require('enquirer').prompt(questions);
+  };
 }
 
 export async function runMigration(
