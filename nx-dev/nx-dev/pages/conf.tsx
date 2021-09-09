@@ -452,7 +452,7 @@ export function ConfPage() {
           {/*SPONSORS*/}
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
             <div className="mt-24">
-              <h2 id="speakers" className="my-20 text-3xl font-input-mono">
+              <h2 id="sponsors" className="my-20 text-3xl font-input-mono">
                 Sponsors
               </h2>
             </div>
