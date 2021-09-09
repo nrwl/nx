@@ -279,11 +279,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       .toPromise();
   }
 
-  protected context(path: string): Observable<{
-    isWorkspaceConfig: boolean;
-    actualConfigFileName: any;
-    isNewFormat: boolean;
-  }> {
+  protected context(path: string): Observable<ChangeContext> {
     if (isWorkspaceConfigPath(path)) {
       return super.exists('/angular.json' as any).pipe(
         switchMap((isAngularJson) => {
@@ -319,60 +315,67 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
   }
 
-  private writeWorkspaceConfiguration(context, content): Observable<void> {
+  private writeWorkspaceConfiguration(
+    context: ChangeContext,
+    content
+  ): Observable<void> {
     const config = parseJson(Buffer.from(content).toString());
     if (context.isNewFormat) {
       try {
         const w = parseJson(Buffer.from(content).toString());
         const formatted = toNewFormatOrNull(w);
         if (formatted) {
-          return this.writeWorkspaceConfigFiles(
-            context.actualConfigFileName,
-            formatted
-          );
+          return this.writeWorkspaceConfigFiles(context, formatted);
         } else {
-          return this.writeWorkspaceConfigFiles(
-            context.actualConfigFileName,
-            config
-          );
+          return this.writeWorkspaceConfigFiles(context, config);
         }
       } catch (e) {
-        return this.writeWorkspaceConfigFiles(
-          context.actualConfigFileName,
-          config
-        );
+        return this.writeWorkspaceConfigFiles(context, config);
       }
     } else {
-      return this.writeWorkspaceConfigFiles(
-        context.actualConfigFileName,
-        config
-      );
+      return this.writeWorkspaceConfigFiles(context, config);
     }
   }
 
-  private writeWorkspaceConfigFiles(workspaceFileName, config) {
+  private writeWorkspaceConfigFiles(
+    { actualConfigFileName: workspaceFileName, isNewFormat }: ChangeContext,
+    config
+  ) {
     // copy to avoid removing inlined config files.
+    let writeObservable: Observable<void>;
     const configToWrite = {
       ...config,
       projects: { ...config.projects },
     };
-
-    Object.entries(configToWrite.projects as Record<string, any>).forEach(
-      ([project, projectConfig]) => {
-        if (projectConfig.configFilePath) {
-          // project was read from a project.json file
-          const configPath = projectConfig.configFilePath;
-          const fileConfigObject = { ...projectConfig };
-          delete fileConfigObject.configFilePath; // remove the configFilePath before writing
-          super.write(configPath, Buffer.from(serializeJson(fileConfigObject))); // write back to the project.json file
-          configToWrite.projects[project] = normalize(dirname(configPath)); // update the config object to point to the written file.
+    const projects: [string, any][] = Object.entries(configToWrite.projects);
+    for (const [project, projectConfig] of projects) {
+      if (projectConfig.configFilePath) {
+        if (!isNewFormat) {
+          throw new Error(
+            'Attempted to write standalone project configuration into a v1 workspace'
+          );
         }
+        // project was read from a project.json file
+        const configPath = projectConfig.configFilePath;
+        const fileConfigObject = { ...projectConfig };
+        delete fileConfigObject.configFilePath; // remove the configFilePath before writing
+        const projectJsonWrite = super.write(
+          configPath,
+          Buffer.from(serializeJson(fileConfigObject))
+        ); // write back to the project.json file
+        writeObservable = writeObservable
+          ? concat(writeObservable, projectJsonWrite)
+          : projectJsonWrite;
+        configToWrite.projects[project] = normalize(dirname(configPath)); // update the config object to point to the written file.
       }
-    );
-    return super.write(
+    }
+    const workspaceJsonWrite = super.write(
       workspaceFileName,
       Buffer.from(serializeJson(configToWrite))
     );
+    return writeObservable
+      ? concat(writeObservable, workspaceJsonWrite)
+      : workspaceJsonWrite;
   }
 
   protected resolveInlineProjectConfigurations(config: {
@@ -418,6 +421,12 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     );
   }
 }
+
+type ChangeContext = {
+  isWorkspaceConfig: boolean;
+  actualConfigFileName: any;
+  isNewFormat: boolean;
+};
 
 /**
  * This host contains the workaround needed to run Angular migrations

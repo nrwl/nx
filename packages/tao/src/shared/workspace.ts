@@ -572,9 +572,12 @@ export function toOldFormatOrNull(w: any) {
 
 export function resolveOldFormatWithInlineProjects(
   w: any,
-  root: string = appRootPath
+  root: string = appRootPath,
+  includeConfigFilePath = false
 ) {
-  return toOldFormatOrNull(inlineProjectConfigurations(w, root));
+  const inlined = inlineProjectConfigurations(w, root, includeConfigFilePath);
+  const formatted = toOldFormatOrNull(inlined);
+  return formatted ? formatted : inlined;
 }
 
 export function resolveNewFormatWithInlineProjects(
@@ -586,13 +589,17 @@ export function resolveNewFormatWithInlineProjects(
 
 export function inlineProjectConfigurations(
   w: any,
-  root: string = appRootPath
+  root: string = appRootPath,
+  includeConfigFilePath = false
 ) {
   Object.entries(w.projects || {}).forEach(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {
         const configFilePath = path.join(root, config, 'project.json');
         const fileConfig = readJsonFile(configFilePath);
+        if (includeConfigFilePath) {
+          fileConfig.configFilePath = configFilePath;
+        }
         w.projects[project] = fileConfig;
       }
     }

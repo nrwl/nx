@@ -4,10 +4,13 @@ import type {
   Tree,
   TreeWriteOptions,
 } from '@nrwl/tao/src/shared/tree';
-import type {
+import {
   Generator,
   GeneratorCallback,
+  toNewFormat,
+  toOldFormatOrNull,
 } from '@nrwl/tao/src/shared/workspace';
+import { parseJson, serializeJson } from '@nrwl/tao/src/utils/json';
 import { join, relative } from 'path';
 
 class RunCallbackTask {
@@ -79,6 +82,8 @@ const actionToFileChangeMap = {
 };
 
 class DevkitTreeFromAngularDevkitTree implements Tree {
+  private configFileName: string;
+
   constructor(private tree, private _root: string) {}
 
   get root(): string {
@@ -144,9 +149,16 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   read(filePath: string): Buffer;
   read(filePath: string, encoding: BufferEncoding): string;
   read(filePath: string, encoding?: BufferEncoding) {
-    return encoding
+    const rawResult = encoding
       ? this.tree.read(filePath).toString(encoding)
       : this.tree.read(filePath);
+    if (isWorkspaceJsonChange(filePath)) {
+      const formatted = toNewFormat(
+        parseJson(Buffer.isBuffer(rawResult) ? rawResult.toString() : rawResult)
+      );
+      return encoding ? serializeJson(formatted) : serializeJson(formatted);
+    }
+    return rawResult;
   }
 
   rename(from: string, to: string): void {
@@ -160,6 +172,20 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   ): void {
     if (options?.mode) {
       this.warnUnsupportedFilePermissionsChange(filePath, options.mode);
+    }
+
+    if (isWorkspaceJsonChange(filePath)) {
+      const w = parseJson(content.toString());
+      for (const [project, configuration] of Object.entries(w.projects)) {
+        if (typeof configuration === 'string') {
+          w.projects[project] = parseJson(
+            this.tree.read(`${configuration}/project.json`)
+          );
+          w.projects[project].configFilePath = `${configuration}/project.json`;
+        }
+      }
+      const formatted = toOldFormatOrNull(w);
+      content = serializeJson(formatted ? formatted : w);
     }
 
     if (this.tree.exists(filePath)) {
@@ -182,4 +208,13 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
                   Ignoring changing ${filePath} permissions to ${mode}.`)
     );
   }
+}
+
+function isWorkspaceJsonChange(path) {
+  return (
+    path === 'workspace.json' ||
+    path === '/workspace.json' ||
+    path === 'angular.json' ||
+    path === '/angular.json'
+  );
 }
