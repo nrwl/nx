@@ -7,6 +7,7 @@ import {
   getProjects,
   getWorkspacePath,
   logger,
+  normalizePath,
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
   ProjectConfiguration,
@@ -72,7 +73,7 @@ To upgrade change the version number at the top of ${getWorkspacePath(
     writeJson(host, configPath, configuration);
 
     updateJson(host, getWorkspacePath(host), (value) => {
-      value.projects[project] = dirname(configPath);
+      value.projects[project] = normalizePath(dirname(configPath));
       return value;
     });
 
