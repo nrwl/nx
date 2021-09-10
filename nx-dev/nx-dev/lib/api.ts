@@ -1,4 +1,3 @@
-import { join } from 'path';
 import {
   DocumentMetadata,
   DocumentsApi,
@@ -10,7 +9,7 @@ import {
 // Also provides some test safety.
 import previousDocuments from '../public/documentation/previous/map.json';
 import latestDocuments from '../public/documentation/latest/map.json';
-import archiveVersionsData from '../public/documentation/versions.json';
+import versionsData from '../public/documentation/versions.json';
 
 export function loadDocumentsData(): Map<string, DocumentMetadata[]> {
   const map = new Map<string, DocumentMetadata[]>();
@@ -20,14 +19,11 @@ export function loadDocumentsData(): Map<string, DocumentMetadata[]> {
 }
 
 export function loadVersionsData(): VersionMetadata[] {
-  return archiveVersionsData;
+  return versionsData;
 }
 
 export const documentsApi = new DocumentsApi({
-  archiveRoot: join(
-    process.env.NX_WORKSPACE_ROOT,
-    'nx-dev/nx-dev/public/documentation'
-  ),
+  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentsMap: loadDocumentsData(),
   versions: loadVersionsData(),
 });

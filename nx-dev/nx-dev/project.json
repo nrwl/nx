@@ -4,16 +4,16 @@
   "projectType": "application",
   "targets": {
     "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "root": "nx-dev/nx-dev",
         "outputPath": "dist/nx-dev/nx-dev",
-        "commands": [
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts",
-          "nx run nx-dev:build-nextjs",
-          "nx run nx-dev:sitemap"
-        ],
-        "parallel": false
+        "command": "nx run nx-dev:sitemap"
       }
     },
     "sitemap": {
@@ -34,7 +34,7 @@
         "parallel": true
       }
     },
-    "build-nextjs": {
+    "build-base": {
       "executor": "@nrwl/next:build",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -48,7 +48,7 @@
     "serve-nextjs": {
       "executor": "@nrwl/next:server",
       "options": {
-        "buildTarget": "nx-dev:build-nextjs",
+        "buildTarget": "nx-dev:build-base",
         "dev": true
       },
       "configurations": {
