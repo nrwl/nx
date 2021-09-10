@@ -93,6 +93,9 @@ function createWorkflow(
       workflow.registry
     )
   );
+  if (opts.interactive) {
+    workflow.registry.usePromptProvider(createPromptProvider());
+  }
   return workflow;
 }
 
@@ -613,9 +616,6 @@ export async function generate(
   const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const workflow = createWorkflow(fsHost, root, opts);
-  if (opts.interactive) {
-    workflow.registry.usePromptProvider(createPromptProvider());
-  }
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
