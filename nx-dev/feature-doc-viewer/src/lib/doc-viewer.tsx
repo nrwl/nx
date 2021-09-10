@@ -32,13 +32,8 @@ export function DocViewer({
   return (
     <>
       <Head>
-        <title>
-          {document.data.title} | Nx {flavor.label} documentation
-        </title>
-        <meta
-          name="twitter:title"
-          content={document.data.title ?? `Nx {flavor.label} documentation`}
-        />
+        <title>{document.data.title} - Nx</title>
+        <meta name="twitter:title" content={document.data.title ?? `Nx`} />
         <meta
           name="twitter:description"
           content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
@@ -55,10 +50,7 @@ export function DocViewer({
           property="og:description"
           content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
         />
-        <meta
-          property="og:title"
-          content={document.data.title ?? `Nx {flavor.label} documentation`}
-        />
+        <meta property="og:title" content={document.data.title ?? `Nx`} />
         <meta
           property="og:image"
           content="https://nx.dev/images/nx-media.jpg"
