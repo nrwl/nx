@@ -21,6 +21,20 @@ export function ConfSponsors(): JSX.Element {
       },
       {
         description:
+          'Cisco helps seize the opportunities of tomorrow by proving that amazing things can happen when you connect the unconnected. As Customer & Partner Experience Engineering, we deliver the CX and PX Cloud that unifies our Customer Experience and serves as the single Customer entry point to Cisco. We accelerate our customers’ success and profitable growth for Cisco and our partners by delivering simple, secure, innovate, and agile scaling engines.',
+        imageUrl: '/images/conf/ciscologo.webp',
+        name: 'Cisco',
+        linkTarget: 'https://www.cisco.com',
+      },
+      // {
+      //   description:
+      //     'Heroes of enterprise Angular development. Looking for the best Angular developers on earth? The heroes at HeroDevs are here for you. These heroes helped create the Angular CLI, Angular Universal, Scully, ng-conf, extended AngularJS support, and Angular itself. If you need a hero developer, look no further.',
+      //   imageUrl: '/images/conf/herodevlogo.svg',
+      //   name: 'Hero.dev',
+      //   linkTarget: 'https://hero.dev',
+      // },
+      {
+        description:
           'Use Ionic to build beautiful, fast, cross-platform apps using web technologies like HTML, CSS, JavaScript, and your framework of choice — React, Angular, or Vue. Use native device APIs with Ionic and deploy web, iOS, Android, and desktop apps from a single codebase.',
         imageUrl: '/images/conf/ioniclogo.svg',
         name: 'Ionic',
@@ -42,8 +56,15 @@ export function ConfSponsors(): JSX.Element {
       },
       {
         description:
+          'Dive into JavaScript and Web development stories with Web Rush, a weekly podcast where we tackle the challenges facing Web developers today and invite expert guests on the show to share their experience solving concrete problems while building real Web applications.',
+        imageUrl: '/images/conf/webrushlogo.svg',
+        name: 'WebRush',
+        linkTarget: 'https://webrush.io',
+      },
+      {
+        description:
           'XLTS.dev software support ensures that the open-source libraries and frameworks your applications depend on continue to function, even in the face of security weaknesses and breaking changes.',
-        imageUrl: '/images/conf/xltslogo.svg',
+        imageUrl: '/images/conf/xltslogo.webp',
         name: 'XLTS',
         linkTarget: 'https://xlts.dev/angularjs',
       },
