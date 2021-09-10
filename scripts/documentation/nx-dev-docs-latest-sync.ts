@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import { watch } from 'chokidar';
 import * as shell from 'shelljs';
 import { BehaviorSubject } from 'rxjs';
-import { debounceTime, filter, switchMapTo } from 'rxjs/operators';
+import { debounceTime, filter, switchMapTo, tap } from 'rxjs/operators';
 
 /**
  * Available colours
@@ -38,14 +38,21 @@ function main(isWatched: boolean) {
     const isReady$ = new BehaviorSubject(false);
     const syncR$ = new BehaviorSubject(null);
 
-    console.log(bgGreen(white(' => DOCS SYNC ENABLED ')));
-
     /**
      * If we do not debounce, the sync will happen for every file detect by the watcher
      */
     isReady$
       .pipe(
         filter((isReady) => isReady),
+        tap(() =>
+          console.log(
+            bgGreen(
+              white(
+                ' => DOCS SYNC ENABLED & READY: You can modify `/docs`, changes will be synced '
+              )
+            )
+          )
+        ),
         switchMapTo(syncR$),
         debounceTime(1000)
       )

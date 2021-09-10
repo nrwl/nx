@@ -10,7 +10,7 @@ You can use the [`cra-to-nx`](https://www.npmjs.com/package/cra-to-nx) tool, tha
 
 Just `cd` into your Create-React-App (CRA) project and run the following command:
 
-```
+```bash
 npx cra-to-nx
 ```
 
