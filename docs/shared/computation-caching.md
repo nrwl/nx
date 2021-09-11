@@ -124,7 +124,7 @@ If the outputs property is missing, Nx defaults to caching the appropriate folde
 
 By default, Nx uses a local computation cache. **Because the word "cache" appears in the description, the phrase "artifact caching" comes to mind. But this isn't the right way to think about it. What Nx does is really computation memoization.** Nx doesn't choose to use or not use the cached value. There are no versions. It is transparent: Nx skips the computation only when running the computation would have produced the same result.
 
-Nx stores the cached values only for a week, after which they are deleted. To clear the cache, delete the [cache directory](#customizing-the-cache-directory), and Nx creates a new one the next time it tries to access it.
+Nx stores the cached values only for a week, after which they are deleted. To clear the cache, delete the [cache directory](customizing-the-cache-location), and Nx creates a new one the next time it tries to access it.
 
 ## Distributed Computation Caching
 
