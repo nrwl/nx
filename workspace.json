@@ -56,6 +56,7 @@
     "nx-dev-feature-search": "nx-dev/feature-search",
     "nx-dev-ui-common": "nx-dev/ui/common",
     "nx-dev-ui-member-card": "nx-dev/ui/member-card",
+    "nx-dev-ui-sponsor-card": "nx-dev/ui/sponsor-card",
     "nx-plugin": "packages/nx-plugin",
     "react": "packages/react",
     "react-native": "packages/react-native",
