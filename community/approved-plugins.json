@@ -208,5 +208,10 @@
     "name": "@nx-clean/plugin-core",
     "description": "Nx Plugin to generate projects following Clean Architecture practices",
     "url": "https://github.com/guiseek/nx-clean/tree/main/libs/plugin/core"
+  },
+  {
+    "name": "@jnxplus/nx-boot-gradle",
+    "description": "Nx plugin to add Spring Boot and Gradle multi-project builds support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-gradle"
   }
 ]
