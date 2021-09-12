@@ -198,5 +198,10 @@
     "name": "@nx-extend/translations",
     "description": "Nx plugin to extract, pull, push and translate your apps translations",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
+  },
+  {
+    "name": "@jnxplus/nx-boot-gradle",
+    "description": "Nx plugin to add Spring Boot and Gradle multi-project builds support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-gradle"
   }
 ]
