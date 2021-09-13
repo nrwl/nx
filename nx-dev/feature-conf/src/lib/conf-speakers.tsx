@@ -102,7 +102,7 @@ export function ConfSpeakers(): JSX.Element {
     {
       description:
         'Craigory is an engineer with Nrwl on the Nx core team. Before joining Nrwl, Craigory created the nx-dotnet plugin to integrate C# and .NET into Nx in monorepos alongside front end code.',
-      imageUrl: '/images/conf/nrwl-logo.webp',
+      imageUrl: '/images/conf/craigory-coppola.webp',
       name: 'Craigory Coppola',
       twitter: 'enderagent',
     },
