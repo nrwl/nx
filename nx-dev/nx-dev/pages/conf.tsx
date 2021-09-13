@@ -208,7 +208,7 @@ export function ConfPage() {
                   />
                 </svg>
               </div>
-              <div className="w-full lg:w-3/5 flex flex-col lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0">
+              <div className="w-full lg:w-3/5 flex flex-col lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0 z-50">
                 <h2 className="my-6">
                   <div className="inline-block py-4 px-6 text-xl sm:text-2xl lg:text-2xl leading-none font-input-mono font-extrabold tracking-tight mb-4 bg-blue-nx-dark rounded-md">
                     <span className="hidden">
