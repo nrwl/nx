@@ -253,6 +253,7 @@ Object {
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
       main: 'apps/my-app/src/main.tsx',
+      baseHref: '/',
       outputPath: 'dist/apps/my-app',
       polyfills: 'apps/my-app/src/polyfills.ts',
       scripts: [],

@@ -46,6 +46,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
     options: {
       outputPath: joinPathFragments('dist', options.appProjectRoot),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
+      baseHref: '/',
       main: joinPathFragments(
         options.appProjectRoot,
         maybeJs(options, `src/main.tsx`)

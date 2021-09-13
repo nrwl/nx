@@ -54,6 +54,7 @@ function addBuildTarget(
   const buildOptions: WebBuildBuilderOptions = {
     outputPath: joinPathFragments('dist', options.appProjectRoot),
     index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
+    baseHref: '/',
     main: joinPathFragments(options.appProjectRoot, 'src/main.ts'),
     polyfills: joinPathFragments(options.appProjectRoot, 'src/polyfills.ts'),
     tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
