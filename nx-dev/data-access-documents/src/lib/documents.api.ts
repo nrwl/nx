@@ -25,14 +25,13 @@ export const flavorList: {
 export class DocumentsApi {
   constructor(
     private readonly options: {
-      previewRoot: string;
-      archiveRoot: string;
+      publicDocsRoot: string;
       versions: VersionMetadata[];
       documentsMap: Map<string, DocumentMetadata[]>;
     }
   ) {
-    if (!options.archiveRoot || !options.previewRoot) {
-      throw new Error('archive and preview roots cannot be undefined');
+    if (!options.publicDocsRoot) {
+      throw new Error('public docs root cannot be undefined');
     }
   }
 
@@ -59,14 +58,8 @@ export class DocumentsApi {
     if (!file.data.title) {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
     }
-
     return {
-      filePath: relative(
-        versionId === 'preview'
-          ? this.options.previewRoot
-          : this.options.archiveRoot,
-        docPath
-      ),
+      filePath: join(this.options.publicDocsRoot, docPath),
       data: file.data,
       content: file.content,
       excerpt: file.excerpt,
@@ -117,16 +110,12 @@ export class DocumentsApi {
   }
 
   getDocumentsRoot(version: string): string {
-    if (version === 'preview') {
-      return this.options.previewRoot;
-    }
-
     const versionPath = this.options.versions.find(
       (x) => x.id === version
     )?.path;
 
     if (versionPath) {
-      return join(this.options.archiveRoot, versionPath);
+      return join(this.options.publicDocsRoot, versionPath);
     }
 
     throw new Error(`Cannot find root for ${version}`);

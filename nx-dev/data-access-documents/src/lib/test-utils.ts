@@ -36,7 +36,6 @@ export function createDocumentApiOptions() {
         ),
       ],
     ]),
-    previewRoot: join(__dirname, '../../../../docs'),
-    archiveRoot: join(__dirname, '../../../nx-dev/public/documentation'),
+    publicDocsRoot: join(__dirname, '../../../nx-dev/public/documentation'),
   };
 }
