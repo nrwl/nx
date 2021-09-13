@@ -26,13 +26,13 @@ export function ConfSponsors(): JSX.Element {
         name: 'Cisco',
         linkTarget: 'https://www.cisco.com',
       },
-      // {
-      //   description:
-      //     'Heroes of enterprise Angular development. Looking for the best Angular developers on earth? The heroes at HeroDevs are here for you. These heroes helped create the Angular CLI, Angular Universal, Scully, ng-conf, extended AngularJS support, and Angular itself. If you need a hero developer, look no further.',
-      //   imageUrl: '/images/conf/herodevlogo.svg',
-      //   name: 'Hero.dev',
-      //   linkTarget: 'https://hero.dev',
-      // },
+      {
+        description:
+          'Heroes of enterprise Angular development. Looking for the best Angular developers on earth? The heroes at HeroDevs are here for you. These heroes helped create the Angular CLI, Angular Universal, Scully, ng-conf, extended AngularJS support, and Angular itself. If you need a hero developer, look no further.',
+        imageUrl: '/images/conf/herodevslogo.svg',
+        name: 'Hero.dev',
+        linkTarget: 'https://hero.dev',
+      },
       {
         description:
           'Use Ionic to build beautiful, fast, cross-platform apps using web technologies like HTML, CSS, JavaScript, and your framework of choice — React, Angular, or Vue. Use native device APIs with Ionic and deploy web, iOS, Android, and desktop apps from a single codebase.',
