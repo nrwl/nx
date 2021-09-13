@@ -115,7 +115,8 @@ export class TargetProjectLocator {
     const wildcardPath = Object.keys(this.paths).find(
       (path) =>
         path.endsWith('/*') &&
-        normalizedImportExpr.startsWith(path.replace(/\/\*$/, ''))
+        (normalizedImportExpr.startsWith(path.replace(/\*$/, '')) ||
+          normalizedImportExpr === path.replace(/\/\*$/, ''))
     );
     if (wildcardPath) {
       return this.paths[wildcardPath];
