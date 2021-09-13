@@ -41,8 +41,11 @@ describe('findTargetProjectWithImport', () => {
           '@proj/proj6': ['../root/libs/proj6/*'],
           '@proj/proj7': ['/libs/proj7/*'],
           '@proj/proj123': ['libs/proj123'],
+          '@proj/proj123/*': ['libs/proj123/*'],
           '@proj/proj1234': ['libs/proj1234'],
+          '@proj/proj1234/*': ['libs/proj1234/*'],
           '@proj/proj1234-child': ['libs/proj1234-child'],
+          '@proj/proj1234-child/*': ['libs/proj1234-child/*'],
         },
       },
     };
@@ -346,6 +349,29 @@ describe('findTargetProjectWithImport', () => {
     );
 
     expect(proj2deep).toEqual('proj2');
+  });
+
+  it('should be able to resolve nested files using tsConfig paths that have similar names', () => {
+    const proj = targetProjectLocator.findProjectWithImport(
+      '@proj/proj123/deep',
+      '',
+      ctx.workspace.npmScope
+    );
+    expect(proj).toEqual('proj123');
+
+    const childProj = targetProjectLocator.findProjectWithImport(
+      '@proj/proj1234-child/deep',
+      '',
+      ctx.workspace.npmScope
+    );
+    expect(childProj).toEqual('proj1234-child');
+
+    const parentProj = targetProjectLocator.findProjectWithImport(
+      '@proj/proj1234/deep',
+      '',
+      ctx.workspace.npmScope
+    );
+    expect(parentProj).toEqual('proj1234');
   });
 
   it('should be able to npm dependencies', () => {
