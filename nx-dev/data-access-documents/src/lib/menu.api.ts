@@ -12,17 +12,20 @@ export class MenuApi {
 
   constructor(private readonly documentsApi: DocumentsApi) {}
 
-  getMenu(version: string, flavor: { alias: string; value: string }): Menu {
-    const key = `${version}-${flavor.alias}`;
+  getMenu(
+    version: { alias: string; value: string },
+    flavor: { alias: string; value: string }
+  ): Menu {
+    const key = `${version.value}-${flavor.alias}`;
     let menu = this.menuCache.get(key);
 
     if (!menu) {
-      const root = this.documentsApi.getDocuments(version);
-      const items = createMenuItems(version, flavor, root);
+      const root = this.documentsApi.getDocuments(version.value);
+      const items = createMenuItems(version.alias, flavor, root);
 
       if (items) {
         menu = {
-          version: version,
+          version: version.value,
           flavor: flavor.value,
           sections: [
             getBasicSection(items),

@@ -2,7 +2,7 @@ import { DocumentMetadata } from '@nrwl/nx-dev/data-access-documents';
 import { MenuItem, MenuSection } from './menu.models';
 
 export function createMenuItems(
-  versionId: string,
+  version: string,
   flavor: { alias: string; value: string },
   root: DocumentMetadata[]
 ): MenuItem[] {
@@ -11,7 +11,7 @@ export function createMenuItems(
   const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
-      path: `/${versionId}/${flavor.value}/${parentId}/${g.id}`,
+      path: `/${version}/${flavor.value}/${parentId}/${g.id}`,
     };
 
     if (Array.isArray(g.itemList)) {

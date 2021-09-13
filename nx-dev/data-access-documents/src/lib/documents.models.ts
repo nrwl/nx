@@ -8,6 +8,7 @@ export interface DocumentData {
 export interface VersionMetadata {
   name: string;
   id: string;
+  alias: string;
   release: string;
   path: string;
   default?: boolean;

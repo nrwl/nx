@@ -56,9 +56,9 @@ export function Sidebar({
           <Selector
             data={versionList.map((version) => ({
               label: version.name,
-              value: version.id,
+              value: version.alias,
             }))}
-            selected={{ label: version.name, value: version.id }}
+            selected={{ label: version.name, value: version.alias }}
             onChange={(item) =>
               router.push(
                 createNextPath(item.value, flavor.value, router.asPath)
@@ -71,7 +71,9 @@ export function Sidebar({
             data={flavorList}
             selected={flavor}
             onChange={(item) =>
-              router.push(createNextPath(version.id, item.value, router.asPath))
+              router.push(
+                createNextPath(version.alias, item.value, router.asPath)
+              )
             }
           />
         </div>

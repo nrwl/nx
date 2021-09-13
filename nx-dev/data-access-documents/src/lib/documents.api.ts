@@ -56,7 +56,7 @@ export class DocumentsApi {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
     }
     return {
-      filePath: join(this.options.publicDocsRoot, docPath),
+      filePath: docPath,
       data: file.data,
       content: file.content,
       excerpt: file.excerpt,

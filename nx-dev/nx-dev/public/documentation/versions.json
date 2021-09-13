@@ -2,6 +2,7 @@
   {
     "name": "Latest",
     "id": "latest",
+    "alias": "l",
     "release": "12.9.0",
     "path": "latest",
     "default": true
@@ -9,6 +10,7 @@
   {
     "name": "Previous (v11.6.3)",
     "id": "previous",
+    "alias": "p",
     "release": "11.6.3",
     "path": "previous",
     "default": false

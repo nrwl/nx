@@ -8,7 +8,10 @@ describe('MenuApi', () => {
 
   describe('getMenu', () => {
     it('should group by section', () => {
-      const menu = api.getMenu('latest', 'react');
+      const menu = api.getMenu(
+        { alias: 'l', value: 'latest' },
+        { alias: 'react', value: 'react' }
+      );
 
       expect(menu).toEqual({
         version: 'latest',
@@ -25,12 +28,15 @@ describe('MenuApi', () => {
     });
 
     it('should add path to menu items', () => {
-      const menu = api.getMenu('latest', 'react');
+      const menu = api.getMenu(
+        { alias: 'l', value: 'latest' },
+        { alias: 'react', value: 'react' }
+      );
 
       // first basic section item should have prefix by version and flavor
       // e.g. "latest/react/getting-started/intro"
       expect(menu?.sections?.[0]?.itemList?.[0]?.itemList?.[0].path).toMatch(
-        /latest\/react/
+        /l\/r/
       );
     });
   });
