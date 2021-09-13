@@ -70,6 +70,7 @@ describe('NodeExecuteBuilder', () => {
       args: [],
       runtimeArgs: [],
       buildTarget: 'nodeapp:build',
+      buildTargetOptions: { testOption: true },
       port: 9229,
       waitUntilTargets: [],
       host: 'localhost',
@@ -91,6 +92,7 @@ describe('NodeExecuteBuilder', () => {
         target: 'build',
       },
       {
+        testOption: true,
         watch: true,
       },
       context
