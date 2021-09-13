@@ -15,11 +15,12 @@ export interface StaticDocumentPaths {
 export const flavorList: {
   label: string;
   value: string;
+  alias: string;
   default?: boolean;
 }[] = [
-  { label: 'Angular', value: 'angular' },
-  { label: 'React', value: 'react', default: true },
-  { label: 'Node', value: 'node' },
+  { label: 'Angular', value: 'a', alias: 'angular' },
+  { label: 'React', value: 'r', alias: 'react', default: true },
+  { label: 'Node', value: 'n', alias: 'node' },
 ];
 
 export class DocumentsApi {
@@ -45,12 +46,8 @@ export class DocumentsApi {
     return this.options.versions;
   }
 
-  getDocument(
-    versionId: string,
-    flavorId: string,
-    path: string[]
-  ): DocumentData {
-    const docPath = this.getFilePath(versionId, flavorId, path);
+  getDocument(version: string, flavor: string, path: string[]): DocumentData {
+    const docPath = this.getFilePath(version, flavor, path);
     const originalContent = readFileSync(docPath, 'utf8');
     const file = matter(originalContent);
 
@@ -121,9 +118,9 @@ export class DocumentsApi {
     throw new Error(`Cannot find root for ${version}`);
   }
 
-  private getFilePath(versionId, flavorId, path): string {
-    let items = this.getDocuments(versionId).find(
-      (item) => item.id === flavorId
+  private getFilePath(version, flavor, path): string {
+    let items = this.getDocuments(version).find(
+      (item) => item.id === flavor
     )?.itemList;
 
     if (!items) {
@@ -139,7 +136,7 @@ export class DocumentsApi {
         throw new Error(`Document not found`);
       }
     }
-    const file = found.file ?? [flavorId, ...path].join('/');
-    return join(this.getDocumentsRoot(versionId), `${file}.md`);
+    const file = found.file ?? [flavor, ...path].join('/');
+    return join(this.getDocumentsRoot(version), `${file}.md`);
   }
 }

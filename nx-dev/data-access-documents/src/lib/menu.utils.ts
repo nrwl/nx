@@ -3,15 +3,15 @@ import { MenuItem, MenuSection } from './menu.models';
 
 export function createMenuItems(
   versionId: string,
-  flavor: string,
+  flavor: { alias: string; value: string },
   root: DocumentMetadata[]
 ): MenuItem[] {
-  const items = root.find((x) => x.id === flavor)?.itemList;
+  const items = root.find((x) => x.id === flavor.alias)?.itemList;
 
   const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
-      path: `/${versionId}/${flavor}/${parentId}/${g.id}`,
+      path: `/${versionId}/${flavor.value}/${parentId}/${g.id}`,
     };
 
     if (Array.isArray(g.itemList)) {
