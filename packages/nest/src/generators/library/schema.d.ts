@@ -27,6 +27,7 @@ export interface LibraryGeneratorOptions {
     | 'es2020';
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
+  standaloneConfig?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {
