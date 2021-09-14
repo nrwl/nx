@@ -4,7 +4,7 @@
   "projectType": "library",
   "targets": {
     "lint": {
-      "builder": "@nrwl/linter:eslint",
+      "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "packages/react-native/**/*.ts",
@@ -14,10 +14,11 @@
           "packages/react-native/**/*.spec.jsx",
           "packages/react-native/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "builder": "@nrwl/jest:jest",
+      "executor": "@nrwl/jest:jest",
       "options": {
         "jestConfig": "packages/react-native/jest.config.js",
         "passWithNoTests": true
@@ -25,7 +26,7 @@
       "outputs": ["coverage/packages/react-native"]
     },
     "build-base": {
-      "builder": "@nrwl/node:package",
+      "executor": "@nrwl/node:package",
       "options": {
         "outputPath": "build/packages/react-native",
         "tsConfig": "packages/react-native/tsconfig.lib.json",

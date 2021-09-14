@@ -80,7 +80,8 @@
           "packages/react/**/*.spec.jsx",
           "packages/react/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

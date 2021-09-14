@@ -8,7 +8,7 @@ import type {
   PHASE_EXPORT,
   PHASE_PRODUCTION_BUILD,
   PHASE_PRODUCTION_SERVER,
-} from 'next/dist/next-server/lib/constants';
+} from 'next/dist/shared/lib/constants';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';

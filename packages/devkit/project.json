@@ -69,7 +69,8 @@
           "packages/devkit/**/*.spec.jsx",
           "packages/devkit/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

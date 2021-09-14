@@ -70,7 +70,8 @@
           "packages/nest/**/*.spec.jsx",
           "packages/nest/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["node", "linter"]

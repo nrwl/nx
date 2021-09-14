@@ -69,7 +69,8 @@
           "packages/jest/**/*.spec.jsx",
           "packages/jest/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

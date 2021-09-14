@@ -70,7 +70,8 @@
           "packages/linter/**/*.spec.jsx",
           "packages/linter/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["eslint-plugin-nx"]

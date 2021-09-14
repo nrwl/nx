@@ -75,7 +75,8 @@
           "packages/web/**/*.spec.jsx",
           "packages/web/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }
