@@ -7,6 +7,7 @@ import {
   getSourceFilePath,
   hasBuildExecutor,
   hasNoneOfTheseTags,
+  hasAnyOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
   mapProjectGraphFiles,
@@ -55,9 +56,10 @@ export type MessageIds =
   | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
-  | 'tagConstraintViolation'
   | 'bannedExternalImportsViolation'
-  | 'noTransitiveDependencies';
+  | 'noTransitiveDependencies'
+  | 'onlyTagsConstraintViolation'
+  | 'notTagsConstraintViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
 export default createESLintRule<Options, MessageIds>({
@@ -84,6 +86,7 @@ export default createESLintRule<Options, MessageIds>({
                 sourceTag: { type: 'string' },
                 onlyDependOnLibsWithTags: [{ type: 'string' }],
                 bannedExternalImports: [{ type: 'string' }],
+                notDependOnLibsWithTags: [{ type: 'string' }],
               },
               additionalProperties: false,
             },
@@ -102,9 +105,10 @@ export default createESLintRule<Options, MessageIds>({
         'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
-      tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
+      onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
+      notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{disallowedTags}}`,
     },
   },
   defaultOptions: [
@@ -410,10 +414,27 @@ export default createESLintRule<Options, MessageIds>({
               .join(', ');
             context.report({
               node,
-              messageId: 'tagConstraintViolation',
+              messageId: 'onlyTagsConstraintViolation',
               data: {
                 sourceTag: constraint.sourceTag,
                 allowedTags,
+              },
+            });
+            return;
+          }
+          if (
+            constraint.notDependOnLibsWithTags &&
+            hasAnyOfTheseTags(targetProject, constraint.notDependOnLibsWithTags)
+          ) {
+            const disallowedTags = constraint.notDependOnLibsWithTags
+              .map((s) => `"${s}"`)
+              .join(', ');
+            context.report({
+              node,
+              messageId: 'notTagsConstraintViolation',
+              data: {
+                sourceTag: constraint.sourceTag,
+                disallowedTags: disallowedTags,
               },
             });
             return;

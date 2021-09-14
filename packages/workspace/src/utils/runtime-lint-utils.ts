@@ -26,14 +26,21 @@ export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags: string[];
+  notDependOnLibsWithTags: string[];
   bannedExternalImports?: string[];
 };
 
 export function hasNoneOfTheseTags(
-  proj: ProjectGraphProjectNode<any>,
+  proj: ProjectGraphProjectNode,
   tags: string[]
 ) {
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
+}
+
+export function hasAnyOfTheseTags(proj: ProjectGraphProjectNode, tags: string[]) {
+  return (
+    tags.filter((disallowedTag) => hasTag(proj, disallowedTag)).length !== 0
+  );
 }
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {

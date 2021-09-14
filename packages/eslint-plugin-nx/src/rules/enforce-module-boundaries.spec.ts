@@ -249,6 +249,28 @@ describe('Enforce Module Boundaries (eslint)', () => {
             files: [createFile(`libs/impl/src/index.ts`)],
           },
         },
+        publicName: {
+          name: 'publicName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/public',
+            tags: ['public'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/public/src/index.ts`)],
+          },
+        },
+        privateName: {
+          name: 'privateName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/private',
+            tags: ['private'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/private/src/index.ts`)],
+          },
+        },
         untaggedName: {
           name: 'untaggedName',
           type: ProjectType.lib,
@@ -304,6 +326,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         { sourceTag: 'impl', onlyDependOnLibsWithTags: ['api', 'impl'] },
         { sourceTag: 'domain1', onlyDependOnLibsWithTags: ['domain1'] },
         { sourceTag: 'domain2', onlyDependOnLibsWithTags: ['domain2'] },
+        { sourceTag: 'public', notDependOnLibsWithTags: ['private'] },
       ],
     };
 
@@ -442,6 +465,24 @@ describe('Enforce Module Boundaries (eslint)', () => {
 
       const message =
         'A project tagged with "api" can only depend on libs tagged with "api"';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should error when the target library has a disallowed tag', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/public/src/index.ts`,
+        `
+          import '@mycompany/private';
+          import('@mycompany/private');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "public" can not depend on libs tagged with "private"';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
