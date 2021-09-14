@@ -58,6 +58,6 @@ export function toNodeLibraryGeneratorOptions(
     tags: options.tags,
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
-    standaloneConfig: options.standaloneConfig
+    standaloneConfig: options.standaloneConfig,
   };
 }
