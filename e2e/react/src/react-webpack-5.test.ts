@@ -23,7 +23,7 @@ describe('Webpack 5: React Apps', () => {
     updateFile(
       `apps/${appName}/src/styles.css`,
       Array.from({ length: 2000 })
-        .map((_, i) => `.class-${i} { color: red; }`)
+        .map((_, i) => `/* this is a comment */\n.class-${i} { color: red; }`)
         .join('\n')
     );
 
@@ -34,6 +34,11 @@ describe('Webpack 5: React Apps', () => {
       `dist/apps/${appName}/runtime.esm.js`,
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/styles.css`
+    );
+
+    // Should be minified
+    expect(readFile(`dist/apps/${appName}/styles.css`)).not.toContain(
+      'this is a comment'
     );
 
     checkFilesDoNotExist(`dist/apps/${appName}/styles.js`);

@@ -297,7 +297,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
   } catch {}
 
   const extraMinimizers = [];
-  if (!isWebpack5 && stylesOptimization) {
+  if (stylesOptimization) {
     extraMinimizers.push(
       new CleanCssWebpackPlugin({
         sourceMap: stylesSourceMap,
