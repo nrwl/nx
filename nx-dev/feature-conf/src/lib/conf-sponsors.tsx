@@ -49,6 +49,13 @@ export function ConfSponsors(): JSX.Element {
       },
       {
         description:
+          "Thinkster makes the world's best development tutorials, combining great teachers with educational science to teach you 5 to 10 times faster than any other method.",
+        imageUrl: '/images/conf/thinksterlogo.webp',
+        name: 'Thinkster',
+        linkTarget: 'https://thinkster.io',
+      },
+      {
+        description:
           'VMware is delivering the multi-cloud platform for all applications, enabling the digital innovation and enterprise control customers need. We build one of the largest enterprise front-end applications using Angular, Typescript, Nrwl, and Cypress. Join us and make an impact!',
         imageUrl: '/images/conf/vmwarelogo.svg',
         name: 'VMware',
