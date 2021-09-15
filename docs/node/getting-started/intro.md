@@ -40,4 +40,4 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 - [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
 - [Nx CLI](/{{framework}}/getting-started/nx-cli)
 - [Configuration Files](/{{framework}}/core-concepts/configuration)
-- [Mental Model](/{{framework}}/core-concepts/mental-model
+- [Mental Model](/{{framework}}/core-concepts/mental-model)
