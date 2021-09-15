@@ -126,6 +126,9 @@ commands:
           name: Check Formatting
           command: yarn check-format
       - run:
+          name: Check Formatting
+          command: yarn check-commit
+      - run:
           name: Check Package dependencies
           command: yarn depcheck
 
