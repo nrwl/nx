@@ -1,21 +1,13 @@
 {
-  "hash": "47f81f4511f4bd79f8bf936c3c4822446cce23c2472c60e0d65e37fa2efacad8",
-  "layout": { "appsDir": "apps", "libsDir": "libs" },
+  "hash": "3b356da7e311c8952e1cc45fde9f0b418a839d468071030e89bbf33472e40b94",
   "projects": [
     {
       "name": "products-product-detail-page",
       "type": "lib",
       "data": {
         "tags": ["type:feature", "scope:products"],
-        "root": "libs/products/product-detail-page"
-      }
-    },
-    {
-      "name": "shared-product-types",
-      "type": "lib",
-      "data": {
-        "tags": ["type:types", "scope:shared"],
-        "root": "libs/shared/product/types"
+        "root": "libs/products/product-detail-page",
+        "files": []
       }
     },
     {
@@ -23,7 +15,17 @@
       "type": "lib",
       "data": {
         "tags": ["scope:shared", "type:state"],
-        "root": "libs/shared/product/state"
+        "root": "libs/shared/product/state",
+        "files": []
+      }
+    },
+    {
+      "name": "shared-product-types",
+      "type": "lib",
+      "data": {
+        "tags": ["type:types", "scope:shared"],
+        "root": "libs/shared/product/types",
+        "files": []
       }
     },
     {
@@ -31,7 +33,8 @@
       "type": "lib",
       "data": {
         "tags": ["type:data", "scope:shared"],
-        "root": "libs/shared/product/data"
+        "root": "libs/shared/product/data",
+        "files": []
       }
     },
     {
@@ -39,15 +42,8 @@
       "type": "lib",
       "data": {
         "tags": ["scope:products", "type:feature"],
-        "root": "libs/products/home-page"
-      }
-    },
-    {
-      "name": "shared-product-ui",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:shared", "type:ui"],
-        "root": "libs/shared/product/ui"
+        "root": "libs/products/home-page",
+        "files": []
       }
     },
     {
@@ -55,7 +51,17 @@
       "type": "lib",
       "data": {
         "tags": ["scope:shared", "type:state"],
-        "root": "libs/shared/cart/state"
+        "root": "libs/shared/cart/state",
+        "files": []
+      }
+    },
+    {
+      "name": "shared-product-ui",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:shared", "type:ui"],
+        "root": "libs/shared/product/ui",
+        "files": []
       }
     },
     {
@@ -63,7 +69,8 @@
       "type": "lib",
       "data": {
         "tags": ["scope:shared", "type:e2e-utils"],
-        "root": "libs/shared/e2e-utils"
+        "root": "libs/shared/e2e-utils",
+        "files": []
       }
     },
     {
@@ -71,15 +78,8 @@
       "type": "lib",
       "data": {
         "tags": ["scope:cart", "type:feature"],
-        "root": "libs/cart/cart-page"
-      }
-    },
-    {
-      "name": "shared-jsxify",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:shared", "type:types"],
-        "root": "libs/shared/jsxify"
+        "root": "libs/cart/cart-page",
+        "files": []
       }
     },
     {
@@ -87,7 +87,8 @@
       "type": "lib",
       "data": {
         "tags": ["type:assets", "scope:shared"],
-        "root": "libs/shared/assets"
+        "root": "libs/shared/assets",
+        "files": []
       }
     },
     {
@@ -95,7 +96,17 @@
       "type": "lib",
       "data": {
         "tags": ["scope:shared", "type:ui"],
-        "root": "libs/shared/header"
+        "root": "libs/shared/header",
+        "files": []
+      }
+    },
+    {
+      "name": "shared-jsxify",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:shared", "type:types"],
+        "root": "libs/shared/jsxify",
+        "files": []
       }
     },
     {
@@ -103,7 +114,8 @@
       "type": "lib",
       "data": {
         "tags": ["scope:shared", "type:styles"],
-        "root": "libs/shared/styles"
+        "root": "libs/shared/styles",
+        "files": []
       }
     },
     {
@@ -111,7 +123,17 @@
       "type": "e2e",
       "data": {
         "tags": ["scope:products", "type:e2e"],
-        "root": "apps/products-e2e"
+        "root": "apps/products-e2e",
+        "files": []
+      }
+    },
+    {
+      "name": "cart-e2e",
+      "type": "e2e",
+      "data": {
+        "tags": ["scope:cart", "type:e2e"],
+        "root": "apps/cart-e2e",
+        "files": []
       }
     },
     {
@@ -119,150 +141,151 @@
       "type": "app",
       "data": {
         "tags": ["type:app", "scope:products"],
-        "root": "apps/products"
+        "root": "apps/products",
+        "files": []
       }
-    },
-    {
-      "name": "cart-e2e",
-      "type": "e2e",
-      "data": { "tags": ["scope:cart", "type:e2e"], "root": "apps/cart-e2e" }
     },
     {
       "name": "cart",
       "type": "app",
-      "data": { "tags": ["type:app", "scope:cart"], "root": "apps/cart" }
+      "data": {
+        "tags": ["type:app", "scope:cart"],
+        "root": "apps/cart",
+        "files": []
+      }
     }
   ],
   "dependencies": {
     "products-product-detail-page": [
       {
-        "type": "static",
         "source": "products-product-detail-page",
-        "target": "shared-product-state"
+        "target": "shared-product-state",
+        "type": "static"
       },
       {
-        "type": "static",
         "source": "products-product-detail-page",
-        "target": "shared-product-ui"
+        "target": "shared-product-ui",
+        "type": "static"
+      }
+    ],
+    "shared-product-state": [
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-data",
+        "type": "static"
+      },
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-types",
+        "type": "static"
       }
     ],
     "shared-product-types": [],
-    "shared-product-state": [
-      {
-        "type": "static",
-        "source": "shared-product-state",
-        "target": "shared-product-data"
-      },
-      {
-        "type": "static",
-        "source": "shared-product-state",
-        "target": "shared-product-types"
-      }
-    ],
     "shared-product-data": [
       {
-        "type": "static",
         "source": "shared-product-data",
-        "target": "shared-product-types"
+        "target": "shared-product-types",
+        "type": "static"
       }
     ],
     "products-home-page": [
       {
-        "type": "static",
         "source": "products-home-page",
-        "target": "shared-product-state"
+        "target": "shared-product-state",
+        "type": "static"
       },
       {
-        "type": "static",
         "source": "products-home-page",
-        "target": "shared-product-types"
+        "target": "shared-product-types",
+        "type": "static"
       },
       {
-        "type": "static",
         "source": "products-home-page",
-        "target": "shared-product-ui"
-      }
-    ],
-    "shared-product-ui": [
-      {
-        "type": "static",
-        "source": "shared-product-ui",
-        "target": "shared-jsxify"
+        "target": "shared-product-ui",
+        "type": "static"
       }
     ],
     "shared-cart-state": [
       {
-        "type": "static",
         "source": "shared-cart-state",
-        "target": "shared-product-data"
+        "target": "shared-product-data",
+        "type": "static"
       },
       {
-        "type": "static",
         "source": "shared-cart-state",
-        "target": "shared-product-state"
+        "target": "shared-product-state",
+        "type": "static"
+      }
+    ],
+    "shared-product-ui": [
+      {
+        "source": "shared-product-ui",
+        "target": "shared-jsxify",
+        "type": "static"
       }
     ],
     "shared-e2e-utils": [],
     "cart-cart-page": [
       {
-        "type": "static",
         "source": "cart-cart-page",
-        "target": "shared-product-ui"
+        "target": "shared-product-ui",
+        "type": "static"
       },
       {
-        "type": "static",
         "source": "cart-cart-page",
-        "target": "shared-cart-state"
+        "target": "shared-cart-state",
+        "type": "static"
       },
       {
-        "type": "static",
         "source": "cart-cart-page",
-        "target": "shared-product-state"
+        "target": "shared-product-state",
+        "type": "static"
       }
     ],
-    "shared-jsxify": [],
     "shared-assets": [],
     "shared-header": [
-      { "type": "static", "source": "shared-header", "target": "shared-jsxify" }
+      { "source": "shared-header", "target": "shared-jsxify", "type": "static" }
     ],
+    "shared-jsxify": [],
     "shared-styles": [],
     "products-e2e": [
+      { "source": "products-e2e", "target": "products", "type": "implicit" },
       {
-        "type": "static",
         "source": "products-e2e",
-        "target": "shared-e2e-utils"
-      },
-      { "type": "implicit", "source": "products-e2e", "target": "products" }
-    ],
-    "products": [
-      { "type": "static", "source": "products", "target": "shared-header" },
-      {
-        "type": "dynamic",
-        "source": "products",
-        "target": "products-home-page"
-      },
-      {
-        "type": "dynamic",
-        "source": "products",
-        "target": "products-product-detail-page"
-      },
-      { "type": "implicit", "source": "products", "target": "shared-assets" },
-      { "type": "implicit", "source": "products", "target": "shared-styles" }
+        "target": "shared-e2e-utils",
+        "type": "static"
+      }
     ],
     "cart-e2e": [
-      { "type": "static", "source": "cart-e2e", "target": "shared-e2e-utils" },
-      { "type": "implicit", "source": "cart-e2e", "target": "cart" }
+      { "source": "cart-e2e", "target": "cart", "type": "implicit" },
+      { "source": "cart-e2e", "target": "shared-e2e-utils", "type": "static" }
+    ],
+    "products": [
+      { "source": "products", "target": "shared-assets", "type": "implicit" },
+      { "source": "products", "target": "shared-styles", "type": "implicit" },
+      { "source": "products", "target": "shared-header", "type": "static" },
+      {
+        "source": "products",
+        "target": "products-home-page",
+        "type": "static"
+      },
+      {
+        "source": "products",
+        "target": "products-product-detail-page",
+        "type": "static"
+      }
     ],
     "cart": [
-      { "type": "static", "source": "cart", "target": "shared-header" },
-      { "type": "static", "source": "cart", "target": "cart-cart-page" },
-      { "type": "implicit", "source": "cart", "target": "shared-assets" },
-      { "type": "implicit", "source": "cart", "target": "shared-styles" }
+      { "source": "cart", "target": "shared-assets", "type": "implicit" },
+      { "source": "cart", "target": "shared-styles", "type": "implicit" },
+      { "source": "cart", "target": "shared-header", "type": "static" },
+      { "source": "cart", "target": "cart-cart-page", "type": "static" }
     ]
   },
+  "layout": { "appsDir": "apps", "libsDir": "libs" },
   "changes": { "added": [] },
   "affected": [],
   "focus": null,
-  "exclude": [],
-  "groupByFolder": false
+  "groupByFolder": false,
+  "exclude": []
 }

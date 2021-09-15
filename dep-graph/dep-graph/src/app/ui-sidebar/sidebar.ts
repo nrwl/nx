@@ -1,9 +1,10 @@
 import { ProjectGraphNode } from '@nrwl/devkit';
-import { BehaviorSubject, fromEvent } from 'rxjs';
+import { BehaviorSubject, combineLatest, fromEvent, Subject } from 'rxjs';
+import { withLatestFrom } from 'rxjs/operators';
 import { DisplayOptionsPanel } from './display-options-panel';
 import { FocusedProjectPanel } from './focused-project-panel';
 import { ProjectList } from './project-list';
-import { TextFilterPanel } from './text-filter-panel';
+import { TextFilterChangeEvent, TextFilterPanel } from './text-filter-panel';
 
 declare var ResizeObserver;
 
@@ -12,6 +13,9 @@ export class SidebarComponent {
   private groupByFolderChangedSubject = new BehaviorSubject<boolean>(
     window.groupByFolder
   );
+
+  private focusProjectSubject = new Subject<string>();
+  private filterByTextSubject = new Subject<TextFilterChangeEvent>();
 
   selectedProjectsChanged$ = this.selectedProjectsChangedSubject.asObservable();
   groupByFolderChanged$ = this.groupByFolderChangedSubject.asObservable();
@@ -27,6 +31,7 @@ export class SidebarComponent {
   set projects(projects: ProjectGraphNode[]) {
     this.projectList.projects = projects;
     this.focusedProjectPanel.unfocusProject();
+    this.unfocusProject();
   }
 
   constructor(private affectedProjects: string[]) {
@@ -62,7 +67,7 @@ export class SidebarComponent {
     }
 
     window.focusProject = (projectId) => {
-      this.focusProject(projectId);
+      this.focusProjectSubject.next(projectId);
     };
 
     window.excludeProject = (projectId) => {
@@ -139,7 +144,16 @@ export class SidebarComponent {
     });
 
     this.textFilterPanel.changes$.subscribe((event) => {
-      this.filterProjectsByText(event.text, event.includeInPath);
+      this.filterByTextSubject.next(event);
+    });
+
+    combineLatest([
+      this.filterByTextSubject,
+      this.displayOptionsPanel.searchDepth$,
+    ]).subscribe(([event, searchDepth]) => {
+      if (event.text) {
+        this.filterProjectsByText(event.text, event.includeInPath, searchDepth);
+      }
     });
 
     this.projectList.checkedProjectsChange$.subscribe((checkedProjects) => {
@@ -147,7 +161,16 @@ export class SidebarComponent {
     });
 
     this.projectList.focusProject$.subscribe((projectName) => {
-      this.focusProject(projectName);
+      this.focusProjectSubject.next(projectName);
+    });
+
+    combineLatest([
+      this.focusProjectSubject,
+      this.displayOptionsPanel.searchDepth$,
+    ]).subscribe(([projectName, searchDepth]) => {
+      if (projectName) {
+        this.focusProject(projectName, searchDepth);
+      }
     });
   }
 
@@ -178,14 +201,16 @@ export class SidebarComponent {
     this.emitSelectedProjects([]);
   }
 
-  focusProject(id) {
+  focusProject(id: string, searchDepth: number = -1) {
+    this.filterByTextSubject.next({ text: null, includeInPath: false });
     this.setFocusedProject(id);
 
     const selectedProjects = window.projects
       .map((project) => project.name)
       .filter(
         (projectName) =>
-          this.hasPath(id, projectName, []) || this.hasPath(projectName, id, [])
+          this.hasPath(id, projectName, [], 1, searchDepth) ||
+          this.hasPath(projectName, id, [], 1, searchDepth)
       );
 
     this.projectList.setCheckedProjects(selectedProjects);
@@ -194,6 +219,7 @@ export class SidebarComponent {
   }
 
   unfocusProject() {
+    this.focusProjectSubject.next(null);
     this.setFocusedProject(null);
 
     this.projectList.uncheckAllProjects();
@@ -215,7 +241,12 @@ export class SidebarComponent {
     this.selectedProjectsChangedSubject.next(selectedProjects);
   }
 
-  filterProjectsByText(text: string, includeInPath: boolean) {
+  filterProjectsByText(
+    text: string,
+    includeInPath: boolean,
+    searchDepth: number
+  ) {
+    this.focusProjectSubject.next(null);
     this.setFocusedProject(null);
     this.projectList.uncheckAllProjects();
 
@@ -237,8 +268,8 @@ export class SidebarComponent {
               .map((project) => project.name)
               .forEach((projectInPath) => {
                 if (
-                  this.hasPath(project, projectInPath, []) ||
-                  this.hasPath(projectInPath, project, [])
+                  this.hasPath(project, projectInPath, [], 1, searchDepth) ||
+                  this.hasPath(projectInPath, project, [], 1, searchDepth)
                 ) {
                   selectedProjects.add(projectInPath);
                 }
@@ -252,14 +283,32 @@ export class SidebarComponent {
     this.emitSelectedProjects(selectedProjectsArray);
   }
 
-  private hasPath(target, node, visited) {
+  private hasPath(
+    target,
+    node,
+    visited,
+    currentSearchDepth: number,
+    maxSearchDepth: number = -1 // -1 indicates unlimited search depth
+  ) {
     if (target === node) return true;
 
-    for (let d of window.graph.dependencies[node] || []) {
-      if (visited.indexOf(d.target) > -1) continue;
-      visited.push(d.target);
-      if (this.hasPath(target, d.target, visited)) return true;
+    if (maxSearchDepth === -1 || currentSearchDepth <= maxSearchDepth) {
+      for (let d of window.graph.dependencies[node] || []) {
+        if (visited.indexOf(d.target) > -1) continue;
+        visited.push(d.target);
+        if (
+          this.hasPath(
+            target,
+            d.target,
+            visited,
+            currentSearchDepth + 1,
+            maxSearchDepth
+          )
+        )
+          return true;
+      }
     }
+
     return false;
   }
 }

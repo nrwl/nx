@@ -56,7 +56,7 @@ export class AppComponent {
       dependencies: project.dependencies,
       nodes: nodes,
     };
-
+    window.focusedProject = null;
     window.projectGraphList = this.config.projectGraphs;
     window.selectedProjectGraph = projectGraphId;
     window.workspaceLayout = workspaceLayout;
