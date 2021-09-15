@@ -4,7 +4,8 @@
   "description": "Angular Plugin for Nx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/angular"
   },
   "scripts": {
     "postinstall": "node ./scripts/nx-cli-warning.js"

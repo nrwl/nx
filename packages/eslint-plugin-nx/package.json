@@ -4,7 +4,8 @@
   "description": "ESLint Plugin for Nx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint-plugin-nx"
   },
   "keywords": [
     "Monorepo",

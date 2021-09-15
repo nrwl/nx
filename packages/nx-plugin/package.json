@@ -4,7 +4,8 @@
   "description": "Plugin for creating plugins for Nx :)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx-plugin"
   },
   "keywords": [
     "Monorepo",
