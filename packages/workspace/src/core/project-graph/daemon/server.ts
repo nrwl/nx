@@ -67,13 +67,16 @@ function formatLogMessage(message) {
  * For now we just invoke the existing `createProjectGraph()` utility and return the project
  * graph upon connection to the server
  */
+let performanceObserver: PerformanceObserver | undefined;
 const server = createServer((socket) => {
-  const obs = new PerformanceObserver((list) => {
-    const entry = list.getEntries()[0];
-    // Slight indentation to improve readability of the overall log file
-    serverLog(`  Time taken for '${entry.name}'`, `${entry.duration}ms`);
-  });
-  obs.observe({ entryTypes: ['measure'], buffered: false });
+  if (!performanceObserver) {
+    performanceObserver = new PerformanceObserver((list) => {
+      const entry = list.getEntries()[0];
+      // Slight indentation to improve readability of the overall log file
+      serverLog(`  Time taken for '${entry.name}'`, `${entry.duration}ms`);
+    });
+  }
+  performanceObserver.observe({ entryTypes: ['measure'], buffered: false });
 
   performance.mark('server-connection');
   serverLog('Connection Received');
