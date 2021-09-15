@@ -94,6 +94,10 @@ function gitLsTree(path: string): Map<string, string> {
   );
 }
 
+export function gitRevParseHead(path: string): string {
+  return spawnProcess('git', ['rev-parse', 'HEAD'], path);
+}
+
 function gitStatus(path: string): {
   status: Map<string, string>;
   deletedFiles: string[];
@@ -166,4 +170,18 @@ export function getFileHashes(path: string): Map<string, string> {
     }
     return new Map<string, string>();
   }
+}
+
+/**
+ * This utility is used to return a Map of filenames to hashes, where those filenames come from
+ * git's knowledge of:
+ *
+ * - files which are untracked (newly created)
+ * - files which are modified in some way (but NOT deleted) and either staged or unstaged
+ */
+export function getUntrackedAndUncommittedFileHashes(
+  path: string
+): Map<string, string> {
+  const { status } = gitStatus(path);
+  return status;
 }
