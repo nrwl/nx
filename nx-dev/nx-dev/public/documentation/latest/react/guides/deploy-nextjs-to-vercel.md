@@ -22,7 +22,7 @@ dist/apps/tuskdesk/.next
 
 Therefore, our full configuration (based on a repo called "nx-workspace" and a project called "tuskdesk") will look like this:
 
-![image](./next-deploy-vercel-1.png)
+![New Vercel Project](/react/guides/next-deploy-vercel-1.png)
 
 ### Existing Vercel project
 
@@ -30,7 +30,7 @@ If you have an existing project on Vercel then the exact same guidance applies a
 
 When everything is updated appropriately, for our `tuskdesk` example we would see the following in our "General" settings UI:
 
-![image](./next-deploy-vercel-2.png)
+![Existing Vercel Project](/react/guides/next-deploy-vercel-2.png)
 
 ## Skipping build if the application is not affected
 
@@ -74,6 +74,6 @@ Secondly, this script only compares changes introduced in a single latest commit
 
 Once you've saved this script in your Nx workspace, for example in `tools/ignore-vercel-build.sh`, we need to point Vercel to use this script.
 
-![image](./next-deploy-vercel-3.png)
+![Ignore build step](/react/guides/next-deploy-vercel-3.png)
 
 Naturally, you can continue on and set any additional Environment Variables etc that may be appropriate for your projects, but we have now covered the key points needed to deploy Next.js projects from Nx workspaces on Vercel!
