@@ -376,7 +376,7 @@ describe('Command Runner Builder', () => {
         { root } as any
       );
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(normalize(readFile(f))).not.toBe("12.0.0");
+      expect(normalize(readFile(f))).not.toBe('12.0.0');
     });
 
     it('should run the task in the workspace root when no cwd is specified', async () => {
