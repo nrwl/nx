@@ -35,7 +35,7 @@ export interface CLISuccessMessageConfig {
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
-if (isCI()) {
+if (isCI() && !process.env.FORCE_COLOR) {
   (chalk as any).Level = 0;
 }
 
