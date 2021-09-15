@@ -72,7 +72,7 @@ export default async function echoExecutor(
   console.log(stdout);
   console.error(stderr);
 
-  const success = !!stderr;
+  const success = !stderr;
   return { success };
 }
 ```
