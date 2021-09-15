@@ -5,6 +5,7 @@ import { connect, createServer, Server } from 'net';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
+import { defaultFileHasher } from '../../hasher/file-hasher';
 import { createProjectGraph } from '../project-graph';
 
 /**
@@ -80,6 +81,8 @@ const server = createServer((socket) => {
 
   performance.mark('server-connection');
   serverLog('Connection Received');
+
+  defaultFileHasher.init();
 
   const projectGraph = createProjectGraph(
     undefined,
