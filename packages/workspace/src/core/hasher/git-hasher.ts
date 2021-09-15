@@ -132,10 +132,9 @@ function checkForDeletedFiles(
       statSync(join(path, f)).isFile();
       filesToHash.push(f);
     } catch {
-      console.warn(
-        `Warning: Fell back to using 'fs' to identify ${f} as deleted. Please open an issue at https://github.com/nrwl/nx so we can investigate.`
+      throw new Error(
+        `Error: Fell back to using 'fs' to identify ${f} as deleted. Please open an issue at https://github.com/nrwl/nx so we can investigate.`
       );
-      deletedFiles.push(f);
     }
   });
 
