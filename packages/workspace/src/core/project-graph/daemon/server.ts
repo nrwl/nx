@@ -6,6 +6,7 @@ import { platform } from 'os';
 import { join, resolve } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
 import { defaultFileHasher } from '../../hasher/file-hasher';
+import { gitRevParseHead } from '../../hasher/git-hasher';
 import { createProjectGraph } from '../project-graph';
 
 /**
@@ -65,6 +66,13 @@ function formatLogMessage(message) {
 }
 
 /**
+ * We cache the latest known HEAD value on the server so that we can potentially skip
+ * some work initializing file hashes. If the HEAD value has not changed since we last
+ * initialized the hashes, then we can move straight on to hashing uncommitted changes.
+ */
+let cachedGitHead: string | undefined;
+
+/**
  * For now we just invoke the existing `createProjectGraph()` utility and return the project
  * graph upon connection to the server
  */
@@ -82,7 +90,13 @@ const server = createServer((socket) => {
   performance.mark('server-connection');
   serverLog('Connection Received');
 
-  defaultFileHasher.init();
+  const currentGitHead = gitRevParseHead(appRootPath);
+  if (currentGitHead === cachedGitHead) {
+    defaultFileHasher.incrementalUpdate();
+  } else {
+    defaultFileHasher.init();
+    cachedGitHead = currentGitHead;
+  }
 
   const projectGraph = createProjectGraph(
     undefined,

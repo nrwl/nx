@@ -1,11 +1,14 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
-import { getFileHashes } from './git-hasher';
+import {
+  getFileHashes,
+  getUntrackedAndUncommittedFileHashes,
+} from './git-hasher';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 
 export class FileHasher {
   fileHashes: { [path: string]: string } = {};
-  workspaceFiles: string[] = [];
+  workspaceFiles = new Set<string>();
   usesGitForHashing = false;
   private isInitialized = false;
 
@@ -13,7 +16,7 @@ export class FileHasher {
 
   clear(): void {
     this.fileHashes = {};
-    this.workspaceFiles = [];
+    this.workspaceFiles = new Set<string>();
     this.usesGitForHashing = false;
   }
 
@@ -28,6 +31,38 @@ export class FileHasher {
       'init hashing',
       'init hashing:start',
       'init hashing:end'
+    );
+  }
+
+  /**
+   * This method is used in cases where we do not want to fully tear down the
+   * known state of file hashes, and instead only want to hash the currently
+   * uncommitted (both staged and unstaged) non-deleted files.
+   *
+   * For example, the daemon server can cache the last known commit SHA in
+   * memory and avoid calling init() by using this method instead when that
+   * SHA is unchanged.
+   */
+  incrementalUpdate() {
+    performance.mark('incremental hashing:start');
+
+    const untrackedAndUncommittedFileHashes =
+      getUntrackedAndUncommittedFileHashes(appRootPath);
+
+    untrackedAndUncommittedFileHashes.forEach((hash, filename) => {
+      this.fileHashes[filename] = hash;
+      /**
+       * we have to store it separately because fileHashes can be modified
+       * later on and can contain files that do not exist in the workspace
+       */
+      this.workspaceFiles.add(filename);
+    });
+
+    performance.mark('incremental hashing:end');
+    performance.measure(
+      'incremental hashing',
+      'incremental hashing:start',
+      'incremental hashing:end'
     );
   }
 
@@ -57,7 +92,7 @@ export class FileHasher {
        * we have to store it separately because fileHashes can be modified
        * later on and can contain files that do not exist in the workspace
        */
-      this.workspaceFiles.push(filename.substr(sliceIndex));
+      this.workspaceFiles.add(filename.substr(sliceIndex));
     });
   }
 

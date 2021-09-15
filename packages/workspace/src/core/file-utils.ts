@@ -280,7 +280,7 @@ export function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
 
   if (defaultFileHasher.usesGitForHashing) {
     const ignoredGlobs = getIgnoredGlobs();
-    const r = defaultFileHasher.workspaceFiles
+    const r = Array.from(defaultFileHasher.workspaceFiles)
       .filter((f) => !ignoredGlobs.ignores(f))
       .map((f) =>
         projectFileDataCompatAdapter(
