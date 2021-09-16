@@ -1,11 +1,3 @@
-# @nrwl/workspace:run-script
-
-Run an npm script using Nx
-
-Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
-
-## Examples
-
 `workspace.json`:
 
 ```json
@@ -23,7 +15,7 @@ Options can be configured in `angular.json` when defining the executor, or when 
 ```
 
 ```bash
-nx run frontend:build
+<%= cli %> run frontend:build
 ```
 
 The `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.
@@ -46,13 +38,3 @@ By default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/di
     }
 }
 ```
-
-Test2
-
-## Options
-
-### script (_**required**_)
-
-Type: `string`
-
-An npm script name in the package.json file of the project (e.g., build)

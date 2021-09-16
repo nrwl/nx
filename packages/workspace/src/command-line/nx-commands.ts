@@ -112,7 +112,7 @@ export const commandsObject = yargs
   )
   .command(
     'print-affected',
-    'Graph execution plan',
+    'Prints information about the projects and targets affected by changes',
     (yargs) => withAffectedOptions(withPrintAffectedOptions(yargs)),
     async (args) =>
       (await import('./affected')).affected('print-affected', {
@@ -255,7 +255,7 @@ function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('select', { type: 'string' });
+  return yargs.option('select', { type: 'string', describe: 'Select the subset of the returned json document (e.g., --selected=projects)' });
 }
 
 function withPlainOption(yargs: yargs.Argv): yargs.Argv {

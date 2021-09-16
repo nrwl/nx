@@ -84,12 +84,7 @@ function generateTemplate(
     # ${builder.collectionName}:${builder.name}
     ${builder.description}
 
-    Options can be configured in \`${filename}\` when defining the executor, or when invoking it.
-    ${
-      framework != 'angular'
-        ? `Read more about how to use executors and the CLI here: https://nx.dev/getting-started/nx-cli#common-commands.`
-        : ``
-    }
+    Options can be configured in \`${filename}\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
     \n`;
 
   if (builder.examplesFileFullPath) {
@@ -97,7 +92,7 @@ function generateTemplate(
     let examples = readFileSync(builder.examplesFileFullPath)
       .toString()
       .replace(/<%= cli %>/gm, cliCommand);
-    template += dedent`${examples}`;
+    template += dedent`${examples}\n`;
   }
 
   if (Array.isArray(builder.options) && !!builder.options.length) {

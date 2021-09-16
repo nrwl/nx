@@ -3,10 +3,10 @@
 ```json
 //...
 "frontend": {
-    "architect": {
+    "targets": {
         //...
         "ls-project-root": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
             "options": {
                 "command": "ls apps/frontend/src"
             }
@@ -31,7 +31,7 @@ You can run them sequentially by setting `parallel: false`:
 
 ```json
 "create-script": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "commands": [
           "mkdir -p scripts",
@@ -70,7 +70,7 @@ For example, when you run:
 
 ```json
 "webpack": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "command": "webpack"
     }
@@ -84,7 +84,7 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ```json
 "webpack": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "commands": [
             {
@@ -102,7 +102,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 
 ```json
 "finish-when-ready": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "commands": [
             "sleep 5 && echo 'FINISHED'",
@@ -133,10 +133,10 @@ nx affected --target=generate-docs
 ```json
 //...
 "frontend": {
-    "architect": {
+    "targets": {
         //...
         "generate-docs": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
             "options": {
                 "command": "npx compodoc -p apps/frontend/tsconfig.app.json"
             }
@@ -144,10 +144,10 @@ nx affected --target=generate-docs
     }
 },
 "api": {
-    "architect": {
+    "targets": {
         //...
         "generate-docs": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
             "options": {
                 "command":  "npx compodoc -p apps/api/tsconfig.app.json"
             }
