@@ -53,7 +53,7 @@ Any custom code that was present in Step 1 and 2 should be recreated now in the 
 
 Modify `tsconfig.spec.ts` in the lib’s folder and add Jest typings: add jest under types and remove previous framework (e.g. jasmine)
 
-```bash
+```typescript
 "types": [ "jest", "node" ]
 ```
 

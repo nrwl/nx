@@ -174,7 +174,7 @@ You can select a configuration like this: `nx build myapp --configuration=produc
 
 The following show how the builder options get constructed:
 
-```bash
+```javascript
 require(`@nrwl/jest`).builders['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
 ```
 
