@@ -7,7 +7,7 @@ contact_links:
     about: "Want to start a thread to discuss an idea? Use the discussions feature provided by GitHub."
     url: https://github.com/nrwl/nx/discussions
   - name: Have a question?
-    url: http://go.nrwl.io/join-slack
+    url: https://go.nrwl.io/join-slack
     about: "The Community Slack is a great place for questions to be asked and answered. Please use the #support channel if you need help with your workspace!"
   - name: Are you looking for integration with a new tool?
     url: https://nx.dev/community
