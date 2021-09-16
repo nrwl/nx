@@ -108,7 +108,7 @@ export function Community(props: CommunityProps) {
                     className="underline cursor-pointer"
                     target="_blank"
                     title="Join the Nx Community Slack"
-                    href="http://go.nrwl.io/join-slack"
+                    href="https://go.nrwl.io/join-slack"
                     rel="noreferrer"
                   >
                     Join the Nx Community Slack
