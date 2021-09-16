@@ -60,7 +60,7 @@ function updateDependencies(host: Tree) {
       'react-helmet': reactHelmetVersion,
       'gatsby-plugin-typescript': gatsbyPluginTypescriptVersion,
       ...(isPnpm ? { 'gatsby-plugin-pnpm': gatsbyPluginPnpm } : {}),
-      webpack: '^5.39.1',
+      webpack: '~5.39.1',
     },
     {
       '@nrwl/gatsby': nxVersion,
