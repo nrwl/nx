@@ -28,7 +28,7 @@
       "outputs": [],
       "options": {
         "commands": [
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts --watch",
+          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts --watch",
           "nx run nx-dev:serve-nextjs"
         ],
         "parallel": true
