@@ -1,6 +1,6 @@
-import { spawnSync } from 'child_process';
-import { join } from 'path';
 import { statSync } from 'fs';
+import { join } from 'path';
+import { spawnProcess } from './spawn-process';
 
 function parseGitLsTree(output: string): Map<string, string> {
   const changes: Map<string, string> = new Map<string, string>();
@@ -33,7 +33,7 @@ function parseGitStatus(path: string): Map<string, string> {
   // we need to manually strip the root path from the filenames.
   const prefix = spawnProcess('git', ['rev-parse', '--show-prefix'], path);
 
-  var chunks = output.split('\0');
+  const chunks = output.split('\0');
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
     if (chunk.length) {
@@ -50,16 +50,6 @@ function parseGitStatus(path: string): Map<string, string> {
     }
   }
   return changes;
-}
-
-function spawnProcess(command: string, args: string[], cwd: string): string {
-  const r = spawnSync(command, args, { cwd, maxBuffer: 50 * 1024 * 1024 });
-  if (r.status !== 0) {
-    throw new Error(
-      `Failed to run ${command} ${args.join(' ')}.\n${r.stdout}\n${r.stderr}`
-    );
-  }
-  return r.stdout.toString().trimEnd();
 }
 
 function getGitHashForFiles(
