@@ -23,7 +23,7 @@ export function createProjectFileMap(
         if (seen.has(f.file)) {
           return;
         }
-        if (f.file.startsWith(p.root)) {
+        if (f.file.startsWith(p.root || p.sourceRoot)) {
           fileMap[projectName].push(f);
           seen.add(f.file);
         }
