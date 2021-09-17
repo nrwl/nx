@@ -8,6 +8,8 @@ import {
   stop,
 } from '../core/project-graph/daemon/exec';
 import { nxVersion } from '../utils/versions';
+import * as chalk from 'chalk';
+import { examples } from './examples';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -22,7 +24,7 @@ export const commandsObject = yargs
   .parserConfiguration({
     'strip-dashed': true,
   })
-  .usage('Smart, Extensible Build Framework')
+  .usage(chalk.bold('Smart, Extensible Build Framework'))
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `
@@ -38,34 +40,50 @@ export const commandsObject = yargs
   .command(
     'generate [collection:][generator] [options, ...]',
     `
-    Generate code
+    ${chalk.bold('Generate or update source code')}
     (e.g., nx generate @nrwl/web:app myapp).
     `
   )
 
   .command(
     'affected',
-    'Run task for affected projects',
-    (yargs) => withAffectedOptions(withParallel(withTarget(yargs))),
+    chalk.bold('Run target for affected projects'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallel(withTarget(yargs))),
+        'affected'
+      ),
     async (args) =>
       (await import('./affected')).affected('affected', { ...args })
   )
   .command(
     'run-many',
-    'Run task for multiple projects',
-    (yargs) => withRunManyOptions(withParallel(withTarget(yargs))),
+    chalk.bold('Run target for multiple listed projects'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withRunManyOptions(withParallel(withTarget(yargs))),
+        'run-many'
+      ),
     async (args) => (await import('./run-many')).runMany({ ...args })
   )
   .command(
     'affected:apps',
-    'Print applications affected by changes',
-    (yargs) => withAffectedOptions(withPlainOption(yargs)),
+    chalk.bold('Print applications affected by changes'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withPlainOption(yargs)),
+        'affected:apps'
+      ),
     async (args) => (await import('./affected')).affected('apps', { ...args })
   )
   .command(
     'affected:libs',
-    'Print libraries affected by changes',
-    (yargs) => withAffectedOptions(withPlainOption(yargs)),
+    chalk.bold('Print libraries affected by changes'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withPlainOption(yargs)),
+        'affected:libs'
+      ),
     async (args) =>
       (await import('./affected')).affected('libs', {
         ...args,
@@ -73,8 +91,14 @@ export const commandsObject = yargs
   )
   .command(
     'affected:build',
-    'Build applications and publishable libraries affected by changes',
-    (yargs) => withAffectedOptions(withParallel(yargs)),
+    chalk.bold(
+      'Build applications and publishable libraries affected by changes'
+    ),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallel(yargs)),
+        'affected:build'
+      ),
     async (args) =>
       (await import('./affected')).affected('affected', {
         ...args,
@@ -83,8 +107,12 @@ export const commandsObject = yargs
   )
   .command(
     'affected:test',
-    'Test projects affected by changes',
-    (yargs) => withAffectedOptions(withParallel(yargs)),
+    chalk.bold('Test projects affected by changes'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallel(yargs)),
+        'affected:test'
+      ),
     async (args) =>
       (await import('./affected')).affected('affected', {
         ...args,
@@ -93,8 +121,12 @@ export const commandsObject = yargs
   )
   .command(
     'affected:e2e',
-    'Run e2e tests for the applications affected by changes',
-    (yargs) => withAffectedOptions(withParallel(yargs)),
+    chalk.bold('Run e2e tests for the applications affected by changes'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallel(yargs)),
+        'affected:e2e'
+      ),
     async (args) =>
       (await import('./affected')).affected('affected', {
         ...args,
@@ -103,8 +135,12 @@ export const commandsObject = yargs
   )
   .command(
     'affected:dep-graph',
-    'Graph dependencies affected by changes',
-    (yargs) => withAffectedOptions(withDepGraphOptions(yargs)),
+    chalk.bold('Graph dependencies affected by changes'),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withDepGraphOptions(yargs)),
+        'affected:dep-graph'
+      ),
     async (args) =>
       (await import('./affected')).affected('dep-graph', {
         ...args,
@@ -112,8 +148,14 @@ export const commandsObject = yargs
   )
   .command(
     'print-affected',
-    'Prints information about the projects and targets affected by changes',
-    (yargs) => withAffectedOptions(withPrintAffectedOptions(yargs)),
+    chalk.bold(
+      'Prints information about the projects and targets affected by changes'
+    ),
+    (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withPrintAffectedOptions(yargs)),
+        'print-affected'
+      ),
     async (args) =>
       (await import('./affected')).affected('print-affected', {
         ...args,
@@ -121,8 +163,12 @@ export const commandsObject = yargs
   )
   .command(
     'affected:lint',
-    'Lint projects affected by changes',
-    async (yargs) => withAffectedOptions(withParallel(yargs)),
+    chalk.bold('Lint projects affected by changes'),
+    async (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallel(yargs)),
+        'affected:lint'
+      ),
     async (args) =>
       (await import('./affected')).affected('affected', {
         ...args,
@@ -132,8 +178,11 @@ export const commandsObject = yargs
 
   .command(
     'daemon:start',
-    'EXPERIMENTAL: Start the project graph daemon server (either in the background or the current process)',
-    (yargs) => withDaemonStartOptions(yargs),
+    chalk.bold(
+      'EXPERIMENTAL: Start the project graph daemon server (either in the background or the current process)'
+    ),
+    (yargs) =>
+      linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon:start'),
     async (args) => {
       if (args.background) {
         return startInBackground();
@@ -143,40 +192,44 @@ export const commandsObject = yargs
   )
   .command(
     'daemon:stop',
-    'EXPERIMENTAL: Stop the project graph daemon server',
-    (yargs) => yargs,
+    chalk.bold('EXPERIMENTAL: Stop the project graph daemon server'),
+    (yargs) => linkToNxDevAndExamples(yargs, 'daemon:stop'),
     async () => stop()
   )
 
   .command(
     'dep-graph',
-    'Graph dependencies within workspace',
-    (yargs) => withDepGraphOptions(yargs),
+    chalk.bold('Graph dependencies within workspace'),
+    (yargs) => linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
     async (args) => (await import('./dep-graph')).generateGraph(args as any, [])
   )
 
   .command(
     'format:check',
-    'Check for un-formatted files',
-    withFormatOptions,
+    chalk.bold('Check for un-formatted files'),
+    (yargs) => linkToNxDevAndExamples(withFormatOptions(yargs), 'format:check'),
     async (args) => (await import('./format')).format('check', args)
   )
   .command(
     ['format:write', 'format'],
-    'Overwrite un-formatted files',
-    withFormatOptions,
+    chalk.bold('Overwrite un-formatted files'),
+    (yargs) => linkToNxDevAndExamples(withFormatOptions(yargs), 'format:write'),
     async (args) => (await import('./format')).format('write', args)
   )
   .command(
     'workspace-lint [files..]',
-    'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
+    chalk.bold(
+      'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file'
+    ),
     noop,
     async (_) => (await import('./lint')).workspaceLint()
   )
 
   .command(
     ['workspace-generator [name]', 'workspace-schematic [name]'],
-    'Runs a workspace generator from the tools/generators directory',
+    chalk.bold(
+      'Runs a workspace generator from the tools/generators directory'
+    ),
     (yargs) => {
       yargs.option('list-generators', {
         describe: 'List the available workspace-generators',
@@ -192,7 +245,7 @@ export const commandsObject = yargs
           describe: 'The name of your generator`',
         });
       }
-      return yargs;
+      return linkToNxDevAndExamples(yargs, 'workspace-generator');
     },
     async () =>
       (await import('./workspace-generators')).workspaceGenerators(
@@ -202,11 +255,11 @@ export const commandsObject = yargs
 
   .command(
     'migrate',
-    `Creates a migrations file or runs migrations from the migrations file.
+    chalk.bold(`Creates a migrations file or runs migrations from the migrations file.
 - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
 - Run migrations (e.g., nx migrate --run-migrations=migrations.json)
-`,
-    (yargs) => yargs,
+`),
+    (yargs) => linkToNxDevAndExamples(yargs, 'migrate'),
     () => {
       if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
         const p = taoPath();
@@ -226,8 +279,8 @@ export const commandsObject = yargs
   .command(require('./clear-cache').clearCache)
   .command(
     'connect-to-nx-cloud',
-    `Makes sure the workspace is connected to Nx Cloud`,
-    (yargs) => yargs,
+    chalk.bold(`Makes sure the workspace is connected to Nx Cloud`),
+    (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
     async () =>
       (await import('./connect-to-nx-cloud')).connectToNxCloudCommand()
   )
@@ -250,12 +303,30 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
     });
 }
 
+function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {
+  (examples[command] || []).forEach((t) => {
+    yargs = yargs.example(t.command, t.description);
+  });
+  return yargs.epilog(
+    chalk.bold(
+      `Find more information and examples at https://nx.dev/cli/${command.replace(
+        ':',
+        '-'
+      )}`
+    )
+  );
+}
+
 function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('background', { type: 'boolean', default: true });
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('select', { type: 'string', describe: 'Select the subset of the returned json document (e.g., --selected=projects)' });
+  return yargs.option('select', {
+    type: 'string',
+    describe:
+      'Select the subset of the returned json document (e.g., --selected=projects)',
+  });
 }
 
 function withPlainOption(yargs: yargs.Argv): yargs.Argv {

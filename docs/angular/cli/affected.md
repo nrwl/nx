@@ -1,6 +1,6 @@
 # affected
 
-Run task for affected projects
+Run target for affected projects
 
 ## Usage
 
