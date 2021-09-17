@@ -331,7 +331,7 @@ jobs:
         default: ''
     executor: << parameters.os >>
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+      #      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
@@ -361,24 +361,6 @@ workflows:
 
   build:
     jobs:
-      - agent:
-          name: 'agent1'
-      - agent:
-          name: 'agent2'
-      - agent:
-          name: 'agent3'
-      - agent:
-          name: 'agent4'
-      - agent:
-          name: 'agent5'
-      - agent:
-          name: 'agent6'
-      - agent:
-          name: 'agent7'
-      - agent:
-          name: 'agent8'
-      - agent:
-          name: 'agent9'
       # - agent:
       #     name: 'agent10'
       #     os: 'macos'
@@ -415,14 +397,14 @@ workflows:
       #     filters:
       #       branches:
       #         ignore: master
-      - agent-cleanup:
-          requires:
-            - pull-request
-            # - pull-request-osx
-            # - pull-request-android
-          filters:
-            branches:
-              ignore: master
+      #      - agent-cleanup:
+      #          requires:
+      #            - pull-request
+      #            # - pull-request-osx
+      #            # - pull-request-android
+      #          filters:
+      #            branches:
+      #              ignore: master
       # -------------------------
       #     Commit to master
       # -------------------------
