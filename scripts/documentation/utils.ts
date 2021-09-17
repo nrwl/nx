@@ -1,6 +1,7 @@
 import { outputFileSync, readJsonSync } from 'fs-extra';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
+const stripAnsi = require('strip-ansi');
 
 export function sortAlphabeticallyFunction(a: string, b: string): number {
   const nameA = a.toUpperCase(); // ignore upper and lowercase
@@ -32,7 +33,7 @@ export async function generateMarkdownFile(
   const filePath = join(outputDirectory, `${templateObject.name}.md`);
   outputFileSync(
     filePath,
-    await formatWithPrettier(filePath, templateObject.template)
+    await formatWithPrettier(filePath, stripAnsi(templateObject.template))
   );
 }
 
