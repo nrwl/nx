@@ -85,7 +85,6 @@ const IGNORE_MATCHES = {
     'karma-coverage-istanbul-reporter',
     'karma-jasmine',
     'karma-jasmine-html-reporter',
-    'strip-ansi',
     'webpack',
     'webpack-dev-server',
   ],
