@@ -72,7 +72,7 @@ export function ConfSponsors(): JSX.Element {
         description:
           'XLTS.dev software support ensures that the open-source libraries and frameworks your applications depend on continue to function, even in the face of security weaknesses and breaking changes.',
         imageUrl: '/images/conf/xltslogo.webp',
-        name: 'XLTS',
+        name: 'XLTS.dev',
         linkTarget: 'https://xlts.dev/angularjs',
       },
     ],
