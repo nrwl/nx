@@ -83,7 +83,8 @@
           "packages/angular/**/*.spec.jsx",
           "packages/angular/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["workspace", "cypress", "jest"]

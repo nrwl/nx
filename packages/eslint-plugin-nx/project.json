@@ -70,7 +70,8 @@
           "packages/eslint-plugin-nx/**/*.spec.jsx",
           "packages/eslint-plugin-nx/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

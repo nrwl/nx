@@ -4,7 +4,7 @@
   "projectType": "library",
   "targets": {
     "lint": {
-      "builder": "@nrwl/linter:eslint",
+      "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "packages/detox/**/*.ts",
@@ -14,10 +14,11 @@
           "packages/detox/**/*.spec.jsx",
           "packages/detox/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "builder": "@nrwl/jest:jest",
+      "executor": "@nrwl/jest:jest",
       "options": {
         "jestConfig": "packages/detox/jest.config.js",
         "passWithNoTests": true
@@ -25,7 +26,7 @@
       "outputs": ["coverage/packages/detox"]
     },
     "build-base": {
-      "builder": "@nrwl/node:package",
+      "executor": "@nrwl/node:package",
       "options": {
         "outputPath": "build/packages/detox",
         "tsConfig": "packages/detox/tsconfig.lib.json",

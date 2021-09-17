@@ -78,7 +78,8 @@
           "packages/create-nx-workspace/**/*.spec.jsx",
           "packages/create-nx-workspace/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["workspace"]

@@ -78,7 +78,8 @@
           "packages/create-nx-plugin/**/*.spec.jsx",
           "packages/create-nx-plugin/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["nx-plugin"]

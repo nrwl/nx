@@ -80,7 +80,8 @@
           "packages/storybook/**/*.spec.jsx",
           "packages/storybook/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

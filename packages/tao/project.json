@@ -80,7 +80,8 @@
           "packages/tao/**/*.spec.jsx",
           "packages/tao/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

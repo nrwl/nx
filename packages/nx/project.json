@@ -67,7 +67,8 @@
           "packages/nx/**/*.spec.jsx",
           "packages/nx/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

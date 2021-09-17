@@ -75,7 +75,8 @@
           "packages/next/**/*.spec.jsx",
           "packages/next/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

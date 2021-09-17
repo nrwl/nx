@@ -70,7 +70,8 @@
           "packages/node/**/*.spec.jsx",
           "packages/node/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }
