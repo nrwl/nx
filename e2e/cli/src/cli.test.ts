@@ -67,11 +67,11 @@ describe('Cli', () => {
 
     let mainHelp = runCLI(`--help`);
     expect(mainHelp).toContain('Run a target for a project');
-    expect(mainHelp).toContain('Run task for affected projects');
+    expect(mainHelp).toContain('Run target for affected projects');
 
     mainHelp = runCLI(`help`);
     expect(mainHelp).toContain('Run a target for a project');
-    expect(mainHelp).toContain('Run task for affected projects');
+    expect(mainHelp).toContain('Run target for affected projects');
 
     const genHelp = runCLI(`g @nrwl/web:app --help`);
     expect(genHelp).toContain(
@@ -82,7 +82,7 @@ describe('Cli', () => {
     expect(buildHelp).toContain('The name of the main entry-point file.');
 
     const affectedHelp = runCLI(`affected --help`);
-    expect(affectedHelp).toContain('Run task for affected projects');
+    expect(affectedHelp).toContain('Run target for affected projects');
 
     const version = runCLI(`--version`);
     expect(version).toContain('9999.0.2'); // stub value
