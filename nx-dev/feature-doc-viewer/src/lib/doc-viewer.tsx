@@ -79,8 +79,8 @@ export function DocViewer({
               document={document}
               flavor={flavor.value}
               flavorList={flavorList.map((flavor) => flavor.value)}
-              version={version.path}
-              versionList={versionList.map((version) => version.id)}
+              version={version.alias}
+              versionList={versionList.map((version) => version.alias)}
             />
           </div>
         </div>
