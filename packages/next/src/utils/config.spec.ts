@@ -6,7 +6,7 @@ import { importConstants } from './require-shim';
 const { PHASE_PRODUCTION_BUILD } = importConstants();
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('next/dist/next-server/server/config', () => ({
+jest.mock('next/dist/server/config', () => ({
   __esModule: true,
   default: () => ({
     webpack: () => ({}),
@@ -139,8 +139,8 @@ describe('Next.js webpack config builder', () => {
         []
       );
 
+      console.log('config', config);
       expect(config).toMatchObject({
-        myPhase: 'phase-production-build',
         myCustomValue: 'test',
       });
     });

@@ -70,7 +70,8 @@
           "packages/express/**/*.spec.jsx",
           "packages/express/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["node"]

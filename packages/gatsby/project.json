@@ -80,7 +80,8 @@
           "packages/gatsby/**/*.spec.jsx",
           "packages/gatsby/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "tags": []

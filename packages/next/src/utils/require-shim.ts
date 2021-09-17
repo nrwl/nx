@@ -8,7 +8,7 @@ export function importConstants() {
 
 export function importConfig() {
   try {
-    return require('next/dist/next-server/server/config').default;
+    return require('next/dist/next-server/lib/config').default;
   } catch {
     return require('next/dist/server/config').default;
   }

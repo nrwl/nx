@@ -69,7 +69,8 @@
           "packages/cypress/**/*.spec.jsx",
           "packages/cypress/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

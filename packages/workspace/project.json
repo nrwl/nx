@@ -83,7 +83,8 @@
           "packages/workspace/**/*.spec.jsx",
           "packages/workspace/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

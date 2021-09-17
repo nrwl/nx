@@ -20,7 +20,8 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": ["nx-dev/nx-dev-e2e/**/*.{js,ts}"]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "tags": ["scope:nx-dev", "type:e2e"],

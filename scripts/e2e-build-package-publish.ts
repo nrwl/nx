@@ -88,8 +88,9 @@ function build(nxVersion: string) {
     execSync('npx nx run-many --target=build --all', {
       stdio: ['ignore', 'ignore', 'ignore'],
     });
-  } catch {
+  } catch (e) {
     console.log('Build failed');
+    console.log(e);
     process.exit(1);
   }
 

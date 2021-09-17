@@ -78,7 +78,8 @@
           "packages/cli/**/*.spec.jsx",
           "packages/cli/**/*.d.ts"
         ]
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     }
   },
   "implicitDependencies": ["workspace"]

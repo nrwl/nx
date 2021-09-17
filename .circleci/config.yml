@@ -203,7 +203,7 @@ commands:
                   - run:
                       name: Run E2E Tests
                       command: |
-                        npx nx affected --target=e2e --base=$NX_BASE
+                        npx nx affected --target=e2e --no-parallel --max-parallel=1 --base=$NX_BASE
                       no_output_timeout: 45m
             - unless:
                 condition:
