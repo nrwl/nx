@@ -51,8 +51,8 @@ export function DocumentationPage({
   const [navIsOpen, setNavIsOpen] = useState(false);
 
   function pathCleaner(versions, flavors) {
-    return (path: string): string => {
-      const myPath = path
+    return (path: string): string =>
+      path
         .split('/')
         .filter(
           (segment: string) =>
@@ -63,9 +63,6 @@ export function DocumentationPage({
             !flavors.find((f) => [f.alias, f.value].includes(segment))
         )
         .join('/');
-      console.log(myPath);
-      return myPath;
-    };
   }
   const cleanPath = pathCleaner(versions, flavors);
 
@@ -232,7 +229,7 @@ export function DocumentationPage({
                   </div>
                 </a>
               </Link>
-              <Link href={`${version.alias}/a${cleanPath(router.asPath)}`}>
+              <Link href={`l/a/getting-started/intro`}>
                 <a className="w-full bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ease-out duration-180 rounded-md py-4 px-3 space-x-1 text-base tracking-tight font-bold leading-tight text-center flex flex-col justify-center items-center px-2 py-4 space-y-4">
                   <svg viewBox="0 0 24 24" className="w-1/2" fill="#E23236">
                     <path d="M9.931 12.645h4.138l-2.07-4.908m0-7.737L.68 3.982l1.726 14.771L12 24l9.596-5.242L23.32 3.984 11.999.001zm7.064 18.31h-2.638l-1.422-3.503H8.996l-1.422 3.504h-2.64L12 2.65z" />
