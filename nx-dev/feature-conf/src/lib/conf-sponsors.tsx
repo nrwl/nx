@@ -70,7 +70,7 @@ export function ConfSponsors(): JSX.Element {
       },
       {
         description:
-          'XLTS.dev software support ensures that the open-source libraries and frameworks your applications depend on continue to function, even in the face of security weaknesses and breaking changes.',
+          'Our AngularJS experts will help you identify the best path forward for supporting your AngularJS projects. Don’t wait for Google’s AngularJS support to end, keep your digital assets protected with XLTS for AngularJS.',
         imageUrl: '/images/conf/xltslogo.webp',
         name: 'XLTS.dev',
         linkTarget: 'https://xlts.dev/angularjs',
