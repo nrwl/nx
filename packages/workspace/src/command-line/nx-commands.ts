@@ -255,7 +255,11 @@ function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('select', { type: 'string', describe: 'Select the subset of the returned json document (e.g., --selected=projects)' });
+  return yargs.option('select', {
+    type: 'string',
+    describe:
+      'Select the subset of the returned json document (e.g., --selected=projects)',
+  });
 }
 
 function withPlainOption(yargs: yargs.Argv): yargs.Argv {
