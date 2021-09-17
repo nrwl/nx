@@ -166,6 +166,28 @@ commands:
                   npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
       - when:
           condition:
+            equal: [<< parameters.run-e2e-tests >>, 'true']
+          steps:
+            - when:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, '']
+                steps:
+                  - run:
+                      name: Run E2E Tests
+                      command: |
+                        npx nx affected --target=e2e --base=$NX_BASE
+                      no_output_timeout: 45m
+            - unless:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, '']
+                steps:
+                  - run:
+                      name: Run E2E Tests with Filter "<< parameters.e2e-test-filter >>"
+                      command: |
+                        npx nx affected --target=e2e --base=$NX_BASE -- --t="<< parameters.e2e-test-filter >>"
+                      no_output_timeout: 45m
+      - when:
+          condition:
             equal: [<< parameters.run-unit-tests >>, 'true']
           steps:
             - when:
@@ -192,28 +214,6 @@ commands:
                 name: Run Linting
                 command: |
                   npx nx affected --target=lint --base=$NX_BASE --parallel --max-parallel=4
-      - when:
-          condition:
-            equal: [<< parameters.run-e2e-tests >>, 'true']
-          steps:
-            - when:
-                condition:
-                  equal: [<< parameters.e2e-test-filter >>, '']
-                steps:
-                  - run:
-                      name: Run E2E Tests
-                      command: |
-                        npx nx affected --target=e2e --base=$NX_BASE
-                      no_output_timeout: 45m
-            - unless:
-                condition:
-                  equal: [<< parameters.e2e-test-filter >>, '']
-                steps:
-                  - run:
-                      name: Run E2E Tests with Filter "<< parameters.e2e-test-filter >>"
-                      command: |
-                        npx nx affected --target=e2e --base=$NX_BASE -- --t="<< parameters.e2e-test-filter >>"
-                      no_output_timeout: 45m
 
 # -------------------------
 #          JOBS
@@ -347,9 +347,9 @@ jobs:
             - run-checks
       - run-targets:
           run-builds: << parameters.run-builds >>
+          run-e2e-tests: << parameters.run-e2e-tests >>
           run-unit-tests: << parameters.run-unit-tests >>
           run-linting: << parameters.run-linting >>
-          run-e2e-tests: << parameters.run-e2e-tests >>
           unit-test-filter: << parameters.unit-test-filter >>
           e2e-test-filter: << parameters.e2e-test-filter >>
 

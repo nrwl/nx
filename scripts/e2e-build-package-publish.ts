@@ -85,7 +85,9 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
 
 function build(nxVersion: string) {
   try {
-    execSync('npx nx run-many --target=build --all');
+    execSync('npx nx run-many --target=build --all', {
+      stdio: 'inherit',
+    });
   } catch (e) {
     console.log('Build failed', e);
     process.exit(1);
