@@ -14,6 +14,7 @@ import * as treeKill from 'tree-kill';
 
 import { NodeBuildEvent } from '../build/build.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
+import {PromiseQueue} from '../../utils/promise-queue';
 
 export const enum InspectType {
   Inspect = 'inspect',
@@ -31,14 +32,21 @@ export interface NodeExecuteBuilderOptions {
   watch: boolean;
 }
 
-let subProcess: ChildProcess = null;
+type EventType = "build" | "process";
+
+interface AsyncIteratorDelegator<T> {
+  type: EventType;
+  iterator: AsyncIterator<T>;
+}
 
 export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
   context: ExecutorContext
 ) {
+  const processRunner = createProcessRunner(options);
+
   process.on('SIGTERM', () => {
-    subProcess?.kill();
+    processRunner.kill();
     process.exit(128 + 15);
   });
   process.on('exit', (code) => {
@@ -57,25 +65,26 @@ export async function* executeExecutor(
     }
   }
 
-  for await (const event of startBuild(options, context)) {
-    if (!event.success) {
-      logger.error('There was an error with the build. See above.');
-      logger.info(`${event.outfile} was not restarted.`);
+  const delegateIterator = delegateAsyncIteratorEvents(
+    {type: 'build', iterator: startBuild(options, context)},
+    {type: 'process', iterator: processRunner}
+  );
+
+  for await (const event of delegateIterator){
+    if(event.type === 'build'){
+      if(!event.value.success){
+        logger.error('There was an error with the build. See above.');
+        logger.info(`${event.value.outfile} was not restarted.`);
+      }
+
+      await processRunner.handleBuildEvent(event.value);
+
+      yield event.value;
     }
-    await handleBuildEvent(event, options);
-    yield event;
   }
 }
 
-function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
-  if (subProcess || !event.success) {
-    return;
-  }
 
-  subProcess = fork(event.outfile, options.args, {
-    execArgv: getExecArgv(options),
-  });
-}
 
 function getExecArgv(options: NodeExecuteBuilderOptions) {
   const args = ['-r', 'source-map-support/register', ...options.runtimeArgs];
@@ -91,34 +100,89 @@ function getExecArgv(options: NodeExecuteBuilderOptions) {
   return args;
 }
 
-async function handleBuildEvent(
-  event: NodeBuildEvent,
-  options: NodeExecuteBuilderOptions
-) {
-  if ((!event.success || options.watch) && subProcess) {
-    await killProcess();
+
+async function* delegateAsyncIteratorEvents<T>(...delegates: AsyncIteratorDelegator<T>[]){
+  const getDelegateValue = (iterator: AsyncIterator<T>, type: EventType) =>
+    iterator.next().then(result => ({
+      iterator,
+      type,
+      result
+    }));
+
+  const delegateMap = new Map(delegates.map(({type, iterator}) => [
+    iterator,
+    getDelegateValue(iterator, type)
+  ]));
+
+  while(delegateMap.size > 0){
+    const {iterator, result, type} = await Promise.race(delegateMap.values());
+
+    if(result.done){
+      delegateMap.delete(iterator);
+      continue;
+    }
+
+    delegateMap.set(iterator, getDelegateValue(iterator, type));
+
+    yield {
+      type,
+      value: result.value
+    }
   }
-  runProcess(event, options);
 }
 
-async function killProcess() {
-  if (!subProcess) {
-    return;
-  }
+function createProcessRunner(options: NodeExecuteBuilderOptions){
+  let subProcess: ChildProcess|null = null;
+  const queue = new PromiseQueue();
 
-  const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
-    promisify(treeKill);
-  try {
-    await promisifiedTreeKill(subProcess.pid, 'SIGTERM');
-  } catch (err) {
-    if (Array.isArray(err) && err[0] && err[2]) {
-      const errorMessage = err[2];
-      logger.error(errorMessage);
-    } else if (err.message) {
-      logger.error(err.message);
+  return {
+    isComplete(){
+      return Boolean(subProcess) && subProcess.exitCode != null;
+    },
+
+    async handleBuildEvent(event: NodeBuildEvent){
+      if(subProcess){
+        await this.kill()
+      }
+
+      subProcess = fork(event.outfile, options.args, {
+        execArgv: getExecArgv(options),
+      });
+
+      subProcess.on('exit', (exitCode) => {
+        queue.enqueue({exitCode})
+      });
+    },
+
+    async kill(){
+      if (!subProcess) {
+        return;
+      }
+
+      const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
+        promisify(treeKill);
+      try {
+        await promisifiedTreeKill(subProcess.pid, 'SIGTERM');
+      } catch (err) {
+        if (Array.isArray(err) && err[0] && err[2]) {
+          const errorMessage = err[2];
+          logger.error(errorMessage);
+        } else if (err.message) {
+          logger.error(err.message);
+        }
+      } finally {
+        subProcess = null;
+      }
+    },
+
+    async next(){
+      if(this.isComplete()) return {done: true, value: undefined};
+
+      return {
+        done: false,
+        value: await queue.dequeue()
+      }
     }
-  } finally {
-    subProcess = null;
   }
 }
 

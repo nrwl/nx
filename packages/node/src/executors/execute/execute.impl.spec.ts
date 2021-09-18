@@ -19,7 +19,7 @@ import {
 describe('NodeExecuteBuilder', () => {
   let testOptions: NodeExecuteBuilderOptions;
   let context: ExecutorContext;
-  let mockSubProcess: { on: jest.Mock };
+  let mockSubProcess: { on: jest.Mock, exitCode: number };
 
   beforeEach(async () => {
     buildOptions = {};
@@ -41,6 +41,7 @@ describe('NodeExecuteBuilder', () => {
             cb();
           }
         }),
+        exitCode: null
       };
       return mockSubProcess;
     });
@@ -86,6 +87,7 @@ describe('NodeExecuteBuilder', () => {
   it('should build the application and start the built file', async () => {
     for await (const event of executeExecutor(testOptions, context)) {
       expect(event.success).toEqual(true);
+      mockSubProcess.exitCode = 1;
     }
     expect(require('@nrwl/devkit').runExecutor).toHaveBeenCalledWith(
       {
@@ -118,6 +120,7 @@ describe('NodeExecuteBuilder', () => {
           },
           context
         )) {
+          mockSubProcess.exitCode = 1;
         }
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
