@@ -10,8 +10,20 @@ describe('Sidebar', () => {
       <Sidebar
         navIsOpen={false}
         menu={{
-          version: 'preview',
-          flavor: 'react',
+          version: {
+            name: 'Latest',
+            id: 'latest',
+            alias: 'l',
+            release: '12.9.0',
+            path: 'latest',
+            default: true,
+          },
+          flavor: {
+            id: 'angular',
+            name: 'Angular',
+            alias: 'a',
+            path: 'angular',
+          },
           sections: [
             {
               id: 'basic',
@@ -22,9 +34,9 @@ describe('Sidebar', () => {
                   id: 'getting-started',
                   name: 'getting started',
                   itemList: [
-                    { id: 'a', name: 'A', path: '/a' },
-                    { id: 'b', name: 'B', path: '/b' },
-                    { id: 'c', name: 'C', path: '/c' },
+                    { id: 'a', name: 'A', path: '/a', url: '/a' },
+                    { id: 'b', name: 'B', path: '/b', url: '/b' },
+                    { id: 'c', name: 'C', path: '/c', url: '/c' },
                   ],
                 },
               ],
@@ -37,37 +49,56 @@ describe('Sidebar', () => {
                   id: 'overview',
                   name: 'overview',
                   itemList: [
-                    { id: 'd', name: 'D', path: '/d' },
-                    { id: 'e', name: 'E', path: '/e' },
+                    { id: 'd', name: 'D', path: '/d', url: '/d' },
+                    { id: 'e', name: 'E', path: '/e', url: '/e' },
                   ],
                 },
               ],
             },
           ],
         }}
-        flavor={{ label: 'Angular', value: 'angular' }}
+        flavor={{
+          id: 'angular',
+          name: 'Angular',
+          alias: 'a',
+          path: 'angular',
+        }}
         flavorList={[
-          { label: 'Angular', value: 'angular' },
-          { label: 'React', value: 'react' },
+          {
+            id: 'angular',
+            name: 'Angular',
+            alias: 'a',
+            path: 'angular',
+          },
+          {
+            id: 'react',
+            name: 'React',
+            alias: 'r',
+            path: 'react',
+            default: true,
+          },
         ]}
         version={{
-          name: 'Latest (v11.4.0)',
+          name: 'Latest',
           id: 'latest',
-          release: '11.4.0',
-          path: '11.4.0',
+          alias: 'l',
+          release: '12.9.0',
+          path: 'latest',
           default: true,
         }}
         versionList={[
           {
-            name: 'Latest (v11.4.0)',
+            name: 'Latest',
             id: 'latest',
-            release: '11.4.0',
-            path: '11.4.0',
+            alias: 'l',
+            release: '12.9.0',
+            path: 'latest',
             default: true,
           },
           {
             name: 'Previous (v10.4.13)',
             id: 'previous',
+            alias: 'p',
             release: '10.4.13',
             path: '10.4.13',
             default: false,

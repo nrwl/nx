@@ -53,7 +53,7 @@
       },
       "configurations": {
         "production": {
-          "buildTarget": "nx-dev:build:production",
+          "buildTarget": "nx-dev:build-base:production",
           "dev": false
         }
       }

@@ -79,7 +79,7 @@ export function Header(props: HeaderProps) {
           <nav className="flex items-justified justify-center space-x-1">
             <Link
               href={
-                version
+                version && flavor
                   ? `/${version.value}/${flavor.value}/getting-started/intro`
                   : `/getting-started/intro`
               }
@@ -90,7 +90,7 @@ export function Header(props: HeaderProps) {
             </Link>
             <Link
               href={
-                version
+                version && flavor
                   ? `/${version.value}/${flavor.value}/core-concepts/nx-devkit`
                   : `/core-concepts/nx-devkit`
               }

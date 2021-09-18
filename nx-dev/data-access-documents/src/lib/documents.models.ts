@@ -1,5 +1,6 @@
 export interface DocumentData {
   filePath: string;
+  url: string;
   data: { [key: string]: any };
   content: string;
   excerpt?: string;

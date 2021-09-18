@@ -6,17 +6,22 @@ describe('DocumentsApi', () => {
 
   describe('getDocument', () => {
     it('should retrieve documents that exist', () => {
-      const result = api.getDocument('latest', 'react', [
-        'getting-started',
-        'intro',
-      ]);
+      const result = api.getDocument(
+        api.getDefaultVersion(),
+        api.getDefaultFlavor(),
+        ['getting-started', 'intro']
+      );
 
       expect(result.filePath).toBeTruthy();
     });
 
     it('should throw error if segments do not match a file', () => {
       expect(() =>
-        api.getDocument('latest', 'vue', ['does', 'not', 'exist'])
+        api.getDocument(
+          api.getDefaultVersion(),
+          { id: 'vue', alias: 'v', name: 'Vue', path: 'does not exist' },
+          ['does', 'not', 'exist']
+        )
       ).toThrow();
     });
   });
@@ -46,7 +51,7 @@ describe('DocumentsApi', () => {
 
   describe('getFlavors', () => {
     it('should return versions data', () => {
-      expect(api.getFavors()).toEqual([
+      expect(api.getFlavors()).toEqual([
         expect.objectContaining({ id: 'angular' }),
         expect.objectContaining({ id: 'react' }),
         expect.objectContaining({ id: 'node' }),
@@ -55,28 +60,28 @@ describe('DocumentsApi', () => {
   });
 
   describe('getStaticDocumentPaths', () => {
-    it.each`
-      version       | flavor
-      ${'latest'}   | ${'react'}
-      ${'latest'}   | ${'angular'}
-      ${'latest'}   | ${'node'}
-      ${'previous'} | ${'react'}
-      ${'previous'} | ${'angular'}
-      ${'previous'} | ${'node'}
-    `('should return paths for all flavors', ({ version, flavor }) => {
-      const paths = api.getStaticDocumentPaths(version);
-      const urls = paths.map((p) => p.params.segments.join('/'));
+    const paths = api
+      .getVersions()
+      .flatMap((v) =>
+        api.getFlavors().flatMap((f) => api.getStaticDocumentPaths(v, f))
+      );
+    const urls = paths.map((p) => p.params.segments.join('/'));
 
+    it.each`
+      version | flavor
+      ${'l'}  | ${'r'}
+      ${'l'}  | ${'a'}
+      ${'l'}  | ${'n'}
+      ${'p'}  | ${'r'}
+      ${'p'}  | ${'a'}
+      ${'p'}  | ${'n'}
+    `('should return paths for all flavors', ({ version, flavor }) =>
       expect(urls).toContainEqual(
         expect.stringMatching(`${version}/${flavor}/getting-started`)
-      );
-    });
+      )
+    );
 
-    it('should return generic paths for the latest version', () => {
-      const paths = api.getStaticDocumentPaths('latest');
-      const urls = paths.map((p) => p.params.segments.join('/'));
-
-      expect(urls).toContainEqual(expect.stringMatching(/^getting-started\//));
-    });
+    it('should return generic paths for the latest version', () =>
+      expect(urls).toContainEqual(expect.stringMatching(/^getting-started\//)));
   });
 });
