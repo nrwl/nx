@@ -19,6 +19,7 @@ import {
 describe('NodeExecuteBuilder', () => {
   let testOptions: NodeExecuteBuilderOptions;
   let context: ExecutorContext;
+  let mockSubProcess: { on: jest.Mock };
 
   beforeEach(async () => {
     buildOptions = {};
@@ -34,13 +35,14 @@ describe('NodeExecuteBuilder', () => {
     );
 
     fork.mockImplementation(() => {
-      return {
-        on: (eventName, cb) => {
+      mockSubProcess = {
+        on: jest.fn().mockImplementation((eventName, cb) => {
           if (eventName === 'exit') {
             cb();
           }
-        },
+        }),
       };
+      return mockSubProcess;
     });
 
     treeKill.mockImplementation((pid, signal, callback) => {
@@ -327,6 +329,29 @@ describe('NodeExecuteBuilder', () => {
           `"Wait until target failed: project1:target1."`
         );
       }
+    });
+  });
+
+  describe('--watch', () => {
+    describe('false', () => {
+      it('should not complete until the child process has exited', async () => {
+        let events = [];
+        for await (const event of executeExecutor(
+          {
+            ...testOptions,
+            watch: false,
+          },
+          context
+        )) {
+          events.push(event);
+          expect(event.success).toEqual(true);
+        }
+        expect(events).toEqual([]);
+        expect(mockSubProcess).toBeDefined();
+        expect(mockSubProcess.on).toHaveBeenCalled();
+        expect(mockSubProcess.on).toHaveBeenCalledWith('exit', expect.any);
+        expect(fork).toHaveBeenCalled();
+      });
     });
   });
 });
