@@ -7,26 +7,24 @@ import Router from 'next/router';
 import { Dialog } from '@headlessui/react';
 import type {
   DocumentData,
+  FlavorMetadata,
   Menu,
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
-import { flavorList } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { Footer, Header } from '@nrwl/nx-dev/ui/common';
 import { documentsApi, menuApi } from '../lib/api';
 import { useStorage } from '../lib/use-storage';
 
+const flavorList = documentsApi.getFavors();
 const versionList = documentsApi.getVersions();
 const defaultVersion = versionList.find((v) => v.default) as VersionMetadata;
-const defaultFlavor = flavorList.find((f) => f.default) as {
-  value: string;
-  label: string;
-};
+const defaultFlavor = flavorList.find((f) => f.default) as FlavorMetadata;
 
 interface DocumentationPageProps {
   version: VersionMetadata;
-  flavor: { label: string; value: string };
-  flavors: { label: string; value: string }[];
+  flavor: FlavorMetadata;
+  flavors: FlavorMetadata[];
   versions: VersionMetadata[];
   menu: Menu;
   document: DocumentData;
@@ -61,7 +59,7 @@ export function DocumentationPage({
   }, [navIsOpen]);
   useEffect(() => {
     if (!isFallback) {
-      setStoredFlavor(flavor.value);
+      setStoredFlavor(flavor.id);
     }
   }, [flavor, isFallback, setStoredFlavor]);
   useEffect(() => {
@@ -75,7 +73,7 @@ export function DocumentationPage({
 
     // If the stored flavor is different then navigate away.
     // Otherwise replace current URL _if_ it is missing version+flavor.
-    if (flavor.value !== storedFlavor) {
+    if (flavor.id !== storedFlavor) {
       router.push(`/${version.id}/${storedFlavor}${router.asPath}`);
     } else if (!router.asPath.startsWith(`/${version.id}`)) {
       router.push(`/${version.id}/${storedFlavor}${router.asPath}`, undefined, {
@@ -94,14 +92,14 @@ export function DocumentationPage({
         <Head>
           <link
             rel="canonical"
-            href={`/${version.id}/${flavor.value}${router.asPath}`}
+            href={`/${version.id}/${flavor.id}${router.asPath}`}
           />
         </Head>
       )}
       <Header
         showSearch={true}
         version={{ name: version.name, value: version.id }}
-        flavor={{ name: flavor.label, value: flavor.value }}
+        flavor={{ name: flavor.name, value: flavor.id }}
       />
       <main>
         <DocViewer
@@ -176,14 +174,12 @@ export function DocumentationPage({
             >
               Before You Continue...
             </Dialog.Title>
-            <Dialog.Description className="m-5">
-              <p className="mb-4">
-                Nx is a smart and extensible build framework that has
-                first-class support for many frontend and backend technologies.
-              </p>
-              <p className="mb-4">
-                Please select the flavor you want to learn more about.
-              </p>
+            <Dialog.Description className="mb-4">
+              Nx is a smart and extensible build framework that has first-class
+              support for many frontend and backend technologies.
+            </Dialog.Description>
+            <Dialog.Description className="mb-4">
+              Please select the flavor you want to learn more about.
             </Dialog.Description>
             <div className="p-5 w-full grid grid-cols-3 gap-5 justify-items-center">
               <Link href={`${version.id}/react${router.asPath}`}>
@@ -232,9 +228,8 @@ export async function getStaticProps({
   const version =
     versionList.find((item) => item.id === params.segments[0]) ??
     defaultVersion;
-  const flavor: { label: string; value: string } =
-    flavorList.find((item) => item.value === params.segments[1]) ??
-    defaultFlavor;
+  const flavor =
+    flavorList.find((item) => item.id === params.segments[1]) ?? defaultFlavor;
 
   const { document, menu, isFallback } = findDocumentAndMenu(
     version,
@@ -278,7 +273,7 @@ export async function getStaticPaths() {
 
 function findDocumentAndMenu(
   version: VersionMetadata,
-  flavor: { label: string; value: string },
+  flavor: FlavorMetadata,
   segments: string[]
 ): {
   menu: undefined | Menu;
@@ -292,8 +287,8 @@ function findDocumentAndMenu(
   let document: undefined | DocumentData = undefined;
 
   try {
-    menu = menuApi.getMenu(version.id, flavor.value);
-    document = documentsApi.getDocument(version.id, flavor.value, path);
+    menu = menuApi.getMenu(version.id, flavor.id);
+    document = documentsApi.getDocument(version.id, flavor.id, path);
   } catch {
     // nothing
   }

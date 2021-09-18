@@ -44,6 +44,16 @@ describe('DocumentsApi', () => {
     });
   });
 
+  describe('getFlavors', () => {
+    it('should return versions data', () => {
+      expect(api.getFavors()).toEqual([
+        expect.objectContaining({ id: 'angular' }),
+        expect.objectContaining({ id: 'react' }),
+        expect.objectContaining({ id: 'node' }),
+      ]);
+    });
+  });
+
   describe('getStaticDocumentPaths', () => {
     it.each`
       version       | flavor

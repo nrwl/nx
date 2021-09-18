@@ -1,10 +1,11 @@
 import { readFileSync } from 'fs';
-import { join, relative } from 'path';
+import { join } from 'path';
 import matter from 'gray-matter';
 import { extractTitle } from './documents.utils';
 import {
   DocumentData,
   DocumentMetadata,
+  FlavorMetadata,
   VersionMetadata,
 } from './documents.models';
 
@@ -12,21 +13,12 @@ export interface StaticDocumentPaths {
   params: { segments: string[] };
 }
 
-export const flavorList: {
-  label: string;
-  value: string;
-  default?: boolean;
-}[] = [
-  { label: 'Angular', value: 'angular' },
-  { label: 'React', value: 'react', default: true },
-  { label: 'Node', value: 'node' },
-];
-
 export class DocumentsApi {
   constructor(
     private readonly options: {
       publicDocsRoot: string;
       versions: VersionMetadata[];
+      flavors: FlavorMetadata[];
       documentsMap: Map<string, DocumentMetadata[]>;
     }
   ) {
@@ -43,6 +35,10 @@ export class DocumentsApi {
 
   getVersions(): VersionMetadata[] {
     return this.options.versions;
+  }
+
+  getFavors(): FlavorMetadata[] {
+    return this.options.flavors;
   }
 
   getDocument(

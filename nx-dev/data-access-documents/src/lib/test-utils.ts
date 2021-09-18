@@ -14,6 +14,12 @@ export function createDocumentApiOptions() {
         'versions.json'
       )
     ),
+    flavors: readJsonFile(
+      join(
+        join(__dirname, '../../../nx-dev/public/documentation'),
+        'flavors.json'
+      )
+    ),
     documentsMap: new Map<string, DocumentMetadata[]>([
       [
         'latest',

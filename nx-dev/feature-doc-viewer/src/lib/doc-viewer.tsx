@@ -3,6 +3,7 @@ import cx from 'classnames';
 import Head from 'next/head';
 import {
   DocumentData,
+  FlavorMetadata,
   Menu,
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
@@ -11,8 +12,8 @@ import Sidebar from './sidebar';
 
 export interface DocumentationFeatureDocViewerProps {
   version: VersionMetadata;
-  flavor: { label: string; value: string };
-  flavorList: { label: string; value: string }[];
+  flavor: FlavorMetadata;
+  flavorList: FlavorMetadata[];
   versionList: VersionMetadata[];
   menu: Menu;
   document: DocumentData;
@@ -77,8 +78,8 @@ export function DocViewer({
           >
             <Content
               document={document}
-              flavor={flavor.value}
-              flavorList={flavorList.map((flavor) => flavor.value)}
+              flavor={flavor.id}
+              flavorList={flavorList.map((flavor) => flavor.id)}
               version={version.path}
               versionList={versionList.map((version) => version.id)}
             />
