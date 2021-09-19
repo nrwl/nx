@@ -8,29 +8,17 @@ import {
   readTargetOptions,
 } from '@nrwl/devkit';
 
-import { ChildProcess, fork } from 'child_process';
-import { promisify } from 'util';
-import * as treeKill from 'tree-kill';
 
 import { NodeBuildEvent } from '../build/build.impl';
-import { BuildNodeBuilderOptions } from '../../utils/types';
-import {PromiseQueue} from '../../utils/promise-queue';
+import { BuildNodeBuilderOptions, NodeExecuteBuilderOptions } from '../../utils/types';
+import { SubProcessRunner } from '@nrwl/node/src/utils/subProcessRunner';
 
 export const enum InspectType {
   Inspect = 'inspect',
   InspectBrk = 'inspect-brk',
 }
 
-export interface NodeExecuteBuilderOptions {
-  inspect: boolean | InspectType;
-  runtimeArgs: string[];
-  args: string[];
-  waitUntilTargets: string[];
-  buildTarget: string;
-  host: string;
-  port: number;
-  watch: boolean;
-}
+export {NodeExecuteBuilderOptions} from '../../utils/types';
 
 type EventType = "build" | "process";
 
@@ -43,7 +31,7 @@ export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
   context: ExecutorContext
 ) {
-  const processRunner = createProcessRunner(options);
+  const processRunner = new SubProcessRunner(options);
 
   process.on('SIGTERM', () => {
     processRunner.kill();
@@ -84,23 +72,6 @@ export async function* executeExecutor(
   }
 }
 
-
-
-function getExecArgv(options: NodeExecuteBuilderOptions) {
-  const args = ['-r', 'source-map-support/register', ...options.runtimeArgs];
-
-  if (options.inspect === true) {
-    options.inspect = InspectType.Inspect;
-  }
-
-  if (options.inspect) {
-    args.push(`--${options.inspect}=${options.host}:${options.port}`);
-  }
-
-  return args;
-}
-
-
 async function* delegateAsyncIteratorEvents<T>(...delegates: AsyncIteratorDelegator<T>[]){
   const getDelegateValue = (iterator: AsyncIterator<T>, type: EventType) =>
     iterator.next().then(result => ({
@@ -127,61 +98,6 @@ async function* delegateAsyncIteratorEvents<T>(...delegates: AsyncIteratorDelega
     yield {
       type,
       value: result.value
-    }
-  }
-}
-
-function createProcessRunner(options: NodeExecuteBuilderOptions){
-  let subProcess: ChildProcess|null = null;
-  const queue = new PromiseQueue();
-
-  return {
-    isComplete(){
-      return Boolean(subProcess) && subProcess.exitCode != null;
-    },
-
-    async handleBuildEvent(event: NodeBuildEvent){
-      if(subProcess){
-        await this.kill()
-      }
-
-      subProcess = fork(event.outfile, options.args, {
-        execArgv: getExecArgv(options),
-      });
-
-      subProcess.on('exit', (exitCode) => {
-        queue.enqueue({exitCode})
-      });
-    },
-
-    async kill(){
-      if (!subProcess) {
-        return;
-      }
-
-      const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
-        promisify(treeKill);
-      try {
-        await promisifiedTreeKill(subProcess.pid, 'SIGTERM');
-      } catch (err) {
-        if (Array.isArray(err) && err[0] && err[2]) {
-          const errorMessage = err[2];
-          logger.error(errorMessage);
-        } else if (err.message) {
-          logger.error(err.message);
-        }
-      } finally {
-        subProcess = null;
-      }
-    },
-
-    async next(){
-      if(this.isComplete()) return {done: true, value: undefined};
-
-      return {
-        done: false,
-        value: await queue.dequeue()
-      }
     }
   }
 }

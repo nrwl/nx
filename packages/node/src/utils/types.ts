@@ -4,6 +4,7 @@ import type {
   Program,
   TransformerFactory,
 } from 'typescript';
+import { InspectType } from '@nrwl/node/src/executors/execute/execute.impl';
 
 export interface FileReplacement {
   replace: string;
@@ -96,4 +97,15 @@ export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
 export interface NormalizedBuildNodeBuilderOptions
   extends BuildNodeBuilderOptions {
   webpackConfig: string[];
+}
+
+export interface NodeExecuteBuilderOptions {
+  inspect: boolean | InspectType;
+  runtimeArgs: string[];
+  args: string[];
+  waitUntilTargets: string[];
+  buildTarget: string;
+  host: string;
+  port: number;
+  watch: boolean;
 }
