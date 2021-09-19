@@ -5,7 +5,7 @@ import { joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 
-export class WebpackNxBuildCoordinaionPlugin {
+export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
 
   constructor(private readonly buildCmd: string) {
