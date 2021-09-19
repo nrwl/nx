@@ -1,6 +1,6 @@
 # Setup incremental builds for Angular applications
 
-In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications.
+In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications. Please read the [incremental builds guide](/angular/ci/incremental-builds) to see if incremental builds are a good fit for you.
 
 > Incremental builds requires Nx version 10.4.0 or later.
 
