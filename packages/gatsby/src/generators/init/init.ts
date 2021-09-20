@@ -13,7 +13,7 @@ import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-
 import {
   babelPluginModuleResolverVersion,
   babelPresetGatsbyVersion,
-  gatsbyImageVersion,
+  gatsbyPluginImageVersion,
   gatsbyPluginManifestVersion,
   gatsbyPluginOfflineVersion,
   gatsbyPluginPnpm,
@@ -47,7 +47,7 @@ function updateDependencies(host: Tree) {
     host,
     {
       gatsby: gatsbyVersion,
-      'gatsby-image': gatsbyImageVersion,
+      'gatsby-plugin-image': gatsbyPluginImageVersion,
       'gatsby-plugin-svgr': gatsbyPluginSvgrVersion,
       'gatsby-plugin-manifest': gatsbyPluginManifestVersion,
       'gatsby-plugin-offline': gatsbyPluginOfflineVersion,
