@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import cx from 'classnames';
 import Link from 'next/link';
 import {
+  FlavorMetadata,
   Menu,
   MenuItem,
   MenuSection,
@@ -14,8 +15,8 @@ export interface SidebarProps {
   menu: Menu;
   version: VersionMetadata;
   versionList: VersionMetadata[];
-  flavorList: any[];
-  flavor: any;
+  flavorList: FlavorMetadata[];
+  flavor: FlavorMetadata;
   navIsOpen?: boolean;
 }
 
@@ -56,22 +57,27 @@ export function Sidebar({
           <Selector
             data={versionList.map((version) => ({
               label: version.name,
-              value: version.id,
+              value: version.alias,
             }))}
-            selected={{ label: version.name, value: version.id }}
+            selected={{ label: version.name, value: version.alias }}
             onChange={(item) =>
               router.push(
-                createNextPath(item.value, flavor.value, router.asPath)
+                createNextPath(item.value, flavor.alias, router.asPath)
               )
             }
           />
         </div>
         <div className="px-1 pt-3 sm:px-3 xl:px-5">
           <Selector
-            data={flavorList}
-            selected={flavor}
+            data={flavorList.map((flavor) => ({
+              label: flavor.name,
+              value: flavor.alias,
+            }))}
+            selected={{ label: flavor.name, value: flavor.alias }}
             onChange={(item) =>
-              router.push(createNextPath(version.id, item.value, router.asPath))
+              router.push(
+                createNextPath(version.alias, item.value, router.asPath)
+              )
             }
           />
         </div>
@@ -146,10 +152,10 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {item.itemList.map((item) => {
-          const isActiveLink = item.path === withoutAnchors(router?.asPath);
+          const isActiveLink = item.url === withoutAnchors(router?.asPath);
           return (
             <li key={item.id} data-testid={`section-li:${item.id}`}>
-              <Link href={item.path}>
+              <Link href={item.url as string}>
                 <a
                   className={cx(
                     'py-1 transition-colors duration-200 relative block text-gray-500 hover:text-gray-900'

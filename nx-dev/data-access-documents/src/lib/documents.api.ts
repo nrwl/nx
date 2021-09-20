@@ -1,10 +1,11 @@
 import { readFileSync } from 'fs';
-import { join, relative } from 'path';
+import { join } from 'path';
 import matter from 'gray-matter';
 import { extractTitle } from './documents.utils';
 import {
   DocumentData,
   DocumentMetadata,
+  FlavorMetadata,
   VersionMetadata,
 } from './documents.models';
 
@@ -12,21 +13,12 @@ export interface StaticDocumentPaths {
   params: { segments: string[] };
 }
 
-export const flavorList: {
-  label: string;
-  value: string;
-  default?: boolean;
-}[] = [
-  { label: 'Angular', value: 'angular' },
-  { label: 'React', value: 'react', default: true },
-  { label: 'Node', value: 'node' },
-];
-
 export class DocumentsApi {
   constructor(
     private readonly options: {
       publicDocsRoot: string;
       versions: VersionMetadata[];
+      flavors: FlavorMetadata[];
       documentsMap: Map<string, DocumentMetadata[]>;
     }
   ) {
@@ -41,16 +33,26 @@ export class DocumentsApi {
     throw new Error('Cannot find default version');
   }
 
+  getDefaultFlavor(): FlavorMetadata {
+    const found = this.options.flavors.find((f) => f.default);
+    if (found) return found;
+    throw new Error('Cannot find default flavor');
+  }
+
   getVersions(): VersionMetadata[] {
     return this.options.versions;
   }
 
+  getFlavors(): FlavorMetadata[] {
+    return this.options.flavors;
+  }
+
   getDocument(
-    versionId: string,
-    flavorId: string,
+    version: VersionMetadata,
+    flavor: FlavorMetadata,
     path: string[]
   ): DocumentData {
-    const docPath = this.getFilePath(versionId, flavorId, path);
+    const docPath = this.getFilePath(version.id, flavor.id, path);
     const originalContent = readFileSync(docPath, 'utf8');
     const file = matter(originalContent);
 
@@ -59,7 +61,11 @@ export class DocumentsApi {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
     }
     return {
-      filePath: join(this.options.publicDocsRoot, docPath),
+      filePath: docPath,
+      url: `/${version.alias}/${flavor.alias}/${docPath
+        .split('/')
+        .splice(2)
+        .join('/')}`,
       data: file.data,
       content: file.content,
       excerpt: file.excerpt,
@@ -75,7 +81,10 @@ export class DocumentsApi {
     }
   }
 
-  getStaticDocumentPaths(version: string): StaticDocumentPaths[] {
+  getStaticDocumentPaths(
+    version: VersionMetadata,
+    flavor: FlavorMetadata
+  ): StaticDocumentPaths[] {
     const paths: StaticDocumentPaths[] = [];
     const defaultVersion = this.getDefaultVersion();
 
@@ -87,22 +96,31 @@ export class DocumentsApi {
       } else {
         paths.push({
           params: {
-            segments: [version, ...acc, curr.id],
+            segments: [version.alias, flavor.alias, ...acc, curr.id],
           },
         });
 
-        // For generic paths such as `/getting-started/intro`, use the default version and react flavor.
-        if (version === defaultVersion.id && acc[0] === 'react') {
+        /**
+         * Generic path generation
+         * For generic paths such as `/getting-started/intro`, use the default version and react flavor.
+         */
+        if (version.id === defaultVersion.id && flavor.id === 'react')
           paths.push({
             params: {
-              segments: [...acc.slice(1), curr.id],
+              segments: [...acc, curr.id],
             },
           });
-        }
       }
     }
 
-    this.getDocuments(version).forEach((item) => {
+    const item = this.getDocuments(version.id).find(
+      (item) => item.id === flavor.id
+    );
+    if (!item || !item.itemList)
+      throw new Error(
+        `Can't find items for version:${version.id} and flavor:${flavor.id}`
+      );
+    item.itemList.forEach((item) => {
       recur(item, []);
     });
 

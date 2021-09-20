@@ -1,13 +1,23 @@
 export interface DocumentData {
   filePath: string;
+  url: string;
   data: { [key: string]: any };
   content: string;
   excerpt?: string;
 }
 
+export interface FlavorMetadata {
+  name: string;
+  id: string;
+  alias: string;
+  path: string;
+  default?: boolean;
+}
+
 export interface VersionMetadata {
   name: string;
   id: string;
+  alias: string;
   release: string;
   path: string;
   default?: boolean;
