@@ -22,10 +22,16 @@
       "type": "string",
       "description": "Dev server target to run tests against."
     },
+    "headed": {
+      "type": "boolean",
+      "description": "Displays the browser instead of running headlessly. Set this to 'true' if your run depends on a Chrome extension being loaded.",
+      "default": false
+    },
     "headless": {
       "type": "boolean",
-      "description": "Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode",
-      "default": false
+      "description": "Hide the browser instead of running headed (default for cypress run).",
+      "default": false,
+      "x-deprecated": true
     },
     "exit": {
       "type": "boolean",
