@@ -141,7 +141,7 @@ export function Index() {
                   <Link href="/conf">
                     <a className="flex items-center justify-center px-4 py-2 border border-transparent group rounded-md text-md text-white font-extrabold">
                       Learn more
-                      <span className="group-hover:mr-2">
+                      <span className="transform-gpu transition ease-out duration-200 group-hover:translate-x-2">
                         <svg
                           width="20"
                           height="16"

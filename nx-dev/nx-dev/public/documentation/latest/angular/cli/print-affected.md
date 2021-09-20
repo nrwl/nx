@@ -1,6 +1,6 @@
 # print-affected
 
-Graph execution plan
+Prints information about the projects and targets affected by changes
 
 ## Usage
 
@@ -85,6 +85,8 @@ Isolate projects which previously failed
 This is the name of the tasks runner configured in nx.json
 
 ### select
+
+Select the subset of the returned json document (e.g., --selected=projects)
 
 ### skip-nx-cache
 

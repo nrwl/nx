@@ -11,9 +11,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        black: '#222222',
+        black: 'hsla(0, 0%, 13%, 1)',
         blue: {
-          'nx-dark': '#0B1A2D',
+          'nx-dark': 'hsla(214, 61%, 11%, 1)',
           'nx-base': 'hsla(214, 62%, 21%, 1)',
         },
         green: {
@@ -41,9 +41,7 @@ module.exports = {
     },
   },
   variants: {
-    extend: {
-      marginRight: ['hover'],
-    },
+    extend: {},
   },
   plugins: [require('@tailwindcss/typography')],
 };
