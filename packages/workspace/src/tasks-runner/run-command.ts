@@ -200,6 +200,7 @@ function addTasksForProjectTarget(
         {
           target,
           configuration,
+          overrides,
         },
         dependencyConfig,
         defaultDependencyConfigs,
@@ -259,7 +260,11 @@ export function createTask({
 
 function addTasksForProjectDependencyConfig(
   project: ProjectGraphNode,
-  { target, configuration }: Pick<TaskParams, 'target' | 'configuration'>,
+  {
+    target,
+    configuration,
+    overrides,
+  }: Pick<TaskParams, 'target' | 'configuration' | 'overrides'>,
   dependencyConfig: TargetDependencyConfig,
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph,
@@ -296,7 +301,7 @@ function addTasksForProjectDependencyConfig(
             project: projectGraph.nodes[dep.target],
             target: dependencyConfig.target,
             configuration,
-            overrides: {},
+            overrides: target === dependencyConfig.target ? overrides : {},
             errorIfCannotFindConfiguration: false,
           },
           defaultDependencyConfigs,
@@ -312,7 +317,7 @@ function addTasksForProjectDependencyConfig(
 
         addTasksForProjectDependencyConfig(
           projectGraph.nodes[dep.target],
-          { target, configuration },
+          { target, configuration, overrides },
           dependencyConfig,
           defaultDependencyConfigs,
           projectGraph,
@@ -328,7 +333,7 @@ function addTasksForProjectDependencyConfig(
         project,
         target: dependencyConfig.target,
         configuration,
-        overrides: {},
+        overrides,
         errorIfCannotFindConfiguration: true,
       },
       defaultDependencyConfigs,

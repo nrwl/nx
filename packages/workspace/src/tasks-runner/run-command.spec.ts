@@ -240,7 +240,9 @@ describe('createTasksForProjectToRun', () => {
       {
         target: 'build',
         configuration: undefined,
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
       },
       projectGraph,
       projectGraph.nodes.app1.name
@@ -249,7 +251,9 @@ describe('createTasksForProjectToRun', () => {
     expect(tasks).toEqual([
       {
         id: 'lib1:build',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'lib1-root',
         target: {
           configuration: undefined,
@@ -259,7 +263,9 @@ describe('createTasksForProjectToRun', () => {
       },
       {
         id: 'app1:build',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'app1-root',
         target: {
           configuration: undefined,
@@ -291,7 +297,9 @@ describe('createTasksForProjectToRun', () => {
       {
         target: 'build',
         configuration: undefined,
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
       },
       projectGraph,
       projectGraph.nodes.app1.name
@@ -300,7 +308,9 @@ describe('createTasksForProjectToRun', () => {
     expect(tasks).toEqual([
       {
         id: 'app1:prebuild',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'app1-root',
         target: {
           configuration: undefined,
@@ -310,7 +320,9 @@ describe('createTasksForProjectToRun', () => {
       },
       {
         id: 'lib1:build',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'lib1-root',
         target: {
           configuration: undefined,
@@ -320,7 +332,9 @@ describe('createTasksForProjectToRun', () => {
       },
       {
         id: 'app1:build',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'app1-root',
         target: {
           configuration: undefined,
@@ -355,7 +369,9 @@ describe('createTasksForProjectToRun', () => {
       {
         target: 'build',
         configuration: undefined,
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
       },
       projectGraph,
       projectGraph.nodes.app1.name
@@ -374,7 +390,9 @@ describe('createTasksForProjectToRun', () => {
       },
       {
         id: 'lib1:build',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'lib1-root',
         target: {
           configuration: undefined,
@@ -384,7 +402,9 @@ describe('createTasksForProjectToRun', () => {
       },
       {
         id: 'app1:build',
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
         projectRoot: 'app1-root',
         target: {
           configuration: undefined,
@@ -438,7 +458,9 @@ describe('createTasksForProjectToRun', () => {
       {
         target: 'build',
         configuration: undefined,
-        overrides: {},
+        overrides: {
+          additionalArg: true,
+        },
       },
       projectGraph,
       projectGraph.nodes.app1.name
@@ -448,13 +470,17 @@ describe('createTasksForProjectToRun', () => {
       id: 'app1:build',
       target: { project: 'app1', target: 'build' },
       projectRoot: 'app1-root',
-      overrides: {},
+      overrides: {
+        additionalArg: true,
+      },
     });
     expect(tasks).toContainEqual({
       id: 'lib2:build',
       target: { project: 'lib2', target: 'build' },
       projectRoot: 'lib2-root',
-      overrides: {},
+      overrides: {
+        additionalArg: true,
+      },
     });
   });
 
