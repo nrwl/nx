@@ -28,6 +28,7 @@ import {
   propTypesVersion,
   reactHelmetVersion,
   testingLibraryReactVersion,
+  webpackVersion,
 } from '../../utils/versions';
 
 import { InitSchema } from './schema';
@@ -60,7 +61,7 @@ function updateDependencies(host: Tree) {
       'react-helmet': reactHelmetVersion,
       'gatsby-plugin-typescript': gatsbyPluginTypescriptVersion,
       ...(isPnpm ? { 'gatsby-plugin-pnpm': gatsbyPluginPnpm } : {}),
-      webpack: '~5.39.1',
+      webpack: webpackVersion,
     },
     {
       '@nrwl/gatsby': nxVersion,
