@@ -84,6 +84,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   const overrides = yargsParser(args._ as string[], {
     configuration: {
       'strip-dashed': true,
+      'dot-notation': false,
     },
   });
   // This removes the overrides from the nxArgs._

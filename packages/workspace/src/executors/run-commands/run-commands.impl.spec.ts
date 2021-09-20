@@ -73,6 +73,32 @@ describe('Command Runner Builder', () => {
     });
   });
 
+  it('should add args containing spaces to in the command', async () => {
+    const exec = jest.spyOn(require('child_process'), 'execSync');
+
+    await runCommands(
+      {
+        command: `echo`,
+        a: 123,
+        b: '4 5 6',
+        c: '4 "5" 6',
+      },
+      context
+    );
+    expect(exec).toHaveBeenCalledWith(
+      `echo --a=123 --b="4 5 6" --c="4 \"5\" 6"`,
+      {
+        stdio: [0, 1, 2],
+        cwd: undefined,
+        env: {
+          ...process.env,
+          ...env(),
+        },
+        maxBuffer: LARGE_BUFFER,
+      }
+    );
+  });
+
   it('should forward args by default when using commands (plural)', async () => {
     const exec = jest.spyOn(require('child_process'), 'exec');
 
