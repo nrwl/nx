@@ -56,13 +56,21 @@ Type: `string`
 
 A named group for recorded runs in the Cypress dashboard.
 
-### headless
+### headed
 
 Default: `false`
 
 Type: `boolean`
 
-Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
+Displays the browser instead of running headlessly. Set this to 'true' if your run depends on a Chrome extension being loaded.
+
+### ~~headless~~
+
+Default: `false`
+
+Type: `boolean`
+
+**Deprecated:** Hide the browser instead of running headed (default for cypress run).
 
 ### ignoreTestFiles
 

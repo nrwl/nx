@@ -24,6 +24,15 @@ describe('@nrwl/linter:workspace-rule', () => {
     ).toMatchSnapshot();
   });
 
+  it('should install necessary depenedencies', async () => {
+    await lintWorkspaceRuleGenerator(tree, {
+      name: 'my-rule',
+      directory: 'rules',
+    });
+
+    expect(tree.read('package.json', 'utf-8')).toMatchSnapshot();
+  });
+
   it('should update the plugin index.ts with the new rule', async () => {
     await lintWorkspaceRuleGenerator(tree, {
       name: 'my-rule',
@@ -52,19 +61,25 @@ describe('@nrwl/linter:workspace-rule', () => {
     });
 
     // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
-    expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+    expect(
+      tree.read('tools/eslint-rules/index.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `
       "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
       /**
        * Import your custom workspace rules at the top of this file.
-       * 
+       * ` +
+        `
        * For example:
-       * 
+       * ` +
+        `
        * import { RULE_NAME as myCustomRuleName, rule as myCustomRule } from './rules/my-custom-rule';
-       * 
+       * ` +
+        `
        * In order to quickly get started with writing rules you can use the
        * following generator command and provide your desired rule name:
-       * 
+       * ` +
+        `
        * \`\`\`sh
        * npx nx g @nrwl/linter:workspace-rule {{ NEW_RULE_NAME }}
        * \`\`\`
@@ -73,9 +88,11 @@ describe('@nrwl/linter:workspace-rule', () => {
       module.exports = {
         /**
          * Apply the imported custom rules here.
-         * 
+         * ` +
+        `
          * For example (using the example import above):
-         * 
+         * ` +
+        `
          * rules: {
          *  [myCustomRuleName]: myCustomRule
          * }
@@ -84,7 +101,8 @@ describe('@nrwl/linter:workspace-rule', () => {
       }
       };
       "
-    `);
+    `
+    );
 
     // ------------------------------------------- EXISTING RULE, NO TRAILING COMMA
 

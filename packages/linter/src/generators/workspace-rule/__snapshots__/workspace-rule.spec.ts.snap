@@ -171,6 +171,23 @@ ruleTester.run(RULE_NAME, rule, {
 "
 `;
 
+exports[`@nrwl/linter:workspace-rule should install necessary depenedencies 1`] = `
+"{
+  \\"name\\": \\"test-name\\",
+  \\"dependencies\\": {
+    \\"tslib\\": \\"^2.0.0\\"
+  },
+  \\"devDependencies\\": {
+    \\"@nrwl/jest\\": \\"*\\",
+    \\"@types/jest\\": \\"26.0.24\\",
+    \\"@typescript-eslint/experimental-utils\\": \\"~4.28.3\\",
+    \\"jest\\": \\"27.0.3\\",
+    \\"ts-jest\\": \\"27.0.3\\"
+  }
+}
+"
+`;
+
 exports[`@nrwl/linter:workspace-rule should update the plugin index.ts with the new rule 1`] = `
 "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
 /**

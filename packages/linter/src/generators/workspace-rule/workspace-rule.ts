@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   applyChangesToString,
   ChangeType,
   convertNxGenerator,
@@ -11,6 +12,7 @@ import {
 import { camelize } from '@nrwl/workspace/src/utils/strings';
 import { join } from 'path';
 import * as ts from 'typescript';
+import { typescriptESLintVersion } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
 
@@ -24,9 +26,7 @@ export async function lintWorkspaceRuleGenerator(
   options: LintWorkspaceRuleGeneratorOptions
 ) {
   // Ensure that the workspace rules project has been created
-  const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
-    tree
-  );
+  await lintWorkspaceRulesProjectGenerator(tree);
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,
@@ -112,7 +112,13 @@ export async function lintWorkspaceRuleGenerator(
        }
 `);
 
-  return projectGeneratorCallback;
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@typescript-eslint/experimental-utils': typescriptESLintVersion,
+    }
+  );
 }
 
 export const lintWorkspaceRuleSchematic = convertNxGenerator(
