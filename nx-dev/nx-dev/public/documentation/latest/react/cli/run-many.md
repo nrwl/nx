@@ -1,6 +1,6 @@
 # run-many
 
-Run task for multiple projects
+Run target for multiple listed projects
 
 ## Usage
 

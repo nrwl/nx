@@ -16,7 +16,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
         {/*FOOTER LINKS*/}
         <div className="my-12 flex sm:flex-row flex-col items-start text-center sm:text-left">
           <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
-            <h3 className="text-xl leading-none tracking-tight mb-4">
+            <h3 className="text-lg font-extrabold leading-none tracking-tight mb-4">
               Resources
             </h3>
             <ul>
@@ -42,7 +42,9 @@ export function Footer({ useDarkBackground }: FooterProps) {
             </ul>
           </div>
           <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
-            <h3 className="text-xl leading-none tracking-tight mb-4">Help</h3>
+            <h3 className="text-lg font-extrabold leading-none tracking-tight mb-4">
+              Help
+            </h3>
             <ul>
               <li className="mb-2">
                 <Link href={`/getting-started/intro`}>
@@ -77,7 +79,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
             </ul>
           </div>
           <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
-            <h3 className="text-xl leading-none tracking-tight mb-4">
+            <h3 className="text-lg font-extrabold leading-none tracking-tight mb-4">
               Community
             </h3>
             <ul>

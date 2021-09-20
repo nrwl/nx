@@ -37,7 +37,7 @@ export function InlineCommand({
       >
         <button
           type="button"
-          className="sm:max-w-full w-full text-sm flex-none bg-white text-gray-400 hover:text-gray-900 font-input-mono leading-6 py-1 sm:px-3 border border-gray-200 rounded-md flex items-center justify-center space-x-2 sm:space-x-4 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-gray-300 focus:outline-none transition-colors duration-180"
+          className="sm:max-w-full w-full text-sm flex-none bg-white text-gray-400 hover:text-gray-900 font-input-mono leading-6 py-1 sm:px-3 border border-blue-nx-dark rounded-md flex items-center justify-center space-x-2 sm:space-x-4 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-gray-300 focus:outline-none transition-colors duration-180"
         >
           <span className="overflow-auto flex items-center text-gray-900">
             <span className="hidden sm:inline text-gray-500" aria-hidden="true">
@@ -48,7 +48,6 @@ export function InlineCommand({
               useInlineStyles={false}
               language={language}
               children={command}
-              style={'padding: 0;'}
             />
           </span>
           <svg width="24" height="24" fill="none" stroke="currentColor">

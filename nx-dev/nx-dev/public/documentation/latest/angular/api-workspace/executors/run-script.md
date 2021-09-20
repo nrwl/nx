@@ -47,8 +47,6 @@ By default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/di
 }
 ```
 
-Test2
-
 ## Options
 
 ### script (_**required**_)
