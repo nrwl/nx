@@ -40,16 +40,6 @@ export function DocumentationPage({
   flavors,
   isFallback,
 }: DocumentationPageProps) {
-  // console.group('DOCUMENTATION_PAGE');
-  // console.log('hasDocument', !!document);
-  // console.log('menu', menu);
-  // console.log('version', version);
-  // // console.log('versions', versions);
-  // console.log('flavor', flavor);
-  // // console.log('flavors', flavors);
-  // console.log('isFallback', isFallback);
-  // console.groupEnd();
-
   const router = useRouter();
   const { value: storedFlavor, setValue: setStoredFlavor } =
     useStorage('flavor');
