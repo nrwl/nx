@@ -246,9 +246,6 @@ jobs:
           name: Set dynamic nx run variable
           command: |
             echo "export NX_RUN_GROUP=\"e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
-      - run:
-          name: Test
-          command: echo $NX_RUN_GROUP
       - setup:
           os: << parameters.os >>
       - run:
@@ -316,9 +313,6 @@ jobs:
           name: Set dynamic nx run variable
           command: |
             echo "export NX_RUN_GROUP=\"e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
-      - run:
-          name: Test
-          command: echo $NX_RUN_GROUP
       - setup:
           os: << parameters.os >>
       - when:
