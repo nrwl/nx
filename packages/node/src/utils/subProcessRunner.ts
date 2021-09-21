@@ -22,7 +22,6 @@ export class SubProcessRunner {
       execArgv: this.getExecArgv(),
     });
 
-
     this.subProcess.on('exit', (exitCode) => {
       this.queue.enqueue({exitCode})
     });

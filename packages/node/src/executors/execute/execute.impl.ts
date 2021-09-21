@@ -67,6 +67,9 @@ export async function* executeExecutor(
 
       await processRunner.handleBuildEvent(event.value);
 
+    }
+
+    if(event.type === "build" || options.emitSubprocessEvents){
       yield event.value;
     }
   }

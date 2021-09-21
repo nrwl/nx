@@ -108,4 +108,5 @@ export interface NodeExecuteBuilderOptions {
   host: string;
   port: number;
   watch: boolean;
+  emitSubprocessEvents: boolean;
 }

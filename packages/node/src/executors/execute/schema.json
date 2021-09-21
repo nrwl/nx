@@ -59,6 +59,11 @@
       "items": {
         "type": "string"
       }
+    },
+    "emitSubprocessEvents": {
+      "type": "boolean",
+      "description": "Emit events from subprocess",
+      "default": false
     }
   },
   "additionalProperties": false,
