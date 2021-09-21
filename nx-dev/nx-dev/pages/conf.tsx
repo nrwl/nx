@@ -16,18 +16,18 @@ export function ConfPage() {
   return (
     <>
       <Head>
-        <title>Announcing the first ever Nx Conf - September 16th-17th</title>
+        <title>The first ever Nx Conf - September 16th-17th, 2021</title>
         <meta
           name="description"
-          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Join us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
+          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
         />
         <meta
           name="twitter:title"
-          content="Announcing the first ever Nx Conf - September 16th-17th"
+          content="The first ever Nx Conf - September 16th-17th, 2021"
         />
         <meta
           name="twitter:description"
-          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Join us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
+          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
         />
         <meta
           name="twitter:image"
@@ -40,11 +40,11 @@ export function ConfPage() {
         <meta property="og:url" content="https://nx.dev/conf" />
         <meta
           property="og:description"
-          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Join us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
+          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
         />
         <meta
           property="og:title"
-          content="Announcing the first ever Nx Conf - September 16th-17th"
+          content="The first ever Nx Conf - September 16th-17th, 2021"
         />
         <meta
           property="og:image"
@@ -214,12 +214,12 @@ export function ConfPage() {
                     <span className="hidden">
                       Announcing the first ever Nx Conf on{' '}
                     </span>{' '}
-                    September 16 & 17
+                    September 16 & 17, 2021
                   </div>
                 </h2>
                 <p className="sm:text-lg mb-6">
                   Nx Conf is a new, online & free-to-attend, 2-day conference
-                  featuring members of the Nx team and community. Join us as we
+                  featuring members of the Nx team and community. Watch us as we
                   share our ideas and expertise about making development faster,
                   more scalable, and more collaborative.
                 </p>
@@ -308,9 +308,29 @@ export function ConfPage() {
                 <div className="flex mt-16">
                   <a
                     className="flex items-center justify-end font-input-mono group w-full sm:text-2xl"
-                    href="https://ti.to/nrwl/nx-conf-2021?utm_source=nxdev"
+                    href="https://www.youtube.com/watch?v=oG2QbFquraA"
                   >
-                    <span className="group-hover:underline">Register now</span>
+                    <span className="group-hover:underline">Watch Day 1</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="ml-1 h-8 w-8 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </a>
+                  <a
+                    className="flex items-center justify-end font-input-mono group w-full sm:text-2xl"
+                    href="https://www.youtube.com/watch?v=hlGOaGDsWKg"
+                  >
+                    <span className="group-hover:underline">Watch Day 2</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="ml-1 h-8 w-8 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
@@ -393,28 +413,6 @@ export function ConfPage() {
                     Sponsors
                   </a>
                 </Link>
-                <div className="p-8 col-span-2">
-                  <a
-                    className="flex items-center font-input-mono group w-full"
-                    href="https://ti.to/nrwl/nx-conf-2021?utm_source=nxdev"
-                  >
-                    <span className="group-hover:underline">Register now</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="ml-1 h-4 w-4 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
-                  </a>
-                </div>
               </div>
             </div>
           </div>

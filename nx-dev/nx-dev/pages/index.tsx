@@ -110,57 +110,6 @@ export function Index() {
               </div>
             </div>
           </div>
-          {/* BANNER */}
-          <div className="bg-blue-nx-dark">
-            <div className="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
-              <div className="flex items-center flex-col sm:flex-row justify-between flex-wrap">
-                <div className="flex-1 flex flex-row items-center">
-                  <span className="flex p-2 rounded-lg bg-blue-nx-dark sm:bg-white">
-                    <svg
-                      className="h-6 w-6 text-white sm:text-blue-nx-dark"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-                      />
-                    </svg>
-                  </span>
-                  <p className="ml-3 font-medium text-white">
-                    Big news! We're excited to announce the first ever Nx Conf -
-                    September 16th-17th
-                  </p>
-                </div>
-                <div className="w-full sm:w-auto pt-4 sm:pt-0">
-                  <Link href="/conf">
-                    <a className="flex items-center justify-center px-4 py-2 border border-transparent group rounded-md text-md text-white font-extrabold">
-                      Learn more
-                      <span className="transform-gpu transition ease-out duration-200 group-hover:translate-x-2">
-                        <svg
-                          width="20"
-                          height="16"
-                          viewBox="-4 0 16 16"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M8.29289 3.29289C8.68342 2.90237 9.31658 2.90237 9.70711 3.29289L13.7071 7.29289C14.0976 7.68342 14.0976 8.31658 13.7071 8.70711L9.70711 12.7071C9.31658 13.0976 8.68342 13.0976 8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929L10.5858 9H3C2.44772 9 2 8.55228 2 8C2 7.44772 2.44772 7 3 7H10.5858L8.29289 4.70711C7.90237 4.31658 7.90237 3.68342 8.29289 3.29289Z"
-                            fill="white"
-                          />
-                        </svg>
-                      </span>
-                    </a>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/*NX FEATURES*/}
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
