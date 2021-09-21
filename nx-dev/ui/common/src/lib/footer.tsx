@@ -34,6 +34,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
                 <a
                   href="https://nrwl.io/?utm_source=nx.dev"
                   target="_blank"
+                  rel="noreferrer"
                   className="cursor-pointer block"
                 >
                   Nrwl

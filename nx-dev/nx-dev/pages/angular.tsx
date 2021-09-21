@@ -465,6 +465,7 @@ export function AngularPage() {
                       className="underline pointer"
                       href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Free Nx Workspaces video course
                     </a>
@@ -474,6 +475,7 @@ export function AngularPage() {
                       className="underline pointer"
                       href="https://www.youtube.com/watch?v=h5FIGDn5YM0"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Nx Explainer: Dev Tools for Monorepos, In-Depth with
                       Victor Savkin
@@ -484,6 +486,7 @@ export function AngularPage() {
                       className="underline pointer"
                       href="https://go.nrwl.io/nx-office-hours"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Tune into regular Nx Office Hours livestreams
                     </a>
@@ -493,6 +496,7 @@ export function AngularPage() {
                       className="underline pointer"
                       href="https://nx.app"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Nx Cloud
                     </a>
@@ -504,6 +508,7 @@ export function AngularPage() {
                     className="underline pointer"
                     href="https://twitter.com/NxDevTools"
                     target="_blank"
+                    rel="noreferrer"
                   >
                     follow Nx Dev Tools on Twitter
                   </a>{' '}
