@@ -43,69 +43,71 @@ export function ConfWorkshop(): JSX.Element {
               <li>
                 <span role="img" aria-label="emojii">
                   🔬
-                </span>{' '}
-                Lab 1 - Generate an empty workspace
+                </span>
+                &nbsp; Lab 1 - Generate an empty workspace
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   ⚗️
-                </span>{' '}
-                Lab 2 - Generate an Angular app
+                </span>
+                &nbsp; Lab 2 - Generate an Angular app
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🧪
-                </span>{' '}
-                Lab 3 - Executors
+                </span>
+                &nbsp; Lab 3 - Executors
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🔭
-                </span>{' '}
-                Lab 4 - Generate a component lib
+                </span>
+                &nbsp; Lab 4 - Generate a component lib
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🧬
-                </span>{' '}
-                Lab 5 - Generate a utility lib
+                </span>
+                &nbsp; Lab 5 - Generate a utility lib
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🧮
-                </span>{' '}
-                Lab 6 - Generate a route lib
+                </span>
+                &nbsp; Lab 6 - Generate a route lib
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🤖
-                </span>{' '}
-                Lab 7 - Add a NestJS API
+                </span>
+                &nbsp; Lab 7 - Add a NestJS API
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   📐
-                </span>{' '}
-                Lab 8 - Displaying a full game in the routed game-detail
+                </span>
+                &nbsp; Lab 8 - Displaying a full game in the routed game-detail
                 component
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   💻
-                </span>{' '}
-                Lab 9 - Generate a type lib that the API and frontend can share
+                </span>
+                &nbsp; Lab 9 - Generate a type lib that the API and frontend can
+                share
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   👩‍💻
-                </span>{' '}
-                Lab 10 - Generate Storybook stories for the shared ui component
+                </span>
+                &nbsp; Lab 10 - Generate Storybook stories for the shared ui
+                component
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   ⌨️
-                </span>{' '}
-                Lab 11 - E2E test the shared component
+                </span>
+                &nbsp; Lab 11 - E2E test the shared component
               </li>
             </ul>
 
@@ -114,47 +116,49 @@ export function ConfWorkshop(): JSX.Element {
               <li>
                 <span role="img" aria-label="emojii">
                   💡
-                </span>{' '}
-                Lab 12 - Module boundaries
+                </span>
+                &nbsp; Lab 12 - Module boundaries
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🧸️
-                </span>{' '}
-                Lab 13 - Workspace Generators - Intro
+                </span>
+                &nbsp; Lab 13 - Workspace Generators - Intro
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🧵
-                </span>{' '}
-                Lab 14 - Workspace Generators - Modifying files
+                </span>
+                &nbsp; Lab 14 - Workspace Generators - Modifying files
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   💎
-                </span>{' '}
-                Lab 15 - Setting up CI
+                </span>
+                &nbsp; Lab 15 - Setting up CI
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🔌
-                </span>{' '}
-                Lab 16 - Distributed caching
+                </span>
+                &nbsp; Lab 16 - Distributed caching
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   🔍
-                </span>{' '}
-                Lab 17 - NxCloud GitHub bot
+                </span>
+                &nbsp; Lab 17 - NxCloud GitHub bot
               </li>
               <li>
                 <span role="img" aria-label="emojii">
                   📎
-                </span>{' '}
-                Lab 18 - Run-Commands and deploying the frontend
+                </span>
+                &nbsp; Lab 18 - Run-Commands and deploying the frontend
               </li>
               <li>
-                Q&A with Jeff Cross, Victor Savkin, Jason Jean, and Jack Hsu
+                <b>
+                  Q&A with Jeff Cross, Victor Savkin, Jason Jean, and Jack Hsu
+                </b>
               </li>
             </ul>
           </div>
@@ -208,10 +212,10 @@ export function ConfWorkshop(): JSX.Element {
             <div className="px-5 pt-12 md:pl-12">
               <a
                 className="flex items-center font-input-mono group w-full sm:text-xl"
-                href="https://ti.to/nrwl/nx-conf-2021?utm_source=nxdev"
+                href="https://nrwl.io/contact-us?utm_source=nxdev"
               >
                 <span className="group-hover:underline">
-                  Register for the workshop now
+                  Contact us for the workshop
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
