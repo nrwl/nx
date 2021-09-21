@@ -113,6 +113,7 @@ export function Header(props: HeaderProps) {
             <a
               href="https://nx.app/?utm_source=nx.dev"
               target="_blank"
+              rel="noreferrer"
               className="px-3 py-2 text-white hidden lg:inline-flex leading-tight group relative"
             >
               Nx Cloud
@@ -120,6 +121,7 @@ export function Header(props: HeaderProps) {
             <a
               href="https://nrwl.io/services/?utm_source=nx.dev"
               target="_blank"
+              rel="noreferrer"
               className="px-3 py-2 text-white hidden lg:inline-flex leading-tight"
             >
               Nx Consulting
@@ -127,6 +129,7 @@ export function Header(props: HeaderProps) {
             <a
               href="https://github.com/nrwl/nx"
               target="_blank"
+              rel="noreferrer"
               className="px-3 py-2 text-white"
             >
               <span className="sr-only">Nx on Github</span>

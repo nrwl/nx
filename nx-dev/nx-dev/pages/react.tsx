@@ -399,6 +399,7 @@ export function ReactPage() {
                     <a
                       className="underline pointer"
                       target="_blank"
+                      rel="noreferrer"
                       href="https://blog.nrwl.io/painlessly-build-and-deploy-next-js-apps-with-nx-225e2721da78?source=friends_link&sk=b381e3b9e7a2d8951fbe806ac0363851"
                     >
                       Next.js
@@ -407,6 +408,7 @@ export function ReactPage() {
                     <a
                       className="underline pointer"
                       target="_blank"
+                      rel="noreferrer"
                       href="https://blog.nrwl.io/step-to-step-guide-on-creating-a-blog-using-nx-gatsby-wordpress-ac7e9bfc0efd?source=friends_link&sk=5af5e109144bc4985f3fe8d92429463b"
                     >
                       Gatsby
@@ -415,6 +417,7 @@ export function ReactPage() {
                     <a
                       className="underline pointer"
                       target="_blank"
+                      rel="noreferrer"
                       href="https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89?source=friends_link&sk=e04878accafe0d9f696b647d0b9ae2d4"
                     >
                       React Native
@@ -510,6 +513,7 @@ export function ReactPage() {
                       className="underline pointer"
                       href="https://egghead.io/playlists/scale-react-development-with-nx-4038"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Free Nx Workspaces video course
                     </a>
@@ -519,6 +523,7 @@ export function ReactPage() {
                       className="underline pointer"
                       href="https://www.youtube.com/watch?v=h5FIGDn5YM0"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Nx Explainer: Dev Tools for Monorepos, In-Depth with
                       Victor Savkin
@@ -529,6 +534,7 @@ export function ReactPage() {
                       className="underline pointer"
                       href="https://go.nrwl.io/nx-office-hours"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Tune into regular Nx Office Hours livestreams
                     </a>
@@ -538,6 +544,7 @@ export function ReactPage() {
                       className="underline pointer"
                       href="https://nx.app"
                       target="_blank"
+                      rel="noreferrer"
                     >
                       Nx Cloud
                     </a>
@@ -549,6 +556,7 @@ export function ReactPage() {
                     className="underline pointer"
                     href="https://twitter.com/NxDevTools"
                     target="_blank"
+                    rel="noreferrer"
                   >
                     follow Nx Dev Tools on Twitter
                   </a>{' '}
