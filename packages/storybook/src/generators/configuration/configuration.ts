@@ -93,6 +93,9 @@ function createRootStorybookDir(
   workspaceStorybookVersion: string
 ) {
   if (tree.exists('.storybook')) {
+    logger.warn(
+      `.storybook folder already exists at root! Skipping generating files in it.`
+    );
     return;
   }
   logger.debug(
@@ -130,6 +133,9 @@ function createProjectStorybookDir(
   const storybookRoot = join(root, '.storybook');
 
   if (tree.exists(storybookRoot)) {
+    logger.warn(
+      `.storybook folder already exists for ${projectName}! Skipping generating files in it.`
+    );
     return;
   }
 
