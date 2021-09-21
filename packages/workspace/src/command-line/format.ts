@@ -17,7 +17,12 @@ import {
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import * as prettier from 'prettier';
-import { NxJsonConfiguration, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
@@ -191,18 +196,15 @@ function movePropertiesToNewLocations() {
       nxJson.projects ||
       nxJson.defaultProject
     ) {
-      const reformattedNxJson = {
-        ...nxJson,
-        cli: workspaceJson.cli,
-        generators: workspaceJson.generators,
-      };
-      const reformattedWorkspaceJson = {
-        ...nxJson,
-        cli: workspaceJson.cli,
-        generators: workspaceJson.generators,
-      };
-      writeJsonFile(workspaceConfig, reformattedWorkspaceJson);
-      writeJsonFile('nx.json', reformattedNxJson);
+      nxJson.cli ??= workspaceJson.cli;
+      nxJson.generators ??= workspaceJson.generators;
+      nxJson.defaultProject ??= workspaceJson.defaultProject;
+      delete workspaceJson['cli'];
+      delete workspaceJson['generators'];
+      delete workspaceJson['defaultProject'];
+      moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(workspaceJson, nxJson);
+      writeJsonFile(workspaceConfig, workspaceJson);
+      writeJsonFile('nx.json', nxJson);
     }
   } catch (e) {
     console.error(
@@ -210,4 +212,20 @@ function movePropertiesToNewLocations() {
     );
     console.error(e);
   }
+}
+
+export function moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(
+  workspaceJson: WorkspaceJsonConfiguration,
+  nxJson: NxJsonConfiguration & { projects: NxJsonProjectConfiguration }
+) {
+  if (!nxJson.projects) {
+    return;
+  }
+  Object.entries(nxJson.projects).forEach(([project, config]) => {
+    workspaceJson.projects[project] = {
+      ...workspaceJson.projects[project],
+      ...config,
+    };
+  });
+  delete nxJson.projects;
 }
