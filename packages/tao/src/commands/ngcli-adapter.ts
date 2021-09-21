@@ -368,10 +368,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           const { cli, generators, defaultProject, ...workspaceJson } =
             formatted;
           return concat(
-            this.writeWorkspaceConfigFiles(
-              context,
-              workspaceJson
-            ),
+            this.writeWorkspaceConfigFiles(context, workspaceJson),
             cli || generators || defaultProject
               ? this.saveNxJsonProps({ cli, generators, defaultProject })
               : of(null)
