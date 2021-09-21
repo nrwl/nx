@@ -518,6 +518,15 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
     });
 
+    it('should not generate files with kebab (default) case names', async () => {
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        pascalCaseFiles: true,
+      } as Schema);
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeFalsy();
+    });
+
     it('should generate files with upper case names for nested libs as well', async () => {
       await libraryGenerator(tree, {
         name: 'myLib',
@@ -530,6 +539,20 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.spec.ts')
       ).toBeTruthy();
+    });
+
+    it('should not generate files with kebab (default) case names for nested libs', async () => {
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        directory: 'myDir',
+        pascalCaseFiles: true,
+      } as Schema);
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
+      ).toBeFalsy();
     });
   });
 });
