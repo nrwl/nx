@@ -201,7 +201,7 @@ commands:
                   - run:
                       name: Run E2E Tests
                       command: |
-                        npx nx affected --target=e2e -base=$NX_BASE
+                        npx nx affected --target=e2e --base=$NX_BASE
                       no_output_timeout: 45m
             - unless:
                 condition:
@@ -240,10 +240,14 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+      - run:
+          name: Test
           command: echo $NX_RUN_GROUP
       - setup:
           os: << parameters.os >>
@@ -305,11 +309,15 @@ jobs:
       SELECTED_CLI: << parameters.cli >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
-      NX_RUN_GROUP: e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID
       NX_E2E_RUN_CYPRESS: << parameters.run-cypress-tests >>
       NX_VERBOSE_LOGGING: 'true'
     steps:
       - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+      - run:
+          name: Test
           command: echo $NX_RUN_GROUP
       - setup:
           os: << parameters.os >>
