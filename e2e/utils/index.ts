@@ -260,6 +260,14 @@ export function isOSX() {
   return process.platform === 'darwin';
 }
 
+export function isAndroid() {
+  return (
+    process.platform === 'linux' &&
+    process.env.ANDROID_HOME &&
+    process.env.ANDROID_SDK_ROOT
+  );
+}
+
 export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
