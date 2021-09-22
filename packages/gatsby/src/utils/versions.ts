@@ -1,7 +1,7 @@
 export const nxVersion = '*';
 
 export const gatsbyVersion = '3.14.0';
-export const gatsbyImageVersion = '3.11.0';
+export const gatsbyPluginImageVersion = '1.14.0';
 export const gatsbyPluginManifestVersion = '3.14.0';
 export const gatsbyPluginOfflineVersion = '4.14.0';
 export const gatsbyPluginReactHelmetVersion = '4.14.0';
