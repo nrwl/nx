@@ -20,18 +20,28 @@ export class FileHasher {
     this.usesGitForHashing = false;
   }
 
-  init(): void {
+  /**
+   * For the project graph daemon server use-case we can potentially skip expensive work
+   * by leveraging knowledge of the uncommitted and untracked files, so the init() method
+   * returns a Map containing this data.
+   */
+  init(): Map<string, string> {
     performance.mark('init hashing:start');
     this.clear();
-    this.getHashesFromGit();
+
+    const getFileHashesResult = getFileHashes(appRootPath);
+    this.applyFileHashes(getFileHashesResult.allFiles);
     this.usesGitForHashing = Object.keys(this.fileHashes).length > 0;
     this.isInitialized = true;
+
     performance.mark('init hashing:end');
     performance.measure(
       'init hashing',
       'init hashing:start',
       'init hashing:end'
     );
+
+    return getFileHashesResult.untrackedUncommittedFiles;
   }
 
   /**
@@ -42,8 +52,10 @@ export class FileHasher {
    * For example, the daemon server can cache the last known commit SHA in
    * memory and avoid calling init() by using this method instead when that
    * SHA is unchanged.
+   *
+   * @returns The Map of filenames to hashes returned by getUntrackedAndUncommittedFileHashes()
    */
-  incrementalUpdate() {
+  incrementalUpdate(): Map<string, string> {
     performance.mark('incremental hashing:start');
 
     const untrackedAndUncommittedFileHashes =
@@ -64,6 +76,8 @@ export class FileHasher {
       'incremental hashing:start',
       'incremental hashing:end'
     );
+
+    return untrackedAndUncommittedFileHashes;
   }
 
   hashFile(path: string): string {
@@ -84,9 +98,9 @@ export class FileHasher {
     }
   }
 
-  private getHashesFromGit(): void {
+  private applyFileHashes(allFiles: Map<string, string>): void {
     const sliceIndex = appRootPath.length + 1;
-    getFileHashes(appRootPath).forEach((hash, filename) => {
+    allFiles.forEach((hash, filename) => {
       this.fileHashes[filename.substr(sliceIndex)] = hash;
       /**
        * we have to store it separately because fileHashes can be modified

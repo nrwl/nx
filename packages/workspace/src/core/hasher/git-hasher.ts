@@ -135,21 +135,38 @@ function checkForDeletedFiles(
   return { filesToHash, deletedFiles };
 }
 
-export function getFileHashes(path: string): Map<string, string> {
-  const res = new Map<string, string>();
+/**
+ * getFileHashes() figures out both committed changes to the git tree as well as untracked
+ * and uncommitted file changes.
+ *
+ * For some utilities the origin of a file hash (i.e. was it committed or not) is unimportant,
+ * but for other tooling like the project graph daemon server it can leverage this distinction
+ * when figuring out what expensive work to skip during project graph construction.
+ *
+ * We therefore return both a Map of all filenames to their hashes, as well as a Map of just
+ * the uncommitted/untracked filenames to hashes.
+ */
+export function getFileHashes(path: string): {
+  allFiles: Map<string, string>;
+  untrackedUncommittedFiles: Map<string, string>;
+} {
+  const allFiles = new Map<string, string>();
 
   try {
     const { deletedFiles, status } = gitStatus(path);
     const m1 = gitLsTree(path);
     m1.forEach((hash: string, filename: string) => {
       if (deletedFiles.indexOf(filename) === -1) {
-        res.set(`${path}/${filename}`, hash);
+        allFiles.set(`${path}/${filename}`, hash);
       }
     });
     status.forEach((hash: string, filename: string) => {
-      res.set(`${path}/${filename}`, hash);
+      allFiles.set(`${path}/${filename}`, hash);
     });
-    return res;
+    return {
+      allFiles,
+      untrackedUncommittedFiles: status,
+    };
   } catch (e) {
     // this strategy is only used for speeding things up.
     // ignoring all the errors
@@ -157,7 +174,10 @@ export function getFileHashes(path: string): Map<string, string> {
       console.error(`Internal error:`);
       console.error(e);
     }
-    return new Map<string, string>();
+    return {
+      allFiles: new Map<string, string>(),
+      untrackedUncommittedFiles: new Map<string, string>(),
+    };
   }
 }
 

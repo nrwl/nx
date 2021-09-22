@@ -25,54 +25,58 @@ describe('git-hasher', () => {
     run(`echo AAA > a.txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    const hashes = getFileHashes(dir);
+    const hashes = getFileHashes(dir).allFiles;
     expect([...hashes.keys()]).toEqual([`${dir}/a.txt`]);
     expect(hashes.get(`${dir}/a.txt`)).toBeDefined();
 
     // should handle additions
     run(`echo BBB > b.txt`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a.txt`,
       `${dir}/b.txt`,
     ]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a.txt`,
       `${dir}/b.txt`,
     ]);
 
     run(`git commit  -am second`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a.txt`,
       `${dir}/b.txt`,
     ]);
 
     // should handle removals
     run(`rm b.txt`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/a.txt`]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/a.txt`]);
 
     run(`git commit  -am third`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/a.txt`]);
 
     // should handle moves
     run(`mv a.txt newa.txt`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/newa.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
+      `${dir}/newa.txt`,
+    ]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/newa.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
+      `${dir}/newa.txt`,
+    ]);
 
     run(`echo AAAA > a.txt`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a.txt`,
       `${dir}/newa.txt`,
     ]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a.txt`,
       `${dir}/newa.txt`,
     ]);
@@ -83,27 +87,29 @@ describe('git-hasher', () => {
     run(`git add .`);
     run(`git commit -am init`);
     run(`touch "x y z.txt"`); // unstaged
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a b.txt`,
       `${dir}/x y z.txt`,
     ]);
     run(`git add .`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a b.txt`,
       `${dir}/x y z.txt`,
     ]);
     run(`mv "a b.txt" "a b moved.txt"`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/x y z.txt`,
       `${dir}/a b moved.txt`,
     ]);
     run(`git add .`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a b moved.txt`,
       `${dir}/x y z.txt`,
     ]);
     run(`rm "x y z.txt"`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a b moved.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
+      `${dir}/a b moved.txt`,
+    ]);
   });
 
   it('should handle renames and modifications', () => {
@@ -113,7 +119,9 @@ describe('git-hasher', () => {
     run(`mv a.txt moda.txt`);
     run(`git add .`);
     run(`echo modified >> moda.txt`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/moda.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
+      `${dir}/moda.txt`,
+    ]);
   });
 
   it('should handle special characters in filenames', () => {
@@ -121,7 +129,7 @@ describe('git-hasher', () => {
     run(`echo BBB > "b-ū".txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/a-ū.txt`,
       `${dir}/b-ū.txt`,
     ]);
@@ -129,13 +137,13 @@ describe('git-hasher', () => {
     run(`mv a-ū.txt moda-ū.txt`);
     run(`git add .`);
     run(`echo modified >> moda-ū.txt`);
-    expect([...getFileHashes(dir).keys()]).toEqual([
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
       `${dir}/b-ū.txt`,
       `${dir}/moda-ū.txt`,
     ]);
 
     run(`rm "moda-ū.txt"`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/b-ū.txt`]);
+    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/b-ū.txt`]);
   });
 
   it('should work with sub-directories', () => {
@@ -145,10 +153,12 @@ describe('git-hasher', () => {
     run(`echo BBB > sub/b.txt`);
     run(`git add --all`);
     run(`git commit -am init`);
-    expect([...getFileHashes(subDir).keys()]).toEqual([`${subDir}/b.txt`]);
+    expect([...getFileHashes(subDir).allFiles.keys()]).toEqual([
+      `${subDir}/b.txt`,
+    ]);
 
     run(`echo CCC > sub/c.txt`);
-    expect([...getFileHashes(subDir).keys()]).toEqual([
+    expect([...getFileHashes(subDir).allFiles.keys()]).toEqual([
       `${subDir}/b.txt`,
       `${subDir}/c.txt`,
     ]);
