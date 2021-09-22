@@ -85,7 +85,7 @@ export function Header(props: HeaderProps) {
               }
             >
               <a className="font-bold px-3 py-2 text-white leading-tight">
-                Get Started
+                Docs
               </a>
             </Link>
             <Link
@@ -114,7 +114,7 @@ export function Header(props: HeaderProps) {
               href="https://nx.app/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 text-white hidden lg:inline-flex leading-tight group relative"
+              className="px-3 py-2 text-white lg:inline-flex leading-tight group relative"
             >
               Nx Cloud
             </a>
