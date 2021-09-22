@@ -368,7 +368,7 @@ workflows:
       # -------------------------
       - main:
           name: pull-request
-          run-checks: 'true'
+          run-checks: 'false'
           filters:
             branches:
               ignore: master
