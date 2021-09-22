@@ -7,6 +7,7 @@ import { join, resolve } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { gitRevParseHead } from '../../hasher/git-hasher';
+import { defaultHashing } from '../../hasher/hashing-impl';
 import { createProjectGraph } from '../project-graph';
 
 /**
@@ -66,11 +67,28 @@ function formatLogMessage(message) {
 }
 
 /**
- * We cache the latest known HEAD value on the server so that we can potentially skip
- * some work initializing file hashes. If the HEAD value has not changed since we last
- * initialized the hashes, then we can move straight on to hashing uncommitted changes.
+ * We cache the latest known HEAD value and an overall hash of the state of the untracked
+ * and uncommitted files so that we can potentially skip some initialization work.
  */
 let cachedGitHead: string | undefined;
+let cachedUntrackedUncommittedState: string | undefined;
+
+function hashAndCacheUntrackedUncommittedState(
+  untrackedAndUncommittedFileHashes: Map<string, string>
+): void {
+  const fileHashesMapAsFlatArray = [].concat(
+    ...Array.from(untrackedAndUncommittedFileHashes)
+  );
+  cachedUntrackedUncommittedState = defaultHashing.hashArray(
+    fileHashesMapAsFlatArray
+  );
+}
+
+/**
+ * We cache the latest copy of the project graph itself in memory so that in the best case
+ * scenario we can skip all graph construction work entirely.
+ */
+let cachedProjectGraph: ProjectGraph | undefined;
 
 /**
  * For now we just invoke the existing `createProjectGraph()` utility and return the project
@@ -91,19 +109,70 @@ const server = createServer((socket) => {
   serverLog('Connection Received');
 
   const currentGitHead = gitRevParseHead(appRootPath);
-  if (currentGitHead === cachedGitHead) {
-    defaultFileHasher.incrementalUpdate();
-  } else {
-    defaultFileHasher.init();
+
+  let projectGraph: ProjectGraph | undefined;
+
+  /**
+   * Cached HEAD has changed, we must perform full file-hashing initialization work and
+   * recompute the project graph
+   */
+  if (currentGitHead !== cachedGitHead) {
+    serverLog(
+      ` [SERVER STATE]: Cached HEAD does not match current (${currentGitHead}), performing full file hash init and recomputing project graph...`
+    );
+    /**
+     * Update the cached values for the HEAD and untracked and uncommitted state which was computed
+     * as part of full init()
+     */
+    const untrackedAndUncommittedFileHashes = defaultFileHasher.init();
+    hashAndCacheUntrackedUncommittedState(untrackedAndUncommittedFileHashes);
     cachedGitHead = currentGitHead;
+    projectGraph = createProjectGraph(undefined, undefined, undefined, '4.0');
+  } else {
+    /**
+     * We know at this point that the cached HEAD has not changed but we must still always use git
+     * to check for untracked and uncommitted changes (and we then create and cache a hash which
+     * represents their overall state).
+     *
+     * We cannot ever skip this particular git operation, but we can compare its result to our
+     * previously cached hash which represents the overall state for untracked and uncommitted changes
+     * and then potentially skip project graph creation altogether if it is unchanged and we have an
+     * existing cached graph.
+     */
+    const previousUntrackedUncommittedState = cachedUntrackedUncommittedState;
+    const untrackedAndUncommittedFileHashes =
+      defaultFileHasher.incrementalUpdate();
+    hashAndCacheUntrackedUncommittedState(untrackedAndUncommittedFileHashes);
+
+    /**
+     * Skip project graph creation if the untracked and uncommitted state is unchanged and we have
+     * a cached version of the graph available in memory.
+     */
+    if (
+      previousUntrackedUncommittedState === cachedUntrackedUncommittedState &&
+      cachedProjectGraph
+    ) {
+      serverLog(
+        ` [SERVER STATE]: State unchanged since last request, resolving in-memory cached project graph...`
+      );
+      projectGraph = cachedProjectGraph;
+    } else {
+      serverLog(
+        ` [SERVER STATE]: Hashed untracked/uncommitted file state changed (now ${cachedUntrackedUncommittedState}), recomputing project graph...`
+      );
+      projectGraph = createProjectGraph(undefined, undefined, undefined, '4.0');
+    }
   }
 
-  const projectGraph = createProjectGraph(
-    undefined,
-    undefined,
-    undefined,
-    '4.0'
-  );
+  /**
+   * Cache the latest version of the project graph in memory so that we can potentially skip a lot
+   * of expensive work on the next client request.
+   *
+   * For reference, on the very large test repo https://github.com/vsavkin/interstellar the project
+   * graph nxdeps.json file is about 24MB, so memory utilization should not be a huge concern.
+   */
+  cachedProjectGraph = projectGraph;
+
   performance.mark('project-graph-created');
   performance.measure(
     'createProjectGraph() total',
