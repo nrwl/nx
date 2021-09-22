@@ -39,6 +39,20 @@ export default async function run(
   const eslint = new projectESLint.ESLint({});
 
   /**
+   * Entire folder might be excluded via .eslintingore which would result
+   * in `lintResults` being an empty array.
+   * This would result in false assumption of invalid configuration and
+   * end up as exception.
+   *
+   * We want to rather show info as this is likely intentional behavior
+   */
+  const projectPath = context.workspace.projects[context.projectName].root;
+  if (await eslint.isPathIgnored(`${context.root}/${projectPath}/**/*`)) {
+    console.info('Project is excluded. Linting is skipped.\n');
+    return { success: true };
+  }
+
+  /**
    * We want users to have the option of not specifying the config path, and let
    * eslint automatically resolve the `.eslintrc.json` files in each folder.
    */
