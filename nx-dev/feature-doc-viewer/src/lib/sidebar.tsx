@@ -10,6 +10,7 @@ import {
 } from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
 import { Selector } from '@nrwl/nx-dev/ui/common';
+import { useStorage } from '../../../nx-dev/lib/use-storage';
 
 export interface SidebarProps {
   menu: Menu;
@@ -38,6 +39,8 @@ export function Sidebar({
   menu,
   navIsOpen,
 }: SidebarProps) {
+  const { setValue: setStoredFlavor } = useStorage('flavor');
+  const { setValue: setStoredVersion } = useStorage('version');
   const router = useRouter();
   return (
     <div
@@ -63,7 +66,7 @@ export function Sidebar({
             onChange={(item) =>
               router.push(
                 createNextPath(item.value, flavor.alias, router.asPath)
-              )
+              ) && setStoredVersion(item.value)
             }
           />
         </div>
@@ -77,7 +80,7 @@ export function Sidebar({
             onChange={(item) =>
               router.push(
                 createNextPath(version.alias, item.value, router.asPath)
-              )
+              ) && setStoredFlavor(item.value)
             }
           />
         </div>
