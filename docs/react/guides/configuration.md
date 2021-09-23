@@ -325,7 +325,7 @@ The `nx.json` file contains extra configuration options mostly related to the pr
 {
   "npmScope": "happyorg",
   "affected": {
-    "defaultBase": "master"
+    "defaultBase": "main"
   },
   "tasksRunnerOptions": {
     "default": {
@@ -375,7 +375,7 @@ Tells Nx what prefix to use when generating library imports.
 
 Tells Nx which branch and HEAD to use when calculating affected projects.
 
-- `defaultBase` defines the default base branch, defaulted to `master`.
+- `defaultBase` defines the default base branch, defaulted to `main`.
 
 ### Tasks Runner Options
 

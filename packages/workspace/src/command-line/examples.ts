@@ -11,9 +11,9 @@ export const examples: Record<string, Example[]> = {
         'Print information about affected projects and the dependency graph',
     },
     {
-      command: 'print-affected --base=master --head=HEAD',
+      command: 'print-affected --base=main --head=HEAD',
       description:
-        'Print information about the projects affected by the changes between master and HEAD (e.g,. PR)',
+        'Print information about the projects affected by the changes between main and HEAD (e.g,. PR)',
     },
     {
       command: 'print-affected --target=test',
@@ -55,14 +55,14 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected --target=test --base=master --head=HEAD',
+      command: 'affected --target=test --base=main --head=HEAD',
       description:
-        'Run tests for all the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Run tests for all the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected --target=test --base=master~1 --head=master',
+      command: 'affected --target=test --base=main~1 --head=main',
       description:
-        'Run tests for all the projects affected by the last commit on master',
+        'Run tests for all the projects affected by the last commit on main',
     },
   ],
   'affected:test': [
@@ -85,14 +85,14 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected:test --base=master --head=HEAD',
+      command: 'affected:test --base=main --head=HEAD',
       description:
-        'Run tests for all the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Run tests for all the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:test --base=master~1 --head=master',
+      command: 'affected:test --base=main~1 --head=main',
       description:
-        'Run tests for all the projects affected by the last commit on master',
+        'Run tests for all the projects affected by the last commit on main',
     },
   ],
   'affected:build': [
@@ -115,14 +115,14 @@ export const examples: Record<string, Example[]> = {
         'Run build for all the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected:build --base=master --head=HEAD',
+      command: 'affected:build --base=main --head=HEAD',
       description:
-        'Run build for all the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Run build for all the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:build --base=master~1 --head=master',
+      command: 'affected:build --base=main~1 --head=main',
       description:
-        'Run build for all the projects affected by the last commit on master',
+        'Run build for all the projects affected by the last commit on main',
     },
   ],
   'affected:e2e': [
@@ -145,14 +145,14 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected:e2e --base=master --head=HEAD',
+      command: 'affected:e2e --base=main --head=HEAD',
       description:
-        'Run tests for all the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Run tests for all the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:e2e --base=master~1 --head=master',
+      command: 'affected:e2e --base=main~1 --head=main',
       description:
-        'Run tests for all the projects affected by the last commit on master',
+        'Run tests for all the projects affected by the last commit on main',
     },
   ],
   'affected:lint': [
@@ -175,14 +175,14 @@ export const examples: Record<string, Example[]> = {
         'Run lint for all the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected:lint --base=master --head=HEAD',
+      command: 'affected:lint --base=main --head=HEAD',
       description:
-        'Run lint for all the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Run lint for all the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:lint --base=master~1 --head=master',
+      command: 'affected:lint --base=main~1 --head=main',
       description:
-        'Run lint for all the projects affected by the last commit on master',
+        'Run lint for all the projects affected by the last commit on main',
     },
   ],
   'affected:apps': [
@@ -192,14 +192,14 @@ export const examples: Record<string, Example[]> = {
         'Print the names of all the apps affected by changing the index.ts file',
     },
     {
-      command: 'affected:apps --base=master --head=HEAD',
+      command: 'affected:apps --base=main --head=HEAD',
       description:
-        'Print the names of all the apps affected by the changes between master and HEAD (e.g., PR)',
+        'Print the names of all the apps affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:apps --base=master~1 --head=master',
+      command: 'affected:apps --base=main~1 --head=main',
       description:
-        'Print the names of all the apps affected by the last commit on master',
+        'Print the names of all the apps affected by the last commit on main',
     },
   ],
   'affected:libs': [
@@ -209,14 +209,14 @@ export const examples: Record<string, Example[]> = {
         'Print the names of all the libs affected by changing the index.ts file',
     },
     {
-      command: 'affected:libs --base=master --head=HEAD',
+      command: 'affected:libs --base=main --head=HEAD',
       description:
-        'Print the names of all the libs affected by the changes between master and HEAD (e.g., PR)',
+        'Print the names of all the libs affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:libs --base=master~1 --head=master',
+      command: 'affected:libs --base=main~1 --head=main',
       description:
-        'Print the names of all the libs affected by the last commit on master',
+        'Print the names of all the libs affected by the last commit on main',
     },
   ],
   'format:write': [],
@@ -266,26 +266,24 @@ export const examples: Record<string, Example[]> = {
         'Open the dep graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected:dep-graph --base=master --head=HEAD',
+      command: 'affected:dep-graph --base=main --head=HEAD',
       description:
-        'Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command:
-        'affected:dep-graph --base=master --head=HEAD --file=output.json',
+      command: 'affected:dep-graph --base=main --head=HEAD --file=output.json',
       description:
-        'Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command:
-        'affected:dep-graph --base=master --head=HEAD --file=output.html',
+      command: 'affected:dep-graph --base=main --head=HEAD --file=output.html',
       description:
-        'Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between master and HEAD (e.g., PR)',
+        'Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:dep-graph --base=master~1 --head=master',
+      command: 'affected:dep-graph --base=main~1 --head=main',
       description:
-        'Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on master',
+        'Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on main',
     },
     {
       command: 'affected:dep-graph --exclude=project-one,project-two',

@@ -63,9 +63,9 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - template: .azure-pipelines/steps/install-node-modules.yml
-      - script: yarn nx affected --target=test --base=origin/master
-      - script: yarn nx affected --target=lint --base=origin/master
-      - script: yarn nx affected --target=build --base=origin/master --prod
+      - script: yarn nx affected --target=test --base=origin/main
+      - script: yarn nx affected --target=lint --base=origin/main
+      - script: yarn nx affected --target=build --base=origin/main --prod
 ```
 
 the CI time will go down from 45 minutes to 8 minutes.
@@ -86,9 +86,9 @@ jobs:
       IS_PR: $[ eq(variables['Build.Reason'], 'PullRequest') ]
     steps:
       - template: .azure-pipelines/steps/install-node-modules.yml
-      - script: yarn nx affected --target=test --base=origin/master --parallel
-      - script: yarn nx affected --target=lint --base=origin/master --parallel
-      - script: yarn nx affected --target=build --base=origin/master --prod --parallel
+      - script: yarn nx affected --target=test --base=origin/main --parallel
+      - script: yarn nx affected --target=lint --base=origin/main --parallel
+      - script: yarn nx affected --target=build --base=origin/main --prod --parallel
 ```
 
 This helps but it still has a ceiling. At some point, this won't be enough. A single agent is simply insufficient. You need to distribute CI across a grid of machines.
@@ -131,8 +131,8 @@ Where `calculate-commands.js` looks like this:
 
 ```javascript
 const execSync = require('child_process').execSync;
-const isMaster = process.argv[2] === 'False';
-const baseSha = isMaster ? 'origin/master~1' : 'origin/master';
+const isMain = process.argv[2] === 'False';
+const baseSha = isMain ? 'origin/main~1' : 'origin/main';
 
 // prints an object with keys {lint1: [...], lint2: [...], lint3: [...], test1: [...], .... build3: [...]}
 console.log(
@@ -168,11 +168,11 @@ Let's step through it:
 The following defines the base sha Nx uses to execute affected commands.
 
 ```javascript
-const isMaster = process.argv[2] === 'False';
-const baseSha = isMaster ? 'origin/master~1' : 'origin/master';
+const isMain = process.argv[2] === 'False';
+const baseSha = isMain ? 'origin/main~1' : 'origin/main';
 ```
 
-If it is a PR, Nx sees what has changed compared to `origin/master`. If it's master, Nx sees what has changed compared to the previous commit (this can be made more robust by remembering the last successful master run, which can be done by labeling the commit).
+If it is a PR, Nx sees what has changed compared to `origin/main`. If it's main, Nx sees what has changed compared to the previous commit (this can be made more robust by remembering the last successful main run, which can be done by labeling the commit).
 
 The following prints information about affected project that have the needed target. `print-affected` doesn't run any targets, just prints information about them.
 

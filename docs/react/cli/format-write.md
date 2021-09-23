@@ -18,7 +18,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

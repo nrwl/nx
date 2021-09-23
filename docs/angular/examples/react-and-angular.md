@@ -405,7 +405,7 @@ If we run `yarn dep-graph`, we will see the following:
 Nx understands how our applications and libraries depend on each other. This is extremely important! To really improve the collaboration between teams and make sure that they can use each other's work, the following two things must be true:
 
 - If the Angular team makes a change to the Angular app itself. Only the Angular app has to be rebuilt and retested. Same is true for the React team. Any tool that requires us to rebuild and retest everything on every PR won't scale beyond a small repository.
-- If any of the teams changes the ui library, both the Angular and the React applications should be rebuilt and retested before the PR gets merged into master. This is the only way to guarantee that the PR is safe to merge.
+- If any of the teams changes the ui library, both the Angular and the React applications should be rebuilt and retested before the PR gets merged into main. This is the only way to guarantee that the PR is safe to merge.
 
 To see how Nx helps with this, let's commit the changes we have made so far.
 
