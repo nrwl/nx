@@ -19,7 +19,7 @@ import {
 describe('NodeExecuteBuilder', () => {
   let testOptions: NodeExecuteBuilderOptions;
   let context: ExecutorContext;
-  let mockSubProcess: { on: jest.Mock, exitCode: number };
+  let mockSubProcess: { on: jest.Mock; exitCode: number };
 
   beforeEach(async () => {
     buildOptions = {};
@@ -42,7 +42,7 @@ describe('NodeExecuteBuilder', () => {
             cb(mockSubProcess.exitCode);
           }
         }),
-        exitCode: null
+        exitCode: null,
       };
       return mockSubProcess;
     });
@@ -78,7 +78,7 @@ describe('NodeExecuteBuilder', () => {
       waitUntilTargets: [],
       host: 'localhost',
       watch: true,
-      emitSubprocessEvents: false
+      emitSubprocessEvents: false,
     };
   });
 
@@ -88,7 +88,7 @@ describe('NodeExecuteBuilder', () => {
 
   it('should build the application and start the built file', async () => {
     for await (const event of executeExecutor(testOptions, context)) {
-      if(!("success" in event)) throw new Error("Got Unexpected event")
+      if (!('success' in event)) throw new Error('Got Unexpected event');
       expect(event.success).toEqual(true);
     }
     expect(require('@nrwl/devkit').runExecutor).toHaveBeenCalledWith(
@@ -120,7 +120,8 @@ describe('NodeExecuteBuilder', () => {
             inspect: InspectType.Inspect,
           },
           context
-        )) {}
+        )) {
+        }
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
@@ -351,27 +352,27 @@ describe('NodeExecuteBuilder', () => {
       fork.mockImplementation(() => {
         mockSubProcess = {
           on: jest.fn().mockImplementation((eventName, cb) => {
-            if(eventName === 'exit'){
+            if (eventName === 'exit') {
               mockSubProcessExit = (exitCode: number) => {
                 cb(exitCode);
                 mockSubProcess.exitCode = exitCode;
               };
             }
 
-            if(eventName === 'error'){
+            if (eventName === 'error') {
               mockSubProcessError = cb;
             }
 
-            if(eventName === "message"){
+            if (eventName === 'message') {
               mockSubProcessMessage = cb;
             }
           }),
-          exitCode: null
+          exitCode: null,
         };
 
         return mockSubProcess;
       });
-    })
+    });
 
     describe('false', () => {
       it('Should not complete until the child process has exited', async () => {
@@ -379,81 +380,81 @@ describe('NodeExecuteBuilder', () => {
         const secondEvent = Symbol('second');
         const events = [];
         const executorIterator = executeExecutor(
-            {
-              ...testOptions,
-              watch: false,
-            },
-            context
+          {
+            ...testOptions,
+            watch: false,
+          },
+          context
         );
 
-        expect(await executorIterator.next()).toEqual(({
+        expect(await executorIterator.next()).toEqual({
           done: false,
           value: {
             outfile: 'outfile.js',
-            success: true
-          }
-        }));
+            success: true,
+          },
+        });
 
         const result = await Promise.race([
-            executorIterator.next(),
-            new Promise(() => {
-              mockSubProcessExit(1);
-              events.push(firstEvent);
-            })
-        ])
+          executorIterator.next(),
+          new Promise(() => {
+            mockSubProcessExit(1);
+            events.push(firstEvent);
+          }),
+        ]);
 
         events.push(secondEvent);
 
         expect(result).toEqual({
           value: undefined,
-          done: true
+          done: true,
         });
         expect(events).toEqual([firstEvent, secondEvent]);
       });
 
-      it("When sub process emits, it should propagate when configured", async () => {
+      it('When sub process emits, it should propagate when configured', async () => {
         const expectedExitCode = 42;
         const executorIterator = executeExecutor(
-            {
-              ...testOptions,
-              watch: false,
-              emitSubprocessEvents: true
-            },
-            context
+          {
+            ...testOptions,
+            watch: false,
+            emitSubprocessEvents: true,
+          },
+          context
         );
 
-        expect(await executorIterator.next()).toEqual(({
+        expect(await executorIterator.next()).toEqual({
           done: false,
           value: {
             outfile: 'outfile.js',
-            success: true
-          }
-        }));
+            success: true,
+          },
+        });
 
         mockSubProcessExit(expectedExitCode);
 
-        expect(await executorIterator.next()).toEqual(({
+        expect(await executorIterator.next()).toEqual({
           done: false,
           value: {
-            exitCode: expectedExitCode
-          }
-        }));
+            exitCode: expectedExitCode,
+          },
+        });
       });
 
-      it("Should propagate sub process events in expected order", async () => {
+      it('Should propagate sub process events in expected order', async () => {
         const expectedSubProcessEvents = [
           {
-            message: "hello"
+            message: 'hello',
           },
           {
-            message: 'world'
+            message: 'world',
           },
           {
-            error: new Error("error")
+            error: new Error('error'),
           },
           {
-            exitCode: 1
-          }
+            exitCode: 1,
+          },
         ];
         const expectedTotalEvents = 5;
 
@@ -461,24 +462,24 @@ describe('NodeExecuteBuilder', () => {
         let totalEvents = 0;
 
         const doSubProcessWork = () => {
-          mockSubProcessMessage("hello");
-          mockSubProcessMessage("world");
-          mockSubProcessError(new Error("error"));
-          mockSubProcessExit(1)
-        }
+          mockSubProcessMessage('hello');
+          mockSubProcessMessage('world');
+          mockSubProcessError(new Error('error'));
+          mockSubProcessExit(1);
+        };
 
-        for await(const event of executeExecutor(
-            {
-              ...testOptions,
-              watch: false,
-              emitSubprocessEvents: true
-            },
-            context
-        )){
-          if(totalEvents === 0){
+        for await (const event of executeExecutor(
+          {
+            ...testOptions,
+            watch: false,
+            emitSubprocessEvents: true,
+          },
+          context
+        )) {
+          if (totalEvents === 0) {
             expect(event).toEqual({
               outfile: 'outfile.js',
-              success: true
+              success: true,
             });
             doSubProcessWork();
           } else {
@@ -489,11 +490,11 @@ describe('NodeExecuteBuilder', () => {
         }
 
         expect(subProcessEvents).toEqual(expectedSubProcessEvents);
-        expect(totalEvents).toEqual(expectedTotalEvents)
+        expect(totalEvents).toEqual(expectedTotalEvents);
       });
     });
 
-    describe("true", () => {
+    describe('true', () => {
       beforeEach(() => {
         (devkit.runExecutor as any).mockImplementation(async function* () {
           yield { success: true, outfile: 'outfile.js' };
@@ -504,21 +505,21 @@ describe('NodeExecuteBuilder', () => {
         });
       });
 
-      it("Should not block build events with process events", async () => {
+      it('Should not block build events with process events', async () => {
         const executorIterator = executeExecutor(
-            {
-              ...testOptions,
-              watch: true,
-            },
-            context
+          {
+            ...testOptions,
+            watch: true,
+          },
+          context
         );
 
         expect(await executorIterator.next()).toEqual({
           done: false,
           value: {
-            outfile: "outfile.js",
-            success: true
-          }
+            outfile: 'outfile.js',
+            success: true,
+          },
         });
 
         // sub process has not exited yet, but we'll receive a new build event
@@ -526,45 +527,45 @@ describe('NodeExecuteBuilder', () => {
         expect(await executorIterator.next()).toEqual({
           done: false,
           value: {
-            outfile: "outfile.js",
-            success: true
-          }
+            outfile: 'outfile.js',
+            success: true,
+          },
         });
 
         // there's no more build events, but process still needs to exit
 
         const result = await Promise.race([
-            executorIterator.next(),
-            new Promise(() => {
-              mockSubProcessExit()
-            })
+          executorIterator.next(),
+          new Promise(() => {
+            mockSubProcessExit();
+          }),
         ]);
 
         expect(result).toEqual({
           value: undefined,
-          done: true
-        })
+          done: true,
+        });
       });
 
-      it("Yield build and process events cooperatively", async () => {
+      it('Yield build and process events cooperatively', async () => {
         const events = [];
-        for await(const event of executeExecutor(
-            {
-              ...testOptions,
-              watch: true,
-              emitSubprocessEvents: true
-            },
-            context
-        )){
-          if('outfile' in event){
-            mockSubProcessExit(1)
+        for await (const event of executeExecutor(
+          {
+            ...testOptions,
+            watch: true,
+            emitSubprocessEvents: true,
+          },
+          context
+        )) {
+          if ('outfile' in event) {
+            mockSubProcessExit(1);
           }
 
-          events.push(event)
+          events.push(event);
         }
 
-        expect(events).toHaveLength(4)
+        expect(events).toHaveLength(4);
       });
-    })
+    });
   });
 });

@@ -3,26 +3,29 @@ import { PromiseQueue } from './promise-queue';
 import { NodeBuildEvent } from '../executors/build/build.impl';
 import { NodeExecuteBuilderOptions } from '../utils/types';
 import { InspectType } from '@nrwl/node/src/executors/execute/execute.impl';
-import { promisify } from "util";
+import { promisify } from 'util';
 import * as treeKill from 'tree-kill';
 import { logger } from '@nrwl/devkit';
 
-export type SubProcessEvent = {
-  exitCode: number
-} | {
-  message: string
-} | {
-  error: unknown
-}
+export type SubProcessEvent =
+  | {
+      exitCode: number;
+    }
+  | {
+      message: string;
+    }
+  | {
+      error: unknown;
+    };
 
 export class SubProcessRunner {
-  private subProcess: ChildProcess|null = null;
+  private subProcess: ChildProcess | null = null;
   private queue = new PromiseQueue<SubProcessEvent>();
 
-  constructor(private options: NodeExecuteBuilderOptions ) {}
+  constructor(private options: NodeExecuteBuilderOptions) {}
 
-  async handleBuildEvent(event: NodeBuildEvent){
-    if(this.subProcess){
+  async handleBuildEvent(event: NodeBuildEvent) {
+    if (this.subProcess) {
       await this.kill();
     }
 
@@ -31,19 +34,19 @@ export class SubProcessRunner {
     });
 
     this.subProcess.on('exit', (exitCode) => {
-      this.queue.enqueue({exitCode});
+      this.queue.enqueue({ exitCode });
     });
 
     this.subProcess.on('message', (message) => {
-      this.queue.enqueue({message});
+      this.queue.enqueue({ message });
     });
 
     this.subProcess.on('error', (error) => {
-      this.queue.enqueue({error})
+      this.queue.enqueue({ error });
     });
   }
 
-  async kill(){
+  async kill() {
     if (!this.subProcess) {
       return;
     }
@@ -65,32 +68,43 @@ export class SubProcessRunner {
     }
   }
 
-  async next(): Promise<IteratorResult<SubProcessEvent, undefined>>{
-    if(this.isComplete()) return {done: true, value: undefined};
+  async next(): Promise<IteratorResult<SubProcessEvent, undefined>> {
+    if (this.isComplete()) return { done: true, value: undefined };
 
     return {
       done: false,
-      value: await this.queue.dequeue()
-    }
+      value: await this.queue.dequeue(),
+    };
   }
 
-  [Symbol.asyncIterator](){ return this; }
+  [Symbol.asyncIterator]() {
+    return this;
+  }
 
-  private getExecArgv(){
-    const args = ['-r', 'source-map-support/register', ...this.options.runtimeArgs];
+  private getExecArgv() {
+    const args = [
+      '-r',
+      'source-map-support/register',
+      ...this.options.runtimeArgs,
+    ];
 
     if (this.options.inspect === true) {
       this.options.inspect = InspectType.Inspect;
     }
 
     if (this.options.inspect) {
-      args.push(`--${this.options.inspect}=${this.options.host}:${this.options.port}`);
+      args.push(
+        `--${this.options.inspect}=${this.options.host}:${this.options.port}`
+      );
     }
 
     return args;
   }
 
-  private isComplete(){
-    return this.queue.size === 0 && (this.subProcess === null || this.subProcess.exitCode !== null);
+  private isComplete() {
+    return (
+      this.queue.size === 0 &&
+      (this.subProcess === null || this.subProcess.exitCode !== null)
+    );
   }
 }

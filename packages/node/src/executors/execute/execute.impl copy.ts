@@ -100,7 +100,7 @@ const createProcessRunner = (
   };
 };
 
-async function *buildAndKillProcess(
+async function* buildAndKillProcess(
   processRunner: ProcessRunner,
   options: NodeExecuteBuilderOptions,
   context: ExecutorContext
@@ -110,7 +110,6 @@ async function *buildAndKillProcess(
 
     yield event;
   }
-
 }
 
 export async function* executeExecutor2(
@@ -119,7 +118,11 @@ export async function* executeExecutor2(
 ) {
   const processRunner = createProcessRunner(options, context);
 
-  for await (const event of buildAndKillProcess(processRunner, options, context)) {
+  for await (const event of buildAndKillProcess(
+    processRunner,
+    options,
+    context
+  )) {
     if (!event.success) {
       logger.error('There was an error with the build. See above.');
       logger.info(`${event.outfile} was not restarted.`);
@@ -127,7 +130,7 @@ export async function* executeExecutor2(
     yield event;
     // yield * runProcess();
     // await processRunner.handleBuildEvent(event)
-    yield * processRunner.events;
+    yield* processRunner.events;
   }
 }
 
