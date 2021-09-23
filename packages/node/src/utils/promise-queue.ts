@@ -6,14 +6,14 @@ interface Deferred<T> {
 
 interface Node<T> {
   value: T,
-  tail: Deferred<Node<T>>
+  tail: Promise<Node<T>>
 }
 
 const createDeferred = <T>(): Deferred<T> => {
   const deferred = {
     promise: Promise.resolve<T>(null as any),
-    resolve: (value: T) => {},
-    reject: (reason?: unknown) => {}
+    resolve: (_value: T) => {},
+    reject: (_reason?: unknown) => {}
   };
 
   deferred.promise = new Promise<T>((resolve, reject) => {
@@ -25,23 +25,32 @@ const createDeferred = <T>(): Deferred<T> => {
 };
 
 
-
 export class PromiseQueue<T> {
   private head = createDeferred<Node<T>>();
+  private promises = new Set<Promise<unknown>>();
+
+  get size(){
+    return this.promises.size;
+  }
 
   enqueue(value){
     const next = createDeferred<Node<T>>();
 
+    this.promises.add(next.promise);
+
     this.head.resolve({
       value,
-      tail: next
+      tail: next.promise
     });
+
+    this.head.resolve = next.resolve;
   }
 
   async dequeue() {
     const { value, tail } = await this.head.promise;
 
-    this.head = tail;
+    this.head.promise = tail;
+    this.promises.delete(tail);
 
     return value;
   }

@@ -12,4 +12,4 @@ setInterval(sayHI, 250);
 
 setTimeout(() => {
   process.exit(1);
-}, 2000);
+}, 0);

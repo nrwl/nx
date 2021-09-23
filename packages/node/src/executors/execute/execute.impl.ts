@@ -11,7 +11,7 @@ import {
 
 import { NodeBuildEvent } from '../build/build.impl';
 import { BuildNodeBuilderOptions, NodeExecuteBuilderOptions } from '../../utils/types';
-import { SubProcessRunner } from '@nrwl/node/src/utils/subProcessRunner';
+import {SubProcessEvent, SubProcessRunner} from '@nrwl/node/src/utils/subProcessRunner';
 
 export const enum InspectType {
   Inspect = 'inspect',
@@ -20,11 +20,20 @@ export const enum InspectType {
 
 export {NodeExecuteBuilderOptions} from '../../utils/types';
 
-type EventType = "build" | "process";
+type ScheduledEvent = {
+  type: "build",
+  value: NodeBuildEvent
+} | {
+  type: "process",
+  value: SubProcessEvent
+}
 
-interface AsyncIteratorDelegator<T> {
-  type: EventType;
-  iterator: AsyncIterator<T>;
+type TypedIterator = {
+  type: "build",
+  iterator: AsyncIterator<NodeBuildEvent, undefined>
+} | {
+  type: "process",
+  iterator: AsyncIterator<SubProcessEvent, undefined>
 }
 
 export async function* executeExecutor(
@@ -53,20 +62,12 @@ export async function* executeExecutor(
     }
   }
 
-  const delegateIterator = delegateAsyncIteratorEvents(
-    {type: 'build', iterator: startBuild(options, context)},
-    {type: 'process', iterator: processRunner}
-  );
-
-  for await (const event of delegateIterator){
+  for await (const event of scheduleBuildAndProcessEvents(startBuild(options, context), processRunner)){
     if(event.type === 'build'){
       if(!event.value.success){
         logger.error('There was an error with the build. See above.');
         logger.info(`${event.value.outfile} was not restarted.`);
       }
-
-      await processRunner.handleBuildEvent(event.value);
-
     }
 
     if(event.type === "build" || options.emitSubprocessEvents){
@@ -75,33 +76,31 @@ export async function* executeExecutor(
   }
 }
 
-async function* delegateAsyncIteratorEvents<T>(...delegates: AsyncIteratorDelegator<T>[]){
-  const getDelegateValue = (iterator: AsyncIterator<T>, type: EventType) =>
-    iterator.next().then(result => ({
-      iterator,
-      type,
-      result
-    }));
+const nextIterValue = (typedIter: TypedIterator) => typedIter.type === "build"
+    ? typedIter.iterator.next().then(result => ({iterator: typedIter.iterator, type: typedIter.type, ...result}))
+    : typedIter.iterator.next().then(result => ({iterator: typedIter.iterator, type: typedIter.type, ...result}))
 
-  const delegateMap = new Map(delegates.map(({type, iterator}) => [
-    iterator,
-    getDelegateValue(iterator, type)
-  ]));
+async function* scheduleBuildAndProcessEvents(buildIterator: AsyncIterator<NodeBuildEvent>, subProcessRunner: SubProcessRunner): AsyncGenerator<ScheduledEvent> {
+  const iteratorMap = new Map<AsyncIterator<SubProcessEvent|NodeBuildEvent>, ReturnType<typeof nextIterValue>>([
+      [buildIterator, nextIterValue({type: "build", iterator: buildIterator})],
+  ])
 
-  while(delegateMap.size > 0){
-    const {iterator, result, type} = await Promise.race(delegateMap.values());
+  while(iteratorMap.size > 0){
+    const result = await Promise.race(iteratorMap.values());
 
     if(result.done){
-      delegateMap.delete(iterator);
+      iteratorMap.delete(result.iterator);
       continue;
     }
 
-    delegateMap.set(iterator, getDelegateValue(iterator, type));
-
-    yield {
-      type,
-      value: result.value
+    if(result.type === "build" && result.value.success){
+      await subProcessRunner.handleBuildEvent(result.value);
+      iteratorMap.set(subProcessRunner, nextIterValue({type: "process", iterator: subProcessRunner}));
     }
+
+    iteratorMap.set(result.iterator, nextIterValue(result))
+
+    yield result
   }
 }
 
