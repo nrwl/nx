@@ -15,7 +15,7 @@ export function transformImagePath({
   return (src) => {
     const isRelative = src.startsWith('.');
 
-    if (!/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i.test(src)) {
+    if (!/\.(gif|jpe?g|tiff?|png|webp|bmp|svg)$/i.test(src)) {
       return uriTransformer(src);
     }
 
