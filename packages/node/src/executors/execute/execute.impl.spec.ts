@@ -498,6 +498,7 @@ describe('NodeExecuteBuilder', () => {
       beforeEach(() => {
         (devkit.runExecutor as any).mockImplementation(async function* () {
           yield { success: true, outfile: 'outfile.js' };
+          await new Promise((resolve) => setTimeout(resolve, 1));
           yield { success: true, outfile: 'outfile.js' };
         });
       });
@@ -546,6 +547,12 @@ describe('NodeExecuteBuilder', () => {
       });
 
       it('Yield build and process events cooperatively', async () => {
+        const expectedEvents = [
+          { outfile: 'outfile.js', success: true },
+          { exitCode: 1 },
+          { outfile: 'outfile.js', success: true },
+          { exitCode: 1 },
+        ];
         const events = [];
         for await (const event of executeExecutor(
           {
@@ -562,7 +569,7 @@ describe('NodeExecuteBuilder', () => {
           events.push(event);
         }
 
-        expect(events).toHaveLength(4);
+        expect(events).toEqual(expectedEvents);
       });
     });
   });

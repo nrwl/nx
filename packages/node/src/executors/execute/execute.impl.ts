@@ -25,7 +25,7 @@ export const enum InspectType {
 
 export { NodeExecuteBuilderOptions } from '../../utils/types';
 
-type ScheduledEvent = NodeBuildEvent|SubProcessEvent
+type ScheduledEvent = NodeBuildEvent | SubProcessEvent;
 
 type TypedIterator =
   | {
@@ -37,10 +37,14 @@ type TypedIterator =
       iterator: AsyncIterator<SubProcessEvent, undefined>;
     };
 
-type MappedIteratorValue<T extends TypedIterator> =
-    T extends Extract<T, { type: 'build' }> ? T & IteratorResult<NodeBuildEvent, undefined> :
-        T extends Extract<T, {type: 'process'}> ? T & IteratorResult<SubProcessEvent, undefined> :
-            never;
+type MappedIteratorValue<T extends TypedIterator> = T extends Extract<
+  T,
+  { type: 'build' }
+>
+  ? T & IteratorResult<NodeBuildEvent, undefined>
+  : T extends Extract<T, { type: 'process' }>
+  ? T & IteratorResult<SubProcessEvent, undefined>
+  : never;
 
 export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
@@ -69,19 +73,21 @@ export async function* executeExecutor(
     }
   }
 
-  yield * scheduleBuildAndProcessEvents(
-      startBuild(options, context),
-      processRunner,
-      options
-  )
+  yield* scheduleBuildAndProcessEvents(
+    startBuild(options, context),
+    processRunner,
+    options
+  );
 }
 
-const mapNextIterValue = <T extends TypedIterator>(typedIter: T): Promise<MappedIteratorValue<T>> =>
-    typedIter.iterator.next().then((result) => ({
-      iterator: typedIter.iterator,
-      type: typedIter.type,
-      ...result,
-    }))
+const mapNextIterValue = <T extends TypedIterator>(
+  typedIter: T
+): Promise<MappedIteratorValue<T>> =>
+  typedIter.iterator.next().then((result) => ({
+    iterator: typedIter.iterator,
+    type: typedIter.type,
+    ...result,
+  }));
 
 async function* scheduleBuildAndProcessEvents(
   buildIterator: AsyncIterator<NodeBuildEvent>,
@@ -92,7 +98,10 @@ async function* scheduleBuildAndProcessEvents(
     AsyncIterator<ScheduledEvent>,
     ReturnType<typeof mapNextIterValue>
   >([
-    [buildIterator, mapNextIterValue({ type: 'build', iterator: buildIterator })],
+    [
+      buildIterator,
+      mapNextIterValue({ type: 'build', iterator: buildIterator }),
+    ],
   ]);
 
   while (iteratorMap.size > 0) {
@@ -104,17 +113,17 @@ async function* scheduleBuildAndProcessEvents(
     }
 
     if (result.type === 'build') {
-        if(!result.value.success){
-          logger.error('There was an error with the build. See above.');
-          logger.info(`${result.value.outfile} was not restarted.`);
-        } else {
-          await subProcessRunner.handleBuildEvent(result.value);
+      if (!result.value.success) {
+        logger.error('There was an error with the build. See above.');
+        logger.info(`${result.value.outfile} was not restarted.`);
+      } else {
+        await subProcessRunner.handleBuildEvent(result.value);
 
-          iteratorMap.set(
-              subProcessRunner,
-              mapNextIterValue({ type: 'process', iterator: subProcessRunner })
-          );
-        }
+        iteratorMap.set(
+          subProcessRunner,
+          mapNextIterValue({ type: 'process', iterator: subProcessRunner })
+        );
+      }
     }
 
     iteratorMap.set(result.iterator, mapNextIterValue(result));
