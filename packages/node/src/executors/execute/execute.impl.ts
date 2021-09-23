@@ -55,6 +55,7 @@ export async function* executeExecutor(
     processRunner.kill();
     process.exit(128 + 15);
   });
+
   process.on('exit', (code) => {
     process.exit(code);
   });
@@ -71,21 +72,11 @@ export async function* executeExecutor(
     }
   }
 
-  for await (const event of scheduleBuildAndProcessEvents(
-    startBuild(options, context),
-    processRunner
-  )) {
-    if (event.type === 'build') {
-      if (!event.value.success) {
-        logger.error('There was an error with the build. See above.');
-        logger.info(`${event.value.outfile} was not restarted.`);
-      }
-    }
-
-    if (event.type === 'build' || options.emitSubprocessEvents) {
-      yield event.value;
-    }
-  }
+  yield * scheduleBuildAndProcessEvents(
+      startBuild(options, context),
+      processRunner,
+      options
+  )
 }
 
 const nextIterValue = (typedIter: TypedIterator) =>
@@ -103,8 +94,9 @@ const nextIterValue = (typedIter: TypedIterator) =>
 
 async function* scheduleBuildAndProcessEvents(
   buildIterator: AsyncIterator<NodeBuildEvent>,
-  subProcessRunner: SubProcessRunner
-): AsyncGenerator<ScheduledEvent> {
+  subProcessRunner: SubProcessRunner,
+  options: NodeExecuteBuilderOptions
+): AsyncGenerator<NodeBuildEvent|SubProcessEvent> {
   const iteratorMap = new Map<
     AsyncIterator<SubProcessEvent | NodeBuildEvent>,
     ReturnType<typeof nextIterValue>
@@ -120,17 +112,25 @@ async function* scheduleBuildAndProcessEvents(
       continue;
     }
 
-    if (result.type === 'build' && result.value.success) {
-      await subProcessRunner.handleBuildEvent(result.value);
-      iteratorMap.set(
-        subProcessRunner,
-        nextIterValue({ type: 'process', iterator: subProcessRunner })
-      );
+    if (result.type === 'build') {
+        if(!result.value.success){
+          logger.error('There was an error with the build. See above.');
+          logger.info(`${result.value.outfile} was not restarted.`);
+        } else {
+          await subProcessRunner.handleBuildEvent(result.value);
+
+          iteratorMap.set(
+              subProcessRunner,
+              nextIterValue({ type: 'process', iterator: subProcessRunner })
+          );
+        }
     }
 
     iteratorMap.set(result.iterator, nextIterValue(result));
 
-    yield result;
+    if (result.type === 'build' || options.emitSubprocessEvents) {
+      yield result.value;
+    }
   }
 }
 
