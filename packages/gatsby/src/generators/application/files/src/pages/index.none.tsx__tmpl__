@@ -5,7 +5,7 @@ import star from './star.svg';
 
 export function Index() {
   return (
-    <h1>Welcome to <%= name %>!</h1>
+    <h1>Welcome to <%= projectName %>!</h1>
   );
 }
 

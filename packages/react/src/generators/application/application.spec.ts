@@ -195,7 +195,7 @@ Object {
 
     expect(
       appTree.read('apps/my-dir/my-app/src/app/app.tsx').toString()
-    ).toContain('Welcome to my-app');
+    ).toContain('Welcome to my-dir-my-app');
   });
 
   it.each`

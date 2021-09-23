@@ -194,9 +194,9 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
 
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   const { appsDir } = getWorkspaceLayout(host);
-  const projectName = options.directory
-    ? `${filePathPrefix(options.directory)}-${options.name}`
-    : options.name;
+  const projectName = filePathPrefix(
+    options.directory ? `${options.directory}-${options.name}` : options.name
+  );
   const projectRoot = options.directory
     ? joinPathFragments(
         appsDir,

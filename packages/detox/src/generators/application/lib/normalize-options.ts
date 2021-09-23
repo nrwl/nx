@@ -28,9 +28,9 @@ export function normalizeOptions(
   const directoryFileName = options.directory
     ? names(options.directory).fileName
     : '';
-  const projectName = directoryFileName
-    ? `${directoryFileName.replace(new RegExp('/', 'g'), '-')}-${fileName}`
-    : fileName;
+  const projectName = (
+    directoryFileName ? `${directoryFileName}-${fileName}` : fileName
+  ).replace(new RegExp('/', 'g'), '-');
   const projectRoot = directoryFileName
     ? joinPathFragments(appsDir, directoryFileName, fileName)
     : joinPathFragments(appsDir, fileName);

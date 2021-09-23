@@ -13,6 +13,6 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
     linter: Linter.EsLint,
     name: `${options.name}-e2e`,
     directory: options.directory,
-    project: options.name,
+    project: options.projectName,
   });
 }

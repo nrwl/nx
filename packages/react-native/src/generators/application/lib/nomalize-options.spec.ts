@@ -81,6 +81,28 @@ describe('Normalize Options', () => {
     });
   });
 
+  it('should normalize options that has directory in its name', () => {
+    const schema: Schema = {
+      name: 'directory/my-app',
+      e2eTestRunner: 'none',
+    };
+    const options = normalizeOptions(appTree, schema);
+    expect(options).toEqual({
+      androidProjectRoot: 'apps/directory/my-app/android',
+      appProjectRoot: 'apps/directory/my-app',
+      className: 'DirectoryMyApp',
+      displayName: 'DirectoryMyApp',
+      iosProjectRoot: 'apps/directory/my-app/ios',
+      lowerCaseName: 'directorymyapp',
+      name: 'directory/my-app',
+      parsedTags: [],
+      projectName: 'directory-my-app',
+      entryFile: '/virtual/apps/directory/my-app/src/main.tsx',
+      e2eTestRunner: 'none',
+      unitTestRunner: 'jest',
+    });
+  });
+
   it('should normalize options with display name', () => {
     const schema: Schema = {
       name: 'my-app',
