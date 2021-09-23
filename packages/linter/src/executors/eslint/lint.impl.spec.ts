@@ -13,6 +13,7 @@ const mockFormatter = {
   format: jest.fn().mockReturnValue(formattedReports),
 };
 const mockLoadFormatter = jest.fn().mockReturnValue(mockFormatter);
+const mockIsPathIgnored = jest.fn().mockReturnValue(Promise.resolve(false));
 const mockOutputFixes = jest.fn();
 
 const VALID_ESLINT_VERSION = '7.6';
@@ -21,6 +22,7 @@ class MockESLint {
   static version = VALID_ESLINT_VERSION;
   static outputFixes = mockOutputFixes;
   loadFormatter = mockLoadFormatter;
+  isPathIgnored = mockIsPathIgnored;
 }
 
 let mockReports: any[] = [{ results: [], usedDeprecatedRules: [] }];
@@ -160,6 +162,23 @@ describe('Linter Builder', () => {
     await expect(result).rejects.toThrow(
       /Invalid lint configuration. Nothing to lint./
     );
+  });
+
+  it('should not throw if project excluded', async () => {
+    mockReports = [];
+    setupMocks();
+    mockIsPathIgnored.mockReturnValue(Promise.resolve(true));
+    const result = await lintExecutor(
+      createValidRunBuilderOptions({
+        lintFilePatterns: ['includedFile1'],
+      }),
+      mockContext
+    );
+    expect(result.success).toBeTruthy();
+    expect(console.info).toHaveBeenCalledWith(
+      'Project ignored because of a matching ignore pattern. Linting is skipped.\n'
+    );
+    mockIsPathIgnored.mockReturnValue(Promise.resolve(false));
   });
 
   it('should create a new instance of the formatter with the selected user option', async () => {

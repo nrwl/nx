@@ -48,7 +48,9 @@ export default async function run(
    */
   const projectPath = context.workspace.projects[context.projectName].root;
   if (await eslint.isPathIgnored(`${context.root}/${projectPath}/**/*`)) {
-    console.info('Project is excluded. Linting is skipped.\n');
+    console.info(
+      'Project ignored because of a matching ignore pattern. Linting is skipped.\n'
+    );
     return { success: true };
   }
 
