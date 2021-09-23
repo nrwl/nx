@@ -2,7 +2,9 @@
 
 Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
 
-Nx helps you develop [Angular](/{{framework}}/angular/overview) applications with fully integrated support for modern tools and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview), [ESLint](/{{framework}}/linter/eslint), [Storybook](/{{framework}}/storybook/overview), NgRx and more.
+Nx helps you develop [Angular](/{{framework}}/angular/overview) applications with fully integrated support for
+modern tools and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview),
+[ESLint](/{{framework}}/linter/eslint), [Storybook](/{{framework}}/storybook/overview), [NgRx](/angular/guides/misc-ngrx) and more.
 
 ## 10-Minute Nx Overview
 

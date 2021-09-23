@@ -1,10 +1,13 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import autolinkHeadings from 'rehype-autolink-headings';
-import Image from 'next/image';
 import gfm from 'remark-gfm';
 import slug from 'rehype-slug';
-import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
+import {
+  DocumentData,
+  FlavorMetadata,
+  VersionMetadata,
+} from '@nrwl/nx-dev/data-access-documents';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { transformLinkPath } from './renderers/transform-link-path';
 import { transformImagePath } from './renderers/transform-image-path';
@@ -13,10 +16,10 @@ import { CodeBlock } from './code-block';
 
 export interface ContentProps {
   document: DocumentData;
-  flavor: string;
-  flavorList: string[];
-  version: string;
-  versionList: string[];
+  flavor: FlavorMetadata;
+  flavorList: FlavorMetadata[];
+  version: VersionMetadata;
+  versionList: VersionMetadata[];
 }
 
 interface ComponentsConfig {

@@ -60,12 +60,9 @@ export class DocumentsApi {
     if (!file.data.title) {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
     }
+
     return {
       filePath: docPath,
-      url: `/${version.alias}/${flavor.alias}/${docPath
-        .split('/')
-        .splice(2)
-        .join('/')}`,
       data: file.data,
       content: file.content,
       excerpt: file.excerpt,
