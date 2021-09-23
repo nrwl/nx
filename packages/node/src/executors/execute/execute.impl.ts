@@ -25,15 +25,7 @@ export const enum InspectType {
 
 export { NodeExecuteBuilderOptions } from '../../utils/types';
 
-type ScheduledEvent =
-  | {
-      type: 'build';
-      value: NodeBuildEvent;
-    }
-  | {
-      type: 'process';
-      value: SubProcessEvent;
-    };
+type ScheduledEvent = NodeBuildEvent|SubProcessEvent
 
 type TypedIterator =
   | {
@@ -44,6 +36,11 @@ type TypedIterator =
       type: 'process';
       iterator: AsyncIterator<SubProcessEvent, undefined>;
     };
+
+type MappedIteratorValue<T extends TypedIterator> =
+    T extends Extract<T, { type: 'build' }> ? T & IteratorResult<NodeBuildEvent, undefined> :
+        T extends Extract<T, {type: 'process'}> ? T & IteratorResult<SubProcessEvent, undefined> :
+            never;
 
 export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
@@ -79,29 +76,23 @@ export async function* executeExecutor(
   )
 }
 
-const nextIterValue = (typedIter: TypedIterator) =>
-  typedIter.type === 'build'
-    ? typedIter.iterator.next().then((result) => ({
-        iterator: typedIter.iterator,
-        type: typedIter.type,
-        ...result,
-      }))
-    : typedIter.iterator.next().then((result) => ({
-        iterator: typedIter.iterator,
-        type: typedIter.type,
-        ...result,
-      }));
+const mapNextIterValue = <T extends TypedIterator>(typedIter: T): Promise<MappedIteratorValue<T>> =>
+    typedIter.iterator.next().then((result) => ({
+      iterator: typedIter.iterator,
+      type: typedIter.type,
+      ...result,
+    }))
 
 async function* scheduleBuildAndProcessEvents(
   buildIterator: AsyncIterator<NodeBuildEvent>,
   subProcessRunner: SubProcessRunner,
   options: NodeExecuteBuilderOptions
-): AsyncGenerator<NodeBuildEvent|SubProcessEvent> {
+): AsyncGenerator<ScheduledEvent> {
   const iteratorMap = new Map<
-    AsyncIterator<SubProcessEvent | NodeBuildEvent>,
-    ReturnType<typeof nextIterValue>
+    AsyncIterator<ScheduledEvent>,
+    ReturnType<typeof mapNextIterValue>
   >([
-    [buildIterator, nextIterValue({ type: 'build', iterator: buildIterator })],
+    [buildIterator, mapNextIterValue({ type: 'build', iterator: buildIterator })],
   ]);
 
   while (iteratorMap.size > 0) {
@@ -121,12 +112,12 @@ async function* scheduleBuildAndProcessEvents(
 
           iteratorMap.set(
               subProcessRunner,
-              nextIterValue({ type: 'process', iterator: subProcessRunner })
+              mapNextIterValue({ type: 'process', iterator: subProcessRunner })
           );
         }
     }
 
-    iteratorMap.set(result.iterator, nextIterValue(result));
+    iteratorMap.set(result.iterator, mapNextIterValue(result));
 
     if (result.type === 'build' || options.emitSubprocessEvents) {
       yield result.value;

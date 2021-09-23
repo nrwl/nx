@@ -498,9 +498,6 @@ describe('NodeExecuteBuilder', () => {
       beforeEach(() => {
         (devkit.runExecutor as any).mockImplementation(async function* () {
           yield { success: true, outfile: 'outfile.js' };
-          await new Promise((resolve) => {
-            setTimeout(resolve, 100);
-          });
           yield { success: true, outfile: 'outfile.js' };
         });
       });
@@ -537,6 +534,7 @@ describe('NodeExecuteBuilder', () => {
         const result = await Promise.race([
           executorIterator.next(),
           new Promise(() => {
+            // this promise intentionally doesn't resolve
             mockSubProcessExit();
           }),
         ]);
