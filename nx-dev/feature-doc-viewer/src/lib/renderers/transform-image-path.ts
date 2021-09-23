@@ -1,17 +1,17 @@
 import { uriTransformer } from 'react-markdown';
-import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
+import {
+  DocumentData,
+  VersionMetadata,
+} from '@nrwl/nx-dev/data-access-documents';
 import { join } from 'path';
 
 export function transformImagePath({
   version,
   document,
 }: {
-  version: string;
+  version: VersionMetadata;
   document: DocumentData;
 }): (src: string) => string {
-  const isVercel = !!process.env.VERCEL;
-  const isPreview = version === 'preview';
-
   return (src) => {
     const isRelative = src.startsWith('.');
 
@@ -19,26 +19,12 @@ export function transformImagePath({
       return uriTransformer(src);
     }
 
-    if (!isVercel && isPreview) {
-      return uriTransformer(
-        `/api/preview-asset?uri=${encodeURIComponent(
-          src
-        )}&document=${encodeURIComponent(document.filePath)}`
-      );
-    }
-
     if (isRelative) {
       return uriTransformer(
-        join(
-          '/documentation',
-          isPreview ? 'preview' : '',
-          document.filePath,
-          '..',
-          src
-        )
+        join('/', document.filePath.split('/').splice(3).join('/'), '..', src)
       );
     }
 
-    return uriTransformer(`/documentation/${version}`.concat(src));
+    return uriTransformer(`/documentation/${version.id}`.concat(src));
   };
 }

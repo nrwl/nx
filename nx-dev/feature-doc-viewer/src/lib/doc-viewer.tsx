@@ -78,10 +78,10 @@ export function DocViewer({
           >
             <Content
               document={document}
-              flavor={flavor.alias}
-              flavorList={flavorList.map((flavor) => flavor.alias)}
-              version={version.alias}
-              versionList={versionList.map((version) => version.alias)}
+              flavor={flavor}
+              flavorList={flavorList}
+              version={version}
+              versionList={versionList}
             />
           </div>
         </div>
