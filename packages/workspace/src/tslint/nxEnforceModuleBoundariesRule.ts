@@ -26,7 +26,10 @@ import {
 import { normalize } from 'path';
 import { readNxJson } from '../core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { checkCircularPath } from '../utils/graph-utils';
+import {
+  checkCircularPath,
+  findFilesInCircularPath,
+} from '../utils/graph-utils';
 import { isRelativePath } from '../utilities/fileutils';
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -191,7 +194,13 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         (acc, v) => `${acc} -> ${v.name}`,
         sourceProject.name
       );
-      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected: ${path}`;
+
+      const circularFilePath = findFilesInCircularPath(circularPath);
+      const filePaths = circularFilePath
+        .map((files) => (files.length > 1 ? `[${files.join(',')}]` : files[0]))
+        .reduce((acc, files) => `${acc}\n- ${files}`, `- ${filePath}`);
+
+      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected: ${path}\n\nCircular file chain:\n${filePaths}`;
       this.addFailureAt(node.getStart(), node.getWidth(), error);
       return;
     }

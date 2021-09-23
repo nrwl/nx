@@ -27,7 +27,10 @@ import {
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
-import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
+import {
+  checkCircularPath,
+  findFilesInCircularPath,
+} from '@nrwl/workspace/src/utils/graph-utils';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 
 type Options = [
@@ -83,7 +86,7 @@ export default createESLintRule<Options, MessageIds>({
     ],
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
-      noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}`,
+      noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}\n\nCircular file chain:\n{{filePaths}}`,
       noSelfCircularDependencies: `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "{{imp}}"`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
@@ -236,11 +239,13 @@ export default createESLintRule<Options, MessageIds>({
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(
-        projectGraph,
+        (global as any).projectGraph,
         sourceProject,
         targetProject
       );
       if (circularPath.length !== 0) {
+        const circularFilePath = findFilesInCircularPath(circularPath);
+
         context.report({
           node,
           messageId: 'noCircularDependencies',
@@ -251,6 +256,14 @@ export default createESLintRule<Options, MessageIds>({
               (acc, v) => `${acc} -> ${v.name}`,
               sourceProject.name
             ),
+            filePaths: circularFilePath
+              .map((files) =>
+                files.length > 1 ? `[${files.join(',')}]` : files[0]
+              )
+              .reduce(
+                (acc, files) => `${acc}\n- ${files}`,
+                `- ${sourceFilePath}`
+              ),
           },
         });
         return;

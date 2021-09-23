@@ -856,8 +856,8 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
             },
           },
           anotherlibName: {
@@ -867,8 +867,8 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`)],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`, ['mylibName'])],
             },
           },
           myappName: {
@@ -878,7 +878,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              targets: {},
+              architect: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -895,7 +895,11 @@ describe('Enforce Module Boundaries (tslint)', () => {
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "anotherlibName" and "mylibName" detected: anotherlibName -> mylibName -> anotherlibName'
+      `Circular dependency between "anotherlibName" and "mylibName" detected: anotherlibName -> mylibName -> anotherlibName
+
+Circular file chain:
+- libs/anotherlib/src/main.ts
+- libs/mylib/src/main.ts`
     );
   });
 
@@ -913,8 +917,10 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
+              architect: {},
+              files: [
+                createFile(`libs/mylib/src/main.ts`, ['badcirclelibName']),
+              ],
             },
           },
           anotherlibName: {
@@ -924,8 +930,11 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`)],
+              architect: {},
+              files: [
+                createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+                createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+              ],
             },
           },
           badcirclelibName: {
@@ -935,8 +944,10 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'libs/badcirclelib',
               tags: [],
               implicitDependencies: [],
-              targets: {},
-              files: [createFile(`libs/badcirclelib/src/main.ts`)],
+              architect: {},
+              files: [
+                createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+              ],
             },
           },
           myappName: {
@@ -946,7 +957,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              targets: {},
+              architect: {},
               files: [createFile(`apps/myapp/index.ts`)],
             },
           },
@@ -977,7 +988,12 @@ describe('Enforce Module Boundaries (tslint)', () => {
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "mylibName" and "badcirclelibName" detected: mylibName -> badcirclelibName -> anotherlibName -> mylibName'
+      `Circular dependency between "mylibName" and "badcirclelibName" detected: mylibName -> badcirclelibName -> anotherlibName -> mylibName
+
+Circular file chain:
+- libs/mylib/src/main.ts
+- libs/badcirclelib/src/main.ts
+- [libs/anotherlib/src/main.ts,libs/anotherlib/src/index.ts]`
     );
   });
 
@@ -1156,8 +1172,8 @@ describe('Enforce Module Boundaries (tslint)', () => {
   });
 });
 
-function createFile(f): FileData {
-  return { file: f, hash: '' };
+function createFile(f: string, deps?: string[]): FileData {
+  return { file: f, hash: '', ...(deps && { deps }) };
 }
 
 function runRule(
