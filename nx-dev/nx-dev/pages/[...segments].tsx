@@ -14,7 +14,7 @@ import type {
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { Footer, Header } from '@nrwl/nx-dev/ui/common';
 import { documentsApi, menuApi } from '../lib/api';
-import { useStorage } from '../lib/use-storage';
+import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 const flavorList = documentsApi.getFlavors();
 const versionList = documentsApi.getVersions();

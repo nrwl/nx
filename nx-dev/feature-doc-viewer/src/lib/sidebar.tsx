@@ -10,7 +10,7 @@ import {
 } from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
 import { Selector } from '@nrwl/nx-dev/ui/common';
-import { useStorage } from '../../../nx-dev/lib/use-storage';
+import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 export interface SidebarProps {
   menu: Menu;
@@ -64,9 +64,9 @@ export function Sidebar({
             }))}
             selected={{ label: version.name, value: version.alias }}
             onChange={(item) =>
-              router.push(
-                createNextPath(item.value, flavor.alias, router.asPath)
-              ) && setStoredVersion(item.value)
+              router
+                .push(createNextPath(item.value, flavor.alias, router.asPath))
+                .then((success) => success && setStoredVersion(item.value))
             }
           />
         </div>
@@ -154,7 +154,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
         )}
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
-        {item.itemList.map((item) => {
+        {(item.itemList as MenuItem[]).map((item) => {
           const isActiveLink = item.url === withoutAnchors(router?.asPath);
           return (
             <li key={item.id} data-testid={`section-li:${item.id}`}>
