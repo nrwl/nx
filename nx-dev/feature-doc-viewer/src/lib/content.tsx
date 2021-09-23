@@ -27,6 +27,9 @@ interface ComponentsConfig {
 }
 
 const components: any = (config: ComponentsConfig) => ({
+  img({ node, alt, src, ...props }) {
+    return <img src={src} alt={alt} loading="lazy" />;
+  },
   code({ node, inline, className, children, ...props }) {
     const language = /language-(\w+)/.exec(className || '')?.[1];
     return !inline && language ? (
