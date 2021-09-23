@@ -25,4 +25,5 @@ export interface Schema {
   remotes?: string[];
   port?: number;
   host?: string;
+  setParserOptionsProject?: boolean;
 }

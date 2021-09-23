@@ -58,6 +58,7 @@ export async function addE2e(
           joinPathFragments(options.e2eProjectRoot, '**/*.ts'),
         ],
         skipFormat: true,
+        setParserOptionsProject: options.setParserOptionsProject,
       });
     }
   }

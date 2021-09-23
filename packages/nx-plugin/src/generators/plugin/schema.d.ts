@@ -10,4 +10,5 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
   standaloneConfig?: boolean;
+  setParserOptionsProject?: boolean;
 }

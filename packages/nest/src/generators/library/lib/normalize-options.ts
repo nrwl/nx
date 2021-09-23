@@ -59,5 +59,6 @@ export function toNodeLibraryGeneratorOptions(
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
     standaloneConfig: options.standaloneConfig,
+    setParserOptionsProject: options.setParserOptionsProject,
   };
 }
