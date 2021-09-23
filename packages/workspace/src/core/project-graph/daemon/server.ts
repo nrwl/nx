@@ -219,13 +219,14 @@ const server = createServer((socket) => {
      * knows when to read it.
      */
     socket.end();
-    serverLog('Closed Connection to Client');
-
-    const bytesWritten = Buffer.byteLength(serializedProjectGraph, 'utf-8');
     performance.measure(
-      `total for server response (${bytesWritten} bytes transferred)`,
+      'total for server response',
       'server-connection',
       'serialized-project-graph-written-to-client'
+    );
+    const bytesWritten = Buffer.byteLength(serializedProjectGraph, 'utf-8');
+    serverLog(
+      `Closed Connection to Client (${bytesWritten} bytes transferred)`
     );
   });
 });
