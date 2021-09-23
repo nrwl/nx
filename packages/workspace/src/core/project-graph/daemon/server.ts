@@ -85,10 +85,37 @@ function hashAndCacheUntrackedUncommittedState(
 }
 
 /**
- * We cache the latest copy of the project graph itself in memory so that in the best case
- * scenario we can skip all graph construction work entirely.
+ * We cache the latest copy of the serialized project graph itself in memory so that in the
+ * best case scenario we can skip all graph construction and serialization work entirely.
  */
-let cachedProjectGraph: ProjectGraph | undefined;
+let cachedSerializedProjectGraph: string | undefined;
+
+function createAndSerializeProjectGraph(): string {
+  performance.mark('create-project-graph-start');
+  const projectGraph = createProjectGraph(
+    undefined,
+    undefined,
+    undefined,
+    '4.0'
+  );
+  performance.mark('create-project-graph-end');
+  performance.measure(
+    'total execution time for createProjectGraph()',
+    'create-project-graph-start',
+    'create-project-graph-end'
+  );
+
+  performance.mark('json-stringify-start');
+  const serializedProjectGraph = JSON.stringify(projectGraph);
+  performance.mark('json-stringify-end');
+  performance.measure(
+    'serialize graph',
+    'json-stringify-start',
+    'json-stringify-end'
+  );
+
+  return serializedProjectGraph;
+}
 
 /**
  * For now we just invoke the existing `createProjectGraph()` utility and return the project
@@ -110,7 +137,7 @@ const server = createServer((socket) => {
 
   const currentGitHead = gitRevParseHead(appRootPath);
 
-  let projectGraph: ProjectGraph | undefined;
+  let serializedProjectGraph: string | undefined;
 
   /**
    * Cached HEAD has changed, we must perform full file-hashing initialization work and
@@ -127,7 +154,7 @@ const server = createServer((socket) => {
     const untrackedAndUncommittedFileHashes = defaultFileHasher.init();
     hashAndCacheUntrackedUncommittedState(untrackedAndUncommittedFileHashes);
     cachedGitHead = currentGitHead;
-    projectGraph = createProjectGraph(undefined, undefined, undefined, '4.0');
+    serializedProjectGraph = createAndSerializeProjectGraph();
   } else {
     /**
      * We know at this point that the cached HEAD has not changed but we must still always use git
@@ -150,17 +177,17 @@ const server = createServer((socket) => {
      */
     if (
       previousUntrackedUncommittedState === cachedUntrackedUncommittedState &&
-      cachedProjectGraph
+      cachedSerializedProjectGraph
     ) {
       serverLog(
         ` [SERVER STATE]: State unchanged since last request, resolving in-memory cached project graph...`
       );
-      projectGraph = cachedProjectGraph;
+      serializedProjectGraph = cachedSerializedProjectGraph;
     } else {
       serverLog(
         ` [SERVER STATE]: Hashed untracked/uncommitted file state changed (now ${cachedUntrackedUncommittedState}), recomputing project graph...`
       );
-      projectGraph = createProjectGraph(undefined, undefined, undefined, '4.0');
+      serializedProjectGraph = createAndSerializeProjectGraph();
     }
   }
 
@@ -171,33 +198,35 @@ const server = createServer((socket) => {
    * For reference, on the very large test repo https://github.com/vsavkin/interstellar the project
    * graph nxdeps.json file is about 24MB, so memory utilization should not be a huge concern.
    */
-  cachedProjectGraph = projectGraph;
+  cachedSerializedProjectGraph = serializedProjectGraph;
 
-  performance.mark('project-graph-created');
+  performance.mark('serialized-project-graph-ready');
   performance.measure(
-    'createProjectGraph() total',
+    'total for creating and serializing project graph',
     'server-connection',
-    'project-graph-created'
+    'serialized-project-graph-ready'
   );
 
-  const serializedProjectGraph = JSON.stringify(projectGraph);
   socket.write(serializedProjectGraph, () => {
-    serverLog('Closed Connection to Client');
+    performance.mark('serialized-project-graph-written-to-client');
+    performance.measure(
+      'write project graph to socket',
+      'serialized-project-graph-ready',
+      'serialized-project-graph-written-to-client'
+    );
     /**
      * Close the connection once all data has been written to the socket so that the client
      * knows when to read it.
      */
     socket.end();
-    performance.mark('serialized-project-graph-written-to-client');
     performance.measure(
-      'serialize and write project graph to client',
-      'project-graph-created',
-      'serialized-project-graph-written-to-client'
-    );
-    performance.measure(
-      'server response total',
+      'total for server response',
       'server-connection',
       'serialized-project-graph-written-to-client'
+    );
+    const bytesWritten = Buffer.byteLength(serializedProjectGraph, 'utf-8');
+    serverLog(
+      `Closed Connection to Client (${bytesWritten} bytes transferred)`
     );
   });
 });
