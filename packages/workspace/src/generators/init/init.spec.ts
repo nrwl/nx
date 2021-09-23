@@ -140,7 +140,7 @@ describe('workspace', () => {
     });
 
     it('should create nx.json', async () => {
-      await initGenerator(tree, { name: 'myApp', defaultBase: 'master' });
+      await initGenerator(tree, { name: 'myApp', defaultBase: 'main' });
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 

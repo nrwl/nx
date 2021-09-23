@@ -75,7 +75,7 @@ Object {
 exports[`new should generate an empty nx.json 1`] = `
 Object {
   "affected": Object {
-    "defaultBase": "master",
+    "defaultBase": "main",
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",

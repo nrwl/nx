@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 
 // TODO (v13): Update to main
 export function deduceDefaultBase(): string {
-  const nxDefaultBase = 'master';
+  const nxDefaultBase = 'main';
   try {
     return (
       execSync('git config --get init.defaultBranch').toString().trim() ||

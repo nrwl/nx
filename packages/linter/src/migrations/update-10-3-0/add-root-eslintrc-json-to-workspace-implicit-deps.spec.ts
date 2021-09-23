@@ -28,7 +28,7 @@ describe('Update implicitDependencies within nx.json to include root .eslintrc.j
         },
         projects: {},
         affected: {
-          defaultBase: 'master',
+          defaultBase: 'main',
         },
       })
     );

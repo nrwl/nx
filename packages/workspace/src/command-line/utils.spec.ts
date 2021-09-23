@@ -40,7 +40,7 @@ describe('splitArgs', () => {
     expect(nxArgs['nxKey']).toEqual('some-value');
   });
 
-  it('should default to having a base of master', () => {
+  it('should default to having a base of main', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
         {
@@ -51,7 +51,7 @@ describe('splitArgs', () => {
         'affected'
       ).nxArgs
     ).toEqual({
-      base: 'master',
+      base: 'main',
       skipNxCache: false,
     });
   });
@@ -94,7 +94,7 @@ describe('splitArgs', () => {
         'affected'
       ).nxArgs
     ).toEqual({
-      base: 'master',
+      base: 'main',
       skipNxCache: false,
     });
   });
@@ -220,7 +220,7 @@ describe('getAffectedConfig', () => {
   it('should return defaults when affected is undefined in nx.json', () => {
     jest.spyOn(fileUtils, 'readNxJson').mockReturnThis();
 
-    expect(getAffectedConfig().defaultBase).toEqual('master');
+    expect(getAffectedConfig().defaultBase).toEqual('main');
   });
 
   it('should return default base branch when its defined in nx.json', () => {

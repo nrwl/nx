@@ -31,13 +31,13 @@ describe('@nrwl/workspace:workspace', () => {
       directory: 'proj',
       cli: 'nx',
       preset: Preset.Empty,
-      defaultBase: 'master',
+      defaultBase: 'main',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
       npmScope: 'proj',
       affected: {
-        defaultBase: 'master',
+        defaultBase: 'main',
       },
       implicitDependencies: {
         'package.json': {

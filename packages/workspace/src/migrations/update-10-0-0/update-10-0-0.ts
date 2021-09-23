@@ -13,7 +13,7 @@ const addNxJsonAffectedConfig = updateJsonInTree(
   'nx.json',
   (json: NxJsonConfiguration) => {
     json.affected = {
-      defaultBase: 'master',
+      defaultBase: 'main',
     };
 
     return json;
