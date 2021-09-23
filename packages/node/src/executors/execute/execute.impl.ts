@@ -90,20 +90,16 @@ export async function* executeExecutor(
 
 const nextIterValue = (typedIter: TypedIterator) =>
   typedIter.type === 'build'
-    ? typedIter.iterator
-        .next()
-        .then((result) => ({
-          iterator: typedIter.iterator,
-          type: typedIter.type,
-          ...result,
-        }))
-    : typedIter.iterator
-        .next()
-        .then((result) => ({
-          iterator: typedIter.iterator,
-          type: typedIter.type,
-          ...result,
-        }));
+    ? typedIter.iterator.next().then((result) => ({
+        iterator: typedIter.iterator,
+        type: typedIter.type,
+        ...result,
+      }))
+    : typedIter.iterator.next().then((result) => ({
+        iterator: typedIter.iterator,
+        type: typedIter.type,
+        ...result,
+      }));
 
 async function* scheduleBuildAndProcessEvents(
   buildIterator: AsyncIterator<NodeBuildEvent>,
