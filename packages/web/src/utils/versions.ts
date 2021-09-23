@@ -1,2 +1,2 @@
 export const nxVersion = '*';
-export const coreJsVersion = '^3.16.0';
+export const sassVersion = '1.42.1';

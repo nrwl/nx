@@ -1,7 +1,8 @@
-import { stripIndents, logger } from '@nrwl/devkit';
+import { logger, stripIndents } from '@nrwl/devkit';
 
 export let sassImplementation: {} | undefined;
 
+// TODO(jack): Remove in Nx 13
 try {
   sassImplementation = require('node-sass');
   logger.warn(stripIndents`
