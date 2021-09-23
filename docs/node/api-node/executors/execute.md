@@ -18,6 +18,14 @@ Type: `array`
 
 Extra args when starting the app
 
+### emitSubprocessEvents
+
+Default: `false`
+
+Type: `boolean`
+
+Emit events from subprocess
+
 ### host
 
 Default: `localhost`
