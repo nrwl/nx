@@ -220,8 +220,10 @@ const server = createServer((socket) => {
      */
     socket.end();
     serverLog('Closed Connection to Client');
+
+    const bytesWritten = Buffer.byteLength(serializedProjectGraph, 'utf-8');
     performance.measure(
-      'server response total',
+      `total for server response (${bytesWritten} bytes transferred)`,
       'server-connection',
       'serialized-project-graph-written-to-client'
     );
