@@ -42,9 +42,21 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
 
     if (existsSync(pathToWebpackConfig)) {
       return serveWebpackBrowser(options as DevServerBuilderOptions, context, {
-        webpackConfiguration: (baseWebpackConfig) => {
+        webpackConfiguration: async (baseWebpackConfig) => {
           const customWebpackConfiguration = require(pathToWebpackConfig);
-          return merge(baseWebpackConfig, customWebpackConfiguration);
+          // The extra Webpack configuration file can export a synchronous or asynchronous function,
+          // for instance: `module.exports = async config => { ... }`.
+          if (typeof customWebpackConfiguration === 'function') {
+            return customWebpackConfiguration(baseWebpackConfig);
+          } else {
+            return merge(
+              baseWebpackConfig,
+              // The extra Webpack configuration file can also export a Promise, for instance:
+              // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
+              // then await will just resolve that object.
+              await customWebpackConfiguration
+            );
+          }
         },
       });
     } else {
