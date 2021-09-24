@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   readJson,
   Tree,
 } from '@nrwl/devkit';

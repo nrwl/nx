@@ -19,7 +19,7 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import * as prettier from 'prettier';
 import {
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
+  ProjectConfiguration,
   readJsonFile,
   writeJsonFile,
 } from '@nrwl/devkit';
@@ -216,7 +216,12 @@ function movePropertiesToNewLocations() {
 
 export function moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(
   workspaceJson: WorkspaceJsonConfiguration,
-  nxJson: NxJsonConfiguration & { projects: NxJsonProjectConfiguration }
+  nxJson: NxJsonConfiguration & {
+    projects: Record<
+      string,
+      Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
+    >;
+  }
 ) {
   if (!nxJson.projects) {
     return;

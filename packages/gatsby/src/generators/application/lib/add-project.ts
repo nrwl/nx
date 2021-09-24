@@ -2,16 +2,11 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addProjectConfiguration,
   joinPathFragments,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const nxConfig: NxJsonProjectConfiguration = {
-    tags: options.parsedTags,
-  };
-
   const targets: Record<string, any> = {};
 
   targets.build = {
@@ -44,6 +39,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'application',
     targets,
+    tags: options.parsedTags,
   };
 
   addProjectConfiguration(
@@ -51,7 +47,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     options.projectName,
     {
       ...project,
-      ...nxConfig,
     },
     options.standaloneConfig
   );

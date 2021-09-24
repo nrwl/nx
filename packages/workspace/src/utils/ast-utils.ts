@@ -18,13 +18,12 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import { parseJson, serializeJson } from '@nrwl/devkit';
+import { parseJson, ProjectConfiguration, serializeJson } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import type {
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   ProjectGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
@@ -461,11 +460,11 @@ export function updateNxJsonInTree(
 
 /**
  * Sets former nx.json options on projects which are already in workspace.json
- * @deprecated project options are no longer stored in nx.json, this should not be used.
+ * @deprecated(v14) project options are no longer stored in nx.json, this should not be used.
  */
 export function addProjectToNxJsonInTree(
   projectName: string,
-  options: NxJsonProjectConfiguration
+  options: Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
 ): Rule {
   const defaultOptions = {
     tags: [],

@@ -219,8 +219,6 @@ It only uses language primitives and immutable objects
 
 • **ProjectGraphProcessorContext**: `Object`
 
-**`deprecated(2021-08-26):`** NxJson no longer contains projects
-
 ---
 
 ## Tree Interfaces

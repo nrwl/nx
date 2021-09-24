@@ -1,6 +1,6 @@
 import {
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
+  ProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -12,7 +12,10 @@ import { writeJson } from 'fs-extra';
 export default function update(host: Tree) {
   const { generators, cli } = readWorkspaceConfiguration(host);
   const nxJson = readNxJson(host) as NxJsonConfiguration & {
-    projects: Record<string, NxJsonProjectConfiguration>;
+    projects: Record<
+      string,
+      Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
+    >;
   };
   nxJson.generators ??= generators;
   nxJson.cli ??= cli;

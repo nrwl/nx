@@ -8,8 +8,6 @@ import {
   getWorkspacePath,
   logger,
   normalizePath,
-  NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -60,7 +58,7 @@ To upgrade change the version number at the top of ${getWorkspacePath(
     ? getProjects(host).entries()
     : ([[schema.project, readProjectConfiguration(host, schema.project)]] as [
         string,
-        ProjectConfiguration & NxJsonProjectConfiguration
+        ProjectConfiguration
       ][]);
 
   for (const [project, configuration] of projects) {

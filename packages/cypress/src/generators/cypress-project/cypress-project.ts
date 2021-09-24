@@ -13,7 +13,6 @@ import {
   Tree,
   updateJson,
   ProjectConfiguration,
-  NxJsonProjectConfiguration,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -64,7 +63,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
         : devServerTarget;
   }
 
-  const project: ProjectConfiguration & NxJsonProjectConfiguration = {
+  const project: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'application',

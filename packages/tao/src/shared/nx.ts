@@ -96,7 +96,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
 }
 
 /**
- * @deprecated(2021-08-26): NxJson no longer contains projects
+ * @deprecated(v14): nx.json no longer contains projects
  */
 export interface NxJsonProjectConfiguration {
   implicitDependencies?: string[];

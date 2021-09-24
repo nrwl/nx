@@ -11,9 +11,7 @@ import {
   updateFile,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
-import type {
-  WorkspaceJsonConfiguration,
-} from '@nrwl/devkit';
+import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
 let proj;
 
 beforeAll(() => {

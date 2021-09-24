@@ -1,8 +1,4 @@
-import type {
-  NxJsonProjectConfiguration,
-  ProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   offsetFromRoot,
@@ -28,7 +24,7 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
   tree.write(page, pageContent.replace(`.content span`, `header h1`));
 
   const proj = readProjectConfiguration(tree, options.name);
-  const project: ProjectConfiguration & NxJsonProjectConfiguration = {
+  const project: ProjectConfiguration = {
     root: options.e2eProjectRoot,
     projectType: 'application',
     targets: {

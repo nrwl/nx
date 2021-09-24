@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   readWorkspaceConfiguration,
   TargetConfiguration,
@@ -10,20 +9,16 @@ import {
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const nxConfig: NxJsonProjectConfiguration = {
-    tags: options.parsedTags,
-  };
-
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
     targets: { ...getTargets(options) },
+    tags: options.parsedTags,
   };
 
   addProjectConfiguration(host, options.projectName, {
     ...project,
-    ...nxConfig,
   });
 
   const workspace = readWorkspaceConfiguration(host);

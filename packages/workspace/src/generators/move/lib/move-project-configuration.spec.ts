@@ -182,6 +182,7 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should update tags and implicitDependencies', () => {
+    setupWorkspace();
     moveProjectConfiguration(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(

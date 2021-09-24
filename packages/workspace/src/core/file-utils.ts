@@ -6,7 +6,6 @@ import {
 import type {
   FileData,
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   ProjectGraphNode,
 } from '@nrwl/devkit';
 import { ProjectFileMap } from '@nrwl/devkit';

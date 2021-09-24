@@ -4,7 +4,7 @@ import * as fs from 'fs';
 function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  wc: any,
+  workspaceConfiguration: any,
   nxJson
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
@@ -12,24 +12,22 @@ function calculateDefaultProjectName(
     relativeCwd = relativeCwd.startsWith('/')
       ? relativeCwd.substring(1)
       : relativeCwd;
-    const matchingProject = Object.keys(wc.projects).find((p) => {
-      const projectRoot = wc.projects[p].root;
-      return (
-        relativeCwd == projectRoot || relativeCwd.startsWith(`${projectRoot}/`)
-      );
-    });
+    const matchingProject = Object.keys(workspaceConfiguration.projects).find(
+      (p) => {
+        const projectRoot = workspaceConfiguration.projects[p].root;
+        return (
+          relativeCwd == projectRoot ||
+          relativeCwd.startsWith(`${projectRoot}/`)
+        );
+      }
+    );
     if (matchingProject) return matchingProject;
   }
-  let defaultProjectName = null;
-  try {
-    defaultProjectName = nxJson.cli.defaultProjectName;
-  } catch (e) {}
-  try {
-    if (!defaultProjectName) {
-      defaultProjectName = nxJson.defaultProject;
-    }
-  } catch (e) {}
-  return defaultProjectName;
+  return (
+    nxJson.cli?.defaultProjectName ||
+    nxJson.defaultProject ||
+    workspaceConfiguration.defaultProject
+  );
 }
 
 const invalidTargetNames = [

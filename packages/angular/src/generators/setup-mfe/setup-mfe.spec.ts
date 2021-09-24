@@ -1,8 +1,4 @@
-import type {
-  NxJsonConfiguration,
-  NxJsonProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -167,7 +163,7 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const projectConfig: NxJsonProjectConfiguration = readProjectConfiguration(
+    const projectConfig: ProjectConfiguration = readProjectConfiguration(
       host,
       'app1'
     );

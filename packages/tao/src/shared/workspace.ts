@@ -2,13 +2,13 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
-import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
+import type { NxJsonConfiguration } from './nx';
 import { TaskGraph } from './tasks';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
     NxJsonConfiguration {
-  projects: Record<string, ProjectConfiguration & NxJsonProjectConfiguration>;
+  projects: Record<string, ProjectConfiguration>;
 }
 
 /**
@@ -23,7 +23,7 @@ export interface WorkspaceJsonConfiguration {
    * Projects' configurations
    */
   projects: {
-    [projectName: string]: ProjectConfiguration & NxJsonProjectConfiguration;
+    [projectName: string]: ProjectConfiguration;
   };
 }
 
