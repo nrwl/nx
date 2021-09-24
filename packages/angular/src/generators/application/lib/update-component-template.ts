@@ -38,6 +38,6 @@ export function updateComponentTemplate(host: Tree, options: NormalizedSchema) {
     ),
     componentPath,
     templateNodeValue,
-    `\`\n${nrwlHomeTemplate.html}\n\`,\n`
+    `\`\n${nrwlHomeTemplate.html}\n\``
   );
 }
