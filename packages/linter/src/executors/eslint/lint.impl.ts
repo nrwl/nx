@@ -74,32 +74,8 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         success: false,
       };
     }
-    if (err.messageTemplate === 'file-not-found' && err.messageData?.pattern) {
-      /**
-       * Entire folder might be excluded via .eslintingore which would result
-       * in `lintResults` being an empty array.
-       * This would result in false assumption of invalid configuration and
-       * end up as exception.
-       *
-       * We want to rather show info as this is likely intentional behavior
-       */
-      if (
-        await eslint.isPathIgnored(`${context.root}/${err.messageData.pattern}`)
-      ) {
-        console.warn(
-          'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.'
-        );
-        return {
-          success: true,
-        };
-      }
-    }
     // If some unexpected error, rethrow
     throw err;
-  }
-
-  if (lintResults.length === 0) {
-    throw new Error('Invalid lint configuration. Nothing to lint.');
   }
 
   // if quiet, only show errors
