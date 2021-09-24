@@ -74,4 +74,24 @@ describe('Normalize Options', () => {
       projectName: 'directory-my-app-e2e',
     });
   });
+
+  it('should normalize options with directory in its name', () => {
+    addProjectConfiguration(appTree, 'my-app', {
+      root: 'apps/my-app',
+      targets: {},
+    });
+    const schema: Schema = {
+      name: 'directory/my-app-e2e',
+      project: 'my-app',
+    };
+    const options = normalizeOptions(appTree, schema);
+    expect(options).toEqual({
+      project: 'my-app',
+      appClassName: 'MyApp',
+      appFileName: 'my-app',
+      projectRoot: 'apps/directory/my-app-e2e',
+      name: 'directory/my-app-e2e',
+      projectName: 'directory-my-app-e2e',
+    });
+  });
 });

@@ -391,5 +391,72 @@ describe('schematic:cypress-project', () => {
         'apps/one/two/other-e2e/src/integration/app.spec.ts',
       ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
     });
+
+    describe('project with directory in its name', () => {
+      beforeEach(async () => {
+        await cypressProjectGenerator(tree, {
+          name: 'my-dir/my-app-e2e',
+          project: 'my-dir-my-app',
+          linter: Linter.TsLint,
+          standaloneConfig: false,
+        });
+      });
+
+      it('should update workspace.json', async () => {
+        const projectConfig = readJson(tree, 'workspace.json').projects[
+          'my-dir-my-app-e2e'
+        ];
+
+        expect(projectConfig).toBeDefined();
+        expect(projectConfig.architect.lint).toEqual({
+          builder: '@angular-devkit/build-angular:tslint',
+          options: {
+            tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.json'],
+            exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**/*'],
+          },
+        });
+
+        expect(projectConfig.architect.e2e).toEqual({
+          builder: '@nrwl/cypress:cypress',
+          options: {
+            cypressConfig: 'apps/my-dir/my-app-e2e/cypress.json',
+            devServerTarget: 'my-dir-my-app:serve',
+            tsConfig: 'apps/my-dir/my-app-e2e/tsconfig.json',
+          },
+          configurations: {
+            production: {
+              devServerTarget: 'my-dir-my-app:serve:production',
+            },
+          },
+        });
+      });
+
+      it('should update nx.json', async () => {
+        const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
+        expect(project.tags).toEqual([]);
+        expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
+      });
+
+      it('should set right path names in `cypress.json`', async () => {
+        const cypressJson = readJson(
+          tree,
+          'apps/my-dir/my-app-e2e/cypress.json'
+        );
+
+        expect(cypressJson).toEqual({
+          fileServerFolder: '.',
+          fixturesFolder: './src/fixtures',
+          integrationFolder: './src/integration',
+          modifyObstructiveCode: false,
+          pluginsFile: './src/plugins/index',
+          supportFile: './src/support/index.ts',
+          video: true,
+          videosFolder: '../../../dist/cypress/apps/my-dir/my-app-e2e/videos',
+          screenshotsFolder:
+            '../../../dist/cypress/apps/my-dir/my-app-e2e/screenshots',
+          chromeWebSecurity: false,
+        });
+      });
+    });
   });
 });

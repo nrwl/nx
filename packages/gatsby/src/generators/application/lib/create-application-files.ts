@@ -22,7 +22,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     ...names(options.name),
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     tmpl: '',
-    appContent: createAppJsx(options.name),
+    appContent: createAppJsx(options.projectName),
     pageWrapperStyle: createPageWrapperStyle(),
     pageStyleContent: createPageStyleContent(),
   };
