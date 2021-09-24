@@ -28,29 +28,32 @@ describe('Detox', () => {
     const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
     expect(lintResults.combinedOutput).toContain('All files pass linting');
   });
-  it('should build and test ios', async () => {
-    if (!isOSX()) return;
 
-    const appName = uniq('myapp');
-    runCLI(
-      `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint`
-    );
+  describe('React Native Detox MACOS-Tests', () => {
+    if (isOSX()) {
+      it('should build and test ios MACOS-Tests', async () => {
+        const appName = uniq('myapp');
+        runCLI(
+          `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint`
+        );
 
-    expect(runCLI(`build-ios ${appName}-e2e`)).toContain(
-      'Running target "build-ios" succeeded'
-    );
+        expect(runCLI(`build-ios ${appName}-e2e`)).toContain(
+          'Running target "build-ios" succeeded'
+        );
 
-    // comment out due to github issue that unable to build xcode error 12.5 https://github.com/facebook/react-native/issues/31480
-    /* expect(runCLI(`build-ios ${appName}-e2e --pod`)).toContain(
-      'Running target "build-ios" succeeded'
-    );
-    expect(
-      runCLI(
-        `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`
-      )
-    ).toContain('Running target "test-ios" succeeded');
+        // comment out due to github issue that unable to build xcode error 12.5 https://github.com/facebook/react-native/issues/31480
+        /* expect(runCLI(`build-ios ${appName}-e2e --pod`)).toContain(
+          'Running target "build-ios" succeeded'
+        );
+        expect(
+          runCLI(
+            `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`
+          )
+        ).toContain('Running target "test-ios" succeeded');
 
-    await killPorts(8081); // kill the port for the serve command
-    */
-  }, 1000000);
+        await killPorts(8081); // kill the port for the serve command
+        */
+      }, 1000000);
+    }
+  });
 });
