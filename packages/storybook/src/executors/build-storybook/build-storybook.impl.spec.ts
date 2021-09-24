@@ -34,6 +34,9 @@ describe('Build storybook', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
   });

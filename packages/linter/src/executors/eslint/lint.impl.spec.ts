@@ -90,6 +90,9 @@ describe('Linter Builder', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
     mockLint.mockImplementation(() => mockReports);

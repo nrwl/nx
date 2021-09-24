@@ -239,6 +239,11 @@ export interface ExecutorContext {
   workspace: WorkspaceJsonConfiguration;
 
   /**
+   * The nx.json configuration
+   */
+  nxJson: NxJsonConfiguration;
+
+  /**
    * The current working directory
    */
   cwd: string;

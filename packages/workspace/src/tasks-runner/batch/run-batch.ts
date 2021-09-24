@@ -18,6 +18,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
   const input: Record<string, any> = {};
   const workspace = new Workspaces(appRootPath);
   const workspaceConfig = workspace.readWorkspaceConfiguration();
+  const nxJsonConfig = workspace.readNxConfiguration();
 
   const batchExecutor = getBatchExecutor(executorName);
   const tasks = Object.values(taskGraph.tasks);
@@ -25,6 +26,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
     root: appRootPath,
     cwd: process.cwd(),
     workspace: workspaceConfig,
+    nxJson: nxJsonConfig,
     isVerbose: false,
   };
   for (const task of tasks) {

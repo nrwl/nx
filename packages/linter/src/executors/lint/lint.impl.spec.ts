@@ -73,6 +73,9 @@ describe('Linter Builder', () => {
         version: 2,
         projects: {},
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
   });

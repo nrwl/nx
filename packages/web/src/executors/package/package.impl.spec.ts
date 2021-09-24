@@ -19,6 +19,9 @@ describe('packageExecutor', () => {
         version: 2,
         projects: {},
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
       projectName: 'example',
       targetName: 'build',

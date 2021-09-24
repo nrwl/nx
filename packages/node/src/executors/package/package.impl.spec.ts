@@ -72,6 +72,9 @@ describe('NodePackageBuilder', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
     testOptions = {

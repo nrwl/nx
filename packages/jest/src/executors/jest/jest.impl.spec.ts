@@ -50,6 +50,9 @@ describe('Jest Executor', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       target: {
         executor: '@nrwl/jest:jest',
       },

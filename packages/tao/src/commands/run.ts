@@ -18,6 +18,7 @@ import {
 
 import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
+import { NxJsonConfiguration } from '../shared/nx';
 
 export interface Target {
   project: string;
@@ -180,6 +181,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   root: string,
   cwd: string,
   workspace: WorkspaceJsonConfiguration,
+  nxJson: NxJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -226,6 +228,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       root,
       target: targetConfig,
       workspace,
+      nxJson,
       projectName: project,
       targetName: target,
       configurationName: configuration,
@@ -301,6 +304,7 @@ export async function runExecutor<T extends { success: boolean }>(
     context.root,
     context.cwd,
     context.workspace,
+    context.nxJson,
     context.isVerbose,
     false
   );
@@ -330,6 +334,7 @@ export async function run(
         root,
         cwd,
         workspace,
+        nxJson,
         isVerbose,
         opts.help
       )

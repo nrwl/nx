@@ -22,7 +22,7 @@ export function readTargetOptions<T = any>(
   const defaultProject = ws.calculateDefaultProjectName(
     context.cwd,
     context.workspace,
-    ws.readNxConfiguration()
+    context.nxJson
   );
 
   return combineOptionsForExecutor(

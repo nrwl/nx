@@ -35,6 +35,9 @@ describe('Node Build Executor', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
     options = {

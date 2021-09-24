@@ -54,6 +54,9 @@ describe('executor: tsc', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
     options = {

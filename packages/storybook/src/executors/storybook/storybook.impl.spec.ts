@@ -60,6 +60,9 @@ describe('@nrwl/storybook:storybook', () => {
           },
         },
       },
+      nxJson: {
+        npmScope: 'test',
+      },
       isVerbose: false,
     };
     jest.mock('fs', () => fsMock);
