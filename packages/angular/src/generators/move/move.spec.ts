@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { readJson, Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { angularMoveGenerator } from './move';
@@ -36,6 +36,19 @@ describe('@nrwl/angular:move', () => {
     expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
       true
     );
+  });
+
+  it('should update ng-package.json dest property', async () => {
+    await libraryGenerator(tree, { name: 'mylib2', buildable: true });
+
+    await angularMoveGenerator(tree, {
+      projectName: 'mylib2',
+      destination: 'mynewlib2',
+      updateImportPath: true,
+    });
+
+    const ngPackageJson = readJson(tree, 'libs/mynewlib2/ng-package.json');
+    expect(ngPackageJson.dest).toEqual('../../dist/libs/mynewlib2');
   });
 
   it('should format files', async () => {
