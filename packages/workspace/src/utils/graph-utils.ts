@@ -111,5 +111,24 @@ export function checkCircularPath(
   targetProject: ProjectGraphNode
 ): Array<ProjectGraphNode> {
   if (!graph.nodes[targetProject.name]) return [];
+
   return getPath(graph, targetProject.name, sourceProject.name);
+}
+
+export function findFilesInCircularPath(
+  circularPath: ProjectGraphNode[]
+): Array<string[]> {
+  const filePathChain = [];
+
+  for (let i = 0; i < circularPath.length - 1; i++) {
+    const next = circularPath[i + 1].name;
+    const files = circularPath[i].data.files;
+    filePathChain.push(
+      Object.keys(files)
+        .filter((key) => files[key].deps?.indexOf(next) !== -1)
+        .map((key) => files[key].file)
+    );
+  }
+
+  return filePathChain;
 }
