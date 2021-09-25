@@ -695,122 +695,71 @@ function createPromptProvider() {
 
 export async function runMigration(
   root: string,
-  collection: string,
-  schematic: string,
+  packageName: string,
+  migrationName: string,
   isVerbose: boolean
 ) {
-  const NodeModulesEngineHost =
-    require('@angular-devkit/schematics/tools').NodeModulesEngineHost;
-
-  class MigrationEngineHost extends NodeModulesEngineHost {
-    private nodeInstallLogPrinted = false;
-
-    constructor(logger: logging.Logger) {
-      super();
-
-      // Overwrite the original CLI node package executor with a new one that does basically nothing
-      // since nx migrate doesn't do npm installs by itself
-      // (https://github.com/angular/angular-cli/blob/5df776780deadb6be5048b3ab006a5d3383650dc/packages/angular_devkit/schematics/tools/workflow/node-workflow.ts#L41)
-      this.registerTaskExecutor({
-        name: require('@angular-devkit/schematics/tasks/package-manager/options')
-          .NodePackageName,
-        create: () =>
-          Promise.resolve<import('@angular-devkit/schematics').TaskExecutor>(
-            () => {
-              return new Promise((res) => {
-                if (!this.nodeInstallLogPrinted) {
-                  logger.warn(
-                    `An installation of node_modules has been required. Make sure to run it after the migration`
-                  );
-                  this.nodeInstallLogPrinted = true;
-                }
-
-                res();
-              });
-            }
-          ),
-      });
-
-      this.registerTaskExecutor(
-        require('@angular-devkit/schematics/tasks/node').BuiltinTaskExecutor
-          .RunSchematic
-      );
-    }
-
-    protected _resolveCollectionPath(name: string): string {
-      let collectionPath: string | undefined = undefined;
-
-      if (name.startsWith('.') || name.startsWith('/')) {
-        name = resolve(name);
-      }
-
-      if (extname(name)) {
-        collectionPath = require.resolve(name);
-      } else {
-        let packageJsonPath;
-        try {
-          packageJsonPath = require.resolve(join(name, 'package.json'), {
-            paths: [process.cwd()],
-          });
-        } catch (e) {
-          // workaround for a bug in node 12
-          packageJsonPath = require.resolve(
-            join(process.cwd(), name, 'package.json')
-          );
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const packageJson = require(packageJsonPath);
-        let pkgJsonSchematics =
-          packageJson['nx-migrations'] ?? packageJson['ng-update'];
-        if (!pkgJsonSchematics) {
-          throw new Error(`Could not find migrations in package: "${name}"`);
-        }
-        if (typeof pkgJsonSchematics != 'string') {
-          pkgJsonSchematics = pkgJsonSchematics.migrations;
-        }
-        collectionPath = require.resolve(pkgJsonSchematics, {
-          paths: [dirname(packageJsonPath)],
-        });
-      }
-
-      try {
-        if (collectionPath) {
-          readJsonFile(collectionPath);
-          return collectionPath;
-        }
-      } catch {
-        throw new Error(`Invalid migration file in package: "${name}"`);
-      }
-      throw new Error(`Collection cannot be resolved: "${name}"`);
-    }
-  }
-
-  const { BaseWorkflow } = require('@angular-devkit/schematics/src/workflow');
-
-  class MigrationsWorkflow extends BaseWorkflow {
-    constructor(host: virtualFs.Host, logger: logging.Logger) {
-      super({
-        host,
-        engineHost: new MigrationEngineHost(logger) as any,
-        force: true,
-        dryRun: false,
-      });
-    }
-  }
-
   const logger = getLogger(isVerbose);
-  const host = new NxScopedHostForMigrations(normalize(root));
-  const workflow = new MigrationsWorkflow(host, logger as any);
+  const fsHost = new NxScopedHost(normalize(root));
+  const workflow = createWorkflow(fsHost, root, {});
+  const collection = resolveMigrationsCollection(packageName);
   return workflow
     .execute({
       collection,
-      schematic,
+      schematic: migrationName,
       options: {},
       debug: false,
       logger: logger as any,
     })
     .toPromise();
+}
+
+function resolveMigrationsCollection(name: string): string {
+  let collectionPath: string | undefined = undefined;
+
+  if (name.startsWith('.') || name.startsWith('/')) {
+    name = resolve(name);
+  }
+
+  if (extname(name)) {
+    collectionPath = require.resolve(name);
+  } else {
+    let packageJsonPath;
+    try {
+      packageJsonPath = require.resolve(join(name, 'package.json'), {
+        paths: [process.cwd()],
+      });
+    } catch (e) {
+      // workaround for a bug in node 12
+      packageJsonPath = require.resolve(
+        join(process.cwd(), name, 'package.json')
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const packageJson = require(packageJsonPath);
+    let pkgJsonSchematics =
+      packageJson['nx-migrations'] ?? packageJson['ng-update'];
+    if (!pkgJsonSchematics) {
+      throw new Error(`Could not find migrations in package: "${name}"`);
+    }
+    if (typeof pkgJsonSchematics != 'string') {
+      pkgJsonSchematics = pkgJsonSchematics.migrations;
+    }
+    collectionPath = require.resolve(pkgJsonSchematics, {
+      paths: [dirname(packageJsonPath)],
+    });
+  }
+
+  try {
+    if (collectionPath) {
+      readJsonFile(collectionPath);
+      return collectionPath;
+    }
+  } catch {
+    throw new Error(`Invalid migration file in package: "${name}"`);
+  }
+  throw new Error(`Collection cannot be resolved: "${name}"`);
 }
 
 function convertEventTypeToHandleMultipleConfigNames(
