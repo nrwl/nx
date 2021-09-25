@@ -44,13 +44,13 @@ describe('app', () => {
 
     it('should update nx.json', async () => {
       // ACT
-      await generateApp(appTree, 'myApp', { tags: 'one,two' });
+      await generateApp(appTree, 'myApp', { tags: 'one,two,my-app' });
 
       // ASSERT
       const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
-          tags: ['one', 'two'],
+          tags: ['one', 'two', 'my-app'],
         },
         'my-app-e2e': {
           implicitDependencies: ['my-app'],
@@ -190,12 +190,12 @@ describe('app', () => {
     it('should update nx.json', async () => {
       await generateApp(appTree, 'myApp', {
         directory: 'myDir',
-        tags: 'one,two',
+        tags: 'one,two,my-dir-my-app',
       });
       const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-app': {
-          tags: ['one', 'two'],
+          tags: ['one', 'two', 'my-dir-my-app'],
         },
         'my-dir-my-app-e2e': {
           implicitDependencies: ['my-dir-my-app'],
