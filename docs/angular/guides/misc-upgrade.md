@@ -28,7 +28,7 @@ Nx sets up the upgrade module for you to help you get started with your upgrade 
 
 In this talk at NgConf, Victor Savkin shows how to upgrade your application gradually, component by component, module by module using NgUpgrade and the Angular Router. He discusses the common problems developers face during such migrations and the patterns that can be used to remedy them.
 
-[![Upgrading Enterprise Angular Applications - Victor Savkin](https://img.youtube.com/vi/izpqQpD8RQ0/0.jpg)](https://www.youtube.com/watch?v=izpqQpD8RQ0 "Upgrading Enterprise Angular Applications - Victor Savkin")
+[![Upgrading Enterprise Angular Applications - Victor Savkin](https://img.youtube.com/vi/izpqQpD8RQ0/0.jpg)](https://www.youtube.com/watch?v=izpqQpD8RQ0 'Upgrading Enterprise Angular Applications - Victor Savkin')
 
 #### Blog: Upgrading Angular Applications
 
