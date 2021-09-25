@@ -874,6 +874,10 @@
         "jasmine-marbles": {
           "version": "~0.8.4",
           "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "10.0.1",
+          "alwaysAddToPackageJson": false
         }
       }
     }
