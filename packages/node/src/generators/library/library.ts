@@ -40,6 +40,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     importPath: options.importPath,
     testEnvironment: 'node',
     skipFormat: true,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
   createFiles(tree, options);
 

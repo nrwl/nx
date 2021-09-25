@@ -38,5 +38,6 @@ export function toNodeApplicationGeneratorOptions(
     standaloneConfig: options.standaloneConfig,
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
+    setParserOptionsProject: options.setParserOptionsProject,
   };
 }
