@@ -56,6 +56,14 @@ Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
