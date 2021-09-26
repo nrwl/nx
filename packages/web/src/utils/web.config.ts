@@ -185,68 +185,59 @@ export function getStylesPartial(
     importLoaders: 1,
   };
 
+  const commonLoaders = [
+    {
+      loader: extractCss
+        ? MiniCssExtractPlugin.loader
+        : require.resolve('style-loader'),
+    },
+    {
+      loader: require.resolve('css-loader'),
+      options: loaderModulesOptions,
+    },
+    {
+      loader: require.resolve('postcss-loader'),
+      options: {
+        implementation: require('postcss'),
+        postcssOptions: (loader) => ({
+          plugins: [
+            postcssImports({
+              addModulesDirectories: includePaths,
+              resolve: (url: string) =>
+                url.startsWith('~') ? url.substr(1) : url,
+              load: (filename: string) => {
+                return new Promise<string>((resolve, reject) => {
+                  loader.fs.readFile(filename, (err: Error, data: Buffer) => {
+                    if (err) {
+                      reject(err);
+
+                      return;
+                    }
+
+                    const content = data.toString();
+                    resolve(content);
+                  });
+                });
+              },
+            }),
+          ],
+        }),
+      },
+    },
+  ];
+
   partial.module.rules = [
     {
       test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
       oneOf: [
         {
           test: /\.module\.css$/,
-          use: [
-            {
-              loader: extractCss
-                ? MiniCssExtractPlugin.loader
-                : require.resolve('style-loader'),
-            },
-            {
-              loader: require.resolve('css-loader'),
-              options: loaderModulesOptions,
-            },
-            {
-              loader: require.resolve('postcss-loader'),
-              options: {
-                implementation: require('postcss'),
-                postcssOptions: (loader) => ({
-                  plugins: [
-                    postcssImports({
-                      addModulesDirectories: includePaths,
-                      resolve: (url: string) =>
-                        url.startsWith('~') ? url.substr(1) : url,
-                      load: (filename: string) => {
-                        return new Promise<string>((resolve, reject) => {
-                          loader.fs.readFile(
-                            filename,
-                            (err: Error, data: Buffer) => {
-                              if (err) {
-                                reject(err);
-
-                                return;
-                              }
-
-                              const content = data.toString();
-                              resolve(content);
-                            }
-                          );
-                        });
-                      },
-                    }),
-                  ],
-                }),
-              },
-            },
-          ],
+          use: commonLoaders,
         },
         {
           test: /\.module\.(scss|sass)$/,
           use: [
-            {
-              loader: extractCss
-                ? MiniCssExtractPlugin.loader
-                : require.resolve('style-loader'),
-            },
-            {
-              loader: require.resolve('css-loader'),
-              options: loaderModulesOptions,
-            },
+            ...commonLoaders,
             {
               loader: require.resolve('sass-loader'),
               options: {
@@ -263,15 +254,7 @@ export function getStylesPartial(
         {
           test: /\.module\.less$/,
           use: [
-            {
-              loader: extractCss
-                ? MiniCssExtractPlugin.loader
-                : require.resolve('style-loader'),
-            },
-            {
-              loader: require.resolve('css-loader'),
-              options: loaderModulesOptions,
-            },
+            ...commonLoaders,
             {
               loader: require.resolve('less-loader'),
               options: {
@@ -283,15 +266,7 @@ export function getStylesPartial(
         {
           test: /\.module\.styl$/,
           use: [
-            {
-              loader: extractCss
-                ? MiniCssExtractPlugin.loader
-                : require.resolve('style-loader'),
-            },
-            {
-              loader: require.resolve('css-loader'),
-              options: loaderModulesOptions,
-            },
+            ...commonLoaders,
             {
               loader: require.resolve('stylus-loader'),
               options: {
