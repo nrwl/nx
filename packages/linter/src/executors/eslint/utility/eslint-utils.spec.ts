@@ -31,6 +31,7 @@ describe('eslint-utils', () => {
       cacheLocation: '/root/cache',
       ignorePath: undefined,
       useEslintrc: true,
+      errorOnUnmatchedPattern: false,
     });
   });
 
@@ -48,6 +49,7 @@ describe('eslint-utils', () => {
       cacheLocation: '/root/cache',
       ignorePath: undefined,
       useEslintrc: true,
+      errorOnUnmatchedPattern: false,
     });
   });
 
@@ -67,6 +69,7 @@ describe('eslint-utils', () => {
         cacheLocation: '/root/cache',
         ignorePath: undefined,
         useEslintrc: false,
+        errorOnUnmatchedPattern: false,
       });
     });
   });

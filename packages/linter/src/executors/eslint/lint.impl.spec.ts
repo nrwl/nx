@@ -150,15 +150,8 @@ describe('Linter Builder', () => {
     });
   });
 
-  it('should throw if "file-not-found" error', async () => {
-    const error = new Error("No files matching 'includedFile1' were found.");
-    error['messageTemplate'] = 'file-not-found';
-    error['messageData'] = {
-      pattern: 'includedFile1',
-      globDisabled: false,
-    };
-
-    mockLint.mockImplementationOnce(() => Promise.reject(error));
+  it('should throw if no reports generated', async () => {
+    mockReports = [];
     setupMocks();
     const result = lintExecutor(
       createValidRunBuilderOptions({
@@ -167,19 +160,14 @@ describe('Linter Builder', () => {
       mockContext
     );
     await expect(result).rejects.toThrow(
-      /No files matching 'includedFile1' were found./
+      /Invalid lint configuration. Nothing to lint. Please check your lint target pattern/
     );
   });
 
-  it('should throw if project excluded', async () => {
-    const error = new Error("All files matching 'includedFile1' are ignored.");
-    error['messageTemplate'] = 'all-files-ignored';
-    error['messageData'] = {
-      pattern: 'includedFile1',
-    };
-    mockIsPathIgnored.mockReturnValue(Promise.resolve(true));
-    mockLint.mockImplementationOnce(() => Promise.reject(error));
+  it('should throw if pattern excluded', async () => {
+    mockReports = [];
     setupMocks();
+    mockIsPathIgnored.mockReturnValue(Promise.resolve(true));
     const result = lintExecutor(
       createValidRunBuilderOptions({
         lintFilePatterns: ['includedFile1'],
@@ -187,7 +175,7 @@ describe('Linter Builder', () => {
       mockContext
     );
     await expect(result).rejects.toThrow(
-      /All files matching 'includedFile1' are ignored./
+      `All files matching the following patterns are ignored:\n- 'includedFile1'\n\nPlease check your '.eslintignore' file.`
     );
     mockIsPathIgnored.mockReturnValue(Promise.resolve(false));
   });
