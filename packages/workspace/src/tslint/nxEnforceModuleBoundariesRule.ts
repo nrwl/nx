@@ -269,7 +269,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         this.addFailureAt(
           node.getStart(),
           node.getWidth(),
-          `A project without tags cannot depend on any libraries`
+          `A project without tags matching at least one constraint cannot depend on any libraries`
         );
         return;
       }
