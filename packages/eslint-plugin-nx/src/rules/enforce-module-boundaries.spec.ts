@@ -337,7 +337,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
         graph
       );
 
-      const message = 'A project without tags cannot depend on any libraries';
+      const message =
+        'A project without tags matching at least one constraint cannot depend on any libraries';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);

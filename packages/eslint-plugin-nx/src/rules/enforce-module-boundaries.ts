@@ -93,7 +93,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportOfNonBuildableLibraries:
         'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
-      projectWithoutTagsCannotHaveDependencies: `A project without tags cannot depend on any libraries`,
+      projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
     },
   },
