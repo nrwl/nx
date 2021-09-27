@@ -8,7 +8,7 @@ function removeWindowsDriveLetter(osSpecificPath: string): string {
  * Coverts an os specific path to a unix style path
  */
 export function normalizePath(osSpecificPath: string): string {
-  return removeWindowsDriveLetter(osSpecificPath).split(path.sep).join('/');
+  return removeWindowsDriveLetter(osSpecificPath).split('\\').join('/');
 }
 
 /**
