@@ -39,7 +39,7 @@ executors:
   macos:
     <<: *defaults
     macos:
-      xcode: &_XCODE_VERSION '12.5.0'
+      xcode: &_XCODE_VERSION '13.0.0'
 
   android:
     <<: *defaults
