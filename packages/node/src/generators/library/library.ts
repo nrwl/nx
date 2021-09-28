@@ -102,9 +102,7 @@ function getCaseAwareFileName(options: {
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {
-  const nameFormats = names(options.fileName);
-
-  const { className, name, propertyName, fileName } = names(options.fileName);
+  const { className, name, propertyName } = names(options.fileName);
 
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
