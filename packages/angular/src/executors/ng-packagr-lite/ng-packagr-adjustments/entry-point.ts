@@ -26,13 +26,13 @@ import { pipe } from 'rxjs';
  *  - downlevelTs
  *  - relocateSourceMaps
  *  - writePackage
- *   - copyStagedFiles (esm, dts, metadata, sourcemaps)
- *   - writePackageJson
+ *  - copyStagedFiles (esm, dts, sourcemaps)
+ *  - writePackageJson
  *
  * The transformation pipeline is pluggable through the dependency injection system.
  * Sub-transformations are passed to this factory function as arguments.
  *
- * @param compileTs Transformation compiling typescript sources to ES2015 modules.
+ * @param compileTs Transformation compiling typescript sources to ES2020 modules.
  * @param writePackage Transformation writing a distribution-ready `package.json` (for publishing to npm registry).
  */
 export const nxEntryPointTransformFactory = (

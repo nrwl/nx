@@ -8,7 +8,7 @@ import type { Provider } from 'injection-js';
 import { InjectionToken } from 'injection-js';
 import type { Transform } from 'ng-packagr/lib/graph/transform';
 import { provideTransform } from 'ng-packagr/lib/graph/transform.di';
-import { NX_COMPILE_NGC_TOKEN, NX_COMPILE_NGC_TRANSFORM } from './compile-ngc';
+import { NX_COMPILE_NGC_PROVIDERS, NX_COMPILE_NGC_TOKEN } from './compile-ngc';
 import { nxEntryPointTransformFactory } from './entry-point';
 import {
   NX_WRITE_PACKAGE_TRANSFORM,
@@ -27,6 +27,6 @@ export const NX_ENTRY_POINT_TRANSFORM = provideTransform({
 
 export const NX_ENTRY_POINT_PROVIDERS: Provider[] = [
   NX_ENTRY_POINT_TRANSFORM,
-  NX_COMPILE_NGC_TRANSFORM,
+  ...NX_COMPILE_NGC_PROVIDERS,
   NX_WRITE_PACKAGE_TRANSFORM,
 ];

@@ -1,9 +1,8 @@
-jest.mock('@angular/compiler-cli');
+jest.mock('ng-packagr/lib/utils/ng-compiler-cli');
 jest.mock('@nrwl/workspace/src/core/project-graph');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('ng-packagr');
 
-import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
 import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import * as ngPackagr from 'ng-packagr';
@@ -14,6 +13,7 @@ import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
 } from './ng-packagr-adjustments/package.di';
+import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import ngPackagrLiteExecutor from './ng-packagr-lite.impl';
 
 describe('NgPackagrLite executor', () => {
@@ -32,13 +32,13 @@ describe('NgPackagrLite executor', () => {
         paths: { '@myorg/my-package': ['/root/my-package/src/index.ts'] },
       },
     };
-    (ng.readConfiguration as jest.Mock).mockImplementation(() => tsConfig);
     (
       buildableLibsUtils.calculateProjectDependencies as jest.Mock
     ).mockImplementation(() => ({
       target: {},
       dependencies: [],
     }));
+
     ngPackagrBuildMock = jest.fn(() => Promise.resolve());
     ngPackagerWatchSubject = new BehaviorSubject<void>(undefined);
     ngPackagrWatchMock = jest.fn(() => ngPackagerWatchSubject.asObservable());
@@ -105,16 +105,25 @@ describe('NgPackagrLite executor', () => {
   });
 
   it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
+    // ARRANGE
     (
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
+
+    (ngCompilerCli as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        readConfiguration: (...args) => tsConfig,
+      })
+    );
     const tsConfigPath = '/root/my-lib/tsconfig.app.json';
 
+    // ACT
     const result = await ngPackagrLiteExecutor(
       { ...options, tsConfig: tsConfigPath },
       context
     ).next();
 
+    // ASSERT
     expect(buildableLibsUtils.updatePaths).toHaveBeenCalledWith(
       expect.any(Array),
       tsConfig.options.paths

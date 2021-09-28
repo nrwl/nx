@@ -1,9 +1,8 @@
 export const nxVersion = '*';
-export const angularVersion = '^12.2.0';
-export const angularDevkitVersion = '~12.2.0';
+export const angularVersion = '^13.0.0-rc.2';
+export const angularDevkitVersion = '~13.0.0-rc.2';
 export const angularJsVersion = '1.7.9';
 export const ngrxVersion = '~12.5.0';
 export const rxjsVersion = '~6.6.0';
-export const jestPresetAngularVersion = '10.0.1';
-export const angularEslintVersion = '~12.3.0';
-export const webpackVersion = '5.45.1';
+export const jestPresetAngularVersion = '10.1.0';
+export const angularEslintVersion = '~12.6.0';

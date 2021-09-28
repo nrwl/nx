@@ -7,7 +7,6 @@
 
 import { logger } from '@nrwl/devkit';
 import { Node } from 'ng-packagr/lib/graph/node';
-import type { Transform } from 'ng-packagr/lib/graph/transform';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import { NgEntryPoint } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
 import {
@@ -15,6 +14,7 @@ import {
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/lib/ng-package/nodes';
+import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import {
   copyFile,
@@ -29,8 +29,8 @@ import * as path from 'path';
 
 type CompilationMode = 'partial' | 'full' | undefined;
 
-export const nxWritePackageTransform: Transform = transformFromPromise(
-  async (graph) => {
+export const nxWritePackageTransform = (options: NgPackagrOptions) =>
+  transformFromPromise(async (graph) => {
     const entryPoint = graph.find(isEntryPointInProgress());
     const ngEntryPoint = entryPoint.data.entryPoint;
     const ngPackageNode = graph.find(isPackage);
@@ -102,23 +102,19 @@ export const nxWritePackageTransform: Transform = transformFromPromise(
       const relativeUnixFromDestPath = (filePath: string) =>
         ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
 
-      const { enableIvy, compilationMode } = entryPoint.data.tsConfig.options;
+      const { compilationMode } = entryPoint.data.tsConfig.options;
 
       await writePackageJson(
         ngEntryPoint,
         ngPackage,
         {
-          module: relativeUnixFromDestPath(destinationFiles.esm2015),
-          esm2015: relativeUnixFromDestPath(destinationFiles.esm2015),
+          module: relativeUnixFromDestPath(destinationFiles.fesm2015),
+          esm2020: relativeUnixFromDestPath(destinationFiles.esm2020),
           typings: relativeUnixFromDestPath(destinationFiles.declarations),
-          // Ivy doesn't generate metadata files
-          metadata: enableIvy
-            ? undefined
-            : relativeUnixFromDestPath(destinationFiles.metadata),
           // webpack v4+ specific flag to enable advanced optimizations and code splitting
-          sideEffects: ngEntryPoint.sideEffects,
+          sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
         },
-        !!enableIvy,
+        !!options.watch,
         compilationMode as CompilationMode
       );
     } catch (error) {
@@ -127,8 +123,7 @@ export const nxWritePackageTransform: Transform = transformFromPromise(
     logger.info(`Built ${ngEntryPoint.moduleId}`);
 
     return graph;
-  }
-);
+  });
 
 /**
  * Creates and writes a `package.json` file of the entry point used by the `node_module`
@@ -149,7 +144,7 @@ async function writePackageJson(
   entryPoint: NgEntryPoint,
   pkg: NgPackage,
   additionalProperties: { [key: string]: string | boolean | string[] },
-  isIvy: boolean,
+  isWatchMode: boolean,
   compilationMode: CompilationMode
 ): Promise<void> {
   // set additional properties
@@ -160,6 +155,12 @@ async function writePackageJson(
   // it will get what installed and not the minimum version nor if it is a `~` or `^`
   // this is only required for primary
   if (!entryPoint.isSecondaryEntryPoint) {
+    if (isWatchMode) {
+      // Needed because of Webpack's 5 `cachemanagedpaths`
+      // https://github.com/angular/angular-cli/issues/20962
+      packageJson.version = `0.0.0-watch+${Date.now()}`;
+    }
+
     if (
       !packageJson.peerDependencies?.tslib &&
       !packageJson.dependencies?.tslib
@@ -216,11 +217,7 @@ async function writePackageJson(
     }
   }
 
-  if (
-    isIvy &&
-    !entryPoint.isSecondaryEntryPoint &&
-    compilationMode !== 'partial'
-  ) {
+  if (!entryPoint.isSecondaryEntryPoint && compilationMode !== 'partial') {
     const scripts = packageJson.scripts || (packageJson.scripts = {});
     scripts.prepublishOnly =
       'node --eval "console.error(\'' +

@@ -36,7 +36,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.Angular) {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/generators/application/application');
+    } = require('@nrwl' + '/angular/generators');
 
     await angularApplicationGenerator(tree, {
       name: options.name,
@@ -94,7 +94,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.AngularWithNest) {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/generators/application/application');
+    } = require('@nrwl' + '/angular/generators');
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 
@@ -194,7 +194,7 @@ async function createPreset(tree: Tree, options: Schema) {
 
 function connectAngularAndNest(host: Tree, options: Schema) {
   const { insertNgModuleImport } = require('@nrwl' +
-    '/angular/src/generators/utils/insert-ngmodule-import');
+    '/angular/generator/utils');
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`

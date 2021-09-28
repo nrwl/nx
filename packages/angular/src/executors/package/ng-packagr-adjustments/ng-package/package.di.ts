@@ -47,7 +47,6 @@ export const NX_PACKAGE_TRANSFORM: TransformProvider = provideTransform({
 export const NX_PACKAGE_PROVIDERS: Provider[] = [
   NX_PACKAGE_TRANSFORM,
   DEFAULT_OPTIONS_PROVIDER,
-  provideTsConfig(),
   INIT_TS_CONFIG_TRANSFORM,
   ANALYSE_SOURCES_TRANSFORM,
 ];

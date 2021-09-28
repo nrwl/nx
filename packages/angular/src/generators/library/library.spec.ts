@@ -23,7 +23,6 @@ describe('lib', () => {
       name: 'myLib',
       publishable: false,
       buildable: false,
-      enableIvy: false,
       linter: Linter.EsLint,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
@@ -164,7 +163,6 @@ describe('lib', () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         buildable: true,
-        enableIvy: true,
       });
 
       // ASSERT
