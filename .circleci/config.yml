@@ -359,10 +359,10 @@ workflows:
           name: 'agent9'
           pm: 'npm'
           os: 'macos'
-      - agent:
-          name: 'agent10'
-          pm: 'npm'
-          os: 'android'
+      # - agent:
+      #     name: 'agent10'
+      #     pm: 'npm'
+      #     os: 'android'
       # -------------------------
       #     Pull request logic
       # -------------------------
@@ -384,18 +384,18 @@ workflows:
           filters:
             branches:
               ignore: master
-      - main:
-          name: pull-request-android
-          pm: 'npm'
-          os: 'android'
-          run-checks: 'false'
-          run-builds: 'false'
-          run-unit-tests: 'false'
-          run-linting: 'false'
-          e2e-test-filter: 'Android-Tests'
-          filters:
-            branches:
-              ignore: master
+      # - main:
+      #     name: pull-request-android
+      #     pm: 'npm'
+      #     os: 'android'
+      #     run-checks: 'false'
+      #     run-builds: 'false'
+      #     run-unit-tests: 'false'
+      #     run-linting: 'false'
+      #     e2e-test-filter: 'Android-Tests'
+      #     filters:
+      #       branches:
+      #         ignore: master
       # -------------------------
       #     Commit to master
       # -------------------------
@@ -418,16 +418,16 @@ workflows:
           filters:
             branches:
               only: master
-      - main:
-          name: commit-to-master-android
-          pm: 'npm'
-          os: 'android'
-          run-checks: 'false'
-          run-builds: 'false'
-          run-unit-tests: 'false'
-          run-linting: 'false'
-          e2e-test-filter: 'Android-Tests'
-          run-cypress-tests: 'true'
-          filters:
-            branches:
-              only: master
+      # - main:
+      #     name: commit-to-master-android
+      #     pm: 'npm'
+      #     os: 'android'
+      #     run-checks: 'false'
+      #     run-builds: 'false'
+      #     run-unit-tests: 'false'
+      #     run-linting: 'false'
+      #     e2e-test-filter: 'Android-Tests'
+      #     run-cypress-tests: 'true'
+      #     filters:
+      #       branches:
+      #         only: master
