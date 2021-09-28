@@ -18,14 +18,14 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          # - windows-latest
+          - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
           - os: macos-latest
             os-name: osx
-          # - os: windows-latest
-          #  os-name: windows
+          - os: windows-latest
+            os-name: windows
         node_version:
           - '14'
           - '15'
@@ -71,10 +71,12 @@ jobs:
             package_manager: pnpm
           - os: macos-latest
             packages: e2e-workspace
-        #   - os: windows-latest
-        #     package_manager: npm
-        #   - os: windows-latest
-        #     package_manager: yarn
+          - os: windows-latest
+            node_version: '14'
+          - os: windows-latest
+            node_version: '15'
+          - os: windows-latest
+            packages: e2e-react-native,e2e-detox
       fail-fast: false
 
     name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
