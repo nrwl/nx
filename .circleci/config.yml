@@ -151,6 +151,9 @@ commands:
       e2e-test-filter:
         type: string
         default: ''
+      exclude-projects:
+        type: string
+        default: ''
     steps:
       - nx/set-shas:
           main-branch-name: 'master'
@@ -168,7 +171,7 @@ commands:
           steps:
             - when:
                 condition:
-                  equal: [<< parameters.e2e-test-filter >>, '']
+                  equal: [<< parameters.unit-test-filter >>, '']
                 steps:
                   - run:
                       name: Run Unit Tests
@@ -176,12 +179,12 @@ commands:
                         npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
             - unless:
                 condition:
-                  equal: [<< parameters.e2e-test-filter >>, '']
+                  equal: [<< parameters.unit-test-filter >>, '']
                 steps:
                   - run:
-                      name: Run Unit Tests with Filter "<< parameters.e2e-test-filter >>"
+                      name: Run Unit Tests with Filter "<< parameters.unit-test-filter >>"
                       command: |
-                        npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 -- --t="<< parameters.e2e-test-filter >>"
+                        npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 -- --t="<< parameters.unit-test-filter >>"
       - when:
           condition:
             equal: [<< parameters.run-linting >>, 'true']
@@ -201,7 +204,7 @@ commands:
                   - run:
                       name: Run E2E Tests
                       command: |
-                        npx nx affected --target=e2e --base=$NX_BASE
+                        npx nx affected --target=e2e --base=$NX_BASE --exclude=<< parameters.exclude-projects >>
                       no_output_timeout: 45m
             - unless:
                 condition:
@@ -210,7 +213,7 @@ commands:
                   - run:
                       name: Run E2E Tests with Filter "<< parameters.e2e-test-filter >>"
                       command: |
-                        npx nx affected --target=e2e --base=$NX_BASE -- --t="<< parameters.e2e-test-filter >>"
+                        npx nx affected --target=e2e --base=$NX_BASE --exclude=<< parameters.exclude-projects >> -- --t="<< parameters.e2e-test-filter >>"
                       no_output_timeout: 45m
 
 # -------------------------
@@ -300,6 +303,9 @@ jobs:
       e2e-test-filter:
         type: string
         default: ''
+      exclude-projects:
+        type: string
+        default: ''
     executor: << parameters.os >>
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
@@ -327,6 +333,7 @@ jobs:
           run-e2e-tests: << parameters.run-e2e-tests >>
           unit-test-filter: << parameters.unit-test-filter >>
           e2e-test-filter: << parameters.e2e-test-filter >>
+          exclude-projects: << parameters.exclude-projects >>
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -369,6 +376,7 @@ workflows:
       - main:
           name: pull-request
           run-checks: 'true'
+          exclude-projects: 'e2e-react-native,e2e-detox'
           filters:
             branches:
               ignore: master
@@ -381,6 +389,7 @@ workflows:
           run-unit-tests: 'false'
           run-linting: 'false'
           e2e-test-filter: 'MACOS-Tests'
+          exclude-projects: 'e2e-next,e2e-gatsby,e2e-workspace,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-cli,e2e-nx-plugin,e2e-storybook,e2e-cypress,e2e-node,e2e-linter,e2e-jest'
           filters:
             branches:
               ignore: master
@@ -402,6 +411,7 @@ workflows:
       - main:
           name: commit-to-master
           run-cypress-tests: 'true'
+          exclude-projects: 'e2e-react-native,e2e-detox'
           filters:
             branches:
               only: master
@@ -415,6 +425,7 @@ workflows:
           run-linting: 'false'
           e2e-test-filter: 'MACOS-Tests'
           run-cypress-tests: 'true'
+          exclude-projects: 'e2e-next,e2e-gatsby,e2e-workspace,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-cli,e2e-nx-plugin,e2e-storybook,e2e-cypress,e2e-node,e2e-linter,e2e-jest'
           filters:
             branches:
               only: master
