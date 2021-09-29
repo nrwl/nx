@@ -157,7 +157,7 @@
     "is-ci": "^3.0.0",
     "is-windows": "^1.0.2",
     "jasmine-core": "~2.99.1",
-    "jasmine-marbles": "~0.8.3",
+    "jasmine-marbles": "~0.8.4",
     "jasmine-spec-reporter": "~4.2.1",
     "jest": "27.0.3",
     "jest-circus": "27.0.6",

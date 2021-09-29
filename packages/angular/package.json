@@ -43,7 +43,7 @@
     "@schematics/angular": "~12.2.0",
     "@phenomnomnominal/tsquery": "4.1.1",
     "ignore": "^5.0.4",
-    "jasmine-marbles": "~0.8.3",
+    "jasmine-marbles": "~0.8.4",
     "rxjs-for-await": "0.0.2",
     "webpack-merge": "5.7.3"
   }
