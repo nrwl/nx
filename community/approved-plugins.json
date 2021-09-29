@@ -213,5 +213,10 @@
     "name": "@jnxplus/nx-boot-gradle",
     "description": "Nx plugin to add Spring Boot and Gradle multi-project builds support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-gradle"
+  },
+  {
+    "name": "@jnxplus/nx-boot-maven",
+    "description": "Nx plugin to add Spring Boot and Maven multi-module project support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-maven"
   }
 ]
