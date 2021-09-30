@@ -183,12 +183,12 @@
           },
           {
             "name": "daemon:start",
-            "id": "daemon:start",
+            "id": "daemon-start",
             "file": "angular/cli/daemon-start"
           },
           {
             "name": "daemon:stop",
-            "id": "daemon:stop",
+            "id": "daemon-stop",
             "file": "angular/cli/daemon-stop"
           },
           {
@@ -1471,12 +1471,12 @@
           },
           {
             "name": "daemon:start",
-            "id": "daemon:start",
+            "id": "daemon-start",
             "file": "react/cli/daemon-start"
           },
           {
             "name": "daemon:stop",
-            "id": "daemon:stop",
+            "id": "daemon-stop",
             "file": "react/cli/daemon-stop"
           },
           {
@@ -2744,12 +2744,12 @@
           },
           {
             "name": "daemon:start",
-            "id": "daemon:start",
+            "id": "daemon-start",
             "file": "node/cli/daemon-start"
           },
           {
             "name": "daemon:stop",
-            "id": "daemon:stop",
+            "id": "daemon-stop",
             "file": "node/cli/daemon-stop"
           },
           {
