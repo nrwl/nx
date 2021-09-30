@@ -28,7 +28,6 @@ jobs:
             os-name: windows
         node_version:
           - '14'
-          - '15'
           - '16'
         package_manager:
           - npm
@@ -50,12 +49,6 @@ jobs:
             node_version: '14'
             package_manager: pnpm
           - os: ubuntu-latest
-            node_version: '15'
-            package_manager: npm
-          - os: ubuntu-latest
-            node_version: '15'
-            package_manager: yarn
-          - os: ubuntu-latest
             node_version: '16'
             package_manager: npm
           - os: ubuntu-latest
@@ -63,8 +56,6 @@ jobs:
             package_manager: yarn
           - os: macos-latest
             node_version: '14'
-          - os: macos-latest
-            node_version: '15'
           - os: macos-latest
             package_manager: yarn
           - os: macos-latest
@@ -74,7 +65,9 @@ jobs:
           - os: windows-latest
             node_version: '14'
           - os: windows-latest
-            node_version: '15'
+            package_manager: yarn
+          - os: windows-latest
+            package_manager: pnpm
           - os: windows-latest
             packages: e2e-react-native,e2e-detox
       fail-fast: false
