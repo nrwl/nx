@@ -516,6 +516,8 @@ describe('lib', () => {
       } as Schema);
       expect(tree.exists('libs/my-lib/src/lib/MyLib.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeFalsy();
     });
 
     it('should generate files with upper case names for nested libs as well', async () => {
@@ -530,6 +532,12 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.spec.ts')
       ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
+      ).toBeFalsy();
     });
   });
 });

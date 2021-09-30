@@ -68,7 +68,10 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.simpleModuleName ? name : projectName;
+  const fileName = getCaseAwareFileName({
+    fileName: options.simpleModuleName ? name : projectName,
+    pascalCaseFiles: options.pascalCaseFiles,
+  });
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
@@ -90,18 +93,30 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   };
 }
 
+function getCaseAwareFileName(options: {
+  pascalCaseFiles: boolean;
+  fileName: string;
+}) {
+  const normalized = names(options.fileName);
+
+  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
+}
+
 function createFiles(tree: Tree, options: NormalizedSchema) {
-  const nameFormats = names(options.fileName);
+  const { className, name, propertyName } = names(options.fileName);
+
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
-    ...nameFormats,
+    className,
+    name,
+    propertyName,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
   });
 
   if (options.unitTestRunner === 'none') {
     tree.delete(
-      join(options.projectRoot, `./src/lib/${nameFormats.fileName}.spec.ts`)
+      join(options.projectRoot, `./src/lib/${options.fileName}.spec.ts`)
     );
   }
   if (!options.publishable && !options.buildable) {
