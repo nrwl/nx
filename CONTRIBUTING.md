@@ -107,7 +107,7 @@ nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qq
 To build Nx on Windows, you need to use WSL.
 
 - Run `yarn install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be compiled for Windows.
-- Run `yarn test` and other commands in WSL.
+- Run `nx affected --target=test` and other commands in WSL.
 
 ## Documentation Contributions
 
@@ -185,7 +185,7 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 
 Please follow the following guidelines:
 
-- Make sure unit tests pass (`yarn test`)
+- Make sure unit tests pass (`nx affected --target=test`)
   - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
   - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-utils.spec.ts`) with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
   - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
