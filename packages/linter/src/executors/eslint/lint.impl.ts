@@ -79,7 +79,25 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   }
 
   if (lintResults.length === 0) {
-    throw new Error('Invalid lint configuration. Nothing to lint.');
+    const ignoredPatterns = (
+      await Promise.all(
+        options.lintFilePatterns.map(async (pattern) =>
+          (await eslint.isPathIgnored(pattern)) ? pattern : null
+        )
+      )
+    )
+      .filter((pattern) => !!pattern)
+      .map((pattern) => `- '${pattern}'`);
+    if (ignoredPatterns.length) {
+      throw new Error(
+        `All files matching the following patterns are ignored:\n${ignoredPatterns.join(
+          '\n'
+        )}\n\nPlease check your '.eslintignore' file.`
+      );
+    }
+    throw new Error(
+      'Invalid lint configuration. Nothing to lint. Please check your lint target pattern(s).'
+    );
   }
 
   // if quiet, only show errors

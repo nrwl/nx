@@ -34,6 +34,9 @@ export async function lint(
      *
      * We don't want ESLint to throw an error if a user has only just created
      * a project and therefore doesn't necessarily have matching files, for example.
+     *
+     * An angular generator creates lint pattern for `html` files, but there may
+     * not be any html files in the project, so keeping it true would break linting everytime
      */
     errorOnUnmatchedPattern: false,
   });
