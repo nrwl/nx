@@ -23,7 +23,7 @@ import {
   toOldFormatOrNull,
   workspaceConfigName,
 } from '../shared/workspace';
-import { dirname, extname, resolve, join, relative, basename } from 'path';
+import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { EMPTY, Observable, of, concat } from 'rxjs';
 import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
@@ -1055,9 +1055,7 @@ function splitProjectFileUpdatesFromWorkspaceUpdate(
   for (const [project, config] of Object.entries(workspace.projects)) {
     if (typeof config === 'object' && config.configFilePath) {
       const path = config.configFilePath;
-      workspace.projects[project] = normalize(
-        relative(host.root, dirname(path))
-      );
+      workspace.projects[project] = normalize(dirname(path));
       delete config.configFilePath;
       host.write(path, serializeJson(config));
       r.content = Buffer.from(serializeJson(workspace));
