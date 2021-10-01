@@ -68,7 +68,7 @@
     "@nrwl/linter": "12.10.0-beta.1",
     "@nrwl/next": "12.10.0-beta.1",
     "@nrwl/node": "12.10.0-beta.1",
-    "@nrwl/nx-cloud": "12.3.11",
+    "@nrwl/nx-cloud": "12.3.13",
     "@nrwl/react": "12.10.0-beta.1",
     "@nrwl/tao": "12.10.0-beta.1",
     "@nrwl/web": "12.10.0-beta.1",
