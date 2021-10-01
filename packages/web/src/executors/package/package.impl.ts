@@ -203,6 +203,7 @@ export function createRollupOptions(
         babelrc: true,
         extensions: fileExtensions,
         babelHelpers: 'bundled',
+        skipPreflightCheck: true, // pre-flight check may yield false positives and also slows down the build
         exclude: /node_modules/,
         plugins: [
           format === 'esm'
