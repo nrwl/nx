@@ -296,13 +296,6 @@ describe('run-many', () => {
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${myapp2}`);
     expect(failedTests).toContain(`Failed tasks:`);
-    expect(readJson('node_modules/.cache/nx/results.json')).toEqual({
-      command: 'test',
-      results: {
-        [myapp]: false,
-        [myapp2]: true,
-      },
-    });
 
     // Fix failing Unit Test
     updateFile(
