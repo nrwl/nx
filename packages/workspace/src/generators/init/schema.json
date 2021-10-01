@@ -12,8 +12,7 @@
     },
     "defaultBase": {
       "type": "string",
-      "description": "Default base branch for affected.",
-      "default": "master"
+      "description": "Default base branch for affected."
     },
     "skipInstall": {
       "type": "boolean",

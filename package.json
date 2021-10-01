@@ -106,6 +106,7 @@
     "@types/react": "17.0.3",
     "@types/react-dom": "17.0.3",
     "@types/react-router-dom": "5.1.7",
+    "@types/semver": "^7.3.8",
     "@types/tmp": "^0.2.0",
     "@types/yargs": "^15.0.5",
     "@typescript-eslint/eslint-plugin": "~4.31.1",

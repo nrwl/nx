@@ -24,6 +24,7 @@ import { readFileSync } from 'fs';
 import { basename } from 'path';
 import { serializeJson } from '../../utilities/fileutils';
 import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
+import { deduceDefaultBase } from '../../utilities/default-base';
 import {
   angularCliVersion,
   nxVersion,
@@ -426,7 +427,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
     serializeJson({
       npmScope: options.npmScope,
       affected: {
-        defaultBase: `${options.defaultBase}` || 'master',
+        defaultBase: `${options.defaultBase}` || deduceDefaultBase(),
       },
       implicitDependencies: {
         'angular.json': '*',
