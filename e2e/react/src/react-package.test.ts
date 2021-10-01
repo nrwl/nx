@@ -1,12 +1,14 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  getSize,
   killPorts,
   newProject,
   readFile,
   readJson,
   rmDist,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -28,10 +30,6 @@ describe('Build React libraries and apps', () => {
   let childLib: string;
   let childLib2: string;
 
-  let buildableParentLib: string;
-  let buildableChildLib: string;
-  let buildableChildLib2: string;
-
   let proj: string;
 
   beforeEach(() => {
@@ -39,9 +37,6 @@ describe('Build React libraries and apps', () => {
     parentLib = uniq('parentlib');
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
-    buildableParentLib = uniq('buildableparentlib');
-    buildableChildLib = uniq('buildablechildlib');
-    buildableChildLib2 = uniq('buildablechildlib2');
 
     proj = newProject();
 
@@ -98,19 +93,6 @@ describe('Build React libraries and apps', () => {
       return JSON.stringify(json, null, 2);
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
-
-    // generate buildable libs
-    runCLI(
-      `generate @nrwl/react:library ${buildableParentLib} --buildable --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/react:library ${buildableChildLib} --buildable --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/react:library ${buildableChildLib2} --buildable --no-interactive`
-    );
-
-    createDep(buildableParentLib, [buildableChildLib, buildableChildLib2]);
 
     // we are setting paths to {} to make sure built libs are read from dist
     updateFile('tsconfig.base.json', (c) => {
@@ -176,6 +158,37 @@ describe('Build React libraries and apps', () => {
       expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
       expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
       expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
+    });
+
+    it('should support --format option', () => {
+      updateFile(
+        `libs/${childLib}/src/index.ts`,
+        (s) => `${s}
+export async function f() { return 'a'; }
+export async function g() { return 'b'; }
+export async function h() { return 'c'; }
+`
+      );
+
+      const childLibOutput = runCLI(`build ${childLib} --format cjs,esm,umd`);
+
+      expect(childLibOutput).toContain(`${childLib}.cjs.js`);
+      expect(childLibOutput).toContain(`${childLib}.esm.js`);
+      expect(childLibOutput).toContain(`${childLib}.umd.js`);
+
+      const esmPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/${childLib}.esm.js`)
+      );
+      const cjsPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/${childLib}.cjs.js`)
+      );
+      const umdPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/${childLib}.umd.js`)
+      );
+
+      // This is a loose requirement that ESM and CJS packages should be less than the UMD counterpart.
+      expect(esmPackageSize).toBeLessThanOrEqual(umdPackageSize);
+      expect(cjsPackageSize).toBeLessThanOrEqual(umdPackageSize);
     });
 
     it('should preserve the tsconfig target set by user', () => {
