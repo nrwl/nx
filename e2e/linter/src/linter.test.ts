@@ -12,7 +12,7 @@ import {
 import * as ts from 'typescript';
 
 describe('Linter', () => {
-  describe('linting errors', () => {
+  describe('linting console errors', () => {
     const myapp = uniq('myapp');
 
     beforeAll(() => {

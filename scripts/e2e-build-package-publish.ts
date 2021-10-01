@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { performance } from 'perf_hooks';
 import { removeSync, readFileSync, writeFileSync } from 'fs-extra';
 import { readdirSync } from 'fs';
 import {
@@ -11,6 +12,7 @@ process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 function buildPackagePublishAndCleanPorts() {
+  console.log('\nSTART BUILD AND PUBLISH', new Date());
   removeSync('./build');
   removeSync('./tmp/nx/proj-backup');
   removeSync('./tmp/angular/proj-backup');
@@ -38,7 +40,9 @@ function updateVersionsAndPublishPackages() {
 
   getDirectories('./build/packages').map((pkg) => {
     updateVersion(`./build/packages/${pkg}`);
+    console.log(`\nUPDATE ${pkg}`, new Date());
     publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
+    console.log(`\nPUBLISH ${pkg}`, new Date());
   });
 }
 
@@ -64,8 +68,7 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
     if (npmMajorVersion === 7) {
       writeFileSync(
         `${packagePath}/.npmrc`,
-        `registry=${
-          process.env.npm_config_registry
+        `registry=${process.env.npm_config_registry
         }\n${process.env.npm_config_registry.replace(
           'http:',
           ''
