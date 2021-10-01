@@ -175,6 +175,12 @@
       "description": "Rename the workspace-schematic script into workspace-generator script",
       "factory": "./src/migrations/update-12-5-0/add-target-dependencies",
       "cli": "nx"
+    },
+    "set-default-base-if-not-set": {
+      "version": "13.0.0-beta.1",
+      "description": "Add default base to nx.json if its not currently set",
+      "factory": "./src/migrations/update-13-0-0/set-default-base-if-not-set",
+      "cli": "nx"
     }
   },
   "packageJsonUpdates": {
