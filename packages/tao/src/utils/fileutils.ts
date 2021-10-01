@@ -35,7 +35,12 @@ export function readJsonFile<T extends object = any>(
   if (options) {
     options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
   }
-  return parseJson<T>(content, options);
+  try {
+    return parseJson<T>(content, options);
+  } catch (e) {
+    e.message = e.message.replace('JSON', path);
+    throw e;
+  }
 }
 
 /**
