@@ -41,6 +41,7 @@ export class GraphComponent {
     this.tooltipService.hideAll();
     this.generateCytoscapeLayout(selectedProjects, groupByFolder);
     this.listenForProjectNodeClicks();
+    this.listenForProjectNodeHovers();
 
     const renderTime = Date.now() - time;
 
@@ -154,6 +155,35 @@ export class GraphComponent {
       const content = new ProjectNodeToolTip(node).render();
 
       this.openTooltip = this.tooltipService.open(ref, content);
+    });
+  }
+
+  listenForProjectNodeHovers(): void {
+    this.graph.on('mouseover', (event) => {
+      const node = event.target;
+      if (!node.isNode || !node.isNode()) return;
+
+      this.graph
+        .elements()
+        .difference(node.outgoers().union(node.incomers()))
+        .not(node)
+        .addClass('transparent');
+      node
+        .addClass('highlight')
+        .outgoers()
+        .union(node.incomers())
+        .addClass('highlight');
+    });
+    this.graph.on('mouseout', (event) => {
+      const node = event.target;
+      if (!node.isNode || !node.isNode()) return;
+
+      this.graph.elements().removeClass('transparent');
+      node
+        .removeClass('highlight')
+        .outgoers()
+        .union(node.incomers())
+        .removeClass('highlight');
     });
   }
 }

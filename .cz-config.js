@@ -28,6 +28,7 @@ module.exports = {
     { name: 'web', description: 'anything Web specific' },
     { name: 'linter', description: 'anything Linter specific' },
     { name: 'storybook', description: 'anything Storybook specific' },
+    { name: 'dep-graph', description: 'anything dep-graph app specific' },
     {
       name: 'testing',
       description: 'anything testing specific (e.g., jest or cypress)',
