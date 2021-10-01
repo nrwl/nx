@@ -151,7 +151,9 @@ export class Cache {
   recordOutputsHash(outputs: string[], hash: string): void {
     outputs.forEach((output) => {
       const hashFile = this.getFileNameWithLatestRecordedHashForOutput(output);
-      writeToFile(hashFile, hash);
+      try {
+        writeToFile(hashFile, hash);
+      } catch {}
     });
   }
 
