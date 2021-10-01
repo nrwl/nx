@@ -105,6 +105,9 @@ describe('Next.js Applications', () => {
       `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
     );
 
+    // Check that the buildable lib builds as well
+    runCLI(`build ${buildableLibName}`);
+
     const mainPath = `apps/${appName}/pages/index.tsx`;
     updateFile(
       mainPath,
