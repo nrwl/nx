@@ -18,6 +18,7 @@ import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import { Preset } from '../utils/presets';
+import { deduceDefaultBase } from '../../utilities/default-base';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
@@ -130,6 +131,7 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
+  options = normalizeOptions(options);
   createFiles(host, options);
   createPrettierrc(host, options);
   if (options.cli === 'angular') {
@@ -154,4 +156,12 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
   Object.keys(copy).forEach((k) => {
     obj[k] = copy[k];
   });
+}
+
+function normalizeOptions(options: Schema) {
+  let defaultBase = options.defaultBase || deduceDefaultBase();
+  return {
+    ...options,
+    defaultBase,
+  };
 }

@@ -16,9 +16,15 @@ import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
 import { spawn, SpawnOptions } from 'child_process';
 
+import { gte } from 'semver';
+
 import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
+import {
+  checkGitVersion,
+  deduceDefaultBase,
+} from '../../utilities/default-base';
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -110,11 +116,8 @@ async function initializeGitRepo(
       });
     });
   };
-  const hasCommand = await execute(['--version']).then(
-    () => true,
-    () => false
-  );
-  if (!hasCommand) {
+  const gitVersion = checkGitVersion();
+  if (!gitVersion) {
     return;
   }
   const insideRepo = await execute(
@@ -130,7 +133,13 @@ async function initializeGitRepo(
     );
     return;
   }
-  await execute(['init']);
+  const defaultBase = options.defaultBase || deduceDefaultBase();
+  if (gte(gitVersion, '2.28.0')) {
+    await execute(['init', '-b', defaultBase]);
+  } else {
+    await execute(['init']);
+    await execute(['checkout', '-b', defaultBase]);
+  }
   await execute(['add', '.']);
   if (options.commit) {
     const message = options.commit.message || 'initial commit';
