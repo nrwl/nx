@@ -1,6 +1,8 @@
 import { Tree } from '@nrwl/devkit';
-
+import { join } from 'path';
 import { CompilerOptions } from 'typescript';
+import path = require('path');
+import { statSync } from 'fs';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -75,7 +77,43 @@ export type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export function isReactUsingWebpack5(): boolean {
-  const { isWebpack5 } = require('@nrwl/web/src/webpack/entry');
-  return isWebpack5;
+// taken from packages/web/src/webpack/entry.ts
+export function isWebpack5(): boolean {
+  const result = requireShim('webpack/package.json');
+  const version = result?.version;
+  const forceWebpack4 = process.env.NX_FORCE_WEBPACK_4;
+  return !forceWebpack4 && /^5\./.test(version);
+}
+
+// taken from packages/web/src/webpack/require-shim.ts
+function requireShim(path: string) {
+  try {
+    return require(join(pathInner(__dirname), 'node_modules', path));
+  } catch {
+    return require(path);
+  }
+}
+
+// taken from packages/tao/src/utils/app-root.ts
+function pathInner(dir: string): string {
+  if (process.env.NX_WORKSPACE_ROOT_PATH)
+    return process.env.NX_WORKSPACE_ROOT_PATH;
+  if (path.dirname(dir) === dir) return process.cwd();
+  if (
+    fileExists(path.join(dir, 'workspace.json')) ||
+    fileExists(path.join(dir, 'angular.json'))
+  ) {
+    return dir;
+  } else {
+    return pathInner(path.dirname(dir));
+  }
+}
+
+// taken from packages/tao/src/utils/app-root.ts
+function fileExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch (err) {
+    return false;
+  }
 }

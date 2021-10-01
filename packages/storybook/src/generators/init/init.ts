@@ -7,7 +7,7 @@ import {
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { isFramework, isReactUsingWebpack5 } from '../../utils/utilities';
+import { isFramework, isWebpack5 } from '../../utils/utilities';
 import {
   babelCoreVersion,
   babelLoaderVersion,
@@ -86,7 +86,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@storybook/react'] = storybookVersion;
     }
 
-    if (isReactUsingWebpack5()) {
+    if (isWebpack5()) {
       if (
         !packageJson.dependencies['@storybook/builder-webpack5'] &&
         !packageJson.devDependencies['@storybook/builder-webpack5']
