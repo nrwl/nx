@@ -22,10 +22,13 @@ jobs:
         include:
           - os: ubuntu-latest
             os-name: ubuntu
+            os-cache-dir: /tmp/nx-cache
           - os: macos-latest
             os-name: osx
+            os-cache-dir: /tmp/nx-cache
           - os: windows-latest
             os-name: windows
+            os-cache-dir: ./nx-cache
         node_version:
           - '14'
           - '16'
@@ -36,6 +39,7 @@ jobs:
         packages:
           - e2e-angular-core,e2e-angular-extensions
           - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          - e2e-linter
           - e2e-cypress
           - e2e-gatsby,e2e-react
           - e2e-next
@@ -138,6 +142,7 @@ jobs:
         npm_config_registry: http://localhost:4872
         YARN_REGISTRY: http://localhost:4872
         VERBOSE_OUTPUT: ${{ 'true' }}
+        NX_CACHE_DIRECTORY: ${{ matrix.os-cache-dir }}
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
