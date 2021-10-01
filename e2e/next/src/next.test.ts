@@ -38,6 +38,7 @@ describe('Next.js Applications', () => {
       },
     };
     updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
+    updateFile('.env.local', 'NX_CUSTOM_VAR=test value from a file');
 
     updateFile(
       `apps/${appName}/pages/index.tsx`,
@@ -53,7 +54,10 @@ describe('Next.js Applications', () => {
               .then(setGreeting);
           }, []);
 
-          return <h1>{greeting}</h1>;
+          return <>
+            <h1>{greeting}</h1>
+            <h2>{process.env.NX_CUSTOM_VAR}</h2>
+          </>;
         };
         export default Index;
       `
@@ -78,6 +82,7 @@ describe('Next.js Applications', () => {
 
     const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
+    expect(data).toContain(`test value from a file`);
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');

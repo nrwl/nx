@@ -1,7 +1,7 @@
 // ignoring while we support both Next 11.1.0 and versions before it
 // @ts-ignore
 import type { NextConfig } from 'next/dist/server/config';
-import { WebpackConfigOptions } from '../src/utils/types';
+import type { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
 const { appRootPath } = require('@nrwl/tao/src/utils/app-root');
@@ -126,9 +126,40 @@ function withNx(nextConfig = {} as WithNxOptions) {
         delete nextGlobalCssLoader.issuer.and;
       }
 
+      /**
+       * 5. Add env variables prefixed with NX_
+       */
+      addNxEnvVariables(config);
+
       return userWebpack(config, options);
     },
   };
+}
+
+function getNxEnvironmentVariables() {
+  return Object.keys(process.env)
+    .filter((env) => /^NX_/i.test(env))
+    .reduce((env, key) => {
+      env[key] = process.env[key];
+      return env;
+    }, {});
+}
+
+function addNxEnvVariables(config: any) {
+  const maybeDefinePlugin = config.plugins.find((plugin) => {
+    return plugin.definitions?.['process.env.NODE_ENV'];
+  });
+
+  if (maybeDefinePlugin) {
+    const env = getNxEnvironmentVariables();
+
+    Object.entries(env)
+      .map(([name, value]) => [`process.env.${name}`, `"${value}"`])
+      .filter(([name]) => !maybeDefinePlugin.definitions[name])
+      .forEach(
+        ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
+      );
+  }
 }
 
 module.exports = withNx;
