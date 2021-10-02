@@ -9,6 +9,11 @@
       "version": "10.0.0-beta.1",
       "description": "Update Nest.js libraries",
       "factory": "./src/migrations/update-10-0-0/update-10-0-0"
+    },
+    "update-13-2-0": {
+      "version": "13.2.0-beta.0",
+      "description": "Update Nest.js libraries",
+      "factory": "./src/migrations/update-13-2-0/update-13-2-0"
     }
   },
   "packageJsonUpdates": {
@@ -67,6 +72,31 @@
         "rxjs": {
           "version": "~6.5.5",
           "alwaysAddToPackageJson": true
+        }
+      }
+    },
+    "update-13.2.0": {
+      "version": "update-13.2.0-beta.0",
+      "packages": {
+        "@nestjs/common": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/core": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/platform-express": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/schematics": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/testing": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

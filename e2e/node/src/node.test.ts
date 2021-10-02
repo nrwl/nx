@@ -261,11 +261,11 @@ describe('Build Node apps', () => {
     expect(packageJson).toEqual(
       expect.objectContaining({
         dependencies: {
-          '@nestjs/common': '^7.0.0',
-          '@nestjs/core': '^7.0.0',
-          '@nestjs/platform-express': '^7.0.0',
+          '@nestjs/common': '^8.0.0',
+          '@nestjs/core': '^8.0.0',
+          '@nestjs/platform-express': '^8.0.0',
           'reflect-metadata': '^0.1.13',
-          rxjs: '~6.6.3',
+          rxjs: '^7.2.0',
         },
         main: 'main.js',
         name: expect.any(String),
