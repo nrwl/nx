@@ -138,6 +138,18 @@ describe('project graph', () => {
     vol.fromJSON(filesJson, '/root');
   });
 
+  it('should throw an appropriate error for an invalid json config', async () => {
+    vol.appendFileSync('/root/tsconfig.base.json', 'invalid');
+    try {
+      await createProjectGraphAsync();
+      fail('Invalid tsconfigs should cause project graph to throw error');
+    } catch (e) {
+      expect(e.message).toMatchInlineSnapshot(
+        `"InvalidSymbol in /root/tsconfig.base.json at position 247"`
+      );
+    }
+  });
+
   it('should create nodes and dependencies with workspace projects', async () => {
     const graph = await createProjectGraphAsync();
 

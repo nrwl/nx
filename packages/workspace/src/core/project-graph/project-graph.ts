@@ -42,6 +42,7 @@ import {
 } from './build-nodes';
 import * as serverExec from './daemon/exec';
 import { getProjectGraphFromServer, isServerAvailable } from './daemon/server';
+import { existsSync } from 'fs';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -367,9 +368,10 @@ function updateProjectGraphWithPlugins(
 }
 
 function readRootTsConfig() {
-  try {
-    return readJsonFile(join(appRootPath, 'tsconfig.base.json'));
-  } catch (e) {
-    return readJsonFile(join(appRootPath, 'tsconfig.json'));
+  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(appRootPath, tsConfigName);
+    if (existsSync(tsConfigPath)) {
+      return readJsonFile(tsConfigPath);
+    }
   }
 }
