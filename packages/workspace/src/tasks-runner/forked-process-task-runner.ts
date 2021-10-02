@@ -28,11 +28,6 @@ export class ForkedProcessTaskRunner {
   public forkProcessForBatch({ executorName, taskGraph }: Batch) {
     return new Promise<BatchResults>((res, rej) => {
       try {
-        const env = this.envForForkedProcess(
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR
-        );
         const count = Object.keys(taskGraph.tasks).length;
         if (count > 1) {
           output.logSingleLine(
@@ -49,10 +44,7 @@ export class ForkedProcessTaskRunner {
 
         const p = fork(workerPath, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env: {
-            ...env,
-            ...process.env,
-          },
+          env: this.getEnvVariablesForProcess(),
         });
         this.processes.add(p);
 
@@ -99,14 +91,6 @@ export class ForkedProcessTaskRunner {
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
-        const env = this.envForForkedProcessForTask(
-          task,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
-          undefined,
-          forwardOutput
-        );
         const args = getCommandArgsForTask(task);
         const commandLine = `nx ${args.join(' ')}`;
 
@@ -115,10 +99,14 @@ export class ForkedProcessTaskRunner {
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-          env: {
-            ...env,
-            ...process.env,
-          },
+          env: this.getEnvVariablesForTask(
+            task,
+            process.env.FORCE_COLOR === undefined
+              ? 'true'
+              : process.env.FORCE_COLOR,
+            undefined,
+            forwardOutput
+          ),
         });
         this.processes.add(p);
         let out = [];
@@ -164,12 +152,6 @@ export class ForkedProcessTaskRunner {
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
-        const env = this.envForForkedProcessForTask(
-          task,
-          undefined,
-          temporaryOutputPath,
-          forwardOutput
-        );
         const args = getCommandArgsForTask(task);
         const commandLine = `nx ${args.join(' ')}`;
 
@@ -178,10 +160,12 @@ export class ForkedProcessTaskRunner {
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env: {
-            ...env,
-            ...process.env,
-          },
+          env: this.getEnvVariablesForTask(
+            task,
+            undefined,
+            temporaryOutputPath,
+            forwardOutput
+          ),
         });
         this.processes.add(p);
         p.on('exit', (code, signal) => {
@@ -219,18 +203,47 @@ export class ForkedProcessTaskRunner {
     }
   }
 
-  private envForForkedProcess(
+  // region Environment Variables
+  private getEnvVariablesForProcess() {
+    return {
+      // Start With Dotenv Variables
+      ...this.getDotenvVariablesForForkedProcess(),
+      // User Process Env Variables override Dotenv Variables
+      ...process.env,
+      // Nx Env Variables overrides everything
+      ...this.getNxEnvVariablesForForkedProcess(
+        process.env.FORCE_COLOR === undefined ? 'true' : process.env.FORCE_COLOR
+      ),
+    };
+  }
+
+  private getEnvVariablesForTask(
+    task: Task,
+    forceColor: string,
+    outputPath: string,
+    forwardOutput: boolean
+  ) {
+    return {
+      // Start With Dotenv Variables
+      ...this.getDotenvVariablesForTask(task),
+      // User Process Env Variables override Dotenv Variables
+      ...process.env,
+      // Nx Env Variables overrides everything
+      ...this.getNxEnvVariablesForTask(
+        task,
+        forceColor,
+        outputPath,
+        forwardOutput
+      ),
+    };
+  }
+
+  private getNxEnvVariablesForForkedProcess(
     forceColor: string,
     outputPath?: string,
     forwardOutput?: boolean
   ) {
-    const envsFromFiles = {
-      ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv('.env.local'),
-    };
     const env: NodeJS.ProcessEnv = {
-      ...envsFromFiles,
       FORCE_COLOR: forceColor,
       NX_INVOKED_BY_RUNNER: 'true',
       NX_WORKSPACE_ROOT: this.workspaceRoot,
@@ -245,29 +258,16 @@ export class ForkedProcessTaskRunner {
         env.NX_FORWARD_OUTPUT = 'true';
       }
     }
-
     return env;
   }
 
-  private envForForkedProcessForTask(
+  private getNxEnvVariablesForTask(
     task: Task,
     forceColor: string,
     outputPath: string,
     forwardOutput: boolean
   ) {
-    const envsFromFiles = {
-      ...parseEnv(`.${task.target.target}.env`),
-      ...parseEnv(`.env.${task.target.target}`),
-      ...parseEnv(`${task.projectRoot}/.env`),
-      ...parseEnv(`${task.projectRoot}/.local.env`),
-      ...parseEnv(`${task.projectRoot}/.env.local`),
-      ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
-      ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
-    };
-
     const env: NodeJS.ProcessEnv = {
-      ...this.envForForkedProcess(forceColor, outputPath, forwardOutput),
-      ...envsFromFiles,
       NX_TASK_TARGET_PROJECT: task.target.project,
       NX_TASK_HASH: task.hash,
     };
@@ -276,8 +276,38 @@ export class ForkedProcessTaskRunner {
     if (task.target.target === 'test') {
       env.NX_TERMINAL_CAPTURE_STDERR = 'true';
     }
-    return env;
+
+    return {
+      ...this.getNxEnvVariablesForForkedProcess(
+        forceColor,
+        outputPath,
+        forwardOutput
+      ),
+      ...env,
+    };
   }
+
+  private getDotenvVariablesForForkedProcess() {
+    return {
+      ...parseEnv('.env'),
+      ...parseEnv('.local.env'),
+      ...parseEnv('.env.local'),
+    };
+  }
+
+  private getDotenvVariablesForTask(task: Task) {
+    return {
+      ...this.getDotenvVariablesForForkedProcess(),
+      ...parseEnv(`.${task.target.target}.env`),
+      ...parseEnv(`.env.${task.target.target}`),
+      ...parseEnv(`${task.projectRoot}/.env`),
+      ...parseEnv(`${task.projectRoot}/.local.env`),
+      ...parseEnv(`${task.projectRoot}/.env.local`),
+      ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
+      ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
+    };
+  }
+  // endregion Environment Variables
 
   private signalToCode(signal: string) {
     if (signal === 'SIGHUP') return 128 + 1;
