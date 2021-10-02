@@ -23,7 +23,7 @@ import chalk = require('chalk');
 import treeKill = require('tree-kill');
 
 const kill = require('kill-port');
-const isWindows = require('is-windows');
+export const isWindows = require('is-windows');
 
 export const promisifiedTreeKill: (
   pid: number,

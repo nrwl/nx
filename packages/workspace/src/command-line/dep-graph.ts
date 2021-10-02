@@ -7,7 +7,7 @@ import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
-import { basename, dirname, join, parse } from 'path';
+import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
@@ -243,7 +243,7 @@ export async function generateGraph(
 
   let html: string;
 
-  if (!args.file || args.file.endsWith('html')) {
+  if (!args.file || extname(args.file) === '.html') {
     html = await projectsToHtml(
       projects,
       graph,
@@ -260,21 +260,15 @@ export async function generateGraph(
   }
 
   if (args.file) {
-    let folder = appRootPath;
-    let filename = args.file;
-    let ext = args.file.replace(/^.*\.(.*)$/, '$1');
+    const workspaceFolder = appRootPath;
+    const ext = extname(args.file);
+    const fullFilePath = isAbsolute(args.file)
+      ? args.file
+      : join(workspaceFolder, args.file);
+    const fileFolderPath = dirname(fullFilePath);
 
-    if (ext === 'html') {
-      if (filename.includes('/')) {
-        const [_match, _folder, _file] = /^(.*)\/([^/]*\.(.*))$/.exec(
-          args.file
-        );
-        folder = `${appRootPath}/${_folder}`;
-        filename = _file;
-      }
-      filename = `${folder}/${filename}`;
-
-      const assetsFolder = `${folder}/static`;
+    if (ext === '.html') {
+      const assetsFolder = join(fileFolderPath, 'static');
       const assets: string[] = [];
       copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
         filter: (_src, dest) => {
@@ -293,26 +287,24 @@ export async function generateGraph(
       html = html.replace('<base href="/">', '');
       html = html.replace(/type="module"/g, '');
 
-      writeFileSync(filename, html);
+      writeFileSync(fullFilePath, html);
 
       output.success({
-        title: `HTML output created in ${folder}`,
-        bodyLines: [filename, ...assets],
+        title: `HTML output created in ${fileFolderPath}`,
+        bodyLines: [fileFolderPath, ...assets],
       });
-    } else if (ext === 'json') {
-      filename = `${folder}/${filename}`;
+    } else if (ext === '.json') {
+      ensureDirSync(dirname(fullFilePath));
 
-      ensureDirSync(dirname(filename));
-
-      writeJsonFile(filename, {
+      writeJsonFile(fullFilePath, {
         graph,
         affectedProjects,
         criticalPath: affectedProjects,
       });
 
       output.success({
-        title: `JSON output created in ${folder}`,
-        bodyLines: [filename],
+        title: `JSON output created in ${fileFolderPath}`,
+        bodyLines: [fullFilePath],
       });
     } else {
       output.error({
