@@ -8,7 +8,7 @@ import {
   ConfSponsors,
   ConfWorkshop,
 } from '@nrwl/nx-dev/feature-conf';
-import { useStorage } from '../lib/use-storage';
+import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 export function ConfPage() {
   const { value: storedFlavor } = useStorage('flavor');

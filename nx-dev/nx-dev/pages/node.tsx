@@ -9,7 +9,7 @@ import {
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui/common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
-import { useStorage } from '../lib/use-storage';
+import { useStorage } from '@nrwl/nx-dev/feature-storage';
 import Head from 'next/head';
 
 export function Node() {

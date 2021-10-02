@@ -48,6 +48,7 @@
         "./nx-dev/feature-doc-viewer/src/index.ts"
       ],
       "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"],
+      "@nrwl/nx-dev/feature-storage": ["./nx-dev/feature-storage/src/index.ts"],
       "@nrwl/nx-dev/ui/common": ["./nx-dev/ui/common/src/index.ts"],
       "@nrwl/nx-dev/ui/member-card": ["./nx-dev/ui/member-card/src/index.ts"],
       "@nrwl/nx-dev/ui/sponsor-card": ["./nx-dev/ui/sponsor-card/src/index.ts"],

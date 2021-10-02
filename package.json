@@ -91,6 +91,7 @@
     "@svgr/webpack": "5.5.0",
     "@tailwindcss/typography": "^0.4.1",
     "@testing-library/react": "11.2.6",
+    "@testing-library/react-hooks": "7.0.1",
     "@types/cytoscape": "^3.14.12",
     "@types/eslint": "^7.2.2",
     "@types/express": "4.17.0",
@@ -274,10 +275,12 @@
     "react-dom": "17.0.2",
     "react-markdown": "^6.0.2",
     "react-syntax-highlighter": "^15.4.3",
+    "regenerator-runtime": "0.13.7",
     "rehype-autolink-headings": "^5.0.1",
     "rehype-slug": "^4.0.1",
     "remark-gfm": "^1.0.0",
     "send": "0.17.1",
+    "tslib": "^2.0.0",
     "weak-napi": "^2.0.2"
   },
   "resolutions": {
