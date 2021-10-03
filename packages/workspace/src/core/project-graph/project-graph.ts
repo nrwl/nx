@@ -175,7 +175,7 @@ export async function createProjectGraphAsync(
     );
   }
 
-  if (!isServerAvailable()) {
+  if (!(await isServerAvailable())) {
     logger.warn(
       '\nWARNING: You set NX_DAEMON=true but the Daemon Server is not running. Starting Daemon Server in the background...'
     );

@@ -59,13 +59,13 @@ describe('Daemon Server', () => {
 
   describe('isServerAvailable()', () => {
     it('should return true if the daemon server is available for connections', async () => {
-      expect(isServerAvailable()).toBe(false);
+      expect(await isServerAvailable()).toBe(false);
 
       await startServer({});
-      expect(isServerAvailable()).toBe(true);
+      expect(await isServerAvailable()).toBe(true);
 
       await stopServer();
-      expect(isServerAvailable()).toBe(false);
+      expect(await isServerAvailable()).toBe(false);
     });
   });
 
