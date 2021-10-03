@@ -80,8 +80,8 @@ export function addLint(
   });
 }
 
-function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.projectRoot, 'tsconfig.lib.json'), (json) => {
+function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, join(options.projectRoot, 'tsconfig.json'), (json) => {
     if (options.strict) {
       json.compilerOptions = {
         ...json.compilerOptions,
@@ -155,7 +155,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tree.delete(join(options.projectRoot, 'package.json'));
   }
 
-  updateLibTsConfig(tree, options);
+  updateTsConfig(tree, options);
 }
 
 async function addJest(

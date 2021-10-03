@@ -16,7 +16,7 @@ describe('lib', () => {
     testEnvironment: 'jsdom',
     js: false,
     pascalCaseFiles: false,
-    strict: false,
+    strict: true,
     standaloneConfig: false,
   };
 
@@ -76,6 +76,12 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
         Object {
+          "compilerOptions": Object {
+            "forceConsistentCasingInFileNames": true,
+            "noFallthroughCasesInSwitch": true,
+            "noImplicitReturns": true,
+            "strict": true,
+          },
           "extends": "../../tsconfig.base.json",
           "files": Array [],
           "include": Array [],
@@ -510,13 +516,30 @@ describe('lib', () => {
   });
 
   describe('--strict', () => {
-    it('should update the projects tsconfig with strict true', async () => {
+    it('should update the projects tsconfig with strict false', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib',
-        strict: true,
+        strict: false,
       });
-      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.lib.json');
+      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.json');
+
+      expect(tsconfigJson.compilerOptions?.strict).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions?.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions?.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions?.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
+    });
+
+    it('should default to strict true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+      });
+      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.json');
 
       expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
       expect(
@@ -526,23 +549,6 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).toBeTruthy();
-    });
-
-    it('should default to strict false', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        name: 'myLib',
-      });
-      const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.lib.json');
-
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
     });
   });
 
@@ -604,6 +610,10 @@ describe('lib', () => {
       expect(
         readJson(tree, 'libs/my-lib/tsconfig.json').compilerOptions
       ).toEqual({
+        forceConsistentCasingInFileNames: true,
+        noFallthroughCasesInSwitch: true,
+        noImplicitReturns: true,
+        strict: true,
         allowJs: true,
       });
     });

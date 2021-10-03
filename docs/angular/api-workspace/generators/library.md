@@ -140,7 +140,7 @@ Split the project configuration into <projectRoot>/project.json rather than incl
 
 ### strict
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
