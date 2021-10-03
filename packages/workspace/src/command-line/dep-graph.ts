@@ -1,4 +1,5 @@
 import { joinPathFragments } from '@nrwl/devkit/src/utils/path';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -6,7 +7,7 @@ import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
-import { dirname, join, parse, basename } from 'path';
+import { basename, dirname, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
@@ -18,7 +19,6 @@ import {
   ProjectGraphDependency,
   ProjectGraphNode,
 } from '../core/project-graph';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,
@@ -201,6 +201,7 @@ export async function generateGraph(
     exclude?: string[];
     groupByFolder?: boolean;
     watch?: boolean;
+    open?: boolean;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -329,7 +330,8 @@ export async function generateGraph(
       affectedProjects,
       args.focus,
       args.groupByFolder,
-      args.exclude
+      args.exclude,
+      args.open
     );
   }
 }
@@ -342,7 +344,8 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = []
+  exclude: string[] = [],
+  openBrowser: boolean = true
 ) {
   if (watchForchanges) {
     startWatcher();
@@ -411,7 +414,9 @@ async function startServer(
     title: `Dep graph started at http://${host}:${port}`,
   });
 
-  open(`http://${host}:${port}`);
+  if (openBrowser) {
+    open(`http://${host}:${port}`);
+  }
 }
 
 let currentDepGraphClientResponse: DepGraphClientResponse = {
