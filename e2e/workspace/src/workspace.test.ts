@@ -449,7 +449,13 @@ describe('affected:*', () => {
     expect(failedTests).toContain(
       'You can isolate the above projects by passing: --only-failed'
     );
-    expect(readJson('node_modules/.cache/nx/results.json')).toEqual({
+    expect(
+      readJson(
+        `${
+          process.env.NX_CACHE_DIRECTORY ?? 'node_modules/.cache/nx'
+        }/results.json`
+      )
+    ).toEqual({
       command: 'test',
       results: {
         [myapp]: false,
