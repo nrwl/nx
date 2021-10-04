@@ -258,6 +258,7 @@ describe('app', () => {
     expect(architectConfig.build.options).toEqual({
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
+      baseHref: '/',
       main: 'apps/my-app/src/main.ts',
       outputPath: 'dist/apps/my-app',
       polyfills: 'apps/my-app/src/polyfills.ts',
