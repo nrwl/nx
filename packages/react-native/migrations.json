@@ -5,6 +5,12 @@
       "cli": "nx",
       "description": "Update jest for react native",
       "factory": "./src/migrations/update-12-5-0/update-jest-for-react-native"
+    },
+    "add-react-native-svg-12-10-0": {
+      "version": "12.10.0-beta.1",
+      "cli": "nx",
+      "description": "Add support to display svg in react native",
+      "factory": "./src/migrations/update-12-10-0/add-react-native-svg-12-10-0"
     }
   },
   "packageJsonUpdates": {
@@ -202,6 +208,21 @@
         "metro-react-native-babel-preset": {
           "version": "0.66.2",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.10.0-beta.1": {
+      "version": "12.10.0-beta.1",
+      "packages": {
+        "react-native-svg-transformer": {
+          "version": "0.14.3",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        },
+        "react-native-svg": {
+          "version": "12.1.1",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
         }
       }
     }

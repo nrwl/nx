@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "react-native": "*",
-    "react": "*",
+    "@testing-library/jest-native": "*",
     "@testing-library/react-native": "*",
-    "@testing-library/jest-native": "*"
+    "react": "*",
+    "react-native": "*",
+    "react-native-svg": "*"
   }
 }

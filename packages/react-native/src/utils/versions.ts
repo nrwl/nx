@@ -21,3 +21,6 @@ export const jestReactNativeVersion = '18.0.0';
 
 export const reactTestRendererVersion = '17.0.2';
 export const reactNativeCodegenVersion = '0.0.7';
+
+export const reactNativeSvgTransformerVersion = '0.14.3';
+export const reactNativeSvgVersion = '12.1.1';
