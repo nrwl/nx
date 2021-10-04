@@ -1,8 +1,8 @@
-import { logger } from '@nrwl/devkit';
+import { logger, normalizePath } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { spawn, spawnSync } from 'child_process';
 import { ensureFileSync } from 'fs-extra';
-import { join, sep } from 'path';
+import { join } from 'path';
 import { dirSync } from 'tmp';
 import {
   DaemonJson,
@@ -17,9 +17,9 @@ export async function startInBackground(): Promise<void> {
    * starting the server, as well as providing a reference to where any subsequent
    * log files can be found.
    */
-  const tmpDirPrefix = `nx-daemon--${appRootPath.replace(
-    // Replace the occurrences of / on unix systems, the \ on windows, with a -
-    new RegExp(escapeRegExp(sep), 'g'),
+  const tmpDirPrefix = `nx-daemon--${normalizePath(appRootPath).replace(
+    // Replace the occurrences of / in the unix-style normalized path with a -
+    new RegExp(escapeRegExp('/'), 'g'),
     '-'
   )}`;
   const serverLogOutputDir = dirSync({
@@ -43,7 +43,7 @@ export async function startInBackground(): Promise<void> {
 
   try {
     const backgroundProcess = spawn(
-      'node',
+      process.execPath,
       ['./start.js', serverLogOutputFile],
       {
         cwd: __dirname,
@@ -64,8 +64,8 @@ export async function startInBackground(): Promise<void> {
      * Ensure the server is actually available to connect to via IPC before resolving
      */
     return new Promise((resolve) => {
-      const id = setInterval(() => {
-        if (isServerAvailable()) {
+      const id = setInterval(async () => {
+        if (await isServerAvailable()) {
           clearInterval(id);
           resolve();
         }
@@ -80,7 +80,7 @@ export async function startInBackground(): Promise<void> {
 export function startInCurrentProcess(): void {
   logger.info(`NX Daemon Server - Starting in the current process...`);
 
-  spawnSync('node', ['./start.js'], {
+  spawnSync(process.execPath, ['./start.js'], {
     cwd: __dirname,
     stdio: 'inherit',
   });
@@ -89,7 +89,7 @@ export function startInCurrentProcess(): void {
 export function stop(): void {
   logger.info(`NX Daemon Server - Stopping...`);
 
-  spawnSync('node', ['./stop.js'], {
+  spawnSync(process.execPath, ['./stop.js'], {
     cwd: __dirname,
     stdio: 'inherit',
   });
