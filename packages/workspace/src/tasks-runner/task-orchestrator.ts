@@ -39,6 +39,7 @@ export class TaskOrchestrator {
   } = {};
   private startedTasks = new Set<string>();
   private waitingForTasks: Function[] = [];
+
   // endregion internal state
 
   constructor(
@@ -108,54 +109,49 @@ export class TaskOrchestrator {
   }
 
   // region Applying Cache
-  private async applyCachedResults(tasks: Task[]) {
-    const results: { task: Task; status: 'cache' }[] = [];
-    for (const task of tasks) {
-      if (!this.isCacheableTask(task)) {
-        continue;
-      }
-      const cachedResult = await this.cache.get(task);
-      if (cachedResult && cachedResult.code === 0) {
-        await this.applyCachedResult({
-          task,
-          cachedResult,
-        });
-        results.push({
-          task,
-          status: 'cache',
-        });
-      }
-    }
-    return results;
+  private async applyCachedResults(
+    tasks: Task[]
+  ): Promise<{ task: Task; status: 'cache' }[]> {
+    const cacheableTasks = tasks.filter((t) => this.isCacheableTask(t));
+    const res = await Promise.all(
+      cacheableTasks.map((t) => this.applyCachedResult(t))
+    );
+    return res
+      .filter((r) => r !== null)
+      .map((task) => ({ task, status: 'cache' }));
   }
 
-  private async applyCachedResult(t: TaskWithCachedResult) {
-    const outputs = getOutputs(this.projectGraph.nodes, t.task);
+  private async applyCachedResult(task: Task) {
+    const cachedResult = await this.cache.get(task);
+    if (!cachedResult || cachedResult.code !== 0) return null;
+
+    const outputs = getOutputs(this.projectGraph.nodes, task);
     const shouldCopyOutputsFromCache =
-      !!outputs.length && this.cache.shouldCopyOutputsFromCache(t, outputs);
+      !!outputs.length &&
+      (await this.cache.shouldCopyOutputsFromCache(
+        { task, cachedResult },
+        outputs
+      ));
     if (shouldCopyOutputsFromCache) {
-      this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
+      await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
     if (
       (!this.initiatingProject ||
-        this.initiatingProject === t.task.target.project) &&
+        this.initiatingProject === task.target.project) &&
       !this.hideCachedOutput
     ) {
-      const args = getCommandArgsForTask(t.task);
+      const args = getCommandArgsForTask(task);
       output.logCommand(
         `nx ${args.join(' ')}`,
         shouldCopyOutputsFromCache
           ? TaskCacheStatus.RetrievedFromCache
           : TaskCacheStatus.MatchedExistingOutput
       );
-      process.stdout.write(t.cachedResult.terminalOutput);
+      process.stdout.write(cachedResult.terminalOutput);
     }
-
-    return {
-      task: t.task,
-      code: t.cachedResult.code,
-    };
+    return task;
   }
+
   // endregion Applying Cache
 
   // region Batch
@@ -184,7 +180,7 @@ export class TaskOrchestrator {
       // cache prep
       for (const task of Object.values(unrunTaskGraph.tasks)) {
         const taskOutputs = getOutputs(this.projectGraph.nodes, task);
-        this.cache.removeRecordedOutputsHashes(taskOutputs);
+        await this.cache.removeRecordedOutputsHashes(taskOutputs);
       }
 
       const batchResults = await this.runBatch({
@@ -240,6 +236,7 @@ export class TaskOrchestrator {
       }));
     }
   }
+
   // endregion Batch
 
   // region Single Task
@@ -257,7 +254,7 @@ export class TaskOrchestrator {
     if (results.length === 0) {
       // cache prep
       const taskOutputs = getOutputs(this.projectGraph.nodes, task);
-      this.cache.removeRecordedOutputsHashes(taskOutputs);
+      await this.cache.removeRecordedOutputsHashes(taskOutputs);
 
       const { code, terminalOutput } = await this.runTaskInForkedProcess(task);
 
@@ -303,6 +300,7 @@ export class TaskOrchestrator {
       };
     }
   }
+
   // endregion Single Task
 
   // region Lifecycle
@@ -361,7 +359,7 @@ export class TaskOrchestrator {
         .map(async ({ task, code, terminalOutput, outputs }) => {
           await this.cache.put(task, terminalOutput, outputs, code);
 
-          this.cache.recordOutputsHash(outputs, task.hash);
+          await this.cache.recordOutputsHash(outputs, task.hash);
 
           if (terminalOutput) {
             const outputPath = this.cache.temporaryOutputPath(task);
@@ -431,6 +429,7 @@ export class TaskOrchestrator {
     this.timings[`${t.target.project}:${t.target.target}`].end =
       new Date().getTime();
   }
+
   //endregion Lifecycle
 
   // region utils
@@ -512,5 +511,6 @@ export class TaskOrchestrator {
       }
     });
   }
+
   // endregion utils
 }

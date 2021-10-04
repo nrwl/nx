@@ -85,9 +85,12 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
 
 function build(nxVersion: string) {
   try {
-    execSync('npx nx run-many --target=build --all', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
+    execSync(
+      'npx nx run-many --target=build --all --parallel --max-parallel=8',
+      {
+        stdio: ['ignore', 'ignore', 'ignore'],
+      }
+    );
   } catch (e) {
     console.log('Build failed');
     console.log(e);
