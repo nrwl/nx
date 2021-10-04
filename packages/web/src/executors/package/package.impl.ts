@@ -194,9 +194,12 @@ export function createRollupOptions(
       getBabelInputPlugin({
         // Let's `@nrwl/web/babel` preset know that we are packaging.
         caller: {
-          // Ignored since this is for our custom babel-loader + babel preset
           // @ts-ignore
+          // Ignoring type checks for caller since we have custom attributes
           isNxPackage: true,
+          // Always target esnext and let rollup handle cjs/umd
+          supportsStaticESM: true,
+          isModern: true,
         },
         cwd: join(context.root, sourceRoot),
         rootMode: 'upward',
