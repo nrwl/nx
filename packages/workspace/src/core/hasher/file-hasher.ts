@@ -46,22 +46,16 @@ export class FileHasher {
 
   /**
    * This method is used in cases where we do not want to fully tear down the
-   * known state of file hashes, and instead only want to hash the currently
-   * uncommitted (both staged and unstaged) non-deleted files.
+   * known state of file hashes, and instead only want to hash an updated Map
+   * of files which are provided to the method.
    *
-   * For example, the daemon server can cache the last known commit SHA in
-   * memory and avoid calling init() by using this method instead when that
-   * SHA is unchanged.
-   *
-   * @returns The Map of filenames to hashes returned by getUntrackedAndUncommittedFileHashes()
+   * For example, the daemon server performs file-watching and knows at a granular
+   * level what needs to be rehashed in order to accurately update the overall state.
    */
-  incrementalUpdate(): Map<string, string> {
+  incrementalUpdate(updatedHashes: Map<string, string>): void {
     performance.mark('incremental hashing:start');
 
-    const untrackedAndUncommittedFileHashes =
-      getUntrackedAndUncommittedFileHashes(appRootPath);
-
-    untrackedAndUncommittedFileHashes.forEach((hash, filename) => {
+    updatedHashes.forEach((hash, filename) => {
       this.fileHashes[filename] = hash;
       /**
        * we have to store it separately because fileHashes can be modified
@@ -76,8 +70,19 @@ export class FileHasher {
       'incremental hashing:start',
       'incremental hashing:end'
     );
+  }
 
-    return untrackedAndUncommittedFileHashes;
+  /**
+   * In the case of the daemon server, because it performs file-watching, it
+   * knows when one or more files have been deleted from the workspace and can
+   * therefore precisely update the source of truth for file hashes and workspace
+   * files.
+   */
+  removeFiles(deletedFiles: string[]): void {
+    for (const deletedFile of deletedFiles) {
+      delete this.fileHashes[deletedFile];
+      this.workspaceFiles.delete(deletedFile);
+    }
   }
 
   hashFile(path: string): string {
