@@ -66,29 +66,37 @@ export function generateFiles(
   substitutions: { [k: string]: any }
 ): void {
   const ejs = require('ejs');
-  allFilesInDir(srcFolder).forEach((filePath) => {
-    let newContent: Buffer | string;
-    const computedPath = computePath(
-      srcFolder,
-      target,
-      filePath,
-      substitutions
+
+  const files = allFilesInDir(srcFolder);
+  if (files.length === 0) {
+    throw new Error(
+      `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`
     );
+  } else {
+    files.forEach((filePath) => {
+      let newContent: Buffer | string;
+      const computedPath = computePath(
+        srcFolder,
+        target,
+        filePath,
+        substitutions
+      );
 
-    if (binaryExts.has(path.extname(filePath))) {
-      newContent = readFileSync(filePath);
-    } else {
-      const template = readFileSync(filePath, 'utf-8');
-      try {
-        newContent = ejs.render(template, substitutions, {});
-      } catch (e) {
-        logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
-        throw e;
+      if (binaryExts.has(path.extname(filePath))) {
+        newContent = readFileSync(filePath);
+      } else {
+        const template = readFileSync(filePath, 'utf-8');
+        try {
+          newContent = ejs.render(template, substitutions, {});
+        } catch (e) {
+          logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
+          throw e;
+        }
       }
-    }
 
-    tree.write(computedPath, newContent);
-  });
+      tree.write(computedPath, newContent);
+    });
+  }
 }
 
 function computePath(
