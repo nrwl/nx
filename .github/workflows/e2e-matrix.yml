@@ -126,7 +126,7 @@ jobs:
         echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
     - name: Install applesimutils, reset ios simulators
-      if: ${{ matrix.os == 'macos-latest' }}
+      if: ${{ matrix.os == 'macos-latest' && matrix.packages == 'e2e-react-native,e2e-detox' }}
       run: |
         HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
         brew install applesimutils
