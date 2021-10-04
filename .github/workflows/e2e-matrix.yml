@@ -39,7 +39,6 @@ jobs:
         packages:
           - e2e-angular-core,e2e-angular-extensions
           - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
-          - e2e-linter
           - e2e-cypress
           - e2e-gatsby,e2e-react
           - e2e-next

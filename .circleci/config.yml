@@ -243,7 +243,6 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
-      NX_VERBOSE_LOGGING: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -313,7 +312,6 @@ jobs:
       SELECTED_PM: << parameters.pm >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       NX_E2E_RUN_CYPRESS: << parameters.run-cypress-tests >>
-      NX_VERBOSE_LOGGING: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
