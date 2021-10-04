@@ -508,6 +508,11 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Watch for changes to dependency graph and update in-browser',
       type: 'boolean',
       default: false,
+    })
+    .option('open', {
+      describe: 'Open the dependency graph in the browser.',
+      type: 'boolean',
+      default: true,
     });
 }
 
