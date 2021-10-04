@@ -4,12 +4,12 @@
   "apps": {
     "ios.debug": {
       "type": "ios.app",
-      "build": "cd ../<%= appFileName %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' -derivedDataPath ./build -quiet",
+      "build": "cd ../<%= appFileName %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
       "binaryPath": "../<%= appFileName %>/ios/build/Build/Products/Debug-iphonesimulator/<%= appClassName %>.app"
     },
     "ios.release": {
       "type": "ios.app",
-      "build": "cd ../<%= appFileName %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' -derivedDataPath ./build -quiet",
+      "build": "cd ../<%= appFileName %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
       "binaryPath": "../<%= appFileName %>/ios/build/Build/Products/Release-iphonesimulator/<%= appClassName %>.app"
     },
     "android.debug": {
@@ -27,7 +27,7 @@
     "simulator": {
       "type": "ios.simulator",
       "device": {
-        "type": "iPhone 12"
+        "type": "iPhone 13"
       }
     },
     "emulator": {

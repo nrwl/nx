@@ -207,6 +207,21 @@ commands:
                       command: |
                         npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=<< parameters.exclude-projects >>
                       no_output_timeout: 45m
+            - when:
+                condition:
+                  equal: [<< parameters.e2e-test-filter >>, 'MACOS-Tests']
+                steps:
+                  - run:
+                      name: Install applesimutils, reset ios simulators
+                      command: |
+                        HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+                        brew install applesimutils
+                        xcrun simctl shutdown all && xcrun simctl erase all
+                      no_output_timeout: 20m
+                  - macos/preboot-simulator:
+                      version: '14.5'
+                      platform: 'iOS'
+                      device: 'iPhone 13'
             - unless:
                 condition:
                   equal: [<< parameters.e2e-test-filter >>, '']
