@@ -6,6 +6,7 @@ import {
   runCLIAsync,
   uniq,
   getSelectedPackageManager,
+  killPorts,
 } from '@nrwl/e2e/utils';
 
 describe('Detox', () => {
@@ -31,7 +32,7 @@ describe('Detox', () => {
 
   describe('React Native Detox MACOS-Tests', () => {
     if (isOSX()) {
-      it('should build and test ios MACOS-Tests', async () => {
+      it('should build and test ios', async () => {
         const appName = uniq('myapp');
         runCLI(
           `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint`
@@ -41,8 +42,7 @@ describe('Detox', () => {
           'Running target "build-ios" succeeded'
         );
 
-        // comment out due to github issue that unable to build xcode error 12.5 https://github.com/facebook/react-native/issues/31480
-        /* expect(runCLI(`build-ios ${appName}-e2e --pod`)).toContain(
+        expect(runCLI(`build-ios ${appName}-e2e --pod`)).toContain(
           'Running target "build-ios" succeeded'
         );
         expect(
@@ -52,7 +52,6 @@ describe('Detox', () => {
         ).toContain('Running target "test-ios" succeeded');
 
         await killPorts(8081); // kill the port for the serve command
-        */
       }, 1000000);
     }
   });
