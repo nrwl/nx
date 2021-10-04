@@ -54,6 +54,12 @@
       "version": "12.8.0-beta.11",
       "description": "Adjust the Next.js lib babel configuration for styled-jsx",
       "factory": "./src/migrations/update-12-8-0/remove-styled-jsx-babel-plugin"
+    },
+    "fix-page-dir-for-eslint": {
+      "cli": "nx",
+      "version": "12.10.0-beta.1",
+      "description": "Updates .eslintrc.json file to use the correct pages directory for '@next/next/no-html-link-for-pages'.",
+      "factory": "./src/migrations/update-12-10-0/fix-page-dir-for-eslint"
     }
   },
   "packageJsonUpdates": {

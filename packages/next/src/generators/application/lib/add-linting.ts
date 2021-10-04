@@ -1,12 +1,12 @@
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
-  Tree,
-  GeneratorCallback,
   addDependenciesToPackageJson,
+  GeneratorCallback,
   joinPathFragments,
+  Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
+import { createReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
@@ -33,15 +33,31 @@ export async function addLinting(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
       () => {
-        // Only set parserOptions.project if it already exists (defined by options.setParserOptionsProject)
-        if (reactEslintJson.overrides?.[0].parserOptions?.project) {
-          reactEslintJson.overrides[0].parserOptions.project = [
-            `${options.appProjectRoot}/tsconfig(.*)?.json`,
-          ];
+        // Find the override that handles both TS and JS files.
+        const commonOverride = reactEslintJson.overrides?.find((o) =>
+          ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) =>
+            o.files.includes(ext)
+          )
+        );
+        if (commonOverride) {
+          // Only set parserOptions.project if it already exists (defined by options.setParserOptionsProject)
+          if (commonOverride.parserOptions?.project) {
+            commonOverride.parserOptions.project = [
+              `${options.appProjectRoot}/tsconfig(.*)?.json`,
+            ];
+          }
+          // Configure custom pages directory for next rule
+          if (commonOverride.rules) {
+            commonOverride.rules = {
+              ...commonOverride.rules,
+              '@next/next/no-html-link-for-pages': [
+                'error',
+                `${options.appProjectRoot}/pages`,
+              ],
+            };
+          }
         }
-        if (!reactEslintJson.extends) {
-          reactEslintJson.extends = [];
-        }
+        reactEslintJson.extends ??= [];
         if (typeof reactEslintJson.extends === 'string') {
           reactEslintJson.extends = [reactEslintJson.extends];
         }

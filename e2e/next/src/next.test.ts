@@ -246,7 +246,7 @@ describe('Next.js Applications', () => {
             `</h2>
                 <div>
                   {testFn()}
-                  <TestComponent text="Hello Next.JS" />
+                  <TestComponent text='Hello Next.JS' />
                 </div>
               `
           )}`
@@ -620,6 +620,36 @@ describe('Next.js Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
+  }, 300000);
+
+  it('should include nextjs lint rules by default', () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName}`);
+
+    // Create /about page
+    updateFile(
+      `apps/${appName}/pages/about.tsx`,
+      `
+export default function About() {
+  return <h1>About Us</h1>
+}
+`
+    );
+
+    // Link to newly created about page
+    // This should cause a lint error since Link isn't used for internal links
+    updateFile(
+      `apps/${appName}/pages/index.tsx`,
+      `
+export default function Home() {
+  return <a href='/about'>About Us</a>;
+}
+`
+    );
+
+    const lintResults = runCLI(`lint ${appName}`, { silenceError: true });
+    expect(lintResults).toContain('Lint errors found');
   }, 300000);
 });
 
