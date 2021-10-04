@@ -1,7 +1,7 @@
 export const nxVersion = '*';
 
-export const reactNativeVersion = '0.66.1';
-export const typesReactNativeVersion = '0.65.8';
+export const reactNativeVersion = '0.66.2';
+export const typesReactNativeVersion = '0.66.2';
 
 export const metroVersion = '0.66.2';
 
@@ -12,7 +12,7 @@ export const reactNativeCommunityCliAndroid = '6.1.0';
 export const metroReactNativeBabelPresetVersion = '0.66.2';
 
 export const testingLibraryReactNativeVersion = '8.0.0';
-export const testingLibraryJestNativeVersion = '4.0.2';
+export const testingLibraryJestNativeVersion = '4.0.4';
 
 export const jestReactNativeVersion = '18.0.0';
 

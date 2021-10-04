@@ -28,11 +28,11 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/react": "*",
+    "@nrwl/workspace": "*",
     "chalk": "^4.1.0"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*",
-    "detox": "^18.22.2"
+    "detox": "^19.0.0"
   },
   "builders": "./executors.json",
   "ng-update": {

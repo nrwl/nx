@@ -262,6 +262,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.2.0": {
+      "version": "13.2.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.66.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.66.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
