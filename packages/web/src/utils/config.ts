@@ -1,4 +1,4 @@
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
@@ -83,9 +83,6 @@ export function getBaseWebpackPartial(
           mainFields,
         }),
       ],
-      // Search closest node_modules first, and then fallback to to default node module resolution scheme.
-      // This ensures we are pulling the correct versions of dependencies, such as `core-js`.
-      modules: [resolve(__dirname, '..', '..', 'node_modules'), 'node_modules'],
       mainFields,
     },
     performance: {
