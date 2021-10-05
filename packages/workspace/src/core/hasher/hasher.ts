@@ -344,7 +344,25 @@ class ProjectHasher {
 
         if (!p) {
           const n = this.projectGraph.externalNodes[projectName];
-          res(this.hashing.hashArray([n.data.version]));
+          const version = n?.data?.version;
+          let hash: string;
+          if (version) {
+            hash = this.hashing.hashArray([version]);
+          } else {
+            // unknown dependency
+            // this may occur if a file has a dependency to a npm package
+            // which is not directly registestered in package.json
+            // but only indirectly through dependencies of registered
+            // npm packages
+            // when it is at a later stage registered in package.json
+            // the cache project graph will not know this module but
+            // the new project graph will know it
+            // The actual checksum added here is of no importance as
+            // the version is unknown and may only change when some
+            // other change occurs in package.json and/or package-lock.json
+            hash = `__${projectName}__`;
+          }
+          res(hash);
           return;
         }
 
