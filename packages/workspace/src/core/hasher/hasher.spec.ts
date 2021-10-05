@@ -13,7 +13,7 @@ jest.mock('fs');
 
 fs.existsSync = () => true;
 
-describe('Hasher', () => {
+fdescribe('Hasher', () => {
   const nxJson = {
     npmScope: 'nrwl',
   };
@@ -441,5 +441,50 @@ describe('Hasher', () => {
 
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
+  });
+
+  it('should hash missing dependent npm project versions', async () => {
+    hashes['/filea'] = 'a.hash';
+    hashes['/fileb'] = 'b.hash';
+    const hasher = new Hasher(
+      {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: '',
+              files: [{ file: '/filea.ts', hash: 'a.hash' }],
+            },
+          },
+        },
+        externalNodes: {},
+        dependencies: {
+          'npm:react': [],
+          app: [
+            {
+              source: 'app',
+              target: 'npm:react',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {} as any,
+      {},
+      createHashing()
+    );
+
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'app', target: 'build' },
+      id: 'app-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    // note that the parent hash is based on parent source files only!
+    expect(hash.details.nodes).toEqual({
+      app: '/filea.ts|a.hash|""|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      'npm:react': '__npm:react__',
+    });
   });
 });
