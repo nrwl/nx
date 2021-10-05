@@ -28,7 +28,7 @@ export async function addJest(
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   moduleNameMapper: {
-    '\\.svg': require.resolve('@nrwl/react-native/src/svg-mock.js'),
+    '\\.svg': '@nrwl/react-native/plugins/jest/svg-mock'
   },
   transform: {
     '\\\\.(js|ts|tsx)$': require.resolve('react-native/jest/preprocessor.js'),

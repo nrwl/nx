@@ -67,7 +67,7 @@ function mockSvgInJestConfig(host: Tree, project: ProjectConfiguration) {
       jestConfigPath,
       contents.replace(
         /,([^,]*)$/,
-        `, moduleNameMapper: {'\\.svg': require.resolve('@nrwl/react-native/src/utils/svg-mock.js')}, $1`
+        `, moduleNameMapper: {'\\.svg': '@nrwl/react-native/plugins/jest/svg-mock'}, $1`
       )
     );
   } catch {

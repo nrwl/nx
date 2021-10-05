@@ -58,7 +58,7 @@ describe('Add react-native-svg to dev dependencies', () => {
 
     const jestConfig = tree.read('apps/products/jest.config.js', 'utf-8');
     expect(jestConfig).toContain(
-      `moduleNameMapper: {'\\.svg': require.resolve('@nrwl/react-native/src/utils/svg-mock.js')},`
+      `moduleNameMapper: {'\\.svg': '@nrwl/react-native/plugins/jest/svg-mock'},`
     );
   });
 
