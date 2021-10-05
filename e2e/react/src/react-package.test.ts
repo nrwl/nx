@@ -116,12 +116,12 @@ describe('Build React libraries and apps', () => {
         // FIX for windows and OSX where output names might get broken to multipleline
         .replace(/\s\s\s││\s\s\s/gm, '');
 
-      expect(childLibOutput).toContain(`${childLib}.umd.js`);
-      expect(childLibOutput).toContain(`${childLib}.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/${childLib}.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/${childLib}.umd.js`);
       expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
 
-      expect(childLib2Output).toContain(`${childLib2}.esm.js`);
-      expect(childLib2Output).toContain(`${childLib2}.umd.js`);
+      checkFilesExist(`dist/libs/${childLib2}/${childLib2}.esm.js`);
+      checkFilesExist(`dist/libs/${childLib2}/${childLib2}.umd.js`);
       expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
 
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
@@ -134,8 +134,8 @@ describe('Build React libraries and apps', () => {
         // FIX for windows and OSX where output names might get broken to multipleline
         .replace(/\s\s\s││\s\s\s/gm, '');
 
-      expect(parentLibOutput).toContain(`${parentLib}.esm.js`);
-      expect(parentLibOutput).toContain(`${parentLib}.umd.js`);
+      checkFilesExist(`dist/libs/${parentLib}/${parentLib}.esm.js`);
+      checkFilesExist(`dist/libs/${parentLib}/${parentLib}.umd.js`);
       expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
@@ -170,17 +170,17 @@ export async function h() { return 'c'; }
 `
       );
 
-      const childLibOutput = runCLI(`build ${childLib} --format cjs,esm,umd`);
+      runCLI(`build ${childLib} --format cjs,esm,umd`);
 
-      expect(childLibOutput).toContain(`${childLib}.cjs.js`);
-      expect(childLibOutput).toContain(`${childLib}.esm.js`);
-      expect(childLibOutput).toContain(`${childLib}.umd.js`);
+      checkFilesExist(`dist/libs/${childLib}/${childLib}.cjs.js`);
+      checkFilesExist(`dist/libs/${childLib}/${childLib}.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/${childLib}.umd.js`);
 
-      const esmPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/${childLib}.esm.js`)
-      );
       const cjsPackageSize = getSize(
         tmpProjPath(`dist/libs/${childLib}/${childLib}.cjs.js`)
+      );
+      const esmPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/${childLib}.esm.js`)
       );
       const umdPackageSize = getSize(
         tmpProjPath(`dist/libs/${childLib}/${childLib}.umd.js`)
