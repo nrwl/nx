@@ -257,15 +257,15 @@ function updateTsConfigsJson(host: Tree, options: Schema) {
   const tsConfigPath = getRootTsConfigPath(host);
   const appOffset = offsetFromRoot(app.root);
 
-  updateJson(host, app.targets.build.options.tsConfig, (json) => {
+  updateJson(host, app.architect.build.options.tsConfig, (json) => {
     json.extends = `${appOffset}${tsConfigPath}`;
     json.compilerOptions = json.compilerOptions || {};
     json.compilerOptions.outDir = `${appOffset}dist/out-tsc`;
     return json;
   });
 
-  if (app.targets.test) {
-    updateJson(host, app.targets.test.options.tsConfig, (json) => {
+  if (app.architect.test) {
+    updateJson(host, app.architect.test.options.tsConfig, (json) => {
       json.extends = `${appOffset}${tsConfigPath}`;
       json.compilerOptions = json.compilerOptions || {};
       json.compilerOptions.outDir = `${appOffset}dist/out-tsc`;
@@ -273,8 +273,8 @@ function updateTsConfigsJson(host: Tree, options: Schema) {
     });
   }
 
-  if (app.targets.server) {
-    updateJson(host, app.targets.server.options.tsConfig, (json) => {
+  if (app.architect.server) {
+    updateJson(host, app.architect.server.options.tsConfig, (json) => {
       json.extends = `${appOffset}${tsConfigPath}`;
       json.compilerOptions = json.compilerOptions || {};
       json.compilerOptions.outDir = `${appOffset}dist/out-tsc`;
@@ -283,7 +283,7 @@ function updateTsConfigsJson(host: Tree, options: Schema) {
   }
 
   if (!!e2eProject) {
-    updateJson(host, e2eProject.targets.lint.options.tsConfig, (json) => {
+    updateJson(host, e2eProject.architect.build.options.tsConfig, (json) => {
       json.extends = `${offsetFromRoot(e2eProject.root)}${tsConfigPath}`;
       json.compilerOptions = {
         ...json.compilerOptions,
