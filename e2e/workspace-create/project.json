@@ -1,6 +1,6 @@
 {
-  "root": "e2e/workspace-integrations",
-  "sourceRoot": "e2e/workspace-integrations",
+  "root": "e2e/workspace-create",
+  "sourceRoot": "e2e/workspace-create",
   "projectType": "application",
   "targets": {
     "e2e": {
@@ -14,7 +14,7 @@
             "command": "yarn e2e-build-package-publish"
           },
           {
-            "command": "nx run-e2e-tests e2e-workspace-integrations"
+            "command": "nx run-e2e-tests e2e-workspace-create"
           }
         ],
         "parallel": false
@@ -23,12 +23,12 @@
     "run-e2e-tests": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "e2e/workspace-integrations/jest.config.js",
+        "jestConfig": "e2e/workspace-create/jest.config.js",
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/workspace-integrations"]
+      "outputs": ["coverage/e2e/workspace-create"]
     }
   },
-  "implicitDependencies": ["angular", "react"]
+  "implicitDependencies": ["create-nx-workspace"]
 }

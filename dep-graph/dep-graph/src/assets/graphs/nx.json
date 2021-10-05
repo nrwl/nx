@@ -198,6 +198,11 @@
       "data": { "tags": [], "root": "e2e/workspace-core", "files": [] }
     },
     {
+      "name": "e2e-workspace-create",
+      "type": "app",
+      "data": { "tags": [], "root": "e2e/workspace-create", "files": [] }
+    },
+    {
       "name": "jest",
       "type": "lib",
       "data": { "tags": [], "root": "packages/jest", "files": [] }
@@ -518,11 +523,6 @@
     "e2e-workspace-integrations": [
       {
         "source": "e2e-workspace-integrations",
-        "target": "create-nx-workspace",
-        "type": "implicit"
-      },
-      {
-        "source": "e2e-workspace-integrations",
         "target": "angular",
         "type": "implicit"
       },
@@ -543,6 +543,23 @@
       },
       {
         "source": "e2e-workspace-integrations",
+        "target": "workspace",
+        "type": "static"
+      }
+    ],
+    "e2e-workspace-create": [
+      {
+        "source": "e2e-workspace-create",
+        "target": "create-nx-workspace",
+        "type": "implicit"
+      },
+      {
+        "source": "e2e-workspace-create",
+        "target": "e2e-utils",
+        "type": "static"
+      },
+      {
+        "source": "e2e-workspace-create",
         "target": "workspace",
         "type": "static"
       }

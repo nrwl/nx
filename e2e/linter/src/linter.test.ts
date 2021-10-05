@@ -231,7 +231,7 @@ describe('Linter', () => {
     }, 1000000);
   });
 
-  it('lint should ensure module boundaries', () => {
+  it('lint plugin should ensure module boundaries', () => {
     const proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
