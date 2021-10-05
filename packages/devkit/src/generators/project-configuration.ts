@@ -11,6 +11,7 @@ import {
 } from '../utils/get-workspace-layout';
 import { readJson, updateJson, writeJson } from '../utils/json';
 import { joinPathFragments } from '../utils/path';
+import { updateWorkspaceJsonToMatchFormatVersion } from './update-workspace-json-to-match-format-version';
 
 import type { Tree } from '@nrwl/tao/src/shared/tree';
 import type {
@@ -196,6 +197,8 @@ export function updateWorkspaceConfiguration(
       }
     });
   }
+
+  updateWorkspaceJsonToMatchFormatVersion(tree);
 }
 
 function readNxJsonExtends(tree: Tree, nxJson: { extends?: string }) {
@@ -334,6 +337,8 @@ function setProjectConfiguration(
       mode
     );
   }
+
+  updateWorkspaceJsonToMatchFormatVersion(tree);
 }
 
 function addProjectToWorkspaceJson(
@@ -372,6 +377,7 @@ function addProjectToWorkspaceJson(
     workspaceJson.projects[projectName] = workspaceConfiguration;
   }
   writeJson(tree, path, workspaceJson);
+  updateWorkspaceJsonToMatchFormatVersion(tree);
 }
 
 function addProjectToNxJson(

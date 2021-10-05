@@ -1,10 +1,12 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
+import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 import * as path from 'path';
-import type * as Prettier from 'prettier';
+
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { readJson, writeJson } from '../utils/json';
-import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { updateWorkspaceJsonToMatchFormatVersion } from './update-workspace-json-to-match-format-version';
+
+import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type * as Prettier from 'prettier';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -16,7 +18,10 @@ export async function formatFiles(tree: Tree): Promise<void> {
     prettier = await import('prettier');
   } catch {}
 
+  // Calling formatFiles() within generators to support old workspace format is weird,
+  // should be removed but it's breaking change for devkit users.
   updateWorkspaceJsonToMatchFormatVersion(tree);
+
   sortWorkspaceJson(tree);
   sortNxJson(tree);
   sortTsConfig(tree);
@@ -59,24 +64,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
       }
     })
   );
-}
-
-function updateWorkspaceJsonToMatchFormatVersion(tree: Tree) {
-  const path = getWorkspacePath(tree);
-  if (!path) {
-    return;
-  }
-
-  try {
-    const workspaceJson = readJson(tree, path);
-    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
-    if (reformatted) {
-      writeJson(tree, path, reformatted);
-    }
-  } catch (e) {
-    console.error(`Failed to format: ${path}`);
-    console.error(e);
-  }
 }
 
 function sortWorkspaceJson(tree: Tree) {

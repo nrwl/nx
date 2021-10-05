@@ -18,14 +18,13 @@ import { getWorkspacePath } from '../utils/get-workspace-layout';
 const baseTestProjectConfig: ProjectConfiguration = {
   root: 'libs/test',
   sourceRoot: 'libs/test/src',
-  targets: {},
 };
 
-describe('project configuration', () => {
+describe('project configuration (workspace format v2)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace(2);
   });
 
   describe('readProjectConfiguration', () => {
@@ -204,11 +203,23 @@ describe('project configuration', () => {
     });
 
     it('should update properties in workspace.json', () => {
-      workspaceConfiguration.version = 3;
+      workspaceConfiguration.generators = {
+        '@nrwl/react': {
+          library: {
+            style: 'scss',
+          },
+        },
+      };
 
       updateWorkspaceConfiguration(tree, workspaceConfiguration);
 
-      expect(readJson(tree, 'workspace.json').version).toEqual(3);
+      expect(readJson(tree, 'workspace.json').generators).toEqual({
+        '@nrwl/react': {
+          library: {
+            style: 'scss',
+          },
+        },
+      });
     });
 
     it('should update properties in nx.json', () => {
@@ -371,6 +382,62 @@ describe('project configuration', () => {
 
       expect(configurations.get('test')).toEqual(baseTestProjectConfig);
       expect(configurations.get('test2')).toEqual(baseTestProjectConfig);
+    });
+  });
+});
+
+describe('project configuration (workspace format v1)', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace(1);
+  });
+
+  it('should keep v1 format when adding a project', () => {
+    addProjectConfiguration(tree, 'test', {
+      ...baseTestProjectConfig,
+      targets: { build: { executor: 'target' } },
+    });
+
+    expect(readJson(tree, 'workspace.json').version).toBe(1);
+    expect(readJson(tree, 'workspace.json').projects.test).toEqual({
+      ...baseTestProjectConfig,
+      architect: { build: { builder: 'target' } },
+    });
+  });
+
+  it('should keep v1 format when updating a project', () => {
+    addProjectConfiguration(tree, 'test', baseTestProjectConfig, false);
+
+    updateProjectConfiguration(tree, 'test', {
+      ...baseTestProjectConfig,
+      targets: { build: { executor: 'target' } },
+    });
+
+    expect(readJson(tree, 'workspace.json').version).toBe(1);
+    expect(readJson(tree, 'workspace.json').projects.test).toEqual({
+      ...baseTestProjectConfig,
+      architect: { build: { builder: 'target' } },
+    });
+  });
+
+  it('should keep v1 format when removing a project', () => {
+    addProjectConfiguration(tree, 'test', {
+      ...baseTestProjectConfig,
+      targets: { build: { executor: 'target' } },
+    });
+    addProjectConfiguration(tree, 'test2', {
+      ...baseTestProjectConfig,
+      targets: { build: { executor: 'target' } },
+    });
+
+    removeProjectConfiguration(tree, 'test2');
+
+    expect(readJson(tree, 'workspace.json').version).toBe(1);
+    expect(readJson(tree, 'workspace.json').projects.test2).toBeUndefined();
+    expect(readJson(tree, 'workspace.json').projects.test).toEqual({
+      ...baseTestProjectConfig,
+      architect: { build: { builder: 'target' } },
     });
   });
 });
