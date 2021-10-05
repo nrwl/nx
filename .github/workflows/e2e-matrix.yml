@@ -45,7 +45,7 @@ jobs:
           - e2e-node
           - e2e-web
           - e2e-storybook
-          - e2e-workspace
+          - e2e-workspace-integrations,e2e-workspace-core
           - e2e-react-native,e2e-detox
         exclude:
           - os: ubuntu-latest
@@ -64,7 +64,9 @@ jobs:
           - os: macos-latest
             package_manager: pnpm
           - os: macos-latest
-            packages: e2e-workspace
+            packages: e2e-workspace-core
+          - os: macos-latest
+            packages: e2e-workspace-integrations
           - os: windows-latest
             node_version: '14'
           - os: windows-latest
