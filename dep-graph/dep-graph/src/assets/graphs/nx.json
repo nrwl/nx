@@ -188,9 +188,19 @@
       "data": { "tags": [], "root": "e2e/storybook", "files": [] }
     },
     {
-      "name": "e2e-workspace",
+      "name": "e2e-workspace-integrations",
       "type": "app",
-      "data": { "tags": [], "root": "e2e/workspace", "files": [] }
+      "data": { "tags": [], "root": "e2e/workspace-integrations", "files": [] }
+    },
+    {
+      "name": "e2e-workspace-core",
+      "type": "app",
+      "data": { "tags": [], "root": "e2e/workspace-core", "files": [] }
+    },
+    {
+      "name": "e2e-workspace-create",
+      "type": "app",
+      "data": { "tags": [], "root": "e2e/workspace-create", "files": [] }
     },
     {
       "name": "jest",
@@ -510,17 +520,61 @@
       { "source": "e2e-storybook", "target": "storybook", "type": "implicit" },
       { "source": "e2e-storybook", "target": "e2e-utils", "type": "static" }
     ],
-    "e2e-workspace": [
+    "e2e-workspace-integrations": [
       {
-        "source": "e2e-workspace",
+        "source": "e2e-workspace-integrations",
+        "target": "angular",
+        "type": "implicit"
+      },
+      {
+        "source": "e2e-workspace-integrations",
+        "target": "react",
+        "type": "implicit"
+      },
+      {
+        "source": "e2e-workspace-integrations",
+        "target": "e2e-utils",
+        "type": "static"
+      },
+      {
+        "source": "e2e-workspace-integrations",
+        "target": "devkit",
+        "type": "static"
+      },
+      {
+        "source": "e2e-workspace-integrations",
+        "target": "workspace",
+        "type": "static"
+      }
+    ],
+    "e2e-workspace-create": [
+      {
+        "source": "e2e-workspace-create",
         "target": "create-nx-workspace",
         "type": "implicit"
       },
-      { "source": "e2e-workspace", "target": "angular", "type": "implicit" },
-      { "source": "e2e-workspace", "target": "react", "type": "implicit" },
-      { "source": "e2e-workspace", "target": "e2e-utils", "type": "static" },
-      { "source": "e2e-workspace", "target": "devkit", "type": "static" },
-      { "source": "e2e-workspace", "target": "workspace", "type": "static" }
+      {
+        "source": "e2e-workspace-create",
+        "target": "e2e-utils",
+        "type": "static"
+      },
+      {
+        "source": "e2e-workspace-create",
+        "target": "workspace",
+        "type": "static"
+      }
+    ],
+    "e2e-workspace-core": [
+      {
+        "source": "e2e-workspace-core",
+        "target": "e2e-utils",
+        "type": "static"
+      },
+      {
+        "source": "e2e-workspace-core",
+        "target": "workspace",
+        "type": "static"
+      }
     ],
     "jest": [
       { "source": "jest", "target": "devkit", "type": "static" },

@@ -13,20 +13,20 @@ describe('Run Commands', () => {
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not override environment variables already set when setting a custom env file path', async () => {
-    const nodeapp = uniq('nodeapp');
+    const mylib = uniq('lib');
     updateFile(
       `.env`,
       'SHARED_VAR=shared-root-value\nROOT_ONLY=root-only-value'
     );
-    runCLI(`generate @nrwl/express:app ${nodeapp}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
     updateFile(
-      `apps/${nodeapp}/.custom.env`,
+      `apps/${mylib}/.custom.env`,
       'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
     );
 
-    const envFile = `apps/${nodeapp}/.custom.env`;
+    const envFile = `apps/${mylib}/.custom.env`;
     runCLI(
-      `generate @nrwl/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${nodeapp}`
+      `generate @nrwl/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
     );
 
     const command =
@@ -35,11 +35,11 @@ describe('Run Commands', () => {
         : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
     const config = readJson(workspaceConfigName());
     config.projects[
-      nodeapp
+      mylib
     ].targets.echoEnvVariables.options.command += ` ${command}`;
     updateFile(workspaceConfigName(), JSON.stringify(config, null, 2));
 
-    const result = runCLI('echoEnvVariables');
+    const result = runCLI(`run ${mylib}:echoEnvVariables`);
     expect(result).toContain('shared-root-value');
     expect(result).not.toContain('shared-nested-value');
     expect(result).toContain('root-only-value');
@@ -47,12 +47,12 @@ describe('Run Commands', () => {
   }, 120000);
 
   it('should pass options', async () => {
-    const myapp = uniq('myapp1');
+    const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/web:app ${myapp}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
     const config = readJson(workspaceConfigName());
-    config.projects[myapp].targets.echo = {
+    config.projects[mylib].targets.echo = {
       executor: '@nrwl/workspace:run-commands',
       options: {
         command: 'echo',
@@ -64,19 +64,19 @@ describe('Run Commands', () => {
     };
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
-    const result = runCLI(`run ${myapp}:echo`, { silent: true });
+    const result = runCLI(`run ${mylib}:echo`, { silent: true });
     expect(result).toContain(
       '--var1=a --var2=b --var-hyphen=c --varCamelCase=d'
     );
   }, 120000);
 
   it('should interpolate provided arguments', async () => {
-    const myapp = uniq('myapp1');
+    const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/web:app ${myapp}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
     const config = readJson(workspaceConfigName());
-    config.projects[myapp].targets.echo = {
+    config.projects[mylib].targets.echo = {
       executor: '@nrwl/workspace:run-commands',
       options: {
         commands: [
@@ -92,7 +92,7 @@ describe('Run Commands', () => {
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
     const result = runCLI(
-      `run ${myapp}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
+      `run ${mylib}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
     );
     expect(result).toContain('var1: a');
     expect(result).toContain('var2: b');
@@ -100,7 +100,7 @@ describe('Run Commands', () => {
     expect(result).toContain('camel: d');
 
     const resultArgs = runCLI(
-      `run ${myapp}:echo --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`
+      `run ${mylib}:echo --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`
     );
     expect(resultArgs).toContain('var1: a');
     expect(resultArgs).toContain('var2: b');
@@ -109,12 +109,12 @@ describe('Run Commands', () => {
   }, 120000);
 
   it('should fail when a process exits non-zero', () => {
-    const myapp = uniq('myapp1');
+    const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/web:app ${myapp}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
     const config = readJson(workspaceConfigName());
-    config.projects[myapp].targets.error = {
+    config.projects[mylib].targets.error = {
       executor: '@nrwl/workspace:run-commands',
       options: {
         command: `exit 1`,
@@ -123,7 +123,7 @@ describe('Run Commands', () => {
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
     try {
-      runCLI(`run ${myapp}:error`);
+      runCLI(`run ${mylib}:error`);
       fail('Should error if process errors');
     } catch (e) {
       expect(e.stderr.toString()).toContain(
@@ -133,17 +133,17 @@ describe('Run Commands', () => {
   });
 
   it('run command should not break if output property is missing in options and arguments', () => {
-    const myapp = uniq('myapp');
+    const mylib = uniq('mylib');
 
-    runCLI(`generate @nrwl/web:app ${myapp}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
     const workspaceJson = readJson(`workspace.json`);
-    workspaceJson.projects[myapp].targets.lint.outputs = [
+    workspaceJson.projects[mylib].targets.lint.outputs = [
       '{options.outputFile}',
     ];
     updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
 
     expect(() =>
-      runCLI(`run ${myapp}:lint --format=json`, {
+      runCLI(`run ${mylib}:lint --format=json`, {
         silenceError: true,
       })
     ).not.toThrow();
