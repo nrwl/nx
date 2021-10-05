@@ -1,6 +1,4 @@
 import type {
-  FileData,
-  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
