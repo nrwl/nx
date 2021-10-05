@@ -96,7 +96,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -136,7 +136,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -179,7 +179,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -211,7 +211,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -257,7 +257,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -307,7 +307,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -357,7 +357,7 @@ Object {
       },
     },
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 

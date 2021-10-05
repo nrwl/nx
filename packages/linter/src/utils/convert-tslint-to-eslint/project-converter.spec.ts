@@ -47,7 +47,7 @@ describe('ProjectConverter', () => {
     process.argv = process.argv.filter(
       (a) => !['--dry-run', '--dryRun', '-d'].includes(a)
     );
-    host = createTreeWithEmptyWorkspace();
+    host = createTreeWithEmptyWorkspace(2);
     addProjectConfiguration(host, projectName, {
       root: projectRoot,
       projectType: 'application',
