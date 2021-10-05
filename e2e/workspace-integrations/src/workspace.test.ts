@@ -502,6 +502,7 @@ describe('affected (with git)', () => {
     runCommand(`git init`);
     runCommand(`git config user.email "test@test.com"`);
     runCommand(`git config user.name "Test"`);
+    runCommand(`git config commit.gpgsign false`);
     runCommand(
       `git add . && git commit -am "initial commit" && git checkout -b main`
     );
