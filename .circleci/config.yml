@@ -125,9 +125,9 @@ commands:
           command: yarn check-imports
       - run:
           name: Check Formatting
-          command: yarn check-format
+          command: yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:
-          name: Check Formatting
+          name: Check Commit
           command: yarn check-commit
       - run:
           name: Check Package dependencies
@@ -158,8 +158,6 @@ commands:
         type: string
         default: ''
     steps:
-      - nx/set-shas:
-          main-branch-name: 'master'
       - when:
           condition:
             equal: [<< parameters.run-builds >>, 'true']
@@ -167,7 +165,7 @@ commands:
             - run:
                 name: Run Builds
                 command: |
-                  npx nx affected --target=build --base=$NX_BASE --parallel --max-parallel=3
+                  npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
       - when:
           condition:
             equal: [<< parameters.run-unit-tests >>, 'true']
@@ -179,7 +177,7 @@ commands:
                   - run:
                       name: Run Unit Tests
                       command: |
-                        npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2
+                        npx nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=2
             - unless:
                 condition:
                   equal: [<< parameters.unit-test-filter >>, '']
@@ -187,7 +185,7 @@ commands:
                   - run:
                       name: Run Unit Tests with Filter "<< parameters.unit-test-filter >>"
                       command: |
-                        npx nx affected --target=test --base=$NX_BASE --parallel --max-parallel=2 -- --t="<< parameters.unit-test-filter >>"
+                        npx nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=2 -- --t="<< parameters.unit-test-filter >>"
       - when:
           condition:
             equal: [<< parameters.run-linting >>, 'true']
@@ -195,7 +193,7 @@ commands:
             - run:
                 name: Run Linting
                 command: |
-                  npx nx affected --target=lint --base=$NX_BASE --parallel --max-parallel=4
+                  npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=4
       - when:
           condition:
             equal: [<< parameters.run-e2e-tests >>, 'true']
@@ -207,7 +205,7 @@ commands:
                   - run:
                       name: Run E2E Tests
                       command: |
-                        npx nx affected --target=e2e --base=$NX_BASE --exclude=<< parameters.exclude-projects >>
+                        npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=<< parameters.exclude-projects >>
                       no_output_timeout: 45m
             - unless:
                 condition:
@@ -216,7 +214,7 @@ commands:
                   - run:
                       name: Run E2E Tests with Filter "<< parameters.e2e-test-filter >>"
                       command: |
-                        npx nx affected --target=e2e --base=$NX_BASE --exclude=<< parameters.exclude-projects >> -- --t="<< parameters.e2e-test-filter >>"
+                        npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=<< parameters.exclude-projects >> -- --t="<< parameters.e2e-test-filter >>"
                       no_output_timeout: 45m
 
 # -------------------------
@@ -322,6 +320,8 @@ jobs:
             echo "export NX_RUN_GROUP=\"e2e-run-group-<< parameters.os >>-<< parameters.pm >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: << parameters.os >>
+      - nx/set-shas:
+          main-branch-name: 'master'
       - when:
           condition:
             equal: [<< parameters.run-checks >>, 'true']

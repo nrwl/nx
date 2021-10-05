@@ -157,7 +157,6 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
  * for the currently selected CLI.
  */
 export function newProject({ name = uniq('proj') } = {}): string {
-  console.log('START PROJECT', new Date());
   const packageManager = getSelectedPackageManager();
 
   try {
@@ -201,7 +200,6 @@ export function newProject({ name = uniq('proj') } = {}): string {
     if (useBackupProject) {
       copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
     }
-    console.log('PROJECT generated', new Date());
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
