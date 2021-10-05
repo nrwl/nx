@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { removeSync, readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync, remove } from 'fs-extra';
 import { readdirSync } from 'fs';
 import {
   prettierVersion,
@@ -10,15 +10,17 @@ process.env.PUBLISHED_VERSION = `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
-function buildPackagePublishAndCleanPorts() {
-  removeSync('./build');
-  removeSync('./tmp/nx/proj-backup');
-  removeSync('./tmp/angular/proj-backup');
-  removeSync('./tmp/local-registry');
+async function buildPackagePublishAndCleanPorts() {
+  await Promise.all([
+    remove('./build'),
+    remove('./tmp/nx/proj-backup'),
+    remove('./tmp/angular/proj-backup'),
+    remove('./tmp/local-registry'),
+  ]);
 
   build(process.env.PUBLISHED_VERSION);
   try {
-    updateVersionsAndPublishPackages();
+    await updateVersionsAndPublishPackages();
   } catch (e) {
     console.log(e);
     process.exit(1);
@@ -30,16 +32,20 @@ const getDirectories = (source: string) =>
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-function updateVersionsAndPublishPackages() {
+async function updateVersionsAndPublishPackages() {
   const npmMajorVersion = execSync(`npm --version`)
     .toString('utf-8')
     .trim()
     .split('.')[0];
 
-  getDirectories('./build/packages').map((pkg) => {
-    updateVersion(`./build/packages/${pkg}`);
-    publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
-  });
+  const directories = getDirectories('./build/packages');
+
+  await Promise.all(
+    directories.map(async (pkg) => {
+      updateVersion(`./build/packages/${pkg}`);
+      publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
+    })
+  );
 }
 
 function updateVersion(packagePath: string) {
@@ -48,7 +54,7 @@ function updateVersion(packagePath: string) {
   });
 }
 
-function publishPackage(packagePath: string, npmMajorVersion: number) {
+async function publishPackage(packagePath: string, npmMajorVersion: number) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -158,4 +164,6 @@ function build(nxVersion: string) {
   });
 }
 
-buildPackagePublishAndCleanPorts();
+(async () => {
+  await buildPackagePublishAndCleanPorts();
+})();
