@@ -12,6 +12,7 @@ describe('git-hasher', () => {
     run(`git init`);
     run(`git config user.email "test@test.com"`);
     run(`git config user.name "test"`);
+    run(`git config commit.gpgsign false`);
 
     warnSpy.mockClear();
   });
