@@ -2,7 +2,8 @@
 import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
 import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
-import { basename, resolve, posix } from 'path';
+import * as path from 'path';
+import { basename, posix, resolve } from 'path';
 import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
@@ -12,15 +13,23 @@ import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-ht
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
-import postcssImports = require('postcss-import');
-import * as path from 'path';
 import { sassImplementation } from './sass';
+import postcssImports = require('postcss-import');
 
 // TODO(jack): Remove this in Nx 13
 type Configuration = any;
 
+// PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
+// https://github.com/webpack-contrib/postcss-loader/blob/0d342b1/src/utils.js#L36
+interface PostcssOptions {
+  (loader: any): any;
+
+  config?: string;
+}
+
 export function getWebConfig(
-  root,
+  workspaceRoot,
+  projectRoot,
   sourceRoot,
   options: WebBuildBuilderOptions,
   esm?: boolean,
@@ -40,8 +49,9 @@ export function getWebConfig(
     tsConfig.options.target = ScriptTarget.ES5;
   }
   const wco: any = {
-    root,
-    projectRoot: resolve(root, sourceRoot),
+    root: workspaceRoot,
+    projectRoot: resolve(workspaceRoot, projectRoot),
+    sourceRoot: resolve(workspaceRoot, sourceRoot),
     buildOptions: convertBuildOptions(options),
     esm,
     console,
@@ -62,7 +72,12 @@ export function getWebConfig(
       esm,
       isScriptOptimizeOn
     ),
-    getStylesPartial(wco.root, wco.buildOptions, options.extractCss),
+    getStylesPartial(
+      wco.root,
+      wco.projectRoot,
+      wco.buildOptions,
+      options.extractCss
+    ),
     getCommonPartial(wco),
     getBrowserPartial(wco, options, isScriptOptimizeOn),
   ]);
@@ -142,7 +157,8 @@ function getCommonPartial(wco: any): Configuration {
 }
 
 export function getStylesPartial(
-  root: string,
+  workspaceRoot: string,
+  projectRoot: string,
   options: any,
   extractCss: boolean
 ): Configuration {
@@ -154,11 +170,11 @@ export function getStylesPartial(
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
       (includePath: string) =>
-        includePaths.push(path.resolve(root, includePath))
+        includePaths.push(path.resolve(workspaceRoot, includePath))
     );
   }
 
-  const partial = getStylesConfig(root, options, includePaths);
+  const partial = getStylesConfig(workspaceRoot, options, includePaths);
   const rules = partial.module.rules.map((rule) => {
     if (!Array.isArray(rule.use)) {
       return rule;
@@ -184,6 +200,29 @@ export function getStylesPartial(
     },
     importLoaders: 1,
   };
+  const postcssOptions: PostcssOptions = (loader) => ({
+    plugins: [
+      postcssImports({
+        addModulesDirectories: includePaths,
+        resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
+        load: (filename: string) => {
+          return new Promise<string>((resolve, reject) => {
+            loader.fs.readFile(filename, (err: Error, data: Buffer) => {
+              if (err) {
+                reject(err);
+
+                return;
+              }
+
+              const content = data.toString();
+              resolve(content);
+            });
+          });
+        },
+      }),
+    ],
+  });
+  postcssOptions.config = projectRoot;
 
   const commonLoaders = [
     {
@@ -199,29 +238,7 @@ export function getStylesPartial(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: (loader) => ({
-          plugins: [
-            postcssImports({
-              addModulesDirectories: includePaths,
-              resolve: (url: string) =>
-                url.startsWith('~') ? url.substr(1) : url,
-              load: (filename: string) => {
-                return new Promise<string>((resolve, reject) => {
-                  loader.fs.readFile(filename, (err: Error, data: Buffer) => {
-                    if (err) {
-                      reject(err);
-
-                      return;
-                    }
-
-                    const content = data.toString();
-                    resolve(content);
-                  });
-                });
-              },
-            }),
-          ],
-        }),
+        postcssOptions: postcssOptions,
       },
     },
   ];

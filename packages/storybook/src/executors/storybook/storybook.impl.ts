@@ -111,6 +111,7 @@ function storybookOptionMapper(
   const optionsWithFramework = {
     ...builderOptions,
     mode: 'dev',
+    workspaceRoot: context.root,
     configDir: storybookConfig,
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],

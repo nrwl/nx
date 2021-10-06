@@ -54,7 +54,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
   } = require('../../../../../webpack/entry');
   const { ContextReplacementPlugin, debug } = webpack;
 
-  const { root, projectRoot, buildOptions, tsConfig } = wco;
+  const { root, projectRoot, sourceRoot, buildOptions, tsConfig } = wco;
   const { styles: stylesOptimization, scripts: scriptsOptimization } =
     buildOptions.optimization;
   const {
@@ -226,7 +226,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           sourceMap: scriptsSourceMap,
           filename: `${path.basename(bundleName)}${hash}.js`,
           scripts: script.paths,
-          basePath: projectRoot,
+          basePath: sourceRoot,
         })
       );
     });
