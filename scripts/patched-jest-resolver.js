@@ -1,9 +1,8 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
-const { fs } = require('memfs');
 const path_1 = require('path');
 const ts = require('typescript');
-const fileSystem = require('fs');
+const fs = require('fs');
 function getCompilerSetup(rootDir) {
   const tsConfigPath =
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.spec.json') ||
@@ -32,8 +31,8 @@ if (
 ) {
   const root = path_1.join(__dirname, '..', 'tmp', 'unit');
   try {
-    if (!fileSystem.existsSync(root)) {
-      fileSystem.mkdirSync(root);
+    if (!fs.existsSync(root)) {
+      fs.mkdirSync(root);
     }
   } catch (_err) {}
   process.env.NX_WORKSPACE_ROOT_PATH = root;
