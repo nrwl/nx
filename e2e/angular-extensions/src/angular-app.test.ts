@@ -2,15 +2,19 @@ process.env.SELECTED_CLI = 'angular';
 
 import {
   getSelectedPackageManager,
+  killPorts,
   newProject,
+  promisifiedTreeKill,
   readFile,
   readJson,
   removeProject,
   runCLI,
+  runCommandUntil,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
+import { ChildProcess } from 'child_process';
 
 // TODO: Check why this fails on yarn and npm
 describe('Angular Package', () => {
@@ -85,4 +89,106 @@ describe('Angular Package', () => {
       it('Skip tests with pnpm', () => {});
     }
   });
+});
+
+describe('Angular MFE App Serve', () => {
+  let hostApp;
+  let remoteApp1;
+  let proj: string;
+
+  const port1 = 4205;
+  const port2 = 4206;
+
+  beforeEach(() => {
+    hostApp = uniq('app');
+    remoteApp1 = uniq('remote');
+
+    proj = newProject();
+
+    // generate host app
+    runCLI(
+      `generate @nrwl/angular:app ${hostApp} -- --mfe --mfeType=host --port=4205 --routing --style=css --no-interactive`
+    );
+
+    // generate remote apps
+    runCLI(
+      `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=4206 --routing --style=css --no-interactive`
+    );
+  });
+
+  afterEach(() => {
+    removeProject({ onlyOnCI: true });
+  });
+
+  it('should serve the host and remote apps successfully', async () => {
+    // ACT + ASSERT
+    let process: ChildProcess;
+
+    try {
+      process = await runCommandUntil(`serve-mfe ${hostApp}`, (output) => {
+        return (
+          output.includes(`listening on localhost:4206`) &&
+          output.includes(`listening on localhost:4205`)
+        );
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+      }
+      await killPorts(4205);
+      await killPorts(4206);
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300000);
+});
+
+describe('Angular App Build and Serve Ops', () => {
+  let app;
+  let proj: string;
+
+  beforeEach(() => {
+    app = uniq('app');
+
+    proj = newProject();
+
+    // generate app
+    runCLI(
+      `generate @nrwl/angular:app ${app} --routing --style=css --no-interactive`
+    );
+  });
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
+  it('should build the app successfully', () => {
+    // ACT
+    const serveOutput = runCLI(`build ${app}`);
+
+    // ASSERT
+    expect(serveOutput).toContain('Running target "build" succeeded');
+  }, 1000000);
+
+  it('should serve the app successfully', async () => {
+    // ACT
+    const port = 4201;
+
+    // ASSERT
+    const process = await runCommandUntil(
+      `serve ${app} -- --port=${port}`,
+      (output) => output.includes(`listening on localhost:${port}`)
+    );
+
+    // port and process cleanup
+    try {
+      await promisifiedTreeKill(process.pid, 'SIGKILL');
+      await killPorts(port);
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 3000000);
 });
