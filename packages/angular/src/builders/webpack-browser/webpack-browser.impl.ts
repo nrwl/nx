@@ -10,7 +10,7 @@ import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utils/buildable-libs-utils';
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { joinPathFragments } from '@nrwl/devkit';
 import { join } from 'path';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
@@ -94,7 +94,10 @@ function run(
 ): Observable<BuilderOutput> {
   const { target, dependencies } = calculateProjectDependencies(
     readCachedProjectGraph('4.0'),
-    context
+    context.workspaceRoot,
+    context.target.project,
+    context.target.target,
+    context.target.configuration
   );
 
   options.tsConfig = createTmpTsConfig(
@@ -103,8 +106,16 @@ function run(
     target.data.root,
     dependencies
   );
+  process.env.NX_TSCONFIG_PATH = options.tsConfig;
 
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
+  return of(
+    checkDependentProjectsHaveBeenBuilt(
+      context.workspaceRoot,
+      context.target.project,
+      context.target.target,
+      dependencies
+    )
+  ).pipe(
     switchMap((result) => {
       if (result) {
         return buildApp(options, context);

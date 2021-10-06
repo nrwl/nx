@@ -1,6 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from '../schema';
-import { generateFiles, joinPathFragments, logger } from '@nrwl/devkit';
+import {
+  generateFiles,
+  joinPathFragments,
+  logger,
+  offsetFromRoot,
+} from '@nrwl/devkit';
 
 const SHARED_SINGLETON_LIBRARIES = [
   '@angular/core',
@@ -35,6 +40,7 @@ export function generateWebpackConfig(
       remotes: remotesWithPorts ?? [],
       sourceRoot: appRoot,
       sharedLibraries: SHARED_SINGLETON_LIBRARIES,
+      offsetFromRoot: offsetFromRoot(appRoot),
     }
   );
 }
