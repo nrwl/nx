@@ -94,12 +94,13 @@ function build(nxVersion: string) {
     execSync(
       'npx nx run-many --target=build --all --parallel --max-parallel=8',
       {
-        stdio: ['ignore', 'ignore', 'ignore'],
+        stdio: ['pipe', 'pipe', 'pipe'],
       }
     );
+    console.log('Packages built successfully');
   } catch (e) {
-    console.log('Build failed');
-    console.log(e);
+    console.log(e.output.toString());
+    console.log('Build failed. See error above.');
     process.exit(1);
   }
 
