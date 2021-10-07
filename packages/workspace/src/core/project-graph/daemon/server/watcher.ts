@@ -11,7 +11,7 @@ import type { AsyncSubscription, Event } from '@parcel/watcher';
 import { readFileSync } from 'fs';
 import ignore from 'ignore';
 import { join, relative } from 'path';
-import { FULL_OS_SOCKET_PATH } from './os-socket-path';
+import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 
 /**
  * This configures the files and directories which we always want to ignore as part of file watching

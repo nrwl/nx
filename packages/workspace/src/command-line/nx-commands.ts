@@ -6,7 +6,7 @@ import {
   startInBackground,
   startInCurrentProcess,
   stop,
-} from '../core/project-graph/daemon/exec';
+} from '../core/project-graph/daemon/client/client';
 import { nxVersion } from '../utils/versions';
 import * as chalk from 'chalk';
 import { examples } from './examples';

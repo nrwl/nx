@@ -1,16 +1,20 @@
-import { logger, ProjectGraph } from '@nrwl/devkit';
+import { logger } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { appendFileSync, existsSync, unlinkSync } from 'fs';
-import { connect, createServer, Server } from 'net';
+import { appendFileSync } from 'fs';
+import { createServer, Server } from 'net';
 import { performance, PerformanceObserver } from 'perf_hooks';
-import { defaultFileHasher } from '../../hasher/file-hasher';
+import { defaultFileHasher } from '../../../hasher/file-hasher';
 import {
   getGitHashForFiles,
   getUntrackedAndUncommittedFileHashes,
   gitRevParseHead,
-} from '../../hasher/git-hasher';
-import { createProjectGraph } from '../project-graph';
-import { FULL_OS_SOCKET_PATH, isWindows } from './os-socket-path';
+} from '../../../hasher/git-hasher';
+import { createProjectGraph } from '../../project-graph';
+import {
+  FULL_OS_SOCKET_PATH,
+  isWindows,
+  killSocketOrPath,
+} from '../socket-utils';
 import {
   convertChangeEventsToLogMessage,
   subscribeToWorkspaceChanges,
@@ -118,33 +122,6 @@ let watcherSubscription: WatcherSubscription | undefined;
  */
 let performanceObserver: PerformanceObserver | undefined;
 
-/**
- * Create the server and register a connection callback.
- *
- * NOTE: It is important that we do not eagerly perform any work directly upon connection
- * of a client.
- *
- * This is because there are two different scenarios for connection that we need to support:
- * 1) Checking if the server is fundamentally available
- * 2) Requesting the project graph to be built
- *
- * For case (1) we want the operation to be as fast as possible - we just need to know if the
- * server exists to connect to, and so this is why we do not perform any work directly upon
- * connection.
- *
- * For case (2) we have a simple known data payload which the client will send to the server
- * in order to trigger the more expensive graph construction logic.
- *
- * The real reason we need have these two separate steps in which we decouple connection from
- * the request to actually build the project graph is down to the fact that on Windows, the named
- * pipe behaves subtly differently from Unix domain sockets in that when you check if it exists
- * as if it were a file (e.g. using fs.existsSync() or fs.open() or fs.statSync() etc), the native
- * code which runs behind the scenes on the OS will actually trigger a connection to the server.
- * Therefore if we were to simply perform the graph creation upon connection we would end up
- * repeating work and throwing `EPIPE` errors.
- */
-const REQUEST_PROJECT_GRAPH_PAYLOAD = 'REQUEST_PROJECT_GRAPH_PAYLOAD';
-
 const server = createServer((socket) => {
   if (!performanceObserver) {
     performanceObserver = new PerformanceObserver((list) => {
@@ -161,7 +138,7 @@ const server = createServer((socket) => {
      * the server, we throw an error.
      */
     const payload = data.toString();
-    if (payload !== REQUEST_PROJECT_GRAPH_PAYLOAD) {
+    if (payload !== 'REQUEST_PROJECT_GRAPH_PAYLOAD') {
       throw new Error(`Unsupported payload sent to daemon server: ${payload}`);
     }
 
@@ -381,111 +358,6 @@ export async function stopServer(): Promise<void> {
        */
       logger.info('NX Daemon Server - Stopped');
       return resolve();
-    });
-  });
-}
-
-export function killSocketOrPath(): void {
-  try {
-    unlinkSync(FULL_OS_SOCKET_PATH);
-  } catch {}
-}
-
-/**
- * As noted in the comments above the createServer() call, in order to reliably (meaning it works
- * cross-platform) check whether or not the server is availabe to request a project graph from we
- * need to actually attempt connecting to it.
- *
- * Because of the behavior of named pipes on Windows, we cannot simply treat them as a file and
- * check for their existence on disk (unlike with Unix Sockets).
- */
-export async function isServerAvailable(): Promise<boolean> {
-  try {
-    const socket = connect(FULL_OS_SOCKET_PATH);
-    return new Promise((resolve) => {
-      socket.on('connect', () => {
-        socket.destroy();
-        resolve(true);
-      });
-      socket.on('error', () => {
-        resolve(false);
-      });
-    });
-  } catch {
-    return Promise.resolve(false);
-  }
-}
-
-/**
- * Establishes a client connection to the daemon server for use in project graph
- * creation utilities.
- *
- * All logs are performed by the devkit logger because this logic does not
- * run "on the server" per se and therefore does not write to its log output.
- *
- * TODO: Gracefully handle a server shutdown (for whatever reason) while a client
- * is connecting and querying it.
- */
-export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
-  return new Promise((resolve, reject) => {
-    performance.mark('getProjectGraphFromServer-start');
-    const socket = connect(FULL_OS_SOCKET_PATH);
-
-    socket.on('error', (err) => {
-      let errorMessage: string | undefined;
-      if (err.message.startsWith('connect ENOENT')) {
-        errorMessage = 'Error: The Daemon Server is not running';
-      }
-      if (err.message.startsWith('connect ECONNREFUSED')) {
-        // If somehow the file descriptor had not been released during a previous shut down.
-        if (existsSync(FULL_OS_SOCKET_PATH)) {
-          errorMessage = `Error: A server instance had not been fully shut down. Please try running the command again.`;
-          killSocketOrPath();
-        }
-      }
-      logger.error(`NX Daemon Client - ${errorMessage || err}`);
-      return reject(new Error(errorMessage) || err);
-    });
-
-    /**
-     * Immediately after connecting to the server we send it the known project graph creation
-     * request payload. See the notes above createServer() for more context as to why we explicitly
-     * request the graph from the client like this.
-     */
-    socket.on('connect', () => {
-      socket.write(REQUEST_PROJECT_GRAPH_PAYLOAD);
-
-      let serializedProjectGraph = '';
-      socket.on('data', (data) => {
-        serializedProjectGraph += data.toString();
-      });
-
-      socket.on('end', () => {
-        try {
-          performance.mark('json-parse-start');
-          const projectGraph = JSON.parse(
-            serializedProjectGraph
-          ) as ProjectGraph;
-          performance.mark('json-parse-end');
-          performance.measure(
-            'deserialize graph on the client',
-            'json-parse-start',
-            'json-parse-end'
-          );
-          logger.info('NX Daemon Client - Resolved ProjectGraph');
-          performance.measure(
-            'total for getProjectGraphFromServer()',
-            'getProjectGraphFromServer-start',
-            'json-parse-end'
-          );
-          return resolve(projectGraph);
-        } catch {
-          logger.error(
-            'NX Daemon Client - Error: Could not deserialize the ProjectGraph'
-          );
-          return reject(new Error('Could not deserialize the ProjectGraph'));
-        }
-      });
     });
   });
 }

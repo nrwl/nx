@@ -3,7 +3,7 @@
  */
 import { logger } from '@nrwl/devkit';
 import { deleteDaemonJsonCache, readDaemonJsonCache } from '../cache';
-import { stopServer } from '../server';
+import { stopServer } from './server';
 
 (async () => {
   try {

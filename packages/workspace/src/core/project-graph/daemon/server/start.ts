@@ -2,7 +2,7 @@
  * NOTE: This file is intended to be executed as a script by utilities found in ./index.ts
  */
 import { logger } from '@nrwl/devkit';
-import { startServer } from '../server';
+import { startServer } from './server';
 
 const serverLogOutputFile = process.argv[2];
 
