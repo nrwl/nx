@@ -51,7 +51,7 @@ export type WatcherSubscription = AsyncSubscription;
 export type SubscribeToWorkspaceChangesCallback = (
   err: Error | null,
   changeEvents: Event[] | null
-) => void;
+) => Promise<void>;
 
 export async function subscribeToWorkspaceChanges(
   cb: SubscribeToWorkspaceChangesCallback
