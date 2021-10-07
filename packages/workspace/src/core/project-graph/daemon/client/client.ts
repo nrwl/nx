@@ -33,10 +33,10 @@ export async function startInBackground(): Promise<void> {
 
   // Clean up any existing orphaned background process before creating a new one
   const cachedDaemonJson = await readDaemonJsonCache();
-  if (cachedDaemonJson) {
-    if (cachedDaemonJson.backgroundProcessId) {
+  if (cachedDaemonJson && cachedDaemonJson.backgroundProcessId) {
+    try {
       process.kill(cachedDaemonJson.backgroundProcessId);
-    }
+    } catch (e) {}
   }
 
   logger.info(`NX Daemon Server - Starting in a background process...`);
@@ -83,7 +83,7 @@ export async function startInBackground(): Promise<void> {
 export function startInCurrentProcess(): void {
   logger.info(`NX Daemon Server - Starting in the current process...`);
 
-  spawnSync(process.execPath, ['./start.js'], {
+  spawnSync(process.execPath, ['../server/start.js'], {
     cwd: __dirname,
     stdio: 'inherit',
   });

@@ -84,9 +84,9 @@ let cachedGitHead: string | undefined;
  */
 let cachedSerializedProjectGraph: string | undefined;
 
-function createAndSerializeProjectGraph(): string {
+async function createAndSerializeProjectGraph(): Promise<string> {
   performance.mark('create-project-graph-start');
-  const projectGraph = createProjectGraph(
+  const projectGraph = await createProjectGraph(
     undefined,
     undefined,
     undefined,
@@ -132,7 +132,7 @@ const server = createServer((socket) => {
     performanceObserver.observe({ entryTypes: ['measure'], buffered: false });
   }
 
-  socket.on('data', (data) => {
+  socket.on('data', async (data) => {
     /**
      * If anything other than the known project graph creation request payload is sent to
      * the server, we throw an error.
@@ -160,7 +160,7 @@ const server = createServer((socket) => {
       );
       defaultFileHasher.init();
       cachedGitHead = currentGitHead;
-      serializedProjectGraph = createAndSerializeProjectGraph();
+      serializedProjectGraph = await createAndSerializeProjectGraph();
     } else {
       /**
        * We know at this point that the cached HEAD has not changed so now there are two possibilities:
@@ -184,7 +184,7 @@ const server = createServer((socket) => {
         nestedLog(
           `Unknown untracked/uncommitted file state, recomputing project graph...`
         );
-        serializedProjectGraph = createAndSerializeProjectGraph();
+        serializedProjectGraph = await createAndSerializeProjectGraph();
       }
     }
 
@@ -256,7 +256,7 @@ process
  * we need to recompute the cached serialized project graph so that it is readily
  * available for the next client request to the server.
  */
-const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = (
+const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
   err,
   changeEvents
 ) => {
@@ -301,7 +301,7 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = (
     nestedLog(
       `Updated file-hasher based on watched changes, recomputing project graph...`
     );
-    cachedSerializedProjectGraph = createAndSerializeProjectGraph();
+    cachedSerializedProjectGraph = await createAndSerializeProjectGraph();
   } catch (err) {
     serverLog(`Unexpected Error`);
     console.error(err);
