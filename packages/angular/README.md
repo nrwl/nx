@@ -6,15 +6,41 @@
 
 # Angular Plugin for Nx
 
+The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
+
+- Integration with libraries such as Jest, Cypress, Karma, Protractor, and Storybook.
+- Helper services, and functions to use along with NgRx libraries.
+- Scaffolding for upgrading AngularJS applications.
+- Scaffolding for creating buildable libraries that can be published to npm.
+- Utilities for automatic workspace refactoring.
+
+## Adding the Angular plugin
+
+Adding the Angular plugin to a workspace can be done with the following:
+
+```bash
+#yarn
+yarn add @nrwl/angular
+```
+
+```bash
+#npm
+npm install @nrwl/angular
+```
+
+For more information about the `@nrwl/angular` package take a look at the [Angular Plugin Overview](https://nx.dev/l/a/angular/overview).
+
 {{what-is-nx}}
 
 {{getting-started}}
 
 ```
-? Workspace name (e.g., org name)     happyorg
-? What to create in the new workspace angular    [a workspace with a single Angular application]
-? Application name                    myapp
-? Default stylesheet format           CSS
+
+✔ Workspace name (e.g., org name)     · happyorg
+✔ What to create in the new workspace · angular
+✔ Application name                    · my app
+✔ Default stylesheet format           · css
+
 ```
 
 ### Serving Application
@@ -23,15 +49,11 @@
 - Run `nx test myapp` to test it.
 - Run `nx e2e myapp-e2e` to run e2e tests for it.
 
-You can also use `ng` instead of `nx:
+You can also use `ng` instead of `nx`:
 
 - Run `ng serve myapp` to serve the newly generated application!
 - Run `ng test myapp` to test it.
 - Run `ng e2e myapp-e2e` to run e2e tests for it.
-
-### Adding Angular Plugin Into an Existing Workspace
-
-You can always add the Angular plugin to an existing workspace by installing `@nrwl/angular` and then generating an Angular application, as follows: `ng g @nrwl/angular:app myapp`.
 
 ## Quick Start Videos
 
