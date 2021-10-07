@@ -1,38 +1,22 @@
 import { logger, ProjectGraph } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { appendFileSync, existsSync, statSync, unlinkSync } from 'fs';
+import { appendFileSync, existsSync, unlinkSync } from 'fs';
 import { connect, createServer, Server } from 'net';
-import { platform } from 'os';
-import { join, resolve } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
 import { defaultFileHasher } from '../../hasher/file-hasher';
-import { gitRevParseHead } from '../../hasher/git-hasher';
-import { defaultHashing } from '../../hasher/hashing-impl';
+import {
+  getGitHashForFiles,
+  getUntrackedAndUncommittedFileHashes,
+  gitRevParseHead,
+} from '../../hasher/git-hasher';
 import { createProjectGraph } from '../project-graph';
-
-/**
- * For IPC with with the daemon server we use unix sockets or windows pipes, depending on the user's operating system.
- * Further notes on the cross-platform concerns are covered below.
- *
- * Unix:
- *
- * - The path is a filesystem pathname. It gets truncated to an OS-dependent length of sizeof(sockaddr_un.sun_path) - 1.
- * Typical values are 107 bytes on Linux and 103 bytes on macOS.
- * - A Unix domain socket will be visible in the filesystem and will persist until unlinked
- *
- * Windows:
- *
- * - The local domain is implemented using a named pipe. The path must refer to an entry in \\?\pipe\ or \\.\pipe\.
- * - Unlike Unix domain sockets, Windows will close and remove the pipe when the owning process exits.
- *
- * We create the socket/pipe based on a path within the current workspace so that we maintain one unique daemon per
- * workspace to ensure that subtle differences between Nx workspaces cannot cause issues.
- */
-const workspaceSocketPath = join(appRootPath, './nx-daemon.sock');
-const isWindows = platform() === 'win32';
-const fullOSSocketPath = isWindows
-  ? '\\\\.\\pipe\\nx\\' + resolve(workspaceSocketPath)
-  : resolve(workspaceSocketPath);
+import { FULL_OS_SOCKET_PATH, isWindows } from './os-socket-path';
+import {
+  convertChangeEventsToLogMessage,
+  subscribeToWorkspaceChanges,
+  SubscribeToWorkspaceChangesCallback,
+  WatcherSubscription,
+} from './watcher';
 
 /**
  * We have two different use-cases for the "daemon" server:
@@ -67,22 +51,28 @@ function formatLogMessage(message) {
 }
 
 /**
- * We cache the latest known HEAD value and an overall hash of the state of the untracked
- * and uncommitted files so that we can potentially skip some initialization work.
+ * To improve the overall readibility of the logs, we categorize things by "trigger":
+ *
+ * - [REQUEST] meaning that the current set of actions were triggered by a client request to the server
+ * - [WATCHER] meaning the the current set of actions were triggered by handling changes to the workspace files
+ *
+ * We keep those two "triggers" left aligned at the top level and then indent subsequent logs so that there is a
+ * logical hierarchy/grouping.
+ */
+function requestLog(...s) {
+  serverLog(`[REQUEST]: ${s.join(' ')}`);
+}
+function watcherLog(...s) {
+  serverLog(`[WATCHER]: ${s.join(' ')}`);
+}
+function nestedLog(...s) {
+  serverLog(`  ${s.join(' ')}`);
+}
+
+/**
+ * We cache the latest known HEAD value so that we can potentially skip some initialization work.
  */
 let cachedGitHead: string | undefined;
-let cachedUntrackedUncommittedState: string | undefined;
-
-function hashAndCacheUntrackedUncommittedState(
-  untrackedAndUncommittedFileHashes: Map<string, string>
-): void {
-  const fileHashesMapAsFlatArray = [].concat(
-    ...Array.from(untrackedAndUncommittedFileHashes)
-  );
-  cachedUntrackedUncommittedState = defaultHashing.hashArray(
-    fileHashesMapAsFlatArray
-  );
-}
 
 /**
  * We cache the latest copy of the serialized project graph itself in memory so that in the
@@ -116,6 +106,11 @@ function createAndSerializeProjectGraph(): string {
 
   return serializedProjectGraph;
 }
+
+/**
+ * File watcher subscription.
+ */
+let watcherSubscription: WatcherSubscription | undefined;
 
 /**
  * We need to make sure that we instantiate the PerformanceObserver only once, otherwise
@@ -155,7 +150,7 @@ const server = createServer((socket) => {
     performanceObserver = new PerformanceObserver((list) => {
       const entry = list.getEntries()[0];
       // Slight indentation to improve readability of the overall log file
-      serverLog(`  Time taken for '${entry.name}'`, `${entry.duration}ms`);
+      nestedLog(`Time taken for '${entry.name}'`, `${entry.duration}ms`);
     });
     performanceObserver.observe({ entryTypes: ['measure'], buffered: false });
   }
@@ -171,7 +166,7 @@ const server = createServer((socket) => {
     }
 
     performance.mark('server-connection');
-    serverLog('Client Request for Project Graph Received');
+    requestLog('Client Request for Project Graph Received');
 
     const currentGitHead = gitRevParseHead(appRootPath);
 
@@ -182,48 +177,35 @@ const server = createServer((socket) => {
      * recompute the project graph
      */
     if (currentGitHead !== cachedGitHead) {
-      serverLog(
-        ` [SERVER STATE]: Cached HEAD does not match current (${currentGitHead}), performing full file hash init and recomputing project graph...`
+      cachedSerializedProjectGraph = undefined;
+      nestedLog(
+        `Cached HEAD does not match current (${currentGitHead}), performing full file hash init and recomputing project graph...`
       );
-      /**
-       * Update the cached values for the HEAD and untracked and uncommitted state which was computed
-       * as part of full init()
-       */
-      const untrackedAndUncommittedFileHashes = defaultFileHasher.init();
-      hashAndCacheUntrackedUncommittedState(untrackedAndUncommittedFileHashes);
+      defaultFileHasher.init();
       cachedGitHead = currentGitHead;
       serializedProjectGraph = createAndSerializeProjectGraph();
     } else {
       /**
-       * We know at this point that the cached HEAD has not changed but we must still always use git
-       * to check for untracked and uncommitted changes (and we then create and cache a hash which
-       * represents their overall state).
+       * We know at this point that the cached HEAD has not changed so now there are two possibilities:
        *
-       * We cannot ever skip this particular git operation, but we can compare its result to our
-       * previously cached hash which represents the overall state for untracked and uncommitted changes
-       * and then potentially skip project graph creation altogether if it is unchanged and we have an
-       * existing cached graph.
+       * 1) We have not computed the project graph and cached it for the untracked and uncommitted changes
+       * and need to ask git for this information (slower)
+       *
+       * 2) We already have a cached serialized project graph (which we trust has been kept up to date
+       * by the file watching logic) so we can immediately resolve it to the client (faster)
        */
-      const previousUntrackedUncommittedState = cachedUntrackedUncommittedState;
-      const untrackedAndUncommittedFileHashes =
-        defaultFileHasher.incrementalUpdate();
-      hashAndCacheUntrackedUncommittedState(untrackedAndUncommittedFileHashes);
-
-      /**
-       * Skip project graph creation if the untracked and uncommitted state is unchanged and we have
-       * a cached version of the graph available in memory.
-       */
-      if (
-        previousUntrackedUncommittedState === cachedUntrackedUncommittedState &&
-        cachedSerializedProjectGraph
-      ) {
-        serverLog(
-          ` [SERVER STATE]: State unchanged since last request, resolving in-memory cached project graph...`
+      if (cachedSerializedProjectGraph) {
+        nestedLog(
+          `State unchanged since last request, resolving in-memory cached project graph...`
         );
         serializedProjectGraph = cachedSerializedProjectGraph;
       } else {
-        serverLog(
-          ` [SERVER STATE]: Hashed untracked/uncommitted file state changed (now ${cachedUntrackedUncommittedState}), recomputing project graph...`
+        // Update the file-hasher's knowledge of the untracked and uncommitted changes in order to recompute the project graph
+        defaultFileHasher.incrementalUpdate(
+          getUntrackedAndUncommittedFileHashes(appRootPath)
+        );
+        nestedLog(
+          `Unknown untracked/uncommitted file state, recomputing project graph...`
         );
         serializedProjectGraph = createAndSerializeProjectGraph();
       }
@@ -263,12 +245,91 @@ const server = createServer((socket) => {
         'serialized-project-graph-written-to-client'
       );
       const bytesWritten = Buffer.byteLength(serializedProjectGraph, 'utf-8');
-      serverLog(
+      nestedLog(
         `Closed Connection to Client (${bytesWritten} bytes transferred)`
       );
     });
   });
 });
+
+/**
+ * Server process termination clean up and logging.
+ */
+async function handleServerProcessTermination() {
+  server.close();
+  /**
+   * Tear down any file watchers that may be running.
+   */
+  if (watcherSubscription) {
+    await watcherSubscription.unsubscribe();
+    watcherLog(`Unsubscribed from changes within: ${appRootPath}`);
+  }
+  serverLog('Server Stopped');
+  logger.info('NX Daemon Server - Stopped');
+  process.exit(0);
+}
+
+process
+  .on('SIGINT', handleServerProcessTermination)
+  .on('SIGTERM', handleServerProcessTermination)
+  .on('SIGHUP', handleServerProcessTermination);
+
+/**
+ * When applicable files in the workspaces are changed (created, updated, deleted),
+ * we need to recompute the cached serialized project graph so that it is readily
+ * available for the next client request to the server.
+ */
+const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = (
+  err,
+  changeEvents
+) => {
+  /**
+   * We know that something must have happened in the workspace so it makes sense
+   * to proactively destroy any previous knowledge of the project graph at this point.
+   */
+  cachedSerializedProjectGraph = undefined;
+  if (err || !changeEvents || !changeEvents.length) {
+    watcherLog('Unexpected Error');
+    console.error(err);
+    return;
+  }
+
+  watcherLog(convertChangeEventsToLogMessage(changeEvents));
+
+  /**
+   * Update the file-hasher's knowledge of the non-deleted changed files in order to
+   * recompute and cache the project graph in memory.
+   */
+  try {
+    const filesToHash = [];
+    const deletedFiles = [];
+    for (const event of changeEvents) {
+      if (event.type === 'delete') {
+        deletedFiles.push(event.path);
+      } else {
+        filesToHash.push(event.path);
+      }
+    }
+    performance.mark('hash-watched-changes-start');
+    const updatedHashes = getGitHashForFiles(filesToHash, appRootPath);
+    performance.mark('hash-watched-changes-end');
+    performance.measure(
+      'hash changed files from watcher',
+      'hash-watched-changes-start',
+      'hash-watched-changes-end'
+    );
+    defaultFileHasher.incrementalUpdate(updatedHashes);
+    defaultFileHasher.removeFiles(deletedFiles);
+
+    nestedLog(
+      `Updated file-hasher based on watched changes, recomputing project graph...`
+    );
+    cachedSerializedProjectGraph = createAndSerializeProjectGraph();
+  } catch (err) {
+    serverLog(`Unexpected Error`);
+    console.error(err);
+  }
+};
 
 interface StartServerOptions {
   serverLogOutputFile?: string;
@@ -284,8 +345,16 @@ export async function startServer({
     killSocketOrPath();
   }
   return new Promise((resolve) => {
-    server.listen(fullOSSocketPath, () => {
-      serverLog(`Started listening on: ${fullOSSocketPath}`);
+    server.listen(FULL_OS_SOCKET_PATH, async () => {
+      serverLog(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
+
+      if (!watcherSubscription) {
+        watcherSubscription = await subscribeToWorkspaceChanges(
+          handleWorkspaceChanges
+        );
+        watcherLog(`Subscribed to changes within: ${appRootPath}`);
+      }
+
       return resolve(server);
     });
   });
@@ -318,7 +387,7 @@ export async function stopServer(): Promise<void> {
 
 export function killSocketOrPath(): void {
   try {
-    unlinkSync(fullOSSocketPath);
+    unlinkSync(FULL_OS_SOCKET_PATH);
   } catch {}
 }
 
@@ -332,7 +401,7 @@ export function killSocketOrPath(): void {
  */
 export async function isServerAvailable(): Promise<boolean> {
   try {
-    const socket = connect(fullOSSocketPath);
+    const socket = connect(FULL_OS_SOCKET_PATH);
     return new Promise((resolve) => {
       socket.on('connect', () => {
         socket.destroy();
@@ -353,10 +422,14 @@ export async function isServerAvailable(): Promise<boolean> {
  *
  * All logs are performed by the devkit logger because this logic does not
  * run "on the server" per se and therefore does not write to its log output.
+ *
+ * TODO: Gracefully handle a server shutdown (for whatever reason) while a client
+ * is connecting and querying it.
  */
 export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
   return new Promise((resolve, reject) => {
-    const socket = connect(fullOSSocketPath);
+    performance.mark('getProjectGraphFromServer-start');
+    const socket = connect(FULL_OS_SOCKET_PATH);
 
     socket.on('error', (err) => {
       let errorMessage: string | undefined;
@@ -365,7 +438,7 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
       }
       if (err.message.startsWith('connect ECONNREFUSED')) {
         // If somehow the file descriptor had not been released during a previous shut down.
-        if (existsSync(fullOSSocketPath)) {
+        if (existsSync(FULL_OS_SOCKET_PATH)) {
           errorMessage = `Error: A server instance had not been fully shut down. Please try running the command again.`;
           killSocketOrPath();
         }
@@ -389,16 +462,28 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
 
       socket.on('end', () => {
         try {
+          performance.mark('json-parse-start');
           const projectGraph = JSON.parse(
             serializedProjectGraph
           ) as ProjectGraph;
+          performance.mark('json-parse-end');
+          performance.measure(
+            'deserialize graph on the client',
+            'json-parse-start',
+            'json-parse-end'
+          );
           logger.info('NX Daemon Client - Resolved ProjectGraph');
+          performance.measure(
+            'total for getProjectGraphFromServer()',
+            'getProjectGraphFromServer-start',
+            'json-parse-end'
+          );
           return resolve(projectGraph);
         } catch {
           logger.error(
             'NX Daemon Client - Error: Could not deserialize the ProjectGraph'
           );
-          return reject();
+          return reject(new Error('Could not deserialize the ProjectGraph'));
         }
       });
     });

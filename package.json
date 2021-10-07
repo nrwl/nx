@@ -73,6 +73,7 @@
     "@nrwl/tao": "12.10.0-beta.3",
     "@nrwl/web": "12.10.0-beta.3",
     "@nrwl/workspace": "12.10.0-beta.3",
+    "@parcel/watcher": "2.0.0-alpha.11",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
     "@popperjs/core": "^2.9.2",

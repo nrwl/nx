@@ -52,7 +52,7 @@ function parseGitStatus(path: string): Map<string, string> {
   return changes;
 }
 
-function getGitHashForFiles(
+export function getGitHashForFiles(
   filesToHash: string[],
   path: string
 ): Map<string, string> {

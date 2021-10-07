@@ -1,11 +1,4 @@
 import { ProjectGraph } from '@nrwl/devkit';
-import {
-  getProjectGraphFromServer,
-  isServerAvailable,
-  killSocketOrPath,
-  startServer,
-  stopServer,
-} from './server';
 
 const mockProjectGraph: ProjectGraph = {
   nodes: {
@@ -35,7 +28,26 @@ jest.mock('../project-graph', () => {
   };
 });
 
+// Mock out file watcher logic so that the tests don't hang
+const mockSubscribeToWorkspaceChanges = jest.fn();
+jest.mock('./watcher', () => {
+  return {
+    subscribeToWorkspaceChanges: mockSubscribeToWorkspaceChanges,
+  };
+});
+
+import {
+  getProjectGraphFromServer,
+  isServerAvailable,
+  killSocketOrPath,
+  startServer,
+  stopServer,
+} from './server';
+
 describe('Daemon Server', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   afterEach(() => {
     killSocketOrPath();
   });
@@ -46,6 +58,13 @@ describe('Daemon Server', () => {
 
     await stopServer();
     expect(server.listening).toBe(false);
+  });
+
+  it('should invoke the file watcher subscription logic upon start up', async () => {
+    expect(mockSubscribeToWorkspaceChanges).not.toHaveBeenCalled();
+    await startServer({});
+    expect(mockSubscribeToWorkspaceChanges).toHaveBeenCalledTimes(1);
+    await stopServer();
   });
 
   it('should error if the server is started multiple times', async () => {
