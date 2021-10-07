@@ -42,6 +42,7 @@ export {
   createOrUpdate,
   findNodes,
   updatePackageJsonDependencies,
+  getProjectGraphFromHost,
   readWorkspace,
   renameSyncInTree,
   renameDirSyncInTree,

@@ -94,23 +94,23 @@ describe('explicit package json dependencies', () => {
       builder.addNode(p);
     });
 
-    const res = buildExplicitPackageJsonDependencies(
-      ctx.workspace,
-      builder.graph,
-      ctx.filesToProcess
-    );
+    buildExplicitPackageJsonDependencies(ctx, builder);
 
-    expect(res).toEqual([
-      {
-        sourceProjectName: 'proj',
-        targetProjectName: 'proj2',
-        sourceProjectFile: 'libs/proj/package.json',
-      },
-      {
-        sourceProjectName: 'proj',
-        targetProjectName: 'proj3',
-        sourceProjectFile: 'libs/proj/package.json',
-      },
-    ]);
+    expect(builder.getUpdatedProjectGraph().dependencies).toEqual({
+      proj: [
+        {
+          source: 'proj',
+          target: 'proj2',
+          type: DependencyType.static,
+        },
+        {
+          source: 'proj',
+          target: 'proj3',
+          type: DependencyType.static,
+        },
+      ],
+      proj2: [],
+      proj3: [],
+    });
   });
 });

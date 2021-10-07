@@ -31,7 +31,11 @@ import {
   shouldRecomputeWholeGraph,
   writeCache,
 } from '../nx-deps/nx-deps-cache';
-import { buildImplicitProjectDependencies } from './build-dependencies';
+import {
+  buildExplicitPackageJsonDependencies,
+  buildExplicitTypeScriptDependencies,
+  buildImplicitProjectDependencies,
+} from './build-dependencies';
 import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
@@ -39,8 +43,6 @@ import {
 import * as serverExec from './daemon/exec';
 import { getProjectGraphFromServer, isServerAvailable } from './daemon/server';
 import { existsSync } from 'fs';
-import * as os from 'os';
-import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -174,6 +176,9 @@ export async function createProjectGraphAsync(
   }
 
   if (!(await isServerAvailable())) {
+    logger.warn(
+      '\nWARNING: You set NX_DAEMON=true but the Daemon Server is not running. Starting Daemon Server in the background...'
+    );
     await serverExec.startInBackground();
   }
 
@@ -190,12 +195,12 @@ function readCombinedDeps() {
 /**
  * @deprecated This function is deprecated in favor of the new asynchronous version {@link createProjectGraphAsync}
  */
-export async function createProjectGraph(
+export function createProjectGraph(
   workspaceJson?: WorkspaceJsonConfiguration,
   nxJson?: NxJsonConfiguration,
   workspaceFiles?: FileData[],
   projectGraphVersion?: string
-): Promise<ProjectGraph> {
+): ProjectGraph {
   projectGraphVersion = projectGraphVersion || '3.0';
   workspaceJson = workspaceJson || readWorkspaceJson();
   nxJson = nxJson || readNxJson();
@@ -232,7 +237,7 @@ export async function createProjectGraph(
     projectFileMap,
     filesToProcess
   );
-  let projectGraph = await buildProjectGraph(
+  let projectGraph = buildProjectGraph(
     context,
     cachedFileData,
     projectGraphVersion
@@ -265,7 +270,7 @@ function addWorkspaceFiles(
   return { ...projectGraph, allWorkspaceFiles };
 }
 
-async function buildProjectGraph(
+function buildProjectGraph(
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string
@@ -285,8 +290,8 @@ async function buildProjectGraph(
     }
   }
 
-  await buildExplicitDependencies(ctx, builder);
-
+  buildExplicitTypeScriptDependencies(ctx, builder);
+  buildExplicitPackageJsonDependencies(ctx, builder);
   buildImplicitProjectDependencies(ctx, builder);
   builder.setVersion(projectGraphVersion);
   const initProjectGraph = builder.getUpdatedProjectGraph();
@@ -301,146 +306,6 @@ async function buildProjectGraph(
   );
 
   return r;
-}
-
-function totalNumberOfFilesToProcess(ctx: ProjectGraphProcessorContext) {
-  let totalNumOfFilesToProcess = 0;
-  Object.values(ctx.filesToProcess).forEach(
-    (t) => (totalNumOfFilesToProcess += t.length)
-  );
-  return totalNumOfFilesToProcess;
-}
-
-function splitFilesIntoBins(
-  ctx: ProjectGraphProcessorContext,
-  totalNumOfFilesToProcess: number,
-  numberOfWorkers: number
-) {
-  // we want to have numberOfWorkers * 5 bins
-  const filesPerBin =
-    Math.round(totalNumOfFilesToProcess / numberOfWorkers / 5) + 1;
-  const bins: ProjectFileMap[] = [];
-  let currentProjectFileMap = {};
-  let currentNumberOfFiles = 0;
-  for (const source of Object.keys(ctx.filesToProcess)) {
-    for (const f of Object.values(ctx.filesToProcess[source])) {
-      if (!currentProjectFileMap[source]) currentProjectFileMap[source] = [];
-      currentProjectFileMap[source].push(f);
-      currentNumberOfFiles++;
-
-      if (currentNumberOfFiles >= filesPerBin) {
-        bins.push(currentProjectFileMap);
-        currentProjectFileMap = {};
-        currentNumberOfFiles = 0;
-      }
-    }
-  }
-  bins.push(currentProjectFileMap);
-  return bins;
-}
-
-function createWorkerPool(numberOfWorkers: number) {
-  const res = [];
-  for (let i = 0; i < numberOfWorkers; ++i) {
-    res.push(
-      new (require('worker_threads').Worker)(
-        join(__dirname, './project-graph-worker.js'),
-        {
-          env: process.env,
-        }
-      )
-    );
-  }
-  return res;
-}
-
-function buildExplicitDependenciesWithoutWorkers(
-  ctx: ProjectGraphProcessorContext,
-  builder: ProjectGraphBuilder
-) {
-  buildExplicitTypescriptAndPackageJsonDependencies(
-    ctx.workspace,
-    builder.graph,
-    ctx.filesToProcess
-  ).forEach((r) => {
-    builder.addExplicitDependency(
-      r.sourceProjectName,
-      r.sourceProjectFile,
-      r.targetProjectName
-    );
-  });
-}
-
-function buildExplicitDependenciesUsingWorkers(
-  ctx: ProjectGraphProcessorContext,
-  totalNumOfFilesToProcess: number,
-  builder: ProjectGraphBuilder
-) {
-  const numberOfWorkers = os.cpus().length - 1;
-  const bins = splitFilesIntoBins(
-    ctx,
-    totalNumOfFilesToProcess,
-    numberOfWorkers
-  );
-  const workers = createWorkerPool(numberOfWorkers);
-  let numberOfExpectedResponses = bins.length;
-
-  return new Promise((res, reject) => {
-    for (let w of workers) {
-      w.on('message', (explicitDependencies) => {
-        explicitDependencies.forEach((r) => {
-          builder.addExplicitDependency(
-            r.sourceProjectName,
-            r.sourceProjectFile,
-            r.targetProjectName
-          );
-        });
-        if (bins.length > 0) {
-          w.postMessage({ filesToProcess: bins.shift() });
-        }
-        // we processed all the bins
-        if (--numberOfExpectedResponses === 0) {
-          for (let w of workers) {
-            w.terminate();
-          }
-          res(null);
-        }
-      });
-      w.on('error', reject);
-      w.on('exit', (code) => {
-        if (code !== 0) {
-          reject(
-            new Error(
-              `Unable to complete project graph creation. Worker stopped with exit code: ${code}`
-            )
-          );
-        }
-      });
-      w.postMessage({
-        workspace: ctx.workspace,
-        projectGraph: builder.graph,
-      });
-      w.postMessage({ filesToProcess: bins.shift() });
-    }
-  });
-}
-
-async function buildExplicitDependencies(
-  ctx: ProjectGraphProcessorContext,
-  builder: ProjectGraphBuilder
-) {
-  let totalNumOfFilesToProcess = totalNumberOfFilesToProcess(ctx);
-  // using workers has an overhead, so we only do it when the number of
-  // files we need to process is >= 100
-  if (totalNumOfFilesToProcess < 100) {
-    return buildExplicitDependenciesWithoutWorkers(ctx, builder);
-  } else {
-    return buildExplicitDependenciesUsingWorkers(
-      ctx,
-      totalNumOfFilesToProcess,
-      builder
-    );
-  }
 }
 
 function createContext(
