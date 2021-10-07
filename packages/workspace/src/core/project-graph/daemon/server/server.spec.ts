@@ -36,13 +36,11 @@ jest.mock('./watcher', () => {
   };
 });
 
-import {
-  getProjectGraphFromServer,
-  isServerAvailable,
-  killSocketOrPath,
-  startServer,
-  stopServer,
-} from './server';
+import { startServer, stopServer } from './server';
+
+import { getProjectGraphFromServer, isServerAvailable } from '../client/client';
+
+import { killSocketOrPath } from '../socket-utils';
 
 describe('Daemon Server', () => {
   beforeEach(() => {

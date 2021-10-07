@@ -40,8 +40,6 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import * as serverExec from './daemon/exec';
-import { getProjectGraphFromServer, isServerAvailable } from './daemon/server';
 import { existsSync } from 'fs';
 
 /**
@@ -175,15 +173,15 @@ export async function createProjectGraphAsync(
     );
   }
 
-  if (!(await isServerAvailable())) {
+  const daemonClient = require('./daemon/client/client');
+  if (!(await daemonClient.isServerAvailable())) {
     logger.warn(
       '\nWARNING: You set NX_DAEMON=true but the Daemon Server is not running. Starting Daemon Server in the background...'
     );
-    await serverExec.startInBackground();
+    await daemonClient.startInBackground();
   }
 
-  const projectGraph = await getProjectGraphFromServer();
-  return projectGraph;
+  return daemonClient.getProjectGraphFromServer();
 }
 
 function readCombinedDeps() {
