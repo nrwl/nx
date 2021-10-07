@@ -1,23 +1,28 @@
-import { ProjectGraphNodeRecords } from '../project-graph-models';
+import { ProjectGraph, ProjectGraphNodeRecords } from '../project-graph-models';
 import { defaultFileRead } from '../../file-utils';
 import {
   joinPathFragments,
   parseJson,
+  ProjectFileMap,
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
+  Workspace,
 } from '@nrwl/devkit';
 
 export function buildExplicitPackageJsonDependencies(
-  ctx: ProjectGraphProcessorContext,
-  builder: ProjectGraphBuilder
+  workspace: Workspace,
+  graph: ProjectGraph,
+  filesToProcess: ProjectFileMap
 ) {
-  Object.keys(ctx.filesToProcess).forEach((source) => {
-    Object.values(ctx.filesToProcess[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(builder.graph.nodes, f.file)) {
-        processPackageJson(source, f.file, builder);
+  const res = [] as any;
+  Object.keys(filesToProcess).forEach((source) => {
+    Object.values(filesToProcess[source]).forEach((f) => {
+      if (isPackageJsonAtProjectRoot(graph.nodes, f.file)) {
+        processPackageJson(source, f.file, graph, res);
       }
     });
   });
+  return res;
 }
 
 function isPackageJsonAtProjectRoot(
@@ -34,14 +39,19 @@ function isPackageJsonAtProjectRoot(
 function processPackageJson(
   sourceProject: string,
   fileName: string,
-  builder: ProjectGraphBuilder
+  graph: ProjectGraph,
+  collectedDeps: any[]
 ) {
   try {
     const deps = readDeps(parseJson(defaultFileRead(fileName)));
     deps.forEach((d) => {
       // package.json refers to another project in the monorepo
-      if (builder.graph.nodes[d]) {
-        builder.addExplicitDependency(sourceProject, fileName, d);
+      if (graph.nodes[d]) {
+        collectedDeps.push({
+          sourceProjectName: sourceProject,
+          targetProjectName: d,
+          sourceProjectFile: fileName,
+        });
       }
     });
   } catch (e) {

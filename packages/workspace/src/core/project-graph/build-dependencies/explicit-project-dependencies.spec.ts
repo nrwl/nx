@@ -187,38 +187,33 @@ describe('explicit project dependencies', () => {
       builder.addNode(p);
     });
 
-    buildExplicitTypeScriptDependencies(ctx, builder);
+    const res = buildExplicitTypeScriptDependencies(
+      ctx.workspace,
+      builder.graph,
+      ctx.filesToProcess
+    );
 
-    expect(builder.getUpdatedProjectGraph().dependencies).toEqual({
-      proj1234: [
-        {
-          source: 'proj1234',
-          target: 'proj1234-child',
-          type: DependencyType.static,
-        },
-      ],
-      proj: [
-        {
-          source: 'proj',
-          target: 'proj2',
-          type: DependencyType.static,
-        },
-        {
-          source: 'proj',
-          target: 'proj3a',
-          type: DependencyType.static,
-        },
-        {
-          source: 'proj',
-          target: 'proj4ab',
-          type: DependencyType.static,
-        },
-      ],
-      proj123: [],
-      'proj1234-child': [],
-      proj2: [],
-      proj3a: [],
-      proj4ab: [],
-    });
+    expect(res).toEqual([
+      {
+        sourceProjectFile: 'libs/proj1234/index.ts',
+        sourceProjectName: 'proj1234',
+        targetProjectName: 'proj1234-child',
+      },
+      {
+        sourceProjectFile: 'libs/proj/index.ts',
+        sourceProjectName: 'proj',
+        targetProjectName: 'proj2',
+      },
+      {
+        sourceProjectFile: 'libs/proj/index.ts',
+        sourceProjectName: 'proj',
+        targetProjectName: 'proj3a',
+      },
+      {
+        sourceProjectFile: 'libs/proj/index.ts',
+        sourceProjectName: 'proj',
+        targetProjectName: 'proj4ab',
+      },
+    ]);
   });
 });
