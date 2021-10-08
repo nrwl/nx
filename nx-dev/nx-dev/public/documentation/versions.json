@@ -3,7 +3,7 @@
     "name": "Latest",
     "id": "latest",
     "alias": "l",
-    "release": "12.9.0",
+    "release": "12.10.0",
     "path": "latest",
     "default": true
   },
