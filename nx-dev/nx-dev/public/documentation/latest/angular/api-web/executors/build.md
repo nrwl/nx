@@ -32,8 +32,6 @@ List of static application assets.
 
 ### baseHref
 
-Default: `/`
-
 Type: `string`
 
 Base url for the application being built.

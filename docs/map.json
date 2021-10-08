@@ -1033,13 +1033,13 @@
         "itemList": [
           {
             "id": "index",
-            "name": "index",
+            "name": "Overview",
             "searchResultsName": "Nx Devkit",
             "file": "angular/api-nx-devkit/index"
           },
           {
             "id": "ngcli_adapter",
-            "name": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
             "searchResultsName": "Ng CLI Adapter",
             "file": "angular/api-nx-devkit/ngcli_adapter"
           }
@@ -2348,13 +2348,13 @@
         "itemList": [
           {
             "id": "index",
-            "name": "index",
+            "name": "Overview",
             "searchResultsName": "Nx Devkit",
             "file": "react/api-nx-devkit/index"
           },
           {
             "id": "ngcli_adapter",
-            "name": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
             "searchResultsName": "Ng CLI Adapter",
             "file": "react/api-nx-devkit/ngcli_adapter"
           }
@@ -3562,13 +3562,13 @@
         "itemList": [
           {
             "id": "index",
-            "name": "index",
+            "name": "Overview",
             "searchResultsName": "Nx Devkit",
             "file": "node/api-nx-devkit/index"
           },
           {
             "id": "ngcli_adapter",
-            "name": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
             "searchResultsName": "Ng CLI Adapter",
             "file": "node/api-nx-devkit/ngcli_adapter"
           }

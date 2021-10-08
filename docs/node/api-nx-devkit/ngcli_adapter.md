@@ -2,7 +2,7 @@
 
 ## Table of contents
 
-### Classes
+### Ng CLI Adapter Classes
 
 - [NxScopedHost](../../node/nx-devkit/ngcli_adapter#nxscopedhost)
 
@@ -12,7 +12,7 @@
 - [overrideCollectionResolutionForTesting](../../node/nx-devkit/ngcli_adapter#overridecollectionresolutionfortesting)
 - [wrapAngularDevkitSchematic](../../node/nx-devkit/ngcli_adapter#wrapangulardevkitschematic)
 
-## Classes
+## Ng CLI Adapter Classes
 
 ### NxScopedHost
 
