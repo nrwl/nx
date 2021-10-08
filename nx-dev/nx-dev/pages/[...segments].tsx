@@ -117,7 +117,7 @@ export function DocumentationPage({
         />
         <button
           type="button"
-          className="fixed z-50 bottom-4 right-4 w-16 h-16 rounded-full bg-blue-nx-base text-white block lg:hidden"
+          className="fixed z-50 bottom-4 right-4 w-16 h-16 rounded-full bg-green-nx-base shadow-sm text-white block lg:hidden"
           onClick={() => setNavIsOpen(!navIsOpen)}
         >
           <span className="sr-only">Open site navigation</span>
@@ -133,7 +133,7 @@ export function DocumentationPage({
             )}
           >
             <path
-              d="M4 8h16M4 16h16"
+              d="M4 7h16M4 14h16M4 21h16"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
