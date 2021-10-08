@@ -13,13 +13,15 @@ import { OptimizationOptions } from './types';
 import { readFileSync } from 'fs-extra';
 
 export function getDevServerConfig(
-  root: string,
+  workspaceRoot: string,
+  projectRoot: string,
   sourceRoot: string,
   buildOptions: WebBuildBuilderOptions,
   serveOptions: WebDevServerOptions
 ) {
   const webpackConfig = getWebConfig(
-    root,
+    workspaceRoot,
+    projectRoot,
     sourceRoot,
     buildOptions,
     true, // Don't need to support legacy browsers for dev.
@@ -27,7 +29,7 @@ export function getDevServerConfig(
   );
 
   (webpackConfig as any).devServer = getDevServerPartial(
-    root,
+    workspaceRoot,
     serveOptions,
     buildOptions
   );

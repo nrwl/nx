@@ -74,7 +74,12 @@ export const webpack = async (
   // ESM build for modern browsers.
   const baseWebpackConfig = mergeWebpack([
     getBaseWebpackPartial(builderOptions, esm, isScriptOptimizeOn),
-    getStylesPartial(options.configDir, builderOptions, extractCss),
+    getStylesPartial(
+      options.workspaceRoot,
+      options.configDir,
+      builderOptions,
+      extractCss
+    ),
   ]);
 
   // run it through the React customizations

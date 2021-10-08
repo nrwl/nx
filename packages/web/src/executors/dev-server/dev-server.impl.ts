@@ -46,7 +46,8 @@ export default async function* devServerExecutor(
   context: ExecutorContext
 ) {
   const { webpack } = require('../../webpack/entry');
-  const sourceRoot = context.workspace.projects[context.projectName].sourceRoot;
+  const { root: projectRoot, sourceRoot } =
+    context.workspace.projects[context.projectName];
   const buildOptions = normalizeWebBuildOptions(
     getBuildOptions(serveOptions, context),
     context.root,
@@ -54,6 +55,7 @@ export default async function* devServerExecutor(
   );
   let webpackConfig = getDevServerConfig(
     context.root,
+    projectRoot,
     sourceRoot,
     buildOptions,
     serveOptions

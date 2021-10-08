@@ -90,6 +90,7 @@ function getWebpackConfigs(
     // ESM build for modern browsers.
     getWebConfig(
       context.root,
+      projectRoot,
       sourceRoot,
       options,
       true,
@@ -100,6 +101,7 @@ function getWebpackConfigs(
     isScriptOptimizeOn && buildBrowserFeatures.isDifferentialLoadingNeeded()
       ? getWebConfig(
           context.root,
+          projectRoot,
           sourceRoot,
           options,
           false,

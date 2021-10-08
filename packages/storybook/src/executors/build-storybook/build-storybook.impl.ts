@@ -57,6 +57,7 @@ function storybookOptionMapper(
     ...builderOptions,
     mode: 'static',
     outputDir: builderOptions.outputPath,
+    workspaceRoot: context.root,
     configDir: storybookConfig,
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
