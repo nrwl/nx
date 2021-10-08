@@ -135,6 +135,11 @@
     "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-openapi"
   },
   {
+    "name": "@trumbitta/nx-plugin-unused-deps",
+    "description": "Check the dependency graph of your monorepo, looking for unused NPM packages.",
+    "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-unused-deps"
+  },
+  {
     "name": "@nxrocks/nx-flutter",
     "description": "Nx Plugin adding first class support for Flutter in your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-flutter"
