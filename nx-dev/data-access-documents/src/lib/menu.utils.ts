@@ -108,6 +108,8 @@ export function getApiSection(items: MenuItem[]): MenuSection {
         m.id === 'nest' ||
         m.id === 'next' ||
         m.id === 'gatsby' ||
+        m.id === 'detox' ||
+        m.id === 'react-native' ||
         m.id === 'nx-plugin' ||
         m.id === 'nx-devkit' ||
         m.id === 'cli'

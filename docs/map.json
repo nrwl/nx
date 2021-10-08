@@ -2229,27 +2229,6 @@
         ]
       },
       {
-        "name": "detox",
-        "id": "detox",
-        "itemList": [
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "node/api-detox/generators/application"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "node/api-detox/executors/build"
-          },
-          {
-            "name": "test executor",
-            "id": "test",
-            "file": "node/api-detox/executors/test"
-          }
-        ]
-      },
-      {
         "name": "react native",
         "id": "react-native",
         "itemList": [
@@ -3460,6 +3439,27 @@
             "name": "server executor",
             "id": "server",
             "file": "node/api-gatsby/executors/server"
+          }
+        ]
+      },
+      {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "node/api-detox/executors/test"
           }
         ]
       },
