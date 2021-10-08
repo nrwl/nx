@@ -565,6 +565,85 @@ describe('params', () => {
       expect(opts).toEqual({ a: [] });
     });
 
+    it('should set the default object value', () => {
+      const opts = setDefaults(
+        {
+          a: {
+            key: 'value',
+          },
+        },
+        {
+          properties: {
+            a: {
+              type: 'object',
+              properties: {
+                key: {
+                  type: 'string',
+                },
+                key2: {
+                  type: 'string',
+                  default: 'value2',
+                },
+              },
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: { key: 'value', key2: 'value2' } });
+    });
+
+    it('should not default object properties to {}', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              type: 'object',
+              properties: {
+                key: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({});
+    });
+
+    it('should be able to set defaults for underlying properties', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              type: 'object',
+              properties: {
+                minify: {
+                  type: 'boolean',
+                  default: true,
+                },
+                inlineCritical: {
+                  type: 'boolean',
+                  default: true,
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({
+        a: {
+          minify: true,
+          inlineCritical: true,
+        },
+      });
+    });
+
     it('should resolve types using refs', () => {
       const opts = setDefaults(
         {},
