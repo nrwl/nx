@@ -607,7 +607,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     if (showConnectToCloudMessage()) {
       logger.info(
-        `- You may run "nx connect-to-nx-cloud" to get faster builds, Github integration, and more. Check out https://nx.app`
+        `- You may run "nx connect-to-nx-cloud" to get faster builds, GitHub integration, and more. Check out https://nx.app`
       );
     }
   } catch (e) {
