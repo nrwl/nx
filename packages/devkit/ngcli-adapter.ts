@@ -1,3 +1,6 @@
+/**
+ * @category Ng CLI Adapter
+ */
 export {
   wrapAngularDevkitSchematic,
   overrideCollectionResolutionForTesting,

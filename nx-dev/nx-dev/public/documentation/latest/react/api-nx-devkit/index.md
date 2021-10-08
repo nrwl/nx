@@ -1,58 +1,91 @@
 # Module: index
 
+The Nx Devkit is the underlying technology used to customize Nx to support
+different technologies and custom use-cases. It contains many utility
+functions for reading and writing files, updating configuration,
+working with Abstract Syntax Trees(ASTs), and more.
+
+As with most things in Nx, the core of Nx Devkit is very simple.
+It only uses language primitives and immutable objects
+(the tree being the only exception).
+
 ## Table of contents
 
-### Enumerations
+### Project Graph Enumerations
 
-- [ChangeType](../../react/nx-devkit/index#changetype)
 - [DependencyType](../../react/nx-devkit/index#dependencytype)
 
-### Classes
+### Utils Enumerations
+
+- [ChangeType](../../react/nx-devkit/index#changetype)
+
+### Project Graph Classes
 
 - [ProjectGraphBuilder](../../react/nx-devkit/index#projectgraphbuilder)
 
-### Interfaces
+### Commands Interfaces
 
-- [ExecutorContext](../../react/nx-devkit/index#executorcontext)
-- [FileChange](../../react/nx-devkit/index#filechange)
+- [Target](../../react/nx-devkit/index#target)
+
+### Project Graph Interfaces
+
 - [FileData](../../react/nx-devkit/index#filedata)
-- [ImplicitJsonSubsetDependency](../../react/nx-devkit/index#implicitjsonsubsetdependency)
-- [JsonParseOptions](../../react/nx-devkit/index#jsonparseoptions)
-- [JsonSerializeOptions](../../react/nx-devkit/index#jsonserializeoptions)
-- [NxAffectedConfig](../../react/nx-devkit/index#nxaffectedconfig)
-- [NxJsonConfiguration](../../react/nx-devkit/index#nxjsonconfiguration)
-- [NxJsonProjectConfiguration](../../react/nx-devkit/index#nxjsonprojectconfiguration)
 - [NxPlugin](../../react/nx-devkit/index#nxplugin)
-- [ProjectConfiguration](../../react/nx-devkit/index#projectconfiguration)
 - [ProjectFileMap](../../react/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../react/nx-devkit/index#projectgraph)
 - [ProjectGraphDependency](../../react/nx-devkit/index#projectgraphdependency)
 - [ProjectGraphNode](../../react/nx-devkit/index#projectgraphnode)
 - [ProjectGraphProcessorContext](../../react/nx-devkit/index#projectgraphprocessorcontext)
+
+### Tree Interfaces
+
+- [FileChange](../../react/nx-devkit/index#filechange)
+- [Tree](../../react/nx-devkit/index#tree)
+
+### Utils Interfaces
+
+- [JsonParseOptions](../../react/nx-devkit/index#jsonparseoptions)
+- [JsonSerializeOptions](../../react/nx-devkit/index#jsonserializeoptions)
 - [StringDeletion](../../react/nx-devkit/index#stringdeletion)
 - [StringInsertion](../../react/nx-devkit/index#stringinsertion)
-- [Target](../../react/nx-devkit/index#target)
+
+### Workspace Interfaces
+
+- [ExecutorContext](../../react/nx-devkit/index#executorcontext)
+- [ImplicitJsonSubsetDependency](../../react/nx-devkit/index#implicitjsonsubsetdependency)
+- [NxAffectedConfig](../../react/nx-devkit/index#nxaffectedconfig)
+- [NxJsonConfiguration](../../react/nx-devkit/index#nxjsonconfiguration)
+- [NxJsonProjectConfiguration](../../react/nx-devkit/index#nxjsonprojectconfiguration)
+- [ProjectConfiguration](../../react/nx-devkit/index#projectconfiguration)
 - [TargetConfiguration](../../react/nx-devkit/index#targetconfiguration)
 - [TargetDependencyConfig](../../react/nx-devkit/index#targetdependencyconfig)
 - [Task](../../react/nx-devkit/index#task)
 - [TaskGraph](../../react/nx-devkit/index#taskgraph)
-- [Tree](../../react/nx-devkit/index#tree)
 - [Workspace](../../react/nx-devkit/index#workspace)
 - [WorkspaceJsonConfiguration](../../react/nx-devkit/index#workspacejsonconfiguration)
 
-### Type aliases
+### Generators Type aliases
+
+- [WorkspaceConfiguration](../../react/nx-devkit/index#workspaceconfiguration)
+
+### Package Manager Type aliases
+
+- [PackageManager](../../react/nx-devkit/index#packagemanager)
+
+### Utils Type aliases
+
+- [StringChange](../../react/nx-devkit/index#stringchange)
+
+### Workspace Type aliases
 
 - [Executor](../../react/nx-devkit/index#executor)
 - [Generator](../../react/nx-devkit/index#generator)
 - [GeneratorCallback](../../react/nx-devkit/index#generatorcallback)
 - [ImplicitDependencyEntry](../../react/nx-devkit/index#implicitdependencyentry)
-- [PackageManager](../../react/nx-devkit/index#packagemanager)
 - [ProjectType](../../react/nx-devkit/index#projecttype)
-- [StringChange](../../react/nx-devkit/index#stringchange)
 - [TaskGraphExecutor](../../react/nx-devkit/index#taskgraphexecutor)
-- [WorkspaceConfiguration](../../react/nx-devkit/index#workspaceconfiguration)
 
-### Variables
+### Logger Variables
 
 - [logger](../../react/nx-devkit/index#logger)
 
@@ -101,101 +134,39 @@
 - [writeJson](../../react/nx-devkit/index#writejson)
 - [writeJsonFile](../../react/nx-devkit/index#writejsonfile)
 
-## Enumerations
-
-### ChangeType
-
-• **ChangeType**: `Object`
-
----
+## Project Graph Enumerations
 
 ### DependencyType
 
 • **DependencyType**: `Object`
 
-Type of dependency between projects
+---
 
-## Classes
+## Utils Enumerations
+
+### ChangeType
+
+• **ChangeType**: `Object`
+
+## Project Graph Classes
 
 ### ProjectGraphBuilder
 
 • **ProjectGraphBuilder**: `Object`
 
-Builder for adding nodes and dependencies to a [ProjectGraph](../../react/nx-devkit/index#projectgraph)
+## Commands Interfaces
 
-## Interfaces
+### Target
 
-### ExecutorContext
-
-• **ExecutorContext**: `Object`
-
-Context that is passed into an executor
+• **Target**: `Object`
 
 ---
 
-### FileChange
-
-• **FileChange**: `Object`
-
-Description of a file change in the Nx virtual file system/
-
----
+## Project Graph Interfaces
 
 ### FileData
 
 • **FileData**: `Object`
-
-Some metadata about a file
-
----
-
-### ImplicitJsonSubsetDependency
-
-• **ImplicitJsonSubsetDependency**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
-
----
-
-### JsonParseOptions
-
-• **JsonParseOptions**: `Object`
-
----
-
-### JsonSerializeOptions
-
-• **JsonSerializeOptions**: `Object`
-
----
-
-### NxAffectedConfig
-
-• **NxAffectedConfig**: `Object`
-
----
-
-### NxJsonConfiguration
-
-• **NxJsonConfiguration**<`T`\>: `Object`
-
-Nx.json configuration
-
-#### Type parameters
-
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
-
----
-
-### NxJsonProjectConfiguration
-
-• **NxJsonProjectConfiguration**: `Object`
 
 ---
 
@@ -203,31 +174,17 @@ Nx.json configuration
 
 • **NxPlugin**: `Object`
 
-A plugin for Nx
-
----
-
-### ProjectConfiguration
-
-• **ProjectConfiguration**: `Object`
-
-Project configuration
-
 ---
 
 ### ProjectFileMap
 
 • **ProjectFileMap**: `Object`
 
-A list of files separated by the project they belong to
-
 ---
 
 ### ProjectGraph
 
 • **ProjectGraph**<`T`\>: `Object`
-
-A Graph of projects in the workspace and dependencies between them
 
 #### Type parameters
 
@@ -241,15 +198,11 @@ A Graph of projects in the workspace and dependencies between them
 
 • **ProjectGraphDependency**: `Object`
 
-A dependency between two projects
-
 ---
 
 ### ProjectGraphNode
 
 • **ProjectGraphNode**<`T`\>: `Object`
-
-A node describing a project in a workspace
 
 #### Type parameters
 
@@ -263,7 +216,33 @@ A node describing a project in a workspace
 
 • **ProjectGraphProcessorContext**: `Object`
 
-Additional information to be used to process a project graph
+---
+
+## Tree Interfaces
+
+### FileChange
+
+• **FileChange**: `Object`
+
+---
+
+### Tree
+
+• **Tree**: `Object`
+
+---
+
+## Utils Interfaces
+
+### JsonParseOptions
+
+• **JsonParseOptions**: `Object`
+
+---
+
+### JsonSerializeOptions
+
+• **JsonSerializeOptions**: `Object`
 
 ---
 
@@ -279,17 +258,59 @@ Additional information to be used to process a project graph
 
 ---
 
-### Target
+## Workspace Interfaces
 
-• **Target**: `Object`
+### ExecutorContext
+
+• **ExecutorContext**: `Object`
+
+---
+
+### ImplicitJsonSubsetDependency
+
+• **ImplicitJsonSubsetDependency**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type                |
+| :--- | :------------------ |
+| `T`  | `"*"` \| `string`[] |
+
+---
+
+### NxAffectedConfig
+
+• **NxAffectedConfig**: `Object`
+
+---
+
+### NxJsonConfiguration
+
+• **NxJsonConfiguration**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type                |
+| :--- | :------------------ |
+| `T`  | `"*"` \| `string`[] |
+
+---
+
+### NxJsonProjectConfiguration
+
+• **NxJsonProjectConfiguration**: `Object`
+
+---
+
+### ProjectConfiguration
+
+• **ProjectConfiguration**: `Object`
 
 ---
 
 ### TargetConfiguration
 
 • **TargetConfiguration**: `Object`
-
-Target's configuration
 
 ---
 
@@ -303,23 +324,11 @@ Target's configuration
 
 • **Task**: `Object`
 
-A representation of the invocation of an Executor
-
 ---
 
 ### TaskGraph
 
 • **TaskGraph**: `Object`
-
-Graph of Tasks to be executed
-
----
-
-### Tree
-
-• **Tree**: `Object`
-
-Virtual file system tree.
 
 ---
 
@@ -333,9 +342,31 @@ Virtual file system tree.
 
 • **WorkspaceJsonConfiguration**: `Object`
 
-Workspace configuration
+## Generators Type aliases
 
-## Type aliases
+### WorkspaceConfiguration
+
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
+
+---
+
+## Package Manager Type aliases
+
+### PackageManager
+
+Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
+
+---
+
+## Utils Type aliases
+
+### StringChange
+
+Ƭ **StringChange**: [`StringInsertion`](../../react/nx-devkit/index#stringinsertion) \| [`StringDeletion`](../../react/nx-devkit/index#stringdeletion)
+
+---
+
+## Workspace Type aliases
 
 ### Executor
 
@@ -427,25 +458,9 @@ A callback function that is executed after changes are made to the file system
 
 ---
 
-### PackageManager
-
-Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
-
----
-
 ### ProjectType
 
 Ƭ **ProjectType**: `"library"` \| `"application"`
-
-Type of project supported
-
----
-
-### StringChange
-
-Ƭ **StringChange**: [`StringInsertion`](../../react/nx-devkit/index#stringinsertion) \| [`StringDeletion`](../../react/nx-devkit/index#stringdeletion)
-
-A change to be made to a string
 
 ---
 
@@ -478,13 +493,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 `Promise`<`Record`<`string`, `Object`\>\>
 
----
-
-### WorkspaceConfiguration
-
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
-
-## Variables
+## Logger Variables
 
 ### logger
 
