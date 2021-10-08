@@ -69,6 +69,7 @@ describe('lib', () => {
       // ASSERT
       const packageJson = readJson(appTree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss-import']).toBeUndefined();
     });
 
     it('should update package.json when publishable', async () => {
@@ -81,6 +82,7 @@ describe('lib', () => {
       // ASSERT
       const packageJson = readJson(appTree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
     });
 
     it('should update tsconfig.lib.prod.json when enableIvy', async () => {

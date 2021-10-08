@@ -11786,6 +11786,11 @@ es6-weak-map@^2.0.3:
     es6-iterator "^2.0.3"
     es6-symbol "^3.1.1"
 
+esbuild-wasm@^0.12.15:
+  version "0.12.29"
+  resolved "https://registry.yarnpkg.com/esbuild-wasm/-/esbuild-wasm-0.12.29.tgz#1d210bb7d463b2ca51c54d69bb4192d9709f6100"
+  integrity sha512-amSuB/qOGnTFYLOxGHDGosQbOKZnrinniPHFf6ZxzeNH7WAjLkjXluKyKAtX2YuhTkUXm9XV9igl13iqYZ44fQ==
+
 esbuild@0.12.17:
   version "0.12.17"
   resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.12.17.tgz#5816f905c2905de0ebbc658860df7b5b48afbcd3"
@@ -18311,10 +18316,10 @@ next@11.1.0:
     vm-browserify "1.1.2"
     watchpack "2.1.1"
 
-ng-packagr@~12.2.0:
-  version "12.2.0"
-  resolved "https://registry.yarnpkg.com/ng-packagr/-/ng-packagr-12.2.0.tgz#53fe47391b5ddaf5f2c24eaecb23d8a10235d887"
-  integrity sha512-M/qq78Gb4q13t6SFX70W2DrPxyooSkLwXzhWozjD8yWGihx4q+54a72ODGx7jIrB4fQgrGDcMUTM7t1zGYir8Q==
+ng-packagr@~12.2.3:
+  version "12.2.3"
+  resolved "https://registry.yarnpkg.com/ng-packagr/-/ng-packagr-12.2.3.tgz#1597f8e70a78ab88bb395675358942bfc14cbc07"
+  integrity sha512-2KHoglc7UgJMnzkytzZ1wU+IEkb6UrxoU4QZxnF5BSFh9vjUra2nCXH+EKkvxD3WTj0ikXmNIMeNWbwoZpGkgA==
   dependencies:
     "@rollup/plugin-commonjs" "^20.0.0"
     "@rollup/plugin-json" "^4.1.0"
@@ -18326,7 +18331,7 @@ ng-packagr@~12.2.0:
     chokidar "^3.5.1"
     commander "^8.0.0"
     dependency-graph "^0.11.0"
-    esbuild "^0.12.15"
+    esbuild-wasm "^0.12.15"
     find-cache-dir "^3.3.1"
     glob "^7.1.6"
     injection-js "^2.4.0"
@@ -18342,6 +18347,8 @@ ng-packagr@~12.2.0:
     rxjs "^6.5.0"
     sass "^1.32.8"
     stylus "^0.54.8"
+  optionalDependencies:
+    esbuild "^0.12.15"
 
 ngrx-store-freeze@0.2.4:
   version "0.2.4"
