@@ -55,7 +55,7 @@ export function isWorkspaceProject(project: ProjectGraphNode) {
 export function isNpmProject(
   project: ProjectGraphNode
 ): project is ProjectGraphNode<{ packageName: string; version: string }> {
-  return project.type === 'npm';
+  return project?.type === 'npm';
 }
 
 export function getSortedProjectNodes(nodes: Record<string, ProjectGraphNode>) {

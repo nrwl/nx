@@ -16,7 +16,12 @@ type PropertyDescription = {
   description?: string;
   format?: string;
   visible?: boolean;
-  default?: string | number | boolean | string[];
+  default?:
+    | string
+    | number
+    | boolean
+    | string[]
+    | { [key: string]: string | number | boolean | string[] };
   $ref?: string;
   $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
   additionalProperties?: boolean;
@@ -436,10 +441,18 @@ function setPropertyDefault(
       opts[propName] = schema.default;
     }
   } else {
-    if (!opts[propName]) {
+    const wasUndefined = opts[propName] === undefined;
+    if (wasUndefined) {
+      // We need an object to set values onto
       opts[propName] = {};
     }
+
     setDefaultsInObject(opts[propName], schema.properties || {}, definitions);
+
+    // If the property was initially undefined but no properties were added, we remove it again instead of having an {}
+    if (wasUndefined && Object.keys(opts[propName]).length === 0) {
+      delete opts[propName];
+    }
   }
 }
 
