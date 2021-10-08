@@ -138,7 +138,7 @@ async function initializeGitRepo(
     await execute(['init', '-b', defaultBase]);
   } else {
     await execute(['init']);
-    await execute(['checkout', '-b', defaultBase]);
+    await execute(['checkout', '-b', defaultBase]); // Git < 2.28 doesn't support -b on git init.
   }
   await execute(['add', '.']);
   if (options.commit) {

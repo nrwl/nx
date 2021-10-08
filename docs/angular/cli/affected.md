@@ -42,16 +42,16 @@ Run tests for all the projects affected by changing the index.ts file:
 nx affected --target=test --files=libs/mylib/src/index.ts
 ```
 
-Run tests for all the projects affected by the changes between master and HEAD (e.g., PR):
+Run tests for all the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected --target=test --base=master --head=HEAD
+nx affected --target=test --base=main --head=HEAD
 ```
 
-Run tests for all the projects affected by the last commit on master:
+Run tests for all the projects affected by the last commit on main:
 
 ```bash
-nx affected --target=test --base=master~1 --head=master
+nx affected --target=test --base=main~1 --head=main
 ```
 
 ## Options
@@ -62,7 +62,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

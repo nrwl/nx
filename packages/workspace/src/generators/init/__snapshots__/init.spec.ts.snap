@@ -3,7 +3,7 @@
 exports[`workspace move to nx layout should create nx.json 1`] = `
 Object {
   "affected": Object {
-    "defaultBase": "master",
+    "defaultBase": "main",
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",

@@ -41,7 +41,7 @@ export function createEmptyWorkspace(tree: Tree): Tree {
       npmScope: 'proj',
       projects: {},
       affected: {
-        defaultBase: 'master',
+        defaultBase: 'main',
       },
       tasksRunnerOptions: {
         default: {

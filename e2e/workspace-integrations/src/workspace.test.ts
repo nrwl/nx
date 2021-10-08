@@ -505,7 +505,7 @@ describe('affected (with git)', () => {
     runCommand(`git config user.email "test@test.com"`);
     runCommand(`git config user.name "Test"`);
     runCommand(
-      `git add . && git commit -am "initial commit" && git checkout -b master`
+      `git add . && git commit -am "initial commit" && git checkout -b main`
     );
   });
   afterAll(() => removeProject({ onlyOnCI: true }));

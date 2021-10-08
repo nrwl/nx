@@ -199,6 +199,6 @@ export function getAffectedConfig(): NxAffectedConfig {
   const config = readNxJson();
 
   return {
-    defaultBase: config.affected?.defaultBase || 'master',
+    defaultBase: config.affected?.defaultBase || 'main',
   };
 }

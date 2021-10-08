@@ -360,7 +360,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: undefined,
     })
     .option('base', {
-      describe: 'Base of the current branch (usually master)',
+      describe: 'Base of the current branch (usually main)',
       type: 'string',
       requiresArg: true,
     })

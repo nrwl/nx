@@ -10,7 +10,7 @@ const defaultOptions: Omit<Schema, 'name' | 'directory' | 'appName'> = {
   skipInstall: false,
   skipGit: false,
   linter: Linter.EsLint,
-  defaultBase: 'master',
+  defaultBase: 'main',
 };
 
 describe('new', () => {
