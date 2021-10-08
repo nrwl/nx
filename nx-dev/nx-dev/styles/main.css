@@ -43,6 +43,7 @@ pre,
  */
 iframe[src*='youtube'] {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
 }
 .prose iframe,
 .prose img {
