@@ -137,6 +137,7 @@ export function Node() {
                       src="/images/cubes-left-1.png"
                       width={488}
                       height={300}
+                      alt="Nx and node"
                     />
                   </div>
                 </div>
@@ -203,6 +204,7 @@ export function Node() {
                       src="/images/cubes-right-1.png"
                       width={488}
                       height={300}
+                      alt="Nx and node"
                     />
                   </div>
                   {/*<iframe*/}
@@ -229,6 +231,7 @@ export function Node() {
                       src="/images/cubes-left-2.png"
                       width={310}
                       height={240}
+                      alt="Nx and node"
                     />
                   </div>
                 </div>

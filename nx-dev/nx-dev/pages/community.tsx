@@ -206,7 +206,12 @@ export function Community(props: CommunityProps) {
                 </p>
               </div>
               <div className="w-full md:w-1/2 flex flex-col justify-between items-start md:pl-16 md:pb-0 pb-10 mt-8 md:mt-0">
-                <Image src="/images/community.svg" width={555} height={735} />
+                <Image
+                  src="/images/community.svg"
+                  width={555}
+                  height={735}
+                  alt="community illustration"
+                />
               </div>
             </div>
           </div>
