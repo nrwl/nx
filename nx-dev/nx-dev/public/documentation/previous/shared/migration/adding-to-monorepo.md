@@ -40,9 +40,9 @@ by your commit.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Github Integration Works
+### GitHub integration Works
 
-If you said "yes" to Nx Cloud, you can enable Nx Cloud - Github integration to get a much better overview of what
+If you said "yes" to Nx Cloud, you can enable Nx Cloud - GitHub integration to get a much better overview of what
 happens in your PRs.
 
 ![Nx Console screenshot](/shared/github.png)
