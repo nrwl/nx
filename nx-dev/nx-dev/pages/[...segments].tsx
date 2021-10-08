@@ -86,7 +86,7 @@ export function DocumentationPage({
   }, [router, version, flavor, storedFlavor, isFallback]);
 
   useEffect(() => {
-    setDialogOpen(isFallback && !storedFlavor);
+    setDialogOpen(isFallback || !storedFlavor);
   }, [setDialogOpen, isFallback, storedFlavor]);
 
   return (
