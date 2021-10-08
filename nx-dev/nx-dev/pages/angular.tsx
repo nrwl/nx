@@ -111,7 +111,7 @@ export function AngularPage() {
                       get started by creating a modern Angular workspace with Nx
                     </a>
                     , or{' '}
-                    <Link href="/latest/angular/migration/overview">
+                    <Link href="/l/a/migration/overview">
                       <a className="underline pointer">
                         add it to an existing Angular workspace
                       </a>
@@ -189,7 +189,7 @@ export function AngularPage() {
                   dependency graphs, and much, much more.
                 </p>
                 <div className="inline-flex">
-                  <Link href="/latest/angular/tutorial/01-create-application">
+                  <Link href="/l/a/tutorial/01-create-application">
                     <a className="inline-flex items-center font-bold group">
                       <span className="group-hover:underline">
                         Nx Angular App Tutorial
@@ -213,7 +213,7 @@ export function AngularPage() {
                 </div>
                 <p className="italic sm:text-lg my-6">
                   If you want to{' '}
-                  <Link href="/latest/angular/migration/overview">
+                  <Link href="/l/a/migration/overview">
                     <a className="underline pointer">
                       add Nx to an existing Angular project, check out this
                       guide
@@ -429,7 +429,7 @@ export function AngularPage() {
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link href="/latest/angular/getting-started/intro">
+                  <Link href="/l/a/getting-started/intro">
                     <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
                       Get started with Angular
                     </a>
@@ -454,7 +454,7 @@ export function AngularPage() {
                 </p>
                 <ul className="sm:text-lg list-disc list-inside">
                   <li>
-                    <Link href={'/latest/angular/getting-started/intro'}>
+                    <Link href={'/l/a/getting-started/intro'}>
                       <a className="underline pointer">
                         Nx Angular Documentation
                       </a>

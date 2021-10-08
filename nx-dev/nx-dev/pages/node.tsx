@@ -239,7 +239,7 @@ export function Node() {
                     building Node applications.
                   </p>
                   <div className="inline-flex rounded-md shadow">
-                    <Link href="/latest/node/getting-started/intro">
+                    <Link href="/l/r/getting-started/intro">
                       <a className="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
                         Nx Node Doc
                       </a>
@@ -317,7 +317,7 @@ export function Node() {
                   dependency graphs, and much, much more.
                 </p>
                 <div className="inline-flex">
-                  <Link href="/latest/node/tutorial/01-create-application">
+                  <Link href="/l/r/tutorial/01-create-application">
                     <a className="inline-flex items-center font-bold group">
                       <span className="group-hover:underline">
                         Nx Node App Tutorial
@@ -340,7 +340,7 @@ export function Node() {
                 </div>
                 <p className="italic sm:text-lg my-6">
                   If you want to add Nx to an existing Node project,{' '}
-                  <Link href="/latest/node/migration/adding-to-monorepo">
+                  <Link href="/l/r/migration/adding-to-monorepo">
                     <a className="underline pointer">check out this guide</a>
                   </Link>
                   .

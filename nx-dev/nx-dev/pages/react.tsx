@@ -167,7 +167,7 @@ export function ReactPage() {
 
                 <p className="sm:text-lg my-6">
                   Refer to our{' '}
-                  <Link href="/latest/react/guides/nextjs">
+                  <Link href="/l/r/guides/nextjs">
                     <a className="font-bold">Next.js guide</a>
                   </Link>{' '}
                   to get started.
@@ -200,7 +200,7 @@ export function ReactPage() {
                   dependency graphs, and much, much more.
                 </p>
                 <div className="inline-flex">
-                  <Link href="/latest/react/tutorial/01-create-application">
+                  <Link href="/l/r/tutorial/01-create-application">
                     <a className="inline-flex items-center font-bold group">
                       <span className="group-hover:underline">
                         Nx React App Tutorial
@@ -224,13 +224,13 @@ export function ReactPage() {
                 <p className="italic sm:text-lg my-6">
                   If you want to add Nx to an existing React project, check out
                   these guides for{' '}
-                  <Link href="/latest/react/migration/migration-cra">
+                  <Link href="/l/r/migration/migration-cra">
                     <a className="underline pointer">
                       "Create React App" migration
                     </a>
                   </Link>{' '}
                   or{' '}
-                  <Link href="/latest/react/migration/migration-cra">
+                  <Link href="/l/r/migration/migration-cra">
                     <a className="underline pointer">
                       "Adding Nx to Yarn/Lerna monorepo" migration
                     </a>
@@ -381,14 +381,14 @@ export function ReactPage() {
                     Use Nx's{' '}
                     <a
                       className="underline pointer"
-                      href="https://nx.dev/latest/react/storybook/overview"
+                      href="https://nx.dev/l/r/storybook/overview"
                     >
                       Storybook
                     </a>{' '}
                     and{' '}
                     <a
                       className="underline pointer"
-                      href="https://nx.dev/latest/react/cypress/overview#cypress-plugin"
+                      href="https://nx.dev/l/r/cypress/overview#cypress-plugin"
                     >
                       Cypress
                     </a>{' '}
@@ -470,7 +470,7 @@ export function ReactPage() {
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link href="/latest/react/getting-started/intro">
+                  <Link href="/l/r/getting-started/intro">
                     <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
                       Get started with React
                     </a>
@@ -495,14 +495,14 @@ export function ReactPage() {
                 </p>
                 <ul className="sm:text-lg list-disc list-inside">
                   <li>
-                    <Link href={'/latest/react/getting-started/intro'}>
+                    <Link href={'/l/r/getting-started/intro'}>
                       <a className="underline pointer">
                         Nx React Documentation
                       </a>
                     </Link>
                   </li>
                   <li>
-                    <Link href={'/latest/react/guides/nextjs'}>
+                    <Link href={'/l/r/guides/nextjs'}>
                       <a className="underline pointer">
                         Nx Next.js Documentation
                       </a>
