@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import { GeneratorCallback, readJson, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
@@ -6,6 +6,10 @@ import {
   removeDependenciesFromPackageJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  migrateStorybookToWebPack5,
+  workspaceHasStorybookForReact,
+} from './storybook-webpack5-changes';
 
 const basePackages = {
   'copy-webpack-plugin': '^9.0.1',
@@ -27,6 +31,7 @@ const webPackages = {
 export async function webMigrateToWebpack5Generator(tree: Tree, schema: {}) {
   const packages = { ...basePackages, ...webPackages };
   const tasks: GeneratorCallback[] = [];
+  const packageJson = readJson(tree, 'package.json');
 
   logger.info(`NX Adding webpack 5 to workspace.`);
 
@@ -34,6 +39,29 @@ export async function webMigrateToWebpack5Generator(tree: Tree, schema: {}) {
   tasks.push(
     removeDependenciesFromPackageJson(tree, [], Object.keys(packages))
   );
+
+  // Here, if our workspace has Storybook for React, we add the Storybook webpack 5 dependencies
+  if (workspaceHasStorybookForReact(packageJson)) {
+    if (
+      !(
+        packageJson.dependencies['@storybook/builder-webpack5'] ||
+        packageJson.devDependencies['@storybook/builder-webpack5']
+      )
+    ) {
+      packages['@storybook/builder-webpack5'] =
+        workspaceHasStorybookForReact(packageJson);
+    }
+    if (
+      !(
+        packageJson.dependencies['@storybook/manager-webpack5'] ||
+        packageJson.devDependencies['@storybook/manager-webpack5']
+      )
+    ) {
+      packages['@storybook/manager-webpack5'] =
+        workspaceHasStorybookForReact(packageJson);
+    }
+    await migrateStorybookToWebPack5(tree);
+  }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, packages));
 
