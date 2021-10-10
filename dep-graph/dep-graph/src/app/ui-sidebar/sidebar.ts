@@ -31,7 +31,6 @@ export class SidebarComponent {
   set projects(projects: ProjectGraphNode[]) {
     this.projectList.projects = projects;
     this.focusedProjectPanel.unfocusProject();
-    this.unfocusProject();
   }
 
   constructor(private affectedProjects: string[]) {

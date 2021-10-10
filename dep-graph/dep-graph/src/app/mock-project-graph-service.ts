@@ -47,7 +47,7 @@ export class MockProjectGraphService implements ProjectGraphService {
     groupByFolder: false,
   };
 
-  constructor(updateFrequency: number = 7500) {
+  constructor(updateFrequency: number = 5000) {
     setInterval(() => this.updateResponse(), updateFrequency);
   }
 
