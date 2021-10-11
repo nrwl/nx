@@ -3,6 +3,7 @@ jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('ng-packagr');
 
 import type { ExecutorContext } from '@nrwl/devkit';
+import * as devkit from '@nrwl/devkit';
 import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import * as ngPackagr from 'ng-packagr';
 import { BehaviorSubject } from 'rxjs';
@@ -25,7 +26,7 @@ describe('Package executor', () => {
 
   beforeEach(async () => {
     (
-      buildableLibsUtils.calculateProjectDependencies as jest.Mock
+      buildableLibsUtils.calculateDependenciesFromEntryPoint as jest.Mock
     ).mockImplementation(() => ({
       target: {},
       dependencies: [],
@@ -41,6 +42,11 @@ describe('Package executor', () => {
       watch: ngPackagrWatchMock,
       withBuildTransform: ngPackagrWithBuildTransformMock,
       withTsConfig: ngPackagrWithTsConfigMock,
+    }));
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      lib: {
+        entryFile: 'src/index.ts',
+      },
     }));
 
     context = {

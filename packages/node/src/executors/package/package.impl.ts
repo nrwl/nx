@@ -2,7 +2,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { copyAssetFiles } from '@nrwl/workspace/src/utilities/assets';
 import {
-  calculateProjectDependencies,
+  calculateDependenciesFromEntryPoint,
   checkDependentProjectsHaveBeenBuilt,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
@@ -18,12 +18,13 @@ export async function packageExecutor(
 ) {
   const libRoot = context.workspace.projects[context.projectName].root;
   const normalizedOptions = normalizeOptions(options, context, libRoot);
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateDependenciesFromEntryPoint(
     readCachedProjectGraph(),
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName
+    context.configurationName,
+    normalizedOptions.main
   );
   const dependentsBuilt = checkDependentProjectsHaveBeenBuilt(
     context.root,

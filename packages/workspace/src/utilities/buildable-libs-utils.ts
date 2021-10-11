@@ -1,12 +1,16 @@
-import { isNpmProject, ProjectType } from '../core/project-graph';
-import { join, resolve, dirname, relative } from 'path';
-import { directoryExists, readJsonFile, writeJsonFile } from './fileutils';
-import { stripIndents } from '@nrwl/devkit';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
-import * as ts from 'typescript';
+import { stripIndents } from '@nrwl/devkit';
 import { unlinkSync } from 'fs';
+import { dirname, join, relative, resolve } from 'path';
+import * as ts from 'typescript';
+import { readNxJson } from '../core/file-utils';
+import { isNpmProject, ProjectType } from '../core/project-graph';
+import { TypeScriptImportLocator } from '../core/project-graph/build-dependencies/typescript-import-locator';
+import { TargetProjectLocator } from '../core/target-project-locator';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
+import { directoryExists, readJsonFile, writeJsonFile } from './fileutils';
 import { output } from './output';
+import { resolveModuleByImport } from './typescript';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -31,47 +35,20 @@ export function calculateProjectDependencies(
 ): { target: ProjectGraphNode; dependencies: DependentBuildableProjectNode[] } {
   const target = projGraph.nodes[projectName];
   // gather the library dependencies
-  const dependencies = recursivelyCollectDependencies(
+  const dependencyNames = recursivelyCollectDependencies(
     projectName,
     projGraph,
     []
-  )
-    .map((dep) => {
-      const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
-      if (
-        depNode.type === ProjectType.lib &&
-        isBuildable(targetName, depNode)
-      ) {
-        const libPackageJson = readJsonFile(
-          join(root, depNode.data.root, 'package.json')
-        );
+  );
+  const dependencies = buildDependentBuildableProjectNodeArray(
+    dependencyNames,
+    projGraph,
+    root,
+    projectName,
+    targetName,
+    configurationName
+  );
 
-        return {
-          name: libPackageJson.name, // i.e. @workspace/mylib
-          outputs: getOutputsForTargetAndConfiguration(
-            {
-              overrides: {},
-              target: {
-                project: projectName,
-                target: targetName,
-                configuration: configurationName,
-              },
-            },
-            depNode
-          ),
-          node: depNode,
-        };
-      } else if (depNode.type === 'npm') {
-        return {
-          name: depNode.data.packageName,
-          outputs: [],
-          node: depNode,
-        };
-      } else {
-        return null;
-      }
-    })
-    .filter((x) => !!x);
   return { target, dependencies };
 }
 
@@ -334,6 +311,153 @@ export function updateBuildableProjectPackageJsonDependencies(
   if (updatePackageJson) {
     writeJsonFile(packageJsonPath, packageJson);
   }
+}
+
+export function calculateDependenciesFromEntryPoint(
+  projectGraph: ProjectGraph,
+  root: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string,
+  entryPoint: string
+): { target: ProjectGraphNode; dependencies: DependentBuildableProjectNode[] } {
+  const dependencyNames = recursivelyCollectDependenciesFromFile(
+    entryPoint,
+    projectName,
+    targetName,
+    configurationName,
+    projectGraph
+  );
+  const dependencies = buildDependentBuildableProjectNodeArray(
+    dependencyNames,
+    projectGraph,
+    root,
+    projectName,
+    targetName,
+    configurationName
+  );
+
+  return { target: projectGraph.nodes[projectName], dependencies };
+}
+
+function recursivelyCollectDependenciesFromFile(
+  file: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string,
+  projectGraph: ProjectGraph,
+  seenFiles: Set<string> = new Set(),
+  seenTargets: Set<string> = new Set(),
+  importLocator = new TypeScriptImportLocator(),
+  targetProjectLocator = new TargetProjectLocator(
+    projectGraph.nodes,
+    projectGraph.externalNodes
+  ),
+  npmScope: string = readNxJson().npmScope
+): string[] {
+  const dependencies: string[] = [];
+  seenFiles.add(file);
+
+  // visit file imports
+  importLocator.fromFile(file, (importExpr, filePath, type) => {
+    // find the project that the import belongs to
+    const target = targetProjectLocator.findProjectWithImport(
+      importExpr,
+      file,
+      npmScope
+    );
+
+    // add the dependency if it is not self-referencing and it hasn't been seen before
+    if (target && target !== projectName && !seenTargets.has(target)) {
+      seenTargets.add(target);
+      dependencies.push(target);
+    }
+
+    // stop if the import is an external module
+    if (projectGraph.externalNodes[target]) {
+      return;
+    }
+
+    // get the file path of the import
+    const resolvedFile = resolveModuleByImport(
+      importExpr,
+      filePath,
+      'tsconfig.base.json'
+    );
+
+    // stop if the file path was not resolved or if it has already been seen
+    if (!resolvedFile || seenFiles.has(resolvedFile)) {
+      return;
+    }
+
+    // recursively collect dependencies from the file
+    const deps = recursivelyCollectDependenciesFromFile(
+      resolvedFile,
+      projectName,
+      targetName,
+      configurationName,
+      projectGraph,
+      seenFiles,
+      seenTargets,
+      importLocator,
+      targetProjectLocator,
+      npmScope
+    );
+
+    dependencies.push(...deps);
+  });
+
+  return dependencies;
+}
+
+function buildDependentBuildableProjectNodeArray(
+  dependencies: string[],
+  projectGraph: ProjectGraph,
+  root: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string
+): DependentBuildableProjectNode[] {
+  return dependencies
+    .map((dep) => {
+      const depNode =
+        projectGraph.nodes[dep] || projectGraph.externalNodes[dep];
+      if (
+        depNode.type === ProjectType.lib &&
+        isBuildable(targetName, depNode)
+      ) {
+        const libPackageJson = readJsonFile(
+          join(root, depNode.data.root, 'package.json')
+        );
+
+        return {
+          name: libPackageJson.name, // i.e. @workspace/mylib
+          outputs: getOutputsForTargetAndConfiguration(
+            {
+              overrides: {},
+              target: {
+                project: projectName,
+                target: targetName,
+                configuration: configurationName,
+              },
+            },
+            depNode
+          ),
+          node: depNode,
+        };
+      }
+
+      if (isNpmProject(depNode)) {
+        return {
+          name: depNode.data.packageName,
+          outputs: [],
+          node: depNode,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
 }
 
 // verify whether the package.json already specifies the dep

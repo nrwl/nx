@@ -20,6 +20,8 @@ import * as fs from 'fs-extra';
 
 jest.mock('@nrwl/workspace/src/utilities/fileutils');
 import * as fsUtility from '@nrwl/workspace/src/utilities/fileutils';
+
+import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
 import * as ts from 'typescript';
 
@@ -89,48 +91,54 @@ describe('NodePackageBuilder', () => {
 
   describe('Without library dependencies', () => {
     beforeEach(() => {
-      jest
-        .spyOn(projectGraph, 'readCachedProjectGraph')
-        .mockImplementation(() => {
-          return {
-            nodes: {
-              nodelib: {
-                type: ProjectType.lib,
-                name: 'nodelib',
-                data: {
-                  files: [],
-                  root: 'libs/nodelib',
-                  targets: { build: { executor: 'any builder' } },
-                },
-              },
-              'nodelib-child': {
-                type: ProjectType.lib,
-                name: 'nodelib-child',
-                data: {
-                  files: [],
-                  root: 'libs/nodelib-child',
-                  prefix: 'proj',
-                  targets: {
-                    build: {
-                      executor: 'any builder',
-                      options: {
-                        assets: [],
-                        main: 'libs/nodelib-child/src/index.ts',
-                        outputPath: 'dist/libs/nodelib-child',
-                        packageJson: 'libs/nodelib-child/package.json',
-                        tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
-                      },
-                    },
+      const projGraph = {
+        nodes: {
+          nodelib: {
+            type: ProjectType.lib,
+            name: 'nodelib',
+            data: {
+              files: [],
+              root: 'libs/nodelib',
+              targets: { build: { executor: 'any builder' } },
+            },
+          },
+          'nodelib-child': {
+            type: ProjectType.lib,
+            name: 'nodelib-child',
+            data: {
+              files: [],
+              root: 'libs/nodelib-child',
+              prefix: 'proj',
+              targets: {
+                build: {
+                  executor: 'any builder',
+                  options: {
+                    assets: [],
+                    main: 'libs/nodelib-child/src/index.ts',
+                    outputPath: 'dist/libs/nodelib-child',
+                    packageJson: 'libs/nodelib-child/package.json',
+                    tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
                   },
                 },
               },
             },
-            dependencies: {
-              nodelib: [],
-              'nodelib-child': [],
-            },
-          } as ProjectGraph;
-        });
+          },
+        },
+        dependencies: {
+          nodelib: [],
+          'nodelib-child': [],
+        },
+      } as ProjectGraph;
+
+      jest
+        .spyOn(projectGraph, 'readCachedProjectGraph')
+        .mockImplementation(() => projGraph);
+      jest
+        .spyOn(buildableLibsUtils, 'calculateDependenciesFromEntryPoint')
+        .mockImplementation(() => ({
+          target: projGraph.nodes[context.projectName],
+          dependencies: [],
+        }));
     });
 
     it('should update the package.json after compiling typescript', async () => {
@@ -262,55 +270,67 @@ describe('NodePackageBuilder', () => {
 
   describe('building with dependencies', () => {
     beforeEach(() => {
-      // fake that dep project has been built
-      jest
-        .spyOn(projectGraph, 'readCachedProjectGraph')
-        .mockImplementation(() => {
-          return {
-            nodes: {
-              nodelib: {
-                type: ProjectType.lib,
-                name: 'nodelib',
-                data: {
-                  files: [],
-                  root: 'libs/nodelib',
-                  targets: { build: { executor: 'any builder' } },
-                },
-              },
-              'nodelib-child': {
-                type: ProjectType.lib,
-                name: 'nodelib-child',
-                data: {
-                  files: [],
-                  root: 'libs/nodelib-child',
-                  prefix: 'proj',
-                  targets: {
-                    build: {
-                      executor: 'any builder',
-                      options: {
-                        assets: [],
-                        main: 'libs/nodelib-child/src/index.ts',
-                        outputPath: 'dist/libs/nodelib-child',
-                        packageJson: 'libs/nodelib-child/package.json',
-                        tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
-                      },
-                    },
+      const projGraph = {
+        nodes: {
+          nodelib: {
+            type: ProjectType.lib,
+            name: 'nodelib',
+            data: {
+              files: [],
+              root: 'libs/nodelib',
+              targets: { build: { executor: 'any builder' } },
+            },
+          },
+          'nodelib-child': {
+            type: ProjectType.lib,
+            name: 'nodelib-child',
+            data: {
+              files: [],
+              root: 'libs/nodelib-child',
+              prefix: 'proj',
+              targets: {
+                build: {
+                  executor: 'any builder',
+                  options: {
+                    assets: [],
+                    main: 'libs/nodelib-child/src/index.ts',
+                    outputPath: 'dist/libs/nodelib-child',
+                    packageJson: 'libs/nodelib-child/package.json',
+                    tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
                   },
                 },
               },
             },
-            dependencies: {
-              nodelib: [
-                {
-                  type: ProjectType.lib,
-                  target: 'nodelib-child',
-                  source: null,
-                },
-              ],
-              'nodelib-child': [],
+          },
+        },
+        dependencies: {
+          nodelib: [
+            {
+              type: ProjectType.lib,
+              target: 'nodelib-child',
+              source: null,
             },
-          } as ProjectGraph;
-        });
+          ],
+          'nodelib-child': [],
+        },
+      } as ProjectGraph;
+
+      jest
+        .spyOn(projectGraph, 'readCachedProjectGraph')
+        .mockImplementation(() => projGraph);
+      jest
+        .spyOn(buildableLibsUtils, 'calculateDependenciesFromEntryPoint')
+        .mockImplementation(() => ({
+          target: projGraph.nodes[context.projectName],
+          dependencies: projGraph.dependencies[context.projectName].map(
+            (dep) => ({
+              name: dep.target,
+              node: projGraph.nodes[dep.target],
+              outputs: ['dist/libs/nodelib-child'],
+            })
+          ),
+        }));
+
       // dist/libs/nodelib-child/package.json
       mocked(fsUtility.directoryExists).mockImplementation((arg: string) => {
         return arg.endsWith('dist/libs/nodelib-child');

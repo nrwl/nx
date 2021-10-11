@@ -11,7 +11,7 @@ import type { ExecutorContext, ProjectGraphNode } from '@nrwl/devkit';
 import { logger, names, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
-  calculateProjectDependencies,
+  calculateDependenciesFromEntryPoint,
   checkDependentProjectsHaveBeenBuilt,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
@@ -46,12 +46,13 @@ export default async function* run(
   const project = context.workspace.projects[context.projectName];
   const projectGraph = readCachedProjectGraph();
   const sourceRoot = project.sourceRoot;
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateDependenciesFromEntryPoint(
     projectGraph,
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName
+    context.configurationName,
+    rawOptions.entryFile
   );
   if (
     !checkDependentProjectsHaveBeenBuilt(

@@ -1,16 +1,15 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, readJsonFile } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
+  calculateDependenciesFromEntryPoint,
+  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import {
-  calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
-import { resolve } from 'path';
+import { NgPackageConfig } from 'ng-packagr/ng-package.schema';
+import { dirname, resolve } from 'path';
 import { from } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 import { mapTo, switchMap, tap } from 'rxjs/operators';
@@ -63,12 +62,17 @@ export function createLibraryExecutor(
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
-    const { target, dependencies } = calculateProjectDependencies(
+    const ngPackageJson: NgPackageConfig = readJsonFile(options.project);
+    const entryFile = `${dirname(options.project)}/${
+      ngPackageJson.lib.entryFile
+    }`;
+    const { target, dependencies } = calculateDependenciesFromEntryPoint(
       readCachedProjectGraph(),
       context.root,
       context.projectName,
       context.targetName,
-      context.configurationName
+      context.configurationName,
+      entryFile
     );
     if (
       !checkDependentProjectsHaveBeenBuilt(
