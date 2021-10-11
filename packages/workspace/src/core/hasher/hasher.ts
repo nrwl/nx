@@ -206,16 +206,9 @@ export class Hasher {
       );
       const patterns = implicitDeps.filter((p) => p.indexOf('*') !== -1);
 
-      const allWorkspaceFiles = [];
-      Object.values(this.projectGraph.nodes).forEach((f) => {
-        if (f.data.files) {
-          allWorkspaceFiles.push(...f.data.files);
-        }
-      });
-
       const implicitDepsFromPatterns =
         patterns.length > 0
-          ? (allWorkspaceFiles ?? [])
+          ? (this.projectGraph.allWorkspaceFiles ?? [])
               .filter(
                 (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
               )

@@ -5,10 +5,10 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 import {
-  createProjectGraphInCurrentProcess,
+  buildProjectGraph,
   projectGraphMigrate3to4,
   projectGraphCompat4to3,
-} from './project-graph';
+} from './build-project-graph';
 import {
   NxJsonConfiguration,
   stripIndents,
@@ -141,7 +141,7 @@ describe('project graph', () => {
   it('should throw an appropriate error for an invalid json config', async () => {
     vol.appendFileSync('/root/tsconfig.base.json', 'invalid');
     try {
-      await createProjectGraphInCurrentProcess();
+      await buildProjectGraph();
       fail('Invalid tsconfigs should cause project graph to throw error');
     } catch (e) {
       expect(e.message).toMatchInlineSnapshot(
@@ -151,7 +151,7 @@ describe('project graph', () => {
   });
 
   it('should create nodes and dependencies with workspace projects', async () => {
-    const graph = await createProjectGraphInCurrentProcess();
+    const graph = await buildProjectGraph();
 
     expect(graph.nodes).toMatchObject({
       api: { name: 'api', type: 'app' },
@@ -213,7 +213,7 @@ describe('project graph', () => {
   });
 
   it('should update the graph if a project got renamed', async () => {
-    let graph = await createProjectGraphInCurrentProcess();
+    let graph = await buildProjectGraph();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'app' },
     });
@@ -222,7 +222,7 @@ describe('project graph', () => {
 
     defaultFileHasher.init();
 
-    graph = await createProjectGraphInCurrentProcess();
+    graph = await buildProjectGraph();
     expect(graph.nodes).toMatchObject({
       renamed: { name: 'renamed', type: 'app' },
     });
@@ -234,7 +234,7 @@ describe('project graph', () => {
       `import * as ui from '@nrwl/ui';`
     );
 
-    const graph = await createProjectGraphInCurrentProcess();
+    const graph = await buildProjectGraph();
 
     expect(graph.dependencies['shared-util']).toEqual([
       {

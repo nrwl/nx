@@ -1,6 +1,7 @@
 import type {
   FileData,
   NxJsonConfiguration,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
@@ -16,7 +17,6 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utilities/fileutils';
-import type { ProjectFileMap } from '../file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,
@@ -63,7 +63,7 @@ export function ensureCacheDirectory(): void {
   }
 }
 
-export function readCache(): false | ProjectGraphCache {
+export function readCache(): null | ProjectGraphCache {
   performance.mark('read cache:start');
   ensureCacheDirectory();
 
@@ -81,16 +81,15 @@ export function readCache(): false | ProjectGraphCache {
 
   performance.mark('read cache:end');
   performance.measure('read cache', 'read cache:start', 'read cache:end');
-  return data ?? false;
+  return data ?? null;
 }
 
-export function writeCache(
+export function createCache(
+  nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
-  nxJson: NxJsonConfiguration,
-  tsConfig: { compilerOptions: { paths?: { [k: string]: any } } },
-  projectGraph: ProjectGraph
-): void {
-  performance.mark('write cache:start');
+  projectGraph: ProjectGraph<any>,
+  tsConfig: { compilerOptions: { paths?: { [p: string]: any } } }
+) {
   const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
     name: p,
     version: packageJsonDeps[p],
@@ -103,7 +102,12 @@ export function writeCache(
     nodes: projectGraph.nodes,
     dependencies: projectGraph.dependencies,
   };
-  writeJsonFile(nxDepsPath, newValue);
+  return newValue;
+}
+
+export function writeCache(cache: ProjectGraphCache): void {
+  performance.mark('write cache:start');
+  writeJsonFile(nxDepsPath, cache);
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }

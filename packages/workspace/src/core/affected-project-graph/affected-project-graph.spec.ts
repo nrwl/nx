@@ -1,10 +1,10 @@
 import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createProjectGraphInCurrentProcess } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
 import { WholeFileChange } from '../file-utils';
 import type { NxJsonConfiguration } from '@nrwl/devkit';
+import { buildProjectGraph } from '../project-graph/build-project-graph';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -118,7 +118,7 @@ describe('project graph', () => {
   afterEach(() => [delete process.env.NX_CACHE_PROJECT_GRAPH]);
 
   it('should create nodes and dependencies with workspace projects', async () => {
-    const graph = await createProjectGraphInCurrentProcess();
+    const graph = await buildProjectGraph();
     const affected = filterAffected(graph, [
       {
         file: 'something-for-api.txt',
@@ -169,7 +169,7 @@ describe('project graph', () => {
   });
 
   it('should create nodes and dependencies with npm packages', async () => {
-    const graph = await createProjectGraphInCurrentProcess();
+    const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
       dependencies: {
@@ -224,7 +224,7 @@ describe('project graph', () => {
   });
 
   it('should support implicit JSON file dependencies (some projects)', async () => {
-    const graph = await createProjectGraphInCurrentProcess();
+    const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
       scripts: {
@@ -244,7 +244,7 @@ describe('project graph', () => {
   });
 
   it('should support implicit JSON file dependencies (all projects)', async () => {
-    const graph = await createProjectGraphInCurrentProcess();
+    const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
       devDependencies: {

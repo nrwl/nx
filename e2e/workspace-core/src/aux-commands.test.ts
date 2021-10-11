@@ -171,7 +171,7 @@ describe('workspace-generator', () => {
   });
 });
 
-xdescribe('workspace-lint', () => {
+describe('workspace-lint', () => {
   it('should identify issues with the workspace', () => {
     const appBefore = uniq('before');
     const appAfter = uniq('after');

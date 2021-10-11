@@ -27,6 +27,8 @@ export interface ProjectFileMap {
 export interface ProjectGraph<T = any> {
   nodes: Record<string, ProjectGraphNode<T>>;
   dependencies: Record<string, ProjectGraphDependency[]>;
+  // this is optional otherwise it might break folks who use project graph creation
+  allWorkspaceFiles?: FileData[];
   version?: string;
 }
 
