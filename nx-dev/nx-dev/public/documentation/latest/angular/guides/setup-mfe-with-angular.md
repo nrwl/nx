@@ -94,7 +94,7 @@ yarn nx g @nrwl/angular:app login --mfe --mfeType=remote --port=4201 --host=dash
 
 _**Note:** We provided `remote` as the `--mfeType`. This tells the generator to create a Webpack configuration file that is ready to be consumed by a Host application._
 
-_**Note:** We provided `4201` as the `--port`. This helps when developing locally as it will tell the `serve` target to serve on a differnt port reducing the chance of multiple remote apps trying to run on the same port._
+_**Note:** We provided `4201` as the `--port`. This helps when developing locally as it will tell the `serve` target to serve on a different port reducing the chance of multiple remote apps trying to run on the same port._
 
 _**Note:** We provided `--host=dashboard` as an option. This tells the generator that this remote app will be consumed by the Dashboard application. The generator will automatically link these two apps together in the `webpack.config.js`_
 
