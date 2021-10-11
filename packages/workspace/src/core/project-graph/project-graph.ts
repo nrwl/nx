@@ -161,9 +161,6 @@ export async function createProjectGraphAsync(
 
   const daemonClient = require('./daemon/client/client');
   if (!(await daemonClient.isServerAvailable())) {
-    logger.warn(
-      '\nWARNING: You set NX_DAEMON=true but the Daemon Server is not running. Starting Daemon Server in the background...'
-    );
     await daemonClient.startInBackground();
   }
 
