@@ -1,25 +1,24 @@
 import { logger, normalizePath, ProjectGraph } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { spawn, spawnSync } from 'child_process';
+import { existsSync, openSync } from 'fs';
 import { ensureFileSync } from 'fs-extra';
+import { connect } from 'net';
 import { join } from 'path';
+import { performance } from 'perf_hooks';
 import { dirSync } from 'tmp';
 import {
   DaemonJson,
   readDaemonJsonCache,
   writeDaemonJsonCache,
 } from '../cache';
-import { connect } from 'net';
-import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
-import { performance } from 'perf_hooks';
-import { existsSync } from 'fs';
+import {
+  deserializeResult,
+  FULL_OS_SOCKET_PATH,
+  killSocketOrPath,
+} from '../socket-utils';
 
 export async function startInBackground(): Promise<void> {
-  /**
-   * For now, while the daemon is an opt-in feature, we will log to stdout when
-   * starting the server, as well as providing a reference to where any subsequent
-   * log files can be found.
-   */
   const tmpDirPrefix = `nx-daemon--${normalizePath(appRootPath).replace(
     // Replace the occurrences of / in the unix-style normalized path with a -
     new RegExp(escapeRegExp('/'), 'g'),
@@ -36,7 +35,7 @@ export async function startInBackground(): Promise<void> {
   if (cachedDaemonJson && cachedDaemonJson.backgroundProcessId) {
     try {
       process.kill(cachedDaemonJson.backgroundProcessId);
-    } catch (e) {}
+    } catch {}
   }
 
   logger.info(`NX Daemon Server - Starting in a background process...`);
@@ -45,15 +44,13 @@ export async function startInBackground(): Promise<void> {
   );
 
   try {
-    const backgroundProcess = spawn(
-      process.execPath,
-      ['../server/start.js', serverLogOutputFile],
-      {
-        cwd: __dirname,
-        stdio: 'ignore',
-        detached: true,
-      }
-    );
+    const out = openSync(serverLogOutputFile, 'a');
+    const err = openSync(serverLogOutputFile, 'a');
+    const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
+      cwd: __dirname,
+      stdio: ['ignore', out, err],
+      detached: true,
+    });
     backgroundProcess.unref();
 
     // Persist metadata about the background process so that it can be cleaned up later if needed
@@ -167,30 +164,36 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
     socket.on('connect', () => {
       socket.write('REQUEST_PROJECT_GRAPH_PAYLOAD');
 
-      let serializedProjectGraph = '';
+      let serializedProjectGraphResult = '';
       socket.on('data', (data) => {
-        serializedProjectGraph += data.toString();
+        serializedProjectGraphResult += data.toString();
       });
 
       socket.on('end', () => {
         try {
           performance.mark('json-parse-start');
-          const projectGraph = JSON.parse(
-            serializedProjectGraph
-          ) as ProjectGraph;
+          const projectGraphResult = deserializeResult(
+            serializedProjectGraphResult
+          );
           performance.mark('json-parse-end');
           performance.measure(
-            'deserialize graph on the client',
+            'deserialize graph result on the client',
             'json-parse-start',
             'json-parse-end'
           );
+
+          if (projectGraphResult.error) {
+            logger.error(`NX Daemon Client - The server returned an Error`);
+            return reject(projectGraphResult.error);
+          }
+
           logger.info('NX Daemon Client - Resolved ProjectGraph');
           performance.measure(
             'total for getProjectGraphFromServer()',
             'getProjectGraphFromServer-start',
             'json-parse-end'
           );
-          return resolve(projectGraph);
+          return resolve(projectGraphResult.projectGraph);
         } catch {
           logger.error(
             'NX Daemon Client - Error: Could not deserialize the ProjectGraph'

@@ -1,6 +1,3 @@
-/**
- * NOTE: This file is intended to be executed as a script by utilities found in ./index.ts
- */
 import { logger } from '@nrwl/devkit';
 import { deleteDaemonJsonCache, readDaemonJsonCache } from '../cache';
 import { stopServer } from './server';
@@ -13,7 +10,9 @@ import { stopServer } from './server';
     const cachedDaemonJson = await readDaemonJsonCache();
     if (cachedDaemonJson) {
       if (cachedDaemonJson.backgroundProcessId) {
-        process.kill(cachedDaemonJson.backgroundProcessId);
+        try {
+          process.kill(cachedDaemonJson.backgroundProcessId);
+        } catch {}
       }
       deleteDaemonJsonCache();
     }
