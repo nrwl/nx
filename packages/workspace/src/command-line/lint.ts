@@ -1,10 +1,9 @@
 import {
   createProjectGraphAsync,
   onlyWorkspaceProjects,
-  ProjectGraph,
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import { workspaceLayout } from '../core/file-utils';
+import { FileData, workspaceLayout } from '../core/file-utils';
 import { output } from '../utilities/output';
 import * as path from 'path';
 
@@ -14,7 +13,7 @@ export async function workspaceLint(): Promise<void> {
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
     graph,
-    readAllFilesFromAppsAndLibs(projectGraph)
+    readAllFilesFromAppsAndLibs(projectGraph.allWorkspaceFiles)
   ).run();
 
   if (cliErrorOutputConfigs.length > 0) {
@@ -25,12 +24,8 @@ export async function workspaceLint(): Promise<void> {
   }
 }
 
-function readAllFilesFromAppsAndLibs(projectGraph: ProjectGraph) {
+function readAllFilesFromAppsAndLibs(allWorkspaceFiles: FileData[]) {
   const wl = workspaceLayout();
-  const allWorkspaceFiles = [];
-  Object.values(projectGraph.nodes).forEach((f) => {
-    allWorkspaceFiles.push(...f.data.files);
-  });
   return allWorkspaceFiles
     .map((f) => f.file)
     .filter(

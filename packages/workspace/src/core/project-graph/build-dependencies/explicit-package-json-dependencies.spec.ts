@@ -1,12 +1,11 @@
 import { buildExplicitPackageJsonDependencies } from '@nrwl/workspace/src/core/project-graph/build-dependencies/explicit-package-json-dependencies';
 import { vol } from 'memfs';
-import { DependencyType, ProjectGraphNode } from '../project-graph-models';
-import { createProjectFileMap } from '../../file-graph';
-import { readWorkspaceFiles } from '../../file-utils';
+import { ProjectGraphNode } from '../project-graph-models';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
+import { createProjectFileMap } from '../../file-utils';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -63,7 +62,7 @@ describe('explicit package json dependencies', () => {
         workspaceJson,
         nxJson,
       },
-      filesToProcess: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+      filesToProcess: createProjectFileMap(workspaceJson).projectFileMap,
     } as any;
 
     projects = {

@@ -1,13 +1,15 @@
-import { logger, normalizePath } from '@nrwl/devkit';
+import { FileData, logger, normalizePath, ProjectFileMap } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
-import { createProjectFileMap } from '../../../file-graph';
-import { readWorkspaceFiles, readWorkspaceJson } from '../../../file-utils';
+import {
+  createProjectFileMap,
+  readWorkspaceJson,
+  updateProjectFileMap,
+} from '../../../file-utils';
 import { defaultFileHasher } from '../../../hasher/file-hasher';
 import { getGitHashForFiles } from '../../../hasher/git-hasher';
-import { createProjectGraph } from '../../project-graph';
 import {
   FULL_OS_SOCKET_PATH,
   isWindows,
@@ -26,27 +28,51 @@ import {
   SubscribeToWorkspaceChangesCallback,
   WatcherSubscription,
 } from './watcher';
+import { buildProjectGraphUsingProjectFileMap } from '../../build-project-graph';
+import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
+import { ProjectGraphCache } from '../../../nx-deps/nx-deps-cache';
+import { readCache } from '../../../nx-deps/nx-deps-cache';
 
 interface InterimProjectGraphResult {
   error: Error | null;
   serializedProjectGraph: string | null;
 }
 
+const configName = workspaceConfigName(appRootPath);
 let cachedSerializedProjectGraphPromise: Promise<InterimProjectGraphResult>;
+let projectFileMapWithFiles:
+  | { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] }
+  | undefined;
+let currentProjectGraphCache: ProjectGraphCache | undefined;
 
-async function createAndSerializeProjectGraph(): Promise<InterimProjectGraphResult> {
+async function createAndSerializeProjectGraph(
+  updatedFiles: Map<string, string>,
+  deletedFiles: string[],
+  shouldWriteCache: boolean
+): Promise<InterimProjectGraphResult> {
   try {
     performance.mark('create-project-graph-start');
     const workspaceJson = readWorkspaceJson();
-    const projectFileMap = createProjectFileMap(
-      workspaceJson,
-      readWorkspaceFiles()
-    );
-    const projectGraph = await createProjectGraph(
-      workspaceJson,
-      projectFileMap,
-      '4.0'
-    );
+    projectFileMapWithFiles = projectFileMapWithFiles
+      ? updateProjectFileMap(
+          workspaceJson,
+          projectFileMapWithFiles.projectFileMap,
+          projectFileMapWithFiles.allWorkspaceFiles,
+          updatedFiles,
+          deletedFiles
+        )
+      : createProjectFileMap(workspaceJson);
+    const { projectGraph, projectGraphCache } =
+      await buildProjectGraphUsingProjectFileMap(
+        workspaceJson,
+        projectFileMapWithFiles.projectFileMap,
+        projectFileMapWithFiles.allWorkspaceFiles,
+        currentProjectGraphCache || readCache(),
+        shouldWriteCache,
+        '4.0'
+      );
+    currentProjectGraphCache = projectGraphCache;
+
     performance.mark('create-project-graph-end');
     performance.measure(
       'total execution time for createProjectGraph()',
@@ -113,7 +139,11 @@ const server = createServer((socket) => {
     serverLogger.requestLog('Client Request for Project Graph Received');
 
     if (!cachedSerializedProjectGraphPromise) {
-      cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
+      cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph(
+        new Map(),
+        [],
+        true
+      );
     }
     const result = await cachedSerializedProjectGraphPromise;
 
@@ -220,6 +250,7 @@ function requireUncached(module: string): unknown {
  * We need to ensure that the server shuts down if the Nx installation changes.
  */
 let cachedNxVersion: string | null = resolveCurrentNxVersion();
+
 function resolveCurrentNxVersion(): string | null {
   const nrwlWorkspacePackageJsonPath = normalizePath(
     join(appRootPath, 'node_modules/@nrwl/workspace/package.json')
@@ -296,7 +327,16 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
       serverLogger.nestedLog(
         `Updated file-hasher based on watched changes, recomputing project graph...`
       );
-      res(await createAndSerializeProjectGraph());
+      // when workspace.json changes we cannot be sure about the correctness of the project file map
+      if (
+        updatedFiles.has(configName) ||
+        deletedFiles.indexOf(configName) > -1
+      ) {
+        projectFileMapWithFiles = undefined;
+      }
+      res(
+        await createAndSerializeProjectGraph(updatedFiles, deletedFiles, true)
+      );
     } catch (err) {
       serverLogger.log(`Unexpected Error`);
       console.error(err);
