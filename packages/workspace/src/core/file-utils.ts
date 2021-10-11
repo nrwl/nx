@@ -21,7 +21,6 @@ import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
 import type { Environment } from './shared-interfaces';
-import { projectFileDataCompatAdapter } from './project-graph/project-graph';
 
 const ignore = require('ignore');
 
@@ -352,5 +351,22 @@ export function normalizedProjectRoot(p: ProjectGraphNode): string {
   }
 }
 
+/**
+ * Backwards compatibility adapter for FileData
+ * @param {FileData} fileData
+ * @param {string?} projectGraphVersion
+ * @returns
+ */
+export function projectFileDataCompatAdapter(
+  fileData: FileData,
+  projectGraphVersion: string
+): FileData {
+  const { file, hash, ext, deps } = fileData;
+  if (projectGraphVersion !== '3.0') {
+    return { file, hash, ...{ deps } };
+  } else {
+    return { file, hash, ext: ext || extname(file), ...{ deps } };
+  }
+}
 // Original Exports
 export { FileData };

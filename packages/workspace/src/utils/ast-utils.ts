@@ -20,10 +20,6 @@ import {
 import * as ts from 'typescript';
 import { parseJson, serializeJson } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
-import {
-  createProjectGraph,
-  onlyWorkspaceProjects,
-} from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import type {
