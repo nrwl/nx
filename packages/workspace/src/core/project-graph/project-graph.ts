@@ -137,22 +137,15 @@ export function projectGraphCompat4to3(
   };
 }
 
-/**
- * Backwards compatibility adapter for FileData
- * @param {FileData} fileData
- * @param {string?} projectGraphVersion
- * @returns
- */
-export function projectFileDataCompatAdapter(
-  fileData: FileData,
-  projectGraphVersion: string
-): FileData {
-  const { file, hash, ext, deps } = fileData;
-  if (projectGraphVersion !== '3.0') {
-    return { file, hash, ...{ deps } };
-  } else {
-    return { file, hash, ext: ext || extname(file), ...{ deps } };
-  }
+export function createProjectGraphInCurrentProcess(
+  projectGraphVersion: string = '3.0'
+) {
+  const workspaceJson = readWorkspaceJson();
+  return createProjectGraph(
+    workspaceJson,
+    createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+    projectGraphVersion
+  );
 }
 
 export async function createProjectGraphAsync(
@@ -163,12 +156,7 @@ export async function createProjectGraphAsync(
    * If the environment variable is not set to true, fallback to using the existing in-process logic.
    */
   if (process.env.NX_DAEMON !== 'true') {
-    return createProjectGraph(
-      undefined,
-      undefined,
-      undefined,
-      projectGraphVersion
-    );
+    return createProjectGraphInCurrentProcess(projectGraphVersion);
   }
 
   const daemonClient = require('./daemon/client/client');
@@ -187,26 +175,17 @@ function readCombinedDeps() {
   return { ...json.dependencies, ...json.devDependencies };
 }
 
-// TODO(v13): remove this deprecated function
-/**
- * @deprecated This function is deprecated in favor of the new asynchronous version {@link createProjectGraphAsync}
- */
 export async function createProjectGraph(
-  workspaceJson?: WorkspaceJsonConfiguration,
-  nxJson?: NxJsonConfiguration,
-  workspaceFiles?: FileData[],
+  workspaceJson: WorkspaceJsonConfiguration,
+  projectFileMap: ProjectFileMap,
   projectGraphVersion?: string
 ): Promise<ProjectGraph> {
   projectGraphVersion = projectGraphVersion || '3.0';
-  workspaceJson = workspaceJson || readWorkspaceJson();
-  nxJson = nxJson || readNxJson();
-  workspaceFiles = workspaceFiles || readWorkspaceFiles(projectGraphVersion);
-
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   let cache = cacheEnabled ? readCache() : false;
+  const nxJson = readNxJson();
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(nxJson);
-  const projectFileMap = createProjectFileMap(workspaceJson, workspaceFiles);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -247,23 +226,7 @@ export async function createProjectGraph(
   if (cacheEnabled) {
     writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
   }
-  return addWorkspaceFiles(projectGraph, workspaceFiles);
-}
-
-// TODO(v13): remove this deprecated function
-/**
- * @deprecated This function is deprecated in favor of {@link readCachedProjectGraph}
- */
-export function readCurrentProjectGraph(): ProjectGraph | null {
-  const cache = readCache();
-  return cache === false ? null : cache;
-}
-
-function addWorkspaceFiles(
-  projectGraph: ProjectGraph,
-  allWorkspaceFiles: FileData[]
-) {
-  return { ...projectGraph, allWorkspaceFiles };
+  return projectGraph;
 }
 
 async function buildProjectGraph(

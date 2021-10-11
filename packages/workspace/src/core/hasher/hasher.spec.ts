@@ -406,18 +406,22 @@ describe('Hasher', () => {
               files: [],
             },
           },
+          nxFilesWithNoProject: {
+            data: {
+              files: [
+                {
+                  file: 'global1',
+                  hash: 'hash1',
+                },
+                {
+                  file: 'global2',
+                  hash: 'hash2',
+                },
+              ],
+            },
+          } as any,
         },
         dependencies: {},
-        allWorkspaceFiles: [
-          {
-            file: 'global1',
-            hash: 'hash1',
-          },
-          {
-            file: 'global2',
-            hash: 'hash2',
-          },
-        ],
       },
       {
         implicitDependencies: {

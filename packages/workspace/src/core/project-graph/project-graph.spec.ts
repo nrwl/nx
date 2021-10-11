@@ -5,8 +5,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 import {
-  createProjectGraphAsync,
-  projectFileDataCompatAdapter,
+  createProjectGraphInCurrentProcess,
   projectGraphMigrate3to4,
   projectGraphCompat4to3,
 } from './project-graph';
@@ -16,6 +15,7 @@ import {
   DependencyType,
 } from '@nrwl/devkit';
 import { defaultFileHasher } from '../hasher/file-hasher';
+import { projectFileDataCompatAdapter } from '../file-utils';
 
 describe('project graph', () => {
   let packageJson: any;
@@ -141,7 +141,7 @@ describe('project graph', () => {
   it('should throw an appropriate error for an invalid json config', async () => {
     vol.appendFileSync('/root/tsconfig.base.json', 'invalid');
     try {
-      await createProjectGraphAsync();
+      await createProjectGraphInCurrentProcess();
       fail('Invalid tsconfigs should cause project graph to throw error');
     } catch (e) {
       expect(e.message).toMatchInlineSnapshot(
@@ -151,7 +151,7 @@ describe('project graph', () => {
   });
 
   it('should create nodes and dependencies with workspace projects', async () => {
-    const graph = await createProjectGraphAsync();
+    const graph = await createProjectGraphInCurrentProcess();
 
     expect(graph.nodes).toMatchObject({
       api: { name: 'api', type: 'app' },
@@ -213,7 +213,7 @@ describe('project graph', () => {
   });
 
   it('should update the graph if a project got renamed', async () => {
-    let graph = await createProjectGraphAsync();
+    let graph = await createProjectGraphInCurrentProcess();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'app' },
     });
@@ -222,7 +222,7 @@ describe('project graph', () => {
 
     defaultFileHasher.init();
 
-    graph = await createProjectGraphAsync();
+    graph = await createProjectGraphInCurrentProcess();
     expect(graph.nodes).toMatchObject({
       renamed: { name: 'renamed', type: 'app' },
     });
@@ -234,7 +234,7 @@ describe('project graph', () => {
       `import * as ui from '@nrwl/ui';`
     );
 
-    const graph = await createProjectGraphAsync();
+    const graph = await createProjectGraphInCurrentProcess();
 
     expect(graph.dependencies['shared-util']).toEqual([
       {
