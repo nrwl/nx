@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   exists,
   isNotWindows,
+  isWindows,
   newProject,
   readFile,
   readJson,
@@ -270,6 +271,24 @@ describe('dep-graph', () => {
     expect(jsonFileContents2.criticalPath).toContain(mylib);
     expect(jsonFileContents2.criticalPath).not.toContain(mylib2);
   }, 1000000);
+
+  if (isNotWindows()) {
+    it('dep-graph should output json to file by absolute path', () => {
+      runCLI(`dep-graph --file=/tmp/project-graph.json`);
+
+      expect(() => checkFilesExist('/tmp/project-graph.json')).not.toThrow();
+    }, 1000000);
+  }
+
+  if (isWindows()) {
+    it('dep-graph should output json to file by absolute path in Windows', () => {
+      runCLI(`dep-graph --file=C:\\tmp\\project-graph.json`);
+
+      expect(() =>
+        checkFilesExist('C:\\tmp\\project-graph.json')
+      ).not.toThrow();
+    }, 1000000);
+  }
 
   it('dep-graph should focus requested project', () => {
     runCLI(`dep-graph --focus=${myapp} --file=project-graph.json`);
