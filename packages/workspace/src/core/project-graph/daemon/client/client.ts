@@ -1,51 +1,30 @@
-import { logger, normalizePath, ProjectGraph } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { logger, ProjectGraph } from '@nrwl/devkit';
 import { spawn, spawnSync } from 'child_process';
 import { existsSync, openSync } from 'fs';
-import { ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
-import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { dirSync } from 'tmp';
 import {
-  DaemonJson,
-  readDaemonJsonCache,
-  writeDaemonJsonCache,
+  safelyCleanUpExistingProcess,
+  writeDaemonJsonProcessCache,
 } from '../cache';
 import {
   deserializeResult,
   FULL_OS_SOCKET_PATH,
   killSocketOrPath,
 } from '../socket-utils';
+import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
 
 export async function startInBackground(): Promise<void> {
-  const tmpDirPrefix = `nx-daemon--${normalizePath(appRootPath).replace(
-    // Replace the occurrences of / in the unix-style normalized path with a -
-    new RegExp(escapeRegExp('/'), 'g'),
-    '-'
-  )}`;
-  const serverLogOutputDir = dirSync({
-    prefix: tmpDirPrefix,
-  }).name;
-  const serverLogOutputFile = join(serverLogOutputDir, 'nx-daemon.log');
-  ensureFileSync(serverLogOutputFile);
-
-  // Clean up any existing orphaned background process before creating a new one
-  const cachedDaemonJson = await readDaemonJsonCache();
-  if (cachedDaemonJson && cachedDaemonJson.backgroundProcessId) {
-    try {
-      process.kill(cachedDaemonJson.backgroundProcessId);
-    } catch {}
-  }
+  await safelyCleanUpExistingProcess();
 
   logger.info(`NX Daemon Server - Starting in a background process...`);
   logger.log(
-    `  Logs from the Daemon process can be found here: ${serverLogOutputFile}\n`
+    `  Logs from the Daemon process can be found here: ${DAEMON_OUTPUT_LOG_FILE}\n`
   );
 
   try {
-    const out = openSync(serverLogOutputFile, 'a');
-    const err = openSync(serverLogOutputFile, 'a');
+    const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
     const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
       cwd: __dirname,
       stdio: ['ignore', out, err],
@@ -54,11 +33,9 @@ export async function startInBackground(): Promise<void> {
     backgroundProcess.unref();
 
     // Persist metadata about the background process so that it can be cleaned up later if needed
-    const daemonJson: DaemonJson = {
-      backgroundProcessId: backgroundProcess.pid,
-      serverLogOutputFile: serverLogOutputFile,
-    };
-    await writeDaemonJsonCache(daemonJson);
+    await writeDaemonJsonProcessCache({
+      processId: backgroundProcess.pid,
+    });
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
@@ -95,11 +72,6 @@ export function stop(): void {
   });
 }
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
-
 /**
  * As noted in the comments above the createServer() call, in order to reliably (meaning it works
  * cross-platform) check whether or not the server is availabe to request a project graph from we
@@ -109,20 +81,19 @@ function escapeRegExp(string) {
  * check for their existence on disk (unlike with Unix Sockets).
  */
 export async function isServerAvailable(): Promise<boolean> {
-  try {
-    const socket = connect(FULL_OS_SOCKET_PATH);
-    return new Promise((resolve) => {
-      socket.on('connect', () => {
+  return new Promise((resolve) => {
+    try {
+      const socket = connect(FULL_OS_SOCKET_PATH, () => {
         socket.destroy();
         resolve(true);
       });
-      socket.on('error', () => {
+      socket.once('error', () => {
         resolve(false);
       });
-    });
-  } catch {
-    return Promise.resolve(false);
-  }
+    } catch (err) {
+      resolve(false);
+    }
+  });
 }
 
 /**

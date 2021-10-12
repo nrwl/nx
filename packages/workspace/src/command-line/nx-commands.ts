@@ -1,4 +1,5 @@
 import { getPackageManagerCommand, writeJsonFile } from '@nrwl/devkit';
+import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
@@ -7,11 +8,16 @@ import {
   startInCurrentProcess,
   stop,
 } from '../core/project-graph/daemon/client/client';
+import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
-import * as chalk from 'chalk';
 import { examples } from './examples';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
+
+const daemonHelpOutput = generateDaemonHelpOutput();
+
+// Ensure that the output takes up the available width of the terminal
+yargs.wrap(yargs.terminalWidth());
 
 /**
  * Exposing the Yargs commands object so the documentation generator can
@@ -24,7 +30,16 @@ export const commandsObject = yargs
   .parserConfiguration({
     'strip-dashed': true,
   })
-  .usage(chalk.bold('Smart, Extensible Build Framework'))
+  .usage(
+    `
+${chalk.bold('Smart, Extensible Build Framework')}` +
+      (daemonHelpOutput
+        ? `
+
+${daemonHelpOutput}
+  `.trimRight()
+        : '')
+  )
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `
@@ -175,7 +190,22 @@ export const commandsObject = yargs
         target: 'lint',
       })
   )
+  .command(
+    'daemon',
+    `${chalk.bold('EXPERIMENTAL: Nx Daemon')}` +
+      (daemonHelpOutput
+        ? `
 
+${daemonHelpOutput}
+`.trimRight()
+        : `
+
+The Daemon is not currently running you can start it manually by running the following command:
+
+npx nx daemon:start
+`.trimRight()),
+    (yargs) => linkToNxDevAndExamples(yargs, 'daemon')
+  )
   .command(
     'daemon:start',
     chalk.bold(

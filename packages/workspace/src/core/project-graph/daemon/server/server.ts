@@ -101,21 +101,6 @@ async function createAndSerializeProjectGraph(
   }
 }
 
-let watcherSubscription: WatcherSubscription | undefined;
-initializePerfObserver();
-
-function initializePerfObserver() {
-  const r = new PerformanceObserver((list) => {
-    const entry = list.getEntries()[0];
-    serverLogger.nestedLog(
-      `Time taken for '${entry.name}'`,
-      `${entry.duration}ms`
-    );
-  });
-  r.observe({ entryTypes: ['measure'], buffered: false });
-  return r;
-}
-
 function respondToClient(socket: Socket, message: string) {
   socket.write(message, () => {
     // Close the connection once all data has been written so that the client knows when to read it.
@@ -124,8 +109,21 @@ function respondToClient(socket: Socket, message: string) {
   });
 }
 
+let watcherSubscription: WatcherSubscription | undefined;
+let performanceObserver: PerformanceObserver | undefined;
+
 const server = createServer((socket) => {
   resetInactivityTimeout(handleInactivityTimeout);
+  if (!performanceObserver) {
+    performanceObserver = new PerformanceObserver((list) => {
+      const entry = list.getEntries()[0];
+      serverLogger.nestedLog(
+        `Time taken for '${entry.name}'`,
+        `${entry.duration}ms`
+      );
+    });
+    performanceObserver.observe({ entryTypes: ['measure'], buffered: false });
+  }
 
   socket.on('data', async (data) => {
     resetInactivityTimeout(handleInactivityTimeout);
