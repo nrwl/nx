@@ -90,6 +90,12 @@
       "version": "12.9.0",
       "description": "Fixes invalid importPaths for buildable and publishable libs.",
       "factory": "./src/migrations/update-12-9-0/update-invalid-import-paths"
+    },
+    "add-postcss-import": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Adds postcss-import package if ng-packagr is already installed.",
+      "factory": "./src/migrations/update-13-0-0/add-postcss-import"
     }
   },
   "packageJsonUpdates": {
@@ -877,6 +883,15 @@
         },
         "jest-preset-angular": {
           "version": "10.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
+      "packages": {
+        "ng-packagr": {
+          "version": "~12.2.3",
           "alwaysAddToPackageJson": false
         }
       }

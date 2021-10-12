@@ -1,6 +1,6 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
-  getWorkspaceLayout,
   installPackagesTask,
   moveFilesToNewDirectory,
   Tree,
@@ -69,6 +69,10 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   addModule(host, options);
   setStrictMode(host, options);
   await addLinting(host, options);
+
+  if (options.publishable) {
+    addDependenciesToPackageJson(host, {}, { 'postcss-import': '^14.0.2' });
+  }
 
   if (options.standaloneConfig) {
     await convertToNxProjectGenerator(host, {

@@ -16,6 +16,7 @@ describe('Package executor', () => {
   let ngPackagrBuildMock: jest.Mock;
   let ngPackagerWatchSubject: BehaviorSubject<void>;
   let ngPackagrWatchMock: jest.Mock;
+  let ngPackagrWithBuildTransformMock: jest.Mock;
   let ngPackagrWithTsConfigMock: jest.Mock;
   let options: BuildAngularLibraryExecutorOptions;
   let tsConfig: { options: { paths: { [key: string]: string[] } } };
@@ -36,11 +37,13 @@ describe('Package executor', () => {
     ngPackagrBuildMock = jest.fn(() => Promise.resolve());
     ngPackagerWatchSubject = new BehaviorSubject<void>(undefined);
     ngPackagrWatchMock = jest.fn(() => ngPackagerWatchSubject.asObservable());
+    ngPackagrWithBuildTransformMock = jest.fn();
     ngPackagrWithTsConfigMock = jest.fn();
-    (ngPackagr.ngPackagr as jest.Mock).mockImplementation(() => ({
+    (ngPackagr.NgPackagr as jest.Mock).mockImplementation(() => ({
       build: ngPackagrBuildMock,
       forProject: jest.fn(),
       watch: ngPackagrWatchMock,
+      withBuildTransform: ngPackagrWithBuildTransformMock,
       withTsConfig: ngPackagrWithTsConfigMock,
     }));
 
