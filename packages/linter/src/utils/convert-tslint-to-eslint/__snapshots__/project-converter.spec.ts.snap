@@ -56,33 +56,11 @@ Object {
 
 exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 2`] = `
 Object {
-  "generators": Object {
-    "@nrwl/angular": Object {
-      "application": Object {
-        "linter": "tslint",
-      },
-      "library": Object {
-        "linter": "tslint",
-      },
-    },
-  },
   "projects": Object {
     "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "linter": "eslint",
-          "unitTestRunner": "jest",
-        },
-        "@nrwl/angular:library": Object {
-          "linter": "tslint",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
+      "architect": Object {
         "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": Object {
             "exclude": Array [
               "**/node_modules/**",
@@ -93,6 +71,28 @@ Object {
             ],
           },
         },
+      },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "linter": "eslint",
+          "unitTestRunner": "jest",
+        },
+        "@nrwl/angular:library": Object {
+          "linter": "tslint",
+        },
+      },
+    },
+  },
+  "schematics": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "library": Object {
+        "linter": "tslint",
       },
     },
   },
@@ -112,17 +112,9 @@ exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant
 Object {
   "projects": Object {
     "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "unitTestRunner": "jest",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
+      "architect": Object {
         "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": Object {
             "exclude": Array [
               "**/node_modules/**",
@@ -133,6 +125,24 @@ Object {
             ],
           },
         },
+      },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "unitTestRunner": "jest",
+        },
+      },
+    },
+  },
+  "schematics": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "library": Object {
+        "linter": "tslint",
       },
     },
   },
@@ -142,30 +152,11 @@ Object {
 
 exports[`ProjectConverter removeTSLintFromWorkspace() should remove the entry in generators for convert-tslint-to-eslint because it is no longer needed 1`] = `
 Object {
-  "generators": Object {
-    "@nrwl/angular": Object {
-      "convert-tslint-to-eslint": Object {
-        "removeTSLintIfNoMoreTSLintTargets": true,
-      },
-    },
-  },
   "projects": Object {
     "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "linter": "eslint",
-          "unitTestRunner": "jest",
-        },
-        "@nrwl/angular:library": Object {
-          "linter": "tslint",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
+      "architect": Object {
         "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": Object {
             "exclude": Array [
               "**/node_modules/**",
@@ -176,6 +167,25 @@ Object {
             ],
           },
         },
+      },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "linter": "eslint",
+          "unitTestRunner": "jest",
+        },
+        "@nrwl/angular:library": Object {
+          "linter": "tslint",
+        },
+      },
+    },
+  },
+  "schematics": Object {
+    "@nrwl/angular": Object {
+      "convert-tslint-to-eslint": Object {
+        "removeTSLintIfNoMoreTSLintTargets": true,
       },
     },
   },
@@ -187,17 +197,9 @@ exports[`ProjectConverter removeTSLintFromWorkspace() should remove the entry in
 Object {
   "projects": Object {
     "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "unitTestRunner": "jest",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
+      "architect": Object {
         "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": Object {
             "exclude": Array [
               "**/node_modules/**",
@@ -208,6 +210,21 @@ Object {
             ],
           },
         },
+      },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "unitTestRunner": "jest",
+        },
+      },
+    },
+  },
+  "schematics": Object {
+    "@nrwl/angular": Object {
+      "convert-tslint-to-eslint": Object {
+        "removeTSLintIfNoMoreTSLintTargets": true,
       },
     },
   },
@@ -217,33 +234,11 @@ Object {
 
 exports[`ProjectConverter setDefaults() should save in workspace.json 1`] = `
 Object {
-  "generators": Object {
-    "@nrwl/angular": Object {
-      "application": Object {
-        "linter": "tslint",
-      },
-      "library": Object {
-        "linter": "tslint",
-      },
-    },
-  },
   "projects": Object {
     "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "linter": "eslint",
-          "unitTestRunner": "jest",
-        },
-        "@nrwl/angular:library": Object {
-          "linter": "tslint",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
+      "architect": Object {
         "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": Object {
             "exclude": Array [
               "**/node_modules/**",
@@ -255,6 +250,28 @@ Object {
           },
         },
       },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "linter": "eslint",
+          "unitTestRunner": "jest",
+        },
+        "@nrwl/angular:library": Object {
+          "linter": "tslint",
+        },
+      },
+    },
+  },
+  "schematics": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "library": Object {
+        "linter": "tslint",
+      },
     },
   },
   "version": 1,
@@ -263,7 +280,37 @@ Object {
 
 exports[`ProjectConverter setDefaults() should save in workspace.json 2`] = `
 Object {
-  "generators": Object {
+  "projects": Object {
+    "foo": Object {
+      "architect": Object {
+        "lint": Object {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": Object {
+            "exclude": Array [
+              "**/node_modules/**",
+              "!apps/foo/**/*",
+            ],
+            "tsConfig": Array [
+              "apps/foo/tsconfig.app.json",
+            ],
+          },
+        },
+      },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "linter": "eslint",
+          "unitTestRunner": "jest",
+        },
+        "@nrwl/angular:library": Object {
+          "linter": "tslint",
+        },
+      },
+    },
+  },
+  "schematics": Object {
     "@nrwl/angular": Object {
       "application": Object {
         "linter": "tslint",
@@ -277,23 +324,17 @@ Object {
       },
     },
   },
+  "version": 1,
+}
+`;
+
+exports[`ProjectConverter setDefaults() should save in workspace.json 3`] = `
+Object {
   "projects": Object {
     "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "linter": "eslint",
-          "unitTestRunner": "jest",
-        },
-        "@nrwl/angular:library": Object {
-          "linter": "tslint",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
+      "architect": Object {
         "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": Object {
             "exclude": Array [
               "**/node_modules/**",
@@ -305,15 +346,21 @@ Object {
           },
         },
       },
+      "projectType": "application",
+      "root": "apps/foo",
+      "schematics": Object {
+        "@nrwl/angular:application": Object {
+          "e2eTestRunner": "cypress",
+          "linter": "eslint",
+          "unitTestRunner": "jest",
+        },
+        "@nrwl/angular:library": Object {
+          "linter": "tslint",
+        },
+      },
     },
   },
-  "version": 1,
-}
-`;
-
-exports[`ProjectConverter setDefaults() should save in workspace.json 3`] = `
-Object {
-  "generators": Object {
+  "schematics": Object {
     "@nrwl/angular": Object {
       "application": Object {
         "linter": "tslint",
@@ -324,36 +371,6 @@ Object {
       },
       "library": Object {
         "linter": "tslint",
-      },
-    },
-  },
-  "projects": Object {
-    "foo": Object {
-      "generators": Object {
-        "@nrwl/angular:application": Object {
-          "e2eTestRunner": "cypress",
-          "linter": "eslint",
-          "unitTestRunner": "jest",
-        },
-        "@nrwl/angular:library": Object {
-          "linter": "tslint",
-        },
-      },
-      "projectType": "application",
-      "root": "apps/foo",
-      "targets": Object {
-        "lint": Object {
-          "executor": "@angular-devkit/build-angular:tslint",
-          "options": Object {
-            "exclude": Array [
-              "**/node_modules/**",
-              "!apps/foo/**/*",
-            ],
-            "tsConfig": Array [
-              "apps/foo/tsconfig.app.json",
-            ],
-          },
-        },
       },
     },
   },

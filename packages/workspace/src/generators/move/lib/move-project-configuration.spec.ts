@@ -14,7 +14,7 @@ describe('moveProjectConfiguration', () => {
   let projectConfig: ProjectConfiguration;
   let schema: NormalizedSchema;
 
-  beforeEach(async () => {
+  const setupWorkspace = (version = 1) => {
     schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
@@ -24,7 +24,7 @@ describe('moveProjectConfiguration', () => {
       relativeToRootDestination: 'apps/subfolder/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace(version);
 
     addProjectConfiguration(tree, 'my-source', {
       projectType: 'application',
@@ -148,9 +148,11 @@ describe('moveProjectConfiguration', () => {
     });
 
     projectConfig = readProjectConfiguration(tree, 'my-source');
-  });
+  };
 
   it('should rename the project', async () => {
+    setupWorkspace();
+
     moveProjectConfiguration(tree, schema, projectConfig);
 
     expect(() => {
@@ -162,6 +164,8 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should update paths in only the intended project', async () => {
+    setupWorkspace();
+
     moveProjectConfiguration(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
@@ -178,6 +182,8 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should update nx.json', () => {
+    setupWorkspace();
+
     moveProjectConfiguration(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
@@ -190,6 +196,8 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should support moving a standalone project', () => {
+    setupWorkspace(2);
+
     const projectName = 'standalone';
     const newProjectName = 'parent-standalone';
     addProjectConfiguration(

@@ -517,7 +517,7 @@ export function toNewFormatOrNull(w: any) {
       formatted = true;
     }
     Object.values(projectConfig.targets || {}).forEach((target: any) => {
-      if (target.builder) {
+      if (target.builder !== undefined) {
         renamePropertyWithStableKeys(target, 'builder', 'executor');
         formatted = true;
       }
@@ -552,7 +552,7 @@ export function toOldFormatOrNull(w: any) {
       formatted = true;
     }
     Object.values(projectConfig.architect || {}).forEach((target: any) => {
-      if (target.executor) {
+      if (target.executor !== undefined) {
         renamePropertyWithStableKeys(target, 'executor', 'builder');
         formatted = true;
       }

@@ -1,5 +1,4 @@
 import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
@@ -16,7 +15,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
     prettier = await import('prettier');
   } catch {}
 
-  updateWorkspaceJsonToMatchFormatVersion(tree);
   sortWorkspaceJson(tree);
   sortNxJson(tree);
   sortTsConfig(tree);
@@ -59,24 +57,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
       }
     })
   );
-}
-
-function updateWorkspaceJsonToMatchFormatVersion(tree: Tree) {
-  const path = getWorkspacePath(tree);
-  if (!path) {
-    return;
-  }
-
-  try {
-    const workspaceJson = readJson(tree, path);
-    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
-    if (reformatted) {
-      writeJson(tree, path, reformatted);
-    }
-  } catch (e) {
-    console.error(`Failed to format: ${path}`);
-    console.error(e);
-  }
 }
 
 function sortWorkspaceJson(tree: Tree) {

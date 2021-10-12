@@ -56,6 +56,10 @@ describe('workspace', () => {
         '/tsconfig.spec.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
+      tree.write(
+        '/e2e/tsconfig.json',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+      );
       tree.write('/tsconfig.json', '{"compilerOptions": {}}');
       tree.write('/tslint.json', '{"rules": {}}');
       tree.write('/e2e/protractor.conf.js', '// content');
@@ -254,6 +258,7 @@ describe('workspace', () => {
       tree.write('/projects/myApp/tslint.json', '{"rules": {}}');
       tree.write('/projects/myApp/tsconfig.app.json', '{}');
       tree.write('/projects/myApp/tsconfig.spec.json', '{}');
+      tree.write('/projects/myApp/e2e/tsconfig.json', '{}');
       tree.write('/projects/myApp/e2e/protractor.conf.js', '// content');
       tree.write('/projects/myApp/src/app/app.module.ts', '// content');
 

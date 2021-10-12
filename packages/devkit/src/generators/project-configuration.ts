@@ -1,6 +1,7 @@
 import {
   ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
+  reformattedWorkspaceJsonOrNull,
   toNewFormat,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
@@ -173,7 +174,10 @@ export function updateWorkspaceConfiguration(
     tree,
     getWorkspacePath(tree),
     (json) => {
-      return { ...json, ...workspace };
+      return {
+        ...json,
+        ...(reformattedWorkspaceJsonOrNull(workspace) ?? workspace),
+      };
     }
   );
 
@@ -363,15 +367,21 @@ function addProjectToWorkspaceJson(
     if (mode === 'create') {
       workspaceJson.projects[projectName] = project.root;
     }
+  } else if (mode === 'delete') {
+    delete workspaceJson.projects[projectName];
   } else {
-    let workspaceConfiguration: ProjectConfiguration;
+    let projectConfiguration: ProjectConfiguration;
     if (project) {
       const { tags, implicitDependencies, ...c } = project;
-      workspaceConfiguration = c;
+      projectConfiguration = c;
     }
-    workspaceJson.projects[projectName] = workspaceConfiguration;
+    workspaceJson.projects[projectName] = projectConfiguration;
   }
-  writeJson(tree, path, workspaceJson);
+  writeJson(
+    tree,
+    path,
+    reformattedWorkspaceJsonOrNull(workspaceJson) ?? workspaceJson
+  );
 }
 
 function addProjectToNxJson(
