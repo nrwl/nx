@@ -182,6 +182,11 @@
             "file": "angular/cli/run"
           },
           {
+            "name": "daemon",
+            "id": "daemon",
+            "file": "angular/cli/daemon"
+          },
+          {
             "name": "daemon:start",
             "id": "daemon-start",
             "file": "angular/cli/daemon-start"
@@ -1470,6 +1475,11 @@
             "file": "react/cli/run"
           },
           {
+            "name": "daemon",
+            "id": "daemon",
+            "file": "react/cli/daemon"
+          },
+          {
             "name": "daemon:start",
             "id": "daemon-start",
             "file": "react/cli/daemon-start"
@@ -2720,6 +2730,11 @@
             "name": "run",
             "id": "run",
             "file": "node/cli/run"
+          },
+          {
+            "name": "daemon",
+            "id": "daemon",
+            "file": "node/cli/daemon"
           },
           {
             "name": "daemon:start",
