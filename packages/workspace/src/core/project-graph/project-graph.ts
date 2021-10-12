@@ -1,17 +1,13 @@
-import { logger, ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph } from '@nrwl/devkit';
 import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
-import {
-  buildProjectGraph,
-  projectGraphCompat4to3,
-  projectGraphMigrate3to4,
-} from './build-project-graph';
+import { buildProjectGraph } from './build-project-graph';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
  */
 export function readCachedProjectGraph(
-  projectGraphVersion = '3.0'
+  projectGraphVersion = '4.0'
 ): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
   if (!projectGraphCache) {
@@ -24,18 +20,11 @@ export function readCachedProjectGraph(
       If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
     `);
   }
-  let projectGraph: ProjectGraph = {
+  return {
     version: projectGraphCache.version,
     nodes: projectGraphCache.nodes,
     dependencies: projectGraphCache.dependencies,
   };
-  if (projectGraphVersion !== projectGraph.version) {
-    projectGraph =
-      projectGraphVersion === '3.0'
-        ? projectGraphCompat4to3(projectGraph)
-        : projectGraphMigrate3to4(projectGraph);
-  }
-  return projectGraph;
 }
 
 export async function createProjectGraphAsync(

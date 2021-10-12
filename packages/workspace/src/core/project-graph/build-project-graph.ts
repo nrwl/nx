@@ -40,7 +40,7 @@ import { existsSync } from 'fs';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 
-export async function buildProjectGraph(projectGraphVersion: string = '3.0') {
+export async function buildProjectGraph(projectGraphVersion: string = '4.0') {
   const workspaceJson = readWorkspaceJson();
   const { projectFileMap, allWorkspaceFiles } =
     createProjectFileMap(workspaceJson);
@@ -71,7 +71,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectGraph: ProjectGraph;
   projectGraphCache: ProjectGraphCache;
 }> {
-  projectGraphVersion = projectGraphVersion || '3.0';
   const nxJson = readNxJson();
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(nxJson);
@@ -82,7 +81,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   let cachedFileData = {};
   if (
     cache &&
-    (cache.version === '3.0' || cache.version === '4.0') &&
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,
@@ -106,13 +104,6 @@ export async function buildProjectGraphUsingProjectFileMap(
     cachedFileData,
     projectGraphVersion
   );
-  if (cache && cache.version && projectGraphVersion !== cache.version) {
-    projectGraph =
-      projectGraphVersion === '3.0'
-        ? projectGraphCompat4to3(projectGraph)
-        : projectGraphMigrate3to4(projectGraph);
-  }
-
   const projectGraphCache = createCache(
     nxJson,
     packageJsonDeps,
@@ -126,68 +117,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   return {
     projectGraph,
     projectGraphCache,
-  };
-}
-
-/**
- * Migrate project graph from v3 to v4
- * @param {ProjectGraph} projectGraph
- */
-export function projectGraphMigrate3to4(
-  projectGraph: ProjectGraph
-): ProjectGraph {
-  const nodes: Record<string, ProjectGraphNode> = {};
-  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
-    const files = node.data.files.map(({ file, hash, deps }) => ({
-      file,
-      hash,
-      ...(deps && { deps }),
-    }));
-    nodes[name] = {
-      ...node,
-      data: {
-        ...node.data,
-        files,
-      },
-    };
-  });
-
-  return {
-    ...projectGraph,
-    nodes,
-    version: '4.0',
-  };
-}
-
-/**
- * Backwards compatibility adapter for project Nodes
- * @param {ProjectGraph} projectGraph
- * @returns {ProjectGraph}
- */
-export function projectGraphCompat4to3(
-  projectGraph: ProjectGraph
-): ProjectGraph {
-  const nodes: Record<string, ProjectGraphNode> = {};
-  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
-    const files = node.data.files.map(({ file, hash, ext, deps }) => ({
-      file,
-      hash,
-      ext: ext || extname(file),
-      ...(deps && { deps }),
-    }));
-    nodes[name] = {
-      ...node,
-      data: {
-        ...node.data,
-        files,
-      },
-    };
-  });
-
-  return {
-    ...projectGraph,
-    nodes,
-    version: '3.0',
   };
 }
 

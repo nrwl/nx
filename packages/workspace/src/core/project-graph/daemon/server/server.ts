@@ -288,7 +288,7 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
   resetInactivityTimeout(handleInactivityTimeout);
 
   if (!isNxVersionSame(resolveCurrentNxVersion())) {
-    handleServerProcessTermination({
+    await handleServerProcessTermination({
       server,
       watcherSubscription,
       reason: '@nrwl/workspace installation changed',

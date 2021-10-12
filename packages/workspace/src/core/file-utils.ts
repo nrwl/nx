@@ -124,8 +124,7 @@ function getFileData(filePath: string): FileData {
 
 export function allFilesInDir(
   dirName: string,
-  recurse: boolean = true,
-  projectGraphVersion = '3.0'
+  recurse: boolean = true
 ): FileData[] {
   const ignoredGlobs = getIgnoredGlobs();
   const relDirName = relative(appRootPath, dirName);
@@ -144,14 +143,9 @@ export function allFilesInDir(
         const s = statSync(child);
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push(
-            projectFileDataCompatAdapter(
-              getFileData(child),
-              projectGraphVersion
-            )
-          );
+          res.push(getFileData(child));
         } else if (s.isDirectory() && recurse) {
-          res = [...res, ...allFilesInDir(child, true, projectGraphVersion)];
+          res = [...res, ...allFilesInDir(child, true)];
         }
       } catch (e) {}
     });
@@ -198,8 +192,6 @@ export function workspaceFileName() {
     return 'workspace.json';
   }
 }
-
-export type FileRead = (s: string) => string;
 
 export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(appRootPath, filePath), 'utf-8');
@@ -265,16 +257,13 @@ export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
 }
 
-export function rootWorkspaceFileData(projectGraphVersion = '3.0'): FileData[] {
+export function rootWorkspaceFileData(): FileData[] {
   return rootWorkspaceFileNames().map((f) =>
-    projectFileDataCompatAdapter(
-      getFileData(`${appRootPath}/${f}`),
-      projectGraphVersion
-    )
+    getFileData(`${appRootPath}/${f}`)
   );
 }
 
-function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
+function readWorkspaceFiles(): FileData[] {
   defaultFileHasher.ensureInitialized();
   performance.mark('read workspace files:start');
 
@@ -282,12 +271,7 @@ function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
     const ignoredGlobs = getIgnoredGlobs();
     const r = Array.from(defaultFileHasher.workspaceFiles)
       .filter((f) => !ignoredGlobs.ignores(f))
-      .map((f) =>
-        projectFileDataCompatAdapter(
-          getFileData(`${appRootPath}/${f}`),
-          projectGraphVersion
-        )
-      );
+      .map((f) => getFileData(`${appRootPath}/${f}`));
     performance.mark('read workspace files:end');
     performance.measure(
       'read workspace files',
@@ -298,24 +282,15 @@ function readWorkspaceFiles(projectGraphVersion = '3.0'): FileData[] {
     return r;
   } else {
     const r = [];
-    r.push(...rootWorkspaceFileData(projectGraphVersion));
+    r.push(...rootWorkspaceFileData());
 
     // Add known workspace files and directories
-    appendArray(r, allFilesInDir(appRootPath, false, projectGraphVersion));
-    appendArray(
-      r,
-      allFilesInDir(`${appRootPath}/tools`, true, projectGraphVersion)
-    );
+    appendArray(r, allFilesInDir(appRootPath, false));
+    appendArray(r, allFilesInDir(`${appRootPath}/tools`, true));
     const wl = workspaceLayout();
-    appendArray(
-      r,
-      allFilesInDir(`${appRootPath}/${wl.appsDir}`, true, projectGraphVersion)
-    );
+    appendArray(r, allFilesInDir(`${appRootPath}/${wl.appsDir}`, true));
     if (wl.appsDir !== wl.libsDir) {
-      appendArray(
-        r,
-        allFilesInDir(`${appRootPath}/${wl.libsDir}`, true, projectGraphVersion)
-      );
+      appendArray(r, allFilesInDir(`${appRootPath}/${wl.libsDir}`, true));
     }
     performance.mark('read workspace files:end');
     performance.measure(
@@ -373,9 +348,11 @@ export function updateProjectFileMap(
   updatedFiles: Map<string, string>,
   deletedFiles: string[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
+  const ignore = getIgnoredGlobs();
   const sortedProjects = sortProjects(workspaceJson);
 
   for (const f of updatedFiles.keys()) {
+    if (ignore.ignores(f)) continue;
     for (const projectName of sortedProjects) {
       const p = workspaceJson.projects[projectName];
       if (f.startsWith(p.root || p.sourceRoot)) {
@@ -406,6 +383,7 @@ export function updateProjectFileMap(
   }
 
   for (const f of deletedFiles) {
+    if (ignore.ignores(f)) continue;
     for (const projectName of sortedProjects) {
       const p = workspaceJson.projects[projectName];
       if (f.startsWith(p.root || p.sourceRoot)) {
@@ -447,24 +425,6 @@ export function normalizedProjectRoot(p: ProjectGraphNode): string {
     return path.slice(1).join('/');
   } else {
     return '';
-  }
-}
-
-/**
- * Backwards compatibility adapter for FileData
- * @param {FileData} fileData
- * @param {string?} projectGraphVersion
- * @returns
- */
-export function projectFileDataCompatAdapter(
-  fileData: FileData,
-  projectGraphVersion: string
-): FileData {
-  const { file, hash, ext, deps } = fileData;
-  if (projectGraphVersion !== '3.0') {
-    return { file, hash, ...{ deps } };
-  } else {
-    return { file, hash, ext: ext || extname(file), ...{ deps } };
   }
 }
 
