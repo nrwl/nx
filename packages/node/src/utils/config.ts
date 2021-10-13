@@ -8,7 +8,6 @@ import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
 import { loadTsPlugins } from './load-ts-plugins';
 import CopyWebpackPlugin = require('copy-webpack-plugin');
-import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export const OUT_FILENAME = 'main.js';
@@ -165,14 +164,6 @@ export function getBaseWebpackPartial(
       }),
     });
     extraPlugins.push(copyWebpackPluginInstance);
-  }
-
-  if (options.showCircularDependencies) {
-    extraPlugins.push(
-      new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/,
-      })
-    );
   }
 
   webpackConfig.plugins = [...webpackConfig.plugins, ...extraPlugins];
