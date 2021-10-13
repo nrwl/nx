@@ -59,12 +59,12 @@ export function startInCurrentProcess(): void {
 }
 
 export function stop(): void {
-  logger.info(`NX Daemon Server - Stopping...`);
-
   spawnSync(process.execPath, ['../server/stop.js'], {
     cwd: __dirname,
     stdio: 'inherit',
   });
+
+  logger.info('NX Daemon Server - Stopped');
 }
 
 /**

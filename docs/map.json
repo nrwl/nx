@@ -292,9 +292,9 @@
             "file": "angular/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "angular/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "angular/cli/reset"
           }
         ]
       },
@@ -1575,9 +1575,9 @@
             "file": "react/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "react/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "react/cli/reset"
           }
         ]
       },
@@ -2822,9 +2822,9 @@
             "file": "node/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "node/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "node/cli/reset"
           }
         ]
       },

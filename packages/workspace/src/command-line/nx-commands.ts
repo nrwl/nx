@@ -11,10 +11,12 @@ import {
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
+import { reset } from './reset';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
-const daemonHelpOutput = generateDaemonHelpOutput();
+const isGenerateDocsProcess = process.env.NX_GENERATE_DOCS_PROCESS === 'true';
+const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);
 
 // Ensure that the output takes up the available width of the terminal
 yargs.wrap(yargs.terminalWidth());
@@ -306,7 +308,7 @@ npx nx daemon:start
   )
   .command(require('./report').report)
   .command(require('./list').list)
-  .command(require('./clear-cache').clearCache)
+  .command(reset)
   .command(
     'connect-to-nx-cloud',
     chalk.bold(`Makes sure the workspace is connected to Nx Cloud`),
