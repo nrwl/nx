@@ -3,6 +3,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import { stripIndents } from '@nrwl/devkit';
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import nodeExternals = require('webpack-node-externals');
 
 /**
  * @deprecated This function is no longer necessary and will be removed in Nx 14
@@ -32,9 +33,6 @@ export function preprocessTypescript(
 }
 
 export function getWebpackConfig(config: any) {
-  // TODO(jack): Remove in Nx 13 and go back to proper import.
-  const { nodeExternals } = require('../webpack/entry');
-
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   return {
     resolve: {

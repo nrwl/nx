@@ -109,15 +109,6 @@ export function normalizeWebBuildOptions(
             styles: options.optimization,
           }
         : options.optimization,
-    sourceMap:
-      typeof options.sourceMap === 'object'
-        ? options.sourceMap
-        : {
-            scripts: options.sourceMap,
-            styles: options.sourceMap,
-            hidden: false,
-            vendors: false,
-          },
     polyfills: options.polyfills ? resolve(root, options.polyfills) : undefined,
     es2015Polyfills: options.es2015Polyfills
       ? resolve(root, options.es2015Polyfills)
@@ -130,7 +121,6 @@ export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
   return <any>{
     ...options,
     buildOptimizer: options.optimization,
-    aot: false,
     forkTypeChecker: false,
     lazyModules: [] as string[],
   };

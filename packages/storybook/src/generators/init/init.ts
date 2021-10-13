@@ -7,7 +7,7 @@ import {
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { isFramework, isWebpack5 } from '../../utils/utilities';
+import { isFramework } from '../../utils/utilities';
 import {
   babelCoreVersion,
   babelLoaderVersion,
@@ -86,20 +86,18 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@storybook/react'] = storybookVersion;
     }
 
-    if (isWebpack5()) {
-      if (
-        !packageJson.dependencies['@storybook/builder-webpack5'] &&
-        !packageJson.devDependencies['@storybook/builder-webpack5']
-      ) {
-        devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-      }
+    if (
+      !packageJson.dependencies['@storybook/builder-webpack5'] &&
+      !packageJson.devDependencies['@storybook/builder-webpack5']
+    ) {
+      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    }
 
-      if (
-        !packageJson.dependencies['@storybook/manager-webpack5'] &&
-        !packageJson.devDependencies['@storybook/manager-webpack5']
-      ) {
-        devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-      }
+    if (
+      !packageJson.dependencies['@storybook/manager-webpack5'] &&
+      !packageJson.devDependencies['@storybook/manager-webpack5']
+    ) {
+      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
     }
   }
   if (isFramework('html', schema)) {
@@ -169,5 +167,6 @@ export function initGenerator(tree: Tree, schema: Schema) {
   addCacheableOperation(tree);
   return installTask;
 }
+
 export default initGenerator;
 export const initSchematic = convertNxGenerator(initGenerator);

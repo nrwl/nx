@@ -1,13 +1,13 @@
 import {
   killPorts,
   newProject,
+  promisifiedTreeKill,
   readJson,
   runCLI,
   runCommandUntil,
   uniq,
   updateFile,
   workspaceConfigName,
-  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { serializeJson } from '@nrwl/workspace';
 
@@ -27,7 +27,7 @@ describe('file-server', () => {
       `serve ${appName} --port=${port}`,
       (output) => {
         return (
-          output.indexOf('Built at') > -1 &&
+          output.indexOf('webpack compiled') > -1 &&
           output.indexOf(`localhost:${port}`) > -1
         );
       }

@@ -2,7 +2,6 @@ import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
   createFile,
-  isNotWindows,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -465,100 +464,6 @@ describe('Next.js Applications', () => {
     });
   }, 120000);
 
-  it('webpack4 - should be able to consume a react libs (buildable and non-buildable)', async () => {
-    if (isNotWindows()) {
-      const appName = uniq('app');
-      const buildableLibName = uniq('lib');
-      const nonBuildableLibName = uniq('lib');
-
-      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none`
-      );
-      runCLI(
-        `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
-      );
-
-      const mainPath = `apps/${appName}/pages/index.tsx`;
-      updateFile(
-        mainPath,
-        `
-    import '@${proj}/${nonBuildableLibName}';
-    import '@${proj}/${buildableLibName}';
-    ${readFile(mainPath)}
-    `
-      );
-      // enable webpack 5
-      updateFile(
-        `apps/${appName}/next.config.js`,
-        `
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const withNx = require('@nrwl/next/plugins/with-nx');
-        module.exports = withNx({
-          nx: {
-            // Set this to false if you do not want to use SVGR
-            // See: https://github.com/gregberge/svgr
-            svgr: true,
-          },
-          webpack5: false
-        });
-      `
-      );
-
-      // Update non-buildable lib to use css modules to test that next.js can compile it
-      updateFile(
-        `libs/${nonBuildableLibName}/src/lib/${nonBuildableLibName}.tsx`,
-        `
-            import styles from './style.module.css';
-            export function Test() {
-              return <div className={styles.container}>Hello</div>;
-            }
-            export default Test;
-          `
-      );
-      updateFile(
-        `libs/${nonBuildableLibName}/src/lib/style.module.css`,
-        `
-            .container {}
-          `
-      );
-
-      await checkApp(appName, {
-        checkUnitTest: true,
-        checkLint: true,
-        checkE2E: true,
-        checkWebpack4: true,
-      });
-    }
-  }, 300000);
-
-  it('webpack4 - should build with a next.config.js file in the dist folder', async () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
-
-    updateFile(
-      `apps/${appName}/next.config.js`,
-      `
-        module.exports = {
-          webpack5: false,
-          webpack: (c) => {
-            console.log('NODE_ENV is', process.env.NODE_ENV);
-            return c;
-          }
-        }
-        `
-    );
-    // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`
-    // by the time it reaches the build executor.
-    // this simulates existing behaviour of running a next.js build executor via Nx
-    delete process.env.NODE_ENV;
-    const result = runCLI(`build ${appName}`);
-
-    checkFilesExist(`dist/apps/${appName}/next.config.js`);
-    expect(result).toContain('NODE_ENV is production');
-  }, 120000);
-
   it('should allow using a custom server implementation in TypeScript', async () => {
     const appName = uniq('app');
     const port = 4202;
@@ -674,13 +579,9 @@ async function checkApp(
     checkUnitTest: boolean;
     checkLint: boolean;
     checkE2E: boolean;
-    checkWebpack4?: boolean;
   }
 ) {
   const buildResult = runCLI(`build ${appName} --withDeps`);
-  if (opts.checkWebpack4) {
-    expect(buildResult).toContain('Using webpack 4');
-  }
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
   checkFilesExist(`dist/apps/${appName}/public/star.svg`);

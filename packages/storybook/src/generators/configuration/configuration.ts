@@ -19,13 +19,14 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Linter } from '@nrwl/linter';
 import { join } from 'path';
 
-import { isFramework, isWebpack5, TsConfig } from '../../utils/utilities';
+import { isFramework, TsConfig } from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
+
 export async function configurationGenerator(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
@@ -154,7 +155,7 @@ function createProjectStorybookDir(
     projectType: projectDirectory,
     useWebpack5:
       uiFramework === '@storybook/angular' ||
-      (uiFramework === '@storybook/react' && isWebpack5()),
+      uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
   });
 

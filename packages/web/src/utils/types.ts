@@ -5,19 +5,12 @@ export interface OptimizationOptions {
   styles: boolean;
 }
 
-export interface SourceMapOptions {
-  scripts: boolean;
-  styles: boolean;
-  vendors: boolean;
-  hidden: boolean;
-}
-
 export interface BuildBuilderOptions {
   main: string;
   outputPath: string;
   tsConfig: string;
   watch?: boolean;
-  sourceMap?: boolean | SourceMapOptions;
+  sourceMap?: boolean | 'hidden';
   optimization?: boolean | OptimizationOptions;
   showCircularDependencies?: boolean;
   memoryLimit?: number;

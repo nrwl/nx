@@ -268,13 +268,6 @@ describe('app', () => {
     });
     expect(architectConfig.build.configurations.production).toEqual({
       optimization: true,
-      budgets: [
-        {
-          maximumError: '5mb',
-          maximumWarning: '2mb',
-          type: 'initial',
-        },
-      ],
       extractCss: true,
       extractLicenses: true,
       fileReplacements: [

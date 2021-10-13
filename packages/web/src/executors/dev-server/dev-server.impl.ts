@@ -1,8 +1,9 @@
+import * as webpack from 'webpack';
 import {
   ExecutorContext,
+  joinPathFragments,
   parseTargetString,
   readTargetOptions,
-  joinPathFragments,
 } from '@nrwl/devkit';
 
 import { eachValueFrom } from 'rxjs-for-await';
@@ -45,7 +46,6 @@ export default async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
-  const { webpack } = require('../../webpack/entry');
   const { root: projectRoot, sourceRoot } =
     context.workspace.projects[context.projectName];
   const buildOptions = normalizeWebBuildOptions(

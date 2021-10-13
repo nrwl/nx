@@ -376,11 +376,6 @@
             "file": "angular/api-web/executors/build"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "angular/api-web/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "dev-server executor",
             "id": "dev-server",
             "file": "angular/api-web/executors/dev-server"
@@ -697,11 +692,6 @@
             "name": "library generator",
             "id": "library",
             "file": "angular/api-node/generators/library"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "angular/api-node/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -1659,11 +1649,6 @@
             "file": "react/api-web/generators/application"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "react/api-web/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
             "file": "react/api-web/executors/build"
@@ -1991,11 +1976,6 @@
             "name": "library generator",
             "id": "library",
             "file": "react/api-node/generators/library"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "react/api-node/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -2911,11 +2891,6 @@
             "file": "node/api-web/generators/application"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "node/api-web/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
             "file": "node/api-web/executors/build"
@@ -3226,11 +3201,6 @@
             "name": "library generator",
             "id": "library",
             "file": "node/api-node/generators/library"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "node/api-node/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",

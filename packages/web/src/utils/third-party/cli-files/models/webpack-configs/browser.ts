@@ -7,40 +7,12 @@
  */
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { WebpackConfigOptions } from '../build-options';
-import {
-  getSourceMapDevTool,
-  isPolyfillsEntry,
-  normalizeExtraEntryPoints,
-} from './utils';
 
 const SubresourceIntegrityPlugin = require('webpack-subresource-integrity');
 
 export function getBrowserConfig(wco: WebpackConfigOptions) {
   const { buildOptions } = wco;
   const extraPlugins = [];
-
-  const { isWebpack5 } = require('../../../../../webpack/entry');
-
-  let isEval = false;
-  const { styles: stylesOptimization, scripts: scriptsOptimization } =
-    buildOptions.optimization;
-  const {
-    styles: stylesSourceMap,
-    scripts: scriptsSourceMap,
-    hidden: hiddenSourceMap,
-    vendor: vendorSourceMap,
-  } = buildOptions.sourceMap;
-
-  // See https://webpack.js.org/configuration/devtool/ for sourcemap types.
-  if (
-    (stylesSourceMap || scriptsSourceMap) &&
-    buildOptions.evalSourceMap &&
-    !stylesOptimization &&
-    !scriptsOptimization
-  ) {
-    // Produce eval sourcemaps for development with serve, which are faster.
-    isEval = true;
-  }
 
   if (buildOptions.subresourceIntegrity) {
     extraPlugins.push(
@@ -63,24 +35,7 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
     );
   }
 
-  if (!isEval && (scriptsSourceMap || stylesSourceMap)) {
-    extraPlugins.push(
-      getSourceMapDevTool(
-        !!scriptsSourceMap,
-        !!stylesSourceMap,
-        hiddenSourceMap,
-        vendorSourceMap
-      )
-    );
-  }
-
-  const globalStylesBundleNames = normalizeExtraEntryPoints(
-    buildOptions.styles,
-    'styles'
-  ).map((style) => style.bundleName);
-
   return {
-    devtool: isEval ? 'eval' : false,
     resolve: {
       mainFields: [
         ...(wco.supportES2015 ? ['es2015'] : []),
@@ -112,30 +67,11 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
             priority: 5,
           },
           vendors: false,
-          // TODO(jack): Support both 4 and 5
           vendor: !!buildOptions.vendorChunk && {
             name: 'vendor',
-            chunks: isWebpack5 ? (chunk) => chunk.name === 'main' : 'initial',
+            chunks: (chunk) => chunk.name === 'main',
             enforce: true,
-            test: isWebpack5
-              ? /[\\/]node_modules[\\/]/
-              : (
-                  module: { nameForCondition?: Function },
-                  chunks: Array<{ name: string }>
-                ) => {
-                  const moduleName = module.nameForCondition
-                    ? module.nameForCondition()
-                    : '';
-
-                  return (
-                    /[\\/]node_modules[\\/]/.test(moduleName) &&
-                    !chunks.some(
-                      ({ name }) =>
-                        isPolyfillsEntry(name) ||
-                        globalStylesBundleNames.includes(name)
-                    )
-                  );
-                },
+            test: /[\\/]node_modules[\\/]/,
           },
         },
       },

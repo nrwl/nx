@@ -1,3 +1,5 @@
+import type { Configuration, WebpackPluginInstance } from 'webpack';
+import * as webpack from 'webpack';
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
@@ -5,22 +7,16 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
 import { loadTsPlugins } from './load-ts-plugins';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export const OUT_FILENAME = 'main.js';
 export const OUT_FILENAME_TEMPLATE = '[name].js';
 
-// TODO(jack): In Nx 13 go back to proper types.
-type Configuration = any;
-type WebpackPluginInstance = any; // This was webpack.Plugin in webpack 4
-
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions
 ): Configuration {
-  // TODO(jack): Remove in Nx 13
-  const { CopyWebpackPlugin, webpack } = require('../webpack/entry');
-
   const { options: compilerOptions } = readTsConfig(options.tsConfig);
   const supportsEs2015 =
     compilerOptions.target !== ts.ScriptTarget.ES3 &&
@@ -194,10 +190,7 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-// TODO(jack): Update the typing with new version of webpack -- was returning Stats.ToStringOptions in webpack 4
-// The StatsOptions type needs to be exported from webpack
-// PR: https://github.com/webpack/webpack/pull/12875
-function getStatsConfig(options: BuildBuilderOptions): any {
+function getStatsConfig(options: BuildBuilderOptions) {
   return {
     hash: true,
     timings: false,

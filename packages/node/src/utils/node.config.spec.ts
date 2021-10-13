@@ -79,9 +79,9 @@ describe('getNodePartial', () => {
         externalDependencies: ['module1'],
       });
       const callback = jest.fn();
-      result.externals[0](null, 'module1', callback);
+      result.externals[0]({ request: 'module1' }, callback);
       expect(callback).toHaveBeenCalledWith(null, 'commonjs module1');
-      result.externals[0](null, '@nestjs/core', callback);
+      result.externals[0]({ request: '@nestjs/core' }, callback);
       expect(callback).toHaveBeenCalledWith();
     });
 

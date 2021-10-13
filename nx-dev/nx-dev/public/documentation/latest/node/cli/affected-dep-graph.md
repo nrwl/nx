@@ -18,28 +18,28 @@ Open the dep graph of the workspace in the browser, and highlight the projects a
 nx affected:dep-graph --files=libs/mylib/src/index.ts
 ```
 
-Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between master and HEAD (e.g., PR):
+Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:dep-graph --base=master --head=HEAD
+nx affected:dep-graph --base=main --head=HEAD
 ```
 
-Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between master and HEAD (e.g., PR):
+Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:dep-graph --base=master --head=HEAD --file=output.json
+nx affected:dep-graph --base=main --head=HEAD --file=output.json
 ```
 
-Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between master and HEAD (e.g., PR):
+Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:dep-graph --base=master --head=HEAD --file=output.html
+nx affected:dep-graph --base=main --head=HEAD --file=output.html
 ```
 
-Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on master:
+Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on main:
 
 ```bash
-nx affected:dep-graph --base=master~1 --head=master
+nx affected:dep-graph --base=main~1 --head=main
 ```
 
 Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
@@ -56,7 +56,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

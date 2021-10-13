@@ -1,4 +1,4 @@
-import { Plugin, RuleSetRule } from 'webpack';
+import { RuleSetRule, WebpackPluginInstance } from 'webpack';
 
 export const mergeRules = (...args: RuleSetRule[]) =>
   args.reduce((rules, rule) => {
@@ -11,9 +11,11 @@ export const mergeRules = (...args: RuleSetRule[]) =>
       return rules;
     }
     return [...rules, rule];
-  }, [] as Plugin[]);
+  }, [] as WebpackPluginInstance[]);
 
-export const mergePlugins = (...args: Plugin[]): Plugin[] =>
+export const mergePlugins = (
+  ...args: WebpackPluginInstance[]
+): WebpackPluginInstance[] =>
   args.reduce((plugins, plugin) => {
     if (
       plugins.some(
@@ -24,4 +26,4 @@ export const mergePlugins = (...args: Plugin[]): Plugin[] =>
       return plugins;
     }
     return [...plugins, plugin];
-  }, [] as Plugin[]);
+  }, [] as WebpackPluginInstance[]);

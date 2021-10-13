@@ -87,13 +87,6 @@ function addBuildTarget(
     namedChunks: false,
     extractLicenses: true,
     vendorChunk: false,
-    budgets: [
-      {
-        type: 'initial',
-        maximumWarning: '2mb',
-        maximumError: '5mb',
-      },
-    ],
   };
 
   return {

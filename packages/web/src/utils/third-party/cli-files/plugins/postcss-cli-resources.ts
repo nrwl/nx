@@ -9,7 +9,7 @@ import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 import type { Declaration } from 'postcss';
 import * as url from 'url';
-import * as webpack from 'webpack';
+import { LoaderContext } from 'webpack';
 
 function wrapUrl(url: string): string {
   let wrappedUrl;
@@ -21,26 +21,28 @@ function wrapUrl(url: string): string {
   }
   return `url(${wrappedUrl})`;
 }
+
 export interface PostcssCliResourcesOptions {
   baseHref?: string;
   deployUrl?: string;
   resourcesOutputPath?: string;
   rebaseRootRelative?: boolean;
   filename: string;
-  loader: webpack.loader.LoaderContext;
+  loader: LoaderContext<unknown>;
 }
 
 async function resolve(
   file: string,
   base: string,
-  resolver: (file: string, base: string) => Promise<string>
-): Promise<string> {
+  resolver: (file: string, base: string) => Promise<boolean | string>
+): Promise<boolean | string> {
   try {
     return await resolver(`./${file}`, base);
   } catch {
     return resolver(file, base);
   }
 }
+
 module.exports.postcss = true;
 export default (options: PostcssCliResourcesOptions) => {
   const {
@@ -96,7 +98,7 @@ export default (options: PostcssCliResourcesOptions) => {
     }
     const { pathname, hash, search } = url.parse(inputUrl.replace(/\\/g, '/'));
     const resolver = (file: string, base: string) =>
-      new Promise<string>((resolve, reject) => {
+      new Promise<boolean | string>((resolve, reject) => {
         loader.resolve(base, decodeURI(file), (err, result) => {
           if (err) {
             reject(err);
@@ -106,31 +108,29 @@ export default (options: PostcssCliResourcesOptions) => {
         });
       });
     const result = await resolve(pathname as string, context, resolver);
-    return new Promise<string>((resolve, reject) => {
-      loader.fs.readFile(result, (err: Error, content: Buffer) => {
+    return new Promise<boolean | string>((resolve, reject) => {
+      loader.fs.readFile(result as string, (err: Error, content: Buffer) => {
         if (err) {
           reject(err);
           return;
         }
 
         let outputPath = interpolateName(
-          { resourcePath: result } as webpack.loader.LoaderContext,
+          { resourcePath: result } as LoaderContext<unknown>,
           filename,
           { content }
         );
         if (resourcesOutputPath) {
           outputPath = path.posix.join(resourcesOutputPath, outputPath);
         }
-        loader.addDependency(result);
+        loader.addDependency(result as string);
         loader.emitFile(outputPath, content, undefined);
         let outputUrl = outputPath.replace(/\\/g, '/');
         if (hash || search) {
           outputUrl = url.format({ pathname: outputUrl, hash, search });
         }
-        if (
-          deployUrl &&
-          loader.loaders[loader.loaderIndex].options.ident !== 'extracted'
-        ) {
+        const loaderOptions: any = loader.loaders[loader.loaderIndex].options;
+        if (deployUrl && loaderOptions.ident !== 'extracted') {
           outputUrl = url.resolve(deployUrl, outputUrl);
         }
         resourceCache.set(cacheKey, outputUrl);
@@ -174,9 +174,7 @@ export default (options: PostcssCliResourcesOptions) => {
             try {
               processedUrl = await process(originalUrl, context, resourceCache);
             } catch (err) {
-              loader.emitError(
-                decl.error(err.message, { word: originalUrl }).toString()
-              );
+              loader.emitError(decl.error(err.message, { word: originalUrl }));
               continue;
             }
             if (lastIndex < match.index) {

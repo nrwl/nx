@@ -1,3 +1,4 @@
+import * as webpack from 'webpack';
 import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
 
@@ -28,7 +29,6 @@ export async function* buildExecutor(
   rawOptions: BuildNodeBuilderOptions,
   context: ExecutorContext
 ) {
-  const { webpack } = require('../../webpack/entry');
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
 
   if (!sourceRoot) {
@@ -84,7 +84,7 @@ export async function* buildExecutor(
   }, getNodeWebpackConfig(options));
 
   return yield* eachValueFrom(
-    runWebpack(config, webpack).pipe(
+    runWebpack(config).pipe(
       tap((stats) => {
         console.info(stats.toString(config.stats));
       }),

@@ -36,16 +36,16 @@ Run build for all the projects affected by changing the index.ts file:
 nx affected:build --files=libs/mylib/src/index.ts
 ```
 
-Run build for all the projects affected by the changes between master and HEAD (e.g., PR):
+Run build for all the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:build --base=master --head=HEAD
+nx affected:build --base=main --head=HEAD
 ```
 
-Run build for all the projects affected by the last commit on master:
+Run build for all the projects affected by the last commit on main:
 
 ```bash
-nx affected:build --base=master~1 --head=master
+nx affected:build --base=main~1 --head=main
 ```
 
 ## Options
@@ -56,7 +56,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

@@ -164,7 +164,7 @@ Default: `true`
 
 Type: `boolean`
 
-Creates an application with stricter type checking and build optimization options.
+Creates an application with strict mode and strict type checking
 
 ### style
 
