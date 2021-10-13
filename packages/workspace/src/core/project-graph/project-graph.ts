@@ -28,7 +28,7 @@ export function readCachedProjectGraph(
 }
 
 export async function createProjectGraphAsync(
-  projectGraphVersion = '3.0'
+  projectGraphVersion = '4.0'
 ): Promise<ProjectGraph> {
   /**
    * Using the daemon is currently an undocumented, opt-in feature while we build out its capabilities.
