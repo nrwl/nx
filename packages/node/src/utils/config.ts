@@ -46,8 +46,13 @@ export function getBaseWebpackPartial(
         options.additionalEntryPoints?.length > 0
           ? OUT_FILENAME_TEMPLATE
           : OUT_FILENAME,
+      hashFunction: 'xxhash64',
+      // Disabled for performance
+      pathinfo: false,
     },
     module: {
+      // Enabled for performance
+      unsafeCache: true,
       rules: [
         {
           test: /\.([jt])sx?$/,
@@ -102,6 +107,9 @@ export function getBaseWebpackPartial(
       poll: options.poll,
     },
     stats: getStatsConfig(options),
+    experiments: {
+      cacheUnaffected: true,
+    },
   };
 
   const extraPlugins: WebpackPluginInstance[] = [];
