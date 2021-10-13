@@ -275,19 +275,22 @@ describe('Hasher', () => {
     const hasher = new Hasher(
       {
         nodes: {
-          'npm:react': {
-            name: 'parent',
-            type: 'npm',
-            data: {
-              version: '17.0.0',
-            },
-          },
           app: {
             name: 'app',
             type: 'app',
             data: {
               root: '',
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
+            },
+          },
+        },
+        externalNodes: {
+          'npm:react': {
+            name: 'npm:react',
+            type: 'npm',
+            data: {
+              version: '17.0.0',
+              packageName: 'react',
             },
           },
         },

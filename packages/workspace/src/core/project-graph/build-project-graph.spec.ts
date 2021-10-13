@@ -157,6 +157,8 @@ describe('project graph', () => {
       'shared-util': { name: 'shared-util', type: 'lib' },
       'shared-util-data': { name: 'shared-util-data', type: 'lib' },
       'lazy-lib': { name: 'lazy-lib', type: 'lib' },
+    });
+    expect(graph.externalNodes).toMatchObject({
       'npm:happy-nrwl': {
         name: 'npm:happy-nrwl',
         type: 'npm',
@@ -190,9 +192,6 @@ describe('project graph', () => {
       ],
       'demo-e2e': [],
       'lazy-lib': [],
-      'npm:@nrwl/workspace': [],
-      'npm:express': [],
-      'npm:happy-nrwl': [],
       'shared-util': [
         { source: 'shared-util', target: 'npm:happy-nrwl', type: 'static' },
       ],

@@ -2,6 +2,7 @@ import {
   getOutputsForTargetAndConfiguration,
   unparse,
 } from '@nrwl/workspace/src/tasks-runner/utils';
+import { ProjectGraphProjectNode } from '@nrwl/devkit';
 
 describe('utils', () => {
   describe('getOutputsForTargetAndConfiguration', () => {
@@ -14,10 +15,10 @@ describe('utils', () => {
       },
     };
 
-    function getNode(build) {
+    function getNode(build): ProjectGraphProjectNode {
       return {
         name: 'myapp',
-        type: 'application',
+        type: 'app',
         data: {
           targets: {
             build: { ...build, executor: '' },
@@ -183,7 +184,7 @@ describe('utils', () => {
         expect(
           getOutputsForTargetAndConfiguration(task, {
             name: 'myapp',
-            type: 'application',
+            type: 'app',
             data: {
               root: 'root-myapp',
               targets: {

@@ -10,10 +10,7 @@ import {
 } from '@angular-devkit/core/src/utils/literals';
 import { initRootBabelConfig } from '../utils/rules';
 import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
-import {
-  createProjectGraphAsync,
-  isNpmProject,
-} from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
 let addedEmotionPreset = false;
 
@@ -28,7 +25,7 @@ export default function update(): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = await createProjectGraphAsync('4.0');
+    const projectGraph = await createProjectGraphAsync();
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `
@@ -54,7 +51,7 @@ export default function update(): Rule {
       const deps = projectGraph.dependencies[name];
       const isReact = deps.some(
         (d) =>
-          isNpmProject(projectGraph.nodes[d.target]) &&
+          projectGraph.externalNodes[d.target] &&
           d.target.indexOf('react') !== -1
       );
       if (isReact) {

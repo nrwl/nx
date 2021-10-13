@@ -54,11 +54,13 @@ describe('Migrate babel setup', () => {
             files: [],
           },
         },
+      },
+      externalNodes: {
         'npm:react': {
           name: 'npm:react',
           type: 'npm',
           data: {
-            files: [],
+            version: '1',
             packageName: 'react',
           },
         },

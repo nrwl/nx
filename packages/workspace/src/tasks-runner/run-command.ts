@@ -288,38 +288,42 @@ function addTasksForProjectDependencyConfig(
 
   if (dependencyConfig.projects === 'dependencies') {
     const dependencies = projectGraph.dependencies[project.name];
-    for (const dep of dependencies) {
-      const depProject = projectGraph.nodes[dep.target];
-      if (projectHasTarget(depProject, dependencyConfig.target)) {
-        addTasksForProjectTarget(
-          {
-            project: projectGraph.nodes[dep.target],
-            target: dependencyConfig.target,
-            configuration,
-            overrides: {},
-            errorIfCannotFindConfiguration: false,
-          },
-          defaultDependencyConfigs,
-          projectGraph,
-          tasksMap,
-          [...path, targetIdentifier],
-          seenSet
-        );
-      } else {
-        if (seenSet.has(dep.target)) {
-          continue;
-        }
+    if (dependencies) {
+      for (const dep of dependencies) {
+        const depProject =
+          projectGraph.nodes[dep.target] ||
+          projectGraph.externalNodes[dep.target];
+        if (projectHasTarget(depProject, dependencyConfig.target)) {
+          addTasksForProjectTarget(
+            {
+              project: depProject,
+              target: dependencyConfig.target,
+              configuration,
+              overrides: {},
+              errorIfCannotFindConfiguration: false,
+            },
+            defaultDependencyConfigs,
+            projectGraph,
+            tasksMap,
+            [...path, targetIdentifier],
+            seenSet
+          );
+        } else {
+          if (seenSet.has(dep.target)) {
+            continue;
+          }
 
-        addTasksForProjectDependencyConfig(
-          projectGraph.nodes[dep.target],
-          { target, configuration },
-          dependencyConfig,
-          defaultDependencyConfigs,
-          projectGraph,
-          tasksMap,
-          path,
-          seenSet
-        );
+          addTasksForProjectDependencyConfig(
+            depProject,
+            { target, configuration },
+            dependencyConfig,
+            defaultDependencyConfigs,
+            projectGraph,
+            tasksMap,
+            path,
+            seenSet
+          );
+        }
       }
     }
   } else {

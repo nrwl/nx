@@ -57,6 +57,7 @@ describe('checkDependencies', () => {
           },
         },
       },
+      externalNodes: {},
       dependencies: {
         'my-source': [
           {
@@ -82,7 +83,7 @@ describe('checkDependencies', () => {
       tree.write(
         dependentFilePath,
         `import { MyClass } from '@proj/my-source';
-  
+
         export MyExtendedClass extends MyClass {};
       `
       );
@@ -122,6 +123,7 @@ describe('checkDependencies', () => {
   it('should not error if there are no dependents', async () => {
     projectGraph = {
       nodes: projectGraph.nodes,
+      externalNodes: {},
       dependencies: {},
     };
     await expect(checkDependencies(tree, schema)).resolves.not.toThrow();

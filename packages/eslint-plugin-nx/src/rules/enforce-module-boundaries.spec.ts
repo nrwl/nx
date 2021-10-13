@@ -182,7 +182,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
   });
 
   describe('depConstraints', () => {
-    const graph = {
+    const graph: ProjectGraph = {
       nodes: {
         apiName: {
           name: 'apiName',
@@ -250,13 +250,14 @@ describe('Enforce Module Boundaries (eslint)', () => {
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
+      },
+      externalNodes: {
         npmPackage: {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
             packageName: 'npm-package',
             version: '0.0.0',
-            files: [],
           },
         },
       },
@@ -1553,7 +1554,8 @@ function runRule(
   (global as any).npmScope = 'mycompany';
   (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
-    projectGraph.nodes
+    projectGraph.nodes,
+    projectGraph.externalNodes
   );
 
   const config = {

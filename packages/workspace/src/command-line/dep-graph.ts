@@ -8,16 +8,17 @@ import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
+import { ProjectGraphProjectNode } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
 import { defaultFileHasher } from '../core/hasher/file-hasher';
 import {
   createProjectGraphAsync,
-  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  pruneExternalNodes,
 } from '../core/project-graph';
 import {
   cacheDirectory,
@@ -205,7 +206,7 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  let graph = onlyWorkspaceProjects(await createProjectGraphAsync('4.0'));
+  let graph = pruneExternalNodes(await createProjectGraphAsync());
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];
@@ -496,21 +497,22 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
   defaultFileHasher.clear();
   defaultFileHasher.init();
 
-  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
+  let graph = pruneExternalNodes(await createProjectGraphAsync());
   performance.mark('dep graph watch calculation:end');
   performance.mark('dep graph response generation:start');
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphNode[] = Object.values(graph.nodes).map(
-    (project) => ({
-      name: project.name,
-      type: project.type,
-      data: {
-        tags: project.data.tags,
-        root: project.data.root,
-        files: [],
-      },
-    })
+  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes).map(
+    (project) =>
+      ({
+        name: project.name,
+        type: project.type,
+        data: {
+          tags: project.data.tags,
+          root: project.data.root,
+          files: [],
+        },
+      } as ProjectGraphProjectNode)
   );
 
   const dependencies = graph.dependencies;

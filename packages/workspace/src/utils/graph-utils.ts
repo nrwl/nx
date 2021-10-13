@@ -15,9 +15,7 @@ const reach: Reach = {
 
 function buildMatrix(graph: ProjectGraph) {
   const dependencies = graph.dependencies;
-  const nodes = Object.keys(graph.nodes).filter((s) =>
-    isWorkspaceProject(graph.nodes[s])
-  );
+  const nodes = Object.keys(graph.nodes);
   const adjList = {};
   const matrix = {};
 
@@ -35,7 +33,7 @@ function buildMatrix(graph: ProjectGraph) {
 
   for (let proj in dependencies) {
     for (let dep of dependencies[proj]) {
-      if (isWorkspaceProject(graph.nodes[dep.target])) {
+      if (graph.nodes[dep.target]) {
         adjList[proj].push(dep.target);
       }
     }

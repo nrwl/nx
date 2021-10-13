@@ -54,7 +54,7 @@ export class Rule extends Lint.Rules.AbstractRule {
          */
         try {
           (global as any).projectGraph = mapProjectGraphFiles(
-            readCachedProjectGraph('4.0')
+            readCachedProjectGraph()
           );
         } catch {}
       }
@@ -63,7 +63,8 @@ export class Rule extends Lint.Rules.AbstractRule {
 
       if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
-          this.projectGraph.nodes
+          this.projectGraph.nodes,
+          this.projectGraph.externalNodes
         );
       }
       this.targetProjectLocator = (global as any).targetProjectLocator;
@@ -96,7 +97,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private readonly projectPath: string,
     private readonly npmScope: string,
-    private readonly projectGraph: ProjectGraph,
+    private readonly projectGraph: MappedProjectGraph,
     private readonly targetProjectLocator: TargetProjectLocator
   ) {
     super(sourceFile, options);
@@ -161,7 +162,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     );
 
     // If source or target are not part of an nx workspace, return.
-    if (!sourceProject || !targetProject) {
+    if (!sourceProject || !targetProject || targetProject.type === 'npm') {
       super.visitImportDeclaration(node);
       return;
     }
@@ -174,12 +175,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       } else {
         super.visitImportDeclaration(node);
       }
-      return;
-    }
-
-    // project => npm package
-    if (isNpmProject(targetProject)) {
-      super.visitImportDeclaration(node);
       return;
     }
 

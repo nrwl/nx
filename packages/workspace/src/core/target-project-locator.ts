@@ -1,38 +1,37 @@
 import { resolveModuleByImport } from '../utilities/typescript';
 import { normalizedProjectRoot, readFileIfExisting } from './file-utils';
 import type { ProjectGraphNode } from '@nrwl/devkit';
-import { parseJson } from '@nrwl/devkit';
-import {
-  getSortedProjectNodes,
-  isNpmProject,
-  isWorkspaceProject,
-} from './project-graph';
+import { parseJson, ProjectGraphExternalNode } from '@nrwl/devkit';
 import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { getSortedProjectNodes } from './project-graph';
 
 export class TargetProjectLocator {
   private sortedProjects = getSortedProjectNodes(this.nodes);
 
-  private sortedWorkspaceProjects = this.sortedProjects
-    .filter(isWorkspaceProject)
-    .map(
-      (node) =>
-        ({
-          ...node,
-          data: {
-            ...node.data,
-            normalizedRoot: normalizedProjectRoot(node),
-          },
-        } as ProjectGraphNode)
-    );
-  private npmProjects = this.sortedProjects.filter(isNpmProject);
+  private sortedWorkspaceProjects = this.sortedProjects.map(
+    (node) =>
+      ({
+        ...node,
+        data: {
+          ...node.data,
+          normalizedRoot: normalizedProjectRoot(node),
+        },
+      } as ProjectGraphNode)
+  );
+  private npmProjects = this.externalNodes
+    ? Object.values(this.externalNodes)
+    : [];
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
-  constructor(private readonly nodes: Record<string, ProjectGraphNode>) {}
+  constructor(
+    private readonly nodes: Record<string, ProjectGraphNode>,
+    private readonly externalNodes: Record<string, ProjectGraphExternalNode>
+  ) {}
 
   /**
    * Find a project based on its import

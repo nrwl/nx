@@ -1,5 +1,6 @@
 import { DependencyType, ProjectGraph } from './project-graph-models';
 import { reverse, withDeps, filterNodes } from './operators';
+import { ProjectGraphProjectNode } from '@nrwl/devkit';
 
 const graph: ProjectGraph = {
   nodes: {
@@ -9,6 +10,7 @@ const graph: ProjectGraph = {
     lib2: { name: 'lib2', type: 'lib', data: null },
     lib3: { name: 'lib3', type: 'lib', data: null },
   },
+  externalNodes: {},
   dependencies: {
     'app1-e2e': [
       {
@@ -58,6 +60,7 @@ describe('reverse', () => {
         lib2: { name: 'lib2', type: 'lib', data: null },
         lib3: { name: 'lib3', type: 'lib', data: null },
       },
+      externalNodes: {},
       dependencies: {
         app1: [
           {
@@ -100,7 +103,7 @@ describe('reverse', () => {
 
 describe('withDeps', () => {
   it('should return a new graph with all dependencies included from original', () => {
-    const affectedNodes = [
+    const affectedNodes: ProjectGraphProjectNode[] = [
       { name: 'app1-e2e', type: 'app', data: null },
       { name: 'app1', type: 'app', data: null },
       { name: 'lib1', type: 'lib', data: null },
@@ -198,7 +201,9 @@ describe('withDeps', () => {
       },
     };
 
-    const affectedNodes = [{ name: 'lib1', type: 'lib', data: null }];
+    const affectedNodes: ProjectGraphProjectNode[] = [
+      { name: 'lib1', type: 'lib', data: null },
+    ];
 
     const result = withDeps(graph, affectedNodes);
     expect(result).toEqual({

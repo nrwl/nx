@@ -1,6 +1,7 @@
 import type {
   ProjectGraph,
   ProjectGraphDependency,
+  ProjectGraphExternalNode,
   ProjectGraphNode,
 } from './interfaces';
 import { DependencyType } from './interfaces';
@@ -17,6 +18,7 @@ export class ProjectGraphBuilder {
     } else {
       this.graph = {
         nodes: {},
+        externalNodes: {},
         dependencies: {},
       };
     }
@@ -44,6 +46,13 @@ export class ProjectGraphBuilder {
   }
 
   /**
+   * Adds a external node to the project graph
+   */
+  addExternalNode(node: ProjectGraphExternalNode): void {
+    this.graph.externalNodes[node.name] = node;
+  }
+
+  /**
    * Adds a dependency from source project to target project
    */
   addImplicitDependency(
@@ -56,7 +65,10 @@ export class ProjectGraphBuilder {
     if (!this.graph.nodes[sourceProjectName]) {
       throw new Error(`Source project does not exist: ${sourceProjectName}`);
     }
-    if (!this.graph.nodes[targetProjectName]) {
+    if (
+      !this.graph.nodes[targetProjectName] &&
+      !this.graph.externalNodes[targetProjectName]
+    ) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
     this.graph.dependencies[sourceProjectName].push({
@@ -82,7 +94,10 @@ export class ProjectGraphBuilder {
       throw new Error(`Source project does not exist: ${sourceProjectName}`);
     }
 
-    if (!this.graph.nodes[targetProjectName]) {
+    if (
+      !this.graph.nodes[targetProjectName] &&
+      !this.graph.externalNodes[targetProjectName]
+    ) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
 

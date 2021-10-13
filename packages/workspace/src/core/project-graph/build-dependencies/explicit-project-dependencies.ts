@@ -14,7 +14,10 @@ export function buildExplicitTypeScriptDependencies(
   filesToProcess: ProjectFileMap
 ) {
   const importLocator = new TypeScriptImportLocator();
-  const targetProjectLocator = new TargetProjectLocator(graph.nodes);
+  const targetProjectLocator = new TargetProjectLocator(
+    graph.nodes,
+    graph.externalNodes
+  );
   const res = [] as any;
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {

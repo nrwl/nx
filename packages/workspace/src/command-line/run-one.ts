@@ -27,7 +27,7 @@ export async function runOne(opts: {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync('4.0');
+  const projectGraph = await createProjectGraphAsync();
   const { projects, projectsMap } = getProjects(projectGraph, opts.project);
   const env = readEnvironment(opts.target, projectsMap);
   const reporter = new RunOneReporter(opts.project);

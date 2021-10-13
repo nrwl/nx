@@ -63,7 +63,11 @@ function filterAffectedProjects(
   graph: ProjectGraph,
   ctx: AffectedProjectGraphContext
 ): ProjectGraph {
-  const result = { nodes: {}, dependencies: {} } as ProjectGraph;
+  const result: ProjectGraph = {
+    nodes: {},
+    externalNodes: {},
+    dependencies: {},
+  };
   const reversed = reverse(graph);
   ctx.touchedProjects.forEach((p) => {
     addAffectedNodes(p, reversed, result, []);
@@ -81,13 +85,19 @@ function addAffectedNodes(
   visited: string[]
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
-  if (!reversed.nodes[startingProject]) {
+  const reversedNode = reversed.nodes[startingProject];
+  const reversedExternalNode = reversed.externalNodes[startingProject];
+  if (!reversedNode && !reversedExternalNode) {
     throw new Error(`Invalid project name is detected: "${startingProject}"`);
   }
   visited.push(startingProject);
-  result.nodes[startingProject] = reversed.nodes[startingProject];
-  result.dependencies[startingProject] = [];
-  reversed.dependencies[startingProject].forEach(({ target }) =>
+  if (reversedNode) {
+    result.nodes[startingProject] = reversedNode;
+    result.dependencies[startingProject] = [];
+  } else {
+    result.externalNodes[startingProject] = reversedExternalNode;
+  }
+  reversed.dependencies[startingProject]?.forEach(({ target }) =>
     addAffectedNodes(target, reversed, result, visited)
   );
 }
@@ -100,16 +110,23 @@ function addAffectedDependencies(
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
   visited.push(startingProject);
-
-  reversed.dependencies[startingProject].forEach(({ target }) =>
-    addAffectedDependencies(target, reversed, result, visited)
-  );
-  reversed.dependencies[startingProject].forEach(({ type, source, target }) => {
-    // Since source and target was reversed,
-    // we need to reverse it back to original direction.
-    if (!result.dependencies[target]) {
-      result.dependencies[target] = [];
-    }
-    result.dependencies[target].push({ type, source: target, target: source });
-  });
+  if (reversed.dependencies[startingProject]) {
+    reversed.dependencies[startingProject].forEach(({ target }) =>
+      addAffectedDependencies(target, reversed, result, visited)
+    );
+    reversed.dependencies[startingProject].forEach(
+      ({ type, source, target }) => {
+        // Since source and target was reversed,
+        // we need to reverse it back to original direction.
+        if (!result.dependencies[target]) {
+          result.dependencies[target] = [];
+        }
+        result.dependencies[target].push({
+          type,
+          source: target,
+          target: source,
+        });
+      }
+    );
+  }
 }
