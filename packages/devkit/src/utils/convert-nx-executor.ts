@@ -12,14 +12,12 @@ export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
     const workspaceConfig = workspaces.readWorkspaceConfiguration();
-    const nxJson = workspaces.readNxConfiguration();
     const context: ExecutorContext = {
       root: builderContext.workspaceRoot,
       projectName: builderContext.target.project,
       targetName: builderContext.target.target,
       configurationName: builderContext.target.configuration,
       workspace: workspaceConfig,
-      nxJson,
       cwd: process.cwd(),
       isVerbose: false,
     };

@@ -349,20 +349,6 @@ function getWorkspacePath(host: Tree, { directory, cli }: Schema) {
   return join(directory, cli === 'angular' ? 'angular.json' : 'workspace.json');
 }
 
-function setDefaultPackageManager(host: Tree, options: Schema) {
-  if (!options.packageManager) {
-    return;
-  }
-
-  updateJson<NxJsonConfiguration>(host, 'nx.json', (json) => {
-    if (!json.cli) {
-      json.cli = {};
-    }
-    json.cli.packageManager = options.packageManager;
-    return json;
-  });
-}
-
 function setDefault(
   json: any,
   collectionName: string,

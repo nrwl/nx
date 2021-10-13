@@ -8,6 +8,14 @@ import {
   WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
 
+/**
+ * This test suite is ran with utils from @angular-devkit.
+ * The rules are being tested as though they were used
+ * in a non-nx angular workspace. This means changes from
+ * ngcli-adapter or wrapAngularDevkitSchematic are not applied
+ * to the rules during the unit tests, as they would not be applied
+ * when being ran in a non-nx workspace.
+ */
 describe('Workspace', () => {
   const defaultCollectionName = '@nrwl/node';
   const workspaceJsonFileName = 'workspace.json';
@@ -21,7 +29,6 @@ describe('Workspace', () => {
       '/workspace.json',
       JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
     );
-    tree.create('nx.json', JSON.stringify({}));
   });
 
   describe('setDefaultCollection', () => {
@@ -29,15 +36,17 @@ describe('Workspace', () => {
       const result = new UnitTestTree(
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
-      const nxJson = readJsonInTree(result, 'nx.json');
+      const workspaceJson = readJsonInTree(result, 'workspace.json');
 
-      expect(nxJson.cli.defaultCollection).toEqual(defaultCollectionName);
+      expect(workspaceJson.cli.defaultCollection).toEqual(
+        defaultCollectionName
+      );
     });
 
     it(`should be set if ${nrwlWorkspaceName} was set before`, async () => {
       tree = new UnitTestTree(
         await callRule(
-          updateJsonInTree('nx.json', (json) => {
+          updateJsonInTree(workspaceJsonFileName, (json) => {
             json.cli = {
               defaultCollection: nrwlWorkspaceName,
             };
@@ -50,15 +59,17 @@ describe('Workspace', () => {
       const result = new UnitTestTree(
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
-      const nxJson = readJsonInTree(result, 'nx.json');
-      expect(nxJson.cli.defaultCollection).toEqual(defaultCollectionName);
+      const workspaceJson = readJsonInTree(result, workspaceJsonFileName);
+      expect(workspaceJson.cli.defaultCollection).toEqual(
+        defaultCollectionName
+      );
     });
 
     it('should not be set if something else was set before', async () => {
       const otherCollection = '@nrwl/angular';
       tree = new UnitTestTree(
         await callRule(
-          updateJsonInTree('nx.json', (json) => {
+          updateJsonInTree(workspaceJsonFileName, (json) => {
             json.cli = {
               defaultCollection: otherCollection,
             };
@@ -73,8 +84,8 @@ describe('Workspace', () => {
       const result = new UnitTestTree(
         await callRule(setDefaultCollection(defaultCollectionName), tree)
       );
-      const nxJson = readJsonInTree(result, 'nx.json');
-      expect(nxJson.cli.defaultCollection).toEqual(otherCollection);
+      const workspaceJson = readJsonInTree(result, workspaceJsonFileName);
+      expect(workspaceJson.cli.defaultCollection).toEqual(otherCollection);
     });
   });
 });

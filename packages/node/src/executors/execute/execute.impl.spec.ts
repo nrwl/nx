@@ -62,8 +62,6 @@ describe('NodeExecuteBuilder', () => {
             },
           },
         },
-      },
-      nxJson: {
         npmScope: 'test',
       },
       isVerbose: false,

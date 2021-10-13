@@ -59,8 +59,6 @@ describe('@nrwl/storybook:storybook', () => {
             targets: {},
           },
         },
-      },
-      nxJson: {
         npmScope: 'test',
       },
       isVerbose: false,

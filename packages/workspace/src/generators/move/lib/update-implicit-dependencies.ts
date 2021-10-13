@@ -1,5 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import { updateWorkspace, readWorkspace } from '@nrwl/devkit';
+import { getProjects, updateProjectConfiguration } from '@nrwl/devkit';
 import type { NormalizedSchema } from '../schema';
 
 /**
@@ -11,14 +11,13 @@ export function updateImplicitDependencies(
   tree: Tree,
   schema: NormalizedSchema
 ) {
-  const workspaceJson = readWorkspace(tree);
-  Object.values(workspaceJson.projects).forEach((project) => {
+  for (const [projectName, project] of getProjects(tree)) {
     if (project.implicitDependencies) {
       const index = project.implicitDependencies.indexOf(schema.projectName);
       if (index !== -1) {
         project.implicitDependencies[index] = schema.newProjectName;
+        updateProjectConfiguration(tree, projectName, project);
       }
     }
-  });
-  updateWorkspace(tree, workspaceJson);
+  }
 }

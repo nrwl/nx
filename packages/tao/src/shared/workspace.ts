@@ -236,12 +236,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceJsonConfiguration;
-
-  /**
-   * The nx.json configuration
-   */
-  nxJson: NxJsonConfiguration;
+  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration;
 
   /**
    * The current working directory
@@ -263,8 +258,7 @@ export class Workspaces {
 
   calculateDefaultProjectName(
     cwd: string,
-    wc: WorkspaceJsonConfiguration,
-    nxJson: NxJsonConfiguration
+    wc: WorkspaceJsonConfiguration & NxJsonConfiguration
   ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
@@ -277,18 +271,22 @@ export class Workspaces {
       });
       if (matchingProject) return matchingProject;
     }
-    return nxJson.defaultProject;
+    return wc.defaultProject;
   }
 
-  readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
-    const w = readJsonFile(
+  readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
+    NxJsonConfiguration {
+    const rawWorkspace = readJsonFile(
       path.join(this.root, workspaceConfigName(this.root))
     );
-    return resolveNewFormatWithInlineProjects(w, this.root);
-  }
-
-  readNxConfiguration(): NxJsonConfiguration {
-    return readJsonFile<NxJsonConfiguration>(path.join(this.root, 'nx.json'));
+    const parsedWorkspace = resolveNewFormatWithInlineProjects(
+      rawWorkspace,
+      this.root
+    );
+    const nxJson = readJsonFile<NxJsonConfiguration>(
+      path.join(this.root, 'nx.json')
+    );
+    return { ...parsedWorkspace, ...nxJson };
   }
 
   isNxExecutor(nodeModule: string, executor: string) {

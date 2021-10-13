@@ -1,4 +1,8 @@
-import { addDependenciesToPackageJson, readNxJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  NxJsonConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { expressVersion } from '../../utils/versions';
 import initGenerator from './init';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -36,7 +40,7 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await initGenerator(tree, {});
-      const { cli } = readNxJson(tree);
+      const { cli } = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(cli.defaultCollection).toEqual('@nrwl/express');
     });
   });

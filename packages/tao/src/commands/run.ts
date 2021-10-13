@@ -180,8 +180,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   options: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: WorkspaceJsonConfiguration,
-  nxJson: NxJsonConfiguration,
+  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -228,7 +227,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
       root,
       target: targetConfig,
       workspace,
-      nxJson,
       projectName: project,
       targetName: target,
       configurationName: configuration,
@@ -304,7 +302,6 @@ export async function runExecutor<T extends { success: boolean }>(
     context.root,
     context.cwd,
     context.workspace,
-    context.nxJson,
     context.isVerbose,
     false
   );
@@ -320,12 +317,7 @@ export async function run(
 
   return handleErrors(isVerbose, async () => {
     const workspace = ws.readWorkspaceConfiguration();
-    const nxJson = ws.readNxConfiguration();
-    const defaultProjectName = ws.calculateDefaultProjectName(
-      cwd,
-      workspace,
-      nxJson
-    );
+    const defaultProjectName = ws.calculateDefaultProjectName(cwd, workspace);
     const opts = parseRunOpts(cwd, args, defaultProjectName);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
@@ -334,7 +326,6 @@ export async function run(
         root,
         cwd,
         workspace,
-        nxJson,
         isVerbose,
         opts.help
       )

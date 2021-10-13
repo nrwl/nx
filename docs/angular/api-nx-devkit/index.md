@@ -115,10 +115,8 @@ It only uses language primitives and immutable objects
 - [parseTargetString](../../angular/nx-devkit/index#parsetargetstring)
 - [readJson](../../angular/nx-devkit/index#readjson)
 - [readJsonFile](../../angular/nx-devkit/index#readjsonfile)
-- [readNxJson](../../angular/nx-devkit/index#readnxjson)
 - [readProjectConfiguration](../../angular/nx-devkit/index#readprojectconfiguration)
 - [readTargetOptions](../../angular/nx-devkit/index#readtargetoptions)
-- [readWorkspace](../../angular/nx-devkit/index#readworkspace)
 - [readWorkspaceConfiguration](../../angular/nx-devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../angular/nx-devkit/index#removedependenciesfrompackagejson)
 - [removeProjectConfiguration](../../angular/nx-devkit/index#removeprojectconfiguration)
@@ -131,7 +129,6 @@ It only uses language primitives and immutable objects
 - [updateJson](../../angular/nx-devkit/index#updatejson)
 - [updateProjectConfiguration](../../angular/nx-devkit/index#updateprojectconfiguration)
 - [updateTsConfigsToJs](../../angular/nx-devkit/index#updatetsconfigstojs)
-- [updateWorkspace](../../angular/nx-devkit/index#updateworkspace)
 - [updateWorkspaceConfiguration](../../angular/nx-devkit/index#updateworkspaceconfiguration)
 - [visitNotIgnoredFiles](../../angular/nx-devkit/index#visitnotignoredfiles)
 - [writeJson](../../angular/nx-devkit/index#writejson)
@@ -349,7 +346,7 @@ It only uses language primitives and immutable objects
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration)\>
 
 ---
 
@@ -1136,22 +1133,6 @@ Object the JSON content of the file represents
 
 ---
 
-### readNxJson
-
-▸ **readNxJson**(`tree`): [`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration) \| `null`
-
-#### Parameters
-
-| Name   | Type                                         |
-| :----- | :------------------------------------------- |
-| `tree` | [`Tree`](../../angular/nx-devkit/index#tree) |
-
-#### Returns
-
-[`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration) \| `null`
-
----
-
 ### readProjectConfiguration
 
 ▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration)
@@ -1200,24 +1181,6 @@ Works as if you invoked the target yourself without passing any command lint ove
 #### Returns
 
 `T`
-
----
-
-### readWorkspace
-
-▸ **readWorkspace**(`tree`): [`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration)
-
-Read the workspace configuration, including projects.
-
-#### Parameters
-
-| Name   | Type                                         |
-| :----- | :------------------------------------------- |
-| `tree` | [`Tree`](../../angular/nx-devkit/index#tree) |
-
-#### Returns
-
-[`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration)
 
 ---
 
@@ -1525,23 +1488,6 @@ The utility will update either files.
 | `tree`                | [`Tree`](../../angular/nx-devkit/index#tree) |
 | `options`             | `Object`                                     |
 | `options.projectRoot` | `string`                                     |
-
-#### Returns
-
-`void`
-
----
-
-### updateWorkspace
-
-▸ **updateWorkspace**(`tree`, `workspaceJson`): `void`
-
-#### Parameters
-
-| Name            | Type                                                                                     |
-| :-------------- | :--------------------------------------------------------------------------------------- |
-| `tree`          | [`Tree`](../../angular/nx-devkit/index#tree)                                             |
-| `workspaceJson` | [`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration) |
 
 #### Returns
 

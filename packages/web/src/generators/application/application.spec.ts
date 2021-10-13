@@ -1,4 +1,4 @@
-import { getProjects, readJson, readNxJson } from '@nrwl/devkit';
+import { getProjects, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 
@@ -19,7 +19,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
-      const nxJson = readNxJson(tree);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(

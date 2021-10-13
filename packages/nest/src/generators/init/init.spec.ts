@@ -39,7 +39,10 @@ describe('init generator', () => {
   it('should set @nrwl/nest as the default collection when none was set before', async () => {
     await initGenerator(tree, {});
 
-    const { cli } = devkit.readNxJson(tree);
+    const { cli } = devkit.readJson<devkit.NxJsonConfiguration>(
+      tree,
+      'nx.json'
+    );
     expect(cli.defaultCollection).toEqual('@nrwl/nest');
   });
 

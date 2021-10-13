@@ -34,8 +34,6 @@ describe('Node Build Executor', () => {
             sourceRoot: 'apps/wibble',
           },
         },
-      },
-      nxJson: {
         npmScope: 'test',
       },
       isVerbose: false,

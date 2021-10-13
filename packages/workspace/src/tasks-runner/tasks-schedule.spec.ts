@@ -51,6 +51,7 @@ describe('TasksSchedule', () => {
       readWorkspaceConfiguration() {
         return {
           version: 2,
+          npmScope: '',
           projects: {
             app1: {
               root: 'app1',

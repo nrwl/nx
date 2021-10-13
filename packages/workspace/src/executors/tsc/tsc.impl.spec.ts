@@ -53,8 +53,6 @@ describe('executor: tsc', () => {
             targets: {},
           },
         },
-      },
-      nxJson: {
         npmScope: 'test',
       },
       isVerbose: false,

@@ -4,7 +4,7 @@
     "defaultBase": "<%= defaultBase %>"
   },
   "cli": {
-    "defaultCollection": "@nrwl/workspace"<% if (packageManager) { %>,
+    "defaultCollection": "@nrwl/workspace"<% if (packageManager && cli === 'angular') { %>,
     "packageManager": "<%=packageManager%>" <% } %>
   },
   "implicitDependencies": {

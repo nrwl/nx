@@ -1,8 +1,8 @@
 import {
   addDependenciesToPackageJson,
+  NxJsonConfiguration,
   readJson,
   Tree,
-  readNxJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -43,7 +43,7 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await initGenerator(tree, {});
-      const nxJson = readNxJson(tree);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.cli.defaultCollection).toEqual('@nrwl/node');
     });
   });

@@ -155,7 +155,6 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
       opts.collectionName,
       normalizedGeneratorName,
       null,
-      null,
       schema,
       opts.interactive,
       null,
@@ -201,11 +200,10 @@ export async function generate(
 
   return handleErrors(isVerbose, async () => {
     const workspaceDefinition = ws.readWorkspaceConfiguration();
-    const nxConfig = ws.readNxConfiguration();
     const opts = parseGenerateOpts(
       args,
       'generate',
-      readDefaultCollection(nxConfig)
+      readDefaultCollection(workspaceDefinition)
     );
 
     const { normalizedGeneratorName, schema, implementationFactory } =
@@ -219,11 +217,10 @@ export async function generate(
       opts.generatorOptions,
       opts.collectionName,
       normalizedGeneratorName,
-      nxConfig,
       workspaceDefinition,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(cwd, workspaceDefinition, nxConfig),
+      ws.calculateDefaultProjectName(cwd, workspaceDefinition),
       ws.relativeCwd(cwd),
       isVerbose
     );

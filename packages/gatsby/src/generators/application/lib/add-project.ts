@@ -45,9 +45,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(
     host,
     options.projectName,
-    {
-      ...project,
-    },
+    project,
     options.standaloneConfig
   );
 }

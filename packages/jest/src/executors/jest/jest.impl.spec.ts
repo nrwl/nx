@@ -49,8 +49,6 @@ describe('Jest Executor', () => {
             },
           },
         },
-      },
-      nxJson: {
         npmScope: 'test',
       },
       target: {

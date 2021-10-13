@@ -1,8 +1,8 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  NxJsonConfiguration,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   Tree,
   writeJson,
@@ -273,7 +273,7 @@ describe('ProjectConverter', () => {
         eslintInitializer: () => undefined,
       });
 
-      const nxJson = readNxJson(host);
+      const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
       nxJson.generators = {
         '@nrwl/angular': {
           application: {
@@ -328,7 +328,7 @@ describe('ProjectConverter', () => {
         }
       )();
 
-      const nxJson = readNxJson(host);
+      const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
       // Not using shorthand syntax this time
       nxJson.generators = {
         '@nrwl/angular': {
@@ -373,7 +373,7 @@ describe('ProjectConverter', () => {
         eslintInitializer: () => undefined,
       });
 
-      const nxJson = readNxJson(host);
+      const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
       nxJson.generators = {
         '@nrwl/angular': {
           'convert-tslint-to-eslint': {

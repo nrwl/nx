@@ -20,7 +20,7 @@ export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
   'projects'
 > &
-  Partial<Omit<NxJsonConfiguration, 'projects'>>;
+  Partial<NxJsonConfiguration>;
 
 /**
  * Adds project configuration to the Nx workspace.
@@ -396,33 +396,6 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
   return typeof projectConfig === 'string'
     ? joinPathFragments(projectConfig, 'project.json')
     : null;
-}
-
-export function updateWorkspace(
-  tree: Tree,
-  workspaceJson: WorkspaceJsonConfiguration
-): void {
-  const rawWorkspaceJson = readRawWorkspaceJson(tree);
-  const resolvedWorkspaceJson = inlineProjectConfigurationsWithTree(tree);
-  const workspaceJsonToSave: RawWorkspaceJsonConfiguration = workspaceJson;
-  Object.entries(workspaceJson.projects).forEach(
-    ([projectName, projectConfig]) => {
-      if (
-        typeof rawWorkspaceJson.projects[projectName] === 'string' &&
-        typeof projectConfig !== 'string'
-      ) {
-        if (
-          JSON.stringify(projectConfig) !==
-          JSON.stringify(resolvedWorkspaceJson.projects[projectName])
-        ) {
-          updateProjectConfiguration(tree, projectName, projectConfig);
-        }
-        workspaceJsonToSave.projects[projectName] =
-          rawWorkspaceJson.projects[projectName];
-      }
-    }
-  );
-  writeJson(tree, getWorkspacePath(tree), workspaceJsonToSave);
 }
 
 function validateWorkspaceJsonOperations(

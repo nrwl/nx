@@ -115,10 +115,8 @@ It only uses language primitives and immutable objects
 - [parseTargetString](../../node/nx-devkit/index#parsetargetstring)
 - [readJson](../../node/nx-devkit/index#readjson)
 - [readJsonFile](../../node/nx-devkit/index#readjsonfile)
-- [readNxJson](../../node/nx-devkit/index#readnxjson)
 - [readProjectConfiguration](../../node/nx-devkit/index#readprojectconfiguration)
 - [readTargetOptions](../../node/nx-devkit/index#readtargetoptions)
-- [readWorkspace](../../node/nx-devkit/index#readworkspace)
 - [readWorkspaceConfiguration](../../node/nx-devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../node/nx-devkit/index#removedependenciesfrompackagejson)
 - [removeProjectConfiguration](../../node/nx-devkit/index#removeprojectconfiguration)
@@ -131,7 +129,6 @@ It only uses language primitives and immutable objects
 - [updateJson](../../node/nx-devkit/index#updatejson)
 - [updateProjectConfiguration](../../node/nx-devkit/index#updateprojectconfiguration)
 - [updateTsConfigsToJs](../../node/nx-devkit/index#updatetsconfigstojs)
-- [updateWorkspace](../../node/nx-devkit/index#updateworkspace)
 - [updateWorkspaceConfiguration](../../node/nx-devkit/index#updateworkspaceconfiguration)
 - [visitNotIgnoredFiles](../../node/nx-devkit/index#visitnotignoredfiles)
 - [writeJson](../../node/nx-devkit/index#writejson)
@@ -349,7 +346,7 @@ It only uses language primitives and immutable objects
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../node/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../node/nx-devkit/index#nxjsonconfiguration)\>
 
 ---
 
@@ -1136,22 +1133,6 @@ Object the JSON content of the file represents
 
 ---
 
-### readNxJson
-
-▸ **readNxJson**(`tree`): [`NxJsonConfiguration`](../../node/nx-devkit/index#nxjsonconfiguration) \| `null`
-
-#### Parameters
-
-| Name   | Type                                      |
-| :----- | :---------------------------------------- |
-| `tree` | [`Tree`](../../node/nx-devkit/index#tree) |
-
-#### Returns
-
-[`NxJsonConfiguration`](../../node/nx-devkit/index#nxjsonconfiguration) \| `null`
-
----
-
 ### readProjectConfiguration
 
 ▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../node/nx-devkit/index#projectconfiguration)
@@ -1200,24 +1181,6 @@ Works as if you invoked the target yourself without passing any command lint ove
 #### Returns
 
 `T`
-
----
-
-### readWorkspace
-
-▸ **readWorkspace**(`tree`): [`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration)
-
-Read the workspace configuration, including projects.
-
-#### Parameters
-
-| Name   | Type                                      |
-| :----- | :---------------------------------------- |
-| `tree` | [`Tree`](../../node/nx-devkit/index#tree) |
-
-#### Returns
-
-[`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration)
 
 ---
 
@@ -1525,23 +1488,6 @@ The utility will update either files.
 | `tree`                | [`Tree`](../../node/nx-devkit/index#tree) |
 | `options`             | `Object`                                  |
 | `options.projectRoot` | `string`                                  |
-
-#### Returns
-
-`void`
-
----
-
-### updateWorkspace
-
-▸ **updateWorkspace**(`tree`, `workspaceJson`): `void`
-
-#### Parameters
-
-| Name            | Type                                                                                  |
-| :-------------- | :------------------------------------------------------------------------------------ |
-| `tree`          | [`Tree`](../../node/nx-devkit/index#tree)                                             |
-| `workspaceJson` | [`WorkspaceJsonConfiguration`](../../node/nx-devkit/index#workspacejsonconfiguration) |
 
 #### Returns
 

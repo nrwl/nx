@@ -203,7 +203,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     super(new NodeJsSyncHost(), root);
   }
 
-  readWorkspaceConfiguration = (
+  protected __readWorkspaceConfiguration = (
     configFileName: ('workspace.json' | 'angular.json') & Path,
     overrides?: {
       workspace?: Observable<FileBuffer>;
@@ -264,7 +264,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     return this.context(path).pipe(
       switchMap((r) => {
         if (r.isWorkspaceConfig) {
-          return this.readWorkspaceConfiguration(r.actualConfigFileName);
+          return this.__readWorkspaceConfiguration(r.actualConfigFileName);
         } else {
           return super.read(path);
         }
@@ -370,7 +370,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           return concat(
             this.writeWorkspaceConfigFiles(context, workspaceJson),
             cli || generators || defaultProject
-              ? this.saveNxJsonProps({ cli, generators, defaultProject })
+              ? this.__saveNxJsonProps({ cli, generators, defaultProject })
               : of(null)
           );
         } else {
@@ -387,7 +387,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               angularJson
             ),
             cli || schematics
-              ? this.saveNxJsonProps({
+              ? this.__saveNxJsonProps({
                   cli,
                   defaultProject,
                   generators: schematics || generators,
@@ -401,7 +401,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       config;
     return concat(
       this.writeWorkspaceConfigFiles(context, angularJson),
-      this.saveNxJsonProps({
+      this.__saveNxJsonProps({
         cli,
         defaultProject,
         generators: schematics || generators,
@@ -409,7 +409,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     );
   }
 
-  private saveNxJsonProps(
+  private __saveNxJsonProps(
     props: Partial<NxJsonConfiguration>
   ): Observable<void> {
     const nxJsonPath = 'nx.json' as Path;
@@ -554,7 +554,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
 
       // we try to format it, if it changes, return it, otherwise return the original change
       try {
-        return this.readWorkspaceConfiguration(match.path, {
+        return this.__readWorkspaceConfiguration(match.path, {
           workspace: of(match.content),
           nx: nxJsonChange ? of(nxJsonChange.content) : null,
         });

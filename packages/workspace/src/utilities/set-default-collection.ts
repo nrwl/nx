@@ -1,4 +1,8 @@
-import { Tree, readNxJson, writeJson } from '@nrwl/devkit';
+import {
+  Tree,
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
+} from '@nrwl/devkit';
 
 /**
  * Sets the default collection within the workspace.
@@ -9,7 +13,7 @@ import { Tree, readNxJson, writeJson } from '@nrwl/devkit';
  * @param collectionName Name of the collection to be set as the default
  */
 export function setDefaultCollection(host: Tree, collectionName: string) {
-  const workspace = readNxJson(host);
+  const workspace = readWorkspaceConfiguration(host);
   workspace.cli = workspace.cli || {};
 
   const defaultCollection = workspace.cli.defaultCollection;
@@ -18,5 +22,5 @@ export function setDefaultCollection(host: Tree, collectionName: string) {
     workspace.cli.defaultCollection = collectionName;
   }
 
-  writeJson(host, 'nx.json', workspace);
+  updateWorkspaceConfiguration(host, workspace);
 }

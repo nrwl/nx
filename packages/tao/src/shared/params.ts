@@ -519,24 +519,21 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  nxConfig: NxJsonConfiguration | null,
-  wc: WorkspaceJsonConfiguration | null,
+  wc: (WorkspaceJsonConfiguration & NxJsonConfiguration) | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
   relativeCwd: string | null,
   isVerbose = false
 ) {
-  const generatorDefaults =
-    wc || nxConfig
-      ? getGeneratorDefaults(
-          defaultProjectName,
-          nxConfig,
-          wc,
-          collectionName,
-          generatorName
-        )
-      : {};
+  const generatorDefaults = wc
+    ? getGeneratorDefaults(
+        defaultProjectName,
+        wc,
+        collectionName,
+        generatorName
+      )
+    : {};
   let combined = convertAliases(
     coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,
@@ -614,26 +611,25 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  nxConfig: NxJsonConfiguration | null,
-  wc: WorkspaceJsonConfiguration | null,
+  wc: (WorkspaceJsonConfiguration & NxJsonConfiguration) | null,
   collectionName: string,
   generatorName: string
 ) {
   let defaults = {};
-  if (nxConfig?.generators) {
+  if (wc?.generators) {
     if (
-      nxConfig.generators[collectionName] &&
-      nxConfig.generators[collectionName][generatorName]
+      wc.generators[collectionName] &&
+      wc.generators[collectionName][generatorName]
     ) {
       defaults = {
         ...defaults,
-        ...nxConfig.generators[collectionName][generatorName],
+        ...wc.generators[collectionName][generatorName],
       };
     }
-    if (nxConfig.generators[`${collectionName}:${generatorName}`]) {
+    if (wc.generators[`${collectionName}:${generatorName}`]) {
       defaults = {
         ...defaults,
-        ...nxConfig.generators[`${collectionName}:${generatorName}`],
+        ...wc.generators[`${collectionName}:${generatorName}`],
       };
     }
   }

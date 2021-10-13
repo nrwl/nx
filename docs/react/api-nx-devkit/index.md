@@ -115,10 +115,8 @@ It only uses language primitives and immutable objects
 - [parseTargetString](../../react/nx-devkit/index#parsetargetstring)
 - [readJson](../../react/nx-devkit/index#readjson)
 - [readJsonFile](../../react/nx-devkit/index#readjsonfile)
-- [readNxJson](../../react/nx-devkit/index#readnxjson)
 - [readProjectConfiguration](../../react/nx-devkit/index#readprojectconfiguration)
 - [readTargetOptions](../../react/nx-devkit/index#readtargetoptions)
-- [readWorkspace](../../react/nx-devkit/index#readworkspace)
 - [readWorkspaceConfiguration](../../react/nx-devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../react/nx-devkit/index#removedependenciesfrompackagejson)
 - [removeProjectConfiguration](../../react/nx-devkit/index#removeprojectconfiguration)
@@ -131,7 +129,6 @@ It only uses language primitives and immutable objects
 - [updateJson](../../react/nx-devkit/index#updatejson)
 - [updateProjectConfiguration](../../react/nx-devkit/index#updateprojectconfiguration)
 - [updateTsConfigsToJs](../../react/nx-devkit/index#updatetsconfigstojs)
-- [updateWorkspace](../../react/nx-devkit/index#updateworkspace)
 - [updateWorkspaceConfiguration](../../react/nx-devkit/index#updateworkspaceconfiguration)
 - [visitNotIgnoredFiles](../../react/nx-devkit/index#visitnotignoredfiles)
 - [writeJson](../../react/nx-devkit/index#writejson)
@@ -349,7 +346,7 @@ It only uses language primitives and immutable objects
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration)\>
 
 ---
 
@@ -1136,22 +1133,6 @@ Object the JSON content of the file represents
 
 ---
 
-### readNxJson
-
-▸ **readNxJson**(`tree`): [`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration) \| `null`
-
-#### Parameters
-
-| Name   | Type                                       |
-| :----- | :----------------------------------------- |
-| `tree` | [`Tree`](../../react/nx-devkit/index#tree) |
-
-#### Returns
-
-[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration) \| `null`
-
----
-
 ### readProjectConfiguration
 
 ▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../react/nx-devkit/index#projectconfiguration)
@@ -1200,24 +1181,6 @@ Works as if you invoked the target yourself without passing any command lint ove
 #### Returns
 
 `T`
-
----
-
-### readWorkspace
-
-▸ **readWorkspace**(`tree`): [`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration)
-
-Read the workspace configuration, including projects.
-
-#### Parameters
-
-| Name   | Type                                       |
-| :----- | :----------------------------------------- |
-| `tree` | [`Tree`](../../react/nx-devkit/index#tree) |
-
-#### Returns
-
-[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration)
 
 ---
 
@@ -1525,23 +1488,6 @@ The utility will update either files.
 | `tree`                | [`Tree`](../../react/nx-devkit/index#tree) |
 | `options`             | `Object`                                   |
 | `options.projectRoot` | `string`                                   |
-
-#### Returns
-
-`void`
-
----
-
-### updateWorkspace
-
-▸ **updateWorkspace**(`tree`, `workspaceJson`): `void`
-
-#### Parameters
-
-| Name            | Type                                                                                   |
-| :-------------- | :------------------------------------------------------------------------------------- |
-| `tree`          | [`Tree`](../../react/nx-devkit/index#tree)                                             |
-| `workspaceJson` | [`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration) |
 
 #### Returns
 

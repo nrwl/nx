@@ -4,6 +4,10 @@ import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { readJson, writeJson } from '../utils/json';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import {
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
+} from './project-configuration';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -15,6 +19,7 @@ export async function formatFiles(tree: Tree): Promise<void> {
     prettier = await import('prettier');
   } catch {}
 
+  ensurePropertiesAreInNewLocations(tree);
   sortWorkspaceJson(tree);
   sortTsConfig(tree);
 
@@ -60,7 +65,7 @@ export async function formatFiles(tree: Tree): Promise<void> {
 
 function sortWorkspaceJson(tree: Tree) {
   const workspaceJsonPath = getWorkspacePath(tree);
-  if (!path) {
+  if (!workspaceJsonPath) {
     return;
   }
 
@@ -76,6 +81,21 @@ function sortWorkspaceJson(tree: Tree) {
   } catch (e) {
     // catch noop
   }
+}
+
+/**
+ * `updateWorkspaceConfiguration` already handles
+ * placing properties in their new locations, so
+ * reading + updating it ensures that props are placed
+ * correctly.
+ */
+function ensurePropertiesAreInNewLocations(tree: Tree) {
+  const workspacePath = getWorkspacePath(tree);
+  if (!workspacePath) {
+    return;
+  }
+  const wc = readWorkspaceConfiguration(tree);
+  updateWorkspaceConfiguration(tree, wc);
 }
 
 function sortTsConfig(tree: Tree) {

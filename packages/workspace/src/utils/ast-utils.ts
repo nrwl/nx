@@ -466,15 +466,13 @@ export function addProjectToNxJsonInTree(
   projectName: string,
   options: Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
 ): Rule {
-  const defaultOptions = {
-    tags: [],
-  };
   return updateWorkspaceInTree((json: WorkspaceJsonConfiguration) => {
-    json.projects[projectName] = {
-      ...json.projects[projectName],
-      ...defaultOptions,
-      ...options,
-    };
+    const project =
+      json.projects[projectName] ?? ({} as Partial<ProjectConfiguration>);
+    project.tags = options.tags ?? project.tags ?? [];
+    project.implicitDependencies =
+      options.implicitDependencies ?? project.implicitDependencies;
+    json.projects[projectName] = project as ProjectConfiguration;
     return json;
   });
 }

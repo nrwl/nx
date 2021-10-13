@@ -1,6 +1,6 @@
 import { Linter } from '@nrwl/linter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { getProjects, readJson, readNxJson, Tree } from '@nrwl/devkit';
+import { getProjects, readJson, NxJsonConfiguration, Tree } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 
@@ -20,7 +20,7 @@ describe('app', () => {
       });
 
       const workspaceJson = readJson(tree, 'workspace.json');
-      const nxJson = readNxJson(tree);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(

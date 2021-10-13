@@ -89,8 +89,6 @@ describe('Linter Builder', () => {
             targets: {},
           },
         },
-      },
-      nxJson: {
         npmScope: 'test',
       },
       isVerbose: false,
