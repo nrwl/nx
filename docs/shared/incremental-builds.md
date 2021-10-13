@@ -49,7 +49,7 @@ The above chart has three different test runs:
 
 ## When should I use incremental builds
 
-Whether incremental builds area a good choice depends on your repository. For most small and mid-sized applications, the costs introduced by incremental builds will outweigh the benefits.
+Whether incremental builds are a good choice depends on your repository. For most small and mid-sized applications, the costs introduced by incremental builds will outweigh the benefits.
 
 The upsides of incremental builds:
 
