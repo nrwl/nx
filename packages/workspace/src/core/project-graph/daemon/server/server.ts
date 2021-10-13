@@ -1,15 +1,8 @@
-import { FileData, logger, normalizePath, ProjectFileMap } from '@nrwl/devkit';
+import { logger, normalizePath } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
-import {
-  createProjectFileMap,
-  readWorkspaceJson,
-  updateProjectFileMap,
-} from '../../../file-utils';
-import { defaultFileHasher } from '../../../hasher/file-hasher';
-import { getGitHashForFiles } from '../../../hasher/git-hasher';
 import {
   FULL_OS_SOCKET_PATH,
   isWindows,
@@ -28,78 +21,11 @@ import {
   SubscribeToWorkspaceChangesCallback,
   WatcherSubscription,
 } from './watcher';
-import { buildProjectGraphUsingProjectFileMap } from '../../build-project-graph';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
-import { ProjectGraphCache } from '../../../nx-deps/nx-deps-cache';
-import { readCache } from '../../../nx-deps/nx-deps-cache';
-
-interface InterimProjectGraphResult {
-  error: Error | null;
-  serializedProjectGraph: string | null;
-}
-
-const configName = workspaceConfigName(appRootPath);
-let cachedSerializedProjectGraphPromise: Promise<InterimProjectGraphResult>;
-let projectFileMapWithFiles:
-  | { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] }
-  | undefined;
-let currentProjectGraphCache: ProjectGraphCache | undefined;
-
-async function createAndSerializeProjectGraph(
-  updatedFiles: Map<string, string>,
-  deletedFiles: string[],
-  shouldWriteCache: boolean
-): Promise<InterimProjectGraphResult> {
-  try {
-    performance.mark('create-project-graph-start');
-    const workspaceJson = readWorkspaceJson();
-    projectFileMapWithFiles = projectFileMapWithFiles
-      ? updateProjectFileMap(
-          workspaceJson,
-          projectFileMapWithFiles.projectFileMap,
-          projectFileMapWithFiles.allWorkspaceFiles,
-          updatedFiles,
-          deletedFiles
-        )
-      : createProjectFileMap(workspaceJson);
-    const { projectGraph, projectGraphCache } =
-      await buildProjectGraphUsingProjectFileMap(
-        workspaceJson,
-        projectFileMapWithFiles.projectFileMap,
-        projectFileMapWithFiles.allWorkspaceFiles,
-        currentProjectGraphCache || readCache(),
-        shouldWriteCache,
-        '4.0'
-      );
-    currentProjectGraphCache = projectGraphCache;
-
-    performance.mark('create-project-graph-end');
-    performance.measure(
-      'total execution time for createProjectGraph()',
-      'create-project-graph-start',
-      'create-project-graph-end'
-    );
-
-    performance.mark('json-stringify-start');
-    const serializedProjectGraph = JSON.stringify(projectGraph);
-    performance.mark('json-stringify-end');
-    performance.measure(
-      'serialize graph',
-      'json-stringify-start',
-      'json-stringify-end'
-    );
-
-    return {
-      error: null,
-      serializedProjectGraph,
-    };
-  } catch (err) {
-    return {
-      error: err,
-      serializedProjectGraph: null,
-    };
-  }
-}
+import {
+  addUpdatedAndDeletedFiles,
+  getCachedSerializedProjectGraphPromise,
+  resetAfterError,
+} from './project-graph-incremental-recomputation';
 
 function respondToClient(socket: Socket, message: string) {
   socket.write(message, () => {
@@ -136,17 +62,10 @@ const server = createServer((socket) => {
     performance.mark('server-connection');
     serverLogger.requestLog('Client Request for Project Graph Received');
 
-    if (!cachedSerializedProjectGraphPromise) {
-      cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph(
-        new Map(),
-        [],
-        true
-      );
-    }
-    const result = await cachedSerializedProjectGraphPromise;
+    const result = await getCachedSerializedProjectGraphPromise();
 
     if (result.error) {
-      cachedSerializedProjectGraphPromise = undefined;
+      resetAfterError();
       serverLogger.nestedLog(
         `Error when preparing serialized project graph: ${result.error.message}`
       );
@@ -162,7 +81,7 @@ const server = createServer((socket) => {
       result.serializedProjectGraph
     );
     if (!serializedResult) {
-      cachedSerializedProjectGraphPromise = undefined;
+      resetAfterError();
       serverLogger.nestedLog(`Error when serializing project graph result`);
       respondToClient(
         socket,
@@ -302,44 +221,21 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
 
   serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
 
-  cachedSerializedProjectGraphPromise = new Promise(async (res) => {
-    try {
-      const filesToHash = [];
-      const deletedFiles = [];
-      for (const event of changeEvents) {
-        if (event.type === 'delete') {
-          deletedFiles.push(event.path);
-        } else {
-          filesToHash.push(event.path);
-        }
+  try {
+    const filesToHash = [];
+    const deletedFiles = [];
+    for (const event of changeEvents) {
+      if (event.type === 'delete') {
+        deletedFiles.push(event.path);
+      } else {
+        filesToHash.push(event.path);
       }
-      performance.mark('hash-watched-changes-start');
-      const updatedFiles = getGitHashForFiles(filesToHash, appRootPath);
-      performance.mark('hash-watched-changes-end');
-      performance.measure(
-        'hash changed files from watcher',
-        'hash-watched-changes-start',
-        'hash-watched-changes-end'
-      );
-      defaultFileHasher.incrementalUpdate(updatedFiles, deletedFiles);
-      serverLogger.nestedLog(
-        `Updated file-hasher based on watched changes, recomputing project graph...`
-      );
-      // when workspace.json changes we cannot be sure about the correctness of the project file map
-      if (
-        updatedFiles.has(configName) ||
-        deletedFiles.indexOf(configName) > -1
-      ) {
-        projectFileMapWithFiles = undefined;
-      }
-      res(
-        await createAndSerializeProjectGraph(updatedFiles, deletedFiles, true)
-      );
-    } catch (err) {
-      serverLogger.log(`Unexpected Error`);
-      console.error(err);
     }
-  });
+    addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
+  } catch (err) {
+    serverLogger.log(`Unexpected Error`);
+    console.error(err);
+  }
 };
 
 export async function startServer(): Promise<Server> {

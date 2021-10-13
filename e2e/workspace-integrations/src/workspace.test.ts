@@ -42,7 +42,6 @@ describe('run-one', () => {
       env: { ...process.env, NX_DAEMON: 'true' },
     });
 
-    expect(buildWithDaemon).toContain(`Daemon Client - Resolved ProjectGraph`);
     expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
   }, 10000);
 
@@ -267,7 +266,6 @@ describe('run-many', () => {
     const buildWithDaemon = runCLI(`run-many --target=build --all`, {
       env: { ...process.env, NX_DAEMON: 'true' },
     });
-    expect(buildWithDaemon).toContain(`Daemon Client - Resolved ProjectGraph`);
     expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
   }, 1000000);
 

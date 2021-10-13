@@ -17,11 +17,6 @@ import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
 export async function startInBackground(): Promise<void> {
   await safelyCleanUpExistingProcess();
 
-  logger.info(`NX Daemon Server - Starting in a background process...`);
-  logger.log(
-    `  Logs from the Daemon process can be found here: ${DAEMON_OUTPUT_LOG_FILE}\n`
-  );
-
   try {
     const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
     const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
@@ -158,7 +153,6 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
             return reject(projectGraphResult.error);
           }
 
-          logger.info('NX Daemon Client - Resolved ProjectGraph');
           performance.measure(
             'total for getProjectGraphFromServer()',
             'getProjectGraphFromServer-start',
