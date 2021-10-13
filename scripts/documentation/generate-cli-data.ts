@@ -3,7 +3,6 @@ import { readFileSync } from 'fs';
 import { removeSync } from 'fs-extra';
 import { join } from 'path';
 import { dedent } from 'tslint/lib/utils';
-import { commandsObject } from '../../packages/workspace';
 import { Framework, Frameworks } from './frameworks';
 import {
   formatDeprecated,
@@ -37,7 +36,16 @@ interface ParsedCommand {
 }
 
 export async function generateCLIDocumentation() {
+  /**
+   * For certain commands, they will output dynamic data at runtime in a real workspace,
+   * so we leverage an envrionment variable to inform the logic of the context that we
+   * are just statically generating documentation for the current execution.
+   */
+  process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
+
+  const { commandsObject } = importFresh('../../packages/workspace');
 
   await Promise.all(
     Frameworks.map(async (framework: Framework) => {
@@ -186,6 +194,8 @@ nx ${command.name}
       );
     })
   );
+
+  delete process.env.NX_GENERATE_DOCS_PROCESS;
 
   console.log(`${chalk.green('✓')} Generated Documentation for Nx Commands`);
 }

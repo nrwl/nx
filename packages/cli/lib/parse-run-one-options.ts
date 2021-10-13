@@ -54,6 +54,7 @@ const invalidTargetNames = [
   'workspace-schematic',
   'connect-to-nx-cloud',
   'clear-cache',
+  'reset',
   'report',
   'list',
 ];

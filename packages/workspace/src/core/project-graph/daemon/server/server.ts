@@ -274,7 +274,6 @@ export async function stopServer(): Promise<void> {
       }
 
       killSocketOrPath();
-      logger.info('NX Daemon Server - Stopped');
       return resolve();
     });
   });

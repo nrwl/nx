@@ -2,9 +2,7 @@
 
 EXPERIMENTAL: Nx Daemon
 
-The Daemon is not currently running you can start it manually by running the following command:
-
-npx nx daemon:start
+The Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph.
 
 ## Usage
 
