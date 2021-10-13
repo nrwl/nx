@@ -54,37 +54,14 @@
       "default": true
     },
     "sourceMap": {
-      "description": "Output sourcemaps.",
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
       "default": true,
       "oneOf": [
         {
-          "type": "object",
-          "properties": {
-            "scripts": {
-              "type": "boolean",
-              "description": "Output sourcemaps for all scripts.",
-              "default": true
-            },
-            "styles": {
-              "type": "boolean",
-              "description": "Output sourcemaps for all styles.",
-              "default": true
-            },
-            "hidden": {
-              "type": "boolean",
-              "description": "Output sourcemaps used for error reporting tools.",
-              "default": false
-            },
-            "vendor": {
-              "type": "boolean",
-              "description": "Resolve vendor packages sourcemaps.",
-              "default": false
-            }
-          },
-          "additionalProperties": false
+          "type": "boolean"
         },
         {
-          "type": "boolean"
+          "type": "string"
         }
       ]
     },
@@ -260,7 +237,6 @@
     }
   },
   "required": ["tsConfig", "main", "index"],
-
   "definitions": {
     "assetPattern": {
       "oneOf": [

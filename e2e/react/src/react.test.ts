@@ -55,20 +55,8 @@ describe('React Applications', () => {
 
     runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
 
-    // By default, vendor sourcemaps are off
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName} --sourceMap`);
 
-    // Turn vendor sourcemaps on
-    updateFile(`workspace.json`, (content) => {
-      const json = JSON.parse(content);
-      json.projects[appName].targets.build.options.sourceMap = {
-        scripts: true,
-        vendor: true,
-      };
-      return JSON.stringify(json, null, 2);
-    });
-
-    runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/vendor.js.map`);
   }, 250000);
 

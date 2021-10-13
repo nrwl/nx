@@ -59,8 +59,7 @@ describe('Node Build Executor', () => {
           libraryTarget: 'commonjs',
           path: '/root/dist/apps/wibble',
         },
-      }),
-      expect.anything()
+      })
     );
   });
 
@@ -84,8 +83,7 @@ describe('Node Build Executor', () => {
             path: '/root/dist/apps/wibble',
           },
           prop: 'my-val',
-        }),
-        expect.anything()
+        })
       );
     });
 
@@ -118,8 +116,7 @@ describe('Node Build Executor', () => {
           },
           prop1: 'my-val-1-my-val-2',
           prop2: 'my-val-2',
-        }),
-        expect.anything()
+        })
       );
     });
   });

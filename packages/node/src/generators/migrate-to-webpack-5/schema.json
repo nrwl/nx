@@ -1,9 +1,0 @@
-{
-  "$schema": "http://json-schema.org/schema",
-  "$id": "NxNxMigrateToWebpack5",
-  "cli": "nx",
-  "title": "Migrate to webpack 5",
-  "type": "object",
-  "properties": {},
-  "required": []
-}

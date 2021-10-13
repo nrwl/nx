@@ -1,7 +1,10 @@
 import { join } from 'path';
+import * as webpack from 'webpack';
+import { Configuration, WebpackPluginInstance } from 'webpack';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { getOutputHashFormat } from './hash-format';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
@@ -12,10 +15,6 @@ const IGNORED_WEBPACK_WARNINGS = [
   /could not find any license/i,
 ];
 
-// TODO(jack): Remove this in Nx 13 and go back to proper types
-type Configuration = any;
-type WebpackPluginInstance = any;
-
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
   esm?: boolean,
@@ -23,10 +22,6 @@ export function getBaseWebpackPartial(
   emitDecoratorMetadata?: boolean,
   configuration?: string
 ): Configuration {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { webpack } = require('../webpack/entry');
-  const { ProgressPlugin } = webpack;
-
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const mainFields = [...(esm ? ['es2015'] : []), 'module', 'main'];
   const hashFormat = getOutputHashFormat(options.outputHashing);
@@ -45,14 +40,24 @@ export function getBaseWebpackPartial(
     entry: {
       main: [options.main],
     },
-    devtool: options.sourceMap ? 'source-map' : false,
+    devtool:
+      options.sourceMap === 'hidden'
+        ? 'hidden-source-map'
+        : options.sourceMap
+        ? 'source-map'
+        : false,
     mode,
     output: {
       path: options.outputPath,
       filename,
       chunkFilename,
+      hashFunction: 'xxhash64',
+      // Disabled for performance
+      pathinfo: false,
     },
     module: {
+      // Enabled for performance
+      unsafeCache: true,
       rules: [
         {
           test: /\.([jt])sx?$/,
@@ -94,11 +99,35 @@ export function getBaseWebpackPartial(
       poll: options.poll,
     },
     stats: getStatsConfig(options),
+    ignoreWarnings: [
+      (x) =>
+        IGNORED_WEBPACK_WARNINGS.some((r) =>
+          typeof x === 'string' ? r.test(x) : r.test(x.message)
+        ),
+    ],
+    experiments: {
+      cacheUnaffected: true,
+    },
   };
 
   if (isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      minimizer: [createTerserPlugin(esm, !!options.sourceMap)],
+      sideEffects: false,
+      providedExports: false,
+      minimizer: [
+        new TerserWebpackPlugin({
+          parallel: true,
+          terserOptions: {
+            ecma: esm ? 2016 : 5,
+            safari10: true,
+            output: {
+              ascii_only: true,
+              comments: false,
+              webkit: true,
+            },
+          },
+        }),
+      ],
       runtimeChunk: true,
     };
   }
@@ -118,7 +147,7 @@ export function getBaseWebpackPartial(
   }
 
   if (options.progress) {
-    extraPlugins.push(new ProgressPlugin());
+    extraPlugins.push(new webpack.ProgressPlugin());
   }
 
   // TODO  LicenseWebpackPlugin needs a PR for proper typing
@@ -161,30 +190,7 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-// TODO  Sourcemap and cache options have been removed from plugin.
-//  Investigate what this mgiht change in the build process
-export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { TerserWebpackPlugin } = require('../webpack/entry');
-  return new TerserWebpackPlugin({
-    parallel: true,
-    terserOptions: {
-      ecma: esm ? 8 : 5,
-      safari10: true,
-      output: {
-        ascii_only: true,
-        comments: false,
-        webkit: true,
-      },
-    },
-  });
-}
-
-// TODO(jack): Update the typing with new version of webpack -- was returning Stats.ToStringOptions in webpack 4
-// The StatsOptions type needs to be exported from webpack
-// PR: https://github.com/webpack/webpack/pull/12875
-function getStatsConfig(options: BuildBuilderOptions): any {
-  const { isWebpack5 } = require('../webpack/entry');
+function getStatsConfig(options: BuildBuilderOptions) {
   return {
     hash: true,
     timings: false,
@@ -204,7 +210,6 @@ function getStatsConfig(options: BuildBuilderOptions): any {
     errorDetails: !!options.verbose,
     moduleTrace: !!options.verbose,
     usedExports: !!options.verbose,
-    warningsFilter: IGNORED_WEBPACK_WARNINGS,
   };
 }
 
@@ -240,9 +245,6 @@ function getClientEnvironment(mode) {
 }
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { CopyWebpackPlugin } = require('../webpack/entry');
-
   return new CopyWebpackPlugin({
     patterns: assets.map((asset) => {
       return {

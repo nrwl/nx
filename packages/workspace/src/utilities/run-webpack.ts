@@ -1,40 +1,34 @@
+import * as webpack from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
-
 import { Observable } from 'rxjs/internal/Observable';
-
 import { extname } from 'path';
-import * as url from 'url';
 
-export function runWebpack(config: any, webpack: any): Observable<any> {
+export function runWebpack(config: webpack.Configuration): Observable<any> {
   return new Observable((subscriber) => {
-    const webpackCompiler = webpack(config);
+    // Passing `watch` option here will result in a warning due to missing callback.
+    // We manually call `.watch` or `.run` later so this option isn't needed here.
+    const { watch, ...normalizedConfig } = config;
+    const webpackCompiler = webpack(normalizedConfig);
 
-    function callback(err: Error, stats: any) {
+    const callback = (err: Error, stats: webpack.Stats) => {
       if (err) {
         subscriber.error(err);
       }
       subscriber.next(stats);
-    }
+    };
 
     if (config.watch) {
       const watchOptions = config.watchOptions || {};
       const watching = webpackCompiler.watch(watchOptions, callback);
 
-      return () => {
-        watching.close(() => {});
-      };
+      return () => watching.close(() => subscriber.complete());
     } else {
       webpackCompiler.run((err, stats) => {
         callback(err, stats);
-
-        // TODO: Delete for Nx 13 and leave only the call to close method
-        if (typeof webpackCompiler.close === 'function') {
-          webpackCompiler.close(() => {
-            subscriber.complete();
-          });
-        } else {
+        webpackCompiler.close((closeErr) => {
+          if (closeErr) subscriber.error(closeErr);
           subscriber.complete();
-        }
+        });
       });
     }
   });
@@ -62,34 +56,20 @@ export function runWebpackDevServer(
       originalOnListen(server);
 
       const devServerOptions: WebpackDevServerConfiguration = server.options;
-      baseUrl = url.format({
-        protocol: devServerOptions.https ? 'https' : 'http',
-        hostname: server.hostname,
-        port: server.listeningApp.address().port,
-        pathname: devServerOptions.publicPath,
-      });
+
+      baseUrl = `${server.options.https ? 'https' : 'http'}://${
+        server.options.host
+      }:${server.options.port}${devServerOptions.devMiddleware.publicPath}`;
     };
 
     const webpackServer = new WebpackDevServer(
-      // Some type mismatches between webpack's built-in type defs and what webpack-dev-server expects.
-      webpackCompiler as any,
-      devServerConfig
+      devServerConfig,
+      webpackCompiler as any
     );
 
     try {
-      const server = webpackServer.listen(
-        devServerConfig.port ?? 8080,
-        devServerConfig.host ?? 'localhost',
-        function (err) {
-          if (err) {
-            subscriber.error(err);
-          }
-        }
-      );
-
-      return () => {
-        server.close();
-      };
+      webpackServer.start().catch((err) => subscriber.error(err));
+      return () => webpackServer.stop();
     } catch (e) {
       throw new Error('Could not start start dev server');
     }
@@ -105,7 +85,7 @@ export interface EmittedFile {
   asset?: boolean;
 }
 
-export function getEmittedFiles(stats: any) {
+export function getEmittedFiles(stats: webpack.Stats) {
   const { compilation } = stats;
   const files: EmittedFile[] = [];
   // adds all chunks to the list of emitted files such as lazy loaded modules

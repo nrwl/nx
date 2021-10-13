@@ -2,7 +2,6 @@ import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { gte } from 'semver';
-import { isWebpack5 } from '../utils/utilities';
 import { CommonNxStorybookConfig } from './models';
 
 export interface NodePackage {
@@ -73,16 +72,15 @@ export function runStorybookSetupCheck(options: CommonNxStorybookConfig) {
 
 function reactWebpack5Check(options: CommonNxStorybookConfig) {
   if (options.uiFramework === '@storybook/react') {
-    if (isWebpack5()) {
-      // check whether the current Storybook configuration has the webpack 5 builder enabled
-      const storybookConfig = readFileSync(
-        joinPathFragments(options.config.configFolder, 'main.js'),
-        { encoding: 'utf8' }
-      );
+    // check whether the current Storybook configuration has the webpack 5 builder enabled
+    const storybookConfig = readFileSync(
+      joinPathFragments(options.config.configFolder, 'main.js'),
+      { encoding: 'utf8' }
+    );
 
-      if (!storybookConfig.includes(`builder: 'webpack5'`)) {
-        // storybook needs to be upgraded to webpack 5
-        logger.warn(`
+    if (!storybookConfig.includes(`builder: 'webpack5'`)) {
+      // storybook needs to be upgraded to webpack 5
+      logger.warn(`
 It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
 and thus falls back to Webpack 4.
 Make sure you upgrade your Storybook config to use Webpack 5.
@@ -90,7 +88,6 @@ Make sure you upgrade your Storybook config to use Webpack 5.
   - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
       
 `);
-      }
     }
   }
 }

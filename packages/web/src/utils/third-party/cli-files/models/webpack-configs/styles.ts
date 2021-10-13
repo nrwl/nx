@@ -7,22 +7,20 @@
  */
 
 import * as path from 'path';
+import { RuleSetRule } from 'webpack';
+
 import {
   PostcssCliResources,
   RawCssLoader,
   RemoveHashPlugin,
-  SuppressExtractedTextChunksWebpackPlugin,
 } from '../../plugins/webpack';
 import { BuildOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
 import { RemoveEmptyScriptsPlugin } from '../../plugins/remove-empty-scripts-plugin';
-import { sassImplementation } from '../../../../sass';
+import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const autoprefixer = require('autoprefixer');
 const postcssImports = require('postcss-import');
-
-// TODO(jack): Remove in Nx 13
-type RuleSetRule = any;
 
 /**
  * Enumerate loaders and their dependencies from this file to let the dependency validator
@@ -43,12 +41,6 @@ export function getStylesConfig(
   buildOptions: BuildOptions,
   includePaths: string[]
 ) {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const {
-    isWebpack5,
-    MiniCssExtractPlugin,
-  } = require('../../../../../webpack/entry');
-
   const entryPoints: { [key: string]: string[] } = {};
   const globalStylePaths: string[] = [];
   const extraPlugins = [];
@@ -142,7 +134,7 @@ export function getStylesConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: sassImplementation,
+            implementation: require('sass'),
             sourceMap: cssSourceMap,
             sassOptions: {
               fiber: false,
@@ -245,11 +237,11 @@ export function getStylesConfig(
   if (buildOptions.extractCss) {
     extraPlugins.push(
       // extract global css from js files into own css file
-      new MiniCssExtractPlugin({ filename: `[name]${hashFormat.extract}.css` }),
+      new MiniCssExtractPlugin({
+        filename: `[name]${hashFormat.extract}.css`,
+      }),
       // suppress empty .js files in css only entry points
-      isWebpack5
-        ? new RemoveEmptyScriptsPlugin()
-        : new SuppressExtractedTextChunksWebpackPlugin()
+      new RemoveEmptyScriptsPlugin()
     );
   }
 

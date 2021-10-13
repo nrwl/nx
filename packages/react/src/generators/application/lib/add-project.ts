@@ -93,21 +93,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         namedChunks: false,
         extractLicenses: true,
         vendorChunk: false,
-        budgets: options.strict
-          ? [
-              {
-                type: 'initial',
-                maximumWarning: '500kb',
-                maximumError: '1mb',
-              },
-            ]
-          : [
-              {
-                type: 'initial',
-                maximumWarning: '2mb',
-                maximumError: '5mb',
-              },
-            ],
       },
     },
   };

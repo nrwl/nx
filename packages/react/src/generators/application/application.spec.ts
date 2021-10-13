@@ -263,13 +263,6 @@ Object {
     });
     expect(targetConfig.build.configurations.production).toEqual({
       optimization: true,
-      budgets: [
-        {
-          maximumError: '5mb',
-          maximumWarning: '2mb',
-          type: 'initial',
-        },
-      ],
       extractCss: true,
       extractLicenses: true,
       fileReplacements: [
@@ -702,23 +695,6 @@ Object {
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).toBeTruthy();
-    });
-
-    it('should update budgets in workspace.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        strict: true,
-      });
-      const workspaceJson = getProjects(appTree);
-      const targetConfig = workspaceJson.get('my-app').targets;
-
-      expect(targetConfig.build.configurations.production.budgets).toEqual([
-        {
-          type: 'initial',
-          maximumWarning: '500kb',
-          maximumError: '1mb',
-        },
-      ]);
     });
   });
 });

@@ -15,12 +15,6 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create an application"
-    },
-    "migrate-to-webpack-5": {
-      "factory": "./src/generators/migrate-to-webpack-5/migrate-to-webpack-5#webMigrateToWebpack5Generator",
-      "schema": "./src/generators/migrate-to-webpack-5/schema.json",
-      "aliases": ["webpack5"],
-      "description": "Add webpack 5 compatible dependencies to the workspace"
     }
   },
   "schematics": {
@@ -36,12 +30,6 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create an application"
-    },
-    "migrate-to-webpack-5": {
-      "factory": "./src/generators/migrate-to-webpack-5/migrate-to-webpack-5#webMigrateToWebpack5Schematic",
-      "schema": "./src/generators/migrate-to-webpack-5/schema.json",
-      "aliases": ["webpack5"],
-      "description": "Add webpack 5 compatible dependencies to the workspace"
     }
   }
 }

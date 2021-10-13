@@ -1,8 +1,5 @@
 import { logger } from '@nrwl/devkit';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
-
-import * as open from 'open';
-import * as url from 'url';
 import * as path from 'path';
 
 import { getWebConfig } from './web.config';
@@ -18,7 +15,7 @@ export function getDevServerConfig(
   sourceRoot: string,
   buildOptions: WebBuildBuilderOptions,
   serveOptions: WebDevServerOptions
-) {
+): Partial<WebpackDevServerConfiguration> {
   const webpackConfig = getWebConfig(
     workspaceRoot,
     projectRoot,
@@ -33,10 +30,6 @@ export function getDevServerConfig(
     serveOptions,
     buildOptions
   );
-  webpackConfig.plugins = [
-    ...(webpackConfig.plugins || []),
-    getHmrPlugin(serveOptions),
-  ].filter(Boolean);
 
   return webpackConfig;
 }
@@ -60,35 +53,30 @@ function getDevServerPartial(
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
-    noInfo: true,
     onListening(server: any) {
-      // Depend on the info in the server for this function because the user might adjust the webpack config
-      const serverUrl = url.format({
-        protocol: server.options.https ? 'https' : 'http',
-        hostname: server.hostname,
-        port: server.listeningApp.address().port,
-        pathname: buildServePath(buildOptions),
-      });
-
-      logger.info(`NX Web Development Server is listening at ${serverUrl}`);
-      if (options.open) {
-        open(serverUrl);
-      }
+      logger.info(
+        `NX Web Development Server is listening at ${
+          server.options.https ? 'https' : 'http'
+        }://${server.options.host}:${server.options.port}${buildServePath(
+          buildOptions
+        )}`
+      );
     },
-    stats: false,
+    open: options.open,
+    static: false,
     compress: scriptsOptimization || stylesOptimization,
     https: options.ssl,
-    overlay: {
-      errors: !(scriptsOptimization || stylesOptimization),
-      warnings: false,
+    devMiddleware: {
+      publicPath: servePath,
+      stats: false,
     },
-    watchOptions: {
-      poll: buildOptions.poll,
+    client: {
+      webSocketURL: options.publicHost,
+      overlay: {
+        errors: !(scriptsOptimization || stylesOptimization),
+        warnings: false,
+      },
     },
-    public: options.publicHost,
-    publicPath: servePath,
-    contentBase: false,
-    allowedHosts: [],
     liveReload: options.hmr ? false : options.liveReload, // disable liveReload if hmr is enabled
     hot: options.hmr,
   };
@@ -118,12 +106,4 @@ function getSslConfig(root: string, options: WebDevServerOptions) {
 function getProxyConfig(root: string, options: WebDevServerOptions) {
   const proxyPath = path.resolve(root, options.proxyConfig as string);
   return require(proxyPath);
-}
-
-function getHmrPlugin(options: WebDevServerOptions) {
-  // TODO(jack): Remove in Nx 13
-  const {
-    webpack: { HotModuleReplacementPlugin },
-  } = require('../webpack/entry');
-  return options.hmr && new HotModuleReplacementPlugin();
 }

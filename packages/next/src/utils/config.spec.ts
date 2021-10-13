@@ -76,7 +76,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       const svgrRule = config.module.rules.find(
-        (rule) => rule.test.toString() === String(/\.svg$/)
+        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
       );
       expect(svgrRule).toBeTruthy();
     });
@@ -96,7 +96,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       const svgrRule = config.module.rules.find(
-        (rule) => rule.test.toString() === String(/\.svg$/)
+        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
       );
       expect(svgrRule).toBeFalsy();
     });
@@ -139,7 +139,6 @@ describe('Next.js webpack config builder', () => {
         []
       );
 
-      console.log('config', config);
       expect(config).toMatchObject({
         myCustomValue: 'test',
       });

@@ -81,40 +81,6 @@ export function normalizeExtraEntryPoints(
   });
 }
 
-export function getSourceMapDevTool(
-  scriptsSourceMap: boolean,
-  stylesSourceMap: boolean,
-  hiddenSourceMap = false,
-  vendorSourceMap = false
-) {
-  // TODO(jack): Remove in Nx 13
-  const {
-    webpack: { SourceMapDevToolPlugin },
-  } = require('../../../../../webpack/entry');
-
-  const include = [];
-  if (scriptsSourceMap) {
-    include.push(/js$/);
-  }
-
-  if (stylesSourceMap) {
-    include.push(/css$/);
-  }
-
-  return new SourceMapDevToolPlugin({
-    filename: '[file].map',
-    include,
-    exclude: vendorSourceMap ? [] : ['vendor'],
-    // We want to set sourceRoot to  `webpack:///` for non
-    // inline sourcemaps as otherwise paths to sourcemaps will be broken in browser
-    // `webpack:///` is needed for Visual Studio breakpoints to work properly as currently
-    // there is no way to set the 'webRoot'
-    sourceRoot: 'webpack:///',
-    moduleFilenameTemplate: '[resource-path]',
-    append: hiddenSourceMap ? false : undefined,
-  });
-}
-
 /**
  * Returns an ES version file suffix to differentiate between various builds.
  */
@@ -125,8 +91,4 @@ export function getEsVersionForFileName(
   return scriptTargetOverride && esVersionInFileName
     ? `-${ScriptTarget[scriptTargetOverride].toLowerCase()}`
     : '';
-}
-
-export function isPolyfillsEntry(name: string) {
-  return name === 'polyfills' || name === 'polyfills-es5';
 }
