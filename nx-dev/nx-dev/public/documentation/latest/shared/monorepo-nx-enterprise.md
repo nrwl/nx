@@ -192,7 +192,7 @@ We should utilize `affected:*` commands to build and test projects. Read more ab
 
 Monorepo-style development works best when used with trunk-based development.
 
-When using trunk-based development, we have a single main branch (say `master`) where every team submits their code. And
-they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into master in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
+When using trunk-based development, we have a single main branch (say `main`) where every team submits their code. And
+they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into main in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
 
-One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `master` to. With this, we can still frequently merge code into `master` and have our release isolated from changes made by other teams.
+One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `main` to. With this, we can still frequently merge code into `main` and have our release isolated from changes made by other teams.

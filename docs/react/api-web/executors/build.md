@@ -210,9 +210,9 @@ Show circular dependency warnings on builds.
 
 Default: `true`
 
-Type: `boolean`
+Type: `boolean | string `
 
-Output sourcemaps.
+Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.
 
 ### statsJson
 

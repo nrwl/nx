@@ -75,15 +75,15 @@ node {
       }
 
       stage("Test") {
-        sh 'yarn nx affected --target=test --base=origin/master'
+        sh 'yarn nx affected --target=test --base= origin/main'
       }
 
       stage("Lint") {
-        sh 'yarn nx affected --target=lint --base=origin/master'
+        sh 'yarn nx affected --target=lint --base= origin/main'
       }
 
       stage("Build") {
-        sh 'yarn nx affected --target=build --base=origin/master --prod'
+        sh 'yarn nx affected --target=build --base= origin/main --prod'
       }
     }
   }
@@ -108,15 +108,15 @@ node {
       }
 
       stage("Test") {
-        sh 'yarn nx affected --target=test --base=origin/master --parallel'
+        sh 'yarn nx affected --target=test --base= origin/main --parallel'
       }
 
       stage("Lint") {
-        sh 'yarn nx affected --target=lint --base=origin/master --parallel'
+        sh 'yarn nx affected --target=lint --base= origin/main --parallel'
       }
 
       stage("Build") {
-        sh 'yarn nx affected --target=build --base=origin/master --prod --parallel'
+        sh 'yarn nx affected --target=build --base= origin/main --prod --parallel'
       }
     }
   }
@@ -191,7 +191,7 @@ def distributed(String target, int bins) {
 }
 
 def splitJobs(String target, int bins) {
-  def String baseSha = env.CHANGE_ID ? 'origin/master' : 'origin/master~1'
+  def String baseSha = env.CHANGE_ID ? ' origin/main' : ' origin/main~1'
   def String raw
   raw = sh(script: "npx nx print-affected --base=${baseSha} --target=${target}", returnStdout: true)
   def data = readJSON(text: raw)
@@ -220,12 +220,12 @@ splitting them into bins via `splitJobs`.
 Looking at `splitJobs`, the following defines the base sha Nx uses to execute affected commands.
 
 ```groovy
-  def String baseSha = env.CHANGE_ID ? 'origin/master' : 'origin/master~1'
+  def String baseSha = env.CHANGE_ID ? ' origin/main' : ' origin/main~1'
 ```
 
 Jenkins will only have a CHANGE_ID if it is a PR.
 
-If it is a PR, Nx sees what has changed compared to `origin/master`. If it's master, Nx sees what has changed compared to the previous commit (this can be made more robust by remembering the last successful master run, which can be done by labeling the commit).
+If it is a PR, Nx sees what has changed compared to ` origin/main`. If it's main, Nx sees what has changed compared to the previous commit (this can be made more robust by remembering the last successful main run, which can be done by labeling the commit).
 
 The following prints information about affected project that have the needed target. `print-affected` doesn't run any targets, just prints information about them.
 
