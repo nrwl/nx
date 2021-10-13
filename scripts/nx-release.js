@@ -42,10 +42,12 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-console.log('> git fetch --all');
-childProcess.execSync('git fetch --all', {
-  stdio: [0, 1, 2],
-});
+if (!parsedArgs.local) {
+  console.log('> git fetch --all');
+  childProcess.execSync('git fetch --all', {
+    stdio: [0, 1, 2],
+  });
+}
 
 function updatePackageJsonFiles(parsedVersion, isLocal) {
   let pkgFiles = [
