@@ -10,6 +10,7 @@ jest.mock('@nrwl/workspace/src/utilities/run-webpack', () => ({
   runWebpack: jest.fn(),
 }));
 import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
+import objectContaining = jasmine.objectContaining;
 
 describe('Node Build Executor', () => {
   let context: ExecutorContext;
@@ -54,11 +55,11 @@ describe('Node Build Executor', () => {
 
     expect(runWebpack).toHaveBeenCalledWith(
       expect.objectContaining({
-        output: {
+        output: expect.objectContaining({
           filename: 'main.js',
           libraryTarget: 'commonjs',
           path: '/root/dist/apps/wibble',
-        },
+        }),
       })
     );
   });
@@ -77,11 +78,11 @@ describe('Node Build Executor', () => {
 
       expect(runWebpack).toHaveBeenCalledWith(
         expect.objectContaining({
-          output: {
+          output: expect.objectContaining({
             filename: 'main.js',
             libraryTarget: 'commonjs',
             path: '/root/dist/apps/wibble',
-          },
+          }),
           prop: 'my-val',
         })
       );
@@ -109,11 +110,11 @@ describe('Node Build Executor', () => {
 
       expect(runWebpack).toHaveBeenCalledWith(
         expect.objectContaining({
-          output: {
+          output: expect.objectContaining({
             filename: 'main.js',
             libraryTarget: 'commonjs',
             path: '/root/dist/apps/wibble',
-          },
+          }),
           prop1: 'my-val-1-my-val-2',
           prop2: 'my-val-2',
         })
