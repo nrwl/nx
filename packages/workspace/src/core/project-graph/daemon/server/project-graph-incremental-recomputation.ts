@@ -32,6 +32,7 @@ export function getCachedSerializedProjectGraphPromise() {
   // recomputing it now on demand. we can ignore the scheduled timeout
   if (scheduledTimeoutId) {
     clearTimeout(scheduledTimeoutId);
+    scheduledTimeoutId = undefined;
   }
 
   // reset the wait time
@@ -39,7 +40,7 @@ export function getCachedSerializedProjectGraphPromise() {
 
   if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
     if (!cachedSerializedProjectGraphPromise) {
-      processCollectedUpdatedAndDeletedFiles(); // this is to create the project file map
+      processCollectedUpdatedAndDeletedFiles(); // this creates a project graph
       cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
     }
   } else {
