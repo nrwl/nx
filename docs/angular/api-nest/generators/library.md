@@ -130,8 +130,6 @@ Do not update tsconfig.base.json for development experience.
 
 ### standaloneConfig
 
-Default: `false`
-
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json

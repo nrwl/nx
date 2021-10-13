@@ -5,6 +5,7 @@ import {
   parseJson,
   getProjects,
   NxJsonConfiguration,
+  readProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -12,6 +13,7 @@ import { createApp } from '../../utils/nx-devkit/testing';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 import { UnitTestRunner } from '../../utils/test-runners';
+import { toNewFormat } from '@nrwl/tao/src/shared/workspace';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -33,6 +35,59 @@ describe('lib', () => {
 
   beforeEach(() => {
     appTree = createTreeWithEmptyWorkspace();
+  });
+
+  describe('workspace v2', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace(2);
+    });
+
+    it('should default to standalone project for first project', async () => {
+      await runLibraryGeneratorWithOpts();
+      const workspaceJsonEntry = readJson(appTree, 'workspace.json').projects[
+        'my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(appTree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(workspaceJsonEntry).toEqual('libs/my-lib');
+    });
+
+    it('should obey standalone === false for first project', async () => {
+      await runLibraryGeneratorWithOpts({
+        standaloneConfig: false,
+      });
+      const workspaceJsonEntry = readJson(appTree, 'workspace.json').projects[
+        'my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(appTree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+    });
+  });
+
+  describe('workspace v1', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace(1);
+    });
+
+    it('should default to inline project for first project', async () => {
+      await runLibraryGeneratorWithOpts({
+        standaloneConfig: false,
+      });
+      const workspaceJsonEntry = toNewFormat(
+        readJson(appTree, 'workspace.json')
+      ).projects['my-lib'];
+      const projectConfig = readProjectConfiguration(appTree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+    });
+
+    it('should throw for standaloneConfig === true', async () => {
+      const promise = runLibraryGeneratorWithOpts({
+        standaloneConfig: true,
+      });
+      await expect(promise).rejects.toThrow();
+    });
   });
 
   describe('not nested', () => {

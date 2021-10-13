@@ -40,7 +40,7 @@ export function normalizeOptions(
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
   const defaultPrefix = npmScope;
 
-  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
+  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
   const importPath =
     options.importPath || `@${defaultPrefix}/${projectDirectory}`;

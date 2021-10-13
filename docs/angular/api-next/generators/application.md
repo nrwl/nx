@@ -110,8 +110,6 @@ Skip updating workspace.json with default options based on values provided to th
 
 ### standaloneConfig
 
-Default: `false`
-
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json

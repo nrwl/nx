@@ -251,10 +251,15 @@ describe('project configuration', () => {
       });
 
       it("should not create project.json file if any other app in the workspace doesn't use project.json", () => {
-        addProjectConfiguration(tree, 'project-a', {
-          root: 'apps/project-a',
-          targets: {},
-        });
+        addProjectConfiguration(
+          tree,
+          'project-a',
+          {
+            root: 'apps/project-a',
+            targets: {},
+          },
+          false
+        );
         addProjectConfiguration(tree, 'project-b', {
           root: 'apps/project-b',
           targets: {},
