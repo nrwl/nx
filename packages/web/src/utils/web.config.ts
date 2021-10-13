@@ -258,7 +258,9 @@ export function getStylesPartial(
             {
               loader: require.resolve('less-loader'),
               options: {
-                paths: includePaths,
+                lessOptions: {
+                  paths: includePaths,
+                },
               },
             },
           ],
@@ -270,7 +272,9 @@ export function getStylesPartial(
             {
               loader: require.resolve('stylus-loader'),
               options: {
-                paths: includePaths,
+                stylusOptions: {
+                  include: includePaths,
+                },
               },
             },
           ],

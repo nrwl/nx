@@ -109,20 +109,14 @@ describe('Build React libraries and apps', () => {
       /*
        * 1. Without dependencies
        */
-      const childLibOutput = runCLI(`build ${childLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      const childLib2Output = runCLI(`build ${childLib2}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${childLib2}`);
 
       checkFilesExist(`dist/libs/${childLib}/${childLib}.esm.js`);
       checkFilesExist(`dist/libs/${childLib}/${childLib}.umd.js`);
-      expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
 
       checkFilesExist(`dist/libs/${childLib2}/${childLib2}.esm.js`);
       checkFilesExist(`dist/libs/${childLib2}/${childLib2}.umd.js`);
-      expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
 
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
       checkFilesExist(`dist/libs/${childLib2}/README.md`);
@@ -130,13 +124,10 @@ describe('Build React libraries and apps', () => {
       /*
        * 2. With dependencies
        */
-      let parentLibOutput = runCLI(`build ${parentLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
+      runCLI(`build ${parentLib}`);
 
       checkFilesExist(`dist/libs/${parentLib}/${parentLib}.esm.js`);
       checkFilesExist(`dist/libs/${parentLib}/${parentLib}.umd.js`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.peerDependencies).toEqual(
@@ -151,13 +142,11 @@ describe('Build React libraries and apps', () => {
        */
       rmDist();
 
-      parentLibOutput = runCLI(
-        `build ${parentLib} --with-deps --skip-nx-cache`
-      ).replace(/\s\s\s││\s\s\s/gm, '');
+      runCLI(`build ${parentLib} --with-deps --skip-nx-cache`);
 
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
+      checkFilesExist(`dist/libs/${parentLib}/${parentLib}.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/${childLib}.esm.js`);
+      checkFilesExist(`dist/libs/${childLib2}/${childLib2}.esm.js`);
     });
 
     it('should support --format option', () => {

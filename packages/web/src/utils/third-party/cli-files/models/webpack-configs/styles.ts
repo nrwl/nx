@@ -153,8 +153,10 @@ export function getStylesConfig(
           loader: require.resolve('less-loader'),
           options: {
             sourceMap: cssSourceMap,
-            javascriptEnabled: true,
-            ...lessPathOptions,
+            lessOptions: {
+              javascriptEnabled: true,
+              ...lessPathOptions,
+            },
           },
         },
       ],
@@ -166,7 +168,9 @@ export function getStylesConfig(
           loader: require.resolve('stylus-loader'),
           options: {
             sourceMap: cssSourceMap,
-            paths: includePaths,
+            stylusOptions: {
+              include: includePaths,
+            },
           },
         },
       ],
