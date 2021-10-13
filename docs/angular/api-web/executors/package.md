@@ -36,14 +36,6 @@ Type: `array`
 
 List of static assets.
 
-### ~~babelConfig~~
-
-Type: `string`
-
-**Deprecated:** Use the .babelrc file for project instead
-
-Path to a function which takes a babel config and returns an updated babel config
-
 ### buildableProjectDepsInPackageJsonType
 
 Default: `peerDependencies`

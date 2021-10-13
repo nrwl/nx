@@ -174,10 +174,6 @@ export interface Schema {
    */
   serviceWorker?: boolean;
   /**
-   * Show circular dependency warnings on builds.
-   */
-  showCircularDependencies?: boolean;
-  /**
    * Flag to prevent building an app shell.
    * @deprecated
    */

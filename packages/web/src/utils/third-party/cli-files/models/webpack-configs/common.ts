@@ -34,7 +34,6 @@ export const GLOBAL_DEFS_FOR_TERSER_WITH_AOT = {
 };
 
 const ProgressPlugin = require('webpack/lib/ProgressPlugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 // tslint:disable-next-line:no-any
@@ -224,14 +223,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
 
   if (buildOptions.progress) {
     extraPlugins.push(new ProgressPlugin({ profile: buildOptions.verbose }));
-  }
-
-  if (buildOptions.showCircularDependencies) {
-    extraPlugins.push(
-      new CircularDependencyPlugin({
-        exclude: /([\\\/]node_modules[\\\/])|(ngfactory\.js$)/,
-      })
-    );
   }
 
   // TODO Needs source exported from webpack

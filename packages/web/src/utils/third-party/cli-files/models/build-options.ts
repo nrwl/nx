@@ -49,7 +49,6 @@ export interface BuildOptions {
   deleteOutputPath?: boolean;
   preserveSymlinks?: boolean;
   extractLicenses?: boolean;
-  showCircularDependencies?: boolean;
   buildOptimizer?: boolean;
   namedChunks?: boolean;
   subresourceIntegrity?: boolean;

@@ -7,7 +7,6 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { getOutputHashFormat } from './hash-format';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
@@ -165,14 +164,6 @@ export function getBaseWebpackPartial(
 
   if (Array.isArray(options.assets) && options.assets.length > 0) {
     extraPlugins.push(createCopyPlugin(options.assets));
-  }
-
-  if (options.showCircularDependencies) {
-    extraPlugins.push(
-      new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/,
-      })
-    );
   }
 
   webpackConfig.plugins = [...webpackConfig.plugins, ...extraPlugins];

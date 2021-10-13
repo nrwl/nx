@@ -12,7 +12,6 @@ export interface BuildBuilderOptions {
   watch?: boolean;
   sourceMap?: boolean | 'hidden';
   optimization?: boolean | OptimizationOptions;
-  showCircularDependencies?: boolean;
   memoryLimit?: number;
   maxWorkers?: number;
   poll?: number;
