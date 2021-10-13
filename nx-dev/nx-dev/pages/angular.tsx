@@ -57,12 +57,12 @@ export function AngularPage() {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'angular',
-          value: storedFlavor || 'angular',
+          name: storedFlavor || 'Angular',
+          value: storedFlavor || 'a',
         }}
         version={{
           name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
+          value: storedVersion || 'l',
         }}
       />
       <main>

@@ -54,12 +54,12 @@ export function ReactPage() {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: storedFlavor || 'React',
+          value: storedFlavor || 'r',
         }}
         version={{
           name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
+          value: storedVersion || 'l',
         }}
       />
       <main>
