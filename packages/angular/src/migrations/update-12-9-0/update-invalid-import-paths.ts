@@ -22,7 +22,7 @@ export default async function (tree: Tree) {
   const tsconfigPath = getBaseTsConfigPath(tree);
   if (!tree.exists(tsconfigPath)) {
     logger.error(
-      'Could not find `tsconig.base.json` or `tsconfig.json` at the root of the workspace. Skipping this migration...'
+      'Could not find `tsconfig.base.json` or `tsconfig.json` at the root of the workspace. Skipping this migration...'
     );
     return;
   }
