@@ -87,7 +87,6 @@ export function removeProjectConfiguration(
  */
 export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
   const workspace = readWorkspace(tree);
-  const nxJson = readNxJson(tree);
 
   return new Map(
     Object.keys(workspace.projects || {}).map((projectName) => {
@@ -133,11 +132,11 @@ export function updateWorkspaceConfiguration(
   const {
     // Workspace Json Properties
     version,
+
+    // Nx Json Properties
     cli,
     defaultProject,
     generators,
-
-    // Nx Json Properties
     implicitDependencies,
     plugins,
     npmScope,

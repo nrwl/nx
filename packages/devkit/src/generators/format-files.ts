@@ -2,11 +2,12 @@ import type { Tree } from '@nrwl/tao/src/shared/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
-import { readJson, writeJson } from '../utils/json';
+import { readJson, updateJson, writeJson } from '../utils/json';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
+  WorkspaceConfiguration,
 } from './project-configuration';
 
 /**
@@ -96,6 +97,13 @@ function ensurePropertiesAreInNewLocations(tree: Tree) {
   }
   const wc = readWorkspaceConfiguration(tree);
   updateWorkspaceConfiguration(tree, wc);
+  updateJson<WorkspaceConfiguration>(tree, workspacePath, (json) => {
+    delete json.cli;
+    delete json.defaultProject;
+    delete (json as any).schematics;
+    delete json.generators;
+    return json;
+  });
 }
 
 function sortTsConfig(tree: Tree) {

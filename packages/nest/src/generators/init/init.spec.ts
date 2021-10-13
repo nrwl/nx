@@ -47,14 +47,14 @@ describe('init generator', () => {
   });
 
   it('should not set @nrwl/nest as the default collection when another one was set before', async () => {
-    devkit.updateJson(tree, 'workspace.json', (json) => ({
+    devkit.updateJson(tree, 'nx.json', (json) => ({
       ...json,
       cli: { defaultCollection: '@nrwl/node' },
     }));
 
     await initGenerator(tree, {});
 
-    const workspaceJson = devkit.readJson(tree, 'workspace.json');
+    const workspaceJson = devkit.readJson(tree, 'nx.json');
     expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/node');
   });
 
