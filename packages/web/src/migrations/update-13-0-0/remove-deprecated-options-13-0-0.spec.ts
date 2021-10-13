@@ -1,10 +1,10 @@
 import { readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-import subject from './remove-budgets-13-0-0';
+import subject from './remove-deprecated-options-13-0-0';
 
-describe('Migration: node-sass to sass', () => {
-  it(`should remove node-sass if present in devDependencies or dependencies`, async () => {
+describe('Migration: Remove deprecated options', () => {
+  it(`should remove deprecated web build options`, async () => {
     let tree = createTreeWithEmptyWorkspace();
 
     tree.write(
@@ -20,10 +20,12 @@ describe('Migration: node-sass to sass', () => {
               build: {
                 executor: '@nrwl/web:build',
                 options: {
+                  showCircularDependencies: false,
                   budgets: [],
                 },
                 configurations: {
                   production: {
+                    showCircularDependencies: true,
                     budgets: [],
                   },
                 },

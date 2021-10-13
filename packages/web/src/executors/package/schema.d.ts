@@ -12,7 +12,6 @@ export interface WebPackageOptions {
   globals?: Globals[];
   external?: string[];
   rollupConfig?: string | string[];
-  babelConfig?: string;
   watch?: boolean;
   assets?: any[];
   updateBuildableProjectDepsInPackageJson?: boolean;

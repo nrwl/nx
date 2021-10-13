@@ -64,12 +64,6 @@ export default async function* run(
     throw new Error();
   }
 
-  if (rawOptions.babelConfig) {
-    logger.warn(
-      `Deprecated option "babelConfig" used, please use the .babelrc file for ${context.projectName} instead.`
-    );
-  }
-
   const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
   const packageJson = readJsonFile(options.project);
 

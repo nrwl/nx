@@ -187,12 +187,6 @@
       "description": "Extract all licenses in a separate file, in the case of production builds only.",
       "default": false
     },
-    "showCircularDependencies": {
-      "type": "boolean",
-      "description": "Show circular dependency warnings on builds.",
-      "default": false,
-      "x-deprecated": "The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling."
-    },
     "memoryLimit": {
       "type": "number",
       "description": "Memory limit for type checking service process in MB. (defaults to 2048)"
