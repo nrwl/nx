@@ -35,7 +35,6 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "chalk": "4.1.0",
-    "circular-dependency-plugin": "5.2.0",
     "copy-webpack-plugin": "^9.0.1",
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "fs-extra": "^9.1.0",
