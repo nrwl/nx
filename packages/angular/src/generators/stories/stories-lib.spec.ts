@@ -153,5 +153,38 @@ describe('angularStories generator: libraries', () => {
         )
       ).toBeTruthy();
     });
+
+    it('should handle modules using static members for declarations rather than literals', async () => {
+      await cypressProjectGenerator(tree, {
+        linter: Linter.EsLint,
+        name: libName,
+      });
+
+      angularStoriesGenerator(tree, {
+        name: libName,
+        generateCypressSpecs: true,
+      });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/static-member-declarations/cmp1/cmp1.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/static-member-declarations/cmp2/cmp2.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/cmp1/cmp1.component.spec.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/cmp2/cmp2.component.spec.ts`
+        )
+      ).toBeTruthy();
+    });
   });
 });

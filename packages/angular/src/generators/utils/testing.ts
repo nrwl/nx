@@ -137,6 +137,43 @@ const COMPONENTS = [
 export class VariableDeclareModule {}`
   );
 
+  // create a module where declared components are pulled from a static member of the module
+  await moduleGenerator(tree, {
+    name: 'static-member-declarations',
+    project: libName,
+  });
+
+  await componentGenerator(tree, {
+    name: 'cmp1',
+    project: libName,
+    path: `libs/${libName}/src/lib/static-member-declarations`,
+    module: 'static-member-declarations',
+  });
+
+  await componentGenerator(tree, {
+    name: 'cmp2',
+    project: libName,
+    path: `libs/${libName}/src/lib/static-member-declarations`,
+    module: 'static-member-declarations',
+  });
+
+  tree.write(
+    `libs/${libName}/src/lib/static-member-declarations/static-member-declarations.module.ts`,
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Cmp1Component } from './cmp1/cmp1.component';
+import { Cmp2Component } from './cmp2/cmp2.component';
+
+@NgModule({
+  imports: [CommonModule],
+  declarations: StaticMemberDeclarationsModule.COMPONENTS,
+  exports: StaticMemberDeclarationsModule.COMPONENTS
+})
+export class StaticMemberDeclarationsModule {
+  static readonly COMPONENTS = [Cmp1Component, Cmp2Component];
+}`
+  );
+
   // create another button in a nested subpath
   await moduleGenerator(tree, {
     name: 'nested',
