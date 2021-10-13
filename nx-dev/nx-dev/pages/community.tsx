@@ -255,22 +255,12 @@ export function Community(props: CommunityProps) {
                 </p>
               </div>
               <div className="w-full lg:w-3/5 flex flex-col justify-between items-start md:pl-16 pb-10 mt-8 md:mt-0">
-                <div className="py-4 px-6 bg-gray-50 border border-gray-100">
+                <div className="py-4 px-6 w-full bg-gray-50 border border-gray-100">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
                     How to Create Your Own
                   </h3>
                   <p className="sm:text-lg mb-6">
-                    Check out the{' '}
-                    <a
-                      className="underline cursor-pointer"
-                      target="_blank"
-                      rel="noreferrer"
-                      href="https://go.nrwl.io/nx-newsletter"
-                    >
-                      subscribe to the Nx Newsletter
-                    </a>{' '}
-                    Nx Plugin guide to learn how to get started with building
-                    your own plugin!
+                    Get started with building your own plugin!
                   </p>
                   <iframe
                     width="560"
@@ -292,14 +282,14 @@ export function Community(props: CommunityProps) {
               <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                 <span className="block">Ready to dive in?</span>
                 <span className="block text-blue-nx-base">
-                  Start using Nx with Node today.
+                  Start using Nx today.
                 </span>
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link href="/l/r/getting-started/intro">
+                  <Link href="/getting-started/intro">
                     <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base">
-                      Get started with Node
+                      Get started with Nx
                     </a>
                   </Link>
                 </div>
@@ -309,13 +299,23 @@ export function Community(props: CommunityProps) {
           {/*Plugins*/}
           <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
             <div className="my-12 flex sm:flex-row flex-col justify-center">
-              <div className="w-full py-6 mt-8">
+              <div className="w-full lg:w-3/5 py-6 mt-8">
                 <h2
                   id="community-plugin-list"
-                  className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4 text-center"
+                  className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4"
                 >
                   Community Plugins Directory
                 </h2>
+              </div>
+              <div className="w-full lg:w-2/5 py-6 mt-8 text-right">
+                <a
+                  href="https://github.com/nrwl/nx/blob/master/community/approved-plugins.json"
+                  target="_blank"
+                  rel="nofollow"
+                  className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
+                >
+                  Add your Nx plugin to the list!
+                </a>
               </div>
             </div>
             <div className="my-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
