@@ -68,8 +68,8 @@ export function DocumentationPage({
   useEffect(() => {
     if (!isFallback || !storedFlavor) return;
 
-    // If the stored flavor is different then navigate away.
-    // Otherwise replace current URL _if_ it is missing version+flavor.
+    // If the stored flavor is different then, navigate away.
+    // Otherwise, replace current URL _if_ it is missing version+flavor.
     if (flavor.alias !== storedFlavor) {
       router.push(
         `/${version.alias}/${storedFlavor}${cleanPath(router.asPath)}`
@@ -85,9 +85,10 @@ export function DocumentationPage({
     }
   }, [router, version, flavor, storedFlavor, isFallback]);
 
-  useEffect(() => {
-    setDialogOpen(isFallback || !storedFlavor);
-  }, [setDialogOpen, isFallback, storedFlavor]);
+  useEffect(
+    () => setDialogOpen((isFallback && !storedFlavor) || !storedFlavor),
+    [setDialogOpen, isFallback, storedFlavor]
+  );
 
   return (
     <>
