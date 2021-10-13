@@ -19,9 +19,17 @@ type InvalidLibs = {
 };
 
 export default async function (tree: Tree) {
+  const tsconfigPath = getBaseTsConfigPath(tree);
+  if (!tree.exists(tsconfigPath)) {
+    logger.error(
+      'Could not find `tsconfig.base.json` or `tsconfig.json` at the root of the workspace. Skipping this migration...'
+    );
+    return;
+  }
+
   const possibleAffectedLibs = findBuildableAndPublishableLibs(tree);
-  const invalidLibs = findInvalidLibs(tree, possibleAffectedLibs);
-  fixLibs(tree, invalidLibs);
+  const invalidLibs = findInvalidLibs(tree, possibleAffectedLibs, tsconfigPath);
+  fixLibs(tree, invalidLibs, tsconfigPath);
 
   await formatFiles(tree);
 }
@@ -44,8 +52,12 @@ export function findBuildableAndPublishableLibs(tree: Tree): InvalidLibs {
   return { buildableLibs, publishableLibs };
 }
 
-export function findInvalidLibs(tree: Tree, libs: InvalidLibs): InvalidLibs {
-  const { compilerOptions } = readJson(tree, 'tsconfig.base.json');
+export function findInvalidLibs(
+  tree: Tree,
+  libs: InvalidLibs,
+  tsconfigPath: string
+): InvalidLibs {
+  const { compilerOptions } = readJson(tree, tsconfigPath);
   const { paths: tsConfigPaths } = compilerOptions;
 
   const invalidBuildableLibs = libs.buildableLibs.filter((lib) =>
@@ -69,12 +81,18 @@ function checkInvalidLib(
   return !tsConfigPaths[name];
 }
 
-function fixLibs(tree: Tree, { buildableLibs, publishableLibs }: InvalidLibs) {
-  const { compilerOptions } = readJson(tree, 'tsconfig.base.json');
+function fixLibs(
+  tree: Tree,
+  { buildableLibs, publishableLibs }: InvalidLibs,
+  tsconfigFilePath: string
+) {
+  const { compilerOptions } = readJson(tree, tsconfigFilePath);
   const { paths: tsConfigPaths } = compilerOptions;
 
   buildableLibs.map((lib) => fixBuildableLib(tree, lib, tsConfigPaths));
-  publishableLibs.map((lib) => fixPublishableLib(tree, lib, tsConfigPaths));
+  publishableLibs.map((lib) =>
+    fixPublishableLib(tree, lib, tsConfigPaths, tsconfigFilePath)
+  );
 }
 
 function fixBuildableLib(
@@ -105,7 +123,8 @@ function fixBuildableLib(
 function fixPublishableLib(
   tree: Tree,
   lib: AffectedLib,
-  tsConfigPaths: Record<string, string>
+  tsConfigPaths: Record<string, string>,
+  tsconfigFilePath: string
 ) {
   const srcRoot = joinPathFragments(lib.sourceRoot, 'index.ts');
   const { name: pkgName } = readJson(
@@ -128,7 +147,7 @@ function fixPublishableLib(
 
   for (const [invalidPathKey, tsLibSrcRoot] of Object.entries(tsConfigPaths)) {
     if (tsLibSrcRoot[0] === srcRoot) {
-      updateJson(tree, 'tsconfig.base.json', (tsconfig) => {
+      updateJson(tree, tsconfigFilePath, (tsconfig) => {
         tsconfig.compilerOptions.paths[invalidPathKey] = undefined;
         tsconfig.compilerOptions.paths[pkgName] = tsLibSrcRoot;
 
@@ -137,4 +156,10 @@ function fixPublishableLib(
       break;
     }
   }
+}
+
+function getBaseTsConfigPath(tree: Tree) {
+  return tree.exists('tsconfig.base.json')
+    ? 'tsconfig.base.json'
+    : 'tsconfig.json';
 }
