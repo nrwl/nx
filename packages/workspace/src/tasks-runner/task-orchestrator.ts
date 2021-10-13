@@ -1,12 +1,11 @@
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import type { ProjectGraph, Task, TaskGraph } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
-import { writeFileSync } from 'fs';
 import { Hasher } from '../core/hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output, TaskCacheStatus } from '../utilities/output';
-import { Cache, TaskWithCachedResult } from './cache';
+import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { AffectedEvent, AffectedEventType } from './tasks-runner';
 import {
@@ -358,13 +357,6 @@ export class TaskOrchestrator {
         .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
         .map(async ({ task, code, terminalOutput, outputs }) => {
           await this.cache.put(task, terminalOutput, outputs, code);
-
-          await this.cache.recordOutputsHash(outputs, task.hash);
-
-          if (terminalOutput) {
-            const outputPath = this.cache.temporaryOutputPath(task);
-            writeFileSync(outputPath, terminalOutput);
-          }
         })
     );
 
