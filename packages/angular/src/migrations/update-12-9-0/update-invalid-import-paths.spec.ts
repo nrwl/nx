@@ -82,4 +82,31 @@ describe('Migration to fix invalid import paths in affected workspaces', () => {
     expect(fixedPublishable).toBeTruthy();
     expect(brokenPublishableShouldntExist).toBeFalsy();
   });
+
+  it('should fix the invalid libraries when base tsconfig is not tsconfig.base.json', async () => {
+    // ARRANGE
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    // ACT
+    await updateInvalidImportPaths(tree);
+
+    // ASSERT
+    const fixedBuildable = readJson(
+      tree,
+      joinPathFragments('libs/dir1/buildable1', 'package.json')
+    );
+
+    const { compilerOptions } = readJson<{
+      compilerOptions: { paths: Record<string, string[]> };
+    }>(tree, 'tsconfig.json');
+    const { paths: tsConfigPaths } = compilerOptions;
+    const fixedPublishable = Boolean(tsConfigPaths['@proj/publishable2']);
+    const brokenPublishableShouldntExist = !Boolean(
+      tsConfigPaths['@proj/publishable2']
+    );
+
+    expect(fixedBuildable.name).toEqual('@proj/dir1/buildable1');
+    expect(fixedPublishable).toBeTruthy();
+    expect(brokenPublishableShouldntExist).toBeFalsy();
+  });
 });
