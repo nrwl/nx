@@ -98,12 +98,12 @@ export function Node() {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'node',
-          value: storedFlavor || 'node',
+          name: storedFlavor || 'Node',
+          value: storedFlavor || 'n',
         }}
         version={{
           name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
+          value: storedVersion || 'l',
         }}
       />
       <main>
