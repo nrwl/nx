@@ -222,7 +222,7 @@
     "styled-components": "5.0.0",
     "stylus": "0.54.5",
     "stylus-loader": "^6.2.0",
-    "tailwindcss": "^2.2.7",
+    "tailwindcss": "^2.2.17",
     "tcp-port-used": "^1.0.2",
     "terser": "4.3.8",
     "terser-webpack-plugin": "^5.1.1",
@@ -243,11 +243,11 @@
     "unzipper": "^0.10.11",
     "url-loader": "^4.1.1",
     "verdaccio": "^5.0.4",
-    "webpack-dev-server": "^4.3.1",
-    "webpack-sources": "^3.0.2",
     "webpack": "^5.58.1",
+    "webpack-dev-server": "^4.3.1",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
+    "webpack-sources": "^3.0.2",
     "webpack-subresource-integrity": "^1.5.2",
     "worker-plugin": "3.2.0",
     "yargs": "15.4.1",
@@ -288,4 +288,3 @@
     "**/xmlhttprequest-ssl": "~1.6.2"
   }
 }
-
