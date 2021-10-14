@@ -4,7 +4,8 @@ export const getSelectAllButton = () => cy.get('[data-cy=selectAllButton]');
 export const getDeselectAllButton = () => cy.get('[data-cy=deselectAllButton]');
 export const getUnfocusProjectButton = () => cy.get('[data-cy=unfocusButton]');
 
-export const getProjectCheckboxes = () => cy.get('input[name=projectName]');
+export const getProjectCheckboxes = () =>
+  cy.get<JQuery<HTMLInputElement>>('input[name=projectName]');
 
 export const getCheckedProjectCheckboxes = () =>
   cy.get('input[name=projectName]:checked');

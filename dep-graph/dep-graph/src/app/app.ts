@@ -47,10 +47,11 @@ export class AppComponent {
         acc[cur.name] = cur;
         return acc;
       }, {});
-
-    const newProjects = project.changes.added.filter(
-      (addedProject) => !window.graph.nodes[addedProject]
-    );
+    const newProjects = !!window.graph
+      ? project.changes.added.filter(
+          (addedProject) => !window.graph.nodes[addedProject]
+        )
+      : project.changes.added;
     window.projects = project.projects;
     window.graph = <ProjectGraph>{
       dependencies: project.dependencies,

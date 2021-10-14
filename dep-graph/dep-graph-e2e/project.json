@@ -11,6 +11,14 @@
         "devServerTarget": "dep-graph-dep-graph:serve"
       }
     },
+    "e2e-watch-disabled": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "dep-graph/dep-graph-e2e/cypress-watch-mode.json",
+        "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
+        "devServerTarget": "dep-graph-dep-graph:serve:watch"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:lint",
       "options": {
