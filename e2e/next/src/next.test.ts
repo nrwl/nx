@@ -26,7 +26,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
     const port = 4201;
 
-    runCLI(`generate @nrwl/next:app ${appName} --standalone-config false`);
+    runCLI(`generate @nrwl/next:app ${appName}`);
 
     const proxyConf = {
       '/external-api': {
@@ -96,14 +96,12 @@ describe('Next.js Applications', () => {
     const buildableLibName = uniq('lib');
     const nonBuildableLibName = uniq('lib');
 
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
     runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --standalone-config false`
+      `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none`
     );
     runCLI(
-      `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none --standalone-config false`
-    );
-    runCLI(
-      `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable --standalone-config false`
+      `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
     );
 
     // Check that the buildable lib builds as well
@@ -148,12 +146,8 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --standalone-config false`
-    );
-    runCLI(
-      `generate @nrwl/react:lib ${libName} --no-interactive --style=none --standalone-config false`
-    );
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none`);
 
     const mainPath = `apps/${appName}/pages/index.tsx`;
     updateFile(
@@ -182,15 +176,9 @@ describe('Next.js Applications', () => {
     const tsLibName = uniq('tslib');
     const tsxLibName = uniq('tsxlib');
 
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --standalone-config false`
-    );
-    runCLI(
-      `generate @nrwl/react:lib ${tsxLibName} --no-interactive --standalone-config false`
-    );
-    runCLI(
-      `generate @nrwl/workspace:lib ${tsLibName} --no-interactive --standalone-config false`
-    );
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/react:lib ${tsxLibName} --no-interactive`);
+    runCLI(`generate @nrwl/workspace:lib ${tsLibName} --no-interactive`);
 
     // create a css file in node_modules so that it can be imported in a lib
     // to test that it works as expected
@@ -289,9 +277,7 @@ describe('Next.js Applications', () => {
   it('should support Less', async () => {
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --style=less --standalone-config false`
-    );
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=less`);
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -303,9 +289,7 @@ describe('Next.js Applications', () => {
   it('should support Stylus', async () => {
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --style=styl --standalone-config false`
-    );
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=styl`);
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -332,7 +316,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled --standalone-config false`
+      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
     );
 
     await checkApp(appName, {
@@ -346,14 +330,13 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled --standalone-config false`
+      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
     );
     updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
 
     // Shared assets
     const sharedLib = uniq('sharedLib');
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
+    updateWorkspaceConfig((json) => {
       json.projects[appName].targets.build.options.assets = [
         {
           glob: '**/*',
@@ -361,7 +344,7 @@ describe('Next.js Applications', () => {
           output: 'shared/ui',
         },
       ];
-      return JSON.stringify(json, null, 2);
+      return json;
     });
     updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 
@@ -402,9 +385,7 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --js --standalone-config false`
-    );
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
 
@@ -419,7 +400,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled --standalone-config false`
+      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
     );
 
     updateFile(
@@ -487,9 +468,7 @@ describe('Next.js Applications', () => {
     const port = 4202;
 
     // generate next.js app
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --standalone-config false`
-    );
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
     // create custom server
     createFile(
@@ -550,7 +529,7 @@ describe('Next.js Applications', () => {
   it('should include nextjs lint rules by default', () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --standalone-config false`);
+    runCLI(`generate @nrwl/next:app ${appName}`);
 
     // Create /about page
     updateFile(

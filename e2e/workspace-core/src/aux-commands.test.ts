@@ -4,14 +4,15 @@ import {
   newProject,
   readFile,
   readJson,
+  readWorkspaceConfig,
   renameFile,
   runCLI,
   tmpProjPath,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
-import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
 let proj;
 
 beforeAll(() => {
@@ -174,6 +175,7 @@ describe('workspace-lint', () => {
     const appBefore = uniq('before');
     const appAfter = uniq('after');
 
+    // this tests an issue that doesn't come up when using standalone configurations
     runCLI(`generate @nrwl/angular:app ${appBefore} --standalone-config false`);
     renameFile(`apps/${appBefore}`, `apps/${appAfter}`);
 
@@ -202,9 +204,7 @@ describe('move project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
-    runCLI(
-      `generate @nrwl/workspace:lib ${lib1}/data-access --standalone-config false`
-    );
+    runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
 
     updateFile(
       `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -220,7 +220,7 @@ describe('move project', () => {
      * Create a library which imports a class from lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
 
     updateFile(
       `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -233,12 +233,13 @@ describe('move project', () => {
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib3} --standalone-config false`);
-    let workspaceJson = JSON.parse(
-      readFile('workspace.json')
-    ) as WorkspaceJsonConfiguration;
-    workspaceJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`workspace.json`, JSON.stringify(workspaceJson));
+    runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+    updateWorkspaceConfig((workspaceJson) => {
+      workspaceJson.projects[lib3].implicitDependencies = [
+        `${lib1}-data-access`,
+      ];
+      return workspaceJson;
+    });
 
     /**
      * Now try to move lib1
@@ -294,9 +295,7 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
     checkFilesExist(rootClassPath);
 
-    workspaceJson = JSON.parse(
-      readFile('workspace.json')
-    ) as WorkspaceJsonConfiguration;
+    let workspaceJson = readWorkspaceConfig();
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(workspaceJson.projects[newName]).toMatchObject({
       tags: [],
@@ -315,7 +314,7 @@ describe('move project', () => {
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
-    workspaceJson = readJson(`workspace.json`);
+    workspaceJson = readWorkspaceConfig();
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = workspaceJson.projects[newName];
     expect(project).toBeTruthy();
@@ -342,7 +341,7 @@ describe('move project', () => {
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
     runCLI(
-      `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath} --standalone-config false`
+      `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath}`
     );
 
     updateFile(
@@ -359,7 +358,7 @@ describe('move project', () => {
      * Create a library which imports a class from lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
 
     updateFile(
       `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -372,12 +371,13 @@ describe('move project', () => {
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib3} --standalone-config false`);
-    let workspaceJson = JSON.parse(
-      readFile('workspace.json')
-    ) as WorkspaceJsonConfiguration;
-    workspaceJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`workspace.json`, JSON.stringify(workspaceJson));
+    runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+    updateWorkspaceConfig((workspaceJson) => {
+      workspaceJson.projects[lib3].implicitDependencies = [
+        `${lib1}-data-access`,
+      ];
+      return workspaceJson;
+    });
 
     /**
      * Now try to move lib1
@@ -443,7 +443,7 @@ describe('move project', () => {
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
-    workspaceJson = readJson(`workspace.json`);
+    const workspaceJson = readWorkspaceConfig();
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = workspaceJson.projects[newName];
     expect(project).toBeTruthy();
@@ -478,9 +478,7 @@ describe('move project', () => {
     nxJson.workspaceLayout = { libsDir: 'packages' };
     updateFile('nx.json', JSON.stringify(nxJson));
 
-    runCLI(
-      `generate @nrwl/workspace:lib ${lib1}/data-access --standalone-config false`
-    );
+    runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
 
     updateFile(
       `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -496,7 +494,7 @@ describe('move project', () => {
      * Create a library which imports a class from lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
 
     updateFile(
       `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -509,12 +507,13 @@ describe('move project', () => {
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib3} --standalone-config false`);
-    let workspaceJson = JSON.parse(
-      readFile('workspace.json')
-    ) as WorkspaceJsonConfiguration;
-    workspaceJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`workspace.json`, JSON.stringify(workspaceJson));
+    runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+    updateWorkspaceConfig((workspaceJson) => {
+      workspaceJson.projects[lib3].implicitDependencies = [
+        `${lib1}-data-access`,
+      ];
+      return workspaceJson;
+    });
 
     /**
      * Now try to move lib1
@@ -580,7 +579,7 @@ describe('move project', () => {
     ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
-    workspaceJson = readJson(`workspace.json`);
+    const workspaceJson = readWorkspaceConfig();
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = workspaceJson.projects[newName];
     expect(project).toBeTruthy();
@@ -615,19 +614,18 @@ describe('remove project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
 
-    runCLI(`generate @nrwl/workspace:lib ${lib1} --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${lib1}`);
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
     /**
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2} --standalone-config false`);
-    let workspaceJson = JSON.parse(
-      readFile('workspace.json')
-    ) as WorkspaceJsonConfiguration;
-    workspaceJson.projects[lib2].implicitDependencies = [lib1];
-    updateFile(`workspace.json`, JSON.stringify(workspaceJson));
+    runCLI(`generate @nrwl/workspace:lib ${lib2}`);
+    updateWorkspaceConfig((workspaceJson) => {
+      workspaceJson.projects[lib2].implicitDependencies = [lib1];
+      return workspaceJson;
+    });
 
     /**
      * Try removing the project (should fail)
@@ -658,9 +656,7 @@ describe('remove project', () => {
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
     expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
-    workspaceJson = JSON.parse(
-      readFile('workspace.json')
-    ) as WorkspaceJsonConfiguration;
+    const workspaceJson = readWorkspaceConfig();
     expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
     expect(workspaceJson.projects[lib2].implicitDependencies).toEqual([]);
 

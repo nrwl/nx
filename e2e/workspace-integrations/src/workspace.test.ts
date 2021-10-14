@@ -9,6 +9,7 @@ import {
   newProject,
   readFile,
   readJson,
+  readWorkspaceConfig,
   removeProject,
   rmDist,
   runCLI,
@@ -16,7 +17,8 @@ import {
   runCommand,
   uniq,
   updateFile,
-  workspaceConfigName,
+  updateProjectConfig,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 
@@ -115,13 +117,9 @@ describe('run-one', () => {
       myapp = uniq('myapp');
       mylib1 = uniq('mylib1');
       mylib2 = uniq('mylib1');
-      runCLI(`generate @nrwl/react:app ${myapp} --standalone-config false`);
-      runCLI(
-        `generate @nrwl/react:lib ${mylib1} --buildable --standalone-config false`
-      );
-      runCLI(
-        `generate @nrwl/react:lib ${mylib2} --buildable --standalone-config false`
-      );
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+      runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
+      runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
 
       updateFile(
         `apps/${myapp}/src/main.ts`,
@@ -133,15 +131,16 @@ describe('run-one', () => {
     });
 
     it('should be able to include deps using target dependencies', () => {
-      const originalWorkspace = readFile('workspace.json');
-      const workspace = readJson('workspace.json');
-      workspace.projects[myapp].targets.build.dependsOn = [
-        {
-          target: 'build',
-          projects: 'dependencies',
-        },
-      ];
-      updateFile('workspace.json', JSON.stringify(workspace));
+      const originalWorkspace = readWorkspaceConfig();
+      updateWorkspaceConfig((workspace) => {
+        workspace.projects[myapp].targets.build.dependsOn = [
+          {
+            target: 'build',
+            projects: 'dependencies',
+          },
+        ];
+        return workspace;
+      });
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
@@ -151,7 +150,7 @@ describe('run-one', () => {
       expect(output).toContain(mylib1);
       expect(output).toContain(mylib2);
 
-      updateFile('workspace.json', originalWorkspace);
+      updateWorkspaceConfig(() => originalWorkspace);
     }, 10000);
 
     it('should be able to include deps using target dependencies defined at the root', () => {
@@ -517,9 +516,9 @@ describe('affected (with git)', () => {
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   function generateAll() {
-    runCLI(`generate @nrwl/angular:app ${myapp} --standalone-config false`);
-    runCLI(`generate @nrwl/angular:app ${myapp2} --standalone-config false`);
-    runCLI(`generate @nrwl/angular:lib ${mylib} --standalone-config false`);
+    runCLI(`generate @nrwl/angular:app ${myapp}`);
+    runCLI(`generate @nrwl/angular:app ${myapp2}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
     runCommand(`git add . && git commit -am "add all"`);
   }
 
@@ -546,12 +545,11 @@ describe('affected (with git)', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const workspaceJson: WorkspaceJsonConfiguration =
-        readJson('workspace.json');
-
-      workspaceJson.projects[myapp].tags = ['tag'];
-      updateFile('workspace.json', JSON.stringify(workspaceJson));
-
+      const workspaceJson = readWorkspaceConfig();
+      updateProjectConfig(myapp, {
+        ...workspaceJson.projects[myapp],
+        tags: ['tag'],
+      });
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -562,10 +560,11 @@ describe('affected (with git)', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const workspaceJson = readJson(workspaceConfigName());
-
-      workspaceJson.projects[myapp].prefix = 'my-app';
-      updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+      const workspaceJson = readWorkspaceConfig();
+      updateProjectConfig(myapp, {
+        ...workspaceJson.projects[myapp],
+        prefix: 'my-app',
+      });
 
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
@@ -575,12 +574,10 @@ describe('affected (with git)', () => {
 
   it('should affect all projects by removing projects', () => {
     generateAll();
-    const workspaceJson = readJson(workspaceConfigName());
-    const nxJson = readJson('nx.json');
-
-    delete workspaceJson.projects[mylib];
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
-
+    updateWorkspaceConfig((config) => {
+      delete config.projects[mylib];
+      return config;
+    });
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -881,29 +878,27 @@ describe('cache', () => {
 
   it('should only cache specific files if build outputs is configured with specific files', async () => {
     const mylib1 = uniq('mylib1');
-    runCLI(
-      `generate @nrwl/react:lib ${mylib1} --buildable --standalone-config false`
-    );
+    runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
 
     // Update outputs in workspace.json to just be a particular file
-    const workspaceJson = readJson(workspaceConfigName());
-
-    workspaceJson.projects[mylib1].targets['build-base'] = {
-      ...workspaceJson.projects[mylib1].targets.build,
-    };
-    workspaceJson.projects[mylib1].targets.build = {
-      executor: '@nrwl/workspace:run-commands',
-      outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
-      options: {
-        commands: [
-          {
-            command: `npx nx run ${mylib1}:build-base`,
-          },
-        ],
-        parallel: false,
-      },
-    };
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+    updateWorkspaceConfig((workspaceJson) => {
+      workspaceJson.projects[mylib1].targets['build-base'] = {
+        ...workspaceJson.projects[mylib1].targets.build,
+      };
+      workspaceJson.projects[mylib1].targets.build = {
+        executor: '@nrwl/workspace:run-commands',
+        outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
+        options: {
+          commands: [
+            {
+              command: `npx nx run ${mylib1}:build-base`,
+            },
+          ],
+          parallel: false,
+        },
+      };
+      return workspaceJson;
+    });
 
     // run build with caching
     // --------------------------------------------

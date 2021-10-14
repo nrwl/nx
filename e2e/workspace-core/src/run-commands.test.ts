@@ -1,11 +1,12 @@
 import {
   newProject,
   readJson,
+  readWorkspaceConfig,
   removeProject,
   runCLI,
   uniq,
   updateFile,
-  workspaceConfigName,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
@@ -18,7 +19,7 @@ describe('Run Commands', () => {
       `.env`,
       'SHARED_VAR=shared-root-value\nROOT_ONLY=root-only-value'
     );
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
     updateFile(
       `apps/${mylib}/.custom.env`,
       'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
@@ -33,11 +34,12 @@ describe('Run Commands', () => {
       process.platform === 'win32'
         ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
         : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
-    const config = readJson(workspaceConfigName());
-    config.projects[
-      mylib
-    ].targets.echoEnvVariables.options.command += ` ${command}`;
-    updateFile(workspaceConfigName(), JSON.stringify(config, null, 2));
+    updateWorkspaceConfig((config) => {
+      config.projects[
+        mylib
+      ].targets.echoEnvVariables.options.command += ` ${command}`;
+      return config;
+    });
 
     const result = runCLI(`run ${mylib}:echoEnvVariables`);
     expect(result).toContain('shared-root-value');
@@ -49,20 +51,21 @@ describe('Run Commands', () => {
   it('should pass options', async () => {
     const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
-    const config = readJson(workspaceConfigName());
-    config.projects[mylib].targets.echo = {
-      executor: '@nrwl/workspace:run-commands',
-      options: {
-        command: 'echo',
-        var1: 'a',
-        var2: 'b',
-        'var-hyphen': 'c',
-        varCamelCase: 'd',
-      },
-    };
-    updateFile(workspaceConfigName(), JSON.stringify(config));
+    updateWorkspaceConfig((config) => {
+      config.projects[mylib].targets.echo = {
+        executor: '@nrwl/workspace:run-commands',
+        options: {
+          command: 'echo',
+          var1: 'a',
+          var2: 'b',
+          'var-hyphen': 'c',
+          varCamelCase: 'd',
+        },
+      };
+      return config;
+    });
 
     const result = runCLI(`run ${mylib}:echo`, { silent: true });
     expect(result).toContain(
@@ -73,23 +76,24 @@ describe('Run Commands', () => {
   it('should interpolate provided arguments', async () => {
     const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
-    const config = readJson(workspaceConfigName());
-    config.projects[mylib].targets.echo = {
-      executor: '@nrwl/workspace:run-commands',
-      options: {
-        commands: [
-          'echo "Arguments:"',
-          'echo "  var1: {args.var1}"',
-          'echo "  var2: {args.var2}"',
-          'echo "  hyphen: {args.var-hyphen}"',
-          'echo "  camel: {args.varCamelCase}"',
-          'echo ""',
-        ],
-      },
-    };
-    updateFile(workspaceConfigName(), JSON.stringify(config));
+    updateWorkspaceConfig((config) => {
+      config.projects[mylib].targets.echo = {
+        executor: '@nrwl/workspace:run-commands',
+        options: {
+          commands: [
+            'echo "Arguments:"',
+            'echo "  var1: {args.var1}"',
+            'echo "  var2: {args.var2}"',
+            'echo "  hyphen: {args.var-hyphen}"',
+            'echo "  camel: {args.varCamelCase}"',
+            'echo ""',
+          ],
+        },
+      };
+      return config;
+    });
 
     const result = runCLI(
       `run ${mylib}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
@@ -111,16 +115,17 @@ describe('Run Commands', () => {
   it('should fail when a process exits non-zero', () => {
     const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
-    const config = readJson(workspaceConfigName());
-    config.projects[mylib].targets.error = {
-      executor: '@nrwl/workspace:run-commands',
-      options: {
-        command: `exit 1`,
-      },
-    };
-    updateFile(workspaceConfigName(), JSON.stringify(config));
+    updateWorkspaceConfig((config) => {
+      config.projects[mylib].targets.error = {
+        executor: '@nrwl/workspace:run-commands',
+        options: {
+          command: `exit 1`,
+        },
+      };
+      return config;
+    });
 
     try {
       runCLI(`run ${mylib}:error`);
@@ -135,12 +140,11 @@ describe('Run Commands', () => {
   it('run command should not break if output property is missing in options and arguments', () => {
     const mylib = uniq('mylib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
-    const workspaceJson = readJson(`workspace.json`);
-    workspaceJson.projects[mylib].targets.lint.outputs = [
-      '{options.outputFile}',
-    ];
-    updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    updateWorkspaceConfig((config) => {
+      config.projects[mylib].targets.lint.outputs = ['{options.outputFile}'];
+      return config;
+    });
 
     expect(() =>
       runCLI(`run ${mylib}:lint --format=json`, {

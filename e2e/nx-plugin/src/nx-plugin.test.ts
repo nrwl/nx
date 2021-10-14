@@ -5,6 +5,7 @@ import {
   killPorts,
   newProject,
   readJson,
+  readWorkspaceConfig,
   runCLI,
   runCLIAsync,
   uniq,
@@ -174,10 +175,10 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir --standalone-config false`
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir `
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
-      const workspace = readJson(workspaceConfigName());
+      const workspace = readWorkspaceConfig();
       expect(workspace.projects[`subdir-${plugin}`]).toBeTruthy();
       expect(workspace.projects[`subdir-${plugin}`].root).toBe(
         `libs/subdir/${plugin}`
@@ -189,9 +190,9 @@ describe('Nx Plugin', () => {
     it('should add tags to workspace.json', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage --standalone-config false`
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
-      const workspaceJson = readJson('workspace.json');
+      const workspaceJson = readWorkspaceConfig();
       expect(workspaceJson.projects[plugin].tags).toEqual([
         'e2etag',
         'e2ePackage',

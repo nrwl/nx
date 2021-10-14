@@ -284,12 +284,8 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(
-      `generate @nrwl/react:app ${appName} --no-interactive --standalone-config false`
-    );
-    runCLI(
-      `generate @nrwl/react:lib ${libName} --no-interactive --standalone-config false`
-    );
+    runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
     renameFile(`apps/${appName}/src/main.tsx`, `apps/${appName}/src/main.jsx`);
     renameFile(
@@ -304,15 +300,15 @@ describe('React Applications', () => {
       `apps/${appName}/src/polyfills.ts`,
       `apps/${appName}/src/polyfills.js`
     );
-    const angularJson = readJson(workspaceConfigName());
-
-    angularJson.projects[
-      appName
-    ].targets.build.options.main = `apps/${appName}/src/main.jsx`;
-    angularJson.projects[
-      appName
-    ].targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
-    updateFile(workspaceConfigName(), serializeJson(angularJson));
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[
+        appName
+      ].targets.build.options.main = `apps/${appName}/src/main.jsx`;
+      workspace.projects[
+        appName
+      ].targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
+      return workspace;
+    });
 
     const mainPath = `apps/${appName}/src/main.jsx`;
     updateFile(
@@ -407,7 +403,7 @@ describe('--style option', () => {
   `('should support global and css modules', ({ style }) => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive --standalone-config false`
+      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive`
     );
 
     // make sure stylePreprocessorOptions works

@@ -7,6 +7,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 import { serializeJson } from '@nrwl/workspace';
@@ -17,13 +18,12 @@ describe('file-server', () => {
     const appName = uniq('app');
     const port = 4301;
 
-    runCLI(
-      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
-    );
-    const workspaceJson = readJson(workspaceConfigName());
-    workspaceJson.projects[appName].targets['serve'].executor =
-      '@nrwl/web:file-server';
-    updateFile(workspaceConfigName(), serializeJson(workspaceJson));
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+    updateWorkspaceConfig((workspaceJson) => {
+      workspaceJson.projects[appName].targets['serve'].executor =
+        '@nrwl/web:file-server';
+      return workspaceJson;
+    });
 
     const p = await runCommandUntil(
       `serve ${appName} --port=${port}`,

@@ -6,22 +6,21 @@ import {
   killPorts,
   newProject,
   readFile,
-  readJson,
   runCLI,
   runCLIAsync,
   runCypressTests,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
+import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
-    runCLI(
-      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
-    );
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -279,9 +278,7 @@ describe('Build Options', () => {
 
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
-    );
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
     const srcPath = `apps/${appName}/src`;
     const fooCss = `${srcPath}/foo.css`;
@@ -304,38 +301,38 @@ describe('Build Options', () => {
     updateFile(fooJs, fooJsContent);
     updateFile(barJs, barJsContent);
 
-    const workspacePath = `workspace.json`;
-    const workspaceConfig = readJson(workspacePath);
-    const buildOptions =
-      workspaceConfig.projects[appName].targets.build.options;
-
     const barScriptsBundleName = 'bar-scripts';
-    buildOptions.scripts = [
-      {
-        input: fooJs,
-        inject: true,
-      },
-      {
-        input: barJs,
-        inject: false,
-        bundleName: barScriptsBundleName,
-      },
-    ];
-
     const barStylesBundleName = 'bar-styles';
-    buildOptions.styles = [
-      {
-        input: fooCss,
-        inject: true,
-      },
-      {
-        input: barCss,
-        inject: false,
-        bundleName: barStylesBundleName,
-      },
-    ];
 
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateWorkspaceConfig((workspaceConfig) => {
+      const buildOptions =
+        workspaceConfig.projects[appName].targets.build.options;
+
+      buildOptions.scripts = [
+        {
+          input: fooJs,
+          inject: true,
+        },
+        {
+          input: barJs,
+          inject: false,
+          bundleName: barScriptsBundleName,
+        },
+      ];
+
+      buildOptions.styles = [
+        {
+          input: fooCss,
+          inject: true,
+        },
+        {
+          input: barCss,
+          inject: false,
+          bundleName: barStylesBundleName,
+        },
+      ];
+      return workspaceConfig;
+    });
 
     runCLI(`build ${appName}`);
 
@@ -359,9 +356,7 @@ describe('index.html interpolation', () => {
   test('should interpolate environment variables', () => {
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
-    );
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
@@ -395,13 +390,12 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    const workspacePath = `workspace.json`;
-    const workspaceConfig = readJson(workspacePath);
-    const buildOptions =
-      workspaceConfig.projects[appName].targets.build.options;
-    buildOptions.deployUrl = 'baz';
-
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateWorkspaceConfig((workspaceConfig) => {
+      const buildOptions =
+        workspaceConfig.projects[appName].targets.build.options;
+      buildOptions.deployUrl = 'baz';
+      return workspaceConfig;
+    });
 
     runCLI(`build ${appName}`);
 

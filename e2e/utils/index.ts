@@ -15,12 +15,17 @@ import {
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { check as portCheck } from 'tcp-port-used';
-import { parseJson } from '@nrwl/devkit';
+import {
+  parseJson,
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import { promisify } from 'util';
 import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
+import { join } from 'path';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -57,10 +62,57 @@ export function workspaceConfigName() {
 }
 
 export function updateWorkspaceConfig(
-  callback: (json: { [key: string]: any }) => Object
+  callback: (json: WorkspaceJsonConfiguration) => WorkspaceJsonConfiguration
 ) {
   const file = workspaceConfigName();
-  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
+  const rawWorkspace = readRawWorkspaceConfig();
+  const inlinedWorkspace = inlineProjectConfigs(rawWorkspace);
+  const rawUpdateResult = callback(inlinedWorkspace);
+  Object.entries(rawUpdateResult.projects).forEach(([project, config]) => {
+    const oldConfig = rawWorkspace.projects[project];
+    if (typeof oldConfig === 'string') {
+      updateFile(`${oldConfig}/project.json`, JSON.stringify(config, null, 2));
+    }
+    rawUpdateResult.projects[project] = oldConfig;
+  });
+  updateFile(file, JSON.stringify(rawUpdateResult, null, 2));
+}
+
+export function updateProjectConfig(projectName: string, configuration: any) {
+  const rawWorkspace = readRawWorkspaceConfig();
+  const configEntry = rawWorkspace.projects[projectName];
+  if (typeof configEntry === 'string') {
+    const path = join(rawWorkspace.projects[projectName], 'project.json');
+    updateFile(path, JSON.stringify(configuration, null, 2));
+  } else {
+    rawWorkspace.projects[projectName] = configuration;
+    updateFile(workspaceConfigName(), JSON.stringify(rawWorkspace, null, 2));
+  }
+}
+
+function readRawWorkspaceConfig() {
+  return readJson(workspaceConfigName());
+}
+
+function inlineProjectConfigs(w: {
+  version: number;
+  projects: Record<string, string | ProjectConfiguration>;
+}): WorkspaceJsonConfiguration {
+  const result = {
+    ...w,
+    projects: { ...w.projects },
+  };
+  Object.entries(w.projects).forEach(([project, config]) => {
+    if (typeof config === 'string') {
+      result.projects[project] = readJson(`${config}/project.json`);
+    }
+  });
+  return result as WorkspaceJsonConfiguration;
+}
+
+export function readWorkspaceConfig() {
+  const w = readRawWorkspaceConfig();
+  return inlineProjectConfigs(w);
 }
 
 export function runCreateWorkspace(
