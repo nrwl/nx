@@ -1,17 +1,11 @@
-import { getPackageManagerCommand, logger, writeJsonFile } from '@nrwl/devkit';
+import { getPackageManagerCommand, writeJsonFile } from '@nrwl/devkit';
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
-import {
-  startInBackground,
-  startInCurrentProcess,
-} from '../core/project-graph/daemon/client/client';
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
-import { DAEMON_OUTPUT_LOG_FILE } from '../core/project-graph/daemon/tmp-dir';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { reset } from './reset';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -207,16 +201,7 @@ The Daemon is not currently running you can start it manually by running the fol
 npx nx daemon
 `.trimRight()),
     (yargs) => linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon'),
-    async (args) => {
-      if (!args.background) {
-        return startInCurrentProcess();
-      }
-      logger.info(`NX Daemon Server - Starting in a background process...`);
-      const pid = await startInBackground();
-      logger.log(
-        `  Logs from the Daemon process (ID: ${pid}) can be found here: ${DAEMON_OUTPUT_LOG_FILE}\n`
-      );
-    }
+    async (args) => (await import('./daemon')).daemonHandler(args)
   )
 
   .command(
@@ -298,7 +283,14 @@ npx nx daemon
   )
   .command(require('./report').report)
   .command(require('./list').list)
-  .command(reset)
+  .command({
+    command: 'reset',
+    describe:
+      'Clears all the cached Nx artifacts and metadata about the workspace and shuts down the Nx Daemon.',
+    // Prior to v13 clear-cache was a top level nx command, so preserving as an alias
+    aliases: ['clear-cache'],
+    handler: async () => (await import('./reset')).resetHandler(),
+  })
   .command(
     'connect-to-nx-cloud',
     chalk.bold(`Makes sure the workspace is connected to Nx Cloud`),
