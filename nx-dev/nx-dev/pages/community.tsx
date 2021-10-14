@@ -309,9 +309,7 @@ export function Community(props: CommunityProps) {
               </div>
               <div className="w-full lg:w-2/5 py-6 mt-8 text-right">
                 <a
-                  href="https://github.com/nrwl/nx/blob/master/community/approved-plugins.json"
-                  target="_blank"
-                  rel="nofollow"
+                  href="/nx-plugin/overview#listing-your-nx-plugin"
                   className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
                 >
                   Add your Nx plugin to the list!
