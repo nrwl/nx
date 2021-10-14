@@ -7,7 +7,6 @@
  */
 
 import { dirname, join } from 'path';
-import { EmittedFile } from '@nrwl/workspace/src/utilities/run-webpack';
 import { ExtraEntryPoint } from '../../../browser/schema';
 import { generateEntryPoints } from '../package-chunk-sort';
 import { stripBom } from '../strip-bom';
@@ -18,6 +17,7 @@ import {
 } from './augment-index-html';
 import { readFileSync, writeFileSync } from 'fs';
 import { interpolateEnvironmentVariablesToIndex } from '../../../../interpolate-env-variables-to-index';
+import { EmittedFile } from '../../../../run-webpack';
 
 type ExtensionFilter = '.js' | '.css';
 

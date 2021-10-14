@@ -1,6 +1,5 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import type { Configuration, Stats } from 'webpack';
-import * as webpack from 'webpack';
 import { from, of } from 'rxjs';
 import { bufferCount, mergeScan, switchMap, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
@@ -14,10 +13,6 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import {
-  getEmittedFiles,
-  runWebpack,
-} from '@nrwl/workspace/src/utilities/run-webpack';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
@@ -29,6 +24,7 @@ import { getWebConfig } from '../../utils/web.config';
 import type { BuildBuilderOptions } from '../../utils/types';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
 import type { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
+import { getEmittedFiles, runWebpack } from '../../utils/run-webpack';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;

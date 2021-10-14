@@ -6,11 +6,10 @@ import buildExecutor from './build.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('@nrwl/workspace/src/utilities/run-webpack', () => ({
+jest.mock('../../utils/run-webpack', () => ({
   runWebpack: jest.fn(),
 }));
-import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
-import objectContaining = jasmine.objectContaining;
+import { runWebpack } from '../../utils/run-webpack';
 
 describe('Node Build Executor', () => {
   let context: ExecutorContext;

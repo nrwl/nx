@@ -9,10 +9,6 @@ import {
 import { eachValueFrom } from 'rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import * as WebpackDevServer from 'webpack-dev-server';
-import {
-  getEmittedFiles,
-  runWebpackDevServer,
-} from '@nrwl/workspace/src/utilities/run-webpack';
 
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { WebBuildBuilderOptions } from '../build/build.impl';
@@ -22,6 +18,7 @@ import {
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { getEmittedFiles, runWebpackDevServer } from '../../utils/run-webpack';
 
 export interface WebDevServerOptions {
   host: string;
