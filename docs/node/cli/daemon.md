@@ -14,6 +14,10 @@ nx daemon
 
 ## Options
 
+### background
+
+Default: `true`
+
 ### help
 
 Show help

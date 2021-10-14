@@ -26,7 +26,7 @@ describe('run-one', () => {
   beforeAll(() => (proj = newProject()));
   afterAll(() => {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('daemon:stop');
+    runCLI('reset');
     removeProject({ onlyOnCI: true });
   });
 
@@ -187,7 +187,7 @@ describe('run-many', () => {
   beforeEach(() => (proj = newProject()));
   afterEach(() => {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('daemon:stop');
+    runCLI('reset');
     removeProject({ onlyOnCI: true });
   });
 

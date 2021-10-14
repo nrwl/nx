@@ -1,4 +1,4 @@
-import { getPackageManagerCommand, writeJsonFile } from '@nrwl/devkit';
+import { getPackageManagerCommand, logger, writeJsonFile } from '@nrwl/devkit';
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -6,9 +6,9 @@ import * as yargs from 'yargs';
 import {
   startInBackground,
   startInCurrentProcess,
-  stop,
 } from '../core/project-graph/daemon/client/client';
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
+import { DAEMON_OUTPUT_LOG_FILE } from '../core/project-graph/daemon/tmp-dir';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
 import { reset } from './reset';
@@ -204,29 +204,19 @@ ${daemonHelpOutput}
 
 The Daemon is not currently running you can start it manually by running the following command:
 
-npx nx daemon:start
+npx nx daemon
 `.trimRight()),
-    (yargs) => linkToNxDevAndExamples(yargs, 'daemon')
-  )
-  .command(
-    'daemon:start',
-    chalk.bold(
-      'EXPERIMENTAL: Start the project graph daemon server (either in the background or the current process)'
-    ),
-    (yargs) =>
-      linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon:start'),
+    (yargs) => linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon'),
     async (args) => {
-      if (args.background) {
-        return startInBackground();
+      if (!args.background) {
+        return startInCurrentProcess();
       }
-      return startInCurrentProcess();
+      logger.info(`NX Daemon Server - Starting in a background process...`);
+      const pid = await startInBackground();
+      logger.log(
+        `  Logs from the Daemon process (ID: ${pid}) can be found here: ${DAEMON_OUTPUT_LOG_FILE}\n`
+      );
     }
-  )
-  .command(
-    'daemon:stop',
-    chalk.bold('EXPERIMENTAL: Stop the project graph daemon server'),
-    (yargs) => linkToNxDevAndExamples(yargs, 'daemon:stop'),
-    async () => stop()
   )
 
   .command(
