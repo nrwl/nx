@@ -1,4 +1,3 @@
-import * as webpack from 'webpack';
 import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
 
@@ -8,7 +7,6 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
@@ -19,6 +17,7 @@ import { OUT_FILENAME } from '../../utils/config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
+import { runWebpack } from '../../utils/run-webpack';
 
 export type NodeBuildEvent = {
   outfile: string;
