@@ -70,7 +70,7 @@ describe('React Applications', () => {
     const libTestResults = await runCLIAsync(
       `build ${libName} --no-extract-css`
     );
-    expect(libTestResults.stdout).toContain(`Bundle complete: ${libName}`);
+    expect(libTestResults.stdout).toMatch(/Done in \d+\.\d+s/);
 
     checkFilesExist(
       `dist/libs/${libName}/package.json`,

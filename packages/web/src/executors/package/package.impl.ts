@@ -27,6 +27,7 @@ import {
   NormalizedWebPackageOptions,
   normalizePackageOptions,
 } from './lib/normalize';
+import { analyze } from './lib/analyze-plugin';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -35,7 +36,6 @@ const image = require('@rollup/plugin-image');
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
-const filesize = require('rollup-plugin-filesize');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -114,6 +114,8 @@ export default async function* run(
       deleteOutputDir(context.root, options.outputPath);
     }
 
+    const start = process.hrtime.bigint();
+
     return from(rollupOptions)
       .pipe(
         concatMap((opts) =>
@@ -121,26 +123,31 @@ export default async function* run(
             catchError((e) => {
               logger.error(`Error during bundle: ${e}`);
               return of({ success: false });
-            }),
-            last(),
-            tap({
-              next: (result) => {
-                if (result.success) {
-                  updatePackageJson(
-                    options,
-                    context,
-                    target,
-                    dependencies,
-                    packageJson
-                  );
-                  logger.info(`Bundle complete: ${context.projectName}`);
-                } else {
-                  logger.error(`Bundle failed: ${context.projectName}`);
-                }
-              },
             })
           )
-        )
+        ),
+        last(),
+        tap({
+          next: (result) => {
+            if (result.success) {
+              const end = process.hrtime.bigint();
+              const duration = `${(Number(end - start) / 1_000_000_000).toFixed(
+                2
+              )}s`;
+
+              updatePackageJson(
+                options,
+                context,
+                target,
+                dependencies,
+                packageJson
+              );
+              logger.info(`⚡ Done in ${duration}`);
+            } else {
+              logger.error(`Bundle failed: ${context.projectName}`);
+            }
+          },
+        })
       )
       .toPromise();
   }
@@ -209,7 +216,7 @@ export function createRollupOptions(
         ].filter(Boolean),
       }),
       commonjs(),
-      filesize(),
+      analyze(),
       json(),
     ];
 
