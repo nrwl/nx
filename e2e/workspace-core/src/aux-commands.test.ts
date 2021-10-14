@@ -174,7 +174,7 @@ describe('workspace-lint', () => {
     const appBefore = uniq('before');
     const appAfter = uniq('after');
 
-    runCLI(`generate @nrwl/angular:app ${appBefore}`);
+    runCLI(`generate @nrwl/angular:app ${appBefore} --standalone-config false`);
     renameFile(`apps/${appBefore}`, `apps/${appAfter}`);
 
     const stdout = runCLI('workspace-lint', { silenceError: true });
@@ -220,7 +220,7 @@ describe('move project', () => {
      * Create a library which imports a class from lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui --standalone-config false`);
 
     updateFile(
       `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -342,7 +342,7 @@ describe('move project', () => {
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
     runCLI(
-      `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath}`
+      `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath} --standalone-config false`
     );
 
     updateFile(
@@ -359,7 +359,7 @@ describe('move project', () => {
      * Create a library which imports a class from lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui --standalone-config false`);
 
     updateFile(
       `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -372,7 +372,7 @@ describe('move project', () => {
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+    runCLI(`generate @nrwl/workspace:lib ${lib3} --standalone-config false`);
     let workspaceJson = JSON.parse(
       readFile('workspace.json')
     ) as WorkspaceJsonConfiguration;
@@ -478,7 +478,9 @@ describe('move project', () => {
     nxJson.workspaceLayout = { libsDir: 'packages' };
     updateFile('nx.json', JSON.stringify(nxJson));
 
-    runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+    runCLI(
+      `generate @nrwl/workspace:lib ${lib1}/data-access --standalone-config false`
+    );
 
     updateFile(
       `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -494,7 +496,7 @@ describe('move project', () => {
      * Create a library which imports a class from lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2}/ui --standalone-config false`);
 
     updateFile(
       `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -507,7 +509,7 @@ describe('move project', () => {
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+    runCLI(`generate @nrwl/workspace:lib ${lib3} --standalone-config false`);
     let workspaceJson = JSON.parse(
       readFile('workspace.json')
     ) as WorkspaceJsonConfiguration;
