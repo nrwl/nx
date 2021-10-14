@@ -14,17 +14,18 @@ export default async function update(host: Tree) {
     projects: Record<
       string,
       Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
-    >;
+    > | null;
   };
   // updateProjectConfiguration automatically saves the project opts into workspace/project.json
-  Object.entries(nxJson.projects).forEach(([p, nxJsonConfig]) => {
-    const configuration = readProjectConfiguration(host, p);
-    configuration.tags ??= nxJsonConfig.tags;
-    configuration.implicitDependencies ??= nxJsonConfig.implicitDependencies;
-    updateProjectConfiguration(host, p, configuration);
-  });
-
-  delete nxJson.projects;
+  if (nxJson.projects) {
+    Object.entries(nxJson.projects).forEach(([p, nxJsonConfig]) => {
+      const configuration = readProjectConfiguration(host, p);
+      configuration.tags ??= nxJsonConfig.tags;
+      configuration.implicitDependencies ??= nxJsonConfig.implicitDependencies;
+      updateProjectConfiguration(host, p, configuration);
+    });
+    delete nxJson.projects;
+  }
 
   writeJson(host, 'nx.json', nxJson);
   await formatFiles(host); // format files handles moving config options to new spots.
