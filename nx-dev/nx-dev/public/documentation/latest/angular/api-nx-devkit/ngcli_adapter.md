@@ -37,7 +37,7 @@ Example:
 ```typescript
 mockSchematicsForTesting({
   'mycollection:myschematic': (tree, params) => {
-    tree.write('README.md');
+    tree.write('README');
   },
 });
 ```
