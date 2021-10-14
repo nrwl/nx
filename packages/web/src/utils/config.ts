@@ -59,6 +59,16 @@ export function getBaseWebpackPartial(
       unsafeCache: true,
       rules: [
         {
+          // There's an issue resolving paths without fully specified extensions
+          // See: https://github.com/graphql/graphql-js/issues/2721
+          // TODO(jack): Add a flag to turn this option on like Next.js does via experimental flag.
+          // See: https://github.com/vercel/next.js/pull/29880
+          test: /\.m?jsx?$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+        {
           test: /\.([jt])sx?$/,
           loader: join(__dirname, 'web-babel-loader'),
           exclude: /node_modules/,
