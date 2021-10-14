@@ -22,6 +22,7 @@
         "namedChunks": false,
         "extractLicenses": true,
         "vendorChunk": false,
+        "webpackConfig": "dep-graph/dep-graph/webpack.config.js",
         "budgets": [
           {
             "type": "initial",
