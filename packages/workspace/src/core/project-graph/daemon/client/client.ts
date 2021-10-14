@@ -1,5 +1,5 @@
 import { logger, ProjectGraph } from '@nrwl/devkit';
-import { spawn, spawnSync } from 'child_process';
+import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { existsSync, openSync } from 'fs';
 import { connect } from 'net';
 import { performance } from 'perf_hooks';
@@ -14,7 +14,7 @@ import {
 } from '../socket-utils';
 import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
 
-export async function startInBackground(): Promise<void> {
+export async function startInBackground(): Promise<ChildProcess['pid']> {
   await safelyCleanUpExistingProcess();
 
   try {
@@ -39,7 +39,7 @@ export async function startInBackground(): Promise<void> {
       const id = setInterval(async () => {
         if (await isServerAvailable()) {
           clearInterval(id);
-          resolve();
+          resolve(backgroundProcess.pid);
         }
       }, 500);
     });

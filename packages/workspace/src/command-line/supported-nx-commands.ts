@@ -9,8 +9,6 @@ export const supportedNxCommands: string[] = [
   'affected:lint',
   'print-affected',
   'daemon',
-  'daemon:start',
-  'daemon:stop',
   'dep-graph',
   'format',
   'format:check',

@@ -44,8 +44,6 @@ const invalidTargetNames = [
   'affected:lint',
   'print-affected',
   'daemon',
-  'daemon:start',
-  'daemon:stop',
   'format:check',
   'format',
   'format:write',
