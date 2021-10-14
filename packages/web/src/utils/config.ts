@@ -112,7 +112,6 @@ export function getBaseWebpackPartial(
   if (isScriptOptimizeOn) {
     webpackConfig.optimization = {
       sideEffects: false,
-      providedExports: false,
       minimizer: [
         new TerserWebpackPlugin({
           parallel: true,
