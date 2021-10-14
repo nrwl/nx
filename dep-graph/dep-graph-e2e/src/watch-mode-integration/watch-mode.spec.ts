@@ -1,4 +1,4 @@
-import { getProjectCheckboxes } from '../support/app.po';
+import { getProjectItems } from '../support/app.po';
 
 describe('dep-graph-client in watch mode', () => {
   beforeEach(() => {
@@ -11,13 +11,13 @@ describe('dep-graph-client in watch mode', () => {
     const excludedValues = ['existing-app-1', 'existing-lib-1'];
 
     cy.tick(5000);
-    checkCheckedBoxes(3, excludedValues);
+    checkSelectedProjects(3, excludedValues);
 
     cy.tick(5000);
-    checkCheckedBoxes(4, excludedValues);
+    checkSelectedProjects(4, excludedValues);
 
     cy.tick(5000);
-    checkCheckedBoxes(5, excludedValues);
+    checkSelectedProjects(5, excludedValues);
   });
 
   it('should retain selected projects new libs as they are created', () => {
@@ -26,38 +26,48 @@ describe('dep-graph-client in watch mode', () => {
 
     cy.tick(5000);
 
-    checkCheckedBoxes(3, []);
+    checkSelectedProjects(3, []);
 
     cy.tick(5000);
-    checkCheckedBoxes(4, []);
+    checkSelectedProjects(4, []);
 
     cy.tick(5000);
-    checkCheckedBoxes(5, []);
+    checkSelectedProjects(5, []);
   });
 
-  it('should not re-add new libs if they were un-selected', () => {
+  xit('should not re-add new libs if they were un-selected', () => {
     cy.tick(5000);
-    cy.contains('3')
-      .find('input')
-      .should('be.checked')
-      .click()
-      .should('not.be.checked');
+    cy.get('[data-project*="3"]')
+      .scrollIntoView()
+      .should((project) => {
+        expect(project.data('active')).to.be.true;
+      })
+      .click({ force: true })
+      .should((project) => {
+        console.log(project.data());
+        expect(project.data('active')).to.be.false;
+      });
 
     cy.tick(5000);
     cy.tick(5000);
-    cy.contains('3').find('input').should('not.be.checked');
+
+    cy.get('[data-project*="3"]')
+      .first()
+      .should((project) => {
+        expect(project.data('active')).to.be.false;
+      });
   });
 });
 
-function checkCheckedBoxes(
-  expectedCheckboxes: number,
-  excludedValues: string[]
+function checkSelectedProjects(
+  expectedNumberOfProjects: number,
+  excludedProjects: string[]
 ) {
-  getProjectCheckboxes().should((checkboxes) => {
-    expect(checkboxes.length).to.equal(expectedCheckboxes);
-    checkboxes.each(function () {
-      if (!excludedValues.includes(this.value)) {
-        expect(this.checked).to.be.true;
+  getProjectItems().should((projects) => {
+    expect(projects.length).to.equal(expectedNumberOfProjects);
+    projects.each(function () {
+      if (!excludedProjects.includes(this.dataset.project)) {
+        expect(this.dataset.active).to.eq('true');
       }
     });
   });

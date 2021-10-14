@@ -161,7 +161,7 @@ export class GraphComponent {
   listenForProjectNodeHovers(): void {
     this.graph.on('mouseover', (event) => {
       const node = event.target;
-      if (!node.isNode || !node.isNode()) return;
+      if (!node.isNode || !node.isNode() || node.isParent()) return;
 
       this.graph
         .elements()
@@ -176,7 +176,7 @@ export class GraphComponent {
     });
     this.graph.on('mouseout', (event) => {
       const node = event.target;
-      if (!node.isNode || !node.isNode()) return;
+      if (!node.isNode || !node.isNode() || node.isParent()) return;
 
       this.graph.elements().removeClass('transparent');
       node
