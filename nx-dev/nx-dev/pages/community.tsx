@@ -237,10 +237,10 @@ export function Community(props: CommunityProps) {
                   use the full power of the workspace while using different
                   technologies!
                 </p>
-                <div className="inline-flex rounded-md shadow mb-6">
+                <div className="mb-6">
                   <a
                     href="#community-plugin-list"
-                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
+                    className="underline cursor-pointer"
                   >
                     Check the community plugins right now!
                   </a>
@@ -277,18 +277,18 @@ export function Community(props: CommunityProps) {
             </div>
           </div>
           {/*Call out*/}
-          <div className="bg-gray-50">
+          <div className="text-white bg-blue-nx-base">
             <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
                 <span className="block">Ready to dive in?</span>
-                <span className="block text-blue-nx-base">
+                <span className="block text-gray-200">
                   Start using Nx today.
                 </span>
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
                   <Link href="/getting-started/intro">
-                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base">
+                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-nx-base bg-white">
                       Get started with Nx
                     </a>
                   </Link>
@@ -298,7 +298,7 @@ export function Community(props: CommunityProps) {
           </div>
           {/*Plugins*/}
           <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-            <div className="my-12 flex sm:flex-row flex-col justify-center">
+            <div className="my-32 flex sm:flex-row flex-col justify-center">
               <div className="w-full lg:w-3/5 py-6 mt-8">
                 <h2
                   id="community-plugin-list"
