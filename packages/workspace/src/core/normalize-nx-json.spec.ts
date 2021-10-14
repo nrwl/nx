@@ -1,28 +1,27 @@
+import { ProjectConfiguration } from '@nrwl/devkit';
 import { normalizeNxJson } from './normalize-nx-json';
 
 describe('normalizeNxJson', () => {
   it('should expand projects array', () => {
-    const result = normalizeNxJson({
-      npmScope: 'nrwl',
-      projects: {
-        demo: { tags: [] },
-        ui: { tags: [] },
-        util: { tags: [] },
-      },
-      implicitDependencies: {
-        'package.json': '*',
-        'whatever.json': {
-          a: {
-            b: {
-              c: ['demo'],
-              d: {
-                e: '*',
+    const result = normalizeNxJson(
+      {
+        npmScope: 'nrwl',
+        implicitDependencies: {
+          'package.json': '*',
+          'whatever.json': {
+            a: {
+              b: {
+                c: ['demo'],
+                d: {
+                  e: '*',
+                },
               },
             },
           },
         },
       },
-    });
+      ['demo', 'ui', 'util']
+    );
 
     expect(result.implicitDependencies).toEqual({
       'package.json': ['demo', 'ui', 'util'],

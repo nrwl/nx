@@ -30,6 +30,8 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
     targets: {
       e2e: proj.targets.e2e,
     },
+    implicitDependencies: [options.name],
+    tags: [],
   };
   project.targets.e2e.options.protractorConfig = `${options.e2eProjectRoot}/protractor.conf.js`;
   // update workspace.json / angular.json

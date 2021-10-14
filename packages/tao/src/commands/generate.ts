@@ -7,10 +7,11 @@ import {
   Schema,
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
-import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
+import { Workspaces } from '../shared/workspace';
 import { FileChange, flushChanges, FsTree } from '../shared/tree';
 import { logger } from '../shared/logger';
 import * as chalk from 'chalk';
+import { NxJsonConfiguration } from '../shared/nx';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -125,8 +126,8 @@ export function printGenHelp(opts: GenerateOptions, schema: Schema) {
   });
 }
 
-function readDefaultCollection(workspace: WorkspaceJsonConfiguration) {
-  return workspace.cli ? workspace.cli.defaultCollection : null;
+function readDefaultCollection(nxConfig: NxJsonConfiguration) {
+  return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
 }
 
 function printChanges(fileChanges: FileChange[]) {

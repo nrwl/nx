@@ -49,6 +49,7 @@ describe('Jest Executor', () => {
             },
           },
         },
+        npmScope: 'test',
       },
       target: {
         executor: '@nrwl/jest:jest',

@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { Tree, readJson, NxJsonConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
@@ -55,7 +55,7 @@ describe('preset', () => {
     expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
 
     expect(
-      JSON.parse(tree.read('/workspace.json').toString()).cli.defaultCollection
+      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
     ).toBe('@nrwl/angular');
   });
 
@@ -67,9 +67,9 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
-      '@nrwl/web'
-    );
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
+    ).toBe('@nrwl/web');
   });
 
   it(`should create files (preset = ${Preset.React})`, async () => {
@@ -82,9 +82,9 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
-      '@nrwl/react'
-    );
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
+    ).toBe('@nrwl/react');
   });
 
   it(`should create files (preset = ${Preset.NextJs})`, async () => {
@@ -97,9 +97,9 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
-      '@nrwl/next'
-    );
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
+    ).toBe('@nrwl/next');
   });
 
   it(`should create files (preset = ${Preset.AngularWithNest})`, async () => {
@@ -162,9 +162,9 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/pages/index.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
-      '@nrwl/gatsby'
-    );
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
+    ).toBe('@nrwl/gatsby');
   });
 
   it('should create files (preset = react-native)', async () => {
@@ -177,8 +177,8 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
-    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
-      '@nrwl/react-native'
-    );
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
+    ).toBe('@nrwl/react-native');
   });
 });

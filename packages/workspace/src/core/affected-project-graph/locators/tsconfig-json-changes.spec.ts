@@ -52,11 +52,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
           {},
           {
             npmScope: 'proj',
-            projects: {
-              proj1: {
-                tags: [],
-              },
-            },
           }
         );
         expect(result).toEqual([]);

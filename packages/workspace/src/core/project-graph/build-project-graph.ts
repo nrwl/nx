@@ -73,7 +73,10 @@ export async function buildProjectGraphUsingProjectFileMap(
 }> {
   const nxJson = readNxJson();
   assertWorkspaceValidity(workspaceJson, nxJson);
-  const normalizedNxJson = normalizeNxJson(nxJson);
+  const normalizedNxJson = normalizeNxJson(
+    nxJson,
+    Object.keys(workspaceJson.projects)
+  );
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -315,7 +318,6 @@ function createContext(
   > = Object.keys(workspaceJson.projects).reduce((map, projectName) => {
     map[projectName] = {
       ...workspaceJson.projects[projectName],
-      ...nxJson.projects[projectName],
     };
     return map;
   }, {});

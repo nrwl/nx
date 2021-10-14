@@ -10,6 +10,7 @@ import {
   getPackageManagerCommand,
   WorkspaceJsonConfiguration,
   PackageManager,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -180,9 +181,6 @@ export async function newGenerator(host: Tree, options: Schema) {
 
   await workspaceGenerator(host, { ...options, nxCloud: undefined } as any);
 
-  if (options.cli === 'angular') {
-    setDefaultPackageManager(host, options);
-  }
   setDefaultLinter(host, options);
   addPresetDependencies(host, options);
   addCloudDependencies(host, options);
@@ -349,24 +347,6 @@ function setTSLintDefault(host: Tree, options: Schema) {
 
 function getWorkspacePath(host: Tree, { directory, cli }: Schema) {
   return join(directory, cli === 'angular' ? 'angular.json' : 'workspace.json');
-}
-
-function setDefaultPackageManager(host: Tree, options: Schema) {
-  if (!options.packageManager) {
-    return;
-  }
-
-  updateJson<WorkspaceJsonConfiguration>(
-    host,
-    getWorkspacePath(host, options),
-    (json) => {
-      if (!json.cli) {
-        json.cli = {};
-      }
-      json.cli.packageManager = options.packageManager;
-      return json;
-    }
-  );
 }
 
 function setDefault(

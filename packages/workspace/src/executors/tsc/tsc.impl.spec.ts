@@ -53,6 +53,7 @@ describe('executor: tsc', () => {
             targets: {},
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

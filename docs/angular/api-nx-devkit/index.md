@@ -346,7 +346,7 @@ It only uses language primitives and immutable objects
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<`Omit`<[`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration), `"projects"`\>\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration)\>
 
 ---
 
@@ -549,17 +549,17 @@ Callback to install dependencies only if necessary. undefined is returned if cha
 
 Adds project configuration to the Nx workspace.
 
-The project configuration is stored in workspace.json and nx.json. The utility will update
-both files.
+The project configuration is stored in workspace.json or the associated project.json file.
+The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                    | Default value | Description                                                                                |
-| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../angular/nx-devkit/index#tree)                                                                                                                            | `undefined`   | the file system tree                                                                       |
-| `projectName`          | `string`                                                                                                                                                                | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | `undefined`   | project configuration                                                                      |
-| `standalone`           | `boolean`                                                                                                                                                               | `false`       | should the project use package.json? If false, the project config is inside workspace.json |
+| Name                   | Type                                                                         | Default value | Description                                                                                |
+| :--------------------- | :--------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../angular/nx-devkit/index#tree)                                 | `undefined`   | the file system tree                                                                       |
+| `projectName`          | `string`                                                                     | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) | `undefined`   | project configuration                                                                      |
+| `standalone`           | `boolean`                                                                    | `false`       | should the project use package.json? If false, the project config is inside workspace.json |
 
 #### Returns
 
@@ -808,7 +808,7 @@ but it can also be passed in explicitly.
 
 ### getProjects
 
-▸ **getProjects**(`tree`): `Map`<`string`, [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../angular/nx-devkit/index#nxjsonprojectconfiguration)\>
+▸ **getProjects**(`tree`): `Map`<`string`, [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration)\>
 
 Get a map of all projects in a workspace.
 
@@ -822,7 +822,7 @@ Use [readProjectConfiguration](../../angular/nx-devkit/index#readprojectconfigur
 
 #### Returns
 
-`Map`<`string`, [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../angular/nx-devkit/index#nxjsonprojectconfiguration)\>
+`Map`<`string`, [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration)\>
 
 ---
 
@@ -1135,12 +1135,12 @@ Object the JSON content of the file represents
 
 ### readProjectConfiguration
 
-▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../angular/nx-devkit/index#nxjsonprojectconfiguration)
+▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration)
 
 Reads a project configuration.
 
-The project configuration is stored in workspace.json and nx.json. The utility will read
-both files.
+The project configuration is stored in workspace.json or the associated project.json file.
+The utility will read from either file.
 
 **`throws`** If supplied projectName cannot be found
 
@@ -1153,7 +1153,7 @@ both files.
 
 #### Returns
 
-[`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../angular/nx-devkit/index#nxjsonprojectconfiguration)
+[`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration)
 
 ---
 
@@ -1241,8 +1241,8 @@ Callback to uninstall dependencies only if necessary. undefined is returned if c
 
 Removes the configuration of an existing project.
 
-The project configuration is stored in workspace.json and nx.json.
-The utility will update both files.
+The project configuration is stored in workspace.json or the associated project.json file.
+The utility will update either file.
 
 #### Parameters
 
@@ -1460,16 +1460,16 @@ Updates a JSON value to the file system tree
 
 Updates the configuration of an existing project.
 
-The project configuration is stored in workspace.json and nx.json. The utility will update
-both files.
+The project configuration is stored in workspace.json or the associated project.json file.
+The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                    | Description                                                             |
-| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../angular/nx-devkit/index#tree)                                                                                                                            | the file system tree                                                    |
-| `projectName`          | `string`                                                                                                                                                                | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) & [`NxJsonProjectConfiguration`](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                         | Description                                                             |
+| :--------------------- | :--------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../angular/nx-devkit/index#tree)                                 | the file system tree                                                    |
+| `projectName`          | `string`                                                                     | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) | project configuration                                                   |
 
 #### Returns
 

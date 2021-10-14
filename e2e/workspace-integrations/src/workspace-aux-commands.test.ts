@@ -1,7 +1,6 @@
 import * as path from 'path';
 import {
   checkFilesExist,
-  exists,
   isNotWindows,
   isWindows,
   newProject,
@@ -10,11 +9,9 @@ import {
   removeProject,
   runCLI,
   runCLIAsync,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;

@@ -39,11 +39,11 @@ describe('app', () => {
       expect(workspaceJson.defaultProject).toEqual('my-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(appTree, { ...schema, tags: 'one,two' });
 
-      const nxJson = readJson(appTree, './nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(appTree));
+      expect(projects).toMatchObject({
         'my-app': {
           tags: ['one', 'two'],
         },
@@ -132,15 +132,15 @@ Object {
       );
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit deps', async () => {
       await applicationGenerator(appTree, {
         ...schema,
         directory: 'myDir',
         tags: 'one,two',
       });
 
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(appTree));
+      expect(projects).toMatchObject({
         'my-dir-my-app': {
           tags: ['one', 'two'],
         },

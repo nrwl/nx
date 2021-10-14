@@ -72,6 +72,7 @@ describe('Linter Builder', () => {
       workspace: {
         version: 2,
         projects: {},
+        npmScope: 'test',
       },
       isVerbose: false,
     };

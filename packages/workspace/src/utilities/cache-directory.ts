@@ -1,9 +1,10 @@
+import { NxJsonConfiguration } from '@nrwl/devkit';
 import { join } from 'path';
 import { readJsonFile } from './fileutils';
 
 export function readCacheDirectoryProperty(root: string) {
   try {
-    const nxJson = readJsonFile(join(root, 'nx.json'));
+    const nxJson = readJsonFile<NxJsonConfiguration>(join(root, 'nx.json'));
     return nxJson.tasksRunnerOptions.default.options.cacheDirectory;
   } catch (e) {
     return undefined;

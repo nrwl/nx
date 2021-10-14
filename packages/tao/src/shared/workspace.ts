@@ -2,14 +2,13 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
-import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
-import type { PackageManager } from './package-manager';
+import type { NxJsonConfiguration } from './nx';
 import { TaskGraph } from './tasks';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
     NxJsonConfiguration {
-  projects: Record<string, ProjectConfiguration & NxJsonProjectConfiguration>;
+  projects: Record<string, ProjectConfiguration>;
 }
 
 /**
@@ -23,39 +22,8 @@ export interface WorkspaceJsonConfiguration {
   /**
    * Projects' configurations
    */
-  projects: { [projectName: string]: ProjectConfiguration };
-
-  /**
-   * Default project. When project isn't provided, the default project
-   * will be used. Convenient for small workspaces with one main application.
-   */
-  defaultProject?: string;
-
-  /**
-   * List of default values used by generators.
-   *
-   * These defaults are global. They are used when no other defaults are configured.
-   *
-   * Example:
-   *
-   * ```
-   * {
-   *   "@nrwl/react": {
-   *     "library": {
-   *       "style": "scss"
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  generators?: { [collectionName: string]: { [generatorName: string]: any } };
-
-  /**
-   * Default generator collection. It is used when no collection is provided.
-   */
-  cli?: {
-    packageManager?: PackageManager;
-    defaultCollection?: string;
+  projects: {
+    [projectName: string]: ProjectConfiguration;
   };
 }
 
@@ -111,6 +79,16 @@ export interface ProjectConfiguration {
    * ```
    */
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
+
+  /**
+   * List of projects which are added as a dependency
+   */
+  implicitDependencies?: string[];
+
+  /**
+   * List of tags used by nx-enforce-module-boundaries / dep-graph
+   */
+  tags?: string[];
 }
 
 export interface TargetDependencyConfig {
@@ -258,7 +236,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceJsonConfiguration;
+  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration;
 
   /**
    * The current working directory
@@ -278,7 +256,10 @@ export class Workspaces {
     return path.relative(this.root, cwd) || null;
   }
 
-  calculateDefaultProjectName(cwd: string, wc: WorkspaceJsonConfiguration) {
+  calculateDefaultProjectName(
+    cwd: string,
+    wc: WorkspaceJsonConfiguration & NxJsonConfiguration
+  ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
       const matchingProject = Object.keys(wc.projects).find((p) => {
@@ -293,11 +274,19 @@ export class Workspaces {
     return wc.defaultProject;
   }
 
-  readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
-    const w = readJsonFile(
+  readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
+    NxJsonConfiguration {
+    const rawWorkspace = readJsonFile(
       path.join(this.root, workspaceConfigName(this.root))
     );
-    return resolveNewFormatWithInlineProjects(w, this.root);
+    const parsedWorkspace = resolveNewFormatWithInlineProjects(
+      rawWorkspace,
+      this.root
+    );
+    const nxJson = readJsonFile<NxJsonConfiguration>(
+      path.join(this.root, 'nx.json')
+    );
+    return { ...parsedWorkspace, ...nxJson };
   }
 
   isNxExecutor(nodeModule: string, executor: string) {

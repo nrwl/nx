@@ -13,10 +13,16 @@ import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import * as prettier from 'prettier';
-import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  ProjectConfiguration,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
@@ -38,8 +44,8 @@ export async function format(
     case 'write':
       updateWorkspaceJsonToMatchFormatVersion();
       sortWorkspaceJson();
-      sortNxJson();
       sortTsConfig();
+      movePropertiesToNewLocations();
       chunkList.push([workspaceJsonPath, 'nx.json', 'tsconfig.base.json']);
       chunkList.forEach((chunk) => write(chunk));
       break;
@@ -163,18 +169,6 @@ function sortWorkspaceJson() {
   }
 }
 
-function sortNxJson() {
-  try {
-    const nxJsonPath = path.join(appRootPath, 'nx.json');
-    const nxJson = readJsonFile(nxJsonPath);
-    const sortedProjects = sortObjectByKeys(nxJson.projects);
-    nxJson.projects = sortedProjects;
-    writeJsonFile(nxJsonPath, nxJson);
-  } catch (e) {
-    // catch noop
-  }
-}
-
 function sortTsConfig() {
   try {
     const tsconfigPath = path.join(appRootPath, 'tsconfig.base.json');
@@ -185,4 +179,58 @@ function sortTsConfig() {
   } catch (e) {
     // catch noop
   }
+}
+
+function movePropertiesToNewLocations() {
+  const workspaceConfig = workspaceConfigName(appRootPath);
+  try {
+    const workspaceJson = readJsonFile<
+      NxJsonConfiguration & WorkspaceJsonConfiguration
+    >(workspaceConfig);
+    const nxJson = readJsonFile<
+      NxJsonConfiguration & WorkspaceJsonConfiguration
+    >('nx.json');
+    if (
+      workspaceJson.cli ||
+      workspaceJson.generators ||
+      nxJson.projects ||
+      nxJson.defaultProject
+    ) {
+      nxJson.cli ??= workspaceJson.cli;
+      nxJson.generators ??= workspaceJson.generators;
+      nxJson.defaultProject ??= workspaceJson.defaultProject;
+      delete workspaceJson['cli'];
+      delete workspaceJson['generators'];
+      delete workspaceJson['defaultProject'];
+      moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(workspaceJson, nxJson);
+      writeJsonFile(workspaceConfig, workspaceJson);
+      writeJsonFile('nx.json', nxJson);
+    }
+  } catch (e) {
+    console.error(
+      `Error moving properties between Nx.Json + ${workspaceConfig}`
+    );
+    console.error(e);
+  }
+}
+
+export function moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(
+  workspaceJson: WorkspaceJsonConfiguration,
+  nxJson: NxJsonConfiguration & {
+    projects: Record<
+      string,
+      Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
+    >;
+  }
+) {
+  if (!nxJson.projects) {
+    return;
+  }
+  Object.entries(nxJson.projects).forEach(([project, config]) => {
+    workspaceJson.projects[project] = {
+      ...workspaceJson.projects[project],
+      ...config,
+    };
+  });
+  delete nxJson.projects;
 }

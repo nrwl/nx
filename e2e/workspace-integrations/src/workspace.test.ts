@@ -1,4 +1,7 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type {
+  NxJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
@@ -534,14 +537,15 @@ describe('affected (with git)', () => {
     }
   }, 1000000);
 
-  it('should detect changes to projects based on the nx.json', () => {
+  it('should detect changes to projects based on tags changes', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const nxJson: NxJsonConfiguration = readJson('nx.json');
+      const workspaceJson: WorkspaceJsonConfiguration =
+        readJson('workspace.json');
 
-      nxJson.projects[myapp].tags = ['tag'];
-      updateFile('nx.json', JSON.stringify(nxJson));
+      workspaceJson.projects[myapp].tags = ['tag'];
+      updateFile('workspace.json', JSON.stringify(workspaceJson));
 
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
@@ -571,8 +575,6 @@ describe('affected (with git)', () => {
 
     delete workspaceJson.projects[mylib];
     updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
-    delete nxJson.projects[mylib];
-    updateFile('nx.json', JSON.stringify(nxJson));
 
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);

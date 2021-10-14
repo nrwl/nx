@@ -66,7 +66,7 @@ describe('new', () => {
     describe.each([['npm'], ['yarn'], ['pnpm']])(
       '%s',
       (packageManager: PackageManager) => {
-        it('should set the packageManager in workspace.json', async () => {
+        it('should set the packageManager in nx.json', async () => {
           await newGenerator(tree, {
             ...defaultOptions,
             name: 'my-workspace',
@@ -77,8 +77,8 @@ describe('new', () => {
             packageManager,
           });
 
-          const workspaceJson = readJson(tree, 'my-workspace/angular.json');
-          expect(workspaceJson.cli.packageManager).toEqual(packageManager);
+          const nxJson = readJson(tree, 'my-workspace/nx.json');
+          expect(nxJson.cli.packageManager).toEqual(packageManager);
         });
       }
     );

@@ -33,6 +33,7 @@ describe('Build storybook', () => {
             targets: {},
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

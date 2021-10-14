@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Schema } from './schema.d';
@@ -48,14 +48,14 @@ describe('lib', () => {
       ).toEqual('./src');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, {
         name: 'myLib',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-lib': {
           tags: ['one', 'two'],
         },
@@ -148,15 +148,15 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, {
         name: 'myLib',
         directory: 'myDir',
         tags: 'one',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      let projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-lib': {
           tags: ['one'],
         },
@@ -168,8 +168,8 @@ describe('lib', () => {
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson2 = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson2.projects).toEqual({
+      projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-lib': {
           tags: ['one'],
         },

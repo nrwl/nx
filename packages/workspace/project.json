@@ -1,6 +1,6 @@
 {
   "root": "packages/workspace",
-  "sourceRoot": "packages/workspace",
+  "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "implicitDependencies": ["dep-graph-dep-graph"],
   "targets": {

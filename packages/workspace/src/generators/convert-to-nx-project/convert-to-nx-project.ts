@@ -8,8 +8,6 @@ import {
   getWorkspacePath,
   logger,
   normalizePath,
-  NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -60,7 +58,7 @@ To upgrade change the version number at the top of ${getWorkspacePath(
     ? getProjects(host).entries()
     : ([[schema.project, readProjectConfiguration(host, schema.project)]] as [
         string,
-        ProjectConfiguration & NxJsonProjectConfiguration
+        ProjectConfiguration
       ][]);
 
   for (const [project, configuration] of projects) {
@@ -74,11 +72,6 @@ To upgrade change the version number at the top of ${getWorkspacePath(
 
     updateJson(host, getWorkspacePath(host), (value) => {
       value.projects[project] = normalizePath(dirname(configPath));
-      return value;
-    });
-
-    updateJson(host, 'nx.json', (value: NxJsonConfiguration) => {
-      delete value.projects[project];
       return value;
     });
   }

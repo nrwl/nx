@@ -62,7 +62,6 @@ describe('splitArgs', () => {
       affected: {
         defaultBase: 'develop',
       },
-      projects: {},
     });
     expect(
       splitArgsIntoNxArgsAndOverrides(
@@ -82,7 +81,6 @@ describe('splitArgs', () => {
   it('should return a default base branch if not configured in nx.json', () => {
     jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
       npmScope: 'testing',
-      projects: {},
     });
     expect(
       splitArgsIntoNxArgsAndOverrides(
@@ -229,7 +227,6 @@ describe('getAffectedConfig', () => {
       affected: {
         defaultBase: 'testing',
       },
-      projects: {},
     });
 
     expect(getAffectedConfig().defaultBase).toEqual('testing');

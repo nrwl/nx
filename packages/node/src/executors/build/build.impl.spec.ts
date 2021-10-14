@@ -35,6 +35,7 @@ describe('Node Build Executor', () => {
             sourceRoot: 'apps/wibble',
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

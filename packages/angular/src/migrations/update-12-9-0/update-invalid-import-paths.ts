@@ -1,8 +1,4 @@
-import type {
-  NxJsonProjectConfiguration,
-  ProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   getProjects,
@@ -12,7 +8,7 @@ import {
   logger,
 } from '@nrwl/devkit';
 
-type AffectedLib = ProjectConfiguration & NxJsonProjectConfiguration;
+type AffectedLib = ProjectConfiguration;
 type InvalidLibs = {
   buildableLibs: AffectedLib[];
   publishableLibs: AffectedLib[];

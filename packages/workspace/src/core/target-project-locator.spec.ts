@@ -23,9 +23,6 @@ describe('findTargetProjectWithImport', () => {
     };
     const nxJson = {
       npmScope: 'proj',
-      projects: {
-        proj1: {},
-      },
     };
     const tsConfig = {
       compilerOptions: {

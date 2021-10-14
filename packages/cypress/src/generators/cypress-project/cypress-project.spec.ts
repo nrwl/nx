@@ -4,6 +4,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
   Tree,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { cypressProjectGenerator } from './cypress-project';
@@ -189,7 +190,7 @@ describe('schematic:cypress-project', () => {
       expect(project.architect.lint).toBeUndefined();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit dependencies', async () => {
       await cypressProjectGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
@@ -322,8 +323,13 @@ describe('schematic:cypress-project', () => {
             name: 'my-app-e2e',
           });
 
-          const nxJson = readJson(tree, 'nx.json');
-          expect(nxJson.projects['my-app-e2e']).toEqual({ tags: [] });
+          const workspaceJson = readJson<WorkspaceJsonConfiguration>(
+            tree,
+            'workspace.json'
+          );
+          const projectConfig = workspaceJson.projects['my-app-e2e'];
+          expect(projectConfig.implicitDependencies).not.toBeDefined();
+          expect(projectConfig.tags).toEqual([]);
         });
       });
     });

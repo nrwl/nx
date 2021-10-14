@@ -12,7 +12,6 @@ import {
   GeneratorCallback,
   joinPathFragments,
   ProjectConfiguration,
-  NxJsonProjectConfiguration,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
@@ -33,8 +32,7 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  const projectConfiguration: ProjectConfiguration &
-    NxJsonProjectConfiguration = {
+  const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',

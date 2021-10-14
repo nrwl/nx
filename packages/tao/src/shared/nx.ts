@@ -1,3 +1,4 @@
+import { PackageManager } from './package-manager';
 import { TargetDependencyConfig } from './workspace';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
@@ -36,11 +37,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   affected?: NxAffectedConfig;
   /**
-   * Configuration for projects
+   * Where new apps + libs should be placed
    */
-  projects: {
-    [projectName: string]: NxJsonProjectConfiguration;
-  };
   workspaceLayout?: {
     libsDir: string;
     appsDir: string;
@@ -61,11 +59,45 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     };
   };
   /**
+   * List of default values used by generators.
+   *
+   * These defaults are global. They are used when no other defaults are configured.
+   *
+   * Example:
+   *
+   * ```
+   * {
+   *   "@nrwl/react": {
+   *     "library": {
+   *       "style": "scss"
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
+
+  /**
+   * Default generator collection. It is used when no collection is provided.
+   */
+  cli?: {
+    packageManager?: PackageManager;
+    defaultCollection?: string;
+  };
+  /**
    * Plugins for extending the project graph
    */
   plugins?: string[];
+  /**
+   * Default project. When project isn't provided, the default project
+   * will be used. Convenient for small workspaces with one main application.
+   */
+  defaultProject?: string;
 }
 
+/**
+ * @deprecated(v14): nx.json no longer contains projects
+ */
 export interface NxJsonProjectConfiguration {
   implicitDependencies?: string[];
   tags?: string[];

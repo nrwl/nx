@@ -18,6 +18,7 @@ describe('packageExecutor', () => {
       workspace: {
         version: 2,
         projects: {},
+        npmScope: 'test',
       },
       isVerbose: false,
       projectName: 'example',

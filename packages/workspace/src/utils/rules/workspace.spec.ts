@@ -8,6 +8,14 @@ import {
   WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
 
+/**
+ * This test suite is ran with utils from @angular-devkit.
+ * The rules are being tested as though they were used
+ * in a non-nx angular workspace. This means changes from
+ * ngcli-adapter or wrapAngularDevkitSchematic are not applied
+ * to the rules during the unit tests, as they would not be applied
+ * when being ran in a non-nx workspace.
+ */
 describe('Workspace', () => {
   const defaultCollectionName = '@nrwl/node';
   const workspaceJsonFileName = 'workspace.json';

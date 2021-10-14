@@ -10,25 +10,9 @@ export function assertWorkspaceValidity(
   nxJson: NxJsonConfiguration
 ) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
-  const nxJsonProjects = Object.keys(nxJson.projects);
-
-  if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
-    output.error({
-      title: 'Configuration Error',
-      bodyLines: [
-        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in ${workspaceFileName()}: ${minus(
-          nxJsonProjects,
-          workspaceJsonProjects
-        ).join(', ')}`,
-      ],
-    });
-
-    process.exit(1);
-  }
 
   const projects = {
     ...workspaceJson.projects,
-    ...nxJson.projects,
   };
 
   const invalidImplicitDependencies = new Map<string, string[]>();
@@ -68,16 +52,16 @@ export function assertWorkspaceValidity(
       return map;
     }, invalidImplicitDependencies);
 
-  nxJsonProjects
-    .filter((nxJsonProjectName) => {
-      const project = nxJson.projects[nxJsonProjectName];
+  workspaceJsonProjects
+    .filter((projectName) => {
+      const project = projects[projectName];
       return !!project.implicitDependencies;
     })
-    .reduce((map, nxJsonProjectName) => {
-      const project = nxJson.projects[nxJsonProjectName];
+    .reduce((map, projectName) => {
+      const project = projects[projectName];
       detectAndSetInvalidProjectValues(
         map,
-        nxJsonProjectName,
+        projectName,
         project.implicitDependencies,
         projects
       );
@@ -88,7 +72,7 @@ export function assertWorkspaceValidity(
     return;
   }
 
-  let message = `The following implicitDependencies specified in nx.json are invalid:
+  let message = `The following implicitDependencies specified in project configurations are invalid:
   `;
   invalidImplicitDependencies.forEach((projectNames, key) => {
     const str = `  ${key}

@@ -38,9 +38,9 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/src/executors/build/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/build/schema.json`
     );
-    const nxJson = readJson('nx.json');
+    const nxJson = readJson('workspace.json');
     expect(nxJson).toMatchObject({
-      projects: expect.objectContaining({
+      projects: {
         [plugin]: {
           tags: [],
         },
@@ -48,7 +48,7 @@ describe('Nx Plugin', () => {
           tags: [],
           implicitDependencies: [`${plugin}`],
         },
-      }),
+      },
     });
   }, 90000);
 
@@ -188,13 +188,16 @@ describe('Nx Plugin', () => {
     }, 90000);
   });
   describe('--tags', () => {
-    it('should add tags to nx.json', async () => {
+    it('should add tags to workspace.json', async () => {
       const plugin = uniq('plugin');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage`
       );
-      const nxJson = readJson('nx.json');
-      expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
+      const workspaceJson = readJson('workspace.json');
+      expect(workspaceJson.projects[plugin].tags).toEqual([
+        'e2etag',
+        'e2ePackage',
+      ]);
     }, 90000);
   });
 });

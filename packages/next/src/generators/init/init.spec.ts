@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, NxJsonConfiguration, Tree } from '@nrwl/devkit';
 
 import { nextInitGenerator } from './init';
 
@@ -21,8 +21,8 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await nextInitGenerator(tree, {});
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/next');
+      const { cli } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(cli.defaultCollection).toEqual('@nrwl/next');
     });
   });
 

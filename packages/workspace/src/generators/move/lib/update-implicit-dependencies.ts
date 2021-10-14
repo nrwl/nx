@@ -1,9 +1,9 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
-import { updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
+import { getProjects, updateProjectConfiguration } from '@nrwl/devkit';
 import type { NormalizedSchema } from '../schema';
 
 /**
- * Updates the nx.json file by renaming the project
+ * Updates the workspace.json file by renaming the project
  *
  * @param schema The options provided to the schematic
  */
@@ -11,15 +11,13 @@ export function updateImplicitDependencies(
   tree: Tree,
   schema: NormalizedSchema
 ) {
-  updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-    Object.values(json.projects).forEach((project) => {
-      if (project.implicitDependencies) {
-        const index = project.implicitDependencies.indexOf(schema.projectName);
-        if (index !== -1) {
-          project.implicitDependencies[index] = schema.newProjectName;
-        }
+  for (const [projectName, project] of getProjects(tree)) {
+    if (project.implicitDependencies) {
+      const index = project.implicitDependencies.indexOf(schema.projectName);
+      if (index !== -1) {
+        project.implicitDependencies[index] = schema.newProjectName;
+        updateProjectConfiguration(tree, projectName, project);
       }
-    });
-    return json;
-  });
+    }
+  }
 }

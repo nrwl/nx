@@ -21,7 +21,6 @@ export function createTreeWithEmptyWorkspace(version = 1): Tree {
     '/nx.json',
     JSON.stringify({
       npmScope: 'proj',
-      projects: {},
       affected: {
         defaultBase: 'main',
       },

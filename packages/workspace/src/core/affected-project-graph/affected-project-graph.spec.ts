@@ -3,8 +3,11 @@ import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { filterAffected } from './affected-project-graph';
 import { WholeFileChange } from '../file-utils';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { buildProjectGraph } from '../project-graph/build-project-graph';
+import type {
+  NxJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -13,7 +16,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 
 describe('project graph', () => {
   let packageJson: any;
-  let workspaceJson: any;
+  let workspaceJson: WorkspaceJsonConfiguration;
   let tsConfigJson: any;
   let nxJson: NxJsonConfiguration;
   let filesJson: any;
@@ -33,31 +36,38 @@ describe('project graph', () => {
       },
     };
     workspaceJson = {
+      version: 2,
       projects: {
         demo: {
           root: 'apps/demo/',
           sourceRoot: 'apps/demo/src',
           projectType: 'application',
+          implicitDependencies: ['api'],
+          targets: {},
         },
         'demo-e2e': {
           root: 'apps/demo-e2e/',
           sourceRoot: 'apps/demo-e2e/src',
           projectType: 'application',
+          targets: {},
         },
         ui: {
           root: 'libs/ui/',
           sourceRoot: 'libs/ui/src',
           projectType: 'library',
+          targets: {},
         },
         util: {
           root: 'libs/util/',
           sourceRoot: 'libs/util/src',
           projectType: 'library',
+          targets: {},
         },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
           projectType: 'application',
+          targets: {},
         },
       },
     };
@@ -73,13 +83,6 @@ describe('project graph', () => {
           },
         },
         'something-for-api.txt': ['api'],
-      },
-      projects: {
-        api: { tags: [] },
-        demo: { tags: [], implicitDependencies: ['api'] },
-        'demo-e2e': { tags: [] },
-        ui: { tags: [] },
-        util: { tags: [] },
       },
     };
     tsConfigJson = {
@@ -262,11 +265,11 @@ describe('project graph', () => {
 
     expect(Object.keys(affected.nodes)).toEqual([
       'npm:@nrwl/workspace',
-      'api',
       'demo',
       'demo-e2e',
       'ui',
       'util',
+      'api',
     ]);
   });
 });

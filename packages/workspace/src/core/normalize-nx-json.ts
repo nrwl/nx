@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nrwl/devkit';
+import { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 
 /**
  * Normalize nx json by replacing wildcard `*` implicit dependencies
@@ -7,7 +7,8 @@ import { NxJsonConfiguration } from '@nrwl/devkit';
  * @returns {NxJsonConfiguration<string[]>}
  */
 export function normalizeNxJson(
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  projects: string[]
 ): NxJsonConfiguration<string[]> {
   return nxJson.implicitDependencies
     ? {
@@ -15,7 +16,7 @@ export function normalizeNxJson(
         implicitDependencies: Object.entries(
           nxJson.implicitDependencies
         ).reduce((acc, [key, val]) => {
-          acc[key] = recur(nxJson, val);
+          acc[key] = recur(projects, val);
           return acc;
         }, {}),
       }
@@ -28,17 +29,14 @@ export function normalizeNxJson(
  * @param {'*' | string[] | {}} v
  * @returns {string[] | {}}
  */
-function recur(
-  nxJson: NxJsonConfiguration,
-  v: '*' | string[] | {}
-): string[] | {} {
+function recur(projects: string[], v: '*' | string[] | {}): string[] | {} {
   if (v === '*') {
-    return Object.keys(nxJson.projects);
+    return projects;
   } else if (Array.isArray(v)) {
     return v;
   } else {
     return Object.keys(v).reduce((acc, key) => {
-      acc[key] = recur(nxJson, v[key]);
+      acc[key] = recur(projects, v[key]);
       return acc;
     }, {});
   }

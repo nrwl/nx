@@ -59,6 +59,7 @@ describe('@nrwl/storybook:storybook', () => {
             targets: {},
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

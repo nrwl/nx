@@ -3,6 +3,7 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   readJson,
+  getProjects,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
@@ -66,20 +67,18 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(project.root).toBe('apps/namespace/my-plugin-e2e');
   });
 
-  it('should update the nxJson', async () => {
+  it('should update the tags and implicit dependencies', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       standaloneConfig: false,
     });
-
-    expect(readJson(tree, 'nx.json')).toMatchObject({
-      projects: {
-        'my-plugin-e2e': {
-          tags: [],
-          implicitDependencies: ['my-plugin'],
-        },
+    const projects = Object.fromEntries(getProjects(tree));
+    expect(projects).toMatchObject({
+      'my-plugin-e2e': {
+        tags: [],
+        implicitDependencies: ['my-plugin'],
       },
     });
   });

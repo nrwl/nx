@@ -9,4 +9,5 @@ export interface Schema {
   cli: 'nx' | 'angular';
   preset: string;
   defaultBase: string;
+  packageManager?: string;
 }

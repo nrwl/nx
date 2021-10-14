@@ -13,7 +13,6 @@ import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
 
 export async function updateProject(host: Tree, options: NormalizedSchema) {
-  updateNxConfigWithProject(host, options);
   createFiles(host, options);
   updateProjectTsConfig(host, options);
   fixProjectWorkspaceConfig(host, options);
@@ -119,6 +118,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 
 function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.name);
+  project.tags = options.parsedTags;
 
   const fixedProject = replaceAppNameWithPath(
     project,
@@ -171,14 +171,4 @@ function updateProjectTsConfig(host: Tree, options: NormalizedSchema) {
       },
     };
   });
-}
-
-function updateNxConfigWithProject(host: Tree, options: NormalizedSchema) {
-  updateJson(host, `/nx.json`, (json) => ({
-    ...json,
-    projects: {
-      ...json.projects,
-      [options.name]: { tags: options.parsedTags },
-    },
-  }));
 }

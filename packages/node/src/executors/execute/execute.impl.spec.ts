@@ -62,6 +62,7 @@ describe('NodeExecuteBuilder', () => {
             },
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

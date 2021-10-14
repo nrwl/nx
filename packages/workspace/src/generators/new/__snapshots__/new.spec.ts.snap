@@ -77,6 +77,9 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
+  "cli": Object {
+    "defaultCollection": "@nrwl/workspace",
+  },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
     "package.json": Object {
@@ -85,7 +88,6 @@ Object {
     },
   },
   "npmScope": "npmScope",
-  "projects": Object {},
   "targetDependencies": Object {
     "build": Array [
       Object {
@@ -112,9 +114,6 @@ Object {
 
 exports[`new should generate an empty workspace.json 1`] = `
 Object {
-  "cli": Object {
-    "defaultCollection": "@nrwl/workspace",
-  },
   "projects": Object {},
   "version": 2,
 }
