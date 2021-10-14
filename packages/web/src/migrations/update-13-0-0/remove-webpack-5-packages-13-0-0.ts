@@ -25,7 +25,10 @@ export default async function update(tree: Tree) {
   let task: undefined | GeneratorCallback = undefined;
 
   // Undo the install by `nx g @nrwl/web:webpack5` in Nx 12.
-  if (packageJson.devDependencies['webpack']?.startsWith('^5')) {
+  if (
+    packageJson.devDependencies['webpack']?.match(/^([\^~])?5\./) &&
+    packages.every((p) => packageJson.devDependencies[p])
+  ) {
     task = removeDependenciesFromPackageJson(tree, [], packages);
     await formatFiles(tree);
   }
