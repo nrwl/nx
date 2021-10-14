@@ -61,17 +61,17 @@ describe('Build React libraries and apps', () => {
       );
     };
 
-    runCLI(`generate @nrwl/react:app ${app}`);
+    runCLI(`generate @nrwl/react:app ${app} --standalone-config false`);
 
     // generate publishable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive`
+      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive --standalone-config false`
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive`
+      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive --standalone-config false`
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive`
+      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive --standalone-config false`
     );
 
     createDep(parentLib, [childLib, childLib2]);

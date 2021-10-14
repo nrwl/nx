@@ -115,9 +115,13 @@ describe('run-one', () => {
       myapp = uniq('myapp');
       mylib1 = uniq('mylib1');
       mylib2 = uniq('mylib1');
-      runCLI(`generate @nrwl/react:app ${myapp}`);
-      runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
-      runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
+      runCLI(`generate @nrwl/react:app ${myapp} --standalone-config false`);
+      runCLI(
+        `generate @nrwl/react:lib ${mylib1} --buildable --standalone-config false`
+      );
+      runCLI(
+        `generate @nrwl/react:lib ${mylib2} --buildable --standalone-config false`
+      );
 
       updateFile(
         `apps/${myapp}/src/main.ts`,
@@ -513,9 +517,9 @@ describe('affected (with git)', () => {
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   function generateAll() {
-    runCLI(`generate @nrwl/angular:app ${myapp}`);
-    runCLI(`generate @nrwl/angular:app ${myapp2}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib}`);
+    runCLI(`generate @nrwl/angular:app ${myapp} --standalone-config false`);
+    runCLI(`generate @nrwl/angular:app ${myapp2} --standalone-config false`);
+    runCLI(`generate @nrwl/angular:lib ${mylib} --standalone-config false`);
     runCommand(`git add . && git commit -am "add all"`);
   }
 
@@ -877,7 +881,9 @@ describe('cache', () => {
 
   it('should only cache specific files if build outputs is configured with specific files', async () => {
     const mylib1 = uniq('mylib1');
-    runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
+    runCLI(
+      `generate @nrwl/react:lib ${mylib1} --buildable --standalone-config false`
+    );
 
     // Update outputs in workspace.json to just be a particular file
     const workspaceJson = readJson(workspaceConfigName());

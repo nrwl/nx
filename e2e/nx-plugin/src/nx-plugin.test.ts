@@ -38,17 +38,15 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/src/executors/build/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/build/schema.json`
     );
-    const nxJson = readJson('workspace.json');
-    expect(nxJson).toMatchObject({
-      projects: {
-        [plugin]: {
-          tags: [],
-        },
-        [`${plugin}-e2e`]: {
-          tags: [],
-          implicitDependencies: [`${plugin}`],
-        },
-      },
+    const project = readJson(`libs/${plugin}/project.json`);
+    expect(project).toMatchObject({
+      tags: [],
+    });
+    const e2eProject = readJson(`apps/${plugin}-e2e/project.json`);
+
+    expect(e2eProject).toMatchObject({
+      tags: [],
+      implicitDependencies: [`${plugin}`],
     });
   }, 90000);
 
@@ -176,7 +174,7 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir`
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir --standalone-config false`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const workspace = readJson(workspaceConfigName());
@@ -191,7 +189,7 @@ describe('Nx Plugin', () => {
     it('should add tags to workspace.json', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage`
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage --standalone-config false`
       );
       const workspaceJson = readJson('workspace.json');
       expect(workspaceJson.projects[plugin].tags).toEqual([

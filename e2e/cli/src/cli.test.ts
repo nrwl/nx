@@ -17,7 +17,7 @@ describe('Cli', () => {
 
   it('should execute long running tasks', () => {
     const myapp = uniq('myapp');
-    runCLI(`generate @nrwl/web:app ${myapp}`);
+    runCLI(`generate @nrwl/web:app ${myapp} --standalone-config false`);
 
     updateFile(workspaceConfigName(), (c) => {
       const w = JSON.parse(c);
@@ -39,7 +39,7 @@ describe('Cli', () => {
 
   it('should run npm scripts', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/node:lib ${mylib}`);
+    runCLI(`generate @nrwl/node:lib ${mylib} --standalone-config false`);
 
     updateFile(workspaceConfigName(), (c) => {
       const j = JSON.parse(c);

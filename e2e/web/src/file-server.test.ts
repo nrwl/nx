@@ -17,7 +17,9 @@ describe('file-server', () => {
     const appName = uniq('app');
     const port = 4301;
 
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
+    );
     const workspaceJson = readJson(workspaceConfigName());
     workspaceJson.projects[appName].targets['serve'].executor =
       '@nrwl/web:file-server';

@@ -17,7 +17,7 @@ describe('Linter', () => {
 
     beforeAll(() => {
       newProject();
-      runCLI(`generate @nrwl/react:app ${myapp}`);
+      runCLI(`generate @nrwl/react:app ${myapp} --standalone-config false`);
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
     });
 
@@ -170,7 +170,7 @@ describe('Linter', () => {
     const myapp = uniq('myapp');
     const outputFile = 'a/b/c/lint-output.json';
     newProject();
-    runCLI(`generate @nrwl/react:app ${myapp}`);
+    runCLI(`generate @nrwl/react:app ${myapp} --standalone-config false`);
     const workspaceJson = readJson(`workspace.json`);
     workspaceJson.projects[myapp].targets.lint.outputs = [
       '{options.outputFile}',

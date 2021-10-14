@@ -12,7 +12,6 @@ import {
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
@@ -20,9 +19,9 @@ describe('Web Components Applications', () => {
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
-
-    checkFilesDoNotExist(`apps/${appName}/project.json`);
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
+    );
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -280,7 +279,9 @@ describe('Build Options', () => {
 
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
+    );
 
     const srcPath = `apps/${appName}/src`;
     const fooCss = `${srcPath}/foo.css`;
@@ -358,7 +359,9 @@ describe('index.html interpolation', () => {
   test('should interpolate environment variables', () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config false`
+    );
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;

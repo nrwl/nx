@@ -18,7 +18,7 @@ describe('Run Commands', () => {
       `.env`,
       'SHARED_VAR=shared-root-value\nROOT_ONLY=root-only-value'
     );
-    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
     updateFile(
       `apps/${mylib}/.custom.env`,
       'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
@@ -49,7 +49,7 @@ describe('Run Commands', () => {
   it('should pass options', async () => {
     const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
 
     const config = readJson(workspaceConfigName());
     config.projects[mylib].targets.echo = {
@@ -73,7 +73,7 @@ describe('Run Commands', () => {
   it('should interpolate provided arguments', async () => {
     const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
 
     const config = readJson(workspaceConfigName());
     config.projects[mylib].targets.echo = {
@@ -111,7 +111,7 @@ describe('Run Commands', () => {
   it('should fail when a process exits non-zero', () => {
     const mylib = uniq('lib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
 
     const config = readJson(workspaceConfigName());
     config.projects[mylib].targets.error = {
@@ -135,7 +135,7 @@ describe('Run Commands', () => {
   it('run command should not break if output property is missing in options and arguments', () => {
     const mylib = uniq('mylib');
 
-    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib} --standalone-config false`);
     const workspaceJson = readJson(`workspace.json`);
     workspaceJson.projects[mylib].targets.lint.outputs = [
       '{options.outputFile}',

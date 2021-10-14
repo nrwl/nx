@@ -78,7 +78,9 @@ describe('Node Applications', () => {
   it('should be able to generate an empty application with additional entries', async () => {
     const nodeapp = uniq('nodeapp');
 
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(
+      `generate @nrwl/node:app ${nodeapp} --linter=eslint --standalone-config false`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -284,7 +286,9 @@ describe('Build Node apps', () => {
     it('should have plugin output if specified in `tsPlugins`', async () => {
       newProject();
       const nestapp = uniq('nestapp');
-      runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+      runCLI(
+        `generate @nrwl/nest:app ${nestapp} --linter=eslint --standalone-config false`
+      );
 
       // TODO: update to v5 when Nest8 is supported
       packageInstall('@nestjs/swagger', undefined, '4.8.2');
@@ -362,7 +366,7 @@ describe('Node Libraries', () => {
 
     const nodeLib = uniq('nodelib');
     runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib} --standalone-config false`
     );
     checkFilesExist(`libs/${nodeLib}/package.json`);
     const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
@@ -413,7 +417,7 @@ describe('Node Libraries', () => {
 
     const nodeLib = uniq('nodelib');
     runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib} --standalone-config false`
     );
 
     updateWorkspaceConfig((workspace) => {
@@ -472,14 +476,14 @@ describe('Node Libraries', () => {
 
     // Generating two libraries just to have a lot of files to copy
     runCLI(
-      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@${proj}/${nodelib}`
+      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@${proj}/${nodelib} --standalone-config false`
     );
     /**
      * The angular lib contains a lot sub directories that would fail without
      * `nodir: true` in the package.impl.ts
      */
     runCLI(
-      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
+      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib} --standalone-config false`
     );
 
     updateWorkspaceConfig((workspace) => {

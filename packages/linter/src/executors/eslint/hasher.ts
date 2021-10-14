@@ -1,8 +1,6 @@
 import { Task, TaskGraph } from '@nrwl/devkit';
 import { Hash, Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
-import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { join } from 'path';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 export default async function run(

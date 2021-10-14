@@ -33,8 +33,8 @@ describe('<%= pluginName %> e2e', () => {
         await runNxCommandAsync(
           `generate <%=npmPackageName%>:<%= pluginName %> ${plugin} --tags e2etag,e2ePackage`
         );
-        const workspace = readJson('workspace.json');
-        expect(workspace.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
+        const project = readJson(`libs/${plugin}/project.json`);
+        expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
       }, 120000);
     });
 })

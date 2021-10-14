@@ -284,8 +284,12 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:app ${appName} --no-interactive --standalone-config false`
+    );
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --no-interactive --standalone-config false`
+    );
 
     renameFile(`apps/${appName}/src/main.tsx`, `apps/${appName}/src/main.jsx`);
     renameFile(
@@ -403,7 +407,7 @@ describe('--style option', () => {
   `('should support global and css modules', ({ style }) => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive`
+      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive --standalone-config false`
     );
 
     // make sure stylePreprocessorOptions works

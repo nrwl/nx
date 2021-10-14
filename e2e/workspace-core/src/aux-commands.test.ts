@@ -202,7 +202,9 @@ describe('move project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+    runCLI(
+      `generate @nrwl/workspace:lib ${lib1}/data-access --standalone-config false`
+    );
 
     updateFile(
       `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -231,7 +233,7 @@ describe('move project', () => {
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+    runCLI(`generate @nrwl/workspace:lib ${lib3} --standalone-config false`);
     let workspaceJson = JSON.parse(
       readFile('workspace.json')
     ) as WorkspaceJsonConfiguration;
@@ -611,14 +613,14 @@ describe('remove project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
 
-    runCLI(`generate @nrwl/workspace:lib ${lib1}`);
+    runCLI(`generate @nrwl/workspace:lib ${lib1} --standalone-config false`);
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
     /**
      * Create a library which has an implicit dependency on lib1
      */
 
-    runCLI(`generate @nrwl/workspace:lib ${lib2}`);
+    runCLI(`generate @nrwl/workspace:lib ${lib2} --standalone-config false`);
     let workspaceJson = JSON.parse(
       readFile('workspace.json')
     ) as WorkspaceJsonConfiguration;
