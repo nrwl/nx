@@ -1,6 +1,5 @@
 import { ProjectGraphNode } from '@nrwl/devkit';
 import { BehaviorSubject, combineLatest, fromEvent, Subject } from 'rxjs';
-import { withLatestFrom } from 'rxjs/operators';
 import { DisplayOptionsPanel } from './display-options-panel';
 import { FocusedProjectPanel } from './focused-project-panel';
 import { ProjectList } from './project-list';
@@ -98,30 +97,6 @@ export class SidebarComponent {
   }
 
   listenForDOMEvents() {
-    const sidebarElement = document.getElementById('sidebar');
-    const sidebarToggleButton = document.getElementById(
-      'sidebar-toggle-button'
-    );
-    sidebarToggleButton.style.left = `${sidebarElement.clientWidth - 1}px`;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      entries.forEach((entry) => {
-        sidebarToggleButton.style.left = `${entry.contentRect.width - 1}px`;
-      });
-    });
-    resizeObserver.observe(sidebarElement);
-
-    fromEvent(sidebarToggleButton, 'click').subscribe((x) => {
-      sidebarElement.classList.toggle('hidden');
-      if (sidebarElement.classList.contains('hidden')) {
-        sidebarElement.style.marginLeft = `-${
-          sidebarElement.clientWidth + 1
-        }px`;
-      } else {
-        sidebarElement.style.marginLeft = `0px`;
-      }
-    });
-
     this.displayOptionsPanel.selectAll$.subscribe(() => {
       this.selectAllProjects();
     });
@@ -150,9 +125,9 @@ export class SidebarComponent {
       this.filterByTextSubject,
       this.displayOptionsPanel.searchDepth$,
     ]).subscribe(([event, searchDepth]) => {
-      if (event.text) {
+      if (event.text && !!event.text.length) {
         this.filterProjectsByText(event.text, event.includeInPath, searchDepth);
-      }
+      } else this.deselectAllProjects();
     });
 
     this.projectList.checkedProjectsChange$.subscribe((checkedProjects) => {

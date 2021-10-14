@@ -1,1 +1,1 @@
-export const FONTS = '"Helvetica Neue", sans-serif';
+export const FONTS = 'system-ui, "Helvetica Neue", sans-serif';
