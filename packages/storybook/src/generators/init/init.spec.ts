@@ -47,6 +47,11 @@ describe('@nrwl/storybook:init', () => {
 
       // generic html specific
       expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+
+      // generic svelte specific
+      expect(
+        packageJson.devDependencies['@storybook/svelte']
+      ).not.toBeDefined();
     });
 
     it('should add react related dependencies when using React as uiFramework', async () => {
@@ -84,6 +89,11 @@ describe('@nrwl/storybook:init', () => {
 
       // generic html specific
       expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+
+      // generic svelte specific
+      expect(
+        packageJson.devDependencies['@storybook/svelte']
+      ).not.toBeDefined();
     });
   });
 
@@ -120,6 +130,9 @@ describe('@nrwl/storybook:init', () => {
 
     // generic html specific
     expect(packageJson.devDependencies['@storybook/html']).toBeDefined();
+
+    // generic svelte specific
+    expect(packageJson.devDependencies['@storybook/svelte']).not.toBeDefined();
   });
 
   it('should add web-components related dependencies when using html as uiFramework', async () => {
@@ -163,6 +176,9 @@ describe('@nrwl/storybook:init', () => {
 
     // generic vue specific
     expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
+
+    // generic svelte specific
+    expect(packageJson.devDependencies['@storybook/svelte']).not.toBeDefined();
   });
 
   it('should add vue related dependencies when using vue as uiFramework', async () => {
@@ -203,6 +219,9 @@ describe('@nrwl/storybook:init', () => {
     expect(
       packageJson.devDependencies['@storybook/web-components']
     ).not.toBeDefined();
+
+    // generic svelte specific
+    expect(packageJson.devDependencies['@storybook/svelte']).not.toBeDefined();
 
     // generic vue specific
     expect(packageJson.devDependencies['@storybook/vue']).toBeDefined();
@@ -250,8 +269,60 @@ describe('@nrwl/storybook:init', () => {
       packageJson.devDependencies['@storybook/web-components']
     ).not.toBeDefined();
 
+    // generic svelte specific
+    expect(packageJson.devDependencies['@storybook/svelte']).not.toBeDefined();
+
     // generic vue3 specific
     expect(packageJson.devDependencies['@storybook/vue3']).toBeDefined();
+  });
+
+  it('should add svelte related dependencies when using svelte as uiFramework', async () => {
+    const existing = 'existing';
+    const existingVersion = '1.0.0';
+    addDependenciesToPackageJson(
+      tree,
+      { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+      { [existing]: existingVersion }
+    );
+    await initGenerator(tree, {
+      uiFramework: '@storybook/svelte',
+    });
+    const packageJson = readJson(tree, 'package.json');
+
+    // general deps
+    expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
+    expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+    expect(packageJson.dependencies[existing]).toBeDefined();
+    expect(packageJson.devDependencies[existing]).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/addon-essentials']
+    ).toBeDefined();
+
+    // react specific
+    expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+    expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+    expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+
+    // angular specific
+    expect(packageJson.devDependencies['@storybook/angular']).not.toBeDefined();
+    expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+
+    // generic html specific
+    expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+
+    // generic vue specific
+    expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
+
+    // generic web-components specific
+    expect(
+      packageJson.devDependencies['@storybook/web-components']
+    ).not.toBeDefined();
+
+    // generic vue3 specific
+    expect(packageJson.devDependencies['@storybook/vue3']).not.toBeDefined();
+
+    // generic svelte specific
+    expect(packageJson.devDependencies['@storybook/svelte']).toBeDefined();
   });
 
   it('should add build-storybook to cacheable operations', async () => {

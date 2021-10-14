@@ -18,6 +18,7 @@ export function getStorybookFrameworkPath(uiFramework) {
     '@storybook/vue3': '@storybook/vue3/dist/cjs/server/options',
     '@storybook/web-components':
       '@storybook/web-components/dist/cjs/server/options',
+    '@storybook/svelte': '@storybook/svelte/dist/cjs/server/options',
   };
 
   if (isStorybookV62onwards(uiFramework)) {
