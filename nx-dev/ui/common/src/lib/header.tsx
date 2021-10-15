@@ -20,8 +20,10 @@ export type HeaderProps =
 
 export function Header(props: HeaderProps) {
   const showSearch = props.showSearch;
-  const version = 'version' in props ? props.version : null;
-  const flavor = 'flavor' in props ? props.flavor : null;
+  const version =
+    'version' in props ? props.version : { name: 'Latest', value: 'l' };
+  const flavor =
+    'flavor' in props ? props.flavor : { name: 'React', value: 'r' };
 
   return (
     <header
