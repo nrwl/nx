@@ -45,7 +45,7 @@ export class ProjectList {
                 </svg>
               </span>
             </button>
-            <label class="font-mono font-normal ml-3 p-2 transition hover:bg-gray-50 cursor-pointer block truncate w-full" data-project="project-name" data-active="false">
+            <label class="font-mono font-normal ml-3 p-2 transition hover:bg-gray-50 cursor-pointer block rounded-md truncate w-full" data-project="project-name" data-active="false">
               project-name
             </label>
           </div>
