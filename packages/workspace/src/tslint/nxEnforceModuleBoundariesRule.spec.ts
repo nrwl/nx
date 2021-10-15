@@ -1,5 +1,4 @@
 import { vol } from 'memfs';
-import { extname } from 'path';
 import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
 import {
@@ -10,7 +9,7 @@ import {
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
-import { FileData } from 'packages/devkit/src/project-graph/interfaces';
+import { FileData } from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({ appRootPath: '/root' }));
@@ -177,7 +176,7 @@ describe('Enforce Module Boundaries (tslint)', () => {
   });
 
   describe('depConstraints', () => {
-    const graph = {
+    const graph: ProjectGraph = {
       nodes: {
         apiName: {
           name: 'apiName',
@@ -245,16 +244,14 @@ describe('Enforce Module Boundaries (tslint)', () => {
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
+      },
+      externalNodes: {
         npmPackage: {
-          name: 'npmPackage',
+          name: 'npm:package',
           type: 'npm',
           data: {
             packageName: 'npm-package',
             version: '0.0.0',
-            tags: [],
-            implicitDependencies: [],
-            targets: {},
-            files: [],
           },
         },
       },
@@ -1202,7 +1199,10 @@ function runRule(
     `${process.cwd()}/proj`,
     'mycompany',
     mappedProjectGraph,
-    new TargetProjectLocator(mappedProjectGraph.nodes)
+    new TargetProjectLocator(
+      mappedProjectGraph.nodes,
+      mappedProjectGraph.externalNodes
+    )
   );
   return rule.apply(sourceFile);
 }

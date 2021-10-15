@@ -34,8 +34,9 @@ It only uses language primitives and immutable objects
 - [ProjectFileMap](../../react/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../react/nx-devkit/index#projectgraph)
 - [ProjectGraphDependency](../../react/nx-devkit/index#projectgraphdependency)
-- [ProjectGraphNode](../../react/nx-devkit/index#projectgraphnode)
+- [ProjectGraphExternalNode](../../react/nx-devkit/index#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../react/nx-devkit/index#projectgraphprocessorcontext)
+- [ProjectGraphProjectNode](../../react/nx-devkit/index#projectgraphprojectnode)
 
 ### Tree Interfaces
 
@@ -71,6 +72,10 @@ It only uses language primitives and immutable objects
 ### Package Manager Type aliases
 
 - [PackageManager](../../react/nx-devkit/index#packagemanager)
+
+### Project Graph Type aliases
+
+- [ProjectGraphNode](../../react/nx-devkit/index#projectgraphnode)
 
 ### Utils Type aliases
 
@@ -200,21 +205,27 @@ It only uses language primitives and immutable objects
 
 ---
 
-### ProjectGraphNode
+### ProjectGraphExternalNode
 
-• **ProjectGraphNode**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+• **ProjectGraphExternalNode**: `Object`
 
 ---
 
 ### ProjectGraphProcessorContext
 
 • **ProjectGraphProcessorContext**: `Object`
+
+---
+
+### ProjectGraphProjectNode
+
+• **ProjectGraphProjectNode**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
@@ -355,6 +366,20 @@ It only uses language primitives and immutable objects
 ### PackageManager
 
 Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
+
+---
+
+## Project Graph Type aliases
+
+### ProjectGraphNode
+
+Ƭ **ProjectGraphNode**<`T`\>: [`ProjectGraphProjectNode`](../../react/nx-devkit/index#projectgraphprojectnode)<`T`\> \| [`ProjectGraphExternalNode`](../../react/nx-devkit/index#projectgraphexternalnode)
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 

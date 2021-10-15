@@ -3,11 +3,14 @@ import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraphAsync,
-  onlyWorkspaceProjects,
   ProjectType,
   withDeps,
 } from '../core/project-graph';
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import {
+  ProjectGraph,
+  ProjectGraphNode,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utilities/output';
@@ -37,7 +40,7 @@ export async function affected(
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync('4.0');
+  const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
@@ -141,8 +144,9 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
   if (nxArgs.withDeps) {
-    affectedGraph = onlyWorkspaceProjects(
-      withDeps(projectGraph, Object.values(affectedGraph.nodes))
+    affectedGraph = withDeps(
+      projectGraph,
+      Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[]
     );
   }
   return affectedGraph.nodes;

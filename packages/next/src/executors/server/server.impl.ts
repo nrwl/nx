@@ -53,7 +53,7 @@ export default async function* serveExecutor(
   const root = resolve(context.root, buildOptions.root);
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph('4.0'),
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       'build', // should be generalized

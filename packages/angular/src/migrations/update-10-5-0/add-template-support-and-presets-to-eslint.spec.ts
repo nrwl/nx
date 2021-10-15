@@ -110,11 +110,14 @@ describe('add-template-support-and-presets-to-eslint', () => {
               root: 'apps/lib1',
             },
           },
+        },
+        externalNodes: {
           'npm:@angular/core': {
             name: 'npm:@angular/core',
             type: 'npm',
             data: {
-              files: [],
+              version: '1',
+              packageName: '@angular/core',
             },
           },
         },

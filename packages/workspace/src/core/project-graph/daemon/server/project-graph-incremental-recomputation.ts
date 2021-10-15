@@ -126,8 +126,7 @@ async function createAndSerializeProjectGraph() {
         projectFileMapWithFiles.projectFileMap,
         projectFileMapWithFiles.allWorkspaceFiles,
         currentProjectGraphCache || readCache(),
-        true,
-        '4.0'
+        true
       );
     currentProjectGraphCache = projectGraphCache;
 

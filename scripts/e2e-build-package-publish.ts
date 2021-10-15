@@ -11,19 +11,21 @@ process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 async function buildPackagePublishAndCleanPorts() {
-  await Promise.all([
-    remove('./build'),
-    remove('./tmp/nx/proj-backup'),
-    remove('./tmp/angular/proj-backup'),
-    remove('./tmp/local-registry'),
-  ]);
+  if (!process.env.SKIP_PUBLISH) {
+    await Promise.all([
+      remove('./build'),
+      remove('./tmp/nx/proj-backup'),
+      remove('./tmp/angular/proj-backup'),
+      remove('./tmp/local-registry'),
+    ]);
 
-  build(process.env.PUBLISHED_VERSION);
-  try {
-    await updateVersionsAndPublishPackages();
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
+    build(process.env.PUBLISHED_VERSION);
+    try {
+      await updateVersionsAndPublishPackages();
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
   }
 }
 

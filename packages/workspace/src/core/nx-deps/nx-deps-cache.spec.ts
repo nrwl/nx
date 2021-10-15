@@ -10,13 +10,25 @@ describe('nx deps utils', () => {
     it('should be false when nothing changes', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({}),
+          createCache({ version: '5.0' }),
           createPackageJsonDeps({}),
           createWorkspaceJson({}),
           createNxJson({}),
           createTsConfigJson()
         )
       ).toEqual(false);
+    });
+
+    it('should be true if cache version is outdated', () => {
+      expect(
+        shouldRecomputeWholeGraph(
+          createCache({ version: '4.0' }),
+          createPackageJsonDeps({}),
+          createWorkspaceJson({}),
+          createNxJson({}),
+          createTsConfigJson()
+        )
+      ).toEqual(true);
     });
 
     it('should be true when version of nrwl/workspace changes', () => {

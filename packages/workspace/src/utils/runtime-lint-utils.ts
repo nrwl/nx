@@ -1,28 +1,23 @@
 import * as path from 'path';
 import { FileData } from '../core/file-utils';
-import type {
+import {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-  TargetConfiguration,
+  ProjectGraphProjectNode,
+  normalizePath,
+  DependencyType,
 } from '@nrwl/devkit';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { normalizePath, DependencyType } from '@nrwl/devkit';
 
-export interface MappedProjectGraphNode<T = any> {
-  type: string;
-  name: string;
-  data: T & {
-    root?: string;
-    targets?: { [targetName: string]: TargetConfiguration };
+export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
+  data: {
     files: Record<string, FileData>;
   };
-}
-export interface MappedProjectGraph<T = any> {
+};
+export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
   nodes: Record<string, MappedProjectGraphNode<T>>;
-  dependencies: Record<string, ProjectGraphDependency[]>;
-  allWorkspaceFiles?: FileData[];
-}
+};
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -74,7 +69,7 @@ export function isRelative(s: string) {
 export function isRelativeImportIntoAnotherProject(
   imp: string,
   projectPath: string,
-  projectGraph: ProjectGraph,
+  projectGraph: MappedProjectGraph,
   sourceFilePath: string,
   sourceProject: ProjectGraphNode
 ): boolean {
@@ -104,7 +99,7 @@ export function findSourceProject(
 }
 
 export function findTargetProject(
-  projectGraph: ProjectGraph,
+  projectGraph: MappedProjectGraph,
   targetFile: string
 ) {
   let targetProject = findProjectUsingFile(projectGraph, targetFile);
@@ -198,7 +193,9 @@ export function mapProjectGraphFiles<T>(
     return null;
   }
   const nodes: Record<string, MappedProjectGraphNode> = {};
-  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
+  Object.entries(
+    projectGraph.nodes as Record<string, ProjectGraphProjectNode>
+  ).forEach(([name, node]) => {
     const files: Record<string, FileData> = {};
     node.data.files.forEach(({ file, hash }) => {
       files[removeExt(file)] = { file, hash };

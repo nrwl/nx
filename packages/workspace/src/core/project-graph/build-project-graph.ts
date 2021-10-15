@@ -8,13 +8,12 @@ import {
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphBuilder,
-  ProjectGraphNode,
   ProjectGraphProcessorContext,
   readJsonFile,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import {
@@ -40,7 +39,7 @@ import { existsSync } from 'fs';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 
-export async function buildProjectGraph(projectGraphVersion: string = '4.0') {
+export async function buildProjectGraph() {
   const workspaceJson = readWorkspaceJson();
   const { projectFileMap, allWorkspaceFiles } =
     createProjectFileMap(workspaceJson);
@@ -54,8 +53,7 @@ export async function buildProjectGraph(projectGraphVersion: string = '4.0') {
       projectFileMap,
       allWorkspaceFiles,
       cache,
-      cacheEnabled,
-      projectGraphVersion
+      cacheEnabled
     )
   ).projectGraph;
 }
@@ -65,13 +63,13 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   cache: ProjectGraphCache | null,
-  shouldWriteCache: boolean,
-  projectGraphVersion?: string
+  shouldWriteCache: boolean
 ): Promise<{
   projectGraph: ProjectGraph;
   projectGraphCache: ProjectGraphCache;
 }> {
   const nxJson = readNxJson();
+  const projectGraphVersion = '5.0';
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(
     nxJson,

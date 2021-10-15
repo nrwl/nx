@@ -5,6 +5,7 @@ import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  ProjectGraphExternalNode,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { join } from 'path';
@@ -29,6 +30,7 @@ export interface ProjectGraphCache {
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
   nodes: Record<string, ProjectGraphNode>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
 
   // this is only used by scripts that read dependency from the file
   // in the sync fashion.
@@ -95,11 +97,12 @@ export function createCache(
     version: packageJsonDeps[p],
   }));
   const newValue: ProjectGraphCache = {
-    version: projectGraph.version || '4.0',
+    version: projectGraph.version || '5.0',
     deps: packageJsonDeps,
     pathMappings: tsConfig.compilerOptions.paths || {},
     nxJsonPlugins,
     nodes: projectGraph.nodes,
+    externalNodes: projectGraph.externalNodes,
     dependencies: projectGraph.dependencies,
   };
   return newValue;
@@ -119,6 +122,9 @@ export function shouldRecomputeWholeGraph(
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
+  if (cache.version !== '5.0') {
+    return true;
+  }
   if (cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']) {
     return true;
   }

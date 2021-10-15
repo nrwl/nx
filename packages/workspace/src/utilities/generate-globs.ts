@@ -17,7 +17,7 @@ export function createGlobPatternsForDependencies(
   fileGlobPattern: string
 ): string[] {
   const filenameRelativeToWorkspaceRoot = relative(appRootPath, dirPath);
-  const projectGraph = readCachedProjectGraph('4.0');
+  const projectGraph = readCachedProjectGraph();
 
   // find the project
   let projectName;

@@ -11,10 +11,7 @@ import {
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { offsetFromRoot } from '@nrwl/devkit';
-import {
-  createProjectGraphAsync,
-  isNpmProject,
-} from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
 /**
  * It was decided with Jason that we would do a simple replacement in this migration
@@ -45,7 +42,7 @@ function addHTMLPatternToBuilderConfig(
 async function updateProjectESLintConfigsAndBuilders(
   host: Tree
 ): Promise<Rule> {
-  const graph = await createProjectGraphAsync('4.0');
+  const graph = await createProjectGraphAsync();
 
   /**
    * Make sure user is already using ESLint and is up to date with
@@ -70,7 +67,7 @@ async function updateProjectESLintConfigsAndBuilders(
       !graph.dependencies[projectName].some(
         (dependency) =>
           dependency.target.startsWith('npm:@angular/') &&
-          isNpmProject(graph.nodes[dependency.target])
+          graph.externalNodes[dependency.target]
       )
     ) {
       return;

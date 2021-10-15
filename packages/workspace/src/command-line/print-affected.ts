@@ -1,11 +1,9 @@
-import type { ProjectGraph, ProjectGraphNode, Task } from '@nrwl/devkit';
+import { ProjectGraph, ProjectGraphNode, Task } from '@nrwl/devkit';
 import type { Environment } from '../core/shared-interfaces';
 import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import type { NxArgs } from './utils';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { getPackageManagerCommand } from '@nrwl/devkit';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],

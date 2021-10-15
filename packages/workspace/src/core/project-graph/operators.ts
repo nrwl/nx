@@ -1,20 +1,40 @@
-import { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+  ProjectGraphNode,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 
 export function reverse(graph: ProjectGraph): ProjectGraph {
   const resultFromMemo = reverseMemo.get(graph);
-  if (resultFromMemo) return resultFromMemo;
+  if (resultFromMemo) {
+    return resultFromMemo;
+  }
 
-  const result = { nodes: graph.nodes, dependencies: {} } as ProjectGraph;
+  const result = {
+    nodes: graph.nodes,
+    externalNodes: graph.externalNodes,
+    dependencies: {},
+  } as ProjectGraph;
   Object.keys(graph.nodes).forEach((n) => (result.dependencies[n] = []));
+  // we need to keep external node's reverse dependencies to trace our route back
+  if (graph.externalNodes) {
+    Object.keys(graph.externalNodes).forEach(
+      (n) => (result.dependencies[n] = [])
+    );
+  }
   Object.values(graph.dependencies).forEach((byProject) => {
     byProject.forEach((dep) => {
-      result.dependencies[dep.target].push({
-        type: dep.type,
-        source: dep.target,
-        target: dep.source,
-      });
+      const dependency = result.dependencies[dep.target];
+      if (dependency) {
+        dependency.push({
+          type: dep.type,
+          source: dep.target,
+          target: dep.source,
+        });
+      }
     });
   });
   reverseMemo.set(graph, result);
@@ -23,13 +43,13 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
 }
 
 export function filterNodes(
-  predicate: (n: ProjectGraphNode) => boolean
+  predicate?: (n: ProjectGraphNode) => boolean
 ): (p: ProjectGraph) => ProjectGraph {
   return (original) => {
     const graph = { nodes: {}, dependencies: {} } as ProjectGraph;
     const added = new Set<string>();
     Object.values(original.nodes).forEach((n) => {
-      if (predicate(n)) {
+      if (!predicate || predicate(n)) {
         graph.nodes[n.name] = n;
         graph.dependencies[n.name] = [];
         added.add(n.name);
@@ -46,6 +66,9 @@ export function filterNodes(
   };
 }
 
+/**
+ * @deprecated will be removed in v14. All projects in ProjectGraph's `nodes` are workspace projects
+ */
 export function isWorkspaceProject(project: ProjectGraphNode) {
   return (
     project.type === 'app' || project.type === 'lib' || project.type === 'e2e'
@@ -54,33 +77,26 @@ export function isWorkspaceProject(project: ProjectGraphNode) {
 
 export function isNpmProject(
   project: ProjectGraphNode
-): project is ProjectGraphNode<{ packageName: string; version: string }> {
+): project is ProjectGraphExternalNode {
   return project?.type === 'npm';
 }
 
 export function getSortedProjectNodes(nodes: Record<string, ProjectGraphNode>) {
   return Object.values(nodes).sort((nodeA, nodeB) => {
-    // If a or b is not a nx project, leave them in the same spot
-    if (!isWorkspaceProject(nodeA) && !isWorkspaceProject(nodeB)) {
-      return 0;
-    }
-    // sort all non-projects lower
-    if (!isWorkspaceProject(nodeA) && isWorkspaceProject(nodeB)) {
-      return 1;
-    }
-    if (isWorkspaceProject(nodeA) && !isWorkspaceProject(nodeB)) {
-      return -1;
-    }
-
     return nodeA.data.root.length > nodeB.data.root.length ? -1 : 1;
   });
 }
 
+/**
+ * @deprecated will be removed in v14. All projects in ProjectGraph's `nodes` are workspace projects. Use {@link pruneExternalNodes}
+ */
 export const onlyWorkspaceProjects = filterNodes(isWorkspaceProject);
+
+export const pruneExternalNodes = filterNodes();
 
 export function withDeps(
   original: ProjectGraph,
-  subsetNodes: ProjectGraphNode[]
+  subsetNodes: ProjectGraphProjectNode[]
 ): ProjectGraph {
   const res = { nodes: {}, dependencies: {} } as ProjectGraph;
   const visitedNodes = [];
@@ -100,7 +116,9 @@ export function withDeps(
     visitedNodes.push(node.name);
 
     original.dependencies[node.name].forEach((n) => {
-      recurNodes(original.nodes[n.target]);
+      if (original.nodes[n.target]) {
+        recurNodes(original.nodes[n.target]);
+      }
     });
   }
 
@@ -110,6 +128,9 @@ export function withDeps(
 
     const ds = original.dependencies[node.name];
     ds.forEach((n) => {
+      if (!original.nodes[n.target]) {
+        return;
+      }
       if (!res.dependencies[n.source]) {
         res.dependencies[n.source] = [];
       }
@@ -117,7 +138,9 @@ export function withDeps(
     });
 
     ds.forEach((n) => {
-      recurEdges(original.nodes[n.target]);
+      if (original.nodes[n.target]) {
+        recurEdges(original.nodes[n.target]);
+      }
     });
   }
 }

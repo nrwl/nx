@@ -93,7 +93,7 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph('4.0'),
+    readCachedProjectGraph(),
     context.workspaceRoot,
     context.target.project,
     context.target.target,

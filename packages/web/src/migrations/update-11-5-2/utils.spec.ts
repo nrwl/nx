@@ -5,14 +5,14 @@ import { hasDependentAppUsingWebBuild } from '@nrwl/web/src/migrations/update-11
 describe('hasDependentAppUsingWebBuild', () => {
   const graph: ProjectGraph = reverse({
     nodes: {
-      webapp: { name: 'webapp', data: { files: [] }, type: 'application' },
-      nodeapp: { name: 'nodeapp', data: { files: [] }, type: 'application' },
-      weblib1: { name: 'weblib1', data: { files: [] }, type: 'library' },
-      weblib2: { name: 'weblib2', data: { files: [] }, type: 'library' },
-      weblib3: { name: 'weblib3', data: { files: [] }, type: 'library' },
-      stylelib: { name: 'stylelib', data: { files: [] }, type: 'library' },
-      sharedlib: { name: 'sharedlib', data: { files: [] }, type: 'library' },
-      nodelib: { name: 'nodelib', data: { files: [] }, type: 'library' },
+      webapp: { name: 'webapp', data: { files: [] }, type: 'app' },
+      nodeapp: { name: 'nodeapp', data: { files: [] }, type: 'app' },
+      weblib1: { name: 'weblib1', data: { files: [] }, type: 'lib' },
+      weblib2: { name: 'weblib2', data: { files: [] }, type: 'lib' },
+      weblib3: { name: 'weblib3', data: { files: [] }, type: 'lib' },
+      stylelib: { name: 'stylelib', data: { files: [] }, type: 'lib' },
+      sharedlib: { name: 'sharedlib', data: { files: [] }, type: 'lib' },
+      nodelib: { name: 'nodelib', data: { files: [] }, type: 'lib' },
     },
     dependencies: {
       webapp: [

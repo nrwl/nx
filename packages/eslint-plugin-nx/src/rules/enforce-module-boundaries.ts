@@ -132,7 +132,7 @@ export default createESLintRule<Options, MessageIds>({
        */
       try {
         (global as any).projectGraph = mapProjectGraphFiles(
-          readCachedProjectGraph('4.0')
+          readCachedProjectGraph()
         );
       } catch {}
     }
@@ -146,7 +146,8 @@ export default createESLintRule<Options, MessageIds>({
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
-        projectGraph.nodes
+        projectGraph.nodes,
+        projectGraph.externalNodes
       );
     }
     const targetProjectLocator = (global as any)
@@ -213,7 +214,7 @@ export default createESLintRule<Options, MessageIds>({
       );
 
       // If source or target are not part of an nx workspace, return.
-      if (!sourceProject || !targetProject) {
+      if (!sourceProject || !targetProject || targetProject.type === 'npm') {
         return;
       }
 
@@ -232,10 +233,6 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      // project => npm package
-      if (isNpmProject(targetProject)) {
-        return;
-      }
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(

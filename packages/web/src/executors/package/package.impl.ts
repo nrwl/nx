@@ -44,7 +44,7 @@ export default async function* run(
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
-  const projectGraph = readCachedProjectGraph('4.0');
+  const projectGraph = readCachedProjectGraph();
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
     projectGraph,

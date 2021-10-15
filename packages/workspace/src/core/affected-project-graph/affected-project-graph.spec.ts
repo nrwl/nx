@@ -171,7 +171,7 @@ describe('project graph', () => {
     });
   });
 
-  it('should create nodes and dependencies with npm packages', async () => {
+  it('should create nodes and dependencies with npm packages in externalNodes', async () => {
     const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
@@ -190,11 +190,6 @@ describe('project graph', () => {
 
     expect(affected).toEqual({
       nodes: {
-        'npm:happy-nrwl': {
-          type: 'npm',
-          name: 'npm:happy-nrwl',
-          data: expect.anything(),
-        },
         util: {
           name: 'util',
           type: 'lib',
@@ -211,8 +206,14 @@ describe('project graph', () => {
           data: expect.anything(),
         },
       },
+      externalNodes: {
+        'npm:happy-nrwl': {
+          type: 'npm',
+          name: 'npm:happy-nrwl',
+          data: expect.anything(),
+        },
+      },
       dependencies: {
-        'npm:happy-nrwl': [],
         demo: [
           {
             type: 'static',
@@ -264,7 +265,6 @@ describe('project graph', () => {
     ]);
 
     expect(Object.keys(affected.nodes)).toEqual([
-      'npm:@nrwl/workspace',
       'demo',
       'demo-e2e',
       'ui',

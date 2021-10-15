@@ -2,10 +2,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utilities/fileutils';
-import {
-  createProjectGraphAsync,
-  onlyWorkspaceProjects,
-} from '../core/project-graph';
+import { createProjectGraphAsync } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges } from '../core/file-utils';
 import * as yargs from 'yargs';
@@ -91,7 +88,7 @@ async function getPatternsFromApps(
   affectedFiles: string[],
   matchAllPattern: string
 ): Promise<string[]> {
-  const graph = onlyWorkspaceProjects(await createProjectGraphAsync('4.0'));
+  const graph = await createProjectGraphAsync();
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)

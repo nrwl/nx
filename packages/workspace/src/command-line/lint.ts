@@ -1,6 +1,6 @@
 import {
   createProjectGraphAsync,
-  onlyWorkspaceProjects,
+  pruneExternalNodes,
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import { FileData, workspaceLayout } from '../core/file-utils';
@@ -8,12 +8,13 @@ import { output } from '../utilities/output';
 import * as path from 'path';
 
 export async function workspaceLint(): Promise<void> {
-  const projectGraph = await createProjectGraphAsync('4.0');
-  const graph = onlyWorkspaceProjects(projectGraph);
+  const graph = await createProjectGraphAsync();
+  const allWorkspaceFiles = graph.allWorkspaceFiles;
+  const projectGraph = pruneExternalNodes(graph);
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
-    graph,
-    readAllFilesFromAppsAndLibs(projectGraph.allWorkspaceFiles)
+    projectGraph,
+    readAllFilesFromAppsAndLibs(allWorkspaceFiles)
   ).run();
 
   if (cliErrorOutputConfigs.length > 0) {

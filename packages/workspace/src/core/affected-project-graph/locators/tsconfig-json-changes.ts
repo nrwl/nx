@@ -7,11 +7,7 @@ import {
   JsonChange,
 } from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import {
-  getSortedProjectNodes,
-  onlyWorkspaceProjects,
-  ProjectGraphNode,
-} from '../../project-graph';
+import { getSortedProjectNodes, ProjectGraphNode } from '../../project-graph';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
@@ -25,14 +21,12 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
     return [];
   }
 
-  const workspaceGraph = onlyWorkspaceProjects(graph);
-
-  const sortedNodes = getSortedProjectNodes(workspaceGraph.nodes);
+  const sortedNodes = getSortedProjectNodes(graph.nodes);
 
   const changes = tsConfigJsonChanges.getChanges();
 
   if (!allChangesArePathChanges(changes)) {
-    return Object.keys(workspaceGraph.nodes);
+    return Object.keys(graph.nodes);
   }
 
   const touched: string[] = [];
@@ -45,7 +39,7 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
 
     // If a path is deleted, everything is touched
     if (change.type === DiffType.Deleted) {
-      return Object.keys(workspaceGraph.nodes);
+      return Object.keys(graph.nodes);
     }
     touched.push(...getProjectsAffectedByPaths(change, sortedNodes));
   }

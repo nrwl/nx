@@ -37,7 +37,7 @@ export function calculateProjectDependencies(
     []
   )
     .map((dep) => {
-      const depNode = projGraph.nodes[dep];
+      const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (
         depNode.type === ProjectType.lib &&
         isBuildable(targetName, depNode)
@@ -61,7 +61,7 @@ export function calculateProjectDependencies(
           ),
           node: depNode,
         };
-      } else if (isNpmProject(depNode)) {
+      } else if (depNode.type === 'npm') {
         return {
           name: depNode.data.packageName,
           outputs: [],
