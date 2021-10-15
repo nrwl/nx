@@ -70,7 +70,10 @@ describe('lib', () => {
       // ASSERT
       const packageJson = readJson(appTree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss']).toBeUndefined();
       expect(packageJson.devDependencies['postcss-import']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss-preset-env']).toBeUndefined();
+      expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
     it('should update package.json when publishable', async () => {
@@ -83,7 +86,10 @@ describe('lib', () => {
       // ASSERT
       const packageJson = readJson(appTree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
+      expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['postcss-import']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
     it('should update tsconfig.lib.prod.json when enableIvy', async () => {

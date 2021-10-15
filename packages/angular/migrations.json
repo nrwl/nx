@@ -91,11 +91,11 @@
       "description": "Fixes invalid importPaths for buildable and publishable libs.",
       "factory": "./src/migrations/update-12-9-0/update-invalid-import-paths"
     },
-    "add-postcss-import": {
+    "add-postcss-packages": {
       "cli": "nx",
-      "version": "13.0.0-beta.1",
-      "description": "Adds postcss-import package if ng-packagr is already installed.",
-      "factory": "./src/migrations/update-13-0-0/add-postcss-import"
+      "version": "13.0.0-beta.10",
+      "description": "Adds postcss packages needed for Tailwind support if ng-packagr is already installed.",
+      "factory": "./src/migrations/update-13-0-0/add-postcss-packages"
     }
   },
   "packageJsonUpdates": {
