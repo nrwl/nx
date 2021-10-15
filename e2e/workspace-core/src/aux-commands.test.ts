@@ -4,13 +4,13 @@ import {
   newProject,
   readFile,
   readJson,
-  readWorkspaceConfig,
+  readProjectConfig,
   renameFile,
   runCLI,
   tmpProjPath,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 let proj;
@@ -234,11 +234,9 @@ describe('move project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    updateWorkspaceConfig((workspaceJson) => {
-      workspaceJson.projects[lib3].implicitDependencies = [
-        `${lib1}-data-access`,
-      ];
-      return workspaceJson;
+    updateProjectConfig(lib3, (config) => {
+      config.implicitDependencies = [`${lib1}-data-access`];
+      return config;
     });
 
     /**
@@ -295,12 +293,14 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
     checkFilesExist(rootClassPath);
 
-    let workspaceJson = readWorkspaceConfig();
+    let workspaceJson = readJson(workspaceConfigName());
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
-    expect(workspaceJson.projects[newName]).toMatchObject({
+    const newConfig = readProjectConfig(newName);
+    expect(newConfig).toMatchObject({
       tags: [],
     });
-    expect(workspaceJson.projects[lib3].implicitDependencies).toEqual([
+    const lib3Config = readProjectConfig(lib3);
+    expect(lib3Config.implicitDependencies).toEqual([
       `shared-${lib1}-data-access`,
     ]);
 
@@ -314,9 +314,9 @@ describe('move project', () => {
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
-    workspaceJson = readWorkspaceConfig();
+    workspaceJson = readJson(workspaceConfigName());
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
-    const project = workspaceJson.projects[newName];
+    const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
@@ -372,11 +372,9 @@ describe('move project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    updateWorkspaceConfig((workspaceJson) => {
-      workspaceJson.projects[lib3].implicitDependencies = [
-        `${lib1}-data-access`,
-      ];
-      return workspaceJson;
+    updateProjectConfig(lib3, (config) => {
+      config.implicitDependencies = [`${lib1}-data-access`];
+      return config;
     });
 
     /**
@@ -443,16 +441,15 @@ describe('move project', () => {
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
-    const workspaceJson = readWorkspaceConfig();
+    const workspaceJson = readJson(workspaceConfigName());
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
-    const project = workspaceJson.projects[newName];
+    const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.tags).toEqual([]);
-    expect(workspaceJson.projects[lib3].implicitDependencies).toEqual([
-      newName,
-    ]);
+    const lib3Config = readProjectConfig(lib3);
+    expect(lib3Config.implicitDependencies).toEqual([newName]);
 
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `libs/shared/${lib1}/data-access/**/*.ts`,
@@ -508,11 +505,9 @@ describe('move project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    updateWorkspaceConfig((workspaceJson) => {
-      workspaceJson.projects[lib3].implicitDependencies = [
-        `${lib1}-data-access`,
-      ];
-      return workspaceJson;
+    updateProjectConfig(lib3, (config) => {
+      config.implicitDependencies = [`${lib1}-data-access`];
+      return config;
     });
 
     /**
@@ -579,9 +574,9 @@ describe('move project', () => {
     ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
-    const workspaceJson = readWorkspaceConfig();
+    const workspaceJson = readJson(workspaceConfigName());
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
-    const project = workspaceJson.projects[newName];
+    const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
@@ -622,9 +617,9 @@ describe('remove project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib2}`);
-    updateWorkspaceConfig((workspaceJson) => {
-      workspaceJson.projects[lib2].implicitDependencies = [lib1];
-      return workspaceJson;
+    updateProjectConfig(lib2, (config) => {
+      config.implicitDependencies = [lib1];
+      return config;
     });
 
     /**
@@ -656,9 +651,10 @@ describe('remove project', () => {
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
     expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
-    const workspaceJson = readWorkspaceConfig();
+    const workspaceJson = readJson(workspaceConfigName());
     expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
-    expect(workspaceJson.projects[lib2].implicitDependencies).toEqual([]);
+    const lib2Config = readProjectConfig(lib2);
+    expect(lib2Config.implicitDependencies).toEqual([]);
 
     expect(removeOutputForced).toContain(`UPDATE workspace.json`);
     expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();

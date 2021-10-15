@@ -1,7 +1,4 @@
-import type {
-  NxJsonConfiguration,
-  WorkspaceJsonConfiguration,
-} from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
@@ -9,6 +6,7 @@ import {
   newProject,
   readFile,
   readJson,
+  readProjectConfig,
   readWorkspaceConfig,
   removeProject,
   rmDist,
@@ -18,7 +16,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-  updateWorkspaceConfig,
+  workspaceConfigName,
 } from '@nrwl/e2e/utils';
 import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 
@@ -131,15 +129,15 @@ describe('run-one', () => {
     });
 
     it('should be able to include deps using target dependencies', () => {
-      const originalWorkspace = readWorkspaceConfig();
-      updateWorkspaceConfig((workspace) => {
-        workspace.projects[myapp].targets.build.dependsOn = [
+      const originalWorkspace = readProjectConfig(myapp);
+      updateProjectConfig(myapp, (config) => {
+        config.targets.build.dependsOn = [
           {
             target: 'build',
             projects: 'dependencies',
           },
         ];
-        return workspace;
+        return config;
       });
 
       const output = runCLI(`build ${myapp}`);
@@ -150,7 +148,7 @@ describe('run-one', () => {
       expect(output).toContain(mylib1);
       expect(output).toContain(mylib2);
 
-      updateWorkspaceConfig(() => originalWorkspace);
+      updateProjectConfig(myapp, () => originalWorkspace);
     }, 10000);
 
     it('should be able to include deps using target dependencies defined at the root', () => {
@@ -545,11 +543,10 @@ describe('affected (with git)', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const workspaceJson = readWorkspaceConfig();
-      updateProjectConfig(myapp, {
-        ...workspaceJson.projects[myapp],
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
         tags: ['tag'],
-      });
+      }));
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -560,11 +557,10 @@ describe('affected (with git)', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const workspaceJson = readWorkspaceConfig();
-      updateProjectConfig(myapp, {
-        ...workspaceJson.projects[myapp],
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
         prefix: 'my-app',
-      });
+      }));
 
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
@@ -574,9 +570,10 @@ describe('affected (with git)', () => {
 
   it('should affect all projects by removing projects', () => {
     generateAll();
-    updateWorkspaceConfig((config) => {
-      delete config.projects[mylib];
-      return config;
+    updateFile(workspaceConfigName(), (old) => {
+      const workspaceJson = JSON.parse(old);
+      delete workspaceJson.projects[mylib];
+      return JSON.stringify(workspaceJson, null, 2);
     });
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);
@@ -881,11 +878,11 @@ describe('cache', () => {
     runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
 
     // Update outputs in workspace.json to just be a particular file
-    updateWorkspaceConfig((workspaceJson) => {
-      workspaceJson.projects[mylib1].targets['build-base'] = {
-        ...workspaceJson.projects[mylib1].targets.build,
+    updateProjectConfig(mylib1, (config) => {
+      config.targets['build-base'] = {
+        ...config.targets.build,
       };
-      workspaceJson.projects[mylib1].targets.build = {
+      config.targets.build = {
         executor: '@nrwl/workspace:run-commands',
         outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
         options: {
@@ -897,7 +894,7 @@ describe('cache', () => {
           parallel: false,
         },
       };
-      return workspaceJson;
+      return config;
     });
 
     // run build with caching

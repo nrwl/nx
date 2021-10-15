@@ -11,7 +11,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
@@ -86,10 +86,8 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateWorkspaceConfig((json) => {
-      json.projects[childLib].targets.build.options.assets = [
-        `libs/${childLib}/src/assets`,
-      ];
+    updateProjectConfig(childLib, (json) => {
+      json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
       return json;
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');

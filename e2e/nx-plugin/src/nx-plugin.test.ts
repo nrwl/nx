@@ -5,6 +5,7 @@ import {
   killPorts,
   newProject,
   readJson,
+  readProjectConfig,
   readWorkspaceConfig,
   runCLI,
   runCLIAsync,
@@ -178,12 +179,10 @@ describe('Nx Plugin', () => {
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir `
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
-      const workspace = readWorkspaceConfig();
-      expect(workspace.projects[`subdir-${plugin}`]).toBeTruthy();
-      expect(workspace.projects[`subdir-${plugin}`].root).toBe(
-        `libs/subdir/${plugin}`
-      );
-      expect(workspace.projects[`subdir-${plugin}-e2e`]).toBeTruthy();
+      const pluginProject = readProjectConfig(`subdir-${plugin}`);
+      const pluginE2EProject = readProjectConfig(`subdir-${plugin}-e2e`);
+      expect(pluginProject.root).toBe(`libs/subdir/${plugin}`);
+      expect(pluginE2EProject).toBeTruthy();
     }, 90000);
   });
   describe('--tags', () => {
@@ -192,11 +191,8 @@ describe('Nx Plugin', () => {
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
-      const workspaceJson = readWorkspaceConfig();
-      expect(workspaceJson.projects[plugin].tags).toEqual([
-        'e2etag',
-        'e2ePackage',
-      ]);
+      const pluginProject = readProjectConfig(plugin);
+      expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
   });
 });

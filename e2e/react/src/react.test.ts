@@ -5,15 +5,13 @@ import {
   killPorts,
   newProject,
   readFile,
-  readJson,
   renameFile,
   runCLI,
   runCLIAsync,
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
-  workspaceConfigName,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('React Applications', () => {
@@ -300,14 +298,10 @@ describe('React Applications', () => {
       `apps/${appName}/src/polyfills.ts`,
       `apps/${appName}/src/polyfills.js`
     );
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[
-        appName
-      ].targets.build.options.main = `apps/${appName}/src/main.jsx`;
-      workspace.projects[
-        appName
-      ].targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
-      return workspace;
+    updateProjectConfig(appName, (config) => {
+      config.targets.build.options.main = `apps/${appName}/src/main.jsx`;
+      config.targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
+      return config;
     });
 
     const mainPath = `apps/${appName}/src/main.jsx`;
@@ -407,13 +401,11 @@ describe('--style option', () => {
     );
 
     // make sure stylePreprocessorOptions works
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[
-        appName
-      ].targets.build.options.stylePreprocessorOptions = {
+    updateProjectConfig(appName, (config) => {
+      config.targets.build.options.stylePreprocessorOptions = {
         includePaths: ['libs/shared/lib'],
       };
-      return workspace;
+      return config;
     });
     updateFile(
       `apps/${appName}/src/styles.${style}`,

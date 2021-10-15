@@ -11,9 +11,8 @@ import {
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
@@ -304,9 +303,8 @@ describe('Build Options', () => {
     const barScriptsBundleName = 'bar-scripts';
     const barStylesBundleName = 'bar-styles';
 
-    updateWorkspaceConfig((workspaceConfig) => {
-      const buildOptions =
-        workspaceConfig.projects[appName].targets.build.options;
+    updateProjectConfig(appName, (config) => {
+      const buildOptions = config.targets.build.options;
 
       buildOptions.scripts = [
         {
@@ -331,7 +329,7 @@ describe('Build Options', () => {
           bundleName: barStylesBundleName,
         },
       ];
-      return workspaceConfig;
+      return config;
     });
 
     runCLI(`build ${appName}`);
@@ -390,11 +388,10 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    updateWorkspaceConfig((workspaceConfig) => {
-      const buildOptions =
-        workspaceConfig.projects[appName].targets.build.options;
+    updateProjectConfig(appName, (config) => {
+      const buildOptions = config.targets.build.options;
       buildOptions.deployUrl = 'baz';
-      return workspaceConfig;
+      return config;
     });
 
     runCLI(`build ${appName}`);

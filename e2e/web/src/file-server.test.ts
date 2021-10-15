@@ -2,13 +2,10 @@ import {
   killPorts,
   newProject,
   promisifiedTreeKill,
-  readJson,
   runCLI,
   runCommandUntil,
   uniq,
-  updateFile,
-  updateWorkspaceConfig,
-  workspaceConfigName,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { serializeJson } from '@nrwl/workspace';
 
@@ -19,10 +16,9 @@ describe('file-server', () => {
     const port = 4301;
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
-    updateWorkspaceConfig((workspaceJson) => {
-      workspaceJson.projects[appName].targets['serve'].executor =
-        '@nrwl/web:file-server';
-      return workspaceJson;
+    updateProjectConfig(appName, (config) => {
+      config.targets['serve'].executor = '@nrwl/web:file-server';
+      return config;
     });
 
     const p = await runCommandUntil(

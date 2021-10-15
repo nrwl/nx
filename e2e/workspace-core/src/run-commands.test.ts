@@ -1,12 +1,10 @@
 import {
   newProject,
-  readJson,
-  readWorkspaceConfig,
   removeProject,
   runCLI,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
@@ -34,10 +32,8 @@ describe('Run Commands', () => {
       process.platform === 'win32'
         ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
         : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
-    updateWorkspaceConfig((config) => {
-      config.projects[
-        mylib
-      ].targets.echoEnvVariables.options.command += ` ${command}`;
+    updateProjectConfig(mylib, (config) => {
+      config.targets.echoEnvVariables.options.command += ` ${command}`;
       return config;
     });
 
@@ -53,8 +49,8 @@ describe('Run Commands', () => {
 
     runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
-    updateWorkspaceConfig((config) => {
-      config.projects[mylib].targets.echo = {
+    updateProjectConfig(mylib, (config) => {
+      config.targets.echo = {
         executor: '@nrwl/workspace:run-commands',
         options: {
           command: 'echo',
@@ -78,8 +74,8 @@ describe('Run Commands', () => {
 
     runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
-    updateWorkspaceConfig((config) => {
-      config.projects[mylib].targets.echo = {
+    updateProjectConfig(mylib, (config) => {
+      config.targets.echo = {
         executor: '@nrwl/workspace:run-commands',
         options: {
           commands: [
@@ -117,8 +113,8 @@ describe('Run Commands', () => {
 
     runCLI(`generate @nrwl/workspace:lib ${mylib}`);
 
-    updateWorkspaceConfig((config) => {
-      config.projects[mylib].targets.error = {
+    updateProjectConfig(mylib, (config) => {
+      config.targets.error = {
         executor: '@nrwl/workspace:run-commands',
         options: {
           command: `exit 1`,
@@ -141,8 +137,8 @@ describe('Run Commands', () => {
     const mylib = uniq('mylib');
 
     runCLI(`generate @nrwl/workspace:lib ${mylib}`);
-    updateWorkspaceConfig((config) => {
-      config.projects[mylib].targets.lint.outputs = ['{options.outputFile}'];
+    updateProjectConfig(mylib, (config) => {
+      config.targets.lint.outputs = ['{options.outputFile}'];
       return config;
     });
 
