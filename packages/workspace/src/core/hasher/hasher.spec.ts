@@ -447,12 +447,20 @@ describe('Hasher', () => {
           'package.json': {
             dependencies: '*',
             devDependencies: { mypackage: ['proja'] },
-            scripts: { 'check:*': '*', lint: ['proja'] },
+            scripts: {
+              'check:*': '*',
+              lint: ['proja'],
+              // non-existent keys
+              baz: '*',
+              foo: { bar: ['projb'] },
+            },
+            bazz: '*', // non-existent key
           },
           globalFile1: ['parent'],
           globalFile2: ['proja'],
           'styles/**/*.css': ['parent'],
           'some-config.json': { key1: ['parent'] },
+          'foo.json': { a: '*' }, // non-existent file
         },
       } as any,
       {},
@@ -466,17 +474,21 @@ describe('Hasher', () => {
       },
     };
     const projAPackageJson = {
-      dependencies: packageJson.dependencies,
-      devDependencies: {
-        mypackage: packageJson.devDependencies['mypackage'],
+      devDependencies: { mypackage: packageJson.devDependencies['mypackage'] },
+      scripts: {
+        lint: packageJson.scripts['lint'],
+        'check:1': packageJson.scripts['check:1'],
+        'check:2': packageJson.scripts['check:2'],
       },
+      dependencies: packageJson.dependencies,
+    };
+    const projBPackageJson = {
       scripts: {
         'check:1': packageJson.scripts['check:1'],
         'check:2': packageJson.scripts['check:2'],
-        lint: packageJson.scripts['lint'],
       },
+      dependencies: packageJson.dependencies,
     };
-    const projBPackageJson = parentPackageJson;
     const parentSomeConfig = { key1: someConfig.key1 };
 
     const tasksHashParent = await hasher.hashTaskWithDepsAndContext({
@@ -509,6 +521,7 @@ describe('Hasher', () => {
     expect(tasksHashParent.details.implicitDeps['some-config.json']).toBe(
       JSON.stringify(parentSomeConfig)
     );
+    expect(tasksHashProjectB.details.implicitDeps['foo.json']).toBeUndefined();
     // proja
     expect(tasksHashProjectA.value).toContain('workspace.json.hash');
     expect(tasksHashProjectA.value).toContain(JSON.stringify(projAPackageJson));
@@ -524,6 +537,7 @@ describe('Hasher', () => {
     expect(
       tasksHashProjectA.details.implicitDeps['some-config.json']
     ).toBeUndefined();
+    expect(tasksHashProjectB.details.implicitDeps['foo.json']).toBeUndefined();
     // projb
     expect(tasksHashProjectB.value).toContain('workspace.json.hash');
     expect(tasksHashProjectB.value).toContain(JSON.stringify(projBPackageJson));
@@ -539,5 +553,6 @@ describe('Hasher', () => {
     expect(
       tasksHashProjectB.details.implicitDeps['some-config.json']
     ).toBeUndefined();
+    expect(tasksHashProjectB.details.implicitDeps['foo.json']).toBeUndefined();
   });
 });
