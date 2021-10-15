@@ -555,6 +555,9 @@ export default function Home() {
 
     const lintResults = runCLI(`lint ${appName}`, { silenceError: true });
     expect(lintResults).toContain('Lint errors found');
+
+    // even though there's a lint error - building should not fail
+    expect(() => runCLI(`build ${appName}`)).not.toThrow();
   }, 300000);
 });
 
