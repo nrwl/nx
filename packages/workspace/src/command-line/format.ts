@@ -194,7 +194,8 @@ function movePropertiesToNewLocations() {
       nxJson.defaultProject
     ) {
       nxJson.cli ??= workspaceJson.cli;
-      nxJson.generators ??= workspaceJson.generators;
+      nxJson.generators ??=
+        workspaceJson.generators ?? (workspaceJson as any).schematics;
       nxJson.defaultProject ??= workspaceJson.defaultProject;
       delete workspaceJson['cli'];
       delete workspaceJson['generators'];

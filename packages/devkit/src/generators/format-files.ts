@@ -96,14 +96,22 @@ function ensurePropertiesAreInNewLocations(tree: Tree) {
     return;
   }
   const wc = readWorkspaceConfiguration(tree);
-  updateWorkspaceConfiguration(tree, wc);
   updateJson<WorkspaceConfiguration>(tree, workspacePath, (json) => {
+    wc.generators ??= json.generators ?? (json as any).schematics;
+    if (wc.cli) {
+      wc.cli.defaultCollection ??= json.cli?.defaultCollection;
+      wc.cli.packageManager ??= json.cli?.packageManager;
+    } else if (json.cli) {
+      wc.cli ??= json.cli;
+    }
+    wc.defaultProject ??= json.defaultProject;
     delete json.cli;
     delete json.defaultProject;
     delete (json as any).schematics;
     delete json.generators;
     return json;
   });
+  updateWorkspaceConfiguration(tree, wc);
 }
 
 function sortTsConfig(tree: Tree) {
