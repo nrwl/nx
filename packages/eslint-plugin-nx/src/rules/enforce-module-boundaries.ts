@@ -13,6 +13,7 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
   MappedProjectGraph,
+  hasBannedImport,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -50,7 +51,8 @@ export type MessageIds =
   | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
-  | 'tagConstraintViolation';
+  | 'tagConstraintViolation'
+  | 'bannedExternalImportsViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
 export default createESLintRule<Options, MessageIds>({
@@ -76,6 +78,7 @@ export default createESLintRule<Options, MessageIds>({
               properties: {
                 sourceTag: { type: 'string' },
                 onlyDependOnLibsWithTags: [{ type: 'string' }],
+                bannedExternalImports: [{ type: 'string' }],
               },
               additionalProperties: false,
             },
@@ -95,6 +98,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
+      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{package}}" package`,
     },
   },
   defaultOptions: [
@@ -214,7 +218,7 @@ export default createESLintRule<Options, MessageIds>({
       );
 
       // If source or target are not part of an nx workspace, return.
-      if (!sourceProject || !targetProject || targetProject.type === 'npm') {
+      if (!sourceProject || !targetProject) {
         return;
       }
 
@@ -227,6 +231,26 @@ export default createESLintRule<Options, MessageIds>({
             messageId: 'noSelfCircularDependencies',
             data: {
               imp,
+            },
+          });
+        }
+        return;
+      }
+
+      // project => npm package
+      if (targetProject.type === 'npm') {
+        const constraint = hasBannedImport(
+          sourceProject,
+          targetProject,
+          depConstraints
+        );
+        if (constraint) {
+          context.report({
+            node,
+            messageId: 'bannedExternalImportsViolation',
+            data: {
+              sourceTag: constraint.sourceTag,
+              package: targetProject.data.packageName,
             },
           });
         }
