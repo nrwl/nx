@@ -13,7 +13,8 @@
         "@storybook/html",
         "@storybook/web-components",
         "@storybook/vue",
-        "@storybook/vue3"
+        "@storybook/vue3",
+        "@storybook/svelte"
       ],
       "x-prompt": "What UI framework plugin should storybook use?"
     }

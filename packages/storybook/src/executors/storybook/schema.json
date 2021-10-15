@@ -13,7 +13,8 @@
         "@storybook/html",
         "@storybook/web-components",
         "@storybook/vue",
-        "@storybook/vue3"
+        "@storybook/vue3",
+        "@storybook/svelte"
       ],
       "default": "@storybook/angular",
       "hidden": true

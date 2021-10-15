@@ -116,6 +116,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@storybook/web-components'] = storybookVersion;
   }
 
+  if (isFramework('svelte', schema)) {
+    devDependencies['@storybook/svelte'] = storybookVersion;
+  }
+
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }
 

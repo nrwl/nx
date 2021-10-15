@@ -12,7 +12,8 @@ export interface CommonNxStorybookConfig {
     | '@storybook/html'
     | '@storybook/web-components'
     | '@storybook/vue'
-    | '@storybook/vue3';
+    | '@storybook/vue3'
+    | '@storybook/svelte';
   projectBuildConfig?: string;
   config: StorybookConfig;
 }
