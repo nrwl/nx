@@ -58,8 +58,7 @@ function getWebpackConfig(config: Configuration) {
     const babelLoader = config.module.rules.find(
       (rule) =>
         typeof rule !== 'string' &&
-        rule.loader &&
-        rule.loader.toString().includes('babel-loader')
+        rule.loader?.toString().includes('babel-loader')
     );
     if (babelLoader && typeof babelLoader !== 'string') {
       babelLoader.options['plugins'] = [

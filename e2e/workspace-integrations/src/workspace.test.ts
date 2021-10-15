@@ -7,7 +7,6 @@ import {
   readFile,
   readJson,
   readProjectConfig,
-  readWorkspaceConfig,
   removeProject,
   rmDist,
   runCLI,
@@ -669,13 +668,13 @@ describe('print-affected', () => {
     );
 
     expect(resWithDeps.tasks[0]).toMatchObject({
-      id: `${myapp}:build`,
+      id: `${myapp}:build:production`,
       overrides: {},
       target: {
         project: myapp,
         target: 'build',
       },
-      command: `${runNx} build ${myapp}`,
+      command: `${runNx} build ${myapp} --configuration production`,
       outputs: [`dist/apps/${myapp}`],
     });
 

@@ -1,7 +1,7 @@
 import { NormalizedSchema } from '../schema';
 import {
-  joinPathFragments,
   addProjectConfiguration,
+  joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
 } from '@nrwl/devkit';
@@ -38,6 +38,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
   return {
     executor: '@nrwl/web:build',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       outputPath: joinPathFragments('dist', options.appProjectRoot),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
@@ -84,7 +85,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         optimization: true,
         outputHashing: 'all',
         sourceMap: false,
-        extractCss: true,
         namedChunks: false,
         extractLicenses: true,
         vendorChunk: false,

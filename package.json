@@ -222,7 +222,7 @@
     "strip-json-comments": "^3.1.1",
     "style-loader": "^3.3.0",
     "styled-components": "5.0.0",
-    "stylus": "0.54.5",
+    "stylus": "^0.55.0",
     "stylus-loader": "^6.2.0",
     "tailwindcss": "^2.2.17",
     "tcp-port-used": "^1.0.2",

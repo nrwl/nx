@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 
-import { AssetGlobPattern } from '../../../utils/types';
+import { AssetGlobPattern } from '../../../utils/shared-models';
 import { normalizeAssets, normalizePluginPath } from '../../../utils/normalize';
 import { WebPackageOptions } from '../schema';
 

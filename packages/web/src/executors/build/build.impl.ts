@@ -15,24 +15,24 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
-import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
-import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
-import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
-
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
-import type { BuildBuilderOptions } from '../../utils/types';
-import { deleteOutputDir } from '../../utils/delete-output-dir';
-import type { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
+import type { BuildBuilderOptions } from '../../utils/shared-models';
+import { ExtraEntryPoint } from '../../utils/shared-models';
 import { getEmittedFiles, runWebpack } from '../../utils/run-webpack';
+import { BuildBrowserFeatures } from '../../utils/webpack/build-browser-features';
+import { deleteOutputDir } from '../../utils/fs';
+import {
+  CrossOriginValue,
+  writeIndexHtml,
+} from '../../utils/webpack/write-index-html';
 
-export interface WebBuildBuilderOptions extends BuildBuilderOptions {
+export interface WebBuildExecutorOptions extends BuildBuilderOptions {
   index: string;
   budgets?: any[];
   baseHref?: string;
   deployUrl?: string;
 
-  extractCss?: boolean;
   crossOrigin?: CrossOriginValue;
 
   polyfills?: string;
@@ -58,7 +58,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 }
 
 function getWebpackConfigs(
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   context: ExecutorContext
 ): Configuration[] {
   const metadata = context.workspace.projects[context.projectName];
@@ -115,7 +115,7 @@ function getWebpackConfigs(
 }
 
 export async function* run(
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   context: ExecutorContext
 ) {
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes

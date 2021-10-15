@@ -44,7 +44,8 @@ async function resolve(
 }
 
 module.exports.postcss = true;
-export default (options: PostcssCliResourcesOptions) => {
+
+export function PostcssCliResources(options: PostcssCliResourcesOptions) {
   const {
     deployUrl = '',
     baseHref = '',
@@ -198,4 +199,4 @@ export default (options: PostcssCliResourcesOptions) => {
       );
     },
   };
-};
+}
