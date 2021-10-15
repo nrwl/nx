@@ -1,6 +1,6 @@
 import { readJson, Tree, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import addPostCssImport from './add-postcss-import';
+import addPostCssImport from './add-postcss-packages';
 
 describe('add-postcss-import migration', () => {
   let tree: Tree;
@@ -13,7 +13,10 @@ describe('add-postcss-import migration', () => {
     addPostCssImport(tree);
 
     const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['postcss']).toBeUndefined();
     expect(packageJson.devDependencies['postcss-import']).toBeUndefined();
+    expect(packageJson.devDependencies['postcss-preset-env']).toBeUndefined();
+    expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
   });
 
   it('should add postcss-import when ng-packagr is installed', () => {
@@ -25,6 +28,9 @@ describe('add-postcss-import migration', () => {
     addPostCssImport(tree);
 
     const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['postcss']).toBeDefined();
     expect(packageJson.devDependencies['postcss-import']).toBeDefined();
+    expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+    expect(packageJson.devDependencies['postcss-url']).toBeDefined();
   });
 });

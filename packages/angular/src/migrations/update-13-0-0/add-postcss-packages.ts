@@ -16,7 +16,12 @@ export default async function (tree: Tree) {
   const task = addDependenciesToPackageJson(
     tree,
     {},
-    { 'postcss-import': '^14.0.2' }
+    {
+      postcss: '^8.3.9',
+      'postcss-import': '^14.0.2',
+      'postcss-preset-env': '^6.7.0',
+      'postcss-url': '^10.1.1',
+    }
   );
 
   await formatFiles(tree);
