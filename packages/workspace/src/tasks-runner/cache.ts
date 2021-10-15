@@ -237,12 +237,10 @@ export class Cache {
         (await existsAsync(cacheOutputPath)) &&
         (await lstatAsync(cacheOutputPath)).isFile()
       ) {
-        if (
+        return (
           (await existsAsync(join(cachedResult.outputsPath, output))) &&
           !(await existsAsync(join(this.root, output)))
-        ) {
-          return true;
-        }
+        );
       }
 
       const haveDifferentAmountOfFiles =
