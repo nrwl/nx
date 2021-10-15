@@ -6,13 +6,12 @@ import {
   killPorts,
   newProject,
   readFile,
-  readJson,
   runCLI,
   runCLIAsync,
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
@@ -21,8 +20,6 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
-
-    checkFilesDoNotExist(`apps/${appName}/project.json`);
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -303,38 +300,37 @@ describe('Build Options', () => {
     updateFile(fooJs, fooJsContent);
     updateFile(barJs, barJsContent);
 
-    const workspacePath = `workspace.json`;
-    const workspaceConfig = readJson(workspacePath);
-    const buildOptions =
-      workspaceConfig.projects[appName].targets.build.options;
-
     const barScriptsBundleName = 'bar-scripts';
-    buildOptions.scripts = [
-      {
-        input: fooJs,
-        inject: true,
-      },
-      {
-        input: barJs,
-        inject: false,
-        bundleName: barScriptsBundleName,
-      },
-    ];
-
     const barStylesBundleName = 'bar-styles';
-    buildOptions.styles = [
-      {
-        input: fooCss,
-        inject: true,
-      },
-      {
-        input: barCss,
-        inject: false,
-        bundleName: barStylesBundleName,
-      },
-    ];
 
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateProjectConfig(appName, (config) => {
+      const buildOptions = config.targets.build.options;
+
+      buildOptions.scripts = [
+        {
+          input: fooJs,
+          inject: true,
+        },
+        {
+          input: barJs,
+          inject: false,
+          bundleName: barScriptsBundleName,
+        },
+      ];
+
+      buildOptions.styles = [
+        {
+          input: fooCss,
+          inject: true,
+        },
+        {
+          input: barCss,
+          inject: false,
+          bundleName: barStylesBundleName,
+        },
+      ];
+      return config;
+    });
 
     runCLI(`build ${appName}`);
 
@@ -392,13 +388,11 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    const workspacePath = `workspace.json`;
-    const workspaceConfig = readJson(workspacePath);
-    const buildOptions =
-      workspaceConfig.projects[appName].targets.build.options;
-    buildOptions.deployUrl = 'baz';
-
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateProjectConfig(appName, (config) => {
+      const buildOptions = config.targets.build.options;
+      buildOptions.deployUrl = 'baz';
+      return config;
+    });
 
     runCLI(`build ${appName}`);
 

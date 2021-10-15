@@ -9,7 +9,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  workspaceConfigName,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Cli', () => {
@@ -18,16 +18,14 @@ describe('Cli', () => {
   it('should execute long running tasks', () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
-
-    updateFile(workspaceConfigName(), (c) => {
-      const w = JSON.parse(c);
-      w.projects[myapp].targets['counter'] = {
+    updateProjectConfig(myapp, (c) => {
+      c.targets['counter'] = {
         executor: '@nrwl/workspace:counter',
         options: {
           to: 2,
         },
       };
-      return JSON.stringify(w);
+      return c;
     });
 
     const success = runCLI(`counter ${myapp} --result=true`);
@@ -41,10 +39,9 @@ describe('Cli', () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
 
-    updateFile(workspaceConfigName(), (c) => {
-      const j = JSON.parse(c);
-      delete j.projects[mylib].targets;
-      return JSON.stringify(j);
+    updateProjectConfig(mylib, (j) => {
+      delete j.targets;
+      return j;
     });
 
     updateFile(

@@ -579,12 +579,12 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                                       | Default value | Description                                                                                |
-| :--------------------- | :------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../react/nx-devkit/index#tree)                                 | `undefined`   | the file system tree                                                                       |
-| `projectName`          | `string`                                                                   | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../react/nx-devkit/index#projectconfiguration) | `undefined`   | project configuration                                                                      |
-| `standalone`           | `boolean`                                                                  | `false`       | should the project use package.json? If false, the project config is inside workspace.json |
+| Name                   | Type                                                                       | Description                                                                                |
+| :--------------------- | :------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../react/nx-devkit/index#tree)                                 | the file system tree                                                                       |
+| `projectName`          | `string`                                                                   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [`ProjectConfiguration`](../../react/nx-devkit/index#projectconfiguration) | project configuration                                                                      |
+| `standalone?`          | `boolean`                                                                  | should the project use package.json? If false, the project config is inside workspace.json |
 
 #### Returns
 

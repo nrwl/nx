@@ -47,7 +47,9 @@ export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
     root: projectRoot,
   });
 
-  const isEmpty = tree.children(projectRoot).length === 0;
+  const fileCount = tree.children(projectRoot).length;
+  const projectJsonExists = tree.exists(join(projectRoot, 'project.json'));
+  const isEmpty = fileCount === 0 || (fileCount === 1 && projectJsonExists);
 
   if (isEmpty) {
     addFiles(projectRoot, tree, npmScope, options);

@@ -3,6 +3,7 @@ import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
 import { performance } from 'perf_hooks';
 import { readJsonFile } from '@nrwl/tao/src/utils/fileutils';
+import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
 
 /**
  * Nx is being run inside a workspace.
@@ -83,10 +84,12 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const workspaceConfigJson = readJsonFile(
-      path.join(
-        workspace.dir,
-        workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
+    const workspaceConfigJson = resolveNewFormatWithInlineProjects(
+      readJsonFile(
+        path.join(
+          workspace.dir,
+          workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
+        )
       )
     );
     const nxJson = readJsonFile(path.join(workspace.dir, 'nx.json'));

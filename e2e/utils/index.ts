@@ -15,12 +15,17 @@ import {
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { check as portCheck } from 'tcp-port-used';
-import { parseJson } from '@nrwl/devkit';
+import {
+  parseJson,
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import { promisify } from 'util';
 import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
+import { join } from 'path';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -56,11 +61,33 @@ export function workspaceConfigName() {
   return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
-export function updateWorkspaceConfig(
-  callback: (json: { [key: string]: any }) => Object
+export function updateProjectConfig(
+  projectName: string,
+  callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const file = workspaceConfigName();
-  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
+  const root = readJson(workspaceConfigName()).projects[projectName];
+  const path = join(root, 'project.json');
+  const current = readJson(path);
+  updateFile(path, JSON.stringify(callback(current), null, 2));
+}
+
+/**
+ * Use readProjectConfig or readInlineProjectConfig instead
+ * if you need a project's configuration.
+ */
+export function readWorkspaceConfig(): Omit<
+  WorkspaceJsonConfiguration,
+  'projects'
+> {
+  const w = readJson(workspaceConfigName());
+  delete w.projects;
+  return w;
+}
+
+export function readProjectConfig(projectName: string): ProjectConfiguration {
+  const root = readJson(workspaceConfigName()).projects[projectName];
+  const path = join(root, 'project.json');
+  return readJson(path);
 }
 
 export function runCreateWorkspace(

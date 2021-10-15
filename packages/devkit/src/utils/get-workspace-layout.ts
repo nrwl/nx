@@ -38,8 +38,8 @@ export function getWorkspaceLayout(tree: Tree): {
       (allStandalone, next) =>
         allStandalone && (typeof next === 'string' || 'configFilePath' in next),
 
-      // default for first project should be false
-      Object.values(rawWorkspace.projects).length > 0
+      // default for first project should be true if using Nx Schema
+      rawWorkspace.version > 1
     ),
   };
 }

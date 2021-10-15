@@ -37,9 +37,10 @@ export function addProjectConfiguration(
   tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration,
-  standalone: boolean = false
+  standalone?: boolean
 ): void {
-  standalone = standalone || getWorkspaceLayout(tree).standaloneAsDefault;
+  const workspaceLayout = getWorkspaceLayout(tree);
+  standalone = standalone ?? workspaceLayout.standaloneAsDefault;
   setProjectConfiguration(
     tree,
     projectName,

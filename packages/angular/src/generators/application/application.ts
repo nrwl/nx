@@ -1,4 +1,3 @@
-import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -7,6 +6,7 @@ import {
   moveFilesToNewDirectory,
   formatFiles,
   installPackagesTask,
+  Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace';

@@ -31,7 +31,7 @@ export function normalizeOptions(
 
   const defaultPrefix = npmScope;
 
-  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
+  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
   // Set defaults and then overwrite with user options
   return {

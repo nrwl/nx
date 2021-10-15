@@ -17,7 +17,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
 
@@ -83,20 +83,14 @@ describe('Node Applications', () => {
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    updateFile('workspace.json', (workspaceJson) => {
-      const workspace = JSON.parse(workspaceJson);
-
-      workspace.projects[nodeapp].targets.build.options.additionalEntryPoints =
-        [
-          {
-            entryName: 'additional-main',
-            entryPath: `apps/${nodeapp}/src/additional-main.ts`,
-          },
-        ];
-
-      const newWorkspace = JSON.stringify(workspace, undefined, 2);
-
-      return newWorkspace;
+    updateProjectConfig(nodeapp, (config) => {
+      config.targets.build.options.additionalEntryPoints = [
+        {
+          entryName: 'additional-main',
+          entryPath: `apps/${nodeapp}/src/additional-main.ts`,
+        },
+      ];
+      return config;
     });
 
     updateFile(
@@ -289,11 +283,9 @@ describe('Build Node apps', () => {
       // TODO: update to v5 when Nest8 is supported
       packageInstall('@nestjs/swagger', undefined, '4.8.2');
 
-      updateWorkspaceConfig((workspace) => {
-        workspace.projects[nestapp].targets.build.options.tsPlugins = [
-          '@nestjs/swagger/plugin',
-        ];
-        return workspace;
+      updateProjectConfig(nestapp, (config) => {
+        config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
+        return config;
       });
 
       updateFile(
@@ -392,11 +384,9 @@ describe('Node Libraries', () => {
     });
 
     // Copying package.json from assets
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[nodeLib].targets.build.options.assets.push(
-        `libs/${nodeLib}/package.json`
-      );
-      return workspace;
+    updateProjectConfig(nodeLib, (config) => {
+      config.targets.build.options.assets.push(`libs/${nodeLib}/package.json`);
+      return config;
     });
     createFile(`dist/libs/${nodeLib}/_should_remove.txt`); // Output directory should be removed
     await runCLIAsync(`build ${nodeLib}`);
@@ -416,9 +406,9 @@ describe('Node Libraries', () => {
       `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
     );
 
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[nodeLib].targets.build.options.cli = true;
-      return workspace;
+    updateProjectConfig(nodeLib, (config) => {
+      config.targets.build.options.cli = true;
+      return config;
     });
 
     await runCLIAsync(`build ${nodeLib}`);
@@ -482,13 +472,13 @@ describe('Node Libraries', () => {
       `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
     );
 
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[nodelib].targets.build.options.assets.push({
+    updateProjectConfig(nodelib, (config) => {
+      config.targets.build.options.assets.push({
         input: `./dist/libs/${nglib}`,
         glob: '**/*',
         output: '.',
       });
-      return workspace;
+      return config;
     });
 
     runCLI(`build ${nglib}`);

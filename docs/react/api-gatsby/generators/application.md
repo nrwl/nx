@@ -68,8 +68,6 @@ Whether or not to configure the ESLint "parserOptions.project" option. We do not
 
 ### standaloneConfig
 
-Default: `false`
-
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json

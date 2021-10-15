@@ -11,6 +11,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
@@ -61,17 +62,17 @@ describe('Build React libraries and apps', () => {
       );
     };
 
-    runCLI(`generate @nrwl/react:app ${app}`);
+    runCLI(`generate @nrwl/react:app ${app} `);
 
     // generate publishable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive`
+      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive`
+      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive`
+      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive `
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -85,12 +86,9 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
-      json.projects[childLib].targets.build.options.assets = [
-        `libs/${childLib}/src/assets`,
-      ];
-      return JSON.stringify(json, null, 2);
+    updateProjectConfig(childLib, (json) => {
+      json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
+      return json;
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
 
