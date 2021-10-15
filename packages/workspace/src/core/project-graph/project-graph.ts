@@ -1,6 +1,7 @@
-import { ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph, stripIndents } from '@nrwl/devkit';
 import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
+import { workspaceFileName } from '../file-utils';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -10,14 +11,24 @@ export function readCachedProjectGraph(
   projectGraphVersion = '5.0'
 ): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
+  const angularSpecificError =
+    workspaceFileName() === 'angular.json'
+      ? stripIndents`
+      Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script. 
+      The decorated CLI will compute the project graph. 
+      'ng --help' should say 'Smart, Extensible Build Framework'.
+      `
+      : '';
   if (!projectGraphCache) {
-    throw new Error(`
+    throw new Error(stripIndents`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
 
       If you are leveraging \`readCachedProjectGraph()\` directly then you will need to refactor your usage to first ensure that
       the ProjectGraph is created by calling \`await createProjectGraphAsync()\` somewhere before attempting to read the data.
 
       If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
+      
+      ${angularSpecificError}
     `);
   }
   const projectGraph = {
