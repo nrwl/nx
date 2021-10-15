@@ -45,7 +45,7 @@ describe('Storybook schematics', () => {
       );
 
       // build React lib
-      runCLI(`run ${reactStorybookLib}:build-storybook`);
+      runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
       expect(
         readFile(`dist/storybook/${reactStorybookLib}/index.html`)

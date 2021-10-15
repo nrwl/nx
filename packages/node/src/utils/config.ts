@@ -2,13 +2,17 @@ import type { Configuration, WebpackPluginInstance } from 'webpack';
 import * as webpack from 'webpack';
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
 import { loadTsPlugins } from './load-ts-plugins';
 import CopyWebpackPlugin = require('copy-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
+// Inlining tsconfig-paths-webpack-plugin with a patch
+// See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
+// TODO(jack): Remove once the patch lands in original package
+import TsConfigPathsPlugin from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
 
 export const OUT_FILENAME = 'main.js';
 export const OUT_FILENAME_TEMPLATE = '[name].js';

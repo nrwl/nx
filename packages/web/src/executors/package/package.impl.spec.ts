@@ -5,7 +5,6 @@ import { createRollupOptions } from './package.impl';
 import { normalizePackageOptions } from './lib/normalize';
 
 jest.mock('rollup-plugin-copy', () => jest.fn());
-jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('packageExecutor', () => {
   let context: ExecutorContext;

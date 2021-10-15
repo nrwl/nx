@@ -10,7 +10,7 @@ import type {
   PHASE_PRODUCTION_SERVER,
 } from 'next/dist/shared/lib/constants';
 import { join, resolve } from 'path';
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import { TsconfigPathsPlugin } from '@nrwl/web/src/utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
 import { Configuration } from 'webpack';
 import {
   FileReplacement,
