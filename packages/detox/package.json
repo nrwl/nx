@@ -32,7 +32,7 @@
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "detox": "18.18.0"
+    "detox": "^18.22.2"
   },
   "builders": "./executors.json",
   "ng-update": {
