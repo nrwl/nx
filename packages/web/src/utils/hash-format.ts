@@ -1,5 +1,3 @@
-// Originally from devkit.
-// See: https://github.com/angular/angular-cli/blob/2c8b12f/packages/angular_devkit/build_angular/src/angular-cli-files/models/webpack-configs/utils.ts
 export interface HashFormat {
   chunk: string;
   extract: string;

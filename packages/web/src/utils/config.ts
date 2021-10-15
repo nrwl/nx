@@ -5,7 +5,7 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
-import { AssetGlobPattern, BuildBuilderOptions } from './types';
+import { AssetGlobPattern, BuildBuilderOptions } from './shared-models';
 import { getOutputHashFormat } from './hash-format';
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 

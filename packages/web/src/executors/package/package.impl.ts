@@ -19,8 +19,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import resolve from '@rollup/plugin-node-resolve';
 
-import { AssetGlobPattern } from '../../utils/types';
-import { deleteOutputDir } from '../../utils/delete-output-dir';
+import { AssetGlobPattern } from '../../utils/shared-models';
 import { WebPackageOptions } from './schema';
 import { runRollup } from './lib/run-rollup';
 import {
@@ -28,6 +27,7 @@ import {
   normalizePackageOptions,
 } from './lib/normalize';
 import { analyze } from './lib/analyze-plugin';
+import { deleteOutputDir } from '../../utils/fs';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');

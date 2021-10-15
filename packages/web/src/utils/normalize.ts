@@ -1,7 +1,12 @@
-import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebBuildExecutorOptions } from '../executors/build/build.impl';
 import { normalizePath } from '@nrwl/devkit';
 import { basename, dirname, relative, resolve } from 'path';
-import { AssetGlobPattern, BuildBuilderOptions } from './types';
+import {
+  AssetGlobPattern,
+  BuildBuilderOptions,
+  ExtraEntryPoint,
+  ExtraEntryPointClass,
+} from './shared-models';
 import { statSync } from 'fs';
 
 export interface FileReplacement {
@@ -96,10 +101,10 @@ function normalizeFileReplacements(
 }
 
 export function normalizeWebBuildOptions(
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   root: string,
   sourceRoot: string
-): WebBuildBuilderOptions {
+): WebBuildExecutorOptions {
   return {
     ...normalizeBuildOptions(options, root, sourceRoot),
     optimization:
@@ -116,7 +121,9 @@ export function normalizeWebBuildOptions(
   };
 }
 
-export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
+export function convertBuildOptions(
+  buildOptions: WebBuildExecutorOptions
+): any {
   const options = buildOptions as any;
   return <any>{
     ...options,
@@ -124,4 +131,43 @@ export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
     forkTypeChecker: false,
     lazyModules: [] as string[],
   };
+}
+
+export type NormalizedEntryPoint = Required<Omit<ExtraEntryPointClass, 'lazy'>>;
+
+export function normalizeExtraEntryPoints(
+  extraEntryPoints: ExtraEntryPoint[],
+  defaultBundleName: string
+): NormalizedEntryPoint[] {
+  return extraEntryPoints.map((entry) => {
+    let normalizedEntry;
+    if (typeof entry === 'string') {
+      normalizedEntry = {
+        input: entry,
+        inject: true,
+        bundleName: defaultBundleName,
+      };
+    } else {
+      const { lazy, inject = true, ...newEntry } = entry;
+      const injectNormalized = entry.lazy !== undefined ? !entry.lazy : inject;
+      let bundleName;
+
+      if (entry.bundleName) {
+        bundleName = entry.bundleName;
+      } else if (!injectNormalized) {
+        // Lazy entry points use the file name as bundle name.
+        bundleName = basename(
+          normalizePath(
+            entry.input.replace(/\.(js|css|scss|sass|less|styl)$/i, '')
+          )
+        );
+      } else {
+        bundleName = defaultBundleName;
+      }
+
+      normalizedEntry = { ...newEntry, inject: injectNormalized, bundleName };
+    }
+
+    return normalizedEntry;
+  });
 }

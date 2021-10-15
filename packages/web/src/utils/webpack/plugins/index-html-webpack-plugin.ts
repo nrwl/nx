@@ -1,18 +1,11 @@
-/**
- * @license
- * Copyright Google LLC All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 import * as webpack from 'webpack';
 import { basename, dirname, extname } from 'path';
-import { FileInfo } from '../utils/index-file/augment-index-html';
+import { FileInfo } from './index-file/augment-index-html';
 import {
   IndexHtmlGenerator,
   IndexHtmlGeneratorOptions,
   IndexHtmlGeneratorProcessOptions,
-} from '../utils/index-file/index-html-generator';
+} from './index-file/index-html-generator';
 
 export interface IndexHtmlWebpackPluginOptions
   extends IndexHtmlGeneratorOptions,

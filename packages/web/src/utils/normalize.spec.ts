@@ -1,5 +1,5 @@
 import { normalizeBuildOptions } from './normalize';
-import { BuildBuilderOptions } from './types';
+import { BuildBuilderOptions } from './shared-models';
 
 import * as fs from 'fs';
 

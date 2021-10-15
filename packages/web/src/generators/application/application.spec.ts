@@ -269,7 +269,6 @@ describe('app', () => {
     });
     expect(architectConfig.build.configurations.production).toEqual({
       optimization: true,
-      extractCss: true,
       extractLicenses: true,
       fileReplacements: [
         {

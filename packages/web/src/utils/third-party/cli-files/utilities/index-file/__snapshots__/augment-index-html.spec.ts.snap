@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`augment-index-html can generate index.html 1`] = `"<html><head><base href=\\"/\\"><link rel=\\"stylesheet\\" href=\\"styles.css\\"></head><body><script src=\\"runtime.js\\" defer></script><script src=\\"polyfills.js\\" defer></script><script src=\\"main.js\\" defer></script></body></html>"`;
-
-exports[`augment-index-html should emit correct script tags when having 'module' and 'non-module' js 1`] = `"<html><head><base href=\\"/\\"><link rel=\\"stylesheet\\" href=\\"styles.css\\"></head><body><script src=\\"runtime-es2015.js\\" type=\\"module\\"></script><script src=\\"polyfills-es2015.js\\" type=\\"module\\"></script><script src=\\"runtime-es5.js\\" nomodule defer></script><script src=\\"polyfills-es5.js\\" nomodule defer></script><script src=\\"main-es2015.js\\" type=\\"module\\"></script><script src=\\"main-es5.js\\" nomodule defer></script></body></html>"`;
-
-exports[`augment-index-html should not add 'module' and 'non-module' attr to js files which are in both module formats 1`] = `"<html><head><base href=\\"/\\"><link rel=\\"stylesheet\\" href=\\"styles.css\\"></head><body><script src=\\"scripts.js\\" defer></script><script src=\\"main-es2015.js\\" type=\\"module\\"></script><script src=\\"main-es5.js\\" nomodule defer></script></body></html>"`;

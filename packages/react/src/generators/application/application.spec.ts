@@ -263,7 +263,6 @@ Object {
     });
     expect(targetConfig.build.configurations.production).toEqual({
       optimization: true,
-      extractCss: true,
       extractLicenses: true,
       fileReplacements: [
         {

@@ -84,7 +84,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         optimization: true,
         outputHashing: 'all',
         sourceMap: false,
-        extractCss: true,
         namedChunks: false,
         extractLicenses: true,
         vendorChunk: false,

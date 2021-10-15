@@ -5,16 +5,14 @@ import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
 import { Configuration } from 'webpack';
 
-// TODO @FrozenPandaz we should remove the following imports
-import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs/browser';
-import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
-import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
-import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-html-webpack-plugin';
-import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
-
-import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebBuildExecutorOptions } from '../executors/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { getBaseWebpackPartial } from './config';
+import { getBrowserConfig } from './webpack/partials/browser';
+import { IndexHtmlWebpackPlugin } from './webpack/plugins/index-html-webpack-plugin';
+import { generateEntryPoints } from './webpack/package-chunk-sort';
+import { getCommonConfig } from './webpack/partials/common';
+import { getStylesConfig } from './webpack/partials/styles';
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import webpackMerge = require('webpack-merge');
 import postcssImports = require('postcss-import');
@@ -31,7 +29,7 @@ export function getWebConfig(
   workspaceRoot,
   projectRoot,
   sourceRoot,
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
   configuration?: string
@@ -69,12 +67,7 @@ export function getWebConfig(
       esm,
       isScriptOptimizeOn
     ),
-    getStylesPartial(
-      wco.root,
-      wco.projectRoot,
-      wco.buildOptions,
-      options.extractCss
-    ),
+    getStylesPartial(wco.root, wco.projectRoot, wco.buildOptions, true),
     getCommonPartial(wco),
     getBrowserPartial(wco, options, isScriptOptimizeOn),
   ]);
@@ -82,12 +75,12 @@ export function getWebConfig(
 
 function getBrowserPartial(
   wco: any,
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   isScriptOptimizeOn: boolean
 ) {
   const config = getBrowserConfig(wco);
 
-  if (!isScriptOptimizeOn) {
+  if (isScriptOptimizeOn) {
     const {
       deployUrl,
       subresourceIntegrity,
@@ -97,25 +90,27 @@ function getBrowserPartial(
       baseHref,
     } = options;
 
-    config.plugins.push(
-      new IndexHtmlWebpackPlugin({
-        indexPath: resolve(wco.root, index),
-        outputPath: basename(index),
-        baseHref,
-        entrypoints: generateEntryPoints({ scripts, styles }),
-        deployUrl,
-        sri: subresourceIntegrity,
-        moduleEntrypoints: [],
-        noModuleEntrypoints: ['polyfills-es5'],
-      })
-    );
+    if (options.generateIndexHtml) {
+      config.plugins.push(
+        new IndexHtmlWebpackPlugin({
+          indexPath: resolve(wco.root, index),
+          outputPath: basename(index),
+          baseHref,
+          entrypoints: generateEntryPoints({ scripts, styles }),
+          deployUrl,
+          sri: subresourceIntegrity,
+          moduleEntrypoints: [],
+          noModuleEntrypoints: ['polyfills-es5'],
+        })
+      );
+    }
   }
 
   return config;
 }
 
 function _getBaseWebpackPartial(
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   esm: boolean,
   isScriptOptimizeOn: boolean,
   emitDecoratorMetadata: boolean,
@@ -300,9 +295,7 @@ export function getPolyfillsPartial(
     // Safari 10.1 supports <script type="module"> but not <script nomodule>.
     // Need to patch it up so the browser doesn't load both sets.
     config.entry.polyfills = [
-      require.resolve(
-        '@nrwl/web/src/utils/third-party/cli-files/models/safari-nomodule.js'
-      ),
+      require.resolve('@nrwl/web/src/utils/webpack/safari-nomodule.js'),
       ...(polyfills ? [polyfills] : []),
     ];
   } else if (es2015Polyfills && !esm && isScriptOptimizeOn) {

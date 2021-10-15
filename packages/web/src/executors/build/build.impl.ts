@@ -5,7 +5,7 @@ import { bufferCount, mergeScan, switchMap, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
-import { basename, join } from 'path';
+import { join } from 'path';
 
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
@@ -15,24 +15,21 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
-import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
-import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
-import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
-
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
-import type { BuildBuilderOptions } from '../../utils/types';
-import { deleteOutputDir } from '../../utils/delete-output-dir';
-import type { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
+import type { BuildBuilderOptions } from '../../utils/shared-models';
+import { ExtraEntryPoint } from '../../utils/shared-models';
 import { getEmittedFiles, runWebpack } from '../../utils/run-webpack';
+import { CrossOriginValue } from '../../utils/webpack/plugins/index-file/augment-index-html';
+import { BuildBrowserFeatures } from '../../utils/webpack/build-browser-features';
+import { deleteOutputDir } from '../../utils/fs';
 
-export interface WebBuildBuilderOptions extends BuildBuilderOptions {
+export interface WebBuildExecutorOptions extends BuildBuilderOptions {
   index: string;
   budgets?: any[];
   baseHref?: string;
   deployUrl?: string;
 
-  extractCss?: boolean;
   crossOrigin?: CrossOriginValue;
 
   polyfills?: string;
@@ -58,7 +55,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 }
 
 function getWebpackConfigs(
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   context: ExecutorContext
 ): Configuration[] {
   const metadata = context.workspace.projects[context.projectName];
@@ -115,7 +112,7 @@ function getWebpackConfigs(
 }
 
 export async function* run(
-  options: WebBuildBuilderOptions,
+  options: WebBuildExecutorOptions,
   context: ExecutorContext
 ) {
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
@@ -187,20 +184,6 @@ export async function* run(
           result1 && !result1.hasErrors() && (!result2 || !result2.hasErrors());
         const emittedFiles1 = getEmittedFiles(result1);
         const emittedFiles2 = result2 ? getEmittedFiles(result2) : [];
-        if (options.generateIndexHtml) {
-          await writeIndexHtml({
-            crossOrigin: options.crossOrigin,
-            outputPath: join(options.outputPath, basename(options.index)),
-            indexPath: join(context.root, options.index),
-            files: emittedFiles1.filter((x) => x.extension === '.css'),
-            noModuleFiles: emittedFiles2,
-            moduleFiles: emittedFiles1,
-            baseHref: options.baseHref,
-            deployUrl: options.deployUrl,
-            scripts: options.scripts,
-            styles: options.styles,
-          });
-        }
         return { success, emittedFiles: [...emittedFiles1, ...emittedFiles2] };
       })
     )

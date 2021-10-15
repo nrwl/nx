@@ -1,10 +1,3 @@
-/**
- * @license
- * Copyright Google LLC All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 import { createHash } from 'crypto';
 import { htmlRewritingStream } from './html-rewriting-stream';
 
@@ -165,7 +158,7 @@ export async function augmentIndexHtml(
           // Base href should be added before any link, meta tags
           if (!baseTagExists && isString(baseHref)) {
             rewriter.emitStartTag(tag);
-            rewriter.emitRaw(`<base href="${baseHref}">`);
+            rewriter.emitRaw(`<base href='${baseHref}'>`);
 
             return;
           }

@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import { WebpackConfigOptions } from '../build-options';
+import { WebpackConfigOptions } from '../../shared-models';
 
 const SubresourceIntegrityPlugin = require('webpack-subresource-integrity');
 
@@ -50,7 +50,7 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
         : false,
     },
     optimization: {
-      runtimeChunk: !!buildOptions.runtimeChunk ? 'single' : false,
+      runtimeChunk: 'single',
       splitChunks: {
         maxAsyncRequests: Infinity,
         cacheGroups: {
