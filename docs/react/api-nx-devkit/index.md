@@ -522,7 +522,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### logger
 
-• `Const` **logger**: `Object`
+• **logger**: `Object`
 
 #### Type declaration
 
@@ -649,9 +649,9 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                               |
-| :--------- | :------------------------------------------------- |
-| `executor` | [`Executor`](../../react/nx-devkit/index#executor) |
+| Name       | Type                                                       |
+| :--------- | :--------------------------------------------------------- |
+| `executor` | [`Executor`](../../react/nx-devkit/index#executor)<`any`\> |
 
 #### Returns
 
@@ -1417,15 +1417,15 @@ of comments with a replaceCharacter
 
 ### targetToTargetString
 
-▸ **targetToTargetString**(`__namedParameters`): `string`
+▸ **targetToTargetString**(`target`): `string`
 
 Returns a string in the format "project:target[:configuration]" for the target
 
 #### Parameters
 
-| Name                | Type                                           |
-| :------------------ | :--------------------------------------------- |
-| `__namedParameters` | [`Target`](../../react/nx-devkit/index#target) |
+| Name     | Type                                           | Description                                                                                                                                                                                                                                     |
+| :------- | :--------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target` | [`Target`](../../react/nx-devkit/index#target) | target object Examples: `typescript targetToTargetString({ project: "proj", target: "test" }) // returns "proj:test" targetToTargetString({ project: "proj", target: "test", configuration: "production" }) // returns "proj:test:production" ` |
 
 #### Returns
 

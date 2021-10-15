@@ -13,7 +13,11 @@ export function generateDevkitDocumentation() {
   execSync('nx build typedoc-theme', execSyncOptions);
   Frameworks.forEach((framework) => {
     execSync(
-      `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib`,
+      `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib --readme none`,
+      execSyncOptions
+    );
+    execSync(
+      `rm -rf docs/${framework}/api-nx-devkit/modules.md docs/${framework}/api-nx-devkit/.nojekyll`,
       execSyncOptions
     );
     execSync(
