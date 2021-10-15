@@ -45,6 +45,13 @@ export async function libraryGenerator(host: Tree, options: Schema) {
     return json;
   });
 
+  updateJson(host, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
+    if (options.style === '@emotion/styled') {
+      json.compilerOptions.jsxImportSource = '@emotion/react';
+    }
+    return json;
+  });
+
   updateJson(
     host,
     joinPathFragments(projectRoot, 'tsconfig.lib.json'),

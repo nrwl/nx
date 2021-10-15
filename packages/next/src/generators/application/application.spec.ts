@@ -153,6 +153,20 @@ describe('app', () => {
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
     });
+
+    it('should add jsxImportSource in tsconfig.json', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: '@emotion/styled',
+        standaloneConfig: false,
+      });
+
+      const tsconfigJson = readJson(tree, 'apps/my-app/tsconfig.json');
+
+      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
+        '@emotion/react'
+      );
+    });
   });
 
   describe('--style styled-jsx', () => {
