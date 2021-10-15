@@ -2,6 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = require('path');
 const ts = require('typescript');
+const fs = require('fs');
 function getCompilerSetup(rootDir) {
   const tsConfigPath =
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.spec.json') ||
@@ -28,12 +29,13 @@ if (
   process.argv[1].indexOf('jest-worker') > -1 ||
   (process.argv.length >= 4 && process.argv[3].split(':')[1] === 'test')
 ) {
-  process.env.NX_WORKSPACE_ROOT_PATH = path_1.join(
-    __dirname,
-    '..',
-    'tmp',
-    'unit'
-  );
+  const root = path_1.join(__dirname, '..', 'tmp', 'unit');
+  try {
+    if (!fs.existsSync(root)) {
+      fs.mkdirSync(root);
+    }
+  } catch (_err) {}
+  process.env.NX_WORKSPACE_ROOT_PATH = root;
 }
 
 module.exports = function (path, options) {
