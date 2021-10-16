@@ -93,4 +93,37 @@ describe('next library', () => {
       '../../node_modules/@nrwl/react/typings/image.d.ts'
     );
   });
+
+  it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
+    const baseOptions: Schema = {
+      name: '',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    };
+
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      ...baseOptions,
+      name: 'myLib',
+    });
+    await libraryGenerator(appTree, {
+      ...baseOptions,
+      name: 'myLib2',
+      style: '@emotion/styled',
+    });
+
+    expect(
+      readJson(appTree, 'libs/my-lib/tsconfig.json').compilerOptions
+        .jsxImportSource
+    ).not.toBeDefined();
+    expect(
+      readJson(appTree, 'libs/my-lib2/tsconfig.json').compilerOptions
+        .jsxImportSource
+    ).toEqual('@emotion/react');
+  });
 });
