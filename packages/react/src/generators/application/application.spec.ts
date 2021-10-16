@@ -537,6 +537,18 @@ Object {
       expect(content).toContain('<StyledApp>');
     });
 
+    it('should add jsxImportSource to tsconfig.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: '@emotion/styled',
+      });
+
+      const tsconfigJson = readJson(appTree, 'apps/my-app/tsconfig.json');
+      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
+        '@emotion/react'
+      );
+    });
+
     it('should exclude styles from workspace.json', async () => {
       await applicationGenerator(appTree, {
         ...schema,

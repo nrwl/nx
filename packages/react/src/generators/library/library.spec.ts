@@ -488,6 +488,7 @@ describe('lib', () => {
 
       const workspaceJson = readJson(appTree, '/workspace.json');
       const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
+      const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.json');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
@@ -495,6 +496,9 @@ describe('lib', () => {
         },
       });
       expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
+      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
+        '@emotion/react'
+      );
     });
 
     it('should support styled-jsx', async () => {
