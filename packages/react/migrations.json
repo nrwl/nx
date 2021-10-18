@@ -92,6 +92,12 @@
       "version": "12.0.0-beta.0",
       "description": "Remove @types/react-redux from package.json since react-redux installs the package automatically now",
       "factory": "./src/migrations/update-12-0-0/remove-react-redux-types-package"
+    },
+    "update-emotion-setup-13.0.0": {
+      "cli": "nx",
+      "version": "13.0.0-beta.0",
+      "description": "Update tsconfig.json to use `jsxImportSource` to support css prop",
+      "factory": "./src/migrations/update-13-0-0/update-emotion-setup"
     }
   },
   "packageJsonUpdates": {
