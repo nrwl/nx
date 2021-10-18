@@ -70,7 +70,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   setStrictMode(host, options);
   await addLinting(host, options);
 
-  if (options.publishable) {
+  if (options.buildable || options.publishable) {
     addDependenciesToPackageJson(
       host,
       {},
