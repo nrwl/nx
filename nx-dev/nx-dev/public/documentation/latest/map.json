@@ -182,6 +182,11 @@
             "file": "angular/cli/run"
           },
           {
+            "name": "daemon",
+            "id": "daemon",
+            "file": "angular/cli/daemon"
+          },
+          {
             "name": "dep-graph",
             "id": "dep-graph",
             "file": "angular/cli/dep-graph"
@@ -277,9 +282,9 @@
             "file": "angular/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "angular/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "angular/cli/reset"
           }
         ]
       },
@@ -1450,6 +1455,11 @@
             "file": "react/cli/run"
           },
           {
+            "name": "daemon",
+            "id": "daemon",
+            "file": "react/cli/daemon"
+          },
+          {
             "name": "dep-graph",
             "id": "dep-graph",
             "file": "react/cli/dep-graph"
@@ -1545,9 +1555,9 @@
             "file": "react/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "react/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "react/cli/reset"
           }
         ]
       },
@@ -2682,6 +2692,11 @@
             "file": "node/cli/run"
           },
           {
+            "name": "daemon",
+            "id": "daemon",
+            "file": "node/cli/daemon"
+          },
+          {
             "name": "dep-graph",
             "id": "dep-graph",
             "file": "node/cli/dep-graph"
@@ -2777,9 +2792,9 @@
             "file": "node/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "node/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "node/cli/reset"
           }
         ]
       },

@@ -34,8 +34,9 @@ It only uses language primitives and immutable objects
 - [ProjectFileMap](../../angular/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../angular/nx-devkit/index#projectgraph)
 - [ProjectGraphDependency](../../angular/nx-devkit/index#projectgraphdependency)
-- [ProjectGraphNode](../../angular/nx-devkit/index#projectgraphnode)
+- [ProjectGraphExternalNode](../../angular/nx-devkit/index#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../angular/nx-devkit/index#projectgraphprocessorcontext)
+- [ProjectGraphProjectNode](../../angular/nx-devkit/index#projectgraphprojectnode)
 
 ### Tree Interfaces
 
@@ -71,6 +72,10 @@ It only uses language primitives and immutable objects
 ### Package Manager Type aliases
 
 - [PackageManager](../../angular/nx-devkit/index#packagemanager)
+
+### Project Graph Type aliases
+
+- [ProjectGraphNode](../../angular/nx-devkit/index#projectgraphnode)
 
 ### Utils Type aliases
 
@@ -200,21 +205,27 @@ It only uses language primitives and immutable objects
 
 ---
 
-### ProjectGraphNode
+### ProjectGraphExternalNode
 
-• **ProjectGraphNode**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+• **ProjectGraphExternalNode**: `Object`
 
 ---
 
 ### ProjectGraphProcessorContext
 
 • **ProjectGraphProcessorContext**: `Object`
+
+---
+
+### ProjectGraphProjectNode
+
+• **ProjectGraphProjectNode**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
@@ -355,6 +366,20 @@ It only uses language primitives and immutable objects
 ### PackageManager
 
 Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
+
+---
+
+## Project Graph Type aliases
+
+### ProjectGraphNode
+
+Ƭ **ProjectGraphNode**<`T`\>: [`ProjectGraphProjectNode`](../../angular/nx-devkit/index#projectgraphprojectnode)<`T`\> \| [`ProjectGraphExternalNode`](../../angular/nx-devkit/index#projectgraphexternalnode)
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
@@ -554,12 +579,12 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                                         | Default value | Description                                                                                |
-| :--------------------- | :--------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../angular/nx-devkit/index#tree)                                 | `undefined`   | the file system tree                                                                       |
-| `projectName`          | `string`                                                                     | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) | `undefined`   | project configuration                                                                      |
-| `standalone`           | `boolean`                                                                    | `false`       | should the project use package.json? If false, the project config is inside workspace.json |
+| Name                   | Type                                                                         | Description                                                                                |
+| :--------------------- | :--------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../angular/nx-devkit/index#tree)                                 | the file system tree                                                                       |
+| `projectName`          | `string`                                                                     | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [`ProjectConfiguration`](../../angular/nx-devkit/index#projectconfiguration) | project configuration                                                                      |
+| `standalone?`          | `boolean`                                                                    | should the project use package.json? If false, the project config is inside workspace.json |
 
 #### Returns
 

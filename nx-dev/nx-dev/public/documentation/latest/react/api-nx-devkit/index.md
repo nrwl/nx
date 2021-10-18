@@ -34,8 +34,9 @@ It only uses language primitives and immutable objects
 - [ProjectFileMap](../../react/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../react/nx-devkit/index#projectgraph)
 - [ProjectGraphDependency](../../react/nx-devkit/index#projectgraphdependency)
-- [ProjectGraphNode](../../react/nx-devkit/index#projectgraphnode)
+- [ProjectGraphExternalNode](../../react/nx-devkit/index#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../react/nx-devkit/index#projectgraphprocessorcontext)
+- [ProjectGraphProjectNode](../../react/nx-devkit/index#projectgraphprojectnode)
 
 ### Tree Interfaces
 
@@ -71,6 +72,10 @@ It only uses language primitives and immutable objects
 ### Package Manager Type aliases
 
 - [PackageManager](../../react/nx-devkit/index#packagemanager)
+
+### Project Graph Type aliases
+
+- [ProjectGraphNode](../../react/nx-devkit/index#projectgraphnode)
 
 ### Utils Type aliases
 
@@ -200,21 +205,27 @@ It only uses language primitives and immutable objects
 
 ---
 
-### ProjectGraphNode
+### ProjectGraphExternalNode
 
-• **ProjectGraphNode**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+• **ProjectGraphExternalNode**: `Object`
 
 ---
 
 ### ProjectGraphProcessorContext
 
 • **ProjectGraphProcessorContext**: `Object`
+
+---
+
+### ProjectGraphProjectNode
+
+• **ProjectGraphProjectNode**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
@@ -358,6 +369,20 @@ It only uses language primitives and immutable objects
 
 ---
 
+## Project Graph Type aliases
+
+### ProjectGraphNode
+
+Ƭ **ProjectGraphNode**<`T`\>: [`ProjectGraphProjectNode`](../../react/nx-devkit/index#projectgraphprojectnode)<`T`\> \| [`ProjectGraphExternalNode`](../../react/nx-devkit/index#projectgraphexternalnode)
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
+
+---
+
 ## Utils Type aliases
 
 ### StringChange
@@ -497,7 +522,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### logger
 
-• `Const` **logger**: `Object`
+• **logger**: `Object`
 
 #### Type declaration
 
@@ -554,12 +579,12 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                                       | Default value | Description                                                                                |
-| :--------------------- | :------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../react/nx-devkit/index#tree)                                 | `undefined`   | the file system tree                                                                       |
-| `projectName`          | `string`                                                                   | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../react/nx-devkit/index#projectconfiguration) | `undefined`   | project configuration                                                                      |
-| `standalone`           | `boolean`                                                                  | `false`       | should the project use package.json? If false, the project config is inside workspace.json |
+| Name                   | Type                                                                       | Description                                                                                |
+| :--------------------- | :------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../react/nx-devkit/index#tree)                                 | the file system tree                                                                       |
+| `projectName`          | `string`                                                                   | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [`ProjectConfiguration`](../../react/nx-devkit/index#projectconfiguration) | project configuration                                                                      |
+| `standalone?`          | `boolean`                                                                  | should the project use package.json? If false, the project config is inside workspace.json |
 
 #### Returns
 
@@ -624,9 +649,9 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                               |
-| :--------- | :------------------------------------------------- |
-| `executor` | [`Executor`](../../react/nx-devkit/index#executor) |
+| Name       | Type                                                       |
+| :--------- | :--------------------------------------------------------- |
+| `executor` | [`Executor`](../../react/nx-devkit/index#executor)<`any`\> |
 
 #### Returns
 
@@ -1392,15 +1417,15 @@ of comments with a replaceCharacter
 
 ### targetToTargetString
 
-▸ **targetToTargetString**(`__namedParameters`): `string`
+▸ **targetToTargetString**(`target`): `string`
 
 Returns a string in the format "project:target[:configuration]" for the target
 
 #### Parameters
 
-| Name                | Type                                           |
-| :------------------ | :--------------------------------------------- |
-| `__namedParameters` | [`Target`](../../react/nx-devkit/index#target) |
+| Name     | Type                                           | Description                                                                                                                                                                                                                                     |
+| :------- | :--------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target` | [`Target`](../../react/nx-devkit/index#target) | target object Examples: `typescript targetToTargetString({ project: "proj", target: "test" }) // returns "proj:test" targetToTargetString({ project: "proj", target: "test", configuration: "production" }) // returns "proj:test:production" ` |
 
 #### Returns
 
