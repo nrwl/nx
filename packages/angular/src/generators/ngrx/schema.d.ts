@@ -11,14 +11,4 @@ export interface NgRxGeneratorOptions {
   skipImport?: boolean;
   skipPackageJson?: boolean;
   syntax?: 'classes' | 'creators';
-
-  /**
-   * @deprecated use `skipImport`.
-   */
-  onlyAddFiles?: boolean;
-
-  /**
-   * @deprecated use `minimal`.
-   */
-  onlyEmptyRoot?: boolean;
 }

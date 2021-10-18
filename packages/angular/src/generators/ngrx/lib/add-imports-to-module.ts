@@ -73,7 +73,7 @@ export function addImportsToModule(
   sourceFile = addImport(sourceFile, 'StoreModule', '@ngrx/store');
   sourceFile = addImport(sourceFile, 'EffectsModule', '@ngrx/effects');
 
-  if ((options.onlyEmptyRoot || options.minimal) && options.root) {
+  if (options.minimal && options.root) {
     sourceFile = addImport(
       sourceFile,
       'StoreDevtoolsModule',

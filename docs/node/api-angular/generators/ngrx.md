@@ -68,26 +68,6 @@ Type: `boolean`
 
 Only register the root state management setup or feature state.
 
-### ~~onlyAddFiles~~
-
-Default: `false`
-
-Type: `boolean`
-
-**Deprecated:** Use the `skipImport` option instead.
-
-Only add new NgRx files, without changing the module file (e.g., `--onlyAddFiles`).
-
-### ~~onlyEmptyRoot~~
-
-Default: `false`
-
-Type: `boolean`
-
-**Deprecated:** Use the `minimal` option instead.
-
-Do not generate any files. Only generate `StoreModule.forRoot` and `EffectsModule.forRoot` (e.g., `--onlyEmptyRoot`).
-
 ### root
 
 Default: `false`
