@@ -19,15 +19,8 @@ describe('Package executor', () => {
   let ngPackagrWithBuildTransformMock: jest.Mock;
   let ngPackagrWithTsConfigMock: jest.Mock;
   let options: BuildAngularLibraryExecutorOptions;
-  let tsConfig: { options: { paths: { [key: string]: string[] } } };
 
   beforeEach(async () => {
-    tsConfig = {
-      options: {
-        paths: { '@myorg/my-package': ['/root/my-package/src/index.ts'] },
-      },
-    };
-    (ng.readConfiguration as jest.Mock).mockImplementation(() => tsConfig);
     (
       buildableLibsUtils.calculateProjectDependencies as jest.Mock
     ).mockImplementation(() => ({
@@ -81,10 +74,32 @@ describe('Package executor', () => {
     expect(result.done).toBe(true);
   });
 
-  it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
+  it('should not set up incremental builds when tsConfig option is not set', async () => {
     (
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
+
+    const result = await packageExecutor(options, context).next();
+
+    expect(ng.readConfiguration).not.toHaveBeenCalled();
+    expect(buildableLibsUtils.updatePaths).not.toHaveBeenCalled();
+    expect(ngPackagrWithTsConfigMock).not.toHaveBeenCalled();
+    expect(ngPackagrBuildMock).toHaveBeenCalled();
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
+  });
+
+  it('should process tsConfig for incremental builds when tsConfig option is set and enableIvy is true', async () => {
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
+    const tsConfig = {
+      options: {
+        paths: { '@myorg/my-package': ['/root/my-package/src/index.ts'] },
+        enableIvy: true,
+      },
+    };
+    (ng.readConfiguration as jest.Mock).mockImplementation(() => tsConfig);
     const tsConfigPath = '/root/my-lib/tsconfig.app.json';
 
     const result = await packageExecutor(
