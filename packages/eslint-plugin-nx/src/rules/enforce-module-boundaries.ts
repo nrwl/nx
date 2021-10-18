@@ -98,7 +98,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
-      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{package}}" package`,
+      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
     },
   },
   defaultOptions: [

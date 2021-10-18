@@ -325,7 +325,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import "npm-package" package';
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
