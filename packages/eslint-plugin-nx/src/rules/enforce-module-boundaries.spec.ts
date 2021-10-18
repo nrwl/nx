@@ -252,7 +252,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
       },
       externalNodes: {
-        npmPackage: {
+        'npm:npm-package': {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
@@ -295,7 +295,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
-    it('should allow imports to npm packages', () => {
+    it('should allow imports of npm packages', () => {
       const failures = runRule(
         depConstraints,
         `${process.cwd()}/proj/libs/api/src/index.ts`,
@@ -307,6 +307,28 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       expect(failures.length).toEqual(0);
+    });
+
+    it('should error when importing forbidden npm packages', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
     });
 
     it('should error when the target library is untagged', () => {

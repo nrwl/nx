@@ -23,6 +23,7 @@ export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags: string[];
+  bannedExternalImports?: string[];
 };
 
 export function hasNoneOfTheseTags(
@@ -171,6 +172,23 @@ export function onlyLoadChildren(
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
   return normalizePath(sourceFileName).substring(projectPath.length + 1);
+}
+
+export function hasBannedImport(
+  source: ProjectGraphNode,
+  target: ProjectGraphNode,
+  depConstraints: DepConstraint[]
+): DepConstraint | null {
+  // return those constraints that match source projec and have `bannedExternalImports` defined
+  depConstraints = depConstraints.filter(
+    (c) =>
+      (source.data.tags || []).includes(c.sourceTag) &&
+      c.bannedExternalImports &&
+      c.bannedExternalImports.length
+  );
+  return depConstraints.find((constraint) =>
+    constraint.bannedExternalImports.includes(target.data.packageName)
+  );
 }
 
 /**
