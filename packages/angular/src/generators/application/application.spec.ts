@@ -826,6 +826,17 @@ describe('app', () => {
       );
       expect(hostWebpackConfig).toMatchSnapshot();
     });
+
+    it('should add a port to a non-mfe app', async () => {
+      // ACT
+      await generateApp(appTree, 'app1', {
+        port: 4205,
+      });
+
+      // ASSERT
+      const projectConfig = readProjectConfiguration(appTree, 'app1');
+      expect(projectConfig.targets.serve.options.port).toBe(4205);
+    });
   });
 });
 

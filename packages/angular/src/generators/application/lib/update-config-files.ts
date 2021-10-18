@@ -68,6 +68,16 @@ function updateAppAndE2EProjectConfigurations(
     delete fixedProject.generators;
   }
 
+  if (options.port) {
+    fixedProject.targets.serve = {
+      ...fixedProject.targets.serve,
+      options: {
+        ...fixedProject.targets.serve.options,
+        port: options.port,
+      },
+    };
+  }
+
   updateProjectConfiguration(host, options.name, fixedProject);
 
   if (options.unitTestRunner === UnitTestRunner.None) {
