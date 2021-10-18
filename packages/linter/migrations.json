@@ -128,6 +128,23 @@
           "version": "~4.31.1"
         }
       }
+    },
+    "13.0.0": {
+      "version": "12.10.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~4.33.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~4.33.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~4.33.0"
+        },
+        "eslint": {
+          "version": "7.32.0"
+        }
+      }
     }
   }
 }

@@ -139,7 +139,7 @@ Your `package.json` should now look like this:
     "browserify": "^13.0.0",
     "browserify-ngannotate": "^2.0.0",
     "dotenv": "6.2.0",
-    "eslint": "7.10.0",
+    "eslint": "7.32.0",
     "eslint-config-prettier": "8.1.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",
