@@ -41,22 +41,10 @@
       "default": false,
       "description": "Generate NgRx feature files without registering the feature in the NgModule."
     },
-    "onlyAddFiles": {
-      "type": "boolean",
-      "default": false,
-      "description": "Only add new NgRx files, without changing the module file (e.g., `--onlyAddFiles`).",
-      "x-deprecated": "Use the `skipImport` option instead."
-    },
     "minimal": {
       "type": "boolean",
       "default": true,
       "description": "Only register the root state management setup or feature state."
-    },
-    "onlyEmptyRoot": {
-      "type": "boolean",
-      "default": false,
-      "description": "Do not generate any files. Only generate `StoreModule.forRoot` and `EffectsModule.forRoot` (e.g., `--onlyEmptyRoot`).",
-      "x-deprecated": "Use the `minimal` option instead."
     },
     "skipFormat": {
       "description": "Skip formatting files.",
