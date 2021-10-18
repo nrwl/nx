@@ -26,6 +26,7 @@ export interface NodeExecuteBuilderOptions {
   args: string[];
   waitUntilTargets: string[];
   buildTarget: string;
+  buildTargetOptions: Record<string, any>;
   host: string;
   port: number;
   watch: boolean;
@@ -145,6 +146,7 @@ async function* startBuild(
   yield* await runExecutor<NodeBuildEvent>(
     buildTarget,
     {
+      ...options.buildTargetOptions,
       watch: options.watch,
     },
     context

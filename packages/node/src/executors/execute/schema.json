@@ -8,6 +8,11 @@
       "type": "string",
       "description": "The target to run to build you the app"
     },
+    "buildTargetOptions": {
+      "type": "object",
+      "description": "Additional options to pass into the build target.",
+      "default": {}
+    },
     "waitUntilTargets": {
       "type": "array",
       "description": "The targets to run to before starting the node app",
