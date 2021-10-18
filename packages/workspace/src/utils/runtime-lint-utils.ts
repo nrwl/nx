@@ -140,7 +140,7 @@ export function findProjectUsingImport(
     filePath,
     npmScope
   );
-  return projectGraph.nodes[target];
+  return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
 
 export function findConstraintsFor(
