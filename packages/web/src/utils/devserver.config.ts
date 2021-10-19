@@ -1,6 +1,7 @@
 import { logger } from '@nrwl/devkit';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
+import { basename, resolve } from 'path';
 
 import { getWebConfig } from './web.config';
 import { WebBuildExecutorOptions } from '../executors/build/build.impl';
@@ -8,6 +9,8 @@ import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './shared-models';
 import { readFileSync } from 'fs-extra';
+import { IndexHtmlWebpackPlugin } from './/webpack/plugins/index-html-webpack-plugin';
+import { generateEntryPoints } from './webpack/package-chunk-sort';
 
 export function getDevServerConfig(
   workspaceRoot: string,
@@ -29,6 +32,28 @@ export function getDevServerConfig(
     workspaceRoot,
     serveOptions,
     buildOptions
+  );
+
+  const {
+    deployUrl,
+    subresourceIntegrity,
+    scripts = [],
+    styles = [],
+    index,
+    baseHref,
+  } = buildOptions;
+
+  webpackConfig.plugins.push(
+    new IndexHtmlWebpackPlugin({
+      indexPath: resolve(workspaceRoot, index),
+      outputPath: basename(index),
+      baseHref,
+      entrypoints: generateEntryPoints({ scripts, styles }),
+      deployUrl,
+      sri: subresourceIntegrity,
+      moduleEntrypoints: [],
+      noModuleEntrypoints: ['polyfills-es5'],
+    })
   );
 
   return webpackConfig;
