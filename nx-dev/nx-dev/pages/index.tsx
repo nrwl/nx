@@ -58,9 +58,15 @@ export function Index() {
       <main>
         <div className="w-full">
           {/*INTRO COMPONENT*/}
-          <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
-              <div className="mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
+          <div
+            id="animated-background"
+            className="bg-blue-nx-dark bg-blue-nx-base text-white transform-gpu lg:bg-contain bg-clip-border bg-origin-border bg-right bg-no-repeat"
+            style={{
+              backgroundImage: 'url(/images/background/hero-bg-large.svg)',
+            }}
+          >
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-24">
+              <div className="m-18 2xl:m-24 flex lg:flex-row flex-col items-center justify-center">
                 <div className="w-full lg:w-1/2 flex flex-col">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight sm:mt-10 mb-8 sm:mt-14 sm:mb-10">
                     Smart, Extensible Build Framework

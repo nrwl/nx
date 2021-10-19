@@ -114,3 +114,12 @@ iframe[src*='youtube'] {
   top: 0;
   width: 100%;
 }
+
+/**
+ * Only used for animated background on really big definition
+ */
+@media (min-width: 2400px) {
+  div#animated-background {
+    background-size: cover !important;
+  }
+}
