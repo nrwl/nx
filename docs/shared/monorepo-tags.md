@@ -8,50 +8,65 @@ To help with that Nx uses code analyses to make sure projects can only depend on
 
 Nx comes with a generic mechanism for expressing constraints: tags.
 
-First, use `nx.json` to annotate your projects with tags. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
+First, use your project configuration (within `project.json` or `workspace.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
 
-```json
+```jsonc
+// project "client"
 {
-  "npmScope": "myorg",
-  "implicitDependencies": {
-    "package.json": "*",
-    "tsconfig.base.json": "*",
-    "nx.json": "*"
-  },
-  "projects": {
-    "client": {
-      "tags": ["scope:client"],
-      "implicitDependencies": []
-    },
-    "client-e2e": {
-      "tags": ["scope:client"],
-      "implicitDependencies": ["client"]
-    },
-    "admin": {
-      "tags": ["scope:admin"],
-      "implicitDependencies": []
-    },
-    "admin-e2e": {
-      "tags": ["scope:admin"],
-      "implicitDependencies": ["admin"]
-    },
-    "client-feature-main": {
-      "tags": ["scope:client"],
-      "implicitDependencies": []
-    },
-    "admin-feature-permissions": {
-      "tags": ["scope:admin"],
-      "implicitDependencies": []
-    },
-    "components-shared": {
-      "tags": ["scope:shared"],
-      "implicitDependencies": []
-    },
-    "utils": {
-      "tags": ["scope:shared"],
-      "implicitDependencies": []
-    }
-  }
+  // ... more project configuration here
+
+  "tags": ["scope:client"]
+}
+
+// project "client-e2e"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:client"],
+  "implicitDependencies": ["client"]
+}
+
+// project "admin"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:admin"]
+}
+
+// project "admin-e2e"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:admin"],
+  "implicitDependencies": ["admin"]
+}
+
+// project "client-feature-main"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:client"]
+},
+
+// project "admin-feature-permissions"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:admin"]
+}
+
+// project "components-shared"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:shared"]
+}
+
+// project "utils"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:shared"]
 }
 ```
 
@@ -157,46 +172,65 @@ Let's consider our previous three scopes - `scope:client`. `scope:admin`, `scope
 
 Let's add another dimension - `type`. Some of our projects are applications, some are UI features and some are just plain helper libraries. Let's define three new tags: `type:app`, `type:feature`, `type:ui` and `type:util`.
 
-Our `nx.json` might now look like this:
+Our project configurations might now look like this:
 
 ```jsonc
+// project "client"
 {
-  // ... more nx.json config here
+  // ... more project configuration here
 
-  "projects": {
-    "client": {
-      "tags": ["scope:client", "type:app"],
-      "implicitDependencies": []
-    },
-    "client-e2e": {
-      "tags": ["scope:client", "type:app"],
-      "implicitDependencies": ["client"]
-    },
-    "admin": {
-      "tags": ["scope:admin", "type:app"],
-      "implicitDependencies": []
-    },
-    "admin-e2e": {
-      "tags": ["scope:admin", "type:app"],
-      "implicitDependencies": ["admin"]
-    },
-    "client-feature-main": {
-      "tags": ["scope:client", "type:feature"],
-      "implicitDependencies": []
-    },
-    "admin-feature-permissions": {
-      "tags": ["scope:admin", "type:feature"],
-      "implicitDependencies": []
-    },
-    "components-shared": {
-      "tags": ["scope:shared", "type:ui"],
-      "implicitDependencies": []
-    },
-    "utils": {
-      "tags": ["scope:shared", "type:util"],
-      "implicitDependencies": []
-    }
-  }
+  "tags": ["scope:client", "type:app"]
+}
+
+// project "client-e2e"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:client", "type:app"],
+  "implicitDependencies": ["client"]
+}
+
+// project "admin"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:admin", "type:app"]
+}
+
+// project "admin-e2e"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:admin", "type:app"],
+  "implicitDependencies": ["admin"]
+}
+
+// project "client-feature-main"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:client", "type:feature"]
+},
+
+// project "admin-feature-permissions"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:admin", "type:feature"]
+}
+
+// project "components-shared"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:shared", "type:ui"]
+}
+
+// project "utils"
+{
+  // ... more project configuration here
+
+  "tags": ["scope:shared", "type:util"]
 }
 ```
 
