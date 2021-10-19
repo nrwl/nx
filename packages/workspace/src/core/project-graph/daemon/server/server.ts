@@ -24,7 +24,7 @@ import {
 import {
   addUpdatedAndDeletedFiles,
   getCachedSerializedProjectGraphPromise,
-  resetAfterError,
+  resetInternalState,
 } from './project-graph-incremental-recomputation';
 
 function respondToClient(socket: Socket, message: string) {
@@ -65,7 +65,7 @@ const server = createServer((socket) => {
     const result = await getCachedSerializedProjectGraphPromise();
 
     if (result.error) {
-      resetAfterError();
+      resetInternalState();
       serverLogger.nestedLog(
         `Error when preparing serialized project graph: ${result.error.message}`
       );
@@ -81,7 +81,7 @@ const server = createServer((socket) => {
       result.serializedProjectGraph
     );
     if (!serializedResult) {
-      resetAfterError();
+      resetInternalState();
       serverLogger.nestedLog(`Error when serializing project graph result`);
       respondToClient(
         socket,

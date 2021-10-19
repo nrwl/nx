@@ -1,4 +1,8 @@
-import { getPackageManagerCommand, writeJsonFile } from '@nrwl/devkit';
+import {
+  getPackageManagerCommand,
+  stripIndents,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -190,10 +194,7 @@ ${daemonHelpOutput}
     'daemon',
     `${chalk.bold('EXPERIMENTAL: Nx Daemon')}` +
       (daemonHelpOutput
-        ? `
-
-${daemonHelpOutput}
-`.trimRight()
+        ? stripIndents`${daemonHelpOutput}`.trimRight()
         : `
 
 The Daemon is not currently running you can start it manually by running the following command:

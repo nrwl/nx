@@ -41,7 +41,7 @@ export const nxDepsDir = cacheDirectory(
   appRootPath,
   readCacheDirectoryProperty(appRootPath)
 );
-const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
+export const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
 
 export function ensureCacheDirectory(): void {
   try {
