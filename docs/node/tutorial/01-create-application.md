@@ -4,6 +4,8 @@
 
 In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
+> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/{{framework}}/core-concepts/nx-core).
+
 ## Create a New Workspace
 
 **Start by creating a new workspace.**

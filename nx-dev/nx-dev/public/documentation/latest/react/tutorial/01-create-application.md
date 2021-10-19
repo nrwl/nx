@@ -6,6 +6,8 @@ In this tutorial you use Nx to build a full-stack application out of common libr
 
 > Next.js: Nx also has first-class Next.js support. Read more about it [here](/{{framework}}/next/overview)
 
+> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/{{framework}}/core-concepts/nx-core).
+
 ## Create a new workspace
 
 Start by creating a new workspace.

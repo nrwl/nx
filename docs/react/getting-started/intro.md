@@ -42,6 +42,7 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 ## Learn Nx Fundamentals
 
 - [Interactive Nx Tutorial (with videos)](/{{framework}}/tutorial/01-create-application)
+- [Using Nx Core Without Plugins](/{{framework}}/core-concepts/nx-core)
 - [Free Nx Course on Egghead: Scale React Development with Nx](https://egghead.io/playlists/scale-react-development-with-nx-4038)
 - [45-Minute Walkthrough](https://www.youtube.com/watch?v=jCf92IyR-GE)
 - [Nx CLI](/{{framework}}/getting-started/nx-cli)

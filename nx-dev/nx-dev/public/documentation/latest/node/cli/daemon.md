@@ -1,8 +1,6 @@
 # daemon
 
-EXPERIMENTAL: Nx Daemon
-
-The Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph.
+EXPERIMENTAL: Nx DaemonThe Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph.
 
 ## Usage
 
