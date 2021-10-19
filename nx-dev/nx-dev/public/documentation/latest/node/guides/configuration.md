@@ -74,14 +74,6 @@ The `workspace.json` configuration file contains information about the targets a
         }
       }
     }
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/node"
-  },
-  "generators": {
-    "@nrwl/node:library": {
-      "js": true
-    }
   }
 }
 ```
@@ -98,7 +90,9 @@ For instance, the following configures `mylib`.
     "root": "libs/mylib/",
     "sourceRoot": "libs/mylib/src",
     "projectType": "library",
-    "targets": {}
+    "targets": {},
+    "tags": [],
+    "implicitDependencies": []
   }
 }
 ```
@@ -107,6 +101,8 @@ For instance, the following configures `mylib`.
 - `sourceRoot` tells Nx the location of the library's source files.
 - `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux commands.
 - `targets` configures all the targets which define what tasks you can run against the library.
+- `tags` configures tags used for linting
+- `implicitDependencies` configure implicit dependencies between projects in the workspace ([see below](#implicit-dependencies))
 
 > Projects utilizing `project.json` files are not present in `workspace.json`.
 
@@ -256,50 +252,6 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 
 Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
 
-### Generators
-
-Default generator options are configured in `workspace.json` as well. For instance, the following tells Nx to always pass `--js` when creating new libraries.
-
-```json
-{
-  "generators": {
-    "@nrwl/node:library": {
-      "buildable": true
-    }
-  }
-}
-```
-
-You can also do it on the project level:
-
-```json
-{
-  "mylib": {
-    "root": "libs/mylib/",
-    "sourceRoot": "libs/mylib/src",
-    "projectType": "library",
-    "generators": {
-      "@nrwl/node:lib": {
-        "moreOptions": true
-      }
-    },
-    "targets": {}
-  }
-}
-```
-
-### CLI Options
-
-The following command generates a new library: `nx g @nrwl/node:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
-
-```json
-{
-  "cli": {
-    "defaultCollection": "@nrwl/node"
-  }
-}
-```
-
 ### Version
 
 When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
@@ -316,7 +268,7 @@ Project configurations can also be independent files, referenced by `workspace.j
 }
 ```
 
-This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file. This file contains a combination of the project's configuration from both `workspace.json` and `nx.json`.
+This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file.
 
 ```json
 {
@@ -356,16 +308,12 @@ The `nx.json` file contains extra configuration options mostly related to the pr
     "tsconfig.base.json": "*",
     "nx.json": "*"
   },
-  "projects": {
-    "myapp": {
-      "tags": []
-    },
-    "mylib": {
-      "tags": []
-    },
-    "myapp-e2e": {
-      "tags": [],
-      "implicitDependencies": ["myapp"]
+  "cli": {
+    "defaultCollection": "@nrwl/node"
+  },
+  "generators": {
+    "@nrwl/node:library": {
+      "js": true
     }
   }
 }
@@ -449,15 +397,17 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-You can also add dependencies between projects. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
+You can also add dependencies between projects in `workspace.json`. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
 
-```json
+```jsonc
 {
   "projects": {
     "myapp": {
+      //... other project config
       "tags": []
     },
     "myapp-e2e": {
+      //... other project config
       "tags": [],
       "implicitDependencies": ["myapp"]
     }
@@ -489,6 +439,50 @@ Often the same `dependsOn` configuration has to be defined for every project in 
 The configuration above is identical to adding `{"dependsOn": [{"target": "build", "projects": "dependencies"]}` to every build target in `workspace.json`.
 
 The `dependsOn` property in `workspace.json` takes precedence over the `targetDependencies` in `nx.json`.
+
+### Generators
+
+Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always pass `--js` when creating new libraries.
+
+```json
+{
+  "generators": {
+    "@nrwl/node:library": {
+      "buildable": true
+    }
+  }
+}
+```
+
+You can also do it on the project level in workspace.json or project.json:
+
+```json
+{
+  "mylib": {
+    "root": "libs/mylib/",
+    "sourceRoot": "libs/mylib/src",
+    "projectType": "library",
+    "generators": {
+      "@nrwl/node:lib": {
+        "moreOptions": true
+      }
+    },
+    "targets": {}
+  }
+}
+```
+
+### CLI Options
+
+The following command generates a new library: `nx g @nrwl/node:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
+
+```json
+{
+  "cli": {
+    "defaultCollection": "@nrwl/node"
+  }
+}
+```
 
 ## .nxignore
 

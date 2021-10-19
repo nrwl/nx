@@ -63,9 +63,6 @@ The `angular.json` configuration file contains information about the targets and
         }
       }
     }
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/web"
   }
 }
 ```
@@ -82,7 +79,9 @@ For instance, the following configures `mylib`.
     "root": "libs/mylib/",
     "sourceRoot": "libs/mylib/src",
     "projectType": "library",
-    "architect": {}
+    "architect": {},
+    "tags": [],
+    "implicitDependencies": []
   }
 }
 ```
@@ -91,10 +90,10 @@ For instance, the following configures `mylib`.
 - `sourceRoot` tells Nx the location of the library's source files.
 - `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux commands.
 - `architect` configures all the targets which define what tasks you can run against the library.
+- `tags` configures tags used for linting
+- `implicitDependencies` configure implicit dependencies between projects in the workspace ([see below](#implicit-dependencies))
 
 > Nx uses the architect library built by the Angular team at Google. The naming reflects that. Important to note: it's a general purpose library that **does not** have any dependency on Angular.
-
-> Projects utilizing `project.json` files are not present in `angular.json`.
 
 ### Targets
 
@@ -240,31 +239,7 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 
 Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
 
-### Generators
-
-Generators that are created using `@angular-devkit` are called schematics. Default generator options are configured `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
-
-```json
-{
-  "schematics": {
-    "@nrwl/angular:library": {
-      "style": "scss"
-    }
-  }
-}
-```
-
-### CLI Options
-
-The following command generates a new library: `nx g @nrwl/angular:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
-
-```json
-{
-  "cli": {
-    "defaultCollection": "@nrwl/angular"
-  }
-}
-```
+````
 
 ### workspace.json
 
@@ -280,9 +255,9 @@ In version 2 workspaces, project configurations can also be independent files, r
     "mylib": "libs/mylib"
   }
 }
-```
+````
 
-This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file. This file contains a combination of the project's configuration from both `angular.json` and `nx.json`.
+This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file.
 
 ```json
 {
@@ -330,17 +305,8 @@ The `nx.json` file contains extra configuration options mostly related to the pr
       }
     ]
   },
-  "projects": {
-    "myapp": {
-      "tags": []
-    },
-    "mylib": {
-      "tags": []
-    },
-    "myapp-e2e": {
-      "tags": [],
-      "implicitDependencies": ["myapp"]
-    }
+  "cli": {
+    "defaultCollection": "@nrwl/web"
   }
 }
 ```
@@ -440,15 +406,17 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-You can also add dependencies between projects. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
+You can also add dependencies between projects in `angular.json`. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
 
-```json
+```jsonc
 {
   "projects": {
     "myapp": {
+      //... other project config
       "tags": []
     },
     "myapp-e2e": {
+      //... other project config
       "tags": [],
       "implicitDependencies": ["myapp"]
     }
@@ -478,6 +446,31 @@ Often the same `dependsOn` configuration has to be defined for every project in 
 The configuration above is identical to adding `{"dependsOn": [{"target": "build", "projects": "dependencies"]}` to every build target in `workspace.json`.
 
 The `dependsOn` property in `workspace.json` takes precedence over the `targetDependencies` in `nx.json`.
+
+### CLI Options
+
+The following command generates a new library: `nx g @nrwl/angular:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
+
+```json
+{
+  "cli": {
+    "defaultCollection": "@nrwl/angular"
+  }
+}
+```
+
+### Generators
+
+Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always pass `--style=scss` when creating new libraries.
+
+````json
+{
+  "generators": {
+    "@nrwl/angular:library": {
+      "style": "scss"
+    }
+  }
+}
 
 ## .nxignore
 
@@ -521,3 +514,4 @@ nx workspace-lint
 ```
 
 This will identify any projects with no files in the configured project root folder, as well as any file that's not part of any project configured in the workspace.
+````
