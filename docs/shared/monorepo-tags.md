@@ -8,15 +8,14 @@ To help with that Nx uses code analyses to make sure projects can only depend on
 
 Nx comes with a generic mechanism for expressing constraints: tags.
 
-First, use your project configuration (within `workspace.json` or `project.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
+First, use your project configuration (within `project.json` or `workspace.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
 
 ```jsonc
 // project "client"
 {
   // ... more project configuration here
 
-  "tags": ["scope:client"],
-  "implicitDependencies": []
+  "tags": ["scope:client"]
 }
 
 // project "client-e2e"
@@ -31,8 +30,7 @@ First, use your project configuration (within `workspace.json` or `project.json`
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin"],
-  "implicitDependencies": []
+  "tags": ["scope:admin"]
 }
 
 // project "admin-e2e"
@@ -47,32 +45,28 @@ First, use your project configuration (within `workspace.json` or `project.json`
 {
   // ... more project configuration here
 
-  "tags": ["scope:client"],
-  "implicitDependencies": []
+  "tags": ["scope:client"]
 },
 
 // project "admin-feature-permissions"
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin"],
-  "implicitDependencies": []
+  "tags": ["scope:admin"]
 }
 
 // project "components-shared"
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared"],
-  "implicitDependencies": []
+  "tags": ["scope:shared"]
 }
 
 // project "utils"
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared"],
-  "implicitDependencies": []
+  "tags": ["scope:shared"]
 }
 ```
 
@@ -185,8 +179,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:client", "type:app"],
-  "implicitDependencies": []
+  "tags": ["scope:client", "type:app"]
 }
 
 // project "client-e2e"
@@ -201,8 +194,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin", "type:app"],
-  "implicitDependencies": []
+  "tags": ["scope:admin", "type:app"]
 }
 
 // project "admin-e2e"
@@ -217,32 +209,28 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:client", "type:feature"],
-  "implicitDependencies": []
+  "tags": ["scope:client", "type:feature"]
 },
 
 // project "admin-feature-permissions"
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin", "type:feature"],
-  "implicitDependencies": []
+  "tags": ["scope:admin", "type:feature"]
 }
 
 // project "components-shared"
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared", "type:ui"],
-  "implicitDependencies": []
+  "tags": ["scope:shared", "type:ui"]
 }
 
 // project "utils"
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared", "type:util"],
-  "implicitDependencies": []
+  "tags": ["scope:shared", "type:util"]
 }
 ```
 
