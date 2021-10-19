@@ -98,6 +98,12 @@
       "version": "13.0.0-beta.0",
       "description": "Update tsconfig.json to use `jsxImportSource` to support css prop",
       "factory": "./src/migrations/update-13-0-0/update-emotion-setup"
+    },
+    "migrate-storybook-to-webpack-5-13.0.0": {
+      "cli": "nx",
+      "version": "13.0.0-beta.0",
+      "description": "Migrate Storybook to use webpack 5",
+      "factory": "./src/migrations/update-13-0-0/migrate-storybook-to-webpack-5"
     }
   },
   "packageJsonUpdates": {
