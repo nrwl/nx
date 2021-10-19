@@ -97,6 +97,11 @@
             "file": "angular/guides/configuration"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit-and-nx-plugins"
@@ -1374,6 +1379,11 @@
             "file": "react/guides/configuration"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit-and-nx-plugins"
@@ -2613,6 +2623,11 @@
             "name": "Configuration",
             "id": "configuration",
             "file": "node/guides/configuration"
+          },
+          {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
           },
           {
             "name": "Nx Plugins and Devkit",
