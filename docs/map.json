@@ -1219,6 +1219,11 @@
             "file": "shared/eslint"
           },
           {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
+          },
+          {
             "name": "Nx 7 => Nx 8",
             "id": "nx7-to-nx8"
           },
@@ -2479,6 +2484,11 @@
             "file": "shared/eslint"
           },
           {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
+          },
+          {
             "name": "JavaScript and TypeScript",
             "id": "js-and-ts",
             "file": "react/guides/js-and-ts"
@@ -3687,6 +3697,11 @@
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
             "file": "shared/eslint"
+          },
+          {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
           },
           {
             "name": "Webpack 5 Migration",
