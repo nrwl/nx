@@ -11,7 +11,12 @@ import { getGitHashForFiles } from '../../../hasher/git-hasher';
 import { serverLogger } from './logger';
 import { buildProjectGraphUsingProjectFileMap } from '../../build-project-graph';
 import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
-import { ProjectGraphCache, readCache } from '../../../nx-deps/nx-deps-cache';
+import {
+  nxDepsPath,
+  ProjectGraphCache,
+  readCache,
+} from '../../../nx-deps/nx-deps-cache';
+import { fileExists } from '../../../../utilities/fileutils';
 
 const configName = workspaceConfigName(appRootPath);
 let cachedSerializedProjectGraphPromise: Promise<{
@@ -37,7 +42,7 @@ export function getCachedSerializedProjectGraphPromise() {
 
   // reset the wait time
   waitPeriod = 100;
-
+  resetInternalStateIfNxDepsMissing();
   if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
     if (!cachedSerializedProjectGraphPromise) {
       processCollectedUpdatedAndDeletedFiles(); // this creates a project graph
@@ -158,11 +163,21 @@ async function createAndSerializeProjectGraph() {
   }
 }
 
-export function resetAfterError() {
+export function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
   projectFileMapWithFiles = undefined;
   currentProjectGraphCache = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
   waitPeriod = 100;
+}
+
+function resetInternalStateIfNxDepsMissing() {
+  try {
+    if (!fileExists(nxDepsPath)) {
+      resetInternalState();
+    }
+  } catch (e) {
+    resetInternalState();
+  }
 }
