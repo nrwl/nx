@@ -48,7 +48,7 @@ describe('Web Components Applications', () => {
     expect(lintE2eResults).toContain('All files pass linting.');
 
     if (isNotWindows() && runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
+      const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }

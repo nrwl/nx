@@ -72,9 +72,7 @@ describe('Angular Package', () => {
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
       if (runCypressTests()) {
-        const e2eResults = runCLI(
-          `e2e my-dir-${myapp}-e2e --headless --no-watch`
-        );
+        const e2eResults = runCLI(`e2e my-dir-${myapp}-e2e --no-watch`);
         expect(e2eResults).toContain('All specs passed!');
         expect(await killPorts()).toBeTruthy();
       }

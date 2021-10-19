@@ -184,9 +184,7 @@ describe('Angular Package', () => {
           );
 
           if (runCypressTests()) {
-            const e2eResults = runCLI(
-              `e2e ${myAngularLib}-e2e --headless --no-watch`
-            );
+            const e2eResults = runCLI(`e2e ${myAngularLib}-e2e --no-watch`);
             expect(e2eResults).toContain('All specs passed!');
             expect(await killPorts()).toBeTruthy();
           }
