@@ -12,6 +12,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   targets.build = {
     builder: '@nrwl/next:build',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       root: options.appProjectRoot,
       outputPath: joinPathFragments('dist', options.appProjectRoot),

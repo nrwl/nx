@@ -1,51 +1,31 @@
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-
 import * as path from 'path';
 import { RuleSetRule } from 'webpack';
 
-import {
-  PostcssCliResources,
-  RawCssLoader,
-  RemoveHashPlugin,
-} from '../../plugins/webpack';
-import { BuildOptions } from '../build-options';
-import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
-import { RemoveEmptyScriptsPlugin } from '../../plugins/remove-empty-scripts-plugin';
+import { WebBuildExecutorOptions } from '../../../executors/build/build.impl';
+import { RemoveEmptyScriptsPlugin } from '../plugins/remove-empty-scripts-plugin';
+import { getOutputHashFormat } from '../../hash-format';
+import { normalizeExtraEntryPoints } from '../../normalize';
+import { PostcssCliResources } from '../plugins/postcss-cli-resources';
+import { RemoveHashPlugin } from '../plugins/remove-hash-plugin';
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const autoprefixer = require('autoprefixer');
 const postcssImports = require('postcss-import');
 
-/**
- * Enumerate loaders and their dependencies from this file to let the dependency validator
- * know they are used.
- *
- * require('style-loader')
- * require('postcss-loader')
- * require('stylus')
- * require('stylus-loader')
- * require('less')
- * require('less-loader')
- * require('node-sass')
- * require('sass-loader')
- */
-// tslint:disable-next-line:no-big-function
+const RawCssLoader = require.resolve(
+  path.join(__dirname, '../plugins/raw-css-loader.js')
+);
+
 export function getStylesConfig(
   root: string,
-  buildOptions: BuildOptions,
+  buildOptions: WebBuildExecutorOptions,
   includePaths: string[]
 ) {
   const entryPoints: { [key: string]: string[] } = {};
   const globalStylePaths: string[] = [];
   const extraPlugins = [];
 
-  const cssSourceMap = buildOptions.sourceMap.styles;
+  const cssSourceMap = !!buildOptions.sourceMap;
 
   // Determine hashing format.
   const hashFormat = getOutputHashFormat(buildOptions.outputHashing as string);
@@ -78,7 +58,6 @@ export function getStylesConfig(
         PostcssCliResources({
           baseHref: buildOptions.baseHref,
           deployUrl: buildOptions.deployUrl,
-          resourcesOutputPath: buildOptions.resourcesOutputPath,
           loader,
           filename: `[name]${hashFormat.file}.[ext]`,
         }),
@@ -178,24 +157,24 @@ export function getStylesConfig(
   ];
 
   // load component css as raw strings
-  const componentsSourceMap = !!(
-    cssSourceMap &&
-    // Never use component css sourcemap when style optimizations are on.
-    // It will just increase bundle size without offering good debug experience.
-    !buildOptions.optimization.styles &&
-    // Inline all sourcemap types except hidden ones, which are the same as no sourcemaps
-    // for component css.
-    !buildOptions.sourceMap.hidden
-  );
+  const componentsSourceMap = !!(cssSourceMap &&
+  // Never use component css sourcemap when style optimizations are on.
+  // It will just increase bundle size without offering good debug experience.
+  typeof buildOptions.optimization === 'undefined'
+    ? true
+    : typeof buildOptions.optimization === 'boolean'
+    ? !buildOptions.optimization
+    : buildOptions.optimization.styles &&
+      // Inline all sourcemap types except hidden ones, which are the same as no sourcemaps
+      // for component css.
+      buildOptions.sourceMap !== 'hidden');
 
   const rules: RuleSetRule[] = baseRules.map(({ test, use }) => ({
     exclude: globalStylePaths,
     test,
     use: [
       { loader: require.resolve('raw-loader') },
-      // Including RawCssLoader here because per v4.x release notes for postcss-loader under breaking changes:
-      // "loader output only CSS, so you need to use css-loader/file-loader/raw-loader to inject code inside bundle"
-      RawCssLoader,
+      { loader: RawCssLoader },
       {
         loader: require.resolve('postcss-loader'),
         options: {
@@ -203,13 +182,14 @@ export function getStylesConfig(
           postcssOptions: postcssOptionsCreator(componentsSourceMap),
         },
       },
-      ...(use as any[]),
+      ...(Array.isArray(use) ? use : []),
     ],
   }));
 
   // load global css as css files
   if (globalStylePaths.length > 0) {
-    const globalSourceMap = !!cssSourceMap && !buildOptions.sourceMap.hidden;
+    const globalSourceMap =
+      !!cssSourceMap && buildOptions.sourceMap !== 'hidden';
 
     rules.push(
       ...baseRules.map(({ test, use }) => {
@@ -217,13 +197,11 @@ export function getStylesConfig(
           include: globalStylePaths,
           test,
           use: [
-            buildOptions.extractCss
-              ? {
-                  loader: MiniCssExtractPlugin.loader,
-                  options: { esModule: true },
-                }
-              : require.resolve('style-loader'),
-            RawCssLoader,
+            {
+              loader: MiniCssExtractPlugin.loader,
+              options: { esModule: true },
+            },
+            { loader: RawCssLoader },
             {
               loader: require.resolve('postcss-loader'),
               options: {
@@ -238,16 +216,14 @@ export function getStylesConfig(
     );
   }
 
-  if (buildOptions.extractCss) {
-    extraPlugins.push(
-      // extract global css from js files into own css file
-      new MiniCssExtractPlugin({
-        filename: `[name]${hashFormat.extract}.css`,
-      }),
-      // suppress empty .js files in css only entry points
-      new RemoveEmptyScriptsPlugin()
-    );
-  }
+  extraPlugins.push(
+    // extract global css from js files into own css file
+    new MiniCssExtractPlugin({
+      filename: `[name]${hashFormat.extract}.css`,
+    }),
+    // suppress empty .js files in css only entry points
+    new RemoveEmptyScriptsPlugin()
+  );
 
   return {
     entry: entryPoints,

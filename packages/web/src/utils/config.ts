@@ -4,7 +4,7 @@ import { Configuration, WebpackPluginInstance } from 'webpack';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
-import { AssetGlobPattern, BuildBuilderOptions } from './types';
+import { AssetGlobPattern, BuildBuilderOptions } from './shared-models';
 import { getOutputHashFormat } from './hash-format';
 
 // Inlining tsconfig-paths-webpack-plugin with a patch

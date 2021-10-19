@@ -95,7 +95,7 @@
     "source-map": "0.7.3",
     "source-map-loader": "^3.0.0",
     "style-loader": "^3.3.0",
-    "stylus": "0.54.5",
+    "stylus": "^0.55.0",
     "stylus-loader": "^6.2.0",
     "terser": "4.3.8",
     "terser-webpack-plugin": "^5.1.1",

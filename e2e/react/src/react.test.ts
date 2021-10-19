@@ -1,4 +1,3 @@
-import { serializeJson } from '@nrwl/workspace';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -42,20 +41,19 @@ describe('React Applications', () => {
 
     await testGeneratedApp(appName, {
       checkStyles: true,
-      checkProdBuild: true,
       checkLinter: true,
       checkE2E: true,
     });
   }, 500000);
 
-  it('should support vendor sourcemaps', () => {
+  it('should support sourcemaps', () => {
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
 
-    runCLI(`build ${appName} --sourceMap`);
+    runCLI(`build ${appName} --sourceMap --outputHashing none`);
 
-    checkFilesExist(`dist/apps/${appName}/vendor.js.map`);
+    checkFilesExist(`dist/apps/${appName}/main.esm.js.map`);
   }, 250000);
 
   it('should be able to generate a publishable react lib', async () => {
@@ -114,7 +112,6 @@ describe('React Applications', () => {
 
     await testGeneratedApp(appName, {
       checkStyles: true,
-      checkProdBuild: false,
       checkLinter: false,
       checkE2E: false,
     });
@@ -145,7 +142,6 @@ describe('React Applications', () => {
 
     await testGeneratedApp(appName, {
       checkStyles: true,
-      checkProdBuild: false,
       checkLinter: false,
       checkE2E: false,
     });
@@ -185,17 +181,9 @@ describe('React Applications', () => {
 
     await testGeneratedApp(styledComponentsApp, {
       checkStyles: false,
-      checkProdBuild: true,
       checkLinter: false,
       checkE2E: false,
     });
-
-    expect(readFile(`dist/apps/${styledComponentsApp}/main.js`)).toContain(
-      'app__StyledApp'
-    );
-    expect(
-      readFile(`dist/apps/${styledComponentsApp}/prod/main.esm.js`)
-    ).not.toContain('app__StyledApp');
 
     const styledJsxApp = uniq('app');
 
@@ -205,7 +193,6 @@ describe('React Applications', () => {
 
     await testGeneratedApp(styledJsxApp, {
       checkStyles: false,
-      checkProdBuild: false,
       checkLinter: false,
       checkE2E: false,
     });
@@ -218,7 +205,6 @@ describe('React Applications', () => {
 
     await testGeneratedApp(noStylesApp, {
       checkStyles: false,
-      checkProdBuild: false,
       checkLinter: false,
       checkE2E: false,
     });
@@ -236,24 +222,23 @@ describe('React Applications', () => {
 
     runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
 
-    // changing browser suporrt of this application
+    // changing browser support of this application
     updateFile(`apps/${appName}/.browserslistrc`, `IE 11`);
 
     await testGeneratedApp(appName, {
       checkStyles: false,
-      checkProdBuild: true,
       checkLinter: false,
       checkE2E: false,
     });
 
     const filesToCheck = [
-      `dist/apps/${appName}/prod/polyfills.es5.js`,
-      `dist/apps/${appName}/prod/main.es5.js`,
+      `dist/apps/${appName}/polyfills.es5.js`,
+      `dist/apps/${appName}/main.es5.js`,
     ];
 
     checkFilesExist(...filesToCheck);
 
-    expect(readFile(`dist/apps/${appName}/prod/index.html`)).toContain(
+    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
     );
   }, 250000);
@@ -312,7 +297,6 @@ describe('React Applications', () => {
 
     await testGeneratedApp(appName, {
       checkStyles: true,
-      checkProdBuild: false,
       checkLinter: false,
       checkE2E: false,
     });
@@ -321,7 +305,6 @@ describe('React Applications', () => {
   async function testGeneratedApp(
     appName,
     opts: {
-      checkProdBuild: boolean;
       checkStyles: boolean;
       checkLinter: boolean;
       checkE2E: boolean;
@@ -332,44 +315,22 @@ describe('React Applications', () => {
       expect(lintResults).toContain('All files pass linting.');
     }
 
-    runCLI(`build ${appName}`);
-    let filesToCheck = [
+    runCLI(`build ${appName} --outputHashing none`);
+    const filesToCheck = [
       `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/polyfills.js`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/vendor.js`,
-      `dist/apps/${appName}/main.js`,
+      `dist/apps/${appName}/runtime.esm.js`,
+      `dist/apps/${appName}/polyfills.esm.js`,
+      `dist/apps/${appName}/main.esm.js`,
     ];
     if (opts.checkStyles) {
-      filesToCheck.push(`dist/apps/${appName}/styles.js`);
+      filesToCheck.push(`dist/apps/${appName}/styles.css`);
     }
     checkFilesExist(...filesToCheck);
 
-    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'function App() {'
-    );
-
-    if (opts.checkProdBuild) {
-      const prodOutputPath = `dist/apps/${appName}/prod`;
-      runCLI(
-        `build ${appName} --prod --output-hashing none --outputPath ${prodOutputPath}`
+    if (opts.checkStyles) {
+      expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+        `<link rel="stylesheet" href="styles.css">`
       );
-      filesToCheck = [
-        `${prodOutputPath}/index.html`,
-        `${prodOutputPath}/runtime.esm.js`,
-        `${prodOutputPath}/polyfills.esm.js`,
-        `${prodOutputPath}/main.esm.js`,
-      ];
-      if (opts.checkStyles) {
-        filesToCheck.push(`${prodOutputPath}/styles.css`);
-      }
-      checkFilesExist(...filesToCheck);
-
-      if (opts.checkStyles) {
-        expect(readFile(`${prodOutputPath}/index.html`)).toContain(
-          `<link rel="stylesheet" href="styles.css">`
-        );
-      }
     }
 
     const testResults = await runCLIAsync(`test ${appName}`);
@@ -385,7 +346,7 @@ describe('React Applications', () => {
   }
 });
 
-describe('--style option', () => {
+fdescribe('--style option', () => {
   beforeAll(() => newProject());
 
   it.each`
@@ -420,11 +381,7 @@ describe('--style option', () => {
       `body { font-family: "Comic Sans MS"; }`
     );
 
-    runCLI(`build ${appName}`);
-
-    expect(readFile(`dist/apps/${appName}/styles.js`)).toMatch(/Comic Sans MS/);
-
-    runCLI(`build ${appName} --prod --output-hashing none`);
+    runCLI(`build ${appName} --outputHashing none`);
 
     expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
       /Comic Sans MS/

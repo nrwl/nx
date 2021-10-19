@@ -3,17 +3,17 @@ import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-serv
 import * as path from 'path';
 
 import { getWebConfig } from './web.config';
-import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebBuildExecutorOptions } from '../executors/build/build.impl';
 import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
-import { OptimizationOptions } from './types';
+import { OptimizationOptions } from './shared-models';
 import { readFileSync } from 'fs-extra';
 
 export function getDevServerConfig(
   workspaceRoot: string,
   projectRoot: string,
   sourceRoot: string,
-  buildOptions: WebBuildBuilderOptions,
+  buildOptions: WebBuildExecutorOptions,
   serveOptions: WebDevServerOptions
 ): Partial<WebpackDevServerConfiguration> {
   const webpackConfig = getWebConfig(
@@ -37,7 +37,7 @@ export function getDevServerConfig(
 function getDevServerPartial(
   root: string,
   options: WebDevServerOptions,
-  buildOptions: WebBuildBuilderOptions
+  buildOptions: WebBuildExecutorOptions
 ): WebpackDevServerConfiguration {
   const servePath = buildServePath(buildOptions);
 
@@ -49,7 +49,7 @@ function getDevServerPartial(
     port: options.port,
     headers: { 'Access-Control-Allow-Origin': '*' },
     historyApiFallback: {
-      index: `${servePath}/${path.basename(buildOptions.index)}`,
+      index: `${servePath}${path.basename(buildOptions.index)}`,
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },

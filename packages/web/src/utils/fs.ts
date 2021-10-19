@@ -1,13 +1,5 @@
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-import { existsSync } from 'fs';
 import * as path from 'path';
-import { isDirectory } from './is-directory';
+import { existsSync, removeSync, statSync } from 'fs-extra';
 
 export function findUp(
   names: string | string[],
@@ -59,4 +51,24 @@ export function findAllNodeModules(from: string, root?: string) {
   }
 
   return nodeModules;
+}
+
+/**
+ * Delete an output directory, but error out if it's the root of the project.
+ */
+export function deleteOutputDir(root: string, outputPath: string) {
+  const resolvedOutputPath = path.resolve(root, outputPath);
+  if (resolvedOutputPath === root) {
+    throw new Error('Output path MUST not be project root directory!');
+  }
+
+  removeSync(resolvedOutputPath);
+}
+
+export function isDirectory(path: string) {
+  try {
+    return statSync(path).isDirectory();
+  } catch (_) {
+    return false;
+  }
 }
