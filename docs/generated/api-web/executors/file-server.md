@@ -53,6 +53,12 @@ Type: `string`
 
 URL to proxy unhandled requests to.
 
+### secure
+
+Type: `boolean`
+
+True if you want to verify the SSL Certs.
+
 ### ssl
 
 Default: `false`

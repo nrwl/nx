@@ -48,6 +48,10 @@
     "proxyUrl": {
       "type": "string",
       "description": "URL to proxy unhandled requests to."
+    },
+    "secure": {
+      "type": "boolean",
+      "description": "True if you want to verify the SSL Certs."
     }
   },
   "additionalProperties": false,

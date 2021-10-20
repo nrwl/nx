@@ -26,6 +26,9 @@ function getHttpServerArgs(options: Schema) {
   if (options.proxyUrl) {
     args.push(`-P ${options.proxyUrl}`);
   }
+  if (typeof options.secure === 'boolean') {
+    args.push(`--proxy-options.secure ${options.secure}`);
+  }
   return args;
 }
 
