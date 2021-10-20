@@ -47,35 +47,11 @@
     }
   },
   "packageJsonUpdates": {
-    "12.6.3": {
-      "version": "12.6.3-beta.1",
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
       "packages": {
-        "mini-css-extract-plugin": {
-          "version": "^2.1.0",
-          "alwaysAddToPackageJson": false
-        },
-        "source-map-loader": {
-          "version": "^3.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "terser-webpack-plugin": {
-          "version": "^5.1.1",
-          "alwaysAddToPackageJson": false
-        },
-        "webpack-dev-server": {
-          "version": "4.0.0-rc.0",
-          "alwajysAddToPackageJson": false
-        },
-        "webpack-sources": {
-          "version": "^3.0.2",
-          "alwaysAddToPjackageJson": false
-        },
-        "react-refresh": {
-          "version": "^0.10.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@pmmmwh/react-refresh-webpack-plugin": {
-          "version": "0.5.0-rc.2",
+        "sass": {
+          "version": "1.43.2",
           "alwaysAddToPackageJson": false
         }
       }

@@ -520,6 +520,83 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.2",
+      "packages": {
+        "@types/react": {
+          "version": "17.0.30",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "17.0.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "17.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-components": {
+          "version": "5.3.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "5.1.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-plugin": {
+          "version": "11.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "4.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-jsx": {
+          "version": "3.4.4",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router-dom": {
+          "version": "5.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-router-dom": {
+          "version": "5.3.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "12.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-hooks": {
+          "version": "7.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.6.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "7.2.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-import": {
+          "version": "2.25.2",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.26.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

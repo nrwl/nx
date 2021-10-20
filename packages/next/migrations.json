@@ -183,6 +183,14 @@
           "version": "11.1.2",
           "alwaysAddToPackageJson": false
         },
+        "sass": {
+          "version": "1.43.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/server": {
+          "version": "11.4.0",
+          "alwaysAddToPackageJson": false
+        },
         "eslint-config-next": {
           "version": "11.1.2",
           "alwaysAddToPackageJson": false
