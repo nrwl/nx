@@ -1,4 +1,4 @@
-# Configuring CI Using Jenkins and Nx
+# Configuring CI Using CircleCI and Nx
 
 Nx is a smart and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
 
@@ -12,68 +12,46 @@ Nx is a smart and extensible build framework, and it works really well with mono
 
 But they come with their own technical challenges. The more code you add into your repository, the slower the CI gets. Adding Nx to your CI pipeline makes this more efficient.
 
-## Setting up Jenkins
+## Setting up CircleCI
 
-Below is an example of a Jenkins setup for an Nx workspace only building and testing what is affected.
-
-Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1`, but a more robust solution would be to tag a SHA in the main job once it succeeds, and then use this tag as a base.
-
-We also have to set `NX_BRANCH` explicitly.
+Below is an example of a Circle CI setup for an Nx workspace only building and testing what is affected.
 
 ```yaml
-pipeline {
-agent none
-environment {
-NX_CLOUD_DISTRIBUTED_EXECUTION = 'true'
-NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
-}
-stages {
-stage('Pipelien') {
-parallel {
-stage('Agent') {
-matrix {
-agent any
-axes {
-axis {
-name 'Number'
-values '1', '2', '3'
-}
-}
-steps {
-sh "npm install"
-sh "npx nx-cloud start"
-}
-}
-}
-stage('Main') {
-when {
-branch 'main'
-}
-agent any
-steps {
-sh "npm install"
-sh "npx nx-cloud start-ci-run"
-sh "npx nx affected --base=HEAD~1 --target=build --parallel --max-parallel=3"
-sh "npx nx affected --base=HEAD~1 --target=test --parallel --max-parallel=2"
-sh "npx nx-cloud stop-all-agents"
-}
-}
-stage('PR') {
-when {
-not { branch 'main' }
-}
-agent any
-steps {
-sh "npm install"
-sh "npx nx-cloud start-ci-run"
-sh "npx nx affected --target=build --parallel --max-parallel=3"
-sh "npx nx affected --target=test --parallel --max-parallel=2"
-sh "npx nx-cloud stop-all-agents"
-}
-}
-}
-}
-}
+version: 2.1
+orbs:
+  nx: nrwl/nx@1.0.0
+jobs:
+  agent:
+    steps:
+      - checkout
+      - run: npm install
+  main:
+    steps:
+      - checkout
+      - run: npm install
+      - nx/set-shas
+      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=3
+      - run: npx nx affected --base=$NX_BASE --target=test --parallel --max-parallel=2
+  pr:
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+    steps:
+      - checkout
+      - run: npm install
+      - nx/set-shas
+      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=3
+      - run: npx nx affected --base=$NX_BASE --target=test --parallel --max-parallel=2
+workflows:
+  build:
+    jobs:
+      - main:
+          filters:
+            branches:
+              only: main
+      - pr:
+          filters:
+            branches:
+              ignore: main
 ```
 
 The `pr` and `main` jobs implement the CI workflow.
