@@ -12,7 +12,7 @@
     "ng-add": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Convert an existing CLI project into an Nx Workspace",
+      "description": "Convert an existing Angular CLI project into an Nx Workspace",
       "hidden": true
     },
 
@@ -90,7 +90,7 @@
     "ng-add": {
       "factory": "./src/generators/init/init#initGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Convert an existing CLI project into an Nx Workspace",
+      "description": "Convert an existing Angular CLI project into an Nx Workspace",
       "hidden": true
     },
 
