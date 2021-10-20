@@ -16,7 +16,7 @@ nx serve <project> [options]
 nx run <project>:serve [options]
 ```
 
-Install the `nx` package globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -33,6 +33,10 @@ The options below are common to the `serve` command used within an Nx workspace.
 ### allowedHosts
 
 This option allows you to whitelist services that are allowed to access the dev server.
+
+### hmr
+
+Enable hot module replacement.
 
 ### host
 
@@ -139,10 +143,6 @@ Don't verify connected clients are part of allowed hosts.
 ### eval-source-map
 
 Output in-file eval sourcemaps.
-
-### hmr
-
-Enable hot module replacement.
 
 ### hmr-warning
 

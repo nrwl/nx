@@ -1,29 +1,29 @@
 # React Nx Tutorial - Step 1: Create Application
 
-## Nx.dev Tutorial | React | Step 1: Create Application
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
+In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies.
 
 > Next.js: Nx also has first-class Next.js support. Read more about it [here](/{{framework}}/next/overview)
 
-## Create a New Workspace
+## Create a new workspace
 
-**Start by creating a new workspace.**
+Start by creating a new workspace.
 
 ```bash
 npx create-nx-workspace@latest
 ```
 
-You will then receive the following prompts in your command line:
+You then receive the following prompts in your command line:
 
+```bash
+Workspace name (e.g., org name)     myorg
+What to create in the new workspace react
+Application name                    todos
+Default stylesheet format           CSS
 ```
-? Workspace name (e.g., org name)     myorg
-? What to create in the new workspace react
-? Application name                    todos
-? Default stylesheet format           CSS
-```
+
+> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
 When asked about 'preset', select `react`, and `todos` for the app name.
 
@@ -40,7 +40,9 @@ myorg/
 │   │   │   ├── main.tsx
 │   │   │   ├── polyfills.ts
 │   │   │   └── styles.css
-│   │   ├── browserslist
+│   │   ├── .babelrc
+│   │   ├── .browserslistrc
+│   │   ├── .eslintrc.json
 │   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
@@ -52,24 +54,30 @@ myorg/
 │       │   ├── integration/
 │       │   │   └── app.spec.ts
 │       │   ├── plugins/
-│       │   │   └── index.ts
+│       │   │   └── index.js
 │       │   └── support/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
 │       │       └── index.ts
+│       ├── .eslintrc.json
 │       ├── cypress.json
 │       ├── tsconfig.e2e.json
 │       └── tsconfig.json
 ├── libs/
 ├── tools/
-├── README.md
-├── workspace.json
+├── .eslintrc.json
+├── .prettierrc
+├── babel.config.json
+├── jest.config.js
+├── jest.preset.js
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+├── README.md
+├── tsconfig.base.json
+└── workspace.json
 ```
 
-The generate command added two projects to our workspace:
+Two projects were added to the workspace:
 
 - A React application
 - E2E tests for the React application
@@ -104,10 +112,10 @@ or
 yarn global add nx
 ```
 
-Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
+Alternatively, you can run the local installation of Nx by prepending every command with `npx`:
 
 ```bash
-npm run nx -- serve todos
+npx nx -- serve todos
 ```
 
 or
@@ -115,10 +123,3 @@ or
 ```bash
 yarn nx serve todos
 ```
-
-!!!!!
-Open http://localhost:4200 in the browser. What do you see?
-!!!!!
-Page saying "Welcome to Todos!"
-Page saying "This is an React app built with Create React App"
-404

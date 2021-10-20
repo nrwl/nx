@@ -1,7 +1,5 @@
 # Node Nx Tutorial - Step 4: Create Libraries
 
-## Nx.dev Tutorial | Node | Step 4: Create Libraries
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/V29I_DHGlB8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
@@ -10,7 +8,7 @@ Libraries are not just a way to share code in Nx. They are also useful for facto
 
 Every library has an `index.ts` file, which defines its public API. Other applications and libraries should only access what the `index.ts` exports. Everything else in the library is private.
 
-## Controller Libraries
+## Controller libraries
 
 To illustrate how useful libraries can be, create a new Auth library with a controller.
 
@@ -64,9 +62,9 @@ export class AuthController {
 }
 ```
 
-> In code destined for production, we would actually have a proper authentication check here.
+> In code destined for production, you would actually have a proper authentication check here.
 
-## Use the new Library
+## Use the new library
 
 **Now import `AuthModule` into `apps/todos/src/app/app.module.ts`.**
 
@@ -87,9 +85,3 @@ export class AppModule {}
 ```
 
 **Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`**
-
-!!!!!
-Libraries' public API is defined in...
-!!!!!
-index.ts
-workspace.json and tsconfig.json files

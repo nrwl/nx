@@ -1,6 +1,6 @@
 # affected
 
-Run task for affected projects
+Run target for affected projects
 
 ## Usage
 
@@ -8,7 +8,7 @@ Run task for affected projects
 nx affected
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -36,12 +36,6 @@ Run the test target for all projects:
 nx affected --target=test --all
 ```
 
-Run the test target for the affected projects and also all the projects the affected projects depend on.:
-
-```bash
-nx affected --target=test --with-deps
-```
-
 Run tests for all the projects affected by changing the index.ts file:
 
 ```bash
@@ -58,12 +52,6 @@ Run tests for all the projects affected by the last commit on master:
 
 ```bash
 nx affected --target=test --base=master~1 --head=master
-```
-
-Run build for all the projects affected by the last commit on master and their dependencies:
-
-```bash
-nx affected --target=build --base=master~1 --head=master --with-deps
 ```
 
 ## Options
@@ -100,7 +88,9 @@ Show help
 
 ### maxParallel
 
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)
+Default: `3`
+
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
 
 ### only-failed
 
@@ -110,7 +100,9 @@ Isolate projects which previously failed
 
 ### parallel
 
-Parallelize the command (default: false)
+Default: `false`
+
+Parallelize the command
 
 ### runner
 

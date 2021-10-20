@@ -1,4 +1,4 @@
-# application
+# @nrwl/web:application
 
 Create an application
 
@@ -68,6 +68,14 @@ Type: `string`
 
 The name of the application.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
@@ -75,6 +83,14 @@ Default: `false`
 Type: `boolean`
 
 Skip formatting files
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### style
 

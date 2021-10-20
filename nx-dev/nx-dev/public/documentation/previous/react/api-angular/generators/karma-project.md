@@ -1,6 +1,6 @@
-# karma-project
+# @nrwl/angular:karma-project
 
-Add karma testing to a project
+Adds Karma configuration to a project.
 
 ## Usage
 
@@ -24,7 +24,7 @@ nx g karma-project ... --dry-run
 
 ## Options
 
-### project
+### project (_**required**_)
 
 Type: `string`
 

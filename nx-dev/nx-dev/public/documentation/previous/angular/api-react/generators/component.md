@@ -1,4 +1,4 @@
-# component
+# @nrwl/react:component
 
 Create a component
 
@@ -42,6 +42,20 @@ nx g component my-component --project=mylib --classComponent
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the component.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
+
 ### classComponent
 
 Alias(es): C
@@ -54,7 +68,7 @@ Use class components instead of functional component.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
@@ -94,11 +108,15 @@ Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
 
-### name
+### pascalCaseDirectory
 
-Type: `string`
+Alias(es): R
 
-The name of the component.
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case directory name (e.g. App/App.tsx).
 
 ### pascalCaseFiles
 
@@ -109,14 +127,6 @@ Default: `false`
 Type: `boolean`
 
 Use pascal case component file name (e.g. App.tsx).
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
 
 ### routing
 

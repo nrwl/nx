@@ -1,4 +1,4 @@
-# storybook-migrate-defaults-5-to-6
+# @nrwl/react:storybook-migrate-defaults-5-to-6
 
 Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
 

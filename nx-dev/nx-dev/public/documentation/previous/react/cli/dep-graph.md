@@ -8,7 +8,7 @@ Graph dependencies within workspace
 nx dep-graph
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -54,6 +54,12 @@ Show the graph where every node is either an ancestor or a descendant of todos-f
 nx dep-graph --focus=todos-feature-main --exclude=project-one,project-two
 ```
 
+Watch for changes to dep graph and update in-browser:
+
+```bash
+nx dep-graph --watch
+```
+
 ## Options
 
 ### exclude
@@ -62,7 +68,7 @@ List of projects delimited by commas to exclude from the dependency graph.
 
 ### file
 
-output file (e.g. --file=output.json or --file=dep-graph.html)
+Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### focus
 
@@ -70,7 +76,7 @@ Use to show the dependency graph for a particular project and every node that is
 
 ### groupByFolder
 
-Group projects by folder in dependency graph
+Group projects by folder in the dependency graph
 
 ### help
 
@@ -78,12 +84,24 @@ Show help
 
 ### host
 
-Bind the dep graph server to a specific ip address.
+Bind the dependency graph server to a specific ip address.
+
+### open
+
+Default: `true`
+
+Open the dependency graph in the browser.
 
 ### port
 
-Bind the dep graph server to a specific port.
+Bind the dependecy graph server to a specific port.
 
 ### version
 
 Show version number
+
+### watch
+
+Default: `false`
+
+Watch for changes to dependency graph and update in-browser

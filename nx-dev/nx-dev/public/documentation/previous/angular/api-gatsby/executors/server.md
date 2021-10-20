@@ -1,10 +1,10 @@
-# server
+# @nrwl/gatsby:server
 
 Starts server for app
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
 
 ### buildTarget
 

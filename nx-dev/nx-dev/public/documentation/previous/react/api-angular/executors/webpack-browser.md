@@ -1,11 +1,34 @@
-# webpack-browser
+# @nrwl/angular:webpack-browser
 
-Angular browser builder that supports incremental builds
+Builds a browser application with support for incremental builds and custom webpack configuration.
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/react/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### index (_**required**_)
+
+Type: `string`
+
+Configures the generation of the application's HTML index.
+
+### main (_**required**_)
+
+Type: `string`
+
+The full path for the main entry point to the app, relative to the current workspace.
+
+### outputPath (_**required**_)
+
+Type: `string`
+
+The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The full path for the TypeScript configuration file, relative to the current workspace.
 
 ### allowedCommonJsDependencies
 
@@ -15,7 +38,7 @@ A list of CommonJS packages that are allowed to be used without a build time war
 
 ### aot
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
@@ -41,7 +64,7 @@ Budget thresholds to ensure parts of your application stay within boundaries whi
 
 ### buildOptimizer
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
@@ -53,7 +76,7 @@ Default: `true`
 
 Type: `boolean`
 
-Use a separate bundle containing code used across multiple bundles.
+Generate a seperate bundle containing code used across multiple bundles.
 
 ### crossOrigin
 
@@ -79,25 +102,19 @@ Type: `string`
 
 URL where files will be deployed.
 
-### experimentalRollupPass
+### ~~extractCss~~
 
-Default: `false`
-
-Type: `boolean`
-
-Concatenate modules with Rollup before bundling them with Webpack.
-
-### extractCss
-
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
-Extract css from global styles into css files instead of js ones.
+**Deprecated:** Deprecated since version 11.0. No longer required to disable CSS extraction for HMR.
+
+Extract CSS from global styles into '.css' files instead of '.js'.
 
 ### extractLicenses
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
@@ -109,32 +126,6 @@ Type: `array`
 
 Replace compilation source files with other compilation source files in the build.
 
-### forkTypeChecker
-
-Default: `true`
-
-Type: `boolean`
-
-Run the TypeScript type checker in a forked process.
-
-### i18nFile
-
-Type: `string`
-
-Localization file to use for i18n.
-
-### i18nFormat
-
-Type: `string`
-
-Format of the localization file specified with --i18n-file.
-
-### i18nLocale
-
-Type: `string`
-
-Locale to use for i18n.
-
 ### i18nMissingTranslation
 
 Default: `warning`
@@ -145,31 +136,25 @@ Possible values: `warning`, `error`, `ignore`
 
 How to handle missing translations for i18n.
 
-### index
+### inlineStyleLanguage
+
+Default: `css`
 
 Type: `string`
 
-Configures the generation of the application's HTML index.
+Possible values: `css`, `less`, `sass`, `scss`
 
-### lazyModules
-
-Type: `array`
-
-List of additional NgModule files that will be lazy loaded. Lazy router modules will be discovered automatically.
+The stylesheet language to use for the application's inline component styles.
 
 ### localize
 
 Type: `boolean | boolean[] `
 
-### main
-
-Type: `string`
-
-The full path for the main entry point to the app, relative to the current workspace.
+Translate the bundles in one or more locales.
 
 ### namedChunks
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
@@ -183,11 +168,11 @@ Path to ngsw-config.json.
 
 ### optimization
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
-Enables optimization of the build output.
+Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.
 
 ### outputHashing
 
@@ -198,14 +183,6 @@ Type: `string`
 Possible values: `none`, `all`, `media`, `bundles`
 
 Define the output filename cache-busting hashing mode.
-
-### outputPath
-
-Type: `string`
-
-            The full path for the new output directory, relative to the current workspace.
-
-By default, writes output to a folder named dist/ in the current project.
 
 ### poll
 
@@ -226,6 +203,8 @@ Type: `boolean`
 Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set.
 
 ### progress
+
+Default: `true`
 
 Type: `boolean`
 
@@ -251,21 +230,23 @@ Type: `boolean`
 
 Generates a service worker config for production builds.
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
 Default: `false`
 
 Type: `boolean`
 
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use either a lint rule or other external tooling.
+
 Show circular dependency warnings on builds.
 
 ### sourceMap
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
-Output sourcemaps.
+Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.
 
 ### statsJson
 
@@ -289,19 +270,13 @@ Type: `boolean`
 
 Enables the use of subresource integrity validation.
 
-### tsConfig
-
-Type: `string`
-
-The full path for the TypeScript configuration file, relative to the current workspace.
-
 ### vendorChunk
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
-Use a separate bundle containing only vendor libraries.
+Generate a seperate bundle containing only vendor libraries. This option should only used for development.
 
 ### verbose
 

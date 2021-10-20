@@ -1,11 +1,34 @@
-# package
+# @nrwl/web:package
 
 Package a library
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/react/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### entryFile (_**required**_)
+
+Type: `string`
+
+The path to the entry file, relative to project.
+
+### outputPath (_**required**_)
+
+Type: `string`
+
+The output path of the generated files.
+
+### project (_**required**_)
+
+Type: `string`
+
+The path to package.json file.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The path to tsconfig file.
 
 ### assets
 
@@ -13,11 +36,13 @@ Type: `array`
 
 List of static assets.
 
-### babelConfig
+### ~~babelConfig~~
 
 Type: `string`
 
-(deprecated) Path to a function which takes a babel config and returns an updated babel config
+**Deprecated:** Use the .babelrc file for project instead
+
+Path to a function which takes a babel config and returns an updated babel config
 
 ### buildableProjectDepsInPackageJsonType
 
@@ -37,12 +62,6 @@ Type: `boolean`
 
 Delete the output path before building.
 
-### entryFile
-
-Type: `string`
-
-The path to the entry file, relative to project.
-
 ### external
 
 Type: `array`
@@ -56,6 +75,14 @@ Default: `true`
 Type: `boolean`
 
 CSS files will be extracted to the output folder.
+
+### format
+
+Alias(es): f
+
+Type: `array`
+
+Only build the specified comma-separated formats (esm,umd,cjs)
 
 ### globals
 
@@ -75,29 +102,11 @@ Type: `string`
 
 The global name to map to (e.g. `ReactDOM`).
 
-### outputPath
-
-Type: `string`
-
-The output path of the generated files.
-
-### project
-
-Type: `string`
-
-The path to package.json file.
-
 ### rollupConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a rollup config and returns an updated rollup config
-
-### tsConfig
-
-Type: `string`
-
-The path to tsconfig file.
 
 ### umdName
 

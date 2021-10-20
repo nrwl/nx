@@ -1,10 +1,38 @@
-# build
+# @nrwl/node:build
 
 Build a Node application
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### main (_**required**_)
+
+Type: `string`
+
+The name of the main entry-point file.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The name of the Typescript configuration file.
+
+### additionalEntryPoints
+
+Type: `object[]`
+
+#### entryName
+
+Type: `string`
+
+Name of the additional entry file
+
+#### entryPath
+
+Type: `string`
+
+Path to the additional entry file
 
 ### assets
 
@@ -46,13 +74,13 @@ Replace files with other files in the build.
 
 Type: `string`
 
-undefined
+The file to be replaced.
 
 #### with
 
 Type: `string`
 
-undefined
+The file to replace with.
 
 ### generatePackageJson
 
@@ -61,12 +89,6 @@ Default: `false`
 Type: `boolean`
 
 Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.
-
-### main
-
-Type: `string`
-
-The name of the main entry-point file.
 
 ### maxWorkers
 
@@ -108,11 +130,13 @@ Type: `boolean`
 
 Log progress to the console while building.
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
 Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 
@@ -132,11 +156,11 @@ Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
 
-### tsConfig
+### tsPlugins
 
-Type: `string`
+Type: `array`
 
-The name of the Typescript configuration file.
+List of TypeScript Compiler Plugins.
 
 ### verbose
 
@@ -156,6 +180,6 @@ Run build when files change.
 
 ### webpackConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a webpack config, context and returns the resulting webpack config

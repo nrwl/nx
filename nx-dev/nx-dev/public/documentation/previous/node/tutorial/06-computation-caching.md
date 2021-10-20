@@ -1,7 +1,5 @@
 # Node Nx Tutorial - Step 6: Computation Caching
 
-## Nx.dev Tutorial | Node | Step 6: Computation Caching
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/gXChzhI1Qpg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Nx has built-in computation caching, which drastically improves the performance of the commands.
@@ -72,11 +70,4 @@ All files pass linting.
 >  NX   SUCCESS  Running target "lint" succeeded
 ```
 
-> Add --parallel to any command, and Nx will do most of the work in parallel.
-
-!!!!!
-Run `nx lint auth --with-deps`. What do you see?
-!!!!!
-Nx read the output from cache instead of running the command for 1 out of 1 projects.
-Everything was retrieved from the cache
-`Cannot lint data` error
+> Add --parallel to any command, and Nx does most of the work in parallel.

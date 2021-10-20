@@ -1,10 +1,16 @@
-# eslint
+# @nrwl/linter:eslint
 
 Run ESLint on a project
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### lintFilePatterns (_**required**_)
+
+Type: `array`
+
+One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
 
 ### cache
 
@@ -50,17 +56,17 @@ Type: `string`
 
 ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
+### hasTypeAwareRules
+
+Type: `boolean`
+
+When set to true, the linter will invalidate its cache when any of its dependencies changes.
+
 ### ignorePath
 
 Type: `string`
 
 The path of the .eslintignore file.
-
-### lintFilePatterns
-
-Type: `array`
-
-One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
 
 ### maxWarnings
 

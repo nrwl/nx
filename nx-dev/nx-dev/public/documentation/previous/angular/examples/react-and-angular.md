@@ -64,7 +64,7 @@ happynrwl/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -148,7 +148,7 @@ happynrwl/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -231,7 +231,7 @@ happynrwl/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -414,26 +414,26 @@ git add .
 git commit -am 'great commit'
 ```
 
-Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn affected:dep-graph`.
+Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn nx affected:dep-graph`.
 
 ![serve screenshot](/assets/content/angular/examples/react-affected.png)
 
 As you can see, Nx knows that this change only affects the `angularapp` and nothing else. Nx can use this information to rebuild and retest only the angularapp:
 
 ```bash
-yarn affected:test # only tests angularapp
-yarn affected:build # only builds angularapp
+yarn nx affected --target test # only tests angularapp
+yarn nx affected --target build # only builds angularapp
 ```
 
-Now, let's introduce a change to `greeting.element.ts` and run `yarn affected:dep-graph`.
+Now, let's introduce a change to `greeting.element.ts` and run `yarn nx affected:dep-graph`.
 
 ![serve screenshot](/assets/content/angular/examples/react-affected2.png)
 
 Both `angularapp` and `reactapp` are affected by this change because they both depend on the greeting component.
 
 ```bash
-yarn affected:test # tests ui, angularapp, reactapp
-yarn affected:build # only builds angularapp, reactapp
+yarn nx affected --target test # tests ui, angularapp, reactapp
+yarn nx affected --target build # only builds angularapp, reactapp
 ```
 
 This is what we just saw:

@@ -2,7 +2,7 @@
 
 **Spend less time looking up command line arguments and more time shipping incredible products.**
 
-With Nx, you can get a full-stack application up and running in minutes, no need to figure out source maps, webpack, test runners. It all works out of the box. Nx also helps you enforce consistent development practices by generating components, services, and state management modules.
+With Nx, you can get a full-stack application up and running in minutes, no need to figure out sourcemaps, webpack or test runners. It all works out of the box. Nx also helps you to enforce consistent development practices by generating components, services, and state management modules.
 
 ## Why use Nx Editor Plugins?
 
@@ -13,7 +13,7 @@ Nx is a command-line tool, which works great when you want to serve an applicati
 For instance:
 
 - Exploring custom generator collections is hard in the terminal, but it's easy using Nx Console.
-- Using rarely-used flags is challenging. Do you pass absolute or relative paths? You don't have to remember any flags, names, or paths -- Nx Console will help you by providing autocompletion and validating your inputs.
+- Using rarely-used flags is challenging. Do you pass absolute or relative paths? You don't have to remember any flags, names or paths -  Nx Console will help you by providing autocompletion and validating your inputs.
 - Finding the right Nx extension can take a long time. When using Nx Console, you can find and install an extension in minutes.
 
 Nx Console does all that and more!
@@ -32,7 +32,7 @@ If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can instal
 
 These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
 
-## Nx Console for VS Code
+## Nx Console for VSCode
 
 ![Nx Console logo](/shared/nx-console-logo.png)
 
@@ -43,11 +43,11 @@ These plugins are **NOT** built or maintained by the Nx team. They are maintaine
 
 ### True UI for Nx
 
-Nx Console is the UI for Nx. It will work for any generator or any architect commands. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does--it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console. After all, Nx Console is the UI for Nx.
+Nx Console is the UI for Nx. It works for any generator or any architect commands. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does - it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console. After all, Nx Console is the UI for Nx.
 
-### Useful for Both Experts and Beginners
+### Useful for both experts and beginners
 
-Even though we started building Nx Console as a tool for experts, we also aimed to make Nx Console a great tool for developers who are new to development or Nx. You can create projects, interact with your editor, run generators and commands, install extensions without ever touching the terminal or having to install any node packages globally. Also, Nx Console highlights the properties you are likely to use for built-in generators and commands, so if you haven't used the CLI, you don't get overwhelmed.
+Even though we started building Nx Console as a tool for experts, we also aimed to make Nx Console a great tool for developers who are new to development or Nx. You can create projects, interact with your editor, run generators and commands and install extensions without ever touching the terminal or having to install any node packages globally. Also, Nx Console highlights the properties you are likely to use for built-in generators and commands, so if you haven't used the CLI, you don't get overwhelmed.
 
 ### Documentation
 
@@ -69,13 +69,13 @@ You can even construct the generator options while staying entirely within the C
 
 #### Run
 
-The `Run` action allows you to choose a builder command and then opens a form listing out all the options for that builder. The frequently used builder commands `build`, `serve`, `test`, `e2e` and `lint` also have their own dedicated actions.
+The `Run` action allows you to choose an executor command and then opens a form listing out all the options for that executor. The frequently used executor commands `build`, `serve`, `test`, `e2e` and `lint` also have their own dedicated actions.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/rNImFxo9gYs?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 **From the Command Palette**
 
-You can also construct the builder command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the builder command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
+You can also construct the executor command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the executor command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/CsUkSyQcxwQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -87,13 +87,13 @@ You can also launch other common Nx commands with the options listed out in the 
 
 #### Projects
 
-Clicking on the name of any project will navigate to that project's definition in the `workspace.json` (or `angular.json`) file. Clicking on the name of any builder command will navigate to that builder command's definition in the `workspace.json` (or `angular.json`) file.
+Clicking on the name of any project navigates to that project's definition in the `workspace.json` (or `angular.json`) file. Clicking on the name of any executor command navigates to that executor command's definition in the `workspace.json` (or `angular.json`) file.
 
-Clicking the [refresh-light.svg] icon next to the `PROJECTS` header will repopulate the Projects pane from the `workspace.json` (or `angular.json`) file.
+Clicking the ![refresh-light.svg](./refresh-light.svg) icon next to the `PROJECTS` header repopulates the Projects pane from the `workspace.json` (or `angular.json`) file.
 
-Clicking the [folder-light.svg] icon next to a project will reveal that project's folder in the VSCode Explorer pane.
+Clicking the ![folder-light.svg](./folder-light.svg) icon next to a project reveals that project's folder in the VSCode Explorer pane.
 
-Clicking the [continue-light.svg] icon next to a builder command will execute that command without prompting for options.
+Clicking the ![continue-light.svg](./continue-light.svg) icon next to an executor command executes that command without prompting for options.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/ve_N3unDqAg?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

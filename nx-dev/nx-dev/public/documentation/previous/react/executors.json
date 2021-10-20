@@ -1,14 +1,14 @@
 [
   "angular",
   "cypress",
-  "express",
+  "detox",
   "gatsby",
   "jest",
   "linter",
-  "nest",
   "next",
   "node",
   "nx-plugin",
+  "react-native",
   "storybook",
   "web",
   "workspace"

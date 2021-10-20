@@ -1,4 +1,4 @@
-# redux
+# @nrwl/react:redux
 
 Create a redux slice for a project
 
@@ -28,6 +28,12 @@ nx g redux ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Redux slice name.
+
 ### appProject
 
 Alias(es): a
@@ -38,7 +44,7 @@ The application project to add the slice to.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
@@ -51,12 +57,6 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
-
-### name
-
-Type: `string`
-
-Redux slice name.
 
 ### project
 

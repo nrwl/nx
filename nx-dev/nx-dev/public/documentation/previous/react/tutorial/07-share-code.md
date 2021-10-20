@@ -1,10 +1,8 @@
 # React Nx Tutorial - Step 7: Share Code
 
-## Nx.dev Tutorial | React | Step 7: Share Code
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/-zzw4_oT_2I" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Awesome! The application is working end to end! However, there is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it will diverge, and, as a result, runtime errors will creep in. You should share this interface between the backend and the frontend. In Nx, you can do this by creating a library.
+Awesome! The application is working end to end! However, there is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it diverges, and, as a result, runtime errors creep in. You should share this interface between the backend and the frontend. In Nx, you do this by creating a library.
 
 **Run the following generator to create a library:**
 
@@ -33,7 +31,7 @@ myorg/
 ├── tools/
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 **Copy the interface into `libs/data/src/lib/data.ts`.**
@@ -70,11 +68,11 @@ export function addTodoRoutes(app: Express) {
 }
 ```
 
-## Update the React Application
+## Update the React application
 
 **Next import the interface in `apps/todos/src/app/app.tsx`:**
 
-```typescript jsx
+```typescript
 import React, { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 
@@ -85,11 +83,6 @@ export const App = () => {
 export default App;
 ```
 
-Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+Every time you add a new library, you have to restart `npx nx serve`.
 
-!!!!!
-Nx allows you to share code...
-!!!!!
-Between frontend and backend apps
-Between different frontend apps
-Between different node apps
+**So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**

@@ -1,12 +1,10 @@
 # Node Nx Tutorial - Step 3: Share Code
 
-## Nx.dev Tutorial | Node | Step 3: Share Code
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MqqwOoKa-Ho" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Awesome! The application is working as expected!
 
-Next, let's work on refactoring a bit. What we're planning to do is move the `Todo` type to it's own library. This is important if we want to share the type between multiple applications, without having to duplicate the same type everywhere.
+Next, work on refactoring a bit. The next work to do is move the `Todo` type to it's own library. This is important when you want to share the type between multiple applications, without having to duplicate the same type everywhere.
 
 **Run the following generator to create a library:**
 
@@ -51,7 +49,7 @@ If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at
 
 Use the command palette with a `*.ts` file open and choose `Restart TS Server`.
 
-## Refactor the Todos Service
+## Refactor the todos service
 
 **Now update `apps/todos/src/app/todos/todos.service.ts` to import the type:**
 
@@ -73,10 +71,3 @@ export class TodosService {
 ```
 
 Every time you add a new library, you have to restart `nx serve`. **So restart `nx serve todos` and you should see the application running.**
-
-!!!!!
-Nx allows you to share code...
-!!!!!
-Between Nx applications and libraries
-Between Nx applications
-Between Nx libraries

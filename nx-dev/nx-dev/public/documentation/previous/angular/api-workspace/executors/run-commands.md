@@ -1,8 +1,8 @@
-# run-commands
+# @nrwl/workspace:run-commands
 
 Run any custom commands with Nx
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
 ## Examples
 
@@ -11,10 +11,10 @@ Properties can be configured in angular.json when defining the executor, or when
 ```json
 //...
 "frontend": {
-    "architect": {
+    "targets": {
         //...
         "ls-project-root": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
             "options": {
                 "command": "ls apps/frontend/src"
             }
@@ -39,7 +39,7 @@ You can run them sequentially by setting `parallel: false`:
 
 ```json
 "create-script": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "commands": [
           "mkdir -p scripts",
@@ -78,7 +78,7 @@ nx run frontend:webpack --args="--config=example.config.js"
 
 ```json
 "webpack": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "command": "webpack"
     }
@@ -92,7 +92,7 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ```json
 "webpack": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
         "commands": [
             {
@@ -106,14 +106,18 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ##### Custom **done** conditions
 
-Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
+Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:
 
 ```json
 "finish-when-ready": {
-    "builder": "@nrwl/workspace:run-commands",
+    "executor": "@nrwl/workspace:run-commands",
     "options": {
-        "command": "echo 'READY' && sleep 5 && echo 'FINISHED'",
-        "readyWhen": "READY"
+        "commands": [
+            "sleep 5 && echo 'FINISHED'",
+            "echo 'READY'"
+        ],
+        "readyWhen": "READY",
+        "parallel": true
     }
 }
 ```
@@ -122,7 +126,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 nx run frontend:finish-when-ready
 ```
 
-The above command will finish immediately, instead of waiting for 5 seconds.
+The above commands will finish immediately, instead of waiting for 5 seconds.
 
 ##### Nx Affected
 
@@ -137,10 +141,10 @@ nx affected --target=generate-docs
 ```json
 //...
 "frontend": {
-    "architect": {
+    "targets": {
         //...
         "generate-docs": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
             "options": {
                 "command": "npx compodoc -p apps/frontend/tsconfig.app.json"
             }
@@ -148,10 +152,10 @@ nx affected --target=generate-docs
     }
 },
 "api": {
-    "architect": {
+    "targets": {
         //...
         "generate-docs": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
             "options": {
                 "command":  "npx compodoc -p apps/api/tsconfig.app.json"
             }
@@ -160,7 +164,7 @@ nx affected --target=generate-docs
 }
 ```
 
-## Properties
+## Options
 
 ### args
 
@@ -185,6 +189,8 @@ Command to run in child process
 ### commands
 
 Type: `array`
+
+Commands to run in child process
 
 ### cwd
 
@@ -216,4 +222,4 @@ Run commands in parallel
 
 Type: `string`
 
-String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is done when all the child processes complete.
+String to appear in `stdout` or `stderr` that indicates that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete.

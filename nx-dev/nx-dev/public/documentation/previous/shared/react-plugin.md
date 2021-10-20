@@ -11,12 +11,12 @@ The Nx Plugin for React contains generators for managing React applications and 
 
 Adding the React plugin to a workspace can be done with the following:
 
-```shell script
+```bash
 #yarn
 yarn add -D @nrwl/react
 ```
 
-```shell script
+```bash
 #npm
 npm install -D @nrwl/react
 ```
@@ -64,7 +64,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ## See Also

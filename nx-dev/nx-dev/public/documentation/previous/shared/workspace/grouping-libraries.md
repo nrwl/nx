@@ -26,7 +26,7 @@ Let's use Nrwl Airlines as an example organization. This organization has two ap
 
 The purpose of these folders is to help with organizing by scope. We recommend grouping libraries together which are (usually) updated together. It helps minimize the amount of time a developer spends navigating the folder tree to find the right file.
 
-```txt
+```text
 apps/
   booking/
   check-in/
@@ -51,7 +51,7 @@ One of the main advantages of using a monorepo is that there is more visibility 
 
 Let’s consider our reference monorepo. The `shared-data-access` library contains the code needed to communicate with the back-end (for example, the URL prefix). We know that this would be the same for all libs; therefore, we should place this in the shared lib and properly document it so that all projects can use it instead of writing their own versions.
 
-```txt
+```text
   libs/
     booking/
       data-access/           <---- app-specific library

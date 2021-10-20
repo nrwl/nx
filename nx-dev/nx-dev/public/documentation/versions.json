@@ -3,15 +3,15 @@
     "name": "Latest",
     "id": "latest",
     "alias": "l",
-    "release": "12.10.0",
+    "release": "master",
     "path": "latest",
     "default": true
   },
   {
-    "name": "Previous (v11.6.3)",
+    "name": "Previous (v12.10.0)",
     "id": "previous",
     "alias": "p",
-    "release": "11.6.3",
+    "release": "12.10.0",
     "path": "previous",
     "default": false
   }
