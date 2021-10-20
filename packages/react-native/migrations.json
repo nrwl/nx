@@ -233,6 +233,35 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
+      "packages": {
+        "react-native": {
+          "version": "0.66.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.65.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "8.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

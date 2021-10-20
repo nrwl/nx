@@ -17,6 +17,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
+      "packages": {
+        "detox": {
+          "version": "18.22.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/detox": {
+          "version": "17.14.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

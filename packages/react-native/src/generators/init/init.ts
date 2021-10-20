@@ -19,16 +19,18 @@ import {
   reactNativeSvgVersion,
   reactNativeVersion,
   reactTestRendererVersion,
-  reactVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesReactNativeVersion,
-  typesReactVersion,
 } from '../../utils/versions';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
+import {
+  reactVersion,
+  typesReactVersion,
+} from '@nrwl/react/src/utils/versions';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   setDefaultCollection(host, '@nrwl/react-native');
