@@ -46,15 +46,5 @@
       "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
     }
   },
-  "packageJsonUpdates": {
-    "13.0.0": {
-      "version": "13.0.0-beta.1",
-      "packages": {
-        "sass": {
-          "version": "1.43.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
-  }
+  "packageJsonUpdates": {}
 }
