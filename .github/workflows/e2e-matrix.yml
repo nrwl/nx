@@ -86,8 +86,14 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Install PNPM
+      if: ${{ matrix.package_manager == 'pnpm' }}
+      uses: pnpm/action-setup@v2.0.1
+      with:
+        version: 6.9.1
+
     - name: Use Node.js ${{ matrix.node_version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v2.4.0
       with:
         node-version: ${{ matrix.node_version }}
         registry-url: http://localhost:4872
@@ -118,12 +124,6 @@ jobs:
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
         sudo apt-get install lsof
         echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-
-    - name: Install PNPM
-      if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v2.0.1
-      with:
-        version: 6.9.1
 
     - name: Install applesimutils, reset ios simulators
       if: ${{ matrix.os == 'macos-latest' }}
