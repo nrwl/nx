@@ -89,7 +89,7 @@ export function initLocal(workspace: Workspace) {
             })
             .then(({ c }) => {
               if (c) {
-                execSync(cmd);
+                execSync(cmd, { stdio: 'inherit' });
               }
             })
         );
