@@ -4,6 +4,7 @@ import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import type { NxJsonConfiguration } from './nx';
 import { TaskGraph } from './tasks';
+import { logger } from './logger';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -286,6 +287,7 @@ export class Workspaces {
     const nxJson = readJsonFile<NxJsonConfiguration>(
       path.join(this.root, 'nx.json')
     );
+    assertValidWorkspaceConfiguration(nxJson);
     return { ...parsedWorkspace, ...nxJson };
   }
 
@@ -462,6 +464,18 @@ export class Workspaces {
 
   private resolvePaths() {
     return this.root ? [this.root, __dirname] : [__dirname];
+  }
+}
+
+function assertValidWorkspaceConfiguration(
+  nxJson: NxJsonConfiguration & { projects?: any }
+) {
+  // Assert valid workspace configuration
+  if (nxJson.projects) {
+    logger.error(
+      'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
+    );
+    process.exit(1);
   }
 }
 
