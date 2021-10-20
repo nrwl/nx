@@ -32,12 +32,12 @@ Most projects that don't use Nx end up building, testing, and linting every sing
 
 ```yaml
 jobs:
-  - job: ci
-    timeoutInMinutes: 120
+  - job: pr
     pool:
       vmImage: 'ubuntu-latest'
+    condition: eq(variables['Build.Reason'], 'PullRequest'))
     steps:
-      - template: .azure-pipelines/steps/install-node-modules.yml
+      - script: yarn install
       - script: yarn nx run-many --target=test --all
       - script: yarn nx run-many --target=lint --all
       - script: yarn nx run-many --target=build --all --prod
@@ -57,18 +57,19 @@ If you update `azure-pipelines.yml` to use `nx affected` instead of `nx run-many
 
 ```yaml
 jobs:
-  - job: ci
+  - job: pr
     timeoutInMinutes: 120
     pool:
       vmImage: 'ubuntu-latest'
+    condition: eq(variables['Build.Reason'], 'PullRequest'))
     steps:
-      - template: .azure-pipelines/steps/install-node-modules.yml
+      - script: yarn install
       - script: yarn nx affected --target=test --base=origin/main
       - script: yarn nx affected --target=lint --base=origin/main
-      - script: yarn nx affected --target=build --base=origin/main --prod
+      - script: yarn nx affected --target=build --base=origin/main
 ```
 
-the CI time will go down from 45 minutes to 8 minutes.
+The CI time will go down from 45 minutes to 8 minutes.
 
 This is a good result. It helps to lower the average CI time, but doesn't help with the worst case scenario. Some PR are going to affect a large portion of the repo.
 
@@ -78,22 +79,28 @@ You could make it faster by running the commands in parallel:
 
 ```yaml
 jobs:
-  - job: ci
+  - job: pr
     timeoutInMinutes: 120
     pool:
       vmImage: 'ubuntu-latest'
-    variables:
-      IS_PR: $[ eq(variables['Build.Reason'], 'PullRequest') ]
+    condition: eq(variables['Build.Reason'], 'PullRequest'))
     steps:
-      - template: .azure-pipelines/steps/install-node-modules.yml
-      - script: yarn nx affected --target=test --base=origin/main --parallel
-      - script: yarn nx affected --target=lint --base=origin/main --parallel
-      - script: yarn nx affected --target=build --base=origin/main --prod --parallel
+      - script: yarn install
+      - script: yarn nx affected --target=build --parallel --max-parallel=3
+      - script: yarn nx affected --target=test --parallel --max-parallel=2
 ```
 
 This helps but it still has a ceiling. At some point, this won't be enough. A single agent is simply insufficient. You need to distribute CI across a grid of machines.
 
-## Distributed CI
+## Distributed CI with Nx Cloud
+
+A computation cache is created on your local machine to make the developer experience faster. This allows you to not waste time re-building, re-testing, re-linting, or any number of other actions you might take on code that hasn’t changed. Since the cache is stored locally, you are the only member of your team that can take advantage of these instant commands.
+
+Nx Cloud allows this cache to be shared across your entire organization, meaning that any cacheable operation completed on your workspace only needs to be run once.
+
+Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
+
+## Distributed CI with Binning
 
 To distribute you need to split your job into multiple jobs.
 
@@ -217,7 +224,7 @@ const commands = JSON.parse(process.argv[2]);
 const projects = commands[process.argv[3]];
 const target = process.argv[4];
 execSync(
-  `npx nx run-many --target=${target} --projects=${projects.join(
+  `yarn nx run-many --target=${target} --projects=${projects.join(
     ','
   )} --parallel`,
   {
