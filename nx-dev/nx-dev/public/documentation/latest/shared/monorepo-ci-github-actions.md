@@ -1,6 +1,6 @@
-# Configuring CI Using GitHub Actions
+# Configuring CI Using GitHub Actions and Nx
 
-Nx is a set of smart and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
+Nx is a smart and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
 
 - Everything at that current commit works together. Changes can be verified across all affected parts of the organization.
 - Easy to split code into composable modules
@@ -8,13 +8,13 @@ Nx is a set of smart and extensible build framework, and it works really well wi
 - One toolchain setup
 - Code editors and IDEs are "workspace" aware
 - Consistent developer experience
-- ...
+- And more ...
 
 But they come with their own technical challenges. The more code you add into your repository, the slower the CI gets.
 
 ## Setting GitHub Actions
 
-An example of a GitHub Actions setup for an Nx workspace only building and testing what is affected.
+Below is an example of a GitHub Actions setup for an Nx workspace only building and testing what is affected.
 
 ```yaml
 name: CI
@@ -65,7 +65,7 @@ You can find more information about using GitHub Actions on the [nx-tag-successf
 
 ## Distributed CI with Nx Cloud
 
-A computation cache is created on your local machine to make the developer experience faster. This allows you to not waste time re-building, re-testing, re-linting, or any number of other actions you might take on code that hasn’t changed. Because the cache is stored locally, you are the only member of your team that can take advantage of these instant commands.
+A computation cache is created on your local machine to make the developer experience faster. This allows you to not waste time re-building, re-testing, re-linting, or any number of other actions you might take on code that hasn’t changed. Because the cache is stored locally, you are the only member of your team that can take advantage of these instant commands. You can manage and share this cache manually.
 
 Nx Cloud allows this cache to be shared across your entire organization, meaning that any cacheable operation completed on your workspace only needs to be run once.
 

@@ -14,6 +14,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 The following guides cover optimizing your CI/CD environments with affected commands and distributed caching:
 
-- [Distributed CI using GitHub Actions](/ci/monorepo-ci-github-actions)
-- [Distributed CI using Azure Pipelines](/ci/monorepo-ci-azure)
-- [Distributed CI using Jenkins](/ci/monorepo-ci-jenkins)
+- [Setting up CI using GitHub Actions](/ci/monorepo-ci-github-actions)
+- [Setting up CI using CircleCI](/ci/monorepo-ci-circle-ci)
+- [Setting up CI using Azure Pipelines](/ci/monorepo-ci-azure)
+- [Setting up CI using Jenkins](/ci/monorepo-ci-jenkins)

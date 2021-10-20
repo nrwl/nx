@@ -1159,24 +1159,29 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: GitHub Actions",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
             "id": "monorepo-ci-github-actions",
             "file": "shared/monorepo-ci-github-actions"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Distributed CI: Overview",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
@@ -2458,24 +2463,29 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: GitHub Actions",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
             "id": "monorepo-ci-github-actions",
             "file": "shared/monorepo-ci-github-actions"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Distributed CI: Overview",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
@@ -3698,24 +3708,29 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: GitHub Actions",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
             "id": "monorepo-ci-github-actions",
             "file": "shared/monorepo-ci-github-actions"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Distributed CI: Overview",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
