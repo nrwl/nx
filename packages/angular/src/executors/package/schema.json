@@ -13,6 +13,14 @@
       "type": "string",
       "description": "The full path for the TypeScript configuration file, relative to the workspace root."
     },
+    "fileReplacements": {
+      "description": "Replace compilation source files with other compilation source files in the build.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/fileReplacement"
+      },
+      "default": []
+    },
     "watch": {
       "type": "boolean",
       "description": "Whether to run a build when any file changes.",
@@ -31,5 +39,22 @@
     }
   },
   "additionalProperties": false,
-  "required": ["project"]
+  "required": ["project"],
+  "definitions": {
+    "fileReplacement": {
+      "type": "object",
+      "properties": {
+        "replace": {
+          "type": "string",
+          "pattern": "\\.(([cm]?j|t)sx?|json)$"
+        },
+        "with": {
+          "type": "string",
+          "pattern": "\\.(([cm]?j|t)sx?|json)$"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["replace", "with"]
+    }
+  }
 }

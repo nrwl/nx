@@ -19,6 +19,7 @@ import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
 } from './ng-packagr-adjustments/ng-package/package.di';
+import { performFileReplacements } from './ng-packagr-adjustments/utilities/file-replacements';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
 async function initializeNgPackagr(
@@ -117,6 +118,10 @@ export function createLibraryExecutor(
           options.buildableProjectDepsInPackageJsonType
         );
       }
+    }
+
+    if (options.fileReplacements && options.fileReplacements.length > 0) {
+      performFileReplacements(options.fileReplacements, context.root);
     }
 
     if (options.watch) {

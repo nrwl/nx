@@ -4,4 +4,5 @@ export interface BuildAngularLibraryExecutorOptions {
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   updateBuildableProjectDepsInPackageJson?: boolean;
   watch?: boolean;
+  fileReplacements?: { replace: string; with: string }[];
 }
