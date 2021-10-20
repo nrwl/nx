@@ -1,11 +1,28 @@
-# build
+# @nrwl/web:build
 
 Build a application
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/node/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### index (_**required**_)
+
+Type: `string`
+
+HTML File which will be contain the application
+
+### main (_**required**_)
+
+Type: `string`
+
+The name of the main entry-point file.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The name of the Typescript configuration file.
 
 ### assets
 
@@ -14,8 +31,6 @@ Type: `array`
 List of static application assets.
 
 ### baseHref
-
-Default: `/`
 
 Type: `string`
 
@@ -95,25 +110,21 @@ Replace files with other files in the build.
 
 Type: `string`
 
-undefined
+The file to be replaced.
 
 #### with
 
 Type: `string`
 
-undefined
+The file to replace with.
 
-### index
+### generateIndexHtml
 
-Type: `string`
+Default: `true`
 
-HTML File which will be contain the application
+Type: `boolean`
 
-### main
-
-Type: `string`
-
-The name of the main entry-point file.
+Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`
 
 ### maxWorkers
 
@@ -185,11 +196,13 @@ Type: `array`
 
 External Scripts which will be included before the main application entry
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
 Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 
@@ -222,12 +235,6 @@ Default: `false`
 Type: `boolean`
 
 Enables the use of subresource integrity validation.
-
-### tsConfig
-
-Type: `string`
-
-The name of the Typescript configuration file.
 
 ### vendorChunk
 

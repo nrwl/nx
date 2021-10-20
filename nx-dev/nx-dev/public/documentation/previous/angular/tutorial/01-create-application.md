@@ -1,12 +1,10 @@
 # Angular Nx Tutorial - Step 1: Create Application
 
-## Nx.dev Tutorial | Angular | Step 1: Create Application
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
+In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 
-## Create a New Workspace
+## Create a new workspace
 
 **Start by creating a new workspace.**
 
@@ -14,14 +12,16 @@ In this tutorial you will use Nx to build a full-stack application out of common
 npx create-nx-workspace@latest
 ```
 
-You will then receive the following prompts in your command line:
+You then receive the following prompts in your command line:
 
+```bash
+Workspace name (e.g., org name)     myorg
+What to create in the new workspace angular
+Application name                    todos
+Default stylesheet format           CSS
 ```
-? Workspace name (e.g., org name)     myorg
-? What to create in the new workspace angular
-? Application name                    todos
-? Default stylesheet format           CSS
-```
+
+> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
 When asked about 'preset', select `angular`, and `todos` for the app name.
 
@@ -39,7 +39,9 @@ myorg/
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
 │   │   │   └── test.ts
-│   │   ├── browserslist
+│   │   ├── .babelrc
+│   │   ├── .browserslistrc
+│   │   ├── .eslintrc.json
 │   │   ├── jest.conf.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
@@ -63,12 +65,16 @@ myorg/
 │       └── tslint.json
 ├── libs/
 ├── tools/
-├── angular.json
+├── .eslintrc.json
+├── .prettierrc
+├── babel.config.json
+├── jest.config.js
+├── jest.preset.js
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-├── tslint.json
-└── README.md
+├── README.md
+├── tsconfig.base.json
+└── workspace.json
 ```
 
 The generate command added two projects to our workspace:
@@ -109,7 +115,7 @@ yarn global add nx
 Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
 
 ```bash
-npm run nx -- serve todos
+npx nx serve todos
 ```
 
 or
@@ -120,11 +126,8 @@ yarn nx serve todos
 
 ## Note on `nx serve` and `ng serve`
 
-Internally, the Nx CLI delegates to the Angular CLI when running commands or generating code. The `nx serve` command produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only works when using the Nx CLI. In other words, using `nx` instead `ng` will result in the same output, but often will perform a lot better. [Read more about Nx CLI and Angular CLI.](/angular/getting-started/nx-cli)
-
-!!!!!
-Open http://localhost:4200 in the browser. What do you see?
-!!!!!
-Page saying "Welcome to Todos!"
-Page saying "This is an Angular app built with the Angular CLI"
-404
+Internally, the Nx CLI delegates to the Angular CLI when running commands or generating code. The `nx serve` command
+produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI
+supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only
+works when using the Nx CLI. In other words, using `nx` instead `ng` results in the same output, but often performs
+a lot better. [Read more about Nx CLI and Angular CLI.](/{{framework}}/getting-started/nx-cli)

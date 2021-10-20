@@ -1,23 +1,22 @@
-# execute
+# @nrwl/node:execute
 
 Execute a Node application
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/node/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### buildTarget (_**required**_)
+
+Type: `string`
+
+The target to run to build you the app
 
 ### args
 
 Type: `array`
 
 Extra args when starting the app
-
-### buildTarget
-
-Type: `string`
-
-The target to run to build you the app
 
 ### host
 
@@ -37,7 +36,7 @@ Ensures the app is starting with debugging
 
 ### port
 
-Default: `0`
+Default: `9229`
 
 Type: `number`
 

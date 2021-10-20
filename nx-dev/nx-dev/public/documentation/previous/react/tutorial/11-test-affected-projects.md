@@ -1,10 +1,8 @@
 # React Nx Tutorial - Step 11: Test Affected Projects
 
-## Nx.dev Tutorial | React | Step 11: Test Affected Projects
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/_mBBFRjs01g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-In addition to supporting computation caching, Nx can scale your development by doing code change analysis to see what can affected by a particular pull request.
+In addition to supporting computation caching, Nx scales your development by doing code change analysis to see what is affected by a particular pull request.
 
 **Commit all the changes in the repo**:
 
@@ -16,7 +14,7 @@ git checkout -b testbranch
 
 **Open `libs/ui/src/lib/todos/todos.tsx` and change the component:**
 
-```typescript jsx
+```typescript
 import React from 'react';
 import { Todo } from '@myorg/data';
 
@@ -70,9 +68,3 @@ You can run any target against the affected projects in the graph like this:
 npx nx affected --target=build
 npx nx affected:build
 ```
-
-!!!!!
-Run "npx nx affected --target=invalid --base=master". What do you see?
-!!!!!
-No projects with "invalid" were run
-An error message saying that the "invalid" target is invalid

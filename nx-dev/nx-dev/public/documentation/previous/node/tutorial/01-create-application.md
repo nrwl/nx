@@ -1,10 +1,8 @@
 # Node Nx Tutorial - Step 1: Create Application
 
-## Nx.dev Tutorial | Node | Step 1: Create Application
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-In this tutorial you will use Nx to build a server application out of common libraries using modern technologies.
+In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
 ## Create a New Workspace
 
@@ -14,13 +12,15 @@ In this tutorial you will use Nx to build a server application out of common lib
 npx create-nx-workspace@latest
 ```
 
-You will then receive the following prompts in your command line:
+You then receive the following prompts in your command line:
 
+```bash
+Workspace name (e.g., org name)         myorg
+What to create in the new workspace     nest
+Application name                        todos
 ```
-? Workspace name (e.g., org name)         myorg
-? What to create in the new workspace     nest
-? Application name                        todos
-```
+
+> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
 ```treeview
 myorg/
@@ -43,13 +43,15 @@ myorg/
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
+├── libs/
 ├── tools/
-│   ├── generators
-│   └── tsconfig.tools.json
+├── .eslintrc.json
+├── .prettierrc
 ├── jest.config.js
-├── libs
+├── jest.preset.js
 ├── nx.json
 ├── package.json
+├── README.md
 ├── tsconfig.base.json
 └── workspace.json
 ```
@@ -64,20 +66,20 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```shell script
+```bash
 npm install -g nx
 ```
 
 or
 
-```shell script
+```bash
 yarn global add nx
 ```
 
 Or you can prepend every command with `npm run`:
 
 ```bash
-npm run nx -- serve todos
+npx nx serve todos
 ```
 
 or
@@ -86,17 +88,17 @@ or
 yarn nx serve todos
 ```
 
-## Workspace.json, Targets, Builders
+## Workspace.json, Targets, Executors
 
 You configure your workspaces in `workspace.json`. This file contains the workspace projects with their architect targets. For instance, `todos` has the `build`, `serve`, `lint`, and `test` targets. This means that you can run `nx build todos`, `nx serve todos`, etc..
 
-Every target uses a builder which actually runs this target. So targets are analogous to typed npm scripts, and builders are analogous to typed shell scripts.
+Every target uses an executor which actually runs this target. So targets are analogous to typed npm scripts, and executors are analogous to typed shell scripts.
 
 **Why not use shell scripts and npm scripts directly?**
 
 There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `nx serve todos --help` results in:
 
-```shell script
+```bash
 nx run todos:serve [options,...]
 
 Options:
@@ -111,7 +113,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/latest/node/getting-started/console#nx-console-for-vscode)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/l/node/getting-started/console#nx-console-for-vscode)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 
@@ -119,13 +121,6 @@ But, most importantly, it provides a holistic dev experience regardless of the t
 
 Now that the application is set up, run it locally via:
 
-```shell script
+```bash
 nx serve todos
 ```
-
-!!!!!
-Open http://localhost:3333/api in the browser. What do you see?
-!!!!!
-Page saying "{"message":"Welcome to todos!"}"
-Page saying "This is Nest app built with Nx!"
-404

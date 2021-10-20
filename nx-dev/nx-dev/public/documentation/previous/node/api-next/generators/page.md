@@ -1,4 +1,4 @@
-# page
+# @nrwl/next:page
 
 Create a Next.js page component
 
@@ -38,9 +38,23 @@ nx g component my-component --project=mylib --classComponent
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the component.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
+
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
@@ -71,20 +85,6 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
-
-### name
-
-Type: `string`
-
-The name of the component.
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
 
 ### style
 

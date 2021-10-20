@@ -1,35 +1,33 @@
 # React Nx Tutorial - Step 5: Add Node Application Implementing API
 
-## Nx.dev Tutorial | React | Step 5: Add Node Application Implementing API
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/XgfknOqgxQ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your React applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
+The requests fail because the API has not been created yet. Using Nx you develop node applications next to your React applications. You can use same commands to run and test them. You share code between the backend and the frontend. Use this capability to implement the API service.
 
-## Add Express Plugin to Your Workspace
+## Add Express plugin to your workspace
 
 Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `npx nx list`:**
 
 ```bash
 >  NX  Installed plugins:
 
-  @nrwl/cypress (builders,schematics)
-  @nrwl/jest (builders,schematics)
+  @nrwl/cypress (executors,generators)
+  @nrwl/jest (executors,generators)
   @nrwl/linter (builders)
-  @nrwl/react (schematics)
-  @nrwl/web (builders,schematics)
-  @nrwl/workspace (builders,schematics)
+  @nrwl/react (generators)
+  @nrwl/web (executors,generators)
+  @nrwl/workspace (executors,generators)
 
 
 >  NX  Also available:
 
-  @nrwl/angular (schematics)
-  @nrwl/express (builders,schematics)
-  @nrwl/nest (builders,schematics)
-  @nrwl/next (builders,schematics)
-  @nrwl/node (builders,schematics)
-  @nrwl/nx-plugin (builders,schematics)
-  @nrwl/storybook (builders,schematics)
+  @nrwl/angular (generators)
+  @nrwl/express (executors,generators)
+  @nrwl/nest (executors,generators)
+  @nrwl/next (executors,generators)
+  @nrwl/node (executors,generators)
+  @nrwl/nx-plugin (executors,generators)
+  @nrwl/storybook (executors,generators)
 
 
 >  NX  Community plugins:
@@ -39,7 +37,7 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
   ...
 ```
 
-**Now run `npx nx list @nrwl/express`, and you will see:**
+**Now run `npx nx list @nrwl/express`, and you see:**
 
 ```bash
 >  NX   NOTE  @nrwl/express is not currently installed
@@ -61,7 +59,7 @@ yarn add --dev @nrwl/express
 
 > `@nrwl/express` also added `@nrwl/node`. Run `npx nx list @nrwl/express` and `npx nx list @nrwl/node` to see what those plugins provide.
 
-## Generate an Express Application
+## Generate an Express application
 
 **Run the following to generate a new Express application:**
 
@@ -94,7 +92,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That's why the `api` application appeared there.
@@ -149,10 +147,3 @@ const server = app.listen(port, () => {
 });
 server.on('error', console.error);
 ```
-
-!!!!!
-Run "npx nx serve api" and open http://localhost:3333/api/todos. What do you see?
-!!!!!
-`[{"title":"Todo 1"},{"title":"Todo 2"}]`
-Blank screen
-404

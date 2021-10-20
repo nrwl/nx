@@ -1,6 +1,6 @@
-# application
+# @nrwl/angular:application
 
-Create an Angular application
+Creates an Angular application.
 
 ## Usage
 
@@ -32,7 +32,7 @@ nx g application ... --dry-run
 
 Type: `string`
 
-Backend project that provides data to this application. This sets up proxy.config.json.
+Backend project that provides data to this application. This sets up `proxy.config.json`.
 
 ### directory
 
@@ -48,15 +48,13 @@ Type: `string`
 
 Possible values: `protractor`, `cypress`, `none`
 
-Test runner to use for end to end (e2e) tests
+Test runner to use for end to end (e2e) tests.
 
-### enableIvy
+### host
 
-Default: `true`
+Type: `string`
 
-Type: `boolean`
-
-Create a new app that uses the Ivy rendering engine.
+The name of the host application that the remote application will be consumed by.
 
 ### inlineStyle
 
@@ -84,15 +82,39 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `tslint`, `eslint`
+Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
+
+### mfe
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a Module Federation configuration for the application
+
+### mfeType
+
+Default: `remote`
+
+Type: `string`
+
+Possible values: `host`, `remote`
+
+Type of application to generate the Module Federation configuration for.
 
 ### name
 
 Type: `string`
 
 The name of the application.
+
+### port
+
+Type: `number`
+
+The port at which the remote application should be served.
 
 ### prefix
 
@@ -102,13 +124,27 @@ Type: `string`
 
 The prefix to apply to generated selectors.
 
+### remotes
+
+Type: `array`
+
+A list of remote application names that the host application should consume.
+
 ### routing
 
 Default: `false`
 
 Type: `boolean`
 
-Generates a routing module.
+Generate a routing module.
+
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
 
 ### skipFormat
 
@@ -116,7 +152,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting files.
 
 ### skipPackageJson
 
@@ -124,7 +160,7 @@ Default: `false`
 
 Type: `boolean`
 
-Do not add dependencies to package.json.
+Do not add dependencies to `package.json`.
 
 ### skipTests
 
@@ -136,13 +172,21 @@ Type: `boolean`
 
 Skip creating spec files.
 
-### strict
+### standaloneConfig
 
 Default: `false`
 
 Type: `boolean`
 
-Creates an application with stricter type checking and build optimization options.
+Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.
+
+### strict
+
+Default: `true`
+
+Type: `boolean`
+
+Create an application with stricter type checking and build optimization options.
 
 ### style
 
@@ -150,7 +194,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`
+Possible values: `css`, `scss`, `sass`, `less`
 
 The file extension to be used for style files.
 
@@ -158,7 +202,7 @@ The file extension to be used for style files.
 
 Type: `string`
 
-Add tags to the application (used for linting)
+Add tags to the application (used for linting).
 
 ### unitTestRunner
 
@@ -168,7 +212,7 @@ Type: `string`
 
 Possible values: `karma`, `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.
 
 ### viewEncapsulation
 

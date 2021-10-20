@@ -1,4 +1,4 @@
-# application
+# @nrwl/next:application
 
 Create a Next.js application
 
@@ -84,6 +84,14 @@ Type: `string`
 
 The server script path to be used with next.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
@@ -99,6 +107,14 @@ Default: `false`
 Type: `boolean`
 
 Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style)
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### style
 

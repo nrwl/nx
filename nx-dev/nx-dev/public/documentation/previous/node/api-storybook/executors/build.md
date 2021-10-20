@@ -1,11 +1,18 @@
-# build
+# @nrwl/storybook:build
 
 Build Storybook
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/node/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### uiFramework (_**required**_) (**hidden**)
+
+Default: `@storybook/angular`
+
+Type: `string`
+
+Storybook framework npm package
 
 ### docsMode
 
@@ -34,11 +41,3 @@ Default: `true`
 Type: `boolean`
 
 Suppress verbose build output.
-
-### uiFramework (**hidden**)
-
-Default: `@storybook/angular`
-
-Type: `string`
-
-Storybook framework npm package

@@ -1,6 +1,6 @@
-# decorator
+# @nrwl/nest:decorator
 
-Run the 'decorator' NestJs generator with Nx project support
+Run the `decorator` NestJS generator with Nx project support.
 
 ## Usage
 
@@ -24,42 +24,48 @@ nx g decorator ... --dry-run
 
 ## Options
 
-### directory
-
-Alias(es): d,path
+### name (_**required**_)
 
 Type: `string`
 
-Directory where the generated files are placed
+The name of the decorator.
 
-### flat
-
-Default: `false`
-
-Type: `boolean`
-
-Flag to indicate if a directory is created.
-
-### name
-
-Type: `string`
-
-The name of generated generator
-
-### project
+### project (_**required**_)
 
 Alias(es): p
 
 Type: `string`
 
-The nest project to target
+The Nest project to target.
 
-### unitTestRunner
+### directory
 
-Default: `jest`
+Alias(es): dir,path
 
 Type: `string`
 
-Possible values: `jest`, `none`
+Directory where the generated files are placed.
 
-Test runner to use for unit tests
+### flat
+
+Default: `true`
+
+Type: `boolean`
+
+Flag to indicate if a directory is created.
+
+### language
+
+Type: `string`
+
+Possible values: `js`, `ts`
+
+Nest decorator language.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

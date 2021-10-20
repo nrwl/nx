@@ -8,7 +8,7 @@ Runs an Architect target with an optional custom builder configuration defined i
 nx run <target> [options]
 ```
 
-Install the `nx` package globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 

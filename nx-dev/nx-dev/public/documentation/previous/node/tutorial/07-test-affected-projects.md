@@ -1,10 +1,8 @@
 # Node Nx Tutorial - Step 7: Test Affected Projects
 
-## Nx.dev Tutorial | Node | Step 6: Computation Caching
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/TRRVLyHfN60" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-In addition to supporting computation caching, Nx can scale your development by doing code change analysis to see what apps or libraries are affected by a particular pull request.
+In addition to supporting computation caching, Nx scales your development by doing code change analysis to see what apps or libraries are affected by a particular pull request.
 
 **Commit all the changes in the repo**:
 
@@ -47,7 +45,7 @@ Printing the affected projects can be handy, but usually you want to do somethin
 
 **Run `nx affected:test` to retest only the projects affected by the change.**
 
-As you can see, since we updated the code, without updating the tests, the unit tests failed.
+As you can see, because the code was updated without updating the tests, the unit tests failed.
 
 ```bash
 >  NX  Running target test for projects:
@@ -73,9 +71,3 @@ You can run any target against the affected projects in the graph like this:
 nx affected --target=build
 nx affected:build
 ```
-
-!!!!!
-Run "nx affected --target=invalid --base=master". What do you see?
-!!!!!
-No projects with "invalid" were run
-An error message saying that the "invalid" target is invalid
