@@ -1,5 +1,5 @@
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
 <% if(routing) { %>import { RouterModule } from '@angular/router';<% } %>
 
 import { RemoteEntryComponent } from './entry.component';
@@ -7,7 +7,7 @@ import { RemoteEntryComponent } from './entry.component';
 @NgModule({
   declarations: [RemoteEntryComponent],
   imports: [
-    BrowserModule,
+    CommonModule,
     <% if(routing) { %>RouterModule.forChild([
       {
         path: '',
