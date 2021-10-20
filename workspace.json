@@ -50,6 +50,7 @@
     "nx-dev-feature-storage": "nx-dev/feature-storage",
     "nx-dev-feature-versions-and-flavors": "nx-dev/feature-versions-and-flavors",
     "nx-dev-ui-common": "nx-dev/ui/common",
+    "nx-dev-ui-home": "nx-dev/ui-home",
     "nx-dev-ui-member-card": "nx-dev/ui/member-card",
     "nx-dev-ui-sponsor-card": "nx-dev/ui/sponsor-card",
     "nx-plugin": "packages/nx-plugin",
