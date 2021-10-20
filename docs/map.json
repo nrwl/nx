@@ -112,6 +112,11 @@
             "file": "shared/guides/why-monorepos"
           },
           {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
+          },
+          {
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "angular/guides/update"
@@ -1164,6 +1169,11 @@
             "file": "shared/monorepo-ci-azure"
           },
           {
+            "name": "Distributed CI: GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
+          },
+          {
             "name": "Distributed CI: Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
@@ -1397,6 +1407,11 @@
             "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
           },
           {
             "name": "Updating Nx",
@@ -2453,6 +2468,11 @@
             "file": "shared/monorepo-ci-azure"
           },
           {
+            "name": "Distributed CI: GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
+          },
+          {
             "name": "Distributed CI: Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
@@ -2648,6 +2668,11 @@
             "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
           },
           {
             "name": "Updating Nx",
@@ -3681,6 +3706,11 @@
             "name": "Distributed CI: Azure",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI: GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
           },
           {
             "name": "Distributed CI: Jenkins",

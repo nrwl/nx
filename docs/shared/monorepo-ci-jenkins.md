@@ -125,7 +125,15 @@ node {
 
 This helps, but it still has a ceiling. At some point, this won't be enough. A single agent is simply insufficient. You need to distribute CI across a grid of machines.
 
-## Distributed CI
+## Distributed CI with Nx Cloud
+
+A computation cache is created on your local machine to make the developer experience faster. This allows you to not waste time re-building, re-testing, re-linting, or any number of other actions you might take on code that hasn’t changed. Because the cache is stored locally, you are the only member of your team that can take advantage of these instant commands.
+
+Nx Cloud allows this cache to be shared across your entire organization, meaning that any cacheable operation completed on your workspace only needs to be run once.
+
+Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
+
+## Distributed CI with Binning
 
 To distribute you need to split your job into multiple jobs.
 
