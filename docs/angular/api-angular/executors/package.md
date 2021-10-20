@@ -22,6 +22,12 @@ Possible values: `dependencies`, `peerDependencies`
 
 When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
 
+### fileReplacements
+
+Type: `array`
+
+Replace compilation source files with other compilation source files in the build.
+
 ### tsConfig
 
 Type: `string`
