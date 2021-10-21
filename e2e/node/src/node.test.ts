@@ -301,9 +301,17 @@ export class FooDto {
         `
 import { Controller, Get } from '@nestjs/common';
 import { FooDto } from './foo.dto';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getData() {
+    return this.appService.getData();
+  }
+
   @Get('foo')
   getFoo(): Promise<FooDto> {
     return Promise.resolve({
@@ -575,6 +583,55 @@ describe('nest libraries', function () {
       'Test Suites: 2 passed, 2 total'
     );
   }, 200000);
+
+  it('should have plugin output if specified in `tsPlugins`', async () => {
+    newProject();
+    const nestlib = uniq('nestlib');
+    runCLI(`generate @nrwl/nest:lib ${nestlib} --buildable`);
+
+    // TODO: update to v5 when Nest8 is supported
+    packageInstall('@nestjs/swagger', undefined, '4.8.2');
+
+    updateProjectConfig(nestlib, (config) => {
+      config.targets.build.options.tsPlugins = [
+        {
+          name: '@nestjs/swagger/plugin',
+          options: {
+            dtoFileNameSuffix: ['.model.ts'],
+          },
+        },
+      ];
+      return config;
+    });
+
+    updateFile(
+      `libs/${nestlib}/src/lib/foo.model.ts`,
+      `
+export class FooModel {
+  foo: string;
+  bar: number;
+}`
+    );
+
+    await runCLIAsync(`build ${nestlib}`);
+
+    const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
+    expect(stripIndents`${fooModelJs}`).toContain(
+      stripIndents`
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FooModel = void 0;
+const openapi = require("@nestjs/swagger");
+class FooModel {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+    }
+}
+exports.FooModel = FooModel;
+//# sourceMappingURL=foo.model.js.map
+        `
+    );
+  }, 300000);
 });
 
 describe('with dependencies', () => {

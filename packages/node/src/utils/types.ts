@@ -2,7 +2,7 @@ import type {
   CustomTransformerFactory,
   Node,
   Program,
-  TransformerFactory,
+  TransformerFactory as TypescriptTransformerFactory,
 } from 'typescript';
 
 export interface FileReplacement {
@@ -22,7 +22,9 @@ export interface SourceMapOptions {
   hidden: boolean;
 }
 
-type Transformer = TransformerFactory<Node> | CustomTransformerFactory;
+type TransformerFactory =
+  | TypescriptTransformerFactory<Node>
+  | CustomTransformerFactory;
 
 export interface TsPlugin {
   name: string;
@@ -35,18 +37,21 @@ export interface CompilerPlugin {
   before?: (
     options?: Record<string, unknown>,
     program?: Program
-  ) => Transformer;
-  after?: (options?: Record<string, unknown>, program?: Program) => Transformer;
+  ) => TransformerFactory;
+  after?: (
+    options?: Record<string, unknown>,
+    program?: Program
+  ) => TransformerFactory;
   afterDeclarations?: (
     options?: Record<string, unknown>,
     program?: Program
-  ) => Transformer;
+  ) => TransformerFactory;
 }
 
 export interface CompilerPluginHooks {
-  beforeHooks: Array<(program?: Program) => Transformer>;
-  afterHooks: Array<(program?: Program) => Transformer>;
-  afterDeclarationsHooks: Array<(program?: Program) => Transformer>;
+  beforeHooks: Array<(program?: Program) => TransformerFactory>;
+  afterHooks: Array<(program?: Program) => TransformerFactory>;
+  afterDeclarationsHooks: Array<(program?: Program) => TransformerFactory>;
 }
 
 export interface AdditionalEntryPoint {
