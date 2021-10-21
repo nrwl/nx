@@ -284,9 +284,10 @@ export class Workspaces {
       rawWorkspace,
       this.root
     );
-    const nxJson = readJsonFile<NxJsonConfiguration>(
-      path.join(this.root, 'nx.json')
-    );
+    const nxJsonPath = path.join(this.root, 'nx.json');
+    const nxJson = existsSync(nxJsonPath)
+      ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
+      : ({} as NxJsonConfiguration);
     assertValidWorkspaceConfiguration(nxJson);
     return { ...parsedWorkspace, ...nxJson };
   }
