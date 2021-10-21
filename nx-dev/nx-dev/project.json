@@ -23,12 +23,20 @@
         "command": "npx next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
       }
     },
+    "dep-graph-example": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx nx dep-graph --file=nx-dev/nx-dev/public/dep-graph-example.html"
+      }
+    },
     "serve": {
       "executor": "@nrwl/workspace:run-commands",
       "outputs": [],
       "options": {
         "commands": [
           "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts --watch",
+          "nx run nx-dev:dep-graph-example",
           "nx run nx-dev:serve-nextjs"
         ],
         "parallel": true
