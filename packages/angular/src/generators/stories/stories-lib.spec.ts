@@ -154,6 +154,50 @@ describe('angularStories generator: libraries', () => {
       ).toBeTruthy();
     });
 
+    it('should handle modules with where components are spread into the declarations array', async () => {
+      await cypressProjectGenerator(tree, {
+        linter: Linter.EsLint,
+        name: libName,
+      });
+
+      angularStoriesGenerator(tree, {
+        name: libName,
+        generateCypressSpecs: true,
+      });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-button/variable-spread-declare-button.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-view/variable-spread-declare-view.component.stories.ts`
+        )
+      ).toBeTruthy();
+
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/variable-spread-declare-button/variable-spread-declare-button.component.spec.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/variable-spread-declare-view/variable-spread-declare-view.component.spec.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `apps/${libName}-e2e/src/integration/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.spec.ts`
+        )
+      ).toBeTruthy();
+    });
+
     it('should handle modules using static members for declarations rather than literals', async () => {
       await cypressProjectGenerator(tree, {
         linter: Linter.EsLint,

@@ -137,6 +137,53 @@ const COMPONENTS = [
 export class VariableDeclareModule {}`
   );
 
+  // create a module with components that get Angular exported and declared by variable
+  await moduleGenerator(tree, {
+    name: 'variable-spread-declare',
+    project: libName,
+  });
+
+  await componentGenerator(tree, {
+    name: 'variable-spread-declare-button',
+    project: libName,
+    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    module: 'variable-spread-declare',
+  });
+
+  await componentGenerator(tree, {
+    name: 'variable-spread-declare-view',
+    project: libName,
+    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    module: 'variable-spread-declare',
+  });
+
+  await componentGenerator(tree, {
+    name: 'variable-spread-declare-anotherview',
+    project: libName,
+    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    module: 'variable-spread-declare',
+  });
+
+  tree.write(
+    `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare.module.ts`,
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { VariableSpreadDeclareButtonComponent } from './variable-spread-declare-button/variable-spread-declare-button.component';
+import { VariableSpreadDeclareViewComponent } from './variable-spread-declare-view/variable-spread-declare-view.component';
+import { VariableSpreadDeclareAnotherviewComponent } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview.component';
+
+const COMPONENTS = [ 
+  VariableSpreadDeclareButtonComponent, 
+  VariableSpreadDeclareViewComponent 
+]
+
+@NgModule({
+  imports: [CommonModule],
+  declarations: [...COMPONENTS, VariableSpreadDeclareAnotherviewComponent],
+})
+export class VariableSpreadDeclareModule {}`
+  );
+
   // create a module where declared components are pulled from a static member of the module
   await moduleGenerator(tree, {
     name: 'static-member-declarations',

@@ -56,13 +56,61 @@ export function getModuleFilePaths(tree: Tree, projectPath: string): string[] {
 function getDeclaredComponentsInDeclarations(
   declarationsArray: Node
 ): string[] {
-  return declarationsArray
+  return getDeclaredComponentNodes(declarationsArray)
+    .map((node) => node.getText())
+    .filter((name) => name.endsWith('Component'));
+}
+
+function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
+  const cmps = declarationsArray
     .getChildren()
     .find((node) => node.kind === SyntaxKind.SyntaxList)
     .getChildren()
-    .filter((node) => node.kind === SyntaxKind.Identifier)
-    .map((node) => node.getText())
-    .filter((name) => name.endsWith('Component'));
+    .map((node) => {
+      if (node.kind === SyntaxKind.Identifier) {
+        return node;
+      }
+      // if the node is a destructuring, follow the variable
+      if (node.kind === SyntaxKind.SpreadElement) {
+        const declarationVariableNode = node
+          .getChildren()
+          .find((node) => node.kind === SyntaxKind.Identifier);
+
+        // try to find the variable declaration in the same component
+        const declarationVariable = getVariableDeclaration(
+          declarationVariableNode.getText(),
+          declarationVariableNode.getSourceFile()
+        );
+        if (
+          declarationVariable &&
+          declarationVariable.initializer.kind ===
+            SyntaxKind.ArrayLiteralExpression
+        ) {
+          const nodes = getDeclaredComponentNodes(
+            declarationVariable.initializer
+          );
+          return nodes;
+        }
+      }
+      return null;
+    })
+    .filter((node) => !!node);
+
+  return flatten(cmps);
+}
+
+function flatten(arr) {
+  let flattened = [];
+
+  for (const entry of arr) {
+    if (Array.isArray(entry)) {
+      flattened.push(...flatten(entry));
+    } else {
+      flattened.push(entry);
+    }
+  }
+
+  return flattened;
 }
 
 function getDeclarationsArray(
