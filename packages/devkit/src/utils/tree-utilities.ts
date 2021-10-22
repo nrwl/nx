@@ -3,6 +3,9 @@ import { joinPathFragments } from '@nrwl/devkit';
 import type { Ignore } from 'ignore';
 import ignore from 'ignore';
 
+/**
+ * Returns list of files in a given directory, including all subdirectories
+ */
 export function getAllFilesRecursivelyFromDir(
   tree: Tree,
   dir: string

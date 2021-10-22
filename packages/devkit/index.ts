@@ -253,3 +253,8 @@ export { joinPathFragments, normalizePath } from './src/utils/path';
  * @category Utils
  */
 export { moveFilesToNewDirectory } from './src/utils/move-dir';
+
+/**
+ * @category Utils
+ */
+export { getAllFilesRecursivelyFromDir } from './src/utils/tree-utilities';

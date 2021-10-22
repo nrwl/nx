@@ -104,6 +104,7 @@ It only uses language primitives and immutable objects
 - [detectPackageManager](../../react/nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../react/nx-devkit/index#formatfiles)
 - [generateFiles](../../react/nx-devkit/index#generatefiles)
+- [getAllFilesRecursivelyFromDir](../../react/nx-devkit/index#getallfilesrecursivelyfromdir)
 - [getPackageManagerCommand](../../react/nx-devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../react/nx-devkit/index#getpackagemanagerversion)
 - [getProjects](../../react/nx-devkit/index#getprojects)
@@ -782,6 +783,25 @@ doesn't get confused about incorrect TypeScript files.
 #### Returns
 
 `void`
+
+---
+
+### getAllFilesRecursivelyFromDir
+
+▸ **getAllFilesRecursivelyFromDir**(`tree`, `dir`): `string`[]
+
+Returns list of files in a given directory, including all subdirectories
+
+#### Parameters
+
+| Name   | Type                                       |
+| :----- | :----------------------------------------- |
+| `tree` | [`Tree`](../../react/nx-devkit/index#tree) |
+| `dir`  | `string`                                   |
+
+#### Returns
+
+`string`[]
 
 ---
 

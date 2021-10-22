@@ -1,11 +1,14 @@
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, logger } from '@nrwl/devkit';
+import {
+  getAllFilesRecursivelyFromDir,
+  joinPathFragments,
+  logger,
+} from '@nrwl/devkit';
 import { basename, dirname } from 'path';
 import type { Statement } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import { getModuleDeclaredComponents } from './module-info';
-import { getAllFilesRecursivelyFromDir } from './tree-utilities';
 
 export interface ComponentInfo {
   componentFileName: string;

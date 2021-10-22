@@ -104,6 +104,7 @@ It only uses language primitives and immutable objects
 - [detectPackageManager](../../angular/nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../angular/nx-devkit/index#formatfiles)
 - [generateFiles](../../angular/nx-devkit/index#generatefiles)
+- [getAllFilesRecursivelyFromDir](../../angular/nx-devkit/index#getallfilesrecursivelyfromdir)
 - [getPackageManagerCommand](../../angular/nx-devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../angular/nx-devkit/index#getpackagemanagerversion)
 - [getProjects](../../angular/nx-devkit/index#getprojects)
@@ -782,6 +783,25 @@ doesn't get confused about incorrect TypeScript files.
 #### Returns
 
 `void`
+
+---
+
+### getAllFilesRecursivelyFromDir
+
+▸ **getAllFilesRecursivelyFromDir**(`tree`, `dir`): `string`[]
+
+Returns list of files in a given directory, including all subdirectories
+
+#### Parameters
+
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `tree` | [`Tree`](../../angular/nx-devkit/index#tree) |
+| `dir`  | `string`                                     |
+
+#### Returns
+
+`string`[]
 
 ---
 
