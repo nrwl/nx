@@ -14,7 +14,7 @@ import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 export function ReactPage() {
   const router = useRouter();
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
     <>
@@ -54,8 +54,8 @@ export function ReactPage() {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'React',
-          value: storedFlavor || 'r',
+          name: selectedFlavor || 'React',
+          value: selectedFlavor || 'r',
         }}
         version={{
           name: storedVersion || 'Latest',

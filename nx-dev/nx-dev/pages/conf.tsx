@@ -11,7 +11,7 @@ import {
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 export function ConfPage() {
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
     <>
@@ -57,8 +57,8 @@ export function ConfPage() {
         useDarkBackground={true}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: selectedFlavor || 'react',
+          value: selectedFlavor || 'react',
         }}
         version={{
           name: storedVersion || 'Latest',

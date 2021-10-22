@@ -3,10 +3,10 @@ import { useStorage } from './use-storage';
 
 class MockStorage {
   private cache: Record<string, string> = {};
-  getItem(key) {
+  getItem(key: string) {
     return this.cache[key];
   }
-  setItem(key, value) {
+  setItem(key: string, value: string) {
     this.cache[key] = value;
   }
   clear() {
@@ -15,7 +15,7 @@ class MockStorage {
 }
 
 describe('useStorage', () => {
-  let mockStorage;
+  let mockStorage: MockStorage;
 
   beforeAll(() => {
     mockStorage = new MockStorage();
