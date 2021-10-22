@@ -35,18 +35,13 @@ describe('dep-graph-client in watch mode', () => {
     checkSelectedProjects(5, []);
   });
 
-  xit('should not re-add new libs if they were un-selected', () => {
+  it('should not re-add new libs if they were un-selected', () => {
     cy.tick(5000);
-    cy.get('[data-project*="3"]')
-      .scrollIntoView()
-      .should((project) => {
-        expect(project.data('active')).to.be.true;
-      })
-      .click({ force: true })
-      .should((project) => {
-        console.log(project.data());
-        expect(project.data('active')).to.be.false;
-      });
+    cy.get('[data-project*="3"][data-active="true"]')
+      .should('exist')
+      .click({ force: true });
+
+    cy.get('[data-project*="3"][data-active="false"]').should('exist');
 
     cy.tick(5000);
     cy.tick(5000);

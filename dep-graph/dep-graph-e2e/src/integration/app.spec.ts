@@ -13,7 +13,6 @@ import {
 describe('dep-graph-client', () => {
   beforeEach(() => {
     cy.visit('/');
-    cy.get('[data-cy=project-select]').select('Nx');
   });
 
   it('should display message to select projects', () => {
@@ -50,16 +49,55 @@ describe('dep-graph-client', () => {
     });
   });
 
-  xdescribe('focusing projects in sidebar', () => {
+  describe('selecting projects', () => {
+    it('should select a project by clicking on the project name', () => {
+      // cy.get('[data-project="nx-dev"]').should('have.data', 'active', false);
+      cy.get('[data-project="nx-dev"]')
+        .click({
+          force: true,
+        })
+        .should('have.data', 'active', true);
+    });
+
+    it('should deselect a project by clicking on the project name again', () => {
+      cy.get('[data-project="nx-dev"][data-active="false"]').click({
+        force: true,
+      });
+      cy.get('[data-project="nx-dev"][data-active="true"]')
+        .should('exist')
+        .click({
+          force: true,
+        });
+      cy.get('[data-project="nx-dev"][data-active="false"]').should('exist');
+    });
+
+    it('should select a project by clicking on the selected icon', () => {
+      cy.get('[data-project="nx-dev"][data-active="false"]').click({
+        force: true,
+      });
+      cy.get('[data-project="nx-dev"][data-active="true"]')
+        .should('exist')
+        .parent()
+        .siblings()
+        .first()
+        .should('exist')
+        .click({
+          force: true,
+        });
+      cy.get('[data-project="nx-dev"][data-active="false"]').should('exist');
+    });
+  });
+
+  describe('focusing projects in sidebar', () => {
     it('should select appropriate projects', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
       cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
 
-      cy.get('[data-project="nx-dev"]').should('have.attr', 'active', 'true');
+      cy.get('[data-project="nx-dev"]').should('have.data', 'active', true);
     });
   });
 
-  xdescribe('unfocus button', () => {
+  describe('unfocus button', () => {
     it('should uncheck all project items', () => {
       cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
       getUnfocusProjectButton().click();
