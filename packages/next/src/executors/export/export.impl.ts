@@ -6,7 +6,7 @@ import {
   runExecutor,
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
@@ -19,6 +19,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { importConstants } from '../../utils/require-shim';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
 const { PHASE_EXPORT } = importConstants();
 
@@ -40,6 +41,7 @@ export default async function exportExecutor(
     assertDependentProjectsHaveBeenBuilt(dependencies, context);
   }
 
+  const libsDir = join(context.root, workspaceLayout().libsDir);
   const buildTarget = parseTargetString(options.buildTarget);
   const build = await runExecutor(buildTarget, {}, context);
 
@@ -58,7 +60,8 @@ export default async function exportExecutor(
     PHASE_EXPORT,
     buildOptions,
     context,
-    dependencies
+    dependencies,
+    libsDir
   );
 
   await exportApp(

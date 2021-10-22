@@ -118,7 +118,8 @@ describe('Next.js webpack config builder', () => {
           fileReplacements: [],
         },
         { root: '/root' } as any,
-        []
+        [],
+        ''
       );
 
       expect(config).toEqual(
@@ -142,7 +143,8 @@ describe('Next.js webpack config builder', () => {
           customValue: 'test',
         } as NextBuildBuilderOptions,
         { root: rootPath } as any,
-        []
+        [],
+        ''
       );
 
       expect(config).toMatchObject({
@@ -162,7 +164,8 @@ describe('Next.js webpack config builder', () => {
             customValue: 'test',
           } as NextBuildBuilderOptions,
           { root: '/root' } as any,
-          []
+          [],
+          ''
         )
       ).rejects.toThrow(/Could not find file/);
     });
@@ -179,7 +182,8 @@ describe('Next.js webpack config builder', () => {
             customValue: 'test',
           } as NextBuildBuilderOptions,
           { root: '/root' } as any,
-          []
+          [],
+          ''
         )
       ).rejects.toThrow(/option does not export a function/);
     });

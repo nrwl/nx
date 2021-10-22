@@ -19,6 +19,7 @@ import {
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { checkPublicDirectory } from './lib/check-project';
 import { importConstants } from '../../utils/require-shim';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
 const { PHASE_PRODUCTION_BUILD } = importConstants();
 
@@ -30,6 +31,7 @@ export default async function buildExecutor(
   process.env.NODE_ENV ||= 'production';
 
   const root = resolve(context.root, options.root);
+  const libsDir = join(context.root, workspaceLayout().libsDir);
 
   checkPublicDirectory(root);
 
@@ -50,7 +52,8 @@ export default async function buildExecutor(
     PHASE_PRODUCTION_BUILD,
     options,
     context,
-    dependencies
+    dependencies,
+    libsDir
   );
 
   await build(root, config as any);
