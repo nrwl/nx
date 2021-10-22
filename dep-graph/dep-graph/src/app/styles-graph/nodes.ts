@@ -86,10 +86,20 @@ const highlightedNodes: Stylesheet = {
   },
 };
 
-const transparentNodes: Stylesheet = {
-  selector: 'node.transparent',
+const transparentProjectNodes: Stylesheet = {
+  selector: 'node.transparent:childless',
   style: { opacity: 0.5 },
 };
+
+const transparentParentNodes: Stylesheet = {
+  selector: 'node.transparent:parent',
+  style: {
+    'text-opacity': 0.5,
+    'background-opacity': 0.25,
+    'border-opacity': 0.5,
+  },
+};
+
 const highlightedEdges: Stylesheet = {
   selector: 'edge.highlight',
   style: { 'mid-target-arrow-color': NrwlPalette.blue },
@@ -109,7 +119,8 @@ export const nodeStyles = [
   affectedNodes,
   parentNodes,
   highlightedNodes,
-  transparentNodes,
+  transparentProjectNodes,
+  transparentParentNodes,
   highlightedEdges,
   transparentEdges,
 ];
