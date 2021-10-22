@@ -58,7 +58,8 @@ export function allReactProjectsWithStorybookConfiguration(tree: Tree): {
             projectConfig.targets.storybook.options.config.configFolder,
         };
       }
-    });
+    })
+    ?.filter((entry) => !!entry);
   return reactProjectsThatHaveStorybookConfiguration;
 }
 
