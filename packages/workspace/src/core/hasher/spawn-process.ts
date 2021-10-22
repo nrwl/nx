@@ -13,7 +13,12 @@ export function spawnProcess(
   args: string[],
   cwd: string
 ): string {
-  const r = spawnSync(command, args, { cwd, maxBuffer: 50 * 1024 * 1024 });
+  const r = spawnSync(command, args, {
+    cwd,
+    maxBuffer: 50 * 1024 * 1024,
+    windowsHide: true,
+    shell: false,
+  });
   if (r.status !== 0) {
     throw new Error(
       `Failed to run ${command} ${args.join(' ')}.\n${r.stdout}\n${r.stderr}`
