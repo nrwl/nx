@@ -1,6 +1,7 @@
 import * as path from 'path';
 import {
   checkFilesExist,
+  fileExists,
   isNotWindows,
   isWindows,
   newProject,
@@ -281,9 +282,7 @@ describe('dep-graph', () => {
     it('dep-graph should output json to file by absolute path in Windows', () => {
       runCLI(`dep-graph --file=C:\\tmp\\project-graph.json`);
 
-      expect(() =>
-        checkFilesExist('C:\\tmp\\project-graph.json')
-      ).not.toThrow();
+      expect(fileExists('C:\\tmp\\project-graph.json')).toBeTruthy();
     }, 1000000);
   }
 
