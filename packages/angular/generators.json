@@ -62,6 +62,12 @@
       "x-type": "library",
       "description": "Creates an Angular library."
     },
+    "library-secondary-entry-point": {
+      "factory": "./src/generators/library-secondary-entry-point/compat",
+      "schema": "./src/generators/library-secondary-entry-point/schema.json",
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveSchematic",
       "schema": "./src/generators/move/schema.json",
@@ -175,6 +181,12 @@
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Creates an Angular library."
+    },
+    "library-secondary-entry-point": {
+      "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
+      "schema": "./src/generators/library-secondary-entry-point/schema.json",
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",

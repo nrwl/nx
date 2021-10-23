@@ -5,6 +5,7 @@ export * from './src/generators/init/init';
 export * from './src/generators/karma/karma';
 export * from './src/generators/karma-project/karma-project';
 export * from './src/generators/library/library';
+export * from './src/generators/library-secondary-entry-point/library-secondary-entry-point';
 export * from './src/generators/move/move';
 export * from './src/generators/ngrx/ngrx';
 export * from './src/generators/stories/stories';

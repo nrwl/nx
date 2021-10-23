@@ -175,4 +175,59 @@ describe('Angular Package', () => {
       }
     });
   });
+
+  describe('Publishable library secondary entry point', () => {
+    let project: string;
+    let parentLib: string;
+    let childLib: string;
+    let entryPoint: string;
+
+    beforeEach(() => {
+      project = newProject();
+      parentLib = uniq('parentlib');
+      childLib = uniq('childlib');
+      entryPoint = uniq('entrypoint');
+
+      runCLI(
+        `generate @nrwl/angular:lib ${parentLib} --publishable --importPath=@${project}/${parentLib} --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/angular:lib ${childLib} --publishable --importPath=@${project}/${childLib} --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${childLib} --no-interactive`
+      );
+
+      updateFile(
+        `libs/${parentLib}/src/lib/${parentLib}.module.ts`,
+        `
+          import { NgModule } from '@angular/core';
+          import { CommonModule } from '@angular/common';
+          import { ${
+            names(entryPoint).className
+          }Module } from '@${project}/${childLib}/${entryPoint}';
+
+          @NgModule({
+            imports: [CommonModule, ${names(entryPoint).className}Module],
+          })
+          export class Lib1Module {}
+        `
+      );
+    });
+
+    it('should build successfully', () => {
+      const buildOutput = runCLI(`build ${parentLib}`);
+
+      expect(buildOutput).toContain(
+        `Building entry point '@${project}/${childLib}'`
+      );
+      expect(buildOutput).toContain(
+        `Building entry point '@${project}/${childLib}/${entryPoint}'`
+      );
+      expect(buildOutput).toContain(
+        `Building entry point '@${project}/${parentLib}'`
+      );
+      expect(buildOutput).toContain('Running target "build" succeeded');
+    });
+  });
 });

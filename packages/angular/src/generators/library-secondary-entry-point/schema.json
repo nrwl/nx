@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularLibrarySecondaryEntryPoint",
+  "title": "Creates a secondary entry point for a library",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the secondary entry point.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the secondary entry point?",
+      "pattern": "^[a-zA-Z].*$"
+    },
+    "library": {
+      "type": "string",
+      "description": "The name of the library to create the secondary entry point for.",
+      "x-prompt": "What library would you like to create the secondary entry point for?",
+      "pattern": "^[a-zA-Z].*$"
+    },
+    "skipModule": {
+      "type": "boolean",
+      "description": "Skip generating a module for the secondary entry point.",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name", "library"]
+}
