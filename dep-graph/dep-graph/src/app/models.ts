@@ -17,20 +17,17 @@ export interface ProjectGraphService {
   getProjectGraph: (url: string) => Promise<DepGraphClientResponse>;
 }
 export interface Environment {
-  environment: 'dev' | 'dev-watch' | 'release';
-  appConfig: AppConfig;
+  environment: 'dev' | 'watch' | 'release';
 }
 
 export interface AppConfig {
   showDebugger: boolean;
   projectGraphs: ProjectGraphList[];
   defaultProjectGraph: string;
-  projectGraphService: ProjectGraphService;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
   showDebugger: false,
   projectGraphs: [],
   defaultProjectGraph: null,
-  projectGraphService: null,
 };

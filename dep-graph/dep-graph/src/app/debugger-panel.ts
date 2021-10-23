@@ -16,7 +16,8 @@ export class DebuggerPanel {
 
   constructor(
     private container: HTMLElement,
-    private projectGraphs: ProjectGraphList[]
+    private projectGraphs: ProjectGraphList[],
+    private initialSelectedGraph: string
   ) {
     this.render();
   }
@@ -40,7 +41,7 @@ export class DebuggerPanel {
       select.appendChild(option);
     });
 
-    select.value = window.selectedProjectGraph;
+    select.value = this.initialSelectedGraph;
     select.dataset['cy'] = 'project-select';
 
     select.onchange = (event) =>

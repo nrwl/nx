@@ -1,17 +1,18 @@
-import { Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { useDepGraphService } from '../machines/dep-graph.service';
+import { DepGraphSend } from '../machines/interfaces';
 import { removeChildrenFromContainer } from '../util';
 
 export class FocusedProjectPanel {
-  private unfocusSubject = new Subject<void>();
-
-  set projectName(projectName: string) {
-    this.render(projectName);
-  }
-
-  unfocus$ = this.unfocusSubject.asObservable();
+  private send: DepGraphSend;
 
   constructor(private container: HTMLElement) {
-    this.render();
+    const [state$, send] = useDepGraphService();
+    this.send = send;
+
+    state$
+      .pipe(map(({ context }) => context.focusedProject))
+      .subscribe((focusedProject) => this.render(focusedProject));
   }
 
   private static renderHtmlTemplate(): HTMLElement {
@@ -39,10 +40,6 @@ export class FocusedProjectPanel {
     return render.content.firstChild as HTMLElement;
   }
 
-  unfocusProject() {
-    this.render();
-  }
-
   private render(projectName?: string) {
     removeChildrenFromContainer(this.container);
 
@@ -62,7 +59,7 @@ export class FocusedProjectPanel {
     }
 
     unfocusButtonElement.addEventListener('click', () =>
-      this.unfocusSubject.next()
+      this.send({ type: 'unfocusProject' })
     );
 
     this.container.appendChild(element);

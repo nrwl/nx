@@ -1,6 +1,8 @@
-import { fromEvent, Subject, Subscription } from 'rxjs';
-import { removeChildrenFromContainer } from '../util';
+import { fromEvent, Subscription } from 'rxjs';
 import { debounceTime, filter, map } from 'rxjs/operators';
+import { useDepGraphService } from '../machines/dep-graph.service';
+import { DepGraphSend } from '../machines/interfaces';
+import { removeChildrenFromContainer } from '../util';
 
 export interface TextFilterChangeEvent {
   text: string;
@@ -10,13 +12,11 @@ export interface TextFilterChangeEvent {
 export class TextFilterPanel {
   private textInput: HTMLInputElement;
   private includeInPathCheckbox: HTMLInputElement;
-  private changesSubject = new Subject<TextFilterChangeEvent>();
-  private subscriptions: Subscription[] = [];
-
-  changes$ = this.changesSubject.asObservable();
+  private send: DepGraphSend;
 
   constructor(private container: HTMLElement) {
-    this.subscriptions.map((s) => s.unsubscribe());
+    const [_, send] = useDepGraphService();
+    this.send = send;
     this.render();
   }
 
@@ -42,7 +42,7 @@ export class TextFilterPanel {
           <div class="mt-4 px-4">
             <div class="flex items-start">
               <div class="flex items-center h-5">
-                <input id="includeInPath" name="textFilterCheckbox" type="checkbox" value="includeInPath" class="h-4 w-4 border-gray-300 rounded" disabled>
+                <input disabled id="includeInPath" name="textFilterCheckbox" type="checkbox" value="includeInPath" class="h-4 w-4 border-gray-300 rounded">
               </div>
               <div class="ml-3 text-sm">
                 <label for="includeInPath" class="font-medium text-gray-700 cursor-pointer">Include related libraries</label>
@@ -55,13 +55,6 @@ export class TextFilterPanel {
     return render.content.firstChild as HTMLElement;
   }
 
-  private emitChanges() {
-    this.changesSubject.next({
-      text: this.textInput.value.toLowerCase(),
-      includeInPath: this.includeInPathCheckbox.checked,
-    });
-  }
-
   private render() {
     removeChildrenFromContainer(this.container);
 
@@ -72,7 +65,10 @@ export class TextFilterPanel {
 
     this.textInput = element.querySelector('input[type="text"]');
     this.textInput.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter') this.emitChanges();
+      if (event.key === 'Enter') {
+        this.send({ type: 'filterByText', search: this.textInput.value });
+      }
+
       if (!!this.textInput.value.length) {
         resetInputElement.classList.remove('hidden');
         this.includeInPathCheckbox.disabled = false;
@@ -82,19 +78,22 @@ export class TextFilterPanel {
       }
     });
 
-    this.subscriptions.push(
-      fromEvent(this.textInput, 'keyup')
-        .pipe(
-          filter((event: KeyboardEvent) => event.key !== 'Enter'),
-          debounceTime(500),
-          map(() => this.emitChanges())
+    fromEvent(this.textInput, 'keyup')
+      .pipe(
+        filter((event: KeyboardEvent) => event.key !== 'Enter'),
+        debounceTime(500),
+        map(() =>
+          this.send({ type: 'filterByText', search: this.textInput.value })
         )
-        .subscribe()
-    );
+      )
+      .subscribe();
 
     this.includeInPathCheckbox = element.querySelector('#includeInPath');
     this.includeInPathCheckbox.addEventListener('change', () =>
-      this.emitChanges()
+      this.send({
+        type: 'setIncludeProjectsByPath',
+        includeProjectsByPath: this.includeInPathCheckbox.checked,
+      })
     );
 
     resetInputElement.addEventListener('click', () => {
@@ -102,7 +101,7 @@ export class TextFilterPanel {
       this.includeInPathCheckbox.checked = false;
       this.includeInPathCheckbox.disabled = true;
       resetInputElement.classList.add('hidden');
-      this.emitChanges();
+      this.send([{ type: 'clearTextFilter' }]);
     });
 
     this.container.appendChild(element);

@@ -1,35 +1,24 @@
 import type { ProjectGraphNode } from '@nrwl/devkit';
-import { Subject } from 'rxjs';
+import { useDepGraphService } from '../machines/dep-graph.service';
+import { DepGraphSend } from '../machines/interfaces';
 import {
   parseParentDirectoriesFromPilePath,
   removeChildrenFromContainer,
 } from '../util';
 
 export class ProjectList {
-  private focusProjectSubject = new Subject<string>();
-  private checkedProjectsChangeSubject = new Subject<string[]>();
-  private selectedItems: Record<string, HTMLElement> = {};
-  checkedProjectsChange$ = this.checkedProjectsChangeSubject.asObservable();
-  focusProject$ = this.focusProjectSubject.asObservable();
+  private projectItems: Record<string, HTMLElement> = {};
 
-  private _projects: ProjectGraphNode[] = [];
-
-  set projects(projects: ProjectGraphNode[]) {
-    this._projects = projects;
-
-    const previouslyCheckedProjects = Object.values(this.selectedItems)
-      .filter((checkbox) => checkbox.dataset['active'] === 'true')
-      .map((checkbox) => checkbox.dataset['project']);
-    this.render();
-    this.selectProjects(previouslyCheckedProjects);
-  }
-
-  get projects(): ProjectGraphNode[] {
-    return this._projects;
-  }
+  private send: DepGraphSend;
 
   constructor(private container: HTMLElement) {
-    this.render();
+    const [state$, send] = useDepGraphService();
+    this.send = send;
+
+    state$.subscribe((state) => {
+      this.render(state.context.projects, state.context.workspaceLayout);
+      this.setSelectedProjects(state.context.selectedProjects);
+    });
   }
 
   private static renderHtmlItemTemplate(): HTMLElement {
@@ -60,63 +49,49 @@ export class ProjectList {
     return render.content.firstChild as HTMLElement;
   }
 
-  selectProjects(projects: string[]) {
-    projects.forEach((projectName) => {
-      if (!!this.selectedItems[projectName]) {
-        this.selectedItems[projectName].dataset['active'] = 'true';
-        this.selectedItems[projectName].dispatchEvent(
-          new CustomEvent('change')
-        );
-      }
-    });
-    this.emitChanges();
-  }
-
-  setCheckedProjects(selectedProjects: string[]) {
-    Object.keys(this.selectedItems).forEach((projectName) => {
-      this.selectedItems[projectName].dataset['active'] = selectedProjects
+  setSelectedProjects(selectedProjects: string[]) {
+    Object.keys(this.projectItems).forEach((projectName) => {
+      this.projectItems[projectName].dataset['active'] = selectedProjects
         .includes(projectName)
         .toString();
-      this.selectedItems[projectName].dispatchEvent(new CustomEvent('change'));
+      this.projectItems[projectName].dispatchEvent(new CustomEvent('change'));
     });
   }
 
   checkAllProjects() {
-    Object.values(this.selectedItems).forEach((item) => {
-      item.dataset['active'] = 'true';
-      item.dispatchEvent(new CustomEvent('change'));
-    });
+    this.send({ type: 'selectAll' });
   }
 
   uncheckAllProjects() {
-    Object.values(this.selectedItems).forEach((item) => {
-      item.dataset['active'] = 'false';
-      item.dispatchEvent(new CustomEvent('change'));
-    });
+    this.send({ type: 'deselectAll' });
   }
 
   uncheckProject(projectName: string) {
-    this.selectedItems[projectName].dataset['active'] = 'false';
-    this.selectedItems[projectName].dispatchEvent(new CustomEvent('change'));
+    this.send({ type: 'deselectProject', projectName });
   }
 
-  private emitChanges() {
-    const changes = Object.values(this.selectedItems)
-      .filter((item) => item.dataset['active'] === 'true')
-      .map((item) => item.dataset['project']);
-    this.checkedProjectsChangeSubject.next(changes);
-  }
-
-  private render() {
+  private render(
+    projects: ProjectGraphNode[],
+    workspaceLayout: { appsDir: string; libsDir: string }
+  ) {
     removeChildrenFromContainer(this.container);
 
-    const appProjects = this.getProjectsByType('app');
-    const libProjects = this.getProjectsByType('lib');
-    const e2eProjects = this.getProjectsByType('e2e');
+    const appProjects = this.getProjectsByType('app', projects);
+    const libProjects = this.getProjectsByType('lib', projects);
+    const e2eProjects = this.getProjectsByType('e2e', projects);
 
-    const appDirectoryGroups = this.groupProjectsByDirectory(appProjects);
-    const libDirectoryGroups = this.groupProjectsByDirectory(libProjects);
-    const e2eDirectoryGroups = this.groupProjectsByDirectory(e2eProjects);
+    const appDirectoryGroups = this.groupProjectsByDirectory(
+      appProjects,
+      workspaceLayout
+    );
+    const libDirectoryGroups = this.groupProjectsByDirectory(
+      libProjects,
+      workspaceLayout
+    );
+    const e2eDirectoryGroups = this.groupProjectsByDirectory(
+      e2eProjects,
+      workspaceLayout
+    );
 
     const sortedAppDirectories = Object.keys(appDirectoryGroups).sort();
     const sortedLibDirectories = Object.keys(libDirectoryGroups).sort();
@@ -153,20 +128,23 @@ export class ProjectList {
     });
   }
 
-  private getProjectsByType(type) {
-    return this.projects
+  private getProjectsByType(type: string, projects: ProjectGraphNode[]) {
+    return projects
       .filter((project) => project.type === type)
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  private groupProjectsByDirectory(projects: ProjectGraphNode[]) {
+  private groupProjectsByDirectory(
+    projects: ProjectGraphNode[],
+    workspaceLayout: { appsDir: string; libsDir: string }
+  ) {
     let groups = {};
 
     projects.forEach((project) => {
       const workspaceRoot =
         project.type === 'app' || project.type === 'e2e'
-          ? window.workspaceLayout.appsDir
-          : window.workspaceLayout.libsDir;
+          ? workspaceLayout.appsDir
+          : workspaceLayout.libsDir;
       const directories = parseParentDirectoriesFromPilePath(
         project.data.root,
         workspaceRoot
@@ -203,7 +181,7 @@ export class ProjectList {
       );
       const focusButtonElement: HTMLElement = element.querySelector('button');
       focusButtonElement.addEventListener('click', () =>
-        this.focusProjectSubject.next(project.name)
+        this.send({ type: 'focusProject', projectName: project.name })
       );
 
       const projectNameElement: HTMLElement = element.querySelector('label');
@@ -214,12 +192,19 @@ export class ProjectList {
 
       projectNameElement.addEventListener('click', (event) => {
         const el = event.target as HTMLElement;
-        el.dataset['active'] =
-          el.dataset['active'] === 'false' ? 'true' : 'false';
-        el.dispatchEvent(new CustomEvent('change'));
-
-        this.emitChanges();
+        if (el.dataset['active'] === 'true') {
+          this.send({
+            type: 'deselectProject',
+            projectName: el.dataset['project'],
+          });
+        } else {
+          this.send({
+            type: 'selectProject',
+            projectName: el.dataset['project'],
+          });
+        }
       });
+
       projectNameElement.addEventListener('change', (event) => {
         const el = event.target as HTMLElement;
         if (el.dataset['active'] === 'false') {
@@ -231,7 +216,7 @@ export class ProjectList {
         projectNameElement.dispatchEvent(new Event('click'));
       });
 
-      this.selectedItems[project.name] = projectNameElement;
+      this.projectItems[project.name] = projectNameElement;
 
       formGroup.append(element);
     });
