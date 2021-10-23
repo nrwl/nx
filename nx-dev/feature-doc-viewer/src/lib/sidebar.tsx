@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import { Selector } from '@nrwl/nx-dev/ui/common';
 import { useSelectedFlavor } from '@nrwl/nx-dev/feature-flavor-selection';
 import {
+  useActiveFlavor,
   useActiveVersion,
   useFlavors,
   useVersions,
@@ -32,7 +33,7 @@ export function createNextPath(
 
 export function Sidebar({ menu, navIsOpen }: SidebarProps) {
   const version = useActiveVersion();
-  const flavor = useActiveVersion();
+  const flavor = useActiveFlavor();
   const { setSelectedFlavor } = useSelectedFlavor();
   const flavorList = useFlavors();
   const versionList = useVersions();
