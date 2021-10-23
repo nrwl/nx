@@ -57,7 +57,7 @@ export function Node() {
   ];
   const router = useRouter();
 
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
 
   return (
@@ -98,8 +98,8 @@ export function Node() {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'Node',
-          value: storedFlavor || 'n',
+          name: selectedFlavor || 'Node',
+          value: selectedFlavor || 'n',
         }}
         version={{
           name: storedVersion || 'Latest',

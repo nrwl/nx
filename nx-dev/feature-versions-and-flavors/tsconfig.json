@@ -8,8 +8,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "lib": ["dom"]
+    "noFallthroughCasesInSwitch": true
   },
   "files": [],
   "include": [],

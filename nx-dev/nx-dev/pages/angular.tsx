@@ -14,7 +14,7 @@ import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 export function AngularPage() {
   const router = useRouter();
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
     <>
@@ -57,8 +57,8 @@ export function AngularPage() {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'Angular',
-          value: storedFlavor || 'a',
+          name: selectedFlavor || 'Angular',
+          value: selectedFlavor || 'a',
         }}
         version={{
           name: storedVersion || 'Latest',

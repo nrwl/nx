@@ -2,22 +2,21 @@ import React, { useCallback, useState } from 'react';
 import cx from 'classnames';
 import Link from 'next/link';
 import {
-  FlavorMetadata,
   Menu,
   MenuItem,
   MenuSection,
-  VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
 import { Selector } from '@nrwl/nx-dev/ui/common';
-import { useStorage } from '@nrwl/nx-dev/feature-storage';
+import { useSelectedFlavor } from '@nrwl/nx-dev/feature-flavor-selection';
+import {
+  useActiveVersion,
+  useFlavors,
+  useVersions,
+} from '@nrwl/nx-dev/feature-versions-and-flavors';
 
 export interface SidebarProps {
   menu: Menu;
-  version: VersionMetadata;
-  versionList: VersionMetadata[];
-  flavorList: FlavorMetadata[];
-  flavor: FlavorMetadata;
   navIsOpen?: boolean;
 }
 
@@ -31,16 +30,12 @@ export function createNextPath(
   return `/${version}/${flavor}/${genericPath}`;
 }
 
-export function Sidebar({
-  flavor,
-  flavorList,
-  version,
-  versionList,
-  menu,
-  navIsOpen,
-}: SidebarProps) {
-  const { setValue: setStoredFlavor } = useStorage('flavor');
-  const { setValue: setStoredVersion } = useStorage('version');
+export function Sidebar({ menu, navIsOpen }: SidebarProps) {
+  const version = useActiveVersion();
+  const flavor = useActiveVersion();
+  const { setSelectedFlavor } = useSelectedFlavor();
+  const flavorList = useFlavors();
+  const versionList = useVersions();
   const router = useRouter();
   return (
     <div
@@ -58,29 +53,32 @@ export function Sidebar({
         <div className="hidden lg:block h-12 pointer-events-none absolute inset-x-0 z-10 bg-gradient-to-b from-white" />
         <div className="px-1 pt-6 sm:px-3 xl:px-5 lg:pt-10">
           <Selector
-            data={versionList.map((version) => ({
+            items={versionList.map((version) => ({
               label: version.name,
               value: version.alias,
             }))}
             selected={{ label: version.name, value: version.alias }}
             onChange={(item) =>
-              router
-                .push(createNextPath(item.value, flavor.alias, router.asPath))
-                .then((success) => success && setStoredVersion(item.value))
+              router.push(
+                createNextPath(item.value, flavor.alias, router.asPath)
+              )
             }
           />
         </div>
         <div className="px-1 pt-3 sm:px-3 xl:px-5">
           <Selector
-            data={flavorList.map((flavor) => ({
+            items={flavorList.map((flavor) => ({
               label: flavor.name,
               value: flavor.alias,
+              data: flavor,
             }))}
             selected={{ label: flavor.name, value: flavor.alias }}
             onChange={(item) =>
               router.push(
                 createNextPath(version.alias, item.value, router.asPath)
-              ) && setStoredFlavor(item.value)
+              ) &&
+              item.data &&
+              setSelectedFlavor(item.data)
             }
           />
         </div>

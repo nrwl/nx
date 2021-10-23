@@ -28,7 +28,7 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
 }
 
 export function Community(props: CommunityProps) {
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
 
   return (
@@ -66,8 +66,8 @@ export function Community(props: CommunityProps) {
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: selectedFlavor || 'react',
+          value: selectedFlavor || 'react',
         }}
         version={{
           name: storedVersion || 'Latest',

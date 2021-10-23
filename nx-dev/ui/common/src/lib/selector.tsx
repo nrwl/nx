@@ -2,14 +2,13 @@ import React, { Fragment } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, SelectorIcon } from '@heroicons/react/solid';
 
-/* eslint-disable-next-line */
-export interface SelectorProps {
-  data: { label: string; value: string }[];
+export interface SelectorProps<T> {
+  items: { label: string; value: string; data?: T }[];
   selected: { label: string; value: string };
-  onChange: (item: { label: string; value: string }) => void;
+  onChange: (item: { label: string; value: string; data?: T }) => void;
 }
 
-export function Selector(props: SelectorProps) {
+export function Selector<T = {}>(props: SelectorProps<T>) {
   return (
     <div className="w-full">
       <Listbox
@@ -42,7 +41,7 @@ export function Selector(props: SelectorProps) {
                   static
                   className="absolute w-full py-1 mt-1 overflow-auto text-base bg-white rounded-sm shadow-md max-h-60 focus:outline-none sm:text-sm z-10"
                 >
-                  {props.data.map((item, personIdx) => (
+                  {props.items.map((item, personIdx) => (
                     <Listbox.Option
                       key={personIdx}
                       className={({ active }) =>

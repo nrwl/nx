@@ -7,7 +7,7 @@ describe('Selector', () => {
   it('should render successfully', () => {
     const { baseElement } = render(
       <Selector
-        data={[
+        items={[
           { label: 'Latest', value: 'latest' },
           { label: 'Previous', value: 'previous' },
         ]}

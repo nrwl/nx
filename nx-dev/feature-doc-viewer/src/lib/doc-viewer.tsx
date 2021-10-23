@@ -65,8 +65,6 @@ export function DocViewer({
             menu={menu}
             version={version}
             flavor={flavor}
-            flavorList={flavorList}
-            versionList={versionList}
             navIsOpen={navIsOpen}
           />
           <div
