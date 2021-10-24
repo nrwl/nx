@@ -1179,7 +1179,7 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
-            "name": "Distributed CI: Overview",
+            "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
           },
@@ -2483,7 +2483,7 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
-            "name": "Distributed CI: Overview",
+            "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
           },
@@ -3728,7 +3728,7 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
-            "name": "Distributed CI: Overview",
+            "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
           },
