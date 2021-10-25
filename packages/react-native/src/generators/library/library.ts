@@ -143,7 +143,10 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
     const { libsDir } = getWorkspaceLayout(host);
 
     c.paths[options.importPath] = [
-      maybeJs(options, `${libsDir}/${options.projectDirectory}/src/index.ts`),
+      maybeJs(
+        options,
+        joinPathFragments(libsDir, `${options.projectDirectory}/src/index.ts`)
+      ),
     ];
 
     return json;

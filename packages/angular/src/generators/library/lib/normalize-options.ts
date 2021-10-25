@@ -1,4 +1,4 @@
-import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
+import { getWorkspaceLayout, joinPathFragments, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';
@@ -31,7 +31,7 @@ export function normalizeOptions(
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = options.simpleModuleName ? name : projectName;
-  const projectRoot = `${libsDir}/${projectDirectory}`;
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags

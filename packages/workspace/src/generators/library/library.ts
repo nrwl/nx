@@ -226,7 +226,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
 
   const { libsDir, npmScope } = getWorkspaceLayout(tree);
 
-  const projectRoot = `${libsDir}/${projectDirectory}`;
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
