@@ -33,7 +33,8 @@ export function createWebpackConfig(
   fileReplacements: FileReplacement[] = [],
   assets: any = null,
   nxConfigOptions: WebpackConfigOptions = {},
-  dependencies: DependentBuildableProjectNode[] = []
+  dependencies: DependentBuildableProjectNode[] = [],
+  libsDir = ''
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
@@ -85,6 +86,7 @@ export function createWebpackConfig(
 
     config.module.rules.push({
       test: /\.([jt])sx?$/,
+      include: [libsDir],
       exclude: /node_modules/,
       use: [defaultLoaders.babel],
     });
@@ -150,10 +152,12 @@ export async function prepareConfig(
     | typeof PHASE_PRODUCTION_SERVER,
   options: NextBuildBuilderOptions,
   context: ExecutorContext,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
+  libsDir: string
 ) {
   const config = (await loadConfig(phase, options.root, null)) as NextConfig &
     WithNxOptions;
+
   const userWebpack = config.webpack;
   const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
   // Yes, these do have different capitalisation...
@@ -169,7 +173,8 @@ export async function prepareConfig(
       options.fileReplacements,
       options.assets,
       config.nx,
-      dependencies
+      dependencies,
+      libsDir
     )(userWebpack ? userWebpack(a, b) : a, b);
 
   if (typeof userNextConfig !== 'function') {

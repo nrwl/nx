@@ -27,6 +27,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { importConstants } from '../../utils/require-shim';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
 const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_SERVER } = importConstants();
 
@@ -51,6 +52,7 @@ export default async function* serveExecutor(
   );
 
   const root = resolve(context.root, buildOptions.root);
+  const libsDir = join(context.root, workspaceLayout().libsDir);
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
       readCachedProjectGraph(),
@@ -68,7 +70,8 @@ export default async function* serveExecutor(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
     buildOptions,
     context,
-    dependencies
+    dependencies,
+    libsDir
   );
 
   const settings: NextServerOptions = {
