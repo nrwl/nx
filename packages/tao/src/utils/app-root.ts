@@ -9,6 +9,7 @@ function pathInner(dir: string): string {
   if (path.dirname(dir) === dir) return process.cwd();
   if (
     fileExists(path.join(dir, 'workspace.json')) ||
+    fileExists(path.join(dir, 'nx.json')) ||
     fileExists(path.join(dir, 'angular.json'))
   ) {
     return dir;

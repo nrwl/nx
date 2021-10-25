@@ -1,11 +1,11 @@
-import * as path from 'path';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+
+import { performance } from 'perf_hooks';
+import { execSync } from 'child_process';
+
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
-import { performance } from 'perf_hooks';
-import { readJsonFile } from '@nrwl/tao/src/utils/fileutils';
-import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-import { execSync } from 'child_process';
 
 /**
  * Nx is being run inside a workspace.
@@ -114,20 +114,13 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const workspaceConfigJson = resolveNewFormatWithInlineProjects(
-      readJsonFile(
-        path.join(
-          workspace.dir,
-          workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
-        )
-      )
-    );
-    const nxJson = readJsonFile(path.join(workspace.dir, 'nx.json'));
+    const workspaceConfig = new Workspaces(
+      workspace.dir
+    ).readWorkspaceConfiguration();
 
     return parseRunOneOptions(
       workspace.dir,
-      workspaceConfigJson,
-      nxJson,
+      workspaceConfig,
       process.argv.slice(2)
     );
   } catch {

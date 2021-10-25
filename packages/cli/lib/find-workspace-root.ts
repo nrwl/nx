@@ -13,7 +13,7 @@ export function findWorkspaceRoot(dir: string): Workspace | null {
     return { type: 'angular', dir };
   }
 
-  if (existsSync(path.join(dir, 'workspace.json'))) {
+  if (existsSync(path.join(dir, 'nx.json'))) {
     return { type: 'nx', dir };
   }
 

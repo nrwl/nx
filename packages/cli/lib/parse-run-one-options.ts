@@ -1,11 +1,14 @@
 import yargsParser = require('yargs-parser');
 import * as fs from 'fs';
+import type {
+  WorkspaceJsonConfiguration,
+  NxJsonConfiguration,
+} from '@nrwl/devkit';
 
 function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  workspaceConfiguration: any,
-  nxJson
+  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {
@@ -24,8 +27,9 @@ function calculateDefaultProjectName(
     if (matchingProject) return matchingProject;
   }
   return (
-    nxJson.cli?.defaultProjectName ||
-    nxJson.defaultProject ||
+    (workspaceConfiguration.cli as { defaultProjectName: string })
+      ?.defaultProjectName ||
+    workspaceConfiguration.defaultProject ||
     workspaceConfiguration.defaultProject
   );
 }
@@ -62,15 +66,13 @@ const invalidTargetNames = [
 
 export function parseRunOneOptions(
   root: string,
-  workspaceJsonConfiguration: any,
-  nxJson: any,
+  workspaceConfiguration: any,
   args: string[]
 ): false | { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     process.cwd(),
     root,
-    workspaceJsonConfiguration,
-    nxJson
+    workspaceConfiguration,
   );
 
   const parsedArgs = yargsParser(args, {
@@ -116,8 +118,8 @@ export function parseRunOneOptions(
 
   // we need both to be able to run a target, no tasks runner
   const p =
-    workspaceJsonConfiguration.projects &&
-    workspaceJsonConfiguration.projects[project];
+    workspaceConfiguration.projects &&
+    workspaceConfiguration.projects[project];
   if (!p) return false;
 
   let targets;
