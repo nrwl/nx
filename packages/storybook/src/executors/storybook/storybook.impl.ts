@@ -1,14 +1,7 @@
 import 'dotenv/config';
 import { basename, join, sep } from 'path';
 import { tmpdir } from 'os';
-import {
-  constants,
-  copyFileSync,
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  statSync,
-} from 'fs';
+import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 
 import { buildDevStandalone } from '@storybook/core/server';
 
@@ -17,7 +10,7 @@ import {
   runStorybookSetupCheck,
   setStorybookAppProject,
 } from '../utils';
-import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import { CommonNxStorybookConfig, StorybookConfig } from '../models';
 export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   host?: string;

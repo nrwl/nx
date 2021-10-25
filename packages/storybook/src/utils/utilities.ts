@@ -20,6 +20,7 @@ export const Constants = {
     vue: '@storybook/vue',
     vue3: '@storybook/vue3',
     svelte: '@storybook/svelte',
+    'react-native': '@storybook/react-native',
   } as const,
 };
 type Constants = typeof Constants;
@@ -58,6 +59,13 @@ export function isFramework(
   }
 
   if (type === 'svelte' && schema.uiFramework === '@storybook/svelte') {
+    return true;
+  }
+
+  if (
+    type === 'react-native' &&
+    schema.uiFramework === '@storybook/react-native'
+  ) {
     return true;
   }
 

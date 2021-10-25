@@ -19,9 +19,14 @@ export function getStorybookFrameworkPath(uiFramework) {
     '@storybook/web-components':
       '@storybook/web-components/dist/cjs/server/options',
     '@storybook/svelte': '@storybook/svelte/dist/cjs/server/options',
+    '@storybook/react-native':
+      '@nrwl/react-native/plugins/storybook/server/options',
   };
 
-  if (isStorybookV62onwards(uiFramework)) {
+  if (
+    isStorybookV62onwards(uiFramework) ||
+    uiFramework === '@storybook/react-native'
+  ) {
     return serverOptionsPaths[uiFramework];
   } else {
     return `${uiFramework}/dist/server/options`;

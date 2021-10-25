@@ -346,6 +346,10 @@ function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
       workspaceStorybookVersion =
         packageJsonContents['devDependencies']['@storybook/react'];
     }
+    if (packageJsonContents['devDependencies']['@storybook/react-native']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react-native'];
+    }
     if (packageJsonContents['devDependencies']['@storybook/core']) {
       workspaceStorybookVersion =
         packageJsonContents['devDependencies']['@storybook/core'];
@@ -359,6 +363,10 @@ function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
     if (packageJsonContents['dependencies']['@storybook/react']) {
       workspaceStorybookVersion =
         packageJsonContents['dependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/react-native']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react-native'];
     }
     if (packageJsonContents['dependencies']['@storybook/core']) {
       workspaceStorybookVersion =

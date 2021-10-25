@@ -29,6 +29,7 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/react": "*",
+    "@nrwl/workspace": "*",
     "chalk": "^4.1.0",
     "ignore": "^5.0.4",
     "metro-resolver": "^0.66.2",
@@ -36,7 +37,6 @@
     "tsconfig-paths": "^3.9.0"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*",
     "react-native": "^0.66.1"
   },
   "builders": "./executors.json",
