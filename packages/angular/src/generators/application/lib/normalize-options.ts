@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, Tree } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -22,8 +22,8 @@ export function normalizeOptions(
     e2eProjectName = `${appProjectName}-e2e`;
   }
 
-  const appProjectRoot = `${appsDir}/${appDirectory}`;
-  const e2eProjectRoot = `${appsDir}/${appDirectory}-e2e`;
+  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
+  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

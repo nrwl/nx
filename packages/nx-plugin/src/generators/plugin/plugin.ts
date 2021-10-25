@@ -1,16 +1,17 @@
-import {
-  readProjectConfiguration,
-  names,
-  convertNxGenerator,
-  generateFiles,
-  getWorkspaceLayout,
-  normalizePath,
-  updateProjectConfiguration,
-  addDependenciesToPackageJson,
-  formatFiles,
-  GeneratorCallback,
-} from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  convertNxGenerator,
+  formatFiles,
+  generateFiles,
+  GeneratorCallback,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  normalizePath,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import type { Schema } from './schema';
 import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
@@ -40,7 +41,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalizePath(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

@@ -1,5 +1,3 @@
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-
 import * as ts from 'typescript';
 import { assertValidStyle } from '../../utils/assertion';
 import {
@@ -9,8 +7,8 @@ import {
   findComponentImportPath,
 } from '../../utils/ast-utils';
 import {
-  extraEslintDependencies,
   createReactEslintJson,
+  extraEslintDependencies,
 } from '../../utils/lint';
 import {
   reactDomVersion,
@@ -251,7 +249,10 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
     const { libsDir } = getWorkspaceLayout(host);
 
     c.paths[options.importPath] = [
-      maybeJs(options, `${libsDir}/${options.projectDirectory}/src/index.ts`),
+      maybeJs(
+        options,
+        joinPathFragments(libsDir, `${options.projectDirectory}/src/index.ts`)
+      ),
     ];
 
     return json;
@@ -380,7 +381,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
   const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
