@@ -24,6 +24,8 @@ export async function startInBackground(): Promise<ChildProcess['pid']> {
       cwd: __dirname,
       stdio: ['ignore', out, err],
       detached: true,
+      windowsHide: true,
+      shell: false,
     });
     backgroundProcess.unref();
 
