@@ -4,7 +4,7 @@ const withNx = require('@nrwl/next/plugins/with-nx');
 <% if (style === 'less') { %>
 // This plugin is needed until this PR is merged.
 // https://github.com/vercel/next.js/pull/23185
-const withLess = require('next-with-less');
+const withLess = require('@nrwl/next/plugins/with-less');
 
 /**
  * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}

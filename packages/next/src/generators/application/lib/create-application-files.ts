@@ -39,6 +39,11 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host.delete(`${options.appProjectRoot}/specs/${options.fileName}.spec.tsx`);
   }
 
+  // SWC will be disabled if custom babelrc is provided.
+  if (options.swc) {
+    host.delete(`${options.appProjectRoot}/.babelrc`);
+  }
+
   if (options.styledModule) {
     host.delete(
       `${options.appProjectRoot}/pages/${options.fileName}.module.${options.style}`
