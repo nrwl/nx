@@ -438,6 +438,11 @@
             "file": "angular/api-angular/generators/library"
           },
           {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "angular/api-angular/generators/library-secondary-entry-point"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "angular/api-angular/generators/move"
@@ -1736,6 +1741,11 @@
             "file": "react/api-angular/generators/library"
           },
           {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "react/api-angular/generators/library-secondary-entry-point"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "react/api-angular/generators/move"
@@ -2996,6 +3006,11 @@
             "name": "library generator",
             "id": "library",
             "file": "node/api-angular/generators/library"
+          },
+          {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "node/api-angular/generators/library-secondary-entry-point"
           },
           {
             "name": "move generator",
