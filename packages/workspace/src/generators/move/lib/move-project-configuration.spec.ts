@@ -18,7 +18,7 @@ describe('moveProjectConfiguration', () => {
     schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
-      importPath: '@proj/subfolder-my-destination',
+      importPath: '@proj/subfolder/my-destination',
       updateImportPath: true,
       newProjectName: 'subfolder-my-destination',
       relativeToRootDestination: 'apps/subfolder/my-destination',
@@ -213,7 +213,7 @@ describe('moveProjectConfiguration', () => {
     const moveSchema: NormalizedSchema = {
       projectName: 'standalone',
       destination: 'parent/standalone',
-      importPath: '@proj/parent-standalone',
+      importPath: '@proj/parent/standalone',
       newProjectName,
       relativeToRootDestination: 'libs/parent/standalone',
       updateImportPath: true,

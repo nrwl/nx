@@ -18,7 +18,7 @@ export function normalizeSchema(
     ...schema,
     destination,
     importPath:
-      schema.importPath ?? normalizeSlashes(`@${npmScope}/${newProjectName}`),
+      schema.importPath ?? normalizeSlashes(`@${npmScope}/${destination}`),
     newProjectName,
     relativeToRootDestination: getDestination(
       tree,

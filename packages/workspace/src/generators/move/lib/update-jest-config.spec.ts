@@ -91,7 +91,7 @@ describe('updateJestConfig', () => {
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: '@proj/other-test-dir-my-destination',
+      importPath: '@proj/other/test/dir/my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
       relativeToRootDestination: 'libs/other/test/dir/my-destination',
@@ -127,7 +127,7 @@ describe('updateJestConfig', () => {
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: '@proj/other-test-dir-my-destination',
+      importPath: '@proj/other/test/dir/my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
       relativeToRootDestination: 'libs/other/test/dir/my-destination',
@@ -166,7 +166,7 @@ module.exports = {
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: '@proj/other-test-dir-my-destination',
+      importPath: '@proj/other/test/dir/my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
       relativeToRootDestination: 'libs/other/test/dir/my-destination',
@@ -206,7 +206,7 @@ module.exports = {
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
       destination: 'other/test/dir/my-destination',
-      importPath: '@proj/other-test-dir-my-destination',
+      importPath: '@proj/other/test/dir/my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
       relativeToRootDestination: 'libs/other/test/dir/my-destination',

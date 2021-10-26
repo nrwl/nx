@@ -13,7 +13,7 @@ describe('updateReadme', () => {
     schema = {
       projectName: 'my-lib',
       destination: 'shared/my-destination',
-      importPath: '@proj/shared-my-destination',
+      importPath: '@proj/shared/my-destination',
       updateImportPath: true,
       newProjectName: 'shared-my-destination',
       relativeToRootDestination: 'libs/shared/my-destination',

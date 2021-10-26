@@ -47,7 +47,7 @@ describe('updateStorybookConfig', () => {
     const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'namespace/my-destination',
-      importPath: '@proj/namespace-my-destination',
+      importPath: '@proj/namespace/my-destination',
       updateImportPath: true,
       newProjectName: 'namespace-my-destination',
       relativeToRootDestination: 'libs/namespace/my-destination',
@@ -76,7 +76,7 @@ describe('updateStorybookConfig', () => {
     const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'namespace/my-destination',
-      importPath: '@proj/namespace-my-destination',
+      importPath: '@proj/namespace/my-destination',
       updateImportPath: true,
       newProjectName: 'namespace-my-destination',
       relativeToRootDestination: 'libs/namespace/my-destination',

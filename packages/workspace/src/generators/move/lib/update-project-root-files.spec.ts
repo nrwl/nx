@@ -31,7 +31,7 @@ describe('updateProjectRootFiles', () => {
     const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
-      importPath: '@proj/subfolder-my-destination',
+      importPath: '@proj/subfolder/my-destination',
       updateImportPath: true,
       newProjectName: 'subfolder-my-destination',
       relativeToRootDestination: 'libs/subfolder/my-destination',
