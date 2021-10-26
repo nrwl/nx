@@ -125,7 +125,11 @@ function getComponentInfoFromDir(
   for (const candidateFile of componentImportPathChildren) {
     if (candidateFile.endsWith('.ts')) {
       const content = tree.read(candidateFile, 'utf-8');
-      if (content.indexOf(`class ${componentName}`) > -1) {
+      const classAndComponentRegex = new RegExp(
+        `@Component[\\s\\S\n]*?\\bclass ${componentName}\\b`,
+        'g'
+      );
+      if (content.match(classAndComponentRegex)) {
         path = candidateFile
           .slice(0, candidateFile.lastIndexOf('/'))
           .replace(moduleFolderPath, '.');
