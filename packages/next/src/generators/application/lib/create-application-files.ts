@@ -40,7 +40,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   }
 
   // SWC will be disabled if custom babelrc is provided.
-  if (options.swc) {
+  // Check for `!== false` because `create-nx-workspace` is not passing default values.
+  if (options.swc !== false) {
     host.delete(`${options.appProjectRoot}/.babelrc`);
   }
 
