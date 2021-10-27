@@ -12,12 +12,17 @@ orbs:
 machine:
   pre:
     - mkdir ~/.cache/yarn
+    - mkdir ~/Library/Caches/Homebrew
+    - mkdir /usr/local/Homebrew
 
 dependencies:
   cache_directories:
     - ~/.cache/yarn
+    - /usr/local/Homebrew
+    - ~/Library/Caches/Homebrew
   override:
     - yarn install
+    - brew install
 
 defaults: &defaults
   working_directory: ~/repo
@@ -109,6 +114,27 @@ commands:
             - run: nvm install 14.17
             - run: nvm use 14.17
             - run: npm install -g yarn@1.22.10
+      - when:
+          condition:
+            equal: [<< parameters.os >>, macos]
+          steps:
+            - restore_cache:
+                name: Restore Homebrew packages
+                keys:
+                  - nrwl-nx-homebrew-packages
+            - run:
+                name: Configure Detox Environment, Install applesimutils
+                command: |
+                  HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+                  HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+                  xcrun simctl shutdown all && xcrun simctl erase all
+                no_output_timeout: 20m
+            - save_cache:
+                name: Save Homebrew Cache
+                key: nrwl-nx-homebrew-packages
+                paths:
+                  - /usr/local/Homebrew
+                  - ~/Library/Caches/Homebrew
 
       - run-yarn:
           os: << parameters.os >>
