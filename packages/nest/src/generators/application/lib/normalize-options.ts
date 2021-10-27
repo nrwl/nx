@@ -39,5 +39,6 @@ export function toNodeApplicationGeneratorOptions(
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
+    experimentalSwc: options.experimentalSwc,
   };
 }

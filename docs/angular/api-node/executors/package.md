@@ -48,6 +48,14 @@ Type: `boolean`
 
 Delete the output path before building.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### outputPath
 
 Type: `string`

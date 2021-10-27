@@ -28,6 +28,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 
 import { Schema } from './schema';
 import { initGenerator } from '../init/init';
+import { addSwcConfig, addSwcDevDependencies } from '../../utils/swc';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -38,18 +39,24 @@ function getBuildConfig(
   project: ProjectConfiguration,
   options: NormalizedSchema
 ): TargetConfiguration {
+  const executorOptions = {
+    outputPath: joinPathFragments('dist', options.appProjectRoot),
+    main: joinPathFragments(
+      project.sourceRoot,
+      'main' + (options.js ? '.js' : '.ts')
+    ),
+    tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+    assets: [joinPathFragments(project.sourceRoot, 'assets')],
+  } as TargetConfiguration['options'];
+
+  if (options.experimentalSwc) {
+    executorOptions.experimentalSwc = true;
+  }
+
   return {
     executor: '@nrwl/node:build',
     outputs: ['{options.outputPath}'],
-    options: {
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
-      main: joinPathFragments(
-        project.sourceRoot,
-        'main' + (options.js ? '.js' : '.ts')
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [joinPathFragments(project.sourceRoot, 'assets')],
-    },
+    options: executorOptions,
     configurations: {
       production: {
         optimization: true,
@@ -193,6 +200,11 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     skipFormat: true,
   });
   tasks.push(initTask);
+
+  if (options.experimentalSwc) {
+    addSwcConfig(tree);
+    tasks.push(addSwcDevDependencies(tree));
+  }
 
   addAppFiles(tree, options);
   addProject(tree, options);

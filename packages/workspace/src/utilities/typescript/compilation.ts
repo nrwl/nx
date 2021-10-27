@@ -1,7 +1,7 @@
 import { logger } from '@nrwl/devkit';
 import { removeSync } from 'fs-extra';
-import * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';
+import * as ts from 'typescript';
 import { readTsConfig } from '../typescript';
 
 export interface TypeScriptCompilationOptions {
@@ -12,6 +12,7 @@ export interface TypeScriptCompilationOptions {
   deleteOutputPath?: boolean;
   rootDir?: string;
   watch?: boolean;
+
   getCustomTransformers?(program: Program): CustomTransformers;
 }
 
@@ -181,7 +182,7 @@ function createProgram(
   }
 }
 
-function normalizeOptions(
+export function normalizeOptions(
   options: TypeScriptCompilationOptions
 ): TypeScriptCompilationOptions {
   return {

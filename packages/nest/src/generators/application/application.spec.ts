@@ -73,6 +73,22 @@ describe('application generator', () => {
     });
   });
 
+  describe('--experimentalSwc', () => {
+    it('should generate swcrc file', async () => {
+      await applicationGenerator(tree, {
+        name: 'mySwcNestApp',
+        experimentalSwc: true,
+      });
+
+      expect(tree.exists('.swcrc')).toBeTruthy();
+
+      const workspaceJson = devkit.readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-swc-nest-app'];
+      const buildTarget = project.architect.build;
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
+    });
+  });
+
   describe('NestJS versions', () => {
     it('should use NestJs 8 for empty workspace', async () => {
       await applicationGenerator(tree, { name: appName });

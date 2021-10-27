@@ -20,7 +20,8 @@ export default function updatePackageJson(
     packageJson.main = `${options.relativeMainFileOutput}${mainJsFile}`;
   }
 
-  if (!packageJson.typings) {
+  // TODO(chau): disable typings for SWC
+  if (!packageJson.typings && !options.experimentalSwc) {
     packageJson.typings = `${options.relativeMainFileOutput}${typingsFile}`;
   }
 

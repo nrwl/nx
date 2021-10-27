@@ -88,6 +88,7 @@ export interface BuildBuilderOptions {
 
   additionalEntryPoints?: AdditionalEntryPoint[];
   outputFileName?: string;
+  experimentalSwc?: boolean;
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {

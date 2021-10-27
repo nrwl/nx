@@ -29,6 +29,7 @@ export interface LibraryGeneratorOptions {
   unitTestRunner?: UnitTestRunner;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
+  experimentalSwc?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

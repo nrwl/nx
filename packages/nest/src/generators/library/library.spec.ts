@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -368,6 +368,21 @@ describe('lib', () => {
       expect(
         tree.read(`libs/${libFileName}/jest.config.js`, 'utf-8')
       ).toMatchSnapshot();
+    });
+  });
+
+  describe('--experimentalSwc', () => {
+    it('should set  build.options.experimentalSwc to true for buildable', async () => {
+      await libraryGenerator(tree, {
+        name: libName,
+        experimentalSwc: true,
+        buildable: true,
+      });
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      const project = workspaceJson.projects[libFileName];
+      const buildTarget = project.architect.build;
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
     });
   });
 });

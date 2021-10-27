@@ -48,6 +48,14 @@ Type: `boolean`
 
 Read buildable libraries from source instead of building them separately.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### externalDependencies
 
 Default: `all`

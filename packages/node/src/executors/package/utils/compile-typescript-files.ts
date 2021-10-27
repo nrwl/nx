@@ -16,6 +16,7 @@ import type {
   SourceFile,
   TransformerFactory,
 } from 'typescript';
+import { execSwc } from './swc';
 
 export default async function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
@@ -34,9 +35,26 @@ export default async function compileTypeScriptFiles(
     );
   }
 
-  const { compilerPluginHooks } = loadTsPlugins(options.tsPlugins);
+  const tscOptions = {
+    outputPath: options.normalizedOutputPath,
+    projectName: context.projectName,
+    projectRoot: libRoot,
+    tsConfig: tsConfigPath,
+    deleteOutputPath: options.deleteOutputPath,
+    rootDir: options.srcRootForCompilationRoot,
+    watch: options.watch,
+  };
 
-  const getCustomTransformers = (program: Program): CustomTransformers => ({
+  if (options.experimentalSwc) {
+    return execSwc(tscOptions, async () => {
+      await postCompleteAction();
+    });
+  }
+
+  const { compilerPluginHooks } = loadTsPlugins(options.tsPlugins);
+  tscOptions['getCustomTransformers'] = (
+    program: Program
+  ): CustomTransformers => ({
     before: compilerPluginHooks.beforeHooks.map(
       (hook) => hook(program) as TransformerFactory<SourceFile>
     ),
@@ -48,27 +66,16 @@ export default async function compileTypeScriptFiles(
     ),
   });
 
-  const tcsOptions = {
-    outputPath: options.normalizedOutputPath,
-    projectName: context.projectName,
-    projectRoot: libRoot,
-    tsConfig: tsConfigPath,
-    deleteOutputPath: options.deleteOutputPath,
-    rootDir: options.srcRootForCompilationRoot,
-    watch: options.watch,
-    getCustomTransformers,
-  };
-
   if (options.watch) {
-    return compileTypeScriptWatcher(tcsOptions, async (d) => {
+    return compileTypeScriptWatcher(tscOptions, async (d) => {
       // Means tsc found 0 errors, in watch mode. https://github.com/microsoft/TypeScript/blob/main/src/compiler/diagnosticMessages.json
       if (d.code === 6194) {
         await postCompleteAction();
       }
     });
-  } else {
-    const result = compileTypeScript(tcsOptions);
-    await postCompleteAction();
-    return result;
   }
+
+  const result = compileTypeScript(tscOptions);
+  await postCompleteAction();
+  return result;
 }

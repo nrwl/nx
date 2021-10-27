@@ -6,13 +6,14 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
 import { loadTsPlugins } from './load-ts-plugins';
-import CopyWebpackPlugin = require('copy-webpack-plugin');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Inlining tsconfig-paths-webpack-plugin with a patch
 // See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
 // TODO(jack): Remove once the patch lands in original package
 import TsConfigPathsPlugin from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
+import { getSwcRuleLoader } from './swc';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export const OUT_FILENAME_TEMPLATE = '[name].js';
 
@@ -26,7 +27,29 @@ export function getBaseWebpackPartial(
   const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 
-  const { compilerPluginHooks, hasPlugin } = loadTsPlugins(options.tsPlugins);
+  let transpileRuleLoader: { loader: string; options?: object };
+
+  if (options.experimentalSwc) {
+    transpileRuleLoader = getSwcRuleLoader();
+  } else {
+    const { compilerPluginHooks, hasPlugin } = loadTsPlugins(options.tsPlugins);
+    transpileRuleLoader = {
+      loader: require.resolve(`ts-loader`),
+      options: {
+        configFile: options.tsConfig,
+        transpileOnly: !hasPlugin,
+        // https://github.com/TypeStrong/ts-loader/pull/685
+        experimentalWatchApi: true,
+        getCustomTransformers: (program) => ({
+          before: compilerPluginHooks.beforeHooks.map((hook) => hook(program)),
+          after: compilerPluginHooks.afterHooks.map((hook) => hook(program)),
+          afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
+            (hook) => hook(program)
+          ),
+        }),
+      },
+    };
+  }
 
   const additionalEntryPoints =
     options.additionalEntryPoints?.reduce(
@@ -59,25 +82,8 @@ export function getBaseWebpackPartial(
       rules: [
         {
           test: /\.([jt])sx?$/,
-          loader: require.resolve(`ts-loader`),
           exclude: /node_modules/,
-          options: {
-            configFile: options.tsConfig,
-            transpileOnly: !hasPlugin,
-            // https://github.com/TypeStrong/ts-loader/pull/685
-            experimentalWatchApi: true,
-            getCustomTransformers: (program) => ({
-              before: compilerPluginHooks.beforeHooks.map((hook) =>
-                hook(program)
-              ),
-              after: compilerPluginHooks.afterHooks.map((hook) =>
-                hook(program)
-              ),
-              afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
-                (hook) => hook(program)
-              ),
-            }),
-          },
+          ...transpileRuleLoader,
         },
       ],
     },

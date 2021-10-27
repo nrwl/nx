@@ -25,5 +25,10 @@ export function addProject(tree: Tree, options: NormalizedOptions): void {
       assets: [`${options.projectRoot}/*.md`],
     },
   };
+
+  if (options.experimentalSwc) {
+    project.targets.build.options.experimentalSwc = true;
+  }
+
   updateProjectConfiguration(tree, options.projectName, project);
 }

@@ -132,4 +132,20 @@ Object {
       ]);
     });
   });
+
+  describe('--experimentalSwc flag', () => {
+    it('should generate swcrc file', async () => {
+      await applicationGenerator(appTree, {
+        name: 'swcExpressApp',
+        experimentalSwc: true,
+      } as Schema);
+
+      expect(appTree.exists('.swcrc')).toBeTruthy();
+
+      const workspaceJson = readJson(appTree, 'workspace.json');
+      const project = workspaceJson.projects['swc-express-app'];
+      const buildTarget = project.architect.build;
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
+    });
+  });
 });

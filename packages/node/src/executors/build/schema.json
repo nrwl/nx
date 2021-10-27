@@ -159,6 +159,11 @@
       "type": "string",
       "description": "Name of the main output file. (defaults to 'main.js')",
       "default": "main.js"
+    },
+    "experimentalSwc": {
+      "type": "boolean",
+      "description": "Use swc as TypeScript loader instead of tsc and babel",
+      "default": false
     }
   },
   "required": ["tsConfig", "main"],

@@ -66,6 +66,14 @@ Type: `string`
 
 A directory where the library is placed.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### global
 
 Default: `false`

@@ -18,6 +18,7 @@ export interface NodePackageBuilderOptions {
   deleteOutputPath: boolean;
   cli?: boolean;
   tsPlugins?: TsPluginEntry[];
+  experimentalSwc?: boolean;
 }
 
 export interface NormalizedBuilderOptions extends NodePackageBuilderOptions {

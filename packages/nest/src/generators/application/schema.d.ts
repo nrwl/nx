@@ -12,6 +12,7 @@ export interface ApplicationGeneratorOptions {
   tags?: string;
   unitTestRunner?: UnitTestRunner;
   setParserOptionsProject?: boolean;
+  experimentalSwc?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {

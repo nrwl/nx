@@ -60,5 +60,6 @@ export function toNodeLibraryGeneratorOptions(
     unitTestRunner: options.unitTestRunner,
     standaloneConfig: options.standaloneConfig,
     setParserOptionsProject: options.setParserOptionsProject,
+    experimentalSwc: options.experimentalSwc,
   };
 }

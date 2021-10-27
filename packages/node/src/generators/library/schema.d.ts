@@ -20,4 +20,5 @@ export interface Schema {
   strict?: boolean;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
+  experimentalSwc?: boolean;
 }

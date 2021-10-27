@@ -1,4 +1,4 @@
-import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { getProjects, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Schema } from './schema.d';
@@ -546,6 +546,22 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
       ).toBeFalsy();
+    });
+  });
+
+  describe('--experimentalSwc', () => {
+    it('should set  build.options.experimentalSwc to true for buildable', async () => {
+      await libraryGenerator(tree, {
+        name: 'mySwcLib',
+        buildable: true,
+        experimentalSwc: true,
+      });
+
+      const workspaceJson = readJson(tree, '/workspace.json');
+      const project = workspaceJson.projects['my-swc-lib'];
+      const buildTarget = project.architect.build;
+
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
     });
   });
 });

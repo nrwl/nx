@@ -1,5 +1,5 @@
-import { NxJsonConfiguration, readJson, Tree, getProjects } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
+import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 // nx-ignore-next-line
@@ -455,6 +455,43 @@ describe('app', () => {
       await applicationGenerator(tree, { name: 'myNodeApp', skipFormat: true });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('--experimentalSwc', () => {
+    it('should generate swcrc file', async () => {
+      await applicationGenerator(tree, {
+        name: 'mySwcNodeApp',
+        experimentalSwc: true,
+      });
+
+      expect(tree.exists('.swcrc')).toBeTruthy();
+    });
+
+    it('should set  build.options.experimentalSwc to true', async () => {
+      await applicationGenerator(tree, {
+        name: 'mySwcNodeApp',
+        experimentalSwc: true,
+      });
+
+      const workspaceJson = readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-swc-node-app'];
+      const buildTarget = project.architect.build;
+
+      expect(buildTarget.options.experimentalSwc).toEqual(true);
+    });
+
+    it('should have swc dependencies in package.json', async () => {
+      await applicationGenerator(tree, {
+        name: 'mySwcNodeApp',
+        experimentalSwc: true,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      const dependencies = packageJson.devDependencies;
+      expect(dependencies['@swc/core']).toBeTruthy();
+      expect(dependencies['@swc/helpers']).toBeTruthy();
+      expect(dependencies['swc-loader']).toBeTruthy();
     });
   });
 });

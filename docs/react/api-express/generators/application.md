@@ -42,6 +42,14 @@ Type: `string`
 
 The directory of the new application.
 
+### experimentalSwc
+
+Default: `false`
+
+Type: `boolean`
+
+Use swc as TypeScript loader instead of tsc and babel
+
 ### frontendProject
 
 Type: `string`

@@ -676,7 +676,9 @@ describe('with dependencies', () => {
     runCLI(`generate @nrwl/express:app ${app}`);
     runCLI(`generate @nrwl/node:lib ${parentLib} --buildable=true`);
     runCLI(`generate @nrwl/node:lib ${childLib} --buildable=true`);
-    runCLI(`generate @nrwl/node:lib ${childLib2} --buildable=true`);
+    runCLI(
+      `generate @nrwl/node:lib ${childLib2} --buildable=true --experimentalSwc`
+    );
 
     // create dependencies by importing
     const createDep = (parent, children: string[]) => {
@@ -729,8 +731,9 @@ describe('with dependencies', () => {
       `Done compiling TypeScript files for project "${childLib}"`
     );
 
+    // TODO(chau): childLib2 has swc turned on and not going through TSC
     const childLib2Output = runCLI(`build ${childLib2}`);
-    expect(childLib2Output).toContain(
+    expect(childLib2Output).not.toContain(
       `Done compiling TypeScript files for project "${childLib2}"`
     );
 
