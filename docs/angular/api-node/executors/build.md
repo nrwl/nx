@@ -34,6 +34,16 @@ Type: `string`
 
 Path to the additional entry file
 
+### analyzerMode
+
+Default: `disabled`
+
+Type: `string`
+
+Possible values: `server`, `static`, `json`, `disabled`
+
+Relates to analyzerMode option from: 'webpack-bundle-analyzer'.
+
 ### assets
 
 Type: `array`
@@ -137,14 +147,6 @@ Default: `true`
 Type: `boolean`
 
 Produce source maps.
-
-### statsJson
-
-Default: `false`
-
-Type: `boolean`
-
-Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
 
 ### tsPlugins
 
