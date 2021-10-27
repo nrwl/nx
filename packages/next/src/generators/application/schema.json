@@ -113,6 +113,11 @@
     "standaloneConfig": {
       "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
       "type": "boolean"
+    },
+    "swc": {
+      "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",
+      "type": "boolean",
+      "default": true
     }
   },
   "required": []

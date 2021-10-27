@@ -9,7 +9,7 @@ import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
   babelPluginStyledComponentsVersion,
   emotionServerVersion,
-  nextWithLess,
+  lessLoader,
   sassVersion,
   stylusLoader,
 } from './versions';
@@ -38,10 +38,10 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
     devDependencies: { sass: sassVersion },
   },
   less: {
-    dependencies: {
-      'next-with-less': nextWithLess,
+    dependencies: {},
+    devDependencies: {
+      'less-loader': lessLoader,
     },
-    devDependencies: {},
   },
   styl: {
     dependencies: {

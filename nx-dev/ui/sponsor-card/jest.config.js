@@ -9,4 +9,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../../coverage/nx-dev/ui/sponsor-card',
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
 };

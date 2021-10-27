@@ -1,5 +1,6 @@
 import { stringUtils } from '@nrwl/workspace';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   createFile,
   killPorts,
@@ -139,6 +140,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: true,
+      checkExport: false,
     });
   }, 300000);
 
@@ -167,6 +169,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: true,
+      checkExport: false,
     });
   }, 300000);
 
@@ -271,6 +274,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: true,
+      checkExport: false,
     });
   }, 300000);
 
@@ -283,6 +287,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -295,6 +300,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -309,6 +315,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -323,6 +330,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -393,6 +401,23 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: true,
+      checkExport: false,
+    });
+  }, 300000);
+
+  it('should support --no-swc flag', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --no-swc`);
+
+    // Next.js enables SWC when custom .babelrc is not provided.
+    checkFilesExist(`apps/${appName}/.babelrc`);
+
+    await checkApp(appName, {
+      checkUnitTest: false,
+      checkLint: false,
+      checkE2E: true,
+      checkExport: true,
     });
   }, 300000);
 
@@ -460,6 +485,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -581,6 +607,7 @@ async function checkApp(
     checkUnitTest: boolean;
     checkLint: boolean;
     checkE2E: boolean;
+    checkExport: boolean;
   }
 ) {
   const buildResult = runCLI(`build ${appName} --withDeps`);
@@ -611,6 +638,8 @@ async function checkApp(
     expect(await killPorts()).toBeTruthy();
   }
 
-  runCLI(`export ${appName}`);
-  checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  if (opts.checkExport) {
+    runCLI(`export ${appName}`);
+    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  }
 }

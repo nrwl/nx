@@ -72,6 +72,12 @@
       "version": "13.0.0-beta.1",
       "description": "Set `webpack5: true` for all next.js projects.",
       "factory": "./src/migrations/update-13-0-0/update-to-webpack-5"
+    },
+    "fix-less": {
+      "cli": "nx",
+      "version": "13.0.3-beta.1",
+      "description": "Fix setup for less stylesheets",
+      "factory": "./src/migrations/update-13-0-3/fix-less"
     }
   },
   "packageJsonUpdates": {
@@ -176,19 +182,15 @@
         }
       }
     },
-    "update-13.0.0": {
-      "version": "13.0.0-beta.0",
+    "update-13.0.3": {
+      "version": "13.0.3-beta.0",
       "packages": {
         "next": {
-          "version": "11.1.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@emotion/server": {
-          "version": "11.4.0",
+          "version": "12.0.0",
           "alwaysAddToPackageJson": false
         },
         "eslint-config-next": {
-          "version": "11.1.2",
+          "version": "12.0.0",
           "alwaysAddToPackageJson": false
         }
       }

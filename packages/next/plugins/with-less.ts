@@ -1,18 +1,18 @@
 // Adapted from https://raw.githubusercontent.com/elado/next-with-less/main/src/index.js
 import { merge } from 'webpack-merge';
 
-const addStylusToRegExp = (rx) =>
-  new RegExp(rx.source.replace('|sass', '|sass|styl'), rx.flags);
+const addLessToRegExp = (rx) =>
+  new RegExp(rx.source.replace('|sass', '|sass|less'), rx.flags);
 
-function patchNextCSSWithStylus(
-  nextCSSModule = require('next/dist/build/webpack/config/blocks/css') as any
+function patchNextCSSWithLess(
+  nextCSSModule: any = require('next/dist/build/webpack/config/blocks/css')
 ) {
-  nextCSSModule.regexLikeCss = addStylusToRegExp(nextCSSModule.regexLikeCss);
+  nextCSSModule.regexLikeCss = addLessToRegExp(nextCSSModule.regexLikeCss);
 }
 
-patchNextCSSWithStylus();
+patchNextCSSWithLess();
 
-function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
+function withLess({ lessLoaderOptions = {}, ...nextConfig }) {
   return Object.assign({}, nextConfig, {
     webpack(config, opts) {
       // there are 2 relevant sass rules in next.js - css modules and global css
@@ -24,11 +24,11 @@ function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
         rule.oneOf?.find((r) => r?.options?.__next_css_remove)
       );
 
-      const addStylusRuleToTest = (test) => {
+      const addLessToRuleTest = (test) => {
         if (Array.isArray(test)) {
-          return test.map((rx) => addStylusToRegExp(rx));
+          return test.map((rx) => addLessToRegExp(rx));
         } else {
-          return addStylusToRegExp(test);
+          return addLessToRegExp(test);
         }
       };
 
@@ -36,11 +36,11 @@ function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
         if (rule.options?.__next_css_remove) return;
 
         if (rule.use?.loader === 'error-loader') {
-          rule.test = addStylusRuleToTest(rule.test);
+          rule.test = addLessToRuleTest(rule.test);
         } else if (rule.use?.loader?.includes('file-loader')) {
-          rule.issuer = addStylusRuleToTest(rule.issuer);
+          rule.issuer = addLessToRuleTest(rule.issuer);
         } else if (rule.use?.includes?.('ignore-loader')) {
-          rule.test = addStylusRuleToTest(rule.test);
+          rule.test = addLessToRuleTest(rule.test);
         } else if (rule.test?.source === '\\.module\\.(scss|sass)$') {
           sassModuleRule = rule;
         } else if (rule.test?.source === '(?<!\\.module)\\.(scss|sass)$') {
@@ -48,39 +48,40 @@ function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
         }
       });
 
-      const stylusLoader = {
-        loader: 'stylus-loader',
+      const lessLoader = {
+        loader: 'less-loader',
         options: {
-          ...stylusLoaderOptions,
-          stylusOptions: {
+          ...lessLoaderOptions,
+          lessOptions: {
             javascriptEnabled: true,
-            ...stylusLoaderOptions.stylusOptions,
+            // @ts-ignore
+            ...lessLoaderOptions.lessOptions,
           },
         },
       };
 
-      let stylusModuleRule = merge({}, sassModuleRule);
+      let lessModuleRule = merge(sassModuleRule);
 
-      const configureStylusRule = (rule) => {
-        rule.test = new RegExp(rule.test.source.replace('(scss|sass)', 'styl'));
-        // replace sass-loader (last entry) with stylus-loader
-        rule.use.splice(-1, 1, stylusLoader);
+      const configureLessRule = (rule) => {
+        rule.test = new RegExp(rule.test.source.replace('(scss|sass)', 'less'));
+        // replace sass-loader (last entry) with less-loader
+        rule.use.splice(-1, 1, lessLoader);
       };
 
-      configureStylusRule(stylusModuleRule);
+      configureLessRule(lessModuleRule);
       cssRule.oneOf.splice(
         cssRule.oneOf.indexOf(sassModuleRule) + 1,
         0,
-        stylusModuleRule
+        lessModuleRule
       );
 
       if (sassGlobalRule) {
-        let stylusGlobalRule = merge({}, sassGlobalRule);
-        configureStylusRule(stylusGlobalRule);
+        let lessGlobalRule = merge(sassGlobalRule);
+        configureLessRule(lessGlobalRule);
         cssRule.oneOf.splice(
           cssRule.oneOf.indexOf(sassGlobalRule) + 1,
           0,
-          stylusGlobalRule
+          lessGlobalRule
         );
       }
 
@@ -93,5 +94,5 @@ function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
   });
 }
 
-module.exports = withStylus;
-module.exports.patchNext = patchNextCSSWithStylus;
+module.exports = withLess;
+module.exports.patchNext = patchNextCSSWithLess;

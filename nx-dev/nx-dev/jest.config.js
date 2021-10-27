@@ -8,4 +8,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/nx-dev',
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
 };

@@ -126,6 +126,14 @@ Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/s
 
 The file extension to be used for style files.
 
+### swc
+
+Default: `true`
+
+Type: `boolean`
+
+Enable the Rust-based compiler SWC to compile JS/TS files.
+
 ### tags
 
 Alias(es): t
