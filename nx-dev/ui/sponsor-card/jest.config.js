@@ -5,7 +5,7 @@ module.exports = {
   displayName: 'nx-dev-ui-sponsor-card',
   preset: '../../../jest.preset.js',
   transform: {
-    '^.+\\.[tj]sx?$': 'babel-jest',
+    '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nrwl/next/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../../coverage/nx-dev/ui/sponsor-card',
