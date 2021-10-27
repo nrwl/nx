@@ -46,7 +46,7 @@ module.exports = {
     expect(tree.exists('apps/demo/.babelrc')).toBe(false);
   });
 
-  it('should skip migration if SWC already enabled', async () => {
+  it('should still fix jest config when babelrc is missing', async () => {
     await applicationGenerator(tree, {
       style: 'none',
       name: 'demo',
@@ -76,8 +76,50 @@ module.exports = {
 
     const result = tree.read('apps/demo/jest.config.js').toString();
 
-    expect(result).not.toMatch(
-      `['babel-jest', { presets: ['@nrwl/next/babel'] }]`
+    expect(result).toMatch(`['babel-jest', { presets: ['@nrwl/next/babel'] }]`);
+  });
+  it('should skip migration if the babelrc has been customized', async () => {
+    await applicationGenerator(tree, {
+      style: 'none',
+      name: 'demo',
+      skipFormat: false,
+      swc: false,
+    });
+
+    tree.write(
+      'apps/demo/.babelrc',
+      `{
+        "presets": ["@nrwl/next/babel", "something-else"],
+        "plugins": []
+      }`
     );
+
+    await update(tree);
+
+    expect(tree.exists('apps/demo/.babelrc')).toBe(true);
+
+    tree.write(
+      'apps/demo/.babelrc',
+      `{
+        "presets": ["@nrwl/next/babel"],
+        "plugins": ["some-plugin"]
+      }`
+    );
+
+    await update(tree);
+
+    expect(tree.exists('apps/demo/.babelrc')).toBe(true);
+
+    // No custom plugins, can migrate.
+    tree.write(
+      'apps/demo/.babelrc',
+      `{
+        "presets": ["@nrwl/next/babel"]
+      }`
+    );
+
+    await update(tree);
+
+    expect(tree.exists('apps/demo/.babelrc')).toBe(false);
   });
 });
