@@ -13,9 +13,9 @@ import { replaceAppNameWithPath } from '@nrwl/workspace';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
-  addProjectToNx(host, options);
   updateTsConfigOptions(host, options);
   updateAppAndE2EProjectConfigurations(host, options);
+  addProjectToNx(host, options);
 }
 
 function addProjectToNx(host: Tree, options: NormalizedSchema) {

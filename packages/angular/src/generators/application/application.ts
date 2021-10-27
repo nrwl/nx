@@ -40,13 +40,16 @@ export async function applicationGenerator(
 
   // Determine the roots where @schematics/angular will place the projects
   // This is not where the projects actually end up
-  const workspaceJson = readJson(host, getWorkspacePath(host));
-
-  const appProjectRoot = workspaceJson.newProjectRoot
-    ? `${workspaceJson.newProjectRoot}/${options.name}`
+  const workspaceJsonPath = getWorkspacePath(host);
+  let newProjectRoot = null;
+  if (workspaceJsonPath) {
+    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
+  }
+  const appProjectRoot = newProjectRoot
+    ? `${newProjectRoot}/${options.name}`
     : options.name;
-  const e2eProjectRoot = workspaceJson.newProjectRoot
-    ? `${workspaceJson.newProjectRoot}/${options.e2eProjectName}`
+  const e2eProjectRoot = newProjectRoot
+    ? `${newProjectRoot}/${options.e2eProjectName}`
     : `${options.name}/e2e`;
 
   await init(host, {

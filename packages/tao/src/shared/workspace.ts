@@ -618,20 +618,28 @@ export function inlineProjectConfigurations(
   return w;
 }
 
-export function buildWorkspaceConfigurationFromGlobs(
+/**
+ * Pulled from toFileName in names from @nrwl/devkit.
+ * Todo: Should refactor, not duplicate.
+ */
+export function toProjectName(
+  fileName: string,
   nxJson: NxJsonConfiguration
-): WorkspaceJsonConfiguration {
-  /**
-   * Pulled from toFileName in names from @nrwl/devkit.
-   * Todo: Should refactor, not duplicate.
-   */
-  function toProjectName(s: string): string {
-    return s
-      .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-      .toLowerCase()
-      .replace(/[ _]/g, '-');
-  }
+): string {
+  const directory = dirname(fileName);
+  const { appsDir, libsDir } = nxJson.workspaceLayout || {};
+  const regex = new RegExp(
+    `^(?:${appsDir || 'apps'}|${libsDir || 'libs'})/`,
+    'g'
+  );
+  const subpath = directory.replace(regex, '');
+  return subpath
+    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+    .toLowerCase()
+    .replace(/[ _]/g, '-');
+}
 
+export function globForProjectFiles(root) {
   /**
    * This configures the files and directories which we always want to ignore as part of file watching
    * and which we know the location of statically (meaning irrespective of user configuration files).
@@ -641,9 +649,9 @@ export function buildWorkspaceConfigurationFromGlobs(
    * .gitignore and .nxignore files below.
    */
   const ALWAYS_IGNORE = [
-    join(this.root, 'node_modules'),
-    join(this.root, 'dist'),
-    join(this.root, '.git'),
+    join(root, 'node_modules'),
+    join(root, 'dist'),
+    join(root, '.git'),
   ];
 
   /**
@@ -652,33 +660,37 @@ export function buildWorkspaceConfigurationFromGlobs(
    */
   const ig = ignore();
   try {
-    ig.add(readFileSync(`${this.root}/.gitignore`, 'utf-8'));
+    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
   } catch {}
   try {
-    ig.add(readFileSync(`${this.root}/.nxignore`, 'utf-8'));
+    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
   } catch {}
 
+  return globSync('**/@(project.json|package.json)', {
+    ignore: ALWAYS_IGNORE,
+    absolute: false,
+    cwd: root,
+    // If part of .nxignore, .gitignore, or the root package.json
+  }).filter((file) => !ig.ignores(file) && file !== 'package.json');
+}
+
+export function buildWorkspaceConfigurationFromGlobs(
+  nxJson: NxJsonConfiguration,
+  projectFiles: string[] = globForProjectFiles(appRootPath),
+  readJson: (string) => any = readJsonFile
+): WorkspaceJsonConfiguration {
   const configurations: Record<string, ProjectConfiguration> = {};
   // For package.json inferred projects, we need the name
   // of the inferred project. This is used to overwrite the
   // inferred project if a project.json file is also found.
   const projectsFromPackageJsons = new Map<string, string>();
   // For `project.json` projects, we don't need the name,
-  // but we need to know if one has already been found in 
+  // but we need to know if one has already been found in
   // a directory. This is used to skip inferring a new project
   // from package.json in the same directory.
   const projectsFromProjectJsons = new Set<string>();
 
-  const globbedProjectFiles = globSync('**/@(project.json|package.json)', {
-    ignore: ALWAYS_IGNORE,
-    absolute: false,
-    cwd: this.root,
-  });
-
-  for (const file of globbedProjectFiles) {
-    // If part of .nxignore, .gitignore, or the root package.json
-    if (ig.ignores(file) || file === 'package.json') continue;
-
+  for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');
     const fileName = basename(file) as 'project.json' | 'package.json';
 
@@ -686,8 +698,11 @@ export function buildWorkspaceConfigurationFromGlobs(
     // if a package.json file is in a directory w/o a `project.json` file.
     // this results in targets being inferred by Nx from package scripts,
     // and the root / sourceRoot both being the directory.
-    if (fileName === 'package.json' && !projectsFromProjectJsons.has(directory)) {
-      const { name } = readJsonFile(file);
+    if (
+      fileName === 'package.json' &&
+      !projectsFromProjectJsons.has(directory)
+    ) {
+      const { name } = readJson(file);
       const root = directory;
       if (configurations[name]) {
         continue;
@@ -701,28 +716,24 @@ export function buildWorkspaceConfigurationFromGlobs(
     } else if (fileName === 'project.json') {
       //  Nx specific project configuration (`project.json` files) in the same
       // directory as a package.json should overwrite the inferred package.json
-      // project configuration. 
+      // project configuration.
       if (projectsFromPackageJsons.has(directory)) {
         const oldName = projectsFromPackageJsons.get(directory);
         delete configurations[oldName];
         projectsFromPackageJsons.delete(directory);
       }
-      const configuration = readJsonFile(file);
+      const configuration = readJson(file);
       let name = configuration.name;
       if (!configuration.name) {
-        const directory = dirname(fileName);
-        const { appsDir, libsDir } = nxJson.workspaceLayout;
-        const regex = new RegExp(
-          `^(?:${appsDir || 'apps'}|${libsDir || 'libs'})/`
-        );
-        const subpath = directory.replace(regex, '');
-        name = toProjectName(subpath);
+        name = toProjectName(file, nxJson);
       }
       if (!configurations[name]) {
         configurations[name] = configuration;
         projectsFromProjectJsons.add(directory);
       } else {
-        logger.warn(`Skipping project found at ${directory} since project ${name} already exists!`)
+        logger.warn(
+          `Skipping project found at ${directory} since project ${name} already exists!`
+        );
       }
     }
   }
