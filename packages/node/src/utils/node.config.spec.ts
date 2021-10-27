@@ -19,7 +19,8 @@ describe('getNodePartial', () => {
       tsConfig: 'tsconfig.json',
       externalDependencies: 'all',
       fileReplacements: [],
-      statsJson: false,
+      analyzerMode: 'disabled',
+      analyzerOptions: {},
     };
     (<any>TsConfigPathsPlugin).mockImplementation(
       function MockPathsPlugin() {}

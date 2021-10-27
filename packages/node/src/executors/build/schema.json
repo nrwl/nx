@@ -59,10 +59,16 @@
       "description": "Dependencies to keep external to the bundle. (\"all\" (default), \"none\", or an array of module names)",
       "default": "all"
     },
-    "statsJson": {
-      "type": "boolean",
-      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.",
-      "default": false
+    "analyzerMode": {
+      "type": "string",
+      "enum": ["server", "static", "json", "disabled"],
+      "description": "Relates to analyzerMode option from: 'webpack-bundle-analyzer'.",
+      "default": "disabled"
+    },
+    "analyzerOptions": {
+      "type": "object",
+      "description": "Additional options to pass into the `webpack-bundle-analyzer`.",
+      "default": {}
     },
     "verbose": {
       "type": "boolean",

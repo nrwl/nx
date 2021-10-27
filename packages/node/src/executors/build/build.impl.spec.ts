@@ -45,6 +45,8 @@ describe('Node Build Executor', () => {
       tsConfig: 'apps/wibble/tsconfig.ts',
       buildLibsFromSource: true,
       fileReplacements: [],
+      analyzerMode: 'disabled',
+      analyzerOptions: {},
     };
   });
 

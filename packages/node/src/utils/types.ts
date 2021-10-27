@@ -74,7 +74,8 @@ export interface BuildBuilderOptions {
   assets?: any[];
 
   progress?: boolean;
-  statsJson?: boolean;
+  analyzerMode: 'server' | 'static' | 'json' | 'disabled';
+  analyzerOptions: Record<string, any>;
   extractLicenses?: boolean;
   verbose?: boolean;
 

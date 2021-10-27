@@ -8,6 +8,7 @@ import { BuildBuilderOptions } from './types';
 import { loadTsPlugins } from './load-ts-plugins';
 import CopyWebpackPlugin = require('copy-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 // Inlining tsconfig-paths-webpack-plugin with a patch
 // See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
@@ -134,6 +135,15 @@ export function getBaseWebpackPartial(
     );
   }
 
+  if (options.analyzerMode !== 'disabled') {
+    extraPlugins.push(
+      new BundleAnalyzerPlugin({
+        ...options.analyzerOptions,
+        analyzerMode: options.analyzerMode,
+      })
+    );
+  }
+
   // process asset entries
   if (Array.isArray(options.assets) && options.assets.length > 0) {
     const copyWebpackPluginInstance = new CopyWebpackPlugin({
@@ -202,7 +212,7 @@ function getStatsConfig(options: BuildBuilderOptions) {
     modules: false,
     warnings: true,
     errors: true,
-    colors: !options.verbose && !options.statsJson,
+    colors: !options.verbose && options.analyzerMode === 'disabled',
     chunks: !options.verbose,
     assets: !!options.verbose,
     chunkOrigins: !!options.verbose,

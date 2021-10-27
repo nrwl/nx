@@ -25,7 +25,8 @@ describe('normalizeBuildOptions', () => {
         },
       ],
       assets: [],
-      statsJson: false,
+      analyzerMode: 'disabled',
+      analyzerOptions: {},
       externalDependencies: 'all',
     };
     root = '/root';
