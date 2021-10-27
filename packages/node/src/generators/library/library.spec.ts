@@ -103,6 +103,12 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
+    it('should exclude test files from tsconfig.lib.json', async () => {
+      await libraryGenerator(tree, { name: 'myLib', standaloneConfig: false });
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+      expect(tsconfigJson.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
+    });
+
     it('should generate files', async () => {
       await libraryGenerator(tree, { name: 'myLib', standaloneConfig: false });
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
@@ -464,7 +470,9 @@ describe('lib', () => {
       ]);
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').exclude).toEqual([
         '**/*.spec.ts',
+        '**/*.test.ts',
         '**/*.spec.js',
+        '**/*.test.js',
       ]);
     });
 
