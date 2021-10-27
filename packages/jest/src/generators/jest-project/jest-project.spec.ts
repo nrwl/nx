@@ -109,7 +109,7 @@ describe('jestProject', () => {
         types: ['jest', 'node'],
       },
       files: ['src/test-setup.ts'],
-      include: ['**/*.spec.ts', '**/*.d.ts'],
+      include: ['**/*.test.ts', '**/*.spec.ts', '**/*.d.ts'],
     });
   });
 
