@@ -13,6 +13,9 @@ export function updateJestConfig(host: Tree, options: NormalizedSchema) {
       'transform: {',
       "transform: {\n    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',"
     )
-    .replace(`'babel-jest'`, `['babel-jest', { presets: ['next/babel'] }]`);
+    .replace(
+      `'babel-jest'`,
+      `['babel-jest', { presets: ['@nrwl/next/babel'] }]`
+    );
   host.write(configPath, content);
 }
