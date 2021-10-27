@@ -20,7 +20,7 @@ export async function update(host: Tree) {
     if (host.exists(babelConfigPath)) {
       if (customBabelConfig(host, babelConfigPath)) {
         logger.info(
-          `NX Skipping SWC migration due to a custom .babelrc file. You can still delete this file yourself to enable SWC.`
+          `NX Custom .babelrc file detected, skipping deletion. You can delete this file yourself to enable SWC: ${babelConfigPath}`
         );
       } else {
         // Deleting custom babel config enables SWC

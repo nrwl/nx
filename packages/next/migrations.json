@@ -83,7 +83,7 @@
       "cli": "nx",
       "version": "13.1.1-beta.1",
       "description": "Enables SWC for Next.js apps.",
-      "factory": "./src/migrations/update-13-0-3/enable-swc"
+      "factory": "./src/migrations/update-13-1-1/enable-swc"
     }
   },
   "packageJsonUpdates": {
