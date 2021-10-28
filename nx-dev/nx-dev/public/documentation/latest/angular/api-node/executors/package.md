@@ -74,6 +74,12 @@ Type: `string`
 
 Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property
 
+### tsPlugins
+
+Type: `array`
+
+List of TypeScript Compiler Plugins.
+
 ### updateBuildableProjectDepsInPackageJson
 
 Default: `true`

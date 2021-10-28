@@ -1,7 +1,10 @@
 # Using Nx Core Without Plugins
 
-The core of Nx is generic, simple, and unobtrusive. Nx Plugins, although very useful for many projects, are completely
-optional. This guide will walk you through creating a simple Nx workspace with no plugins.
+The core of Nx is generic, simple, and unobtrusive. Nx plugins, although very useful for many projects, are completely
+optional. Most large Nx workspaces use plugins for some things and don't use plugins for others.
+
+This guide will walk you through creating a simple Nx workspace with no plugins. It will help you see what capabilities
+of Nx are completely generic and can be used with any technology or tool.
 
 ## Using Nx Core
 
@@ -127,7 +130,7 @@ tsconfig.base.json
 package.json
 ```
 
-Now let's modify `packages/complex/index.js` to include `require('@myorg/simple')`. If you run `npx nx test complex`,
+Now let's modify `packages/complex/index.js` to include `require('@myorg/simple')`. If you run `yarn nx test complex`,
 you will see an error saying that `@myorg/simple` cannot be resolved.
 
 This is expected. Nx analyzes your source to enable computation caching, it knows what projects are affected by your PR,
@@ -159,7 +162,7 @@ Then add the following to the root `package.json` (which enables Yarn Workspaces
 
 Finally, run `yarn`.
 
-`npx nx test complex` works now.
+`yarn nx test complex` works now.
 
 ## Non-JS Projects
 
@@ -194,42 +197,41 @@ Node, Angular plugins for Nx allow different projects in your workspace to impor
 cumbersome `package.json` files. Instead, they use Webpack, Rollup and Jest plugins to enable this use case in a more
 elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/{{framework}}/guides/lerna-and-nx).
 
-## What Nx Provides
+## What Nx Core Provides
 
-If you run `npx nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
+### Nx Understands How Your Workspace is Structured
+
+If you run `yarn nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
 invalidate the computation cache for `complex`, but changes to `complex` won't invalidate the cache for `simple`.
 
-In contrast to more basic JS monorepo tools, Nx doesn't just analyze `package.json` files. It does much more. Nx also
-knows that adding a `require()` creates a dependency and that some dependencies cannot even be expressed in the source
-code. This is crucial for the following reasons:
+In contrast to more basic monorepo tools, Nx doesn't just analyze `package.json` files. It does much more. Nx also knows
+that adding a `require()` creates a dependency and that some dependencies cannot even be expressed in the source code.
 
-- Often, configuration files aren't packages. They aren't built and aren't published. Your packages can depend on them.
-  Nx can recognize this dependency and take it into consideration for `affected:*` and cache computations.
-- Many workspaces have non-JS projects, so you cannot define the deps between them and your JS projects
-  using `package.json`.
-- Aux packages (e.g., e2e tests or demo applications) aren't publishable. You could create fake `package.json` files for
-  them, but with Nx you don't have to.
-- You may have a de-facto dependency (where Project A depends on B without a dependency in `package.json`). This would
-  break other monorepo tools because they would not know that changing B changes the behavior of A. This isn’t the case
-  with Nx.
+### Nx Orchestrates Tasks
 
-### Some Things You Can Do
+Running `yarn nx run-many --target=test --all --parallel` will test all projects in parallel.
 
-- `npx nx run-many --target --test --all --parallel` tests all projects in parallel.
-- `npx nx affected --target --test --all` tests all the projects affected by the current PR. To see this in action,
-  check in all your changes, and create a new branch.
+Running `yarn nx run-many --target=build --projects=app1,app2 --parallel` will build `proj1` and `proj2` and their
+dependencies in parallel. Note that if `app1` depends on the output of its dependency (e.g., `shared-components`), Nx
+will build `shared-components` first and only then will build the app.
+
+### Nx Know What is Affected
+
+Running `yarn nx affected --target=test` will test all the projects affected by the current PR.
+
+### Nx Caches and Distributes Tasks
+
+Running `yarn nx build app1` will cache the file artifacts and the terminal output, so if you run it again the command
+will execute instantly because the results will be retrieved from cache. If you use `Nx Cloud` the cache will be shared
+between you, your teammates, and the CI agents. Nx can also distribute tasks across multiple machines while preserving
+the developer experience of running it on a single machine.
+
+This works because Nx's computation caching and distributed task execution work on the process level. It doesn't matter
+what `build` means. It can be an npm script, a custom Nx executor, a Gradle task. Nx will handle it in the same way.
 
 ## Adding Plugins
 
 As you can see, the core of Nx is generic, simple, and unobtrusive. Nx Plugins are completely optional, but they can
-really level up your developer experience. Watch the video below to see Nx plugins in action.
-
-[Read more about Nx plugins](/{{framework}}/core-concepts/nx-devkit).
-
-## Adding Nx to Existing Workspaces
-
-The following 10-min video walks you through the steps of adding Nx to a Lerna repo and showing many affordances Nx
-offers. Although the video uses Lerna, everything said applies to Yarn Workspaces or PNPM. Basically, any time you
-hear "Lerna" you can substitute it for Yarn or PNPM.
+really level up your developer experience. Watch this video to see the plugins in actions.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

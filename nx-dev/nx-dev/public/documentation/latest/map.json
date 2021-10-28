@@ -438,6 +438,11 @@
             "file": "angular/api-angular/generators/library"
           },
           {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "angular/api-angular/generators/library-secondary-entry-point"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "angular/api-angular/generators/move"
@@ -1324,6 +1329,11 @@
             "file": "react/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -1397,11 +1407,6 @@
             "name": "Configuration",
             "id": "configuration",
             "file": "react/guides/configuration"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
           },
           {
             "name": "Nx Plugins and Devkit",
@@ -1734,6 +1739,11 @@
             "name": "library generator",
             "id": "library",
             "file": "react/api-angular/generators/library"
+          },
+          {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "react/api-angular/generators/library-secondary-entry-point"
           },
           {
             "name": "move generator",
@@ -2996,6 +3006,11 @@
             "name": "library generator",
             "id": "library",
             "file": "node/api-angular/generators/library"
+          },
+          {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "node/api-angular/generators/library-secondary-entry-point"
           },
           {
             "name": "move generator",
