@@ -156,6 +156,7 @@ describe('lib', () => {
         `libs/${libFileName}/tsconfig.lib.json`
       );
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+      expect(tsconfigJson.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
     });
 
     it('should generate files', async () => {
