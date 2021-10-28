@@ -10,9 +10,11 @@ import { Node } from 'ng-packagr/lib/graph/node';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import { NgEntryPoint } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
 import {
+  EntryPointNode,
   fileUrl,
   isEntryPointInProgress,
   isPackage,
+  PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
@@ -31,9 +33,9 @@ type CompilationMode = 'partial' | 'full' | undefined;
 
 export const nxWritePackageTransform = (options: NgPackagrOptions) =>
   transformFromPromise(async (graph) => {
-    const entryPoint = graph.find(isEntryPointInProgress());
-    const ngEntryPoint = entryPoint.data.entryPoint;
-    const ngPackageNode = graph.find(isPackage);
+    const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
+    const ngEntryPoint: NgEntryPoint = entryPoint.data.entryPoint;
+    const ngPackageNode: PackageNode = graph.find(isPackage);
     const ngPackage = ngPackageNode.data;
     const { destinationFiles } = entryPoint.data;
     const ignorePaths: string[] = [
@@ -44,29 +46,29 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       `${ngPackage.dest}/**`,
     ];
 
-    if (ngPackage.assets.length && !ngEntryPoint.isSecondaryEntryPoint) {
+    if (!ngEntryPoint.isSecondaryEntryPoint) {
       const assetFiles: string[] = [];
 
       // COPY ASSET FILES TO DESTINATION
       logger.log('Copying assets');
 
       try {
-        for (let asset of ngPackage.assets) {
-          asset = path.join(ngPackage.src, asset);
+        for (const asset of ngPackage.assets) {
+          let assetFullPath = path.join(ngPackage.src, asset);
 
-          if (await exists(asset)) {
-            const stats = await stat(asset);
+          try {
+            const stats = await stat(assetFullPath);
             if (stats.isFile()) {
-              assetFiles.push(asset);
+              assetFiles.push(assetFullPath);
               continue;
             }
 
             if (stats.isDirectory()) {
-              asset = path.join(asset, '**/*');
+              assetFullPath = path.join(assetFullPath, '**/*');
             }
-          }
+          } catch {}
 
-          const files = await globFiles(asset, {
+          const files = await globFiles(assetFullPath, {
             ignore: ignorePaths,
             cache: ngPackageNode.cache.globCache,
             dot: true,
