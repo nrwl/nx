@@ -233,6 +233,5 @@ In summary:
 
 ## Learn more:
 
-- [Migrating from Lerna to Nx: Better Dev Ergonomics + Much Faster Build Times](https://blog.nrwl.io/migrating-from-lerna-to-nx-better-dev-ergonomics-much-faster-build-times-da76ff14ccbb)
 - [Using Generators](/{{framework}}/generators/using-schematics)
 - [Using Executors](/{{framework}}/executors/using-builders)
