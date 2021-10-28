@@ -7,19 +7,13 @@ import {
   renameSync as fsRenameSync,
   statSync,
 } from 'fs';
-import { ensureDirSync } from 'fs-extra';
 import { basename, dirname, resolve } from 'path';
-import {
-  parseJson,
-  serializeJson,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
+import { serializeJson, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 
 export { serializeJson, readJsonFile, writeJsonFile };
 
 export function writeToFile(filePath: string, str: string) {
-  ensureDirSync(dirname(filePath));
+  mkdirSync(dirname(filePath), { recursive: true });
   writeFileSync(filePath, str);
 }
 
@@ -61,16 +55,6 @@ export function fileExists(filePath: string): boolean {
   }
 }
 
-export function createDirectory(directoryPath: string) {
-  const parentPath = resolve(directoryPath, '..');
-  if (!directoryExists(parentPath)) {
-    createDirectory(parentPath);
-  }
-  if (!directoryExists(directoryPath)) {
-    mkdirSync(directoryPath);
-  }
-}
-
 export function renameSync(
   from: string,
   to: string,
@@ -85,7 +69,7 @@ export function renameSync(
 
     // Make sure parent path exists
     const parentPath = resolve(to, '..');
-    createDirectory(parentPath);
+    mkdirSync(parentPath, { recursive: true });
 
     fsRenameSync(from, to);
     cb(null);

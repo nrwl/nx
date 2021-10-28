@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { dirname, join } from 'path';
-import { existsSync } from 'fs-extra';
+import { existsSync } from 'fs';
 import * as yargsParser from 'yargs-parser';
 
 const argv = yargsParser(process.argv.slice(2));

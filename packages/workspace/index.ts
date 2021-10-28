@@ -6,7 +6,6 @@ export {
   updateJsonFile,
   readJsonFile,
   copyFile,
-  createDirectory,
 } from './src/utilities/fileutils';
 
 // TODO: vsavkin delete after Nx 12

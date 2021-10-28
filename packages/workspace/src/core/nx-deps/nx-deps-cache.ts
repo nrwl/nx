@@ -10,8 +10,7 @@ import type {
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { existsSync } from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import { existsSync, mkdirSync } from 'fs';
 import {
   directoryExists,
   fileExists,
@@ -46,9 +45,9 @@ export const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
 export function ensureCacheDirectory(): void {
   try {
     if (!existsSync(nxDepsDir)) {
-      ensureDirSync(nxDepsDir);
+      mkdirSync(nxDepsDir, { recursive: true });
     }
-  } catch (e) {
+  } catch {
     /*
      * @jeffbcross: Node JS docs recommend against checking for existence of directory immediately before creating it.
      * Instead, just try to create the directory and handle the error.

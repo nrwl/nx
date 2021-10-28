@@ -1,6 +1,6 @@
 import {
   copySync,
-  ensureDirSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
   removeSync,
@@ -51,7 +51,7 @@ export function updateFile(
   file: string,
   content: string | ((originalFileContent: string) => string)
 ): void {
-  ensureDirSync(dirname(tmpProjPath(file)));
+  mkdirSync(dirname(tmpProjPath(file)), { recursive: true });
   if (typeof content === 'string') {
     writeFileSync(tmpProjPath(file), content);
   } else {
@@ -68,7 +68,7 @@ export function updateFile(
  * @param newPath New path
  */
 export function renameFile(path: string, newPath: string): void {
-  ensureDirSync(dirname(tmpProjPath(newPath)));
+  mkdirSync(dirname(tmpProjPath(newPath)), { recursive: true });
   renameSync(tmpProjPath(path), tmpProjPath(newPath));
 }
 

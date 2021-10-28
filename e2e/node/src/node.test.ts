@@ -20,7 +20,7 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { accessSync, constants } from 'fs-extra';
+import { accessSync, constants } from 'fs';
 
 function getData(port): Promise<any> {
   return new Promise((resolve) => {

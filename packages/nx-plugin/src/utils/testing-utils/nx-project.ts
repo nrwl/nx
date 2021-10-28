@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { dirname } from 'path';
-import { ensureDirSync } from 'fs-extra';
+import { mkdirSync } from 'fs';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 
@@ -82,6 +82,6 @@ export function ensureNxProject(
   npmPackageName?: string,
   pluginDistPath?: string
 ): void {
-  ensureDirSync(tmpProjPath());
+  mkdirSync(tmpProjPath(), { recursive: true });
   newNxProject(npmPackageName, pluginDistPath);
 }

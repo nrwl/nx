@@ -11,7 +11,7 @@ import {
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
-import { existsSync, mkdirSync } from 'fs-extra';
+import { existsSync, mkdirSync } from 'fs';
 import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {

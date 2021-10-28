@@ -3,7 +3,7 @@ import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { existsSync } from 'fs-extra';
+import { existsSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import { NodePackageBuilderOptions, NormalizedBuilderOptions } from './models';
 

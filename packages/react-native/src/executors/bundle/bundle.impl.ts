@@ -1,10 +1,10 @@
-import { createDirectory } from '@nrwl/workspace/src/utilities/fileutils';
 import { toFileName } from '@nrwl/workspace/src/devkit-reexport';
-import { dirname, join, relative, sep } from 'path';
+import { dirname, join } from 'path';
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ChildProcess, fork } from 'child_process';
 import { ExecutorContext } from '@nrwl/devkit';
 import { ReactNativeBundleOptions } from './schema';
+import { mkdirSync } from 'fs';
 
 export interface ReactNativeBundleOutput {
   success: boolean;
@@ -20,7 +20,7 @@ export default async function* bundleExecutor(
 
   options.bundleOutput = join(context.root, options.bundleOutput);
 
-  createDirectory(dirname(options.bundleOutput));
+  mkdirSync(dirname(options.bundleOutput), { recursive: true });
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {

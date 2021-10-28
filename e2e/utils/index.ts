@@ -3,7 +3,7 @@ import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
   createFileSync,
-  ensureDirSync,
+  mkdirSync,
   moveSync,
   readdirSync,
   readFileSync,
@@ -49,7 +49,7 @@ export function currentCli() {
 
 export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
 export const e2eCwd = `${e2eRoot}/${currentCli()}`;
-ensureDirSync(e2eCwd);
+mkdirSync(e2eCwd, { recursive: true });
 
 let projName: string;
 const publishedVersion = `9999.0.2`;
@@ -567,7 +567,7 @@ export function updateFile(
   f: string,
   content: string | ((content: string) => string)
 ): void {
-  ensureDirSync(path.dirname(tmpProjPath(f)));
+  mkdirSync(path.dirname(tmpProjPath(f)), { recursive: true });
   if (typeof content === 'string') {
     writeFileSync(tmpProjPath(f), content);
   } else {
@@ -579,7 +579,7 @@ export function updateFile(
 }
 
 export function renameFile(f: string, newPath: string): void {
-  ensureDirSync(path.dirname(tmpProjPath(newPath)));
+  mkdirSync(path.dirname(tmpProjPath(newPath)), { recursive: true });
   renameSync(tmpProjPath(f), tmpProjPath(newPath));
 }
 

@@ -1,8 +1,7 @@
 import { parseJson, serializeJson } from './json';
 import type { JsonParseOptions, JsonSerializeOptions } from './json';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
-import { ensureDirSync } from 'fs-extra';
 
 export interface JsonReadOptions extends JsonParseOptions {
   /**
@@ -55,7 +54,7 @@ export function writeJsonFile<T extends object = object>(
   data: T,
   options?: JsonWriteOptions
 ): void {
-  ensureDirSync(dirname(path));
+  mkdirSync(dirname(path), { recursive: true });
   const serializedJson = serializeJson(data, options);
   const content = options?.appendNewLine
     ? `${serializedJson}\n`

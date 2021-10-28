@@ -1,5 +1,5 @@
-import { lstatSync, readFileSync, writeFileSync } from 'fs';
-import { removeSync, ensureDirSync } from 'fs-extra';
+import { lstatSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { removeSync } from 'fs-extra';
 import { dirSync } from 'tmp';
 import * as path from 'path';
 import { FileChange, FsTree, flushChanges, TreeWriteOptions } from './tree';
@@ -11,7 +11,7 @@ describe('tree', () => {
 
     beforeEach(() => {
       dir = dirSync().name;
-      ensureDirSync(path.join(dir, 'parent/child'));
+      mkdirSync(path.join(dir, 'parent/child'), { recursive: true });
       writeFileSync(path.join(dir, 'root-file.txt'), 'root content');
       writeFileSync(
         path.join(dir, 'parent', 'parent-file.txt'),

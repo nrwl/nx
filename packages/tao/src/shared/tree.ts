@@ -3,7 +3,7 @@ import {
   readFileSync,
   statSync,
   writeFileSync,
-  ensureDirSync,
+  mkdirSync,
   removeSync,
   chmodSync,
 } from 'fs-extra';
@@ -371,7 +371,7 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
-      ensureDirSync(dirname(fpath));
+      mkdirSync(dirname(fpath), { recursive: true });
       writeFileSync(fpath, f.content);
       if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'UPDATE') {

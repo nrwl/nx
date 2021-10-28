@@ -2,8 +2,14 @@ import { joinPathFragments } from '@nrwl/devkit/src/utils/path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { copySync, ensureDirSync } from 'fs-extra';
+import {
+  existsSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+  mkdirSync,
+} from 'fs';
+import { copySync } from 'fs-extra';
 import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
@@ -258,7 +264,7 @@ export async function generateGraph(
         bodyLines: [fileFolderPath, ...assets],
       });
     } else if (ext === '.json') {
-      ensureDirSync(dirname(fullFilePath));
+      mkdirSync(dirname(fullFilePath), { recursive: true });
 
       writeJsonFile(fullFilePath, {
         graph,

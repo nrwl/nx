@@ -1,6 +1,6 @@
-import { fs, vol } from 'memfs';
+import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createDirectory, isRelativePath } from './fileutils';
+import { isRelativePath } from './fileutils';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('./app-root', () => ({ appRootPath: '/root' }));
@@ -25,15 +25,6 @@ describe('fileutils', () => {
       },
       '/root'
     );
-  });
-
-  describe('createDirectory', () => {
-    it('should recursively create the directory', () => {
-      createDirectory('/root/b/c');
-      expect(fs.statSync('/root').isDirectory()).toBe(true);
-      expect(fs.statSync('/root/b').isDirectory()).toBe(true);
-      expect(fs.statSync('/root/b/c').isDirectory()).toBe(true);
-    });
   });
 
   describe('isRelativePath()', () => {

@@ -15,8 +15,11 @@ import { NodePackageBuilderOptions } from './utils/models';
 jest.mock('glob');
 import * as glob from 'glob';
 
+jest.mock('fs');
+import * as fs from 'fs';
+
 jest.mock('fs-extra');
-import * as fs from 'fs-extra';
+import * as fsExtra from 'fs-extra';
 
 jest.mock('@nrwl/workspace/src/utilities/fileutils');
 import * as fsUtility from '@nrwl/workspace/src/utilities/fileutils';
@@ -180,8 +183,8 @@ describe('NodePackageBuilder', () => {
           },
           context
         );
-        expect(fs.copy).toHaveBeenCalledTimes(1);
-        expect(fs.copy).toHaveBeenCalledWith(
+        expect(fsExtra.copy).toHaveBeenCalledTimes(1);
+        expect(fsExtra.copy).toHaveBeenCalledWith(
           `${context.root}/lib/nodelib/src/assets/logo.png`,
           `${context.root}/${testOptions.outputPath}/newfolder/logo.png`
         );
@@ -197,8 +200,8 @@ describe('NodePackageBuilder', () => {
           context
         );
 
-        expect(fs.copy).toHaveBeenCalledTimes(1);
-        expect(fs.copy).toHaveBeenCalledWith(
+        expect(fsExtra.copy).toHaveBeenCalledTimes(1);
+        expect(fsExtra.copy).toHaveBeenCalledWith(
           `${context.root}/lib/nodelib/src/LICENSE`,
           `${context.root}/${testOptions.outputPath}/LICENSE`
         );
@@ -217,12 +220,12 @@ describe('NodePackageBuilder', () => {
           context
         );
 
-        expect(fs.copy).toHaveBeenCalledTimes(2);
-        expect(fs.copy).toHaveBeenCalledWith(
+        expect(fsExtra.copy).toHaveBeenCalledTimes(2);
+        expect(fsExtra.copy).toHaveBeenCalledWith(
           `${context.root}/lib/nodelib/src/README.md`,
           `${context.root}/${testOptions.outputPath}/README.md`
         );
-        expect(fs.copy).toHaveBeenCalledWith(
+        expect(fsExtra.copy).toHaveBeenCalledWith(
           `${context.root}/lib/nodelib/src/CONTRIBUTING.md`,
           `${context.root}/${testOptions.outputPath}/CONTRIBUTING.md`
         );

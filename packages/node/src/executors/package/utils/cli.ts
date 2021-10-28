@@ -5,7 +5,7 @@ import {
   writeJsonFile,
   writeToFile,
 } from '@nrwl/workspace/src/utilities/fileutils';
-import { chmodSync } from 'fs-extra';
+import { chmodSync } from 'fs';
 import { NormalizedBuilderOptions } from './models';
 
 export default function addCliWrapper(
