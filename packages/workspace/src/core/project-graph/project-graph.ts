@@ -14,8 +14,8 @@ export function readCachedProjectGraph(
   const angularSpecificError =
     workspaceFileName() === 'angular.json'
       ? stripIndents`
-      Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script. 
-      The decorated CLI will compute the project graph. 
+      Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
+      The decorated CLI will compute the project graph.
       'ng --help' should say 'Smart, Extensible Build Framework'.
       `
       : '';
@@ -27,7 +27,7 @@ export function readCachedProjectGraph(
       the ProjectGraph is created by calling \`await createProjectGraphAsync()\` somewhere before attempting to read the data.
 
       If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
-      
+
       ${angularSpecificError}
     `);
   }
@@ -91,7 +91,12 @@ export function projectGraphAdapter(
     return projectGraphCompat5to4(projectGraph);
   }
   throw new Error(
-    `Invalid source or target versions. Source: ${sourceVersion}, Target: ${targetVersion}`
+    `Invalid source or target versions. Source: ${sourceVersion}, Target: ${targetVersion}.
+
+Only backwards compatibility between "5.0" and "4.0" is supported.
+This error can be caused by "@nrwl/..." packages getting out of sync or outdated project graph cache.
+Check the versions running "nx report" and/or remove your "nxdeps.json" file (in node_modules/.cache/nx folder).
+    `
   );
 }
 
