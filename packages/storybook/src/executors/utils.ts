@@ -73,11 +73,27 @@ export function runStorybookSetupCheck(options: CommonNxStorybookConfig) {
 
 function reactWebpack5Check(options: CommonNxStorybookConfig) {
   if (options.uiFramework === '@storybook/react') {
-    // check whether the current Storybook configuration has the webpack 5 builder enabled
-    const storybookConfig = readFileSync(
-      joinPathFragments(options.config.configFolder, 'main.js'),
-      { encoding: 'utf8' }
+    let storybookConfigFilePath = joinPathFragments(
+      options.config.configFolder,
+      'main.js'
     );
+
+    if (!existsSync(storybookConfigFilePath)) {
+      storybookConfigFilePath = joinPathFragments(
+        options.config.configFolder,
+        'main.ts'
+      );
+    }
+
+    if (!existsSync(storybookConfigFilePath)) {
+      // looks like there's no main config file, so skip
+      return;
+    }
+
+    // check whether the current Storybook configuration has the webpack 5 builder enabled
+    const storybookConfig = readFileSync(storybookConfigFilePath, {
+      encoding: 'utf8',
+    });
 
     if (!storybookConfig.includes(`builder: 'webpack5'`)) {
       // storybook needs to be upgraded to webpack 5
