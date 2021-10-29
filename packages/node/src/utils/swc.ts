@@ -1,4 +1,8 @@
-import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  getWorkspaceLayout,
+  Tree,
+} from '@nrwl/devkit';
 import {
   swcCliVersion,
   swcCoreVersion,
@@ -24,7 +28,7 @@ export function getSwcRuleLoader(): {
 
 // TODO: change back to 2015 when https://github.com/swc-project/swc/issues/1108 is solved
 // target: 'es2015'
-const swcOptionsString = `{
+const swcOptionsString = (appsDir = 'apps', libsDir = 'libs') => `{
   "jsc": {
     "target": "es2017",
     "parser": {
@@ -44,14 +48,16 @@ const swcOptionsString = `{
     "type": "commonjs",
     "strict": true,
     "noInterop": true
-  }
+  },
+  "exclude": ["${appsDir}/**/.*.spec.ts$", "${libsDir}/**/.*.spec.ts$"]
 }`;
 
 export function addSwcConfig(tree: Tree) {
   const isSwcConfigExist = tree.exists('.swcrc');
   if (isSwcConfigExist) return;
 
-  tree.write('.swcrc', swcOptionsString);
+  const { libsDir, appsDir } = getWorkspaceLayout(tree);
+  tree.write('.swcrc', swcOptionsString(appsDir, libsDir));
 }
 
 export function addSwcDevDependencies(tree: Tree, isLib = false) {

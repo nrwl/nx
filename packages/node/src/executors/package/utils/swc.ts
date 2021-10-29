@@ -20,17 +20,18 @@ export async function execSwc(
       `/${normalizedTscOptions.projectName}`,
       ''
     );
-    // TODO(chau): ignore/exclude don't work with swc
-    const exclude = `'${normalizedTscOptions.projectRoot}/src/**/*.spec.ts'`;
 
-    let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config exclude=${exclude}`;
+    // TODO(chau): use `--ignore` for swc cli to exclude spec files
+    // Open issue: https://github.com/swc-project/cli/issues/20
+    let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps`;
 
     if (normalizedTscOptions.watch) {
       swcCmd += ' --watch';
       return createSwcWatchProcess(swcCmd, completeCallback);
     }
 
-    execSync(swcCmd);
+    const swcCmdLog = execSync(swcCmd).toString();
+    console.log(swcCmdLog);
     console.log(
       `Done compiling with SWC for ${normalizedTscOptions.projectName}.`
     );
