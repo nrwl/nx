@@ -82,10 +82,10 @@ export function AffectedCommand(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1">
-          <div className="relative pr-4 -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="relative px-4 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
             <motion.div
               variants={opacityTranslateXVariant}
-              className="-mt-8 w-full rounded-xl shadow-xl border border-gray-300 lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="-mt-8 w-full max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
             >
               <Image
                 src="/images/nx-affected.webp"
@@ -102,7 +102,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
             >
               <div
                 className="coding inverse-toggle px-5 pt-4 shadow-lg text-gray-200 text-xs font-mono subpixel-antialiased
-              bg-gray-800  pb-6 pt-4 rounded-lg leading-normal overflow-hidden"
+              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal overflow-hidden"
               >
                 <div className="top mb-2 flex">
                   <div className="h-3 w-3 bg-red-500 rounded-full" />

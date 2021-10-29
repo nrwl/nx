@@ -169,7 +169,7 @@ function AngularPane(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="pr-4 flex flex-col items-center justify-center -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
               className="max-w-screen-sm"
               width="100%"
@@ -402,7 +402,7 @@ function NodeJsPane(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="pr-4 flex flex-col items-center justify-center -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
               className="max-w-screen-sm"
               width="100%"
@@ -581,7 +581,7 @@ function ReactPane(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="pr-4 flex flex-col items-center justify-center -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
               className="max-w-screen-sm"
               width="100%"
@@ -770,7 +770,7 @@ function TypescriptPane(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="pr-4 flex flex-col items-center justify-center -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
               className="max-w-screen-sm"
               width="100%"

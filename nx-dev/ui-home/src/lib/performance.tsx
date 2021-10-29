@@ -114,7 +114,7 @@ export function Performance(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-2 lg:col-start-1">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:col-start-1">
           <div className="col-span-1 flex flex-col justify-center pb-8 pl-8 border-r border-b border-gray-100">
             <div className="text-lg text-gray-600">Up to </div>
             <div className="my-2 text-7xl font-bold text-gray-800">

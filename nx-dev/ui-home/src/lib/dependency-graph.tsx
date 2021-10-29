@@ -83,10 +83,10 @@ export function DependencyGraph(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-2">
           <motion.div
             variants={opacityTranslateXVariant}
-            className="pr-4 -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full"
+            className="relative px-4 lg:px-0 lg:h-full"
           >
             <video
-              className="w-full rounded-xl shadow-xl border border-gray-300 lg:absolute lg:left-16 lg:h-full lg:w-auto lg:max-w-none"
+              className="-mt-8 mx-auto w-full max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:left-16 lg:h-full lg:w-auto lg:max-w-none"
               autoPlay={true}
               loop
               muted

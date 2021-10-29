@@ -84,10 +84,10 @@ export function CloudSupport(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-2">
-          <div className="relative pr-4 -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="relative px-4 sm:pr-6 lg:px-0 lg:h-full">
             <motion.div
               variants={opacityTranslateXVariant}
-              className="w-full rounded-xl shadow-xl border border-gray-300 lg:absolute lg:left-16 lg:-top-28 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="w-full mx-auto max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:left-16 lg:-top-28 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
             >
               <Image
                 src="/images/nx-cloud.webp"
@@ -100,7 +100,7 @@ export function CloudSupport(): ReactComponentElement<any> {
             <motion.div
               variants={opacityTranslateXVariant}
               custom={0.25}
-              className="w-full rounded-xl shadow-xl border border-gray-300 lg:absolute lg:-left-20 lg:-bottom-64 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="w-full mx-auto max-w-screen-sm hidden lg:flex rounded-xl shadow-xl border border-gray-300 lg:absolute lg:-left-20 lg:-bottom-64 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
             >
               <Image
                 src="/images/github-app.webp"

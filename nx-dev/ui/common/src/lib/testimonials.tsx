@@ -22,7 +22,7 @@ export function Testimonials() {
           <blockquote className="mt-6 md:flex-grow md:flex md:flex-col">
             <div className="relative text-lg font-medium text-white md:flex-grow">
               <svg
-                className="absolute top-0 left-0 transform -translate-x-3 -translate-y-2 h-8 w-8 text-green-nx-base"
+                className="hidden md:flex absolute top-0 left-0 transform -translate-x-4 -translate-y-4 h-8 w-8 text-green-nx-base"
                 fill="currentColor"
                 viewBox="0 0 32 32"
                 aria-hidden="true"
@@ -72,7 +72,7 @@ export function Testimonials() {
           <blockquote className="mt-6 md:flex-grow md:flex md:flex-col">
             <div className="relative text-lg font-medium text-white md:flex-grow">
               <svg
-                className="absolute top-0 left-0 transform -translate-x-3 -translate-y-2 h-8 w-8 text-green-nx-base"
+                className="hidden md:flex absolute top-0 left-0 transform -translate-x-4 -translate-y-4 h-8 w-8 text-green-nx-base"
                 fill="currentColor"
                 viewBox="0 0 32 32"
               >
