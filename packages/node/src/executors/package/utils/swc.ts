@@ -14,15 +14,16 @@ export async function execSwc(
     console.log(
       `Compiling with SWC for ${normalizedTscOptions.projectName}...`
     );
-    // TODO(chau): ignore/exclude don't work with swc
-    let swcCmd = `npx swc ${
-      normalizedTscOptions.projectRoot
-    }/src -d ${normalizedTscOptions.outputPath.replace(
+
+    const srcPath = `${normalizedTscOptions.projectRoot}/src`;
+    const destPath = normalizedTscOptions.outputPath.replace(
       `/${normalizedTscOptions.projectName}`,
       ''
-    )} --source-maps --config exclude='${
-      normalizedTscOptions.projectRoot
-    }/src/**/*.spec.ts'`;
+    );
+    // TODO(chau): ignore/exclude don't work with swc
+    const exclude = `'${normalizedTscOptions.projectRoot}/src/**/*.spec.ts'`;
+
+    let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config exclude=${exclude}`;
 
     if (normalizedTscOptions.watch) {
       swcCmd += ' --watch';
