@@ -94,6 +94,11 @@
       "schema": "./src/generators/resolver/schema.json",
       "description": "Run the `resolver` NestJS generator with Nx project support."
     },
+    "resource": {
+      "factory": "./src/generators/resource/resource#resourceSchematic",
+      "schema": "./src/generators/resource/schema.json",
+      "description": "Run the `resource` NestJS generator with Nx project support."
+    },
     "service": {
       "factory": "./src/generators/service/service#serviceSchematic",
       "schema": "./src/generators/service/schema.json",
@@ -191,6 +196,11 @@
       "factory": "./src/generators/resolver/resolver",
       "schema": "./src/generators/resolver/schema.json",
       "description": "Run the `resolver` NestJS generator with Nx project support."
+    },
+    "resource": {
+      "factory": "./src/generators/resource/resource",
+      "schema": "./src/generators/resource/schema.json",
+      "description": "Run the `resource` NestJS generator with Nx project support."
     },
     "service": {
       "factory": "./src/generators/service/service",
