@@ -823,11 +823,6 @@
             "file": "angular/api-nest/generators/resolver"
           },
           {
-            "name": "resource generator",
-            "id": "resource",
-            "file": "angular/api-nest/generators/resource"
-          },
-          {
             "name": "service generator",
             "id": "service",
             "file": "angular/api-nest/generators/service"
@@ -2122,11 +2117,6 @@
             "file": "react/api-nest/generators/resolver"
           },
           {
-            "name": "resource generator",
-            "id": "resource",
-            "file": "react/api-nest/generators/resource"
-          },
-          {
             "name": "service generator",
             "id": "service",
             "file": "react/api-nest/generators/service"
@@ -3381,11 +3371,6 @@
             "name": "resolver generator",
             "id": "resolver",
             "file": "node/api-nest/generators/resolver"
-          },
-          {
-            "name": "resource generator",
-            "id": "resource",
-            "file": "node/api-nest/generators/resource"
           },
           {
             "name": "service generator",

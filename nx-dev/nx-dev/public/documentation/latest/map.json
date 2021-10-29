@@ -22,6 +22,11 @@
             "file": "angular/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -95,11 +100,6 @@
             "name": "Configuration",
             "id": "configuration",
             "file": "angular/guides/configuration"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
           },
           {
             "name": "Nx Plugins and Devkit",
@@ -821,11 +821,6 @@
             "name": "resolver generator",
             "id": "resolver",
             "file": "angular/api-nest/generators/resolver"
-          },
-          {
-            "name": "resource generator",
-            "id": "resource",
-            "file": "angular/api-nest/generators/resource"
           },
           {
             "name": "service generator",
@@ -2137,11 +2132,6 @@
             "file": "react/api-nest/generators/resolver"
           },
           {
-            "name": "resource generator",
-            "id": "resource",
-            "file": "react/api-nest/generators/resource"
-          },
-          {
             "name": "service generator",
             "id": "service",
             "file": "react/api-nest/generators/service"
@@ -2626,6 +2616,11 @@
             "file": "node/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -2683,11 +2678,6 @@
             "name": "Configuration",
             "id": "configuration",
             "file": "node/guides/configuration"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
           },
           {
             "name": "Nx Plugins and Devkit",
@@ -3390,11 +3380,6 @@
             "name": "resolver generator",
             "id": "resolver",
             "file": "node/api-nest/generators/resolver"
-          },
-          {
-            "name": "resource generator",
-            "id": "resource",
-            "file": "node/api-nest/generators/resource"
           },
           {
             "name": "service generator",
