@@ -374,7 +374,7 @@ describe('Node Libraries', () => {
         declaration: true,
         types: ['node'],
       },
-      exclude: ['**/*.spec.ts'],
+      exclude: ['**/*.spec.ts', '**/*.test.ts'],
       include: ['**/*.ts'],
     });
     await runCLIAsync(`build ${nodeLib}`);
