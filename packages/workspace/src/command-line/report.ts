@@ -6,6 +6,8 @@ import {
   readJsonFile,
 } from '@nrwl/devkit';
 import { output } from '../utilities/output';
+import { join } from 'path';
+import { resolve } from '../utilities/fileutils';
 
 export const packagesWeCareAbout = [
   'nx',
@@ -22,6 +24,7 @@ export const packagesWeCareAbout = [
   '@nrwl/node',
   '@nrwl/nx-cloud',
   '@nrwl/react',
+  '@nrwl/react-native',
   '@nrwl/schematics',
   '@nrwl/tao',
   '@nrwl/web',
@@ -29,7 +32,14 @@ export const packagesWeCareAbout = [
   '@nrwl/storybook',
   '@nrwl/gatsby',
   'typescript',
+  'rxjs',
 ];
+
+export const packagesWeIgnoreInCommunityReport = new Set([
+  ...packagesWeCareAbout,
+  '@schematics/angular',
+  '@nestjs/schematics',
+]);
 
 export const report = {
   command: 'report',
@@ -58,18 +68,81 @@ function reportHandler() {
   ];
 
   packagesWeCareAbout.forEach((p) => {
-    let status = 'Not Found';
-    try {
-      const packageJsonPath = require.resolve(`${p}/package.json`, {
-        paths: [appRootPath],
-      });
-      status = readJsonFile(packageJsonPath).version;
-    } catch {}
-    bodyLines.push(`${chalk.green(p)} : ${chalk.bold(status)}`);
+    bodyLines.push(`${chalk.green(p)} : ${chalk.bold(readPackageVersion(p))}`);
+  });
+
+  bodyLines.push('---------------------------------------');
+
+  const communityPlugins = findInstalledCommunityPlugins();
+  bodyLines.push('Community plugins:');
+  communityPlugins.forEach((p) => {
+    bodyLines.push(`\t ${chalk.green(p.package)}: ${chalk.bold(p.version)}`);
   });
 
   output.log({
     title: 'Report complete - copy this into the issue template',
     bodyLines,
   });
+}
+
+export function readPackageJson(p: string) {
+  try {
+    const packageJsonPath = resolve(`${p}/package.json`, {
+      paths: [appRootPath],
+    });
+    return readJsonFile(packageJsonPath);
+  } catch {
+    return {};
+  }
+}
+
+export function readPackageVersion(p: string) {
+  let status = 'Not Found';
+  try {
+    status = readPackageJson(p).version;
+  } catch {}
+  return status;
+}
+
+export function findInstalledCommunityPlugins(): {
+  package: string;
+  version: string;
+}[] {
+  const { dependencies, devDependencies } = readJsonFile(
+    join(appRootPath, 'package.json')
+  );
+  const deps = [
+    Object.keys(dependencies || {}),
+    Object.keys(devDependencies || {}),
+  ].flat();
+
+  return deps.reduce(
+    (arr: any[], nextDep: string): { project: string; version: string }[] => {
+      if (packagesWeIgnoreInCommunityReport.has(nextDep)) {
+        return arr;
+      }
+      try {
+        const depPackageJson = readPackageJson(nextDep);
+        if (
+          [
+            'ng-update',
+            'nx-migrations',
+            'schematics',
+            'generators',
+            'builders',
+            'executors',
+          ].some((field) => field in depPackageJson)
+        ) {
+          arr.push({ package: nextDep, version: depPackageJson.version });
+          return arr;
+        } else {
+          return arr;
+        }
+      } catch {
+        console.warn(`Error parsing packageJson for ${nextDep}`);
+        return arr;
+      }
+    },
+    []
+  );
 }
