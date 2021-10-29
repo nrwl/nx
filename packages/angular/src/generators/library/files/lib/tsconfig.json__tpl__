@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "test": "katerina"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }<% if (publishable) { %>,
     {
