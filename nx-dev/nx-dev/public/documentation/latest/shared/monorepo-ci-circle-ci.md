@@ -29,8 +29,6 @@ jobs:
       - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=3
       - run: npx nx affected --base=$NX_BASE --target=test --parallel --max-parallel=2
   pr:
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
       - checkout
       - run: npm install
