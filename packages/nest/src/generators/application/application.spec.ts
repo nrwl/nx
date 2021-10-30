@@ -1,6 +1,16 @@
+import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/src/generators/application/application';
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import * as semver from 'semver';
+import {
+  nestJsSchematicsVersion7,
+  nestJsSchematicsVersion8,
+  nestJsVersion7,
+  nestJsVersion8,
+  rxjsVersion6,
+  rxjsVersion7,
+} from '../../utils/versions';
 import { applicationGenerator } from './application';
 
 describe('application generator', () => {
@@ -60,6 +70,52 @@ describe('application generator', () => {
       await applicationGenerator(tree, { name: appName, skipFormat: true });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('NestJS versions', () => {
+    it('should use NestJs 8 for empty workspace', async () => {
+      await applicationGenerator(tree, { name: appName });
+      const pkg = devkit.readJson(tree, `package.json`);
+
+      expect(pkg.dependencies['rxjs']).toBe(rxjsVersion7);
+      expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion8);
+      expect(pkg.devDependencies['@nestjs/schematics']).toBe(
+        nestJsSchematicsVersion8
+      );
+    });
+
+    it('should use NestJs 8 for Angular + RxJS 7 workspace', async () => {
+      await angularApplicationGenerator(tree, { name: 'angular-app' });
+
+      let pkg = devkit.readJson(tree, 'package.json');
+      pkg.dependencies['rxjs'] = rxjsVersion7;
+      tree.write('package.json', JSON.stringify(pkg));
+
+      await applicationGenerator(tree, { name: appName });
+
+      pkg = devkit.readJson(tree, 'package.json');
+
+      expect(pkg.dependencies['rxjs']).toBe(rxjsVersion7);
+      expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion8);
+      expect(pkg.devDependencies['@nestjs/schematics']).toBe(
+        nestJsSchematicsVersion8
+      );
+    });
+
+    it('should use NestJs 7 for Angular + RxJS 6 workspace', async () => {
+      await angularApplicationGenerator(tree, { name: 'angular-app' });
+      await applicationGenerator(tree, { name: appName });
+
+      const pkg = devkit.readJson(tree, `package.json`);
+
+      expect(semver.minVersion(pkg.dependencies['rxjs']).major).toBe(
+        semver.minVersion(rxjsVersion6).major
+      );
+      expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion7);
+      expect(pkg.devDependencies['@nestjs/schematics']).toBe(
+        nestJsSchematicsVersion7
+      );
     });
   });
 });

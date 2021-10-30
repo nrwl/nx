@@ -265,7 +265,7 @@ describe('Build Node apps', () => {
           '@nestjs/core': '^8.0.0',
           '@nestjs/platform-express': '^8.0.0',
           'reflect-metadata': '^0.1.13',
-          rxjs: '^7.2.0',
+          rxjs: '^7.0.0',
         },
         main: 'main.js',
         name: expect.any(String),

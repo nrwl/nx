@@ -1,27 +1,51 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
+import { minVersion, satisfies } from 'semver';
 import {
-  nestJsSchematicsVersion,
-  nestJsVersion,
+  nestJsSchematicsVersion7,
+  nestJsSchematicsVersion8,
+  nestJsVersion7,
+  nestJsVersion8,
   nxVersion,
   reflectMetadataVersion,
-  rxjsVersion,
+  rxjsVersion6,
+  rxjsVersion7,
 } from '../../../utils/versions';
 
 export function addDependencies(tree: Tree): GeneratorCallback {
+  // Old nest 7 and rxjs 6 by default
+  let NEST_VERSION = nestJsVersion7;
+  let NEST_SCHEMATICS = nestJsSchematicsVersion7;
+  let RXJS = rxjsVersion6;
+
+  const packageJson = readJson(tree, 'package.json');
+
+  if (packageJson.dependencies['@angular/common']) {
+    const rxjs = minVersion(packageJson.dependencies['rxjs']).version;
+    if (satisfies(rxjs, rxjsVersion7)) {
+      NEST_VERSION = nestJsVersion8;
+      NEST_SCHEMATICS = nestJsSchematicsVersion8;
+      RXJS = rxjsVersion7;
+    }
+  } else {
+    NEST_VERSION = nestJsVersion8;
+    NEST_SCHEMATICS = nestJsSchematicsVersion8;
+    RXJS = rxjsVersion7;
+  }
+
   return addDependenciesToPackageJson(
     tree,
     {
-      '@nestjs/common': nestJsVersion,
-      '@nestjs/core': nestJsVersion,
-      '@nestjs/platform-express': nestJsVersion,
+      '@nestjs/common': NEST_VERSION,
+      '@nestjs/core': NEST_VERSION,
+      '@nestjs/platform-express': NEST_VERSION,
       'reflect-metadata': reflectMetadataVersion,
-      rxjs: rxjsVersion,
+      rxjs: RXJS,
       tslib: '^2.0.0',
     },
     {
-      '@nestjs/schematics': nestJsSchematicsVersion,
-      '@nestjs/testing': nestJsVersion,
+      '@nestjs/schematics': NEST_SCHEMATICS,
+      '@nestjs/testing': NEST_VERSION,
       '@nrwl/nest': nxVersion,
     }
   );
