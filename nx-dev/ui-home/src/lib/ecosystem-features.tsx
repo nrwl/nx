@@ -15,7 +15,8 @@ const featureItems: {
     classNames: 'bg-green-nx-base',
     link: '#',
     title: 'Rich plugin ecosystem',
-    subTitle: 'One platform with plugins & tools for any frameworks',
+    subTitle:
+      ' React, React Native, Angular, NativeScript, Cypress, Nest.js, Storybook, Ionic, Go among others',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -37,7 +38,7 @@ const featureItems: {
     classNames: 'bg-pink-500',
     link: '#',
     title: 'Consistent DX',
-    subTitle: 'No matter the framework, Nx works the same',
+    subTitle: 'Improves dev mobility, experimentation and collaboration',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -59,7 +60,8 @@ const featureItems: {
     classNames: 'bg-yellow-500',
     link: '#',
     title: 'Automatic upgrades',
-    subTitle: 'Hassle free code & package management',
+    subTitle:
+      'Updates your source code to work with the newest versions of popular tools',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +83,7 @@ const featureItems: {
     classNames: 'bg-purple-nx-base',
     link: '#',
     title: 'Repeatable migrations',
-    subTitle: 'Where consistency and DX meet for reliability',
+    subTitle: 'Enables large scale refactorings',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -102,8 +104,8 @@ const featureItems: {
   {
     classNames: 'bg-red-500',
     link: '#',
-    title: 'Community driven',
-    subTitle: 'Participate, get help and meet people sharing the same taste',
+    title: 'Large community',
+    subTitle: 'A community of more than 600k developers. Tripling every year.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +127,7 @@ const featureItems: {
     classNames: 'bg-blue-500',
     link: '#',
     title: 'Open source',
-    subTitle: 'Nothing to hide, free and will stay that way',
+    subTitle: 'MIT-licensed, clear roadmap.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -202,15 +204,15 @@ export function EcosystemFeatures(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                An Ecosystem build around you
+                Rich Plugin Ecosystem
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                Quisque sapien nunc nisl eros. Facilisis sagittis maecenas id
-                dignissim tristique proin sed.Sed mi, dapibus turpis orci
-                posuere integer. A porta viverra posuere adipiscing turpis.
+                The core of Nx is generic, simple, and unobtrusive. Nx Plugins
+                are completely optional, but they can really level up your
+                productivity.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">

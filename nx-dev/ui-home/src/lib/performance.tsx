@@ -94,45 +94,36 @@ export function Performance(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                Performance focused
+                Nx is Fast
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                Quisque sapien nunc nisl eros. Facilisis sagittis maecenas id
-                dignissim tristique proin sed.Sed mi, dapibus turpis orci
-                posuere integer. A porta viverra posuere adipiscing turpis.
+                Nx uses its distributed task execution and computation caching
+                to keep your CI time the same, whether you build one project or
+                a thousand.
               </motion.p>
-              <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="#">
-                  <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Link not needed?
-                  </a>
-                </Link>
-              </motion.div>
             </div>
           </div>
         </div>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:col-start-1">
           <div className="col-span-1 flex flex-col justify-center pb-8 pl-8 border-r border-b border-gray-100">
-            <div className="text-lg text-gray-600">Up to </div>
+            <div className="text-lg text-gray-600">Average</div>
             <div className="my-2 text-7xl font-bold text-gray-800">
-              <Counter from={0} to={20} round={0} progress={progress} />{' '}
-              <span className="-ml-3 text-3xl">k</span>
+              <Counter from={0} to={300} round={0} progress={progress} />{' '}
+              <span className="-ml-3 text-3xl">%</span>
             </div>
-            <div className="text-md font-medium text-gray-600">
-              something something
-            </div>
+            <div className="text-md font-medium text-gray-600">sf</div>
           </div>
           <div className="col-span-1 flex flex-col justify-center pb-8 pl-8 border-l border-b border-gray-100">
-            <div className="text-lg text-gray-600">Consistent </div>
+            <div className="text-lg text-gray-600">Average</div>
             <div className="my-2 text-7xl font-bold text-gray-800">
-              <Counter from={0} to={270} round={0} progress={progress} />{' '}
+              <Counter from={0} to={250} round={0} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">%</span>
             </div>
             <div className="text-md font-medium text-gray-600">
-              Average reduction CI time
+              Reduction in CI computation time due to caching
             </div>
           </div>
           <div className="col-span-1 flex flex-col justify-center pt-8 pl-8 border-r border-t border-gray-100">
@@ -146,13 +137,13 @@ export function Performance(): ReactComponentElement<any> {
             </div>
           </div>
           <div className="col-span-1 flex flex-col justify-center pt-8 pl-8 border-l border-t border-gray-100">
-            <div className="text-lg text-gray-600">Up to </div>
+            <div className="text-lg text-gray-600">Up to</div>
             <div className="my-2 text-7xl font-bold text-gray-800">
               <Counter from={0} to={10} round={0} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">x</span>
             </div>
             <div className="text-md font-medium text-gray-600">
-              Faster for large monorepo with NxDeamon
+              Faster CI for larger proj
             </div>
           </div>
         </div>

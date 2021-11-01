@@ -61,20 +61,20 @@ export function VscodePlugin(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                Nx Console for Visual Studio Code
+                Visual Studio Code Plugin
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                With it, you can get a full-stack application up and running in
-                minutes, no need to figure out source maps, webpack, test
-                runners. It all works out of the box.
+                Nx Console adds Nx-aware autocompletion and code lenses. It
+                helps you generate components in folders, refactor your
+                projects, construct commands, and much more.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Install Nx Console now
+                    Install Nx Console
                   </a>
                 </Link>
               </motion.div>

@@ -60,20 +60,19 @@ export function DependencyGraph(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                Explore visually
+                Explore Visually
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                Quisque sapien nunc nisl eros. Facilisis sagittis maecenas id
-                dignissim tristique proin sed.Sed mi, dapibus turpis orci
-                posuere integer. A porta viverra posuere adipiscing turpis.
+                Nx comes with an interactive dependency diagram to help explore
+                and understand your workspace.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Learn about Nx's dependency graph app
+                    Learn about "nx dep-graph"
                   </a>
                 </Link>
               </motion.div>

@@ -61,22 +61,20 @@ export function CloudSupport(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                Next generation cloud support
+                Next Gen Cloud Support
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                Nx also supports optional free cloud support with Nx Cloud as
-                well as GitHub integration. Share links with your teammates
-                where everyone working on a project can examine detailed build
-                logs and get insights about how to improve your project and
-                build.
+                Share links with your teammates where everyone working on a
+                project can examine detailed build logs and get insights about
+                how to improve your project and build.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Enable cloud now
+                    Enable Nx Cloud
                   </a>
                 </Link>
               </motion.div>

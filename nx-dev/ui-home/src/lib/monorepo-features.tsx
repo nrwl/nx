@@ -15,7 +15,7 @@ const featureItems: {
     classNames: 'bg-pink-500',
     link: '#',
     title: 'Smart rebuilds',
-    subTitle: 'On every commit it only rebuilds what is necessary',
+    subTitle: 'Only rebuilds and retests what is affected by your change',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -36,8 +36,9 @@ const featureItems: {
   {
     classNames: 'bg-green-nx-base',
     link: '#',
-    title: 'Graph based',
-    subTitle: 'Understands how you build your monorepo',
+    title: 'Project graph',
+    subTitle:
+      'Analyzes your workspace to improve performance and developer experience',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -59,7 +60,8 @@ const featureItems: {
     classNames: 'bg-yellow-500',
     link: '#',
     title: 'Distributed task execution',
-    subTitle: 'Use the full power of your CI, no more idle states',
+    subTitle:
+      'Distributes any command across multiple machines without any configuration',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +83,7 @@ const featureItems: {
     classNames: 'bg-blue-500',
     link: '#',
     title: 'Computation caching',
-    subTitle: 'Intelligent caching for each of your commands',
+    subTitle: 'Never rebuilds or tests the same code twice',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -102,8 +104,8 @@ const featureItems: {
   {
     classNames: 'bg-purple-nx-base',
     link: '#',
-    title: 'Code sharing',
-    subTitle: 'All in one place, easier to find and update code',
+    title: 'Easy code sharing',
+    subTitle: 'Simplifies extracting and refactoring shared libraries',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +127,8 @@ const featureItems: {
     classNames: 'bg-red-500',
     link: '#',
     title: 'Ownership management',
-    subTitle: 'Organize your teams so they work better together',
+    subTitle:
+      'Statically enforces the separation of shared and app-specific code',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -208,9 +211,11 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                Quisque sapien nunc nisl eros. Facilisis sagittis maecenas id
-                dignissim tristique proin sed.Sed mi, dapibus turpis orci
-                posuere integer. A porta viverra posuere adipiscing turpis.
+                Nx builds a project graph by analyzing your workspace, which it
+                then uses to only rebuild what is necessary, and to never run
+                the same computation twice. Nx also helps establish structured
+                code sharing and ownership management to keep the workspace
+                maintainable.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">

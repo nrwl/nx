@@ -14,8 +14,8 @@ const featureItems: {
   {
     classNames: 'bg-blue-500',
     link: '#',
-    title: 'Quality editor plugins',
-    subTitle: 'Gives your editor super powers for your workspace',
+    title: 'Editor plugins',
+    subTitle: 'Nx-aware autocompletion and refactoring',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -31,8 +31,8 @@ const featureItems: {
   {
     classNames: 'bg-red-500',
     link: '#',
-    title: 'Github apps & actions',
-    subTitle: 'Analytical data where & when it matters',
+    title: 'GitHub & Continuous Integration',
+    subTitle: 'Searchable and filterable CI outputs, analytics, and more',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -48,7 +48,7 @@ const featureItems: {
     classNames: 'bg-pink-500',
     link: '#',
     title: 'Powerful code generation',
-    subTitle: 'Automate repeatable tasks & refactors, save time',
+    subTitle: 'Automates repeatable tasks and refactorings',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -76,7 +76,8 @@ const featureItems: {
     classNames: 'bg-green-nx-base',
     link: '#',
     title: 'Interactive visualizations',
-    subTitle: "Understand deeply what you're building",
+    subTitle:
+      'An evergreen architecture diagram to help explore your workspace',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -97,8 +98,8 @@ const featureItems: {
   {
     classNames: 'bg-yellow-500',
     link: '#',
-    title: 'Share knowledge',
-    subTitle: 'Improve your project and builds as a team',
+    title: 'Workspace generators',
+    subTitle: 'Enforces best practices and organizational standards',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -119,8 +120,9 @@ const featureItems: {
   {
     classNames: 'bg-purple-nx-base',
     link: '#',
-    title: 'Extensible with devkit',
-    subTitle: 'Go above and beyond, build on top of Nx',
+    title: 'Nx Devkit',
+    subTitle:
+      'Enables a custom dev experience to match the needs of your organization',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -197,15 +199,15 @@ export function ExperienceFeatures(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                Nx Integrated Development Experience
+                Integrated Development Experience
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                Quisque sapien nunc nisl eros. Facilisis sagittis maecenas id
-                dignissim tristique proin sed.Sed mi, dapibus turpis orci
-                posuere integer. A porta viverra posuere adipiscing turpis.
+                Nx provides a modern integrated dev experience. It has a
+                high-quality VS Code plugin, interactive visualizations, GitHub
+                integration and more.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">

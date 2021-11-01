@@ -61,20 +61,21 @@ export function AffectedCommand(): ReactComponentElement<any> {
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
-                Build, test, lint only what changed
+                Build and Test Only What is Affected
               </motion.h2>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
               >
-                With it, you can get a full-stack application up and running in
-                minutes, no need to figure out source maps, webpack, test
-                runners. It all works out of the box.
+                Nx is smart. It analyzes your workspace and figures out what can
+                be affected by every code change. That's why Nx doesn't rebuild
+                and retest everything on every commit - it only rebuilds what is
+                necessary.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Check the power of affected
+                    Learn about "nx affected"
                   </a>
                 </Link>
               </motion.div>

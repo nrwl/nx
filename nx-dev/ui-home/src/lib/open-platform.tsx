@@ -110,28 +110,20 @@ export function OpenPlatform(): ReactComponentElement<any> {
               variants={opacityVariant}
               className="text-3xl font-extrabold tracking-tight text-gray-900"
             >
-              Open platform
+              Open Platform
             </motion.h2>
             <motion.p
               variants={opacityVariant}
               className="mt-4 text-lg text-gray-500"
             >
-              <b>
-                Nx is an open platform with plugins for many modern tools and
-                frameworks.{' '}
-              </b>
-              It has support for TypeScript, React, React Native, Angular,
-              NativeScript, Cypress, Jest, Prettier, Nest.js, AngularCLI,
-              Storybook, Ionic, Go, Rust among others. With Nx, you get a
-              consistent dev experience regardless of the tools used.
+              The core of Nx is generic, simple, and unobtrusive. Nx Plugins are
+              completely optional, but they can really level up your
+              productivity.
+              <strong>
+                You can use Nx with any technology either by using Nx Core or by
+                using of one of many Nx plugins.
+              </strong>
             </motion.p>
-            <motion.div variants={opacityVariant} className="mt-6">
-              <Link href="#">
-                <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                  Should we have a link here?
-                </a>
-              </Link>
-            </motion.div>
           </div>
         </div>
         <div className="mt-8 grid grid-cols-3 gap-1 text-gray-500 lg:col-start-2">

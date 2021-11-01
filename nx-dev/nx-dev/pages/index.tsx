@@ -183,11 +183,11 @@ export function Index() {
                   Monorepo done right
                 </h2>
                 <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                  Take control of your workspace.
+                  Works for Projects of Any Size
                 </p>
                 <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
-                  At its core, Nx focuses on performance and DX. No matter the
-                  size of your project, Nx runs seamlessly.
+                  Whether you have one project or one thousand, Nx will keep
+                  your CI fast and your workspace maintainable.
                 </p>
               </div>
             </div>
@@ -210,15 +210,14 @@ export function Index() {
             <div className="mx-auto max-w-prose px-4 text-center sm:px-6 sm:max-w-3xl lg:px-8">
               <div>
                 <h2 className="text-base font-semibold tracking-wider text-blue-nx-base uppercase">
-                  Getting STARTED
+                  Getting Started
                 </h2>
                 <p className="mt-2 text-4xl font-extrabold text-gray-800 tracking-tight sm:text-6xl">
-                  Use Nx with or without flavors
+                  React, Angular, Node, TypeScript and more
                 </p>
                 <p className="mt-5 max-w-prose mx-auto text-xl text-gray-500">
                   Nx has first-class support for many frontend and backend
-                  technologies, so you are always comfortable. No matter your
-                  choice, the Nx experience stays the same.
+                  technologies, so its documentation comes in multiple flavours.
                 </p>
               </div>
             </div>
@@ -229,11 +228,11 @@ export function Index() {
           <div className="mt-28 max-w-prose mx-auto py-16 px-4 sm:py-18 sm:px-6 lg:px-8">
             <div className="text-center">
               <p className="mt-1 text-4xl font-extrabold text-gray-800 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                Are you a visual learner?
+                Free Courses and Videos
               </p>
               <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
-                We did integral courses only for you to help you learn Nx the
-                way you like the most. Step by step with real world examples.
+                For visual learners we have created high-quality courses walking
+                you through building real-world examples step by step.
               </p>
             </div>
           </div>
@@ -262,12 +261,11 @@ export function Index() {
                   Community
                 </h2>
                 <p className="mt-1 text-4xl font-extrabold text-gray-800 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                  Build like the best open source projects
+                  Used by Popular Open Source Projects
                 </p>
                 <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
-                  Nx gives your team everything they need to ship better
-                  software faster, no doubt why open source projects are using
-                  it.
+                  Nx works equally well for the teams building apps and for the
+                  communities building open source libraries and tools.
                 </p>
               </div>
             </div>
@@ -278,11 +276,11 @@ export function Index() {
             <div className="mt-28 max-w-prose mx-auto py-16 px-4 sm:py-18 sm:px-6 lg:px-8">
               <div className="text-center">
                 <p className="mt-1 text-4xl font-extrabold text-gray-800 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                  Learn what they love about Nx
+                  What Devs Love About Nx
                 </p>
                 <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
-                  Developers and Companies build, ship, and maintain their
-                  software with Nx, that's something.
+                  More than 600k developers all over the world build and ship
+                  with Nx. This is what they love about it.
                 </p>
               </div>
             </div>
