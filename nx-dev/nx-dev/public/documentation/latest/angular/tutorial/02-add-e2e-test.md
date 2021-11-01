@@ -36,3 +36,7 @@ If you have not done so already, stop the `npx nx serve` command and run `npx nx
 A UI opens. Click the button in the top right corner that says "Run 1 integration spec". Keep the E2E tests running.
 
 As you progress through the tutorial, you work on making these E2E tests pass.
+
+## What's Next
+
+- Continue to [Step 3: Display Todos](/latest/angular/tutorial/03-display-todos)

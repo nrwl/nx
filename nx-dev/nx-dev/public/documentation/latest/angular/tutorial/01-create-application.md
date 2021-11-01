@@ -47,8 +47,7 @@ myorg/
 │   │   ├── jest.conf.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
+│   │   └── tsconfig.spec.json
 │   └── todos-e2e/
 │       ├── src/
 │       │   ├── fixtures/
@@ -63,8 +62,7 @@ myorg/
 │       │       └── index.ts
 │       ├── cypress.json
 │       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── .eslintrc.json
@@ -133,3 +131,7 @@ produces the same result as `ng serve`, and `nx build` produces the same results
 supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only
 works when using the Nx CLI. In other words, using `nx` instead `ng` results in the same output, but often performs
 a lot better. [Read more about Nx CLI and Angular CLI.](/{{framework}}/getting-started/nx-cli)
+
+## What's Next
+
+- Continue to [Step 2: Add E2E Tests](/latest/angular/tutorial/02-add-e2e-test)

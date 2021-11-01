@@ -93,15 +93,13 @@ myorg/
 │       ├── proxy.conf.json
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── libs/
 ├── angular.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.base.json
-└── tslint.json
+└── tsconfig.base.json
 ```
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That's why the `api` application appeared there.
@@ -179,3 +177,15 @@ export class AppController {
   }
 }
 ```
+
+In a new terminal window, serve the API.
+
+```bash
+npx nx serve api
+```
+
+The API starts running on port `3333`.
+
+## What's Next
+
+- Continue to [Step 6: Proxy](/latest/angular/tutorial/06-proxy)

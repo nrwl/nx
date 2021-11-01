@@ -4,7 +4,7 @@
 
 Awesome! The application is working end to end! However, there is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it will diverge, and, as a result, runtime errors will creep in. You should share this interface between the backend and the frontend. In Nx, you can do this by creating a library.
 
-**Run the following generator to create a library:**
+**Run the following command to create a library:**
 
 ```bash
 npx nx g @nrwl/workspace:lib data
@@ -24,17 +24,16 @@ myorg/
 │       │   ├── lib/
 │       │   │   └── data.ts
 │       │   └── index.ts
-│       ├── jest.conf.js
+│       ├── .eslintrc
+│       ├── jest.config.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── workspace.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.base.json
-└── tslint.json
+└── tsconfig.base.json
 ```
 
 **Copy the interface into `libs/data/src/lib/data.ts`.**
@@ -106,4 +105,20 @@ export class AppComponent {
 }
 ```
 
-Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+> Every time you add a new library, you have to restart `npx nx serve`.
+
+Restart the api and application in separate terminal windows
+
+```bash
+npx nx serve api
+```
+
+```bash
+npx nx serve todos
+```
+
+And you should see the application running.
+
+## What's Next
+
+- Continue to [Step 8: Create Libraries](/latest/angular/tutorial/08-create-libs)
