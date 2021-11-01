@@ -28,7 +28,7 @@ import {
 } from '../shared/workspace';
 import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
-import type {Architect} from '@angular-devkit/architect'
+import type { Architect } from '@angular-devkit/architect';
 import {
   EMPTY,
   Observable,

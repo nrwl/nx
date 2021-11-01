@@ -67,6 +67,9 @@ describe('librarySecondaryEntryPoint generator', () => {
       JSON.stringify({ name: '@my-org/lib1' })
     );
 
+    console.log(readJson(tree, 'workspace.json'));
+    console.log(readJson(tree, 'libs/lib1/project.json'));
+
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'testing',
       library: 'lib1',

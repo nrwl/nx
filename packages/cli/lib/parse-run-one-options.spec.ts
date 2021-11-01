@@ -8,11 +8,10 @@ describe('parseRunOneOptions', () => {
       },
     },
   };
-  const nxJson = {};
   const args = ['build', 'myproj', '--configuration=production', '--flag=true'];
 
   it('should work', () => {
-    expect(parseRunOneOptions('root', workspaceJson, nxJson, args)).toEqual({
+    expect(parseRunOneOptions('root', workspaceJson, args)).toEqual({
       project: 'myproj',
       target: 'build',
       configuration: 'production',
@@ -22,7 +21,7 @@ describe('parseRunOneOptions', () => {
 
   it('should work with --prod', () => {
     expect(
-      parseRunOneOptions('root', workspaceJson, nxJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'build',
         'myproj',
         '--prod',
@@ -38,7 +37,7 @@ describe('parseRunOneOptions', () => {
 
   it('should override --prod with --configuration', () => {
     expect(
-      parseRunOneOptions('root', workspaceJson, nxJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'build',
         'myproj',
         '--prod',
@@ -56,7 +55,7 @@ describe('parseRunOneOptions', () => {
 
   it('should work with run syntax', () => {
     expect(
-      parseRunOneOptions('root', workspaceJson, nxJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'run',
         'myproj:build:staging',
         '--flag=true',
@@ -73,8 +72,7 @@ describe('parseRunOneOptions', () => {
     expect(
       parseRunOneOptions(
         'root',
-        { ...workspaceJson },
-        { cli: { defaultProjectName: 'myproj' } },
+        { ...workspaceJson, cli: { defaultProjectName: 'myproj' } },
         ['build', '--flag=true']
       )
     ).toEqual({
@@ -87,7 +85,7 @@ describe('parseRunOneOptions', () => {
 
   it('should use defaultConfiguration when no provided', () => {
     expect(
-      parseRunOneOptions('root', workspaceJson, nxJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'run',
         'myproj:build',
         '--flag=true',
@@ -101,24 +99,20 @@ describe('parseRunOneOptions', () => {
   });
 
   it('should return false when the task is not recognized', () => {
-    expect(parseRunOneOptions('root', {}, nxJson, args)).toBe(false);
-    expect(parseRunOneOptions('root', { projects: {} }, nxJson, args)).toBe(
-      false
-    );
+    expect(parseRunOneOptions('root', {}, args)).toBe(false);
+    expect(parseRunOneOptions('root', { projects: {} }, args)).toBe(false);
     expect(
-      parseRunOneOptions('root', { projects: { architect: {} } }, nxJson, args)
+      parseRunOneOptions('root', { projects: { architect: {} } }, args)
     ).toBe(false);
   });
 
   it('should return false when cannot find the right project', () => {
     expect(
-      parseRunOneOptions('root', workspaceJson, nxJson, ['build', 'wrongproj'])
+      parseRunOneOptions('root', workspaceJson, ['build', 'wrongproj'])
     ).toBe(false);
   });
 
   it('should return false when no project specified', () => {
-    expect(parseRunOneOptions('root', workspaceJson, nxJson, ['build'])).toBe(
-      false
-    );
+    expect(parseRunOneOptions('root', workspaceJson, ['build'])).toBe(false);
   });
 });

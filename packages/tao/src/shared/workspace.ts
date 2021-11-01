@@ -289,7 +289,8 @@ export class Workspaces {
     const nxJson = existsSync(nxJsonPath)
       ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
       : ({} as NxJsonConfiguration);
-    const workspace = existsSync(workspaceConfigName(this.root))
+    const workspacePath = path.join(this.root, workspaceConfigName(this.root));
+    const workspace = existsSync(workspacePath)
       ? this.readFromWorkspaceJson()
       : buildWorkspaceConfigurationFromGlobs(nxJson);
 
@@ -676,8 +677,8 @@ export function globForProjectFiles(root) {
 
 export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
-  projectFiles: string[] = globForProjectFiles(appRootPath),
-  readJson: (string) => any = readJsonFile
+  projectFiles: string[] = globForProjectFiles(appRootPath), // making this parameter allows devkit to pick up newly created projects
+  readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
 ): WorkspaceJsonConfiguration {
   const configurations: Record<string, ProjectConfiguration> = {};
   // For package.json inferred projects, we need the name

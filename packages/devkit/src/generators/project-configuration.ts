@@ -180,6 +180,17 @@ export function updateWorkspaceConfiguration(
       }
     });
   }
+
+  // Only prop in workspace.json is version. If there is no
+  // workspace.json file, this f(x) doesn't update anything
+  // in project config.
+  const workspacePath = getWorkspacePath(tree);
+  if (workspacePath) {
+    updateJson<WorkspaceJsonConfiguration>(tree, workspacePath, (json) => ({
+      ...json,
+      version: workspaceConfig.version,
+    }));
+  }
 }
 
 function readNxJsonExtends(tree: Tree, nxJson: { extends?: string }) {
@@ -334,9 +345,8 @@ function addProjectToWorkspaceJson(
     } else {
       if (mode === 'create') {
         workspaceJson.projects[projectName] = project.root;
-      } else {
-        writeJson(tree, configFile, project);
       }
+      writeJson(tree, configFile, project);
       if (cachedWorkspaceBuiltFromGlobs) {
         workspaceJson.projects[projectName] = project;
       }
