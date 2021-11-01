@@ -10,7 +10,8 @@
       "description": "Update Nest.js libraries",
       "factory": "./src/migrations/update-10-0-0/update-10-0-0"
     },
-    "update-13-2-0": {
+    "update-to-nest-8": {
+      "cli": "nx",
       "version": "13.2.0-beta.0",
       "description": "Update Nest.js libraries",
       "factory": "./src/migrations/update-13-2-0/update-to-nest-8"

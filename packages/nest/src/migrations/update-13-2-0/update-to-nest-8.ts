@@ -1,24 +1,42 @@
 import {
-  addDependenciesToPackageJson,
-  GeneratorCallback,
+  formatFiles,
+  installPackagesTask,
   readJson,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
-import { minVersion, satisfies } from 'semver';
+import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { checkAndCleanWithSemver } from '@nrwl/workspace';
+import { satisfies } from 'semver';
 import {
   nestJsSchematicsVersion8,
   nestJsVersion8,
   rxjsVersion7,
 } from '../../utils/versions';
 
-export async function update(tree: Tree) {
-  const packageJson = readJson(tree, 'package.json');
-  let task: undefined | GeneratorCallback = undefined;
+export default async function update(tree: Tree) {
+  const shouldUpdate = await isUpdatable(tree);
 
-  if (packageJson.dependencies['@angular/common']) {
-    const rxjs = minVersion(packageJson.dependencies['rxjs']).version;
+  if (!shouldUpdate) {
+    return;
+  }
+
+  updateVersion(tree);
+
+  await formatFiles(tree);
+
+  return (): void => {
+    installPackagesTask(tree);
+  };
+}
+
+async function isUpdatable(tree: Tree) {
+  const json = readJson(tree, 'package.json');
+
+  if (json.dependencies['@angular/common']) {
+    const rxjs = checkAndCleanWithSemver('rxjs', json.dependencies['rxjs']);
     if (satisfies(rxjs, rxjsVersion7)) {
-      task = replaceInPackageJson(tree, packageJson);
+      return true;
     } else {
       const { Confirm } = require('enquirer');
       const prompt = new Confirm({
@@ -27,40 +45,46 @@ export async function update(tree: Tree) {
         initial: true,
       });
 
-      const response = await prompt.run();
-
-      if (response) {
-        task = replaceInPackageJson(tree, packageJson);
-      }
+      return await prompt.run();
     }
   } else {
-    task = replaceInPackageJson(tree, packageJson);
+    return true;
   }
-
-  return task;
 }
 
-function replaceInPackageJson(tree: Tree, packageJson: Record<string, string>) {
-  let dependencies: Record<string, string> = {
-    '@nestjs/common': nestJsVersion8,
-    '@nestjs/core': nestJsVersion8,
-    '@nestjs/schematics': nestJsSchematicsVersion8,
-    '@nestjs/testing': nestJsVersion8,
-  };
+function updateVersion(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    json.dependencies = json.dependencies || {};
+    json.devDependencies = json.devDependencies || {};
 
-  if (packageJson.dependencies['@nestjs/platform-express']) {
-    dependencies = {
-      ...dependencies,
-      '@nestjs/platform-express': nestJsVersion8,
+    const rxjs = checkAndCleanWithSemver('rxjs', json.dependencies['rxjs']);
+
+    json.dependencies = {
+      ...json.dependencies,
+      '@nestjs/common': nestJsVersion8,
+      '@nestjs/core': nestJsVersion8,
+      rxjs: satisfies(rxjs, rxjsVersion7)
+        ? json.dependencies['rxjs']
+        : rxjsVersion7,
     };
-  }
 
-  if (packageJson.dependencies['@nestjs/platform-fastify']) {
-    dependencies = {
-      ...dependencies,
-      '@nestjs/platform-fastify': nestJsVersion8,
+    if (json.dependencies['@nestjs/platform-express']) {
+      json.dependencies['@nestjs/platform-express'] = nestJsVersion8;
+    }
+
+    if (json.dependencies['@nestjs/platform-fastify']) {
+      json.dependencies['@nestjs/platform-fastify'] = nestJsVersion8;
+    }
+
+    json.devDependencies = {
+      ...json.devDependencies,
+      '@nestjs/schematics': nestJsSchematicsVersion8,
+      '@nestjs/testing': nestJsVersion8,
     };
-  }
 
-  return addDependenciesToPackageJson(tree, dependencies, {});
+    json.dependencies = sortObjectByKeys(json.dependencies);
+    json.devDependencies = sortObjectByKeys(json.devDependencies);
+
+    return json;
+  });
 }

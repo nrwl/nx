@@ -1,6 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
-import { minVersion, satisfies } from 'semver';
+import { satisfies } from 'semver';
 import {
   nestJsSchematicsVersion7,
   nestJsSchematicsVersion8,
@@ -21,11 +21,16 @@ export function addDependencies(tree: Tree): GeneratorCallback {
   const packageJson = readJson(tree, 'package.json');
 
   if (packageJson.dependencies['@angular/common']) {
-    const rxjs = minVersion(packageJson.dependencies['rxjs']).version;
+    let rxjs = packageJson.dependencies['rxjs'];
+
+    if (rxjs.startsWith('~') || rxjs.startsWith('^')) {
+      rxjs = rxjs.substring(1);
+    }
+
     if (satisfies(rxjs, rxjsVersion7)) {
       NEST_VERSION = nestJsVersion8;
       NEST_SCHEMATICS = nestJsSchematicsVersion8;
-      RXJS = rxjsVersion7;
+      RXJS = packageJson.dependencies['rxjs'];
     }
   } else {
     NEST_VERSION = nestJsVersion8;
