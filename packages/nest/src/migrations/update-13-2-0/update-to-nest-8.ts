@@ -11,8 +11,6 @@ import {
   rxjsVersion7,
 } from '../../utils/versions';
 
-const { Confirm } = require('enquirer');
-
 export async function update(tree: Tree) {
   const packageJson = readJson(tree, 'package.json');
   let task: undefined | GeneratorCallback = undefined;
@@ -22,6 +20,7 @@ export async function update(tree: Tree) {
     if (satisfies(rxjs, rxjsVersion7)) {
       task = replaceInPackageJson(tree, packageJson);
     } else {
+      const { Confirm } = require('enquirer');
       const prompt = new Confirm({
         name: 'question',
         message: 'Do you want to update to RxJS 7 + Nest 8?',
