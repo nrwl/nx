@@ -8,6 +8,8 @@ import {
   toProjectName,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
+import { parseJson } from '@nrwl/tao/src/utils/json';
+import { basename } from 'path';
 
 import {
   getWorkspaceLayout,
@@ -18,8 +20,6 @@ import { joinPathFragments } from '../utils/path';
 
 import type { Tree } from '@nrwl/tao/src/shared/tree';
 import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
-import { basename } from 'path';
-import { parseJson } from '@nrwl/devkit';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -323,7 +323,7 @@ function addProjectToWorkspaceJson(
   );
 
   const configFile =
-    (mode === 'create' && standalone || !path)
+    (mode === 'create' && standalone) || !path
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
 

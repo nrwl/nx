@@ -72,7 +72,7 @@ export function parseRunOneOptions(
   const defaultProjectName = calculateDefaultProjectName(
     process.cwd(),
     root,
-    workspaceConfiguration,
+    workspaceConfiguration
   );
 
   const parsedArgs = yargsParser(args, {
@@ -118,8 +118,7 @@ export function parseRunOneOptions(
 
   // we need both to be able to run a target, no tasks runner
   const p =
-    workspaceConfiguration.projects &&
-    workspaceConfiguration.projects[project];
+    workspaceConfiguration.projects && workspaceConfiguration.projects[project];
   if (!p) return false;
 
   let targets;

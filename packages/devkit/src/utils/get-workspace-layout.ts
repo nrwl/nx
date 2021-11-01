@@ -24,9 +24,10 @@ export function getWorkspaceLayout(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
   const workspacePath = getWorkspacePath(tree);
-  const rawWorkspace = workspacePath && tree.exists(workspacePath)
-    ? readJson<RawWorkspaceJsonConfiguration>(tree, workspacePath)
-    : null;
+  const rawWorkspace =
+    workspacePath && tree.exists(workspacePath)
+      ? readJson<RawWorkspaceJsonConfiguration>(tree, workspacePath)
+      : null;
 
   return {
     appsDir: nxJson?.workspaceLayout?.appsDir ?? 'apps',
