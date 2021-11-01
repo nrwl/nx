@@ -47,7 +47,7 @@ begin.
 - [Distributed task execution & computation caching](/{{framework}}/core-concepts/mental-model)
 - [Code sharing and ownership management](/{{framework}}/structure/monorepo-tags)
 
-**Nx Integrated Development Experience**
+**Integrated Development Experience**
 
 - [High-quality editor plugins](/{{framework}}/getting-started/console)
   & [GitHub apps](https://github.com/apps/nx-cloud)

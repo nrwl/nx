@@ -22,6 +22,11 @@
             "file": "angular/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -95,11 +100,6 @@
             "name": "Configuration",
             "id": "configuration",
             "file": "angular/guides/configuration"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
           },
           {
             "name": "Nx Plugins and Devkit",
@@ -2616,6 +2616,11 @@
             "file": "node/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -2673,11 +2678,6 @@
             "name": "Configuration",
             "id": "configuration",
             "file": "node/guides/configuration"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
           },
           {
             "name": "Nx Plugins and Devkit",

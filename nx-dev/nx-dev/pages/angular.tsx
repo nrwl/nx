@@ -391,26 +391,25 @@ export function AngularPage() {
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Nx Integrated Development Experience
+                    Integrated Development Experience
                   </h3>
                   <p className="sm:text-lg mb-6">
-                    Nx provides a modern dev experience that is more integrated.
-                    Nx adds a high-quality VS Code plugin which helps you use
-                    the build tool effectively, generate components in folders,
-                    and much more.
+                    Nx provides a modern integrated dev experience. Nx adds a
+                    high-quality VS Code plugin which helps you use the build
+                    tool effectively, generate components in folders, and much
+                    more.
                   </p>
                   <p className="sm:text-lg mb-6">
-                    Nx also supports optional free cloud support with Nx Cloud
-                    as well as GitHub integration. Share links with your
-                    teammates where everyone working on a project can examine
-                    detailed build logs and get insights about how to improve
-                    your project and build.
+                    Nx also has optional free cloud support as well as GitHub
+                    integration. Share links with your teammates where everyone
+                    working on a project can examine detailed build logs and get
+                    insights about how to improve your project and build.
                   </p>
                 </div>
                 <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <Image
                     src="/images/vscode-nxcloud-pr.png"
-                    alt="Nx Integrated Development Experience illustration"
+                    alt="Integrated Development Experience illustration"
                     width={870}
                     height={830}
                   />
