@@ -39,3 +39,7 @@ It created a proxy configuration that allows the Angular application to talk to 
 ```
 
 This configuration tells `nx serve` to forward all requests starting with `/api` to the process listening on port `3333`.
+
+## What's Next
+
+- Continue to [Step 7: Share Code](/latest/angular/tutorial/07-share-code)

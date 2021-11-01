@@ -12,7 +12,11 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of Angular components.
 
-**Run `npx nx g @nrwl/angular:lib ui`.**
+Use the generate to scaffold a new library:
+
+```sh
+npx nx g @nrwl/angular:lib ui
+```
 
 You should see the following:
 
@@ -30,16 +34,16 @@ myorg/
 │       │   │   ├── ui.module.spec.ts
 │       │   │   └── ui.module.ts
 │       │   └── index.ts
+│       ├── .eslintrc
 │       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
+├── .eslintrc
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.base.json
-└── tslint.json
+└── tsconfig.base.json
 ```
 
 The `libs/ui/src/lib/ui.module.ts` file looks like this:
@@ -81,16 +85,15 @@ myorg/
 │       │   │   ├── ui.module.spec.ts
 │       │   │   └── ui.module.ts
 │       │   └── index.ts
+│       ├── .eslintrc
 │       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.base.json
-└── tslint.json
+└── tsconfig.base.json
 ```
 
 **Add a `todos` input to `libs/ui/src/lib/todos/todos.component.ts`.**
@@ -105,7 +108,7 @@ import { Todo } from '@myorg/data';
   styleUrls: ['./todos.component.css'],
 })
 export class TodosComponent implements OnInit {
-  @Input() todos: Todo[];
+  @Input() todos: Todo[] = [];
 
   constructor() {}
 
@@ -152,4 +155,16 @@ export class AppModule {}
 <button (click)="addTodo()">Add Todo</button>
 ```
 
-**Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+Restart the api and application in separate terminal windows
+
+```bash
+npx nx serve api
+```
+
+```bash
+npx nx serve todos
+```
+
+## What's Next
+
+- Continue to [Step 9: Using the Dependency Graph](/latest/angular/tutorial/09-dep-graph)

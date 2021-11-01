@@ -79,3 +79,7 @@ export class AppComponent {
 ```
 
 The tests should pass now.
+
+## What's Next
+
+- Continue to [Step 4: Connect to an API](/latest/angular/tutorial/04-connect-to-api)
