@@ -11,6 +11,7 @@ const schemaDefaults = {
   setupFile: 'none',
   babelJest: false,
   supportTsx: false,
+  experimentalSwc: false,
   skipSetupFile: false,
   skipSerializers: false,
 } as const;
@@ -28,7 +29,7 @@ function normalizeOptions(options: JestProjectSchema) {
   }
 
   // if we support TSX or babelJest we don't support angular(html templates)
-  if (options.supportTsx || options.babelJest) {
+  if (options.supportTsx || options.babelJest || options.swcJest) {
     options.skipSerializers = true;
   }
 

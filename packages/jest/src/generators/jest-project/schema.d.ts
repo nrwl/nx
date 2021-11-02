@@ -1,6 +1,7 @@
 export interface JestProjectSchema {
   project: string;
   supportTsx?: boolean;
+  swcJest?: boolean;
   /**
    * @deprecated
    */

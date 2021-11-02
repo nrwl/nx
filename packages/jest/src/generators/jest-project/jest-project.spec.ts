@@ -20,6 +20,7 @@ describe('jestProject', () => {
     testEnvironment: 'jsdom',
     setupFile: 'none',
     babelJest: false,
+    swcJest: false,
     skipFormat: false,
   };
 
@@ -289,6 +290,20 @@ describe('jestProject', () => {
         supportTsx: true,
       } as JestProjectSchema);
       expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
+  describe('--swc-jest', () => {
+    it('should generate proper jest.transform when swcJest is true', async () => {
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+        swcJest: true,
+      } as JestProjectSchema);
+      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.js');
+      expect(jestConfig.transform).toEqual({
+        '^.+\\.[tj]s$': '@swc/jest',
+      });
     });
   });
 });
