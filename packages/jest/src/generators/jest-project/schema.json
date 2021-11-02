@@ -46,6 +46,12 @@
       "description": "Use babel-jest instead of ts-jest",
       "default": false
     },
+    "swcJest": {
+      "type": "boolean",
+      "alias": "swc-jest",
+      "description": "Use @swc/jest instead of ts-jest",
+      "default": false
+    },
     "skipFormat": {
       "description": "Skip formatting files",
       "type": "boolean",
