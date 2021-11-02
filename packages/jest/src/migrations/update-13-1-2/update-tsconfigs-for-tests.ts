@@ -21,6 +21,10 @@ function updateTsConfigsForTests(tree: Tree) {
         'tsconfig.spec.json'
       );
 
+      if (!tree.exists(tsconfigSpecPath)) {
+        return;
+      }
+
       updateTsConfigInclude(tree, tsconfigSpecPath);
 
       switch (projectConfig.projectType) {
@@ -56,7 +60,9 @@ function updateTsConfigsForTests(tree: Tree) {
       appConfig.exclude = makeAllPatternsFromSpecPatterns(appConfig.exclude);
       tree.write(tsConfigPath, JSON.stringify(appConfig));
     } else {
-      logger.error(stripIndents`Unable to find a tsconfig at ${tsConfigPath}`);
+      logger.warn(
+        stripIndents`Unable update ${tsConfigPath} to exclude new test files patterns since it does not exist.`
+      );
     }
   }
 
@@ -70,8 +76,8 @@ function updateTsConfigsForTests(tree: Tree) {
       specConfig.include = makeAllPatternsFromSpecPatterns(specConfig.include);
       tree.write(tsconfigSpecPath, JSON.stringify(specConfig));
     } else {
-      logger.error(
-        stripIndents`Unable to update tsconfig.spec.json at ${tsconfigSpecPath}`
+      logger.warn(
+        stripIndents`Unable update ${tsconfigSpecPath} to include new test files patterns since it does not exist.`
       );
     }
   }
