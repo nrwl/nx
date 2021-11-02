@@ -11,7 +11,7 @@ const schemaDefaults = {
   setupFile: 'none',
   babelJest: false,
   supportTsx: false,
-  experimentalSwc: false,
+  swcJest: false,
   skipSetupFile: false,
   skipSerializers: false,
 } as const;
