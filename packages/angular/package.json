@@ -49,6 +49,7 @@
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
     "rxjs-for-await": "0.0.2",
-    "webpack-merge": "5.7.3"
+    "webpack-merge": "5.7.3",
+    "find-parent-dir": "0.3.1"
   }
 }

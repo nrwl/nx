@@ -12,7 +12,8 @@
     "ignore",
     "jasmine-marbles",
     "rxjs-for-await",
-    "webpack-merge"
+    "webpack-merge",
+    "find-parent-dir"
   ],
   "keepLifecycleScripts": true
 }

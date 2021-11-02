@@ -96,6 +96,18 @@
       "version": "13.0.0-beta.10",
       "description": "Adds postcss packages needed for Tailwind support if ng-packagr is already installed.",
       "factory": "./src/migrations/update-13-0-0/add-postcss-packages"
+    },
+    "update-angular-config": {
+      "cli": "nx",
+      "version": "13.2.0",
+      "description": "Remove deprecated options from webpack-server and webpack-browser.",
+      "factory": "./src/migrations/update-13-2-0/update-angular-config"
+    },
+    "update-libraries": {
+      "cli": "nx",
+      "version": "13.2.0",
+      "description": "Remove enableIvy and add compilationMode to library tsconfig and remove deprecated ng-packagr options.",
+      "factory": "./src/migrations/update-13-2-0/update-libraries"
     }
   },
   "packageJsonUpdates": {
