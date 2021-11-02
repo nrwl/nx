@@ -1,0 +1,48 @@
+{
+  "name": "@nrwl/react-native",
+  "version": "0.0.1",
+  "description": "React Native Plugin for Nx",
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "Jest",
+    "Native",
+    "CLI"
+  ],
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/react-native"
+  },
+  "license": "MIT",
+  "author": "Victor Savkin",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "@nrwl/detox": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/react": "*",
+    "chalk": "^4.1.0",
+    "ignore": "^5.0.4",
+    "metro-resolver": "^0.66.2",
+    "node-fetch": "^2.6.1",
+    "tsconfig-paths": "^3.9.0"
+  },
+  "peerDependencies": {
+    "@nrwl/workspace": "*",
+    "react-native": "^0.66.1"
+  },
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "schematics": "./generators.json"
+}

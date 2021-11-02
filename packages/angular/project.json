@@ -1,0 +1,91 @@
+{
+  "root": "packages/angular",
+  "sourceRoot": "packages/angular",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/angular/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/angular"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/angular",
+        "tsConfig": "packages/angular/tsconfig.lib.json",
+        "packageJson": "packages/angular/package.json",
+        "main": "packages/angular/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/angular",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/creator-files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/angular"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/build-angular"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js angular"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/angular/**/*.ts",
+          "packages/angular/**/*.spec.ts",
+          "packages/angular/**/*_spec.ts",
+          "packages/angular/**/*.spec.tsx",
+          "packages/angular/**/*.spec.js",
+          "packages/angular/**/*.spec.jsx",
+          "packages/angular/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["workspace", "cypress", "jest"]
+}

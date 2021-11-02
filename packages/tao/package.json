@@ -1,0 +1,44 @@
+{
+  "name": "@nrwl/tao",
+  "version": "0.0.1",
+  "description": "CLI for generating code and running commands",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/tao"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "bin": {
+    "tao": "./index.js"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "chalk": "4.1.0",
+    "enquirer": "~2.3.6",
+    "fs-extra": "^9.1.0",
+    "rxjs": "^6.5.4",
+    "rxjs-for-await": "0.0.2",
+    "semver": "7.3.4",
+    "jsonc-parser": "3.0.0",
+    "tmp": "~0.2.1",
+    "tslib": "^2.0.0",
+    "yargs-parser": "20.0.0"
+  }
+}

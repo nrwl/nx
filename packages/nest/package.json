@@ -1,0 +1,38 @@
+{
+  "name": "@nrwl/nest",
+  "version": "0.0.1",
+  "description": "Nest Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nest"
+  },
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/node": "*",
+    "@nrwl/jest": "*",
+    "@nestjs/schematics": "^7.0.0"
+  }
+}

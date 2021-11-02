@@ -1,0 +1,85 @@
+{
+  "root": "nx-dev/nx-dev",
+  "sourceRoot": "nx-dev/nx-dev",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "outputPath": "dist/nx-dev/nx-dev",
+        "command": "nx run nx-dev:sitemap"
+      }
+    },
+    "sitemap": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts --watch",
+          "nx run nx-dev:serve-nextjs"
+        ],
+        "parallel": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/next:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "root": "nx-dev/nx-dev",
+        "outputPath": "dist/nx-dev/nx-dev"
+      },
+      "configurations": {
+        "production": {}
+      }
+    },
+    "serve-nextjs": {
+      "executor": "@nrwl/next:server",
+      "options": {
+        "buildTarget": "nx-dev:build-base",
+        "dev": true
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "nx-dev:build-base:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nrwl/next:export",
+      "options": {
+        "buildTarget": "nx-dev:build:production"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/nx-dev/**/*.{ts,tsx,js,jsx}"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/nx-dev"],
+      "options": {
+        "jestConfig": "nx-dev/nx-dev/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:app"],
+  "implicitDependencies": ["docs"]
+}

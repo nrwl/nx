@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/workspace:workspace should create a prettierrc file 1`] = `
+"{
+  \\"singleQuote\\": true
+}
+"
+`;
+
+exports[`@nrwl/workspace:workspace should recommend vscode extensions (angular) 1`] = `
+Array [
+  "angular.ng-template",
+  "nrwl.angular-console",
+  "esbenp.prettier-vscode",
+]
+`;
+
+exports[`@nrwl/workspace:workspace should recommend vscode extensions 1`] = `
+Array [
+  "nrwl.angular-console",
+  "esbenp.prettier-vscode",
+]
+`;

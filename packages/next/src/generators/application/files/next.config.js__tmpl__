@@ -1,0 +1,74 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const withNx = require('@nrwl/next/plugins/with-nx');
+
+<% if (style === 'less') { %>
+// This plugin is needed until this PR is merged.
+// https://github.com/vercel/next.js/pull/23185
+const withLess = require('@nrwl/next/plugins/with-less');
+
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
+  nx: {
+    // Set this to true if you would like to to use SVGR
+    // See: https://github.com/gregberge/svgr
+    svgr: false,
+  },
+  // Set this to true if you use CSS modules.
+  // See: https://github.com/css-modules/css-modules
+  cssModules: false,
+};
+
+module.exports = withLess(withNx(nextConfig));
+<% } else if (style === 'styl') { %>
+const withStylus = require('@nrwl/next/plugins/with-stylus');
+
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
+  nx: {
+    // Set this to true if you would like to to use SVGR
+    // See: https://github.com/gregberge/svgr
+    svgr: false,
+  },
+  // Set this to true if you use CSS modules.
+  // See: https://github.com/css-modules/css-modules
+  cssModules: false,
+};
+
+module.exports = withStylus(withNx(nextConfig));
+<% } else if (
+  style === 'styled-components'
+  ||style === '@emotion/styled'
+  || style === 'styled-jsx'
+  || style === 'none'
+) { %>
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
+  nx: {
+    // Set this to true if you would like to to use SVGR
+    // See: https://github.com/gregberge/svgr
+    svgr: false,
+  },
+};
+
+module.exports = withNx(nextConfig);
+<% } else {
+// Defaults to CSS/SASS (which don't need plugin as of Next 9.3) %>
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
+  nx: {
+    // Set this to true if you would like to to use SVGR
+    // See: https://github.com/gregberge/svgr
+    svgr: false,
+  },
+};
+
+module.exports = withNx(nextConfig);
+<% } %>

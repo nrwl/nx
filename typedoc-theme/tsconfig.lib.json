@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "es2018",
+    "lib": ["es2018", "dom"],
+    "module": "commonjs",
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": []
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.spec.ts"]
+}

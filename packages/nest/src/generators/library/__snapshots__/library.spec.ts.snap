@@ -1,0 +1,180 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1`] = `
+"module.exports = {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+  },
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib'
+};
+"
+`;
+
+exports[`lib --testEnvironment should set target jest testEnvironment to node by default 1`] = `
+"module.exports = {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+  },
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib'
+};
+"
+`;
+
+exports[`lib --unit-test-runner none should not generate test configuration 1`] = `
+Object {
+  "extends": "../../tsconfig.base.json",
+  "files": Array [],
+  "include": Array [],
+  "references": Array [
+    Object {
+      "path": "./tsconfig.lib.json",
+    },
+  ],
+}
+`;
+
+exports[`lib --unit-test-runner none should not generate test configuration 2`] = `
+Object {
+  "executor": "@nrwl/linter:eslint",
+  "options": Object {
+    "lintFilePatterns": Array [
+      "libs/my-lib/**/*.ts",
+    ],
+  },
+  "outputs": Array [
+    "{options.outputFile}",
+  ],
+}
+`;
+
+exports[`lib nested should create a local tsconfig.json 1`] = `
+Object {
+  "extends": "../../../tsconfig.base.json",
+  "files": Array [],
+  "include": Array [],
+  "references": Array [
+    Object {
+      "path": "./tsconfig.lib.json",
+    },
+    Object {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
+}
+`;
+
+exports[`lib not nested should add the @Global decorator 1`] = `
+"import { Module, Global } from '@nestjs/common';
+
+@Global()
+@Module({
+	controllers: [],
+	providers: [],
+	exports: [],
+})
+export class MyLibModule {}
+"
+`;
+
+exports[`lib not nested should create a local tsconfig.json 1`] = `
+Object {
+  "extends": "../../tsconfig.base.json",
+  "files": Array [],
+  "include": Array [],
+  "references": Array [
+    Object {
+      "path": "./tsconfig.lib.json",
+    },
+    Object {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
+}
+`;
+
+exports[`lib not nested should generate files 1`] = `
+Object {
+  "extends": Array [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+  ],
+}
+`;
+
+exports[`lib not nested should provide the controller and service 1`] = `
+"import { Module } from '@nestjs/common';
+import { MyLibController } from './my-lib.controller';
+import { MyLibService } from './my-lib.service';
+
+@Module({
+	controllers: [MyLibController],
+	providers: [MyLibService],
+	exports: [MyLibService],
+})
+export class MyLibModule {}
+"
+`;
+
+exports[`lib not nested should provide the controller and service 2`] = `
+"import { Controller } from '@nestjs/common';
+import { MyLibService } from './my-lib.service';
+
+@Controller('my-lib')
+export class MyLibController {
+  constructor(private myLibService: MyLibService) {}
+}
+"
+`;
+
+exports[`lib not nested should provide the controller and service 3`] = `
+"export * from './lib/my-lib.controller';
+export * from './lib/my-lib.service';
+export * from './lib/my-lib.module';
+
+"
+`;

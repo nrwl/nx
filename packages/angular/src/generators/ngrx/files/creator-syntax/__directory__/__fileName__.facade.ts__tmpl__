@@ -1,0 +1,27 @@
+import { Injectable } from '@angular/core';
+import { select, Store, Action } from '@ngrx/store';
+
+import * as <%= className %>Actions from './<%= fileName %>.actions';
+import * as <%= className %>Feature from './<%= fileName %>.reducer';
+import * as <%= className %>Selectors from './<%= fileName %>.selectors';
+
+@Injectable()
+export class <%= className %>Facade {
+  /**
+   * Combine pieces of state using createSelector, 
+   * and expose them as observables through the facade.
+   */
+  loaded$ = this.store.pipe(select(<%= className %>Selectors.get<%= className %>Loaded));
+  all<%= className %>$ = this.store.pipe(select(<%= className %>Selectors.getAll<%= className %>));
+  selected<%= className %>$ = this.store.pipe(select(<%= className %>Selectors.getSelected));
+
+  constructor(private readonly store: Store) {}
+
+  /**
+   * Use the initialization action to perform one 
+   * or more tasks in your Effects.
+   */
+  init() {
+    this.store.dispatch(<%= className %>Actions.init());
+  }
+}

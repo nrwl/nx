@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["**/*.ts"],
+  "compilerOptions": {
+    "types": [
+      <% if (unitTestRunner === 'jest') { %>"jest",<% } %>
+      <% if (unitTestRunner === 'karma') { %>"jasmine",<% } %>
+      "node"
+    ]
+  }
+}

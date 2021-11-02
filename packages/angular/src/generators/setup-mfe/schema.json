@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "GeneratorAngularMFESetup",
+  "cli": "nx",
+  "title": "Generate Module Federation Setup for Angular App",
+  "description": "Create Module Federation configuration files for given Angular Application.",
+  "type": "object",
+  "properties": {
+    "appName": {
+      "type": "string",
+      "description": "The name of the application to generate the Module Federation configuration for.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What app would you like to generate a Module Federation configuration for?"
+    },
+    "mfeType": {
+      "type": "string",
+      "enum": ["host", "remote"],
+      "description": "Type of application to generate the Module Federation configuration for.",
+      "default": "remote"
+    },
+    "port": {
+      "type": "number",
+      "description": "The port at which the remote application should be served."
+    },
+    "remotes": {
+      "type": "array",
+      "description": "A list of remote application names that the host application should consume."
+    },
+    "host": {
+      "type": "string",
+      "description": "The name of the host application that the remote application will be consumed by."
+    },
+    "routing": {
+      "type": "boolean",
+      "description": "Generate a routing setup to allow a host application to route to the remote application."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the workspace after the generator completes."
+    }
+  },
+  "required": ["appName", "mfeType"],
+  "additionalProperties": false
+}

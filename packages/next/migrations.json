@@ -1,0 +1,205 @@
+{
+  "schematics": {
+    "update-8.10.0": {
+      "version": "8.10.0-beta.1",
+      "description": "Update Next.js libraries",
+      "factory": "./src/migrations/update-8-10-0/update-8-10-0"
+    },
+    "create-next-config-9.2.0": {
+      "version": "9.2.0-beta.1",
+      "description": "Add next.config.js file to Next apps",
+      "factory": "./src/migrations/update-9-2-0/create-next-config"
+    },
+    "update-9.3.1": {
+      "version": "9.3.1-beta.1",
+      "description": "Rename @nrwl/next:dev-server to @nrwl/next:server",
+      "factory": "./src/migrations/update-9-3-1/update-9-3-1"
+    },
+    "rename-emotion-packages-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Rename emotion packages to match new 11.0.0 package names",
+      "factory": "./src/migrations/update-11-0-0/rename-emotion-packages-11-0-0"
+    },
+    "update-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-11-0-0/update-11-0-0"
+    },
+    "update-babel-config-11.5.0": {
+      "cli": "nx",
+      "version": "11.5.0-beta.1",
+      "description": "Update .babelrc to use '@nrwl/next/babel' instead of 'next/babel'",
+      "factory": "./src/migrations/update-11-5-0/update-babel-config"
+    },
+    "remove-tsconfig-app-11.5.0": {
+      "cli": "nx",
+      "version": "11.5.0-beta.1",
+      "description": "Remove tsconfig.app.json",
+      "factory": "./src/migrations/update-11-5-0/remove-tsconfig-app-11-5-0"
+    },
+    "add-js-include-11.6.0": {
+      "cli": "nx",
+      "version": "11.6.0-beta.0",
+      "description": "Add js patterns to tsconfig.json",
+      "factory": "./src/migrations/update-11-6-0/add-js-include-11-6-0"
+    },
+    "add-next-eslint-12.6.0": {
+      "cli": "nx",
+      "version": "12.6.0-beta.0",
+      "description": "Add 'next' eslint config",
+      "factory": "./src/migrations/update-12-6-0/add-next-eslint"
+    },
+    "fix-nextjs-lib-babel-config-12.8.0": {
+      "cli": "nx",
+      "version": "12.8.0-beta.11",
+      "description": "Adjust the Next.js lib babel configuration for styled-jsx",
+      "factory": "./src/migrations/update-12-8-0/remove-styled-jsx-babel-plugin"
+    },
+    "fix-page-dir-for-eslint": {
+      "cli": "nx",
+      "version": "12.10.0-beta.1",
+      "description": "Updates .eslintrc.json file to use the correct pages directory for '@next/next/no-html-link-for-pages'.",
+      "factory": "./src/migrations/update-12-10-0/fix-page-dir-for-eslint"
+    },
+    "update-emotion-setup-13.0.0": {
+      "cli": "nx",
+      "version": "13.0.0-beta.0",
+      "description": "Update tsconfig.json to use `jsxImportSource` to support css prop",
+      "factory": "./src/migrations/update-13-0-0/update-emotion-setup"
+    },
+    "update-to-webpack-5": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Set `webpack5: true` for all next.js projects.",
+      "factory": "./src/migrations/update-13-0-0/update-to-webpack-5"
+    },
+    "fix-less": {
+      "cli": "nx",
+      "version": "13.0.3-beta.1",
+      "description": "Fix setup for less stylesheets",
+      "factory": "./src/migrations/update-13-0-3/fix-less"
+    },
+    "enable-swc": {
+      "cli": "nx",
+      "version": "13.1.1-beta.1",
+      "description": "Enables SWC for Next.js apps.",
+      "factory": "./src/migrations/update-13-1-1/enable-swc"
+    }
+  },
+  "packageJsonUpdates": {
+    "8.10.0": {
+      "version": "8.10.0",
+      "packages": {
+        "next": {
+          "version": "9.1.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "9.2.0": {
+      "version": "9.2.0",
+      "packages": {
+        "next": {
+          "version": "9.3.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.1.0": {
+      "version": "10.1.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "9.5.2",
+          "alwaysAddToPackageJson": false
+        },
+        "node-sass": {
+          "version": "4.14.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/server": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.5.2": {
+      "version": "11.5.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.0.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.6.1": {
+      "version": "11.6.1-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.1.2": {
+      "version": "12.1.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.0.1",
+          "addToPackageJson": "devDependencies"
+        }
+      }
+    },
+    "update-12.7.2": {
+      "version": "12.7.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "update-13.0.3": {
+      "version": "13.0.3-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

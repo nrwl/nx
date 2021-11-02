@@ -1,0 +1,11 @@
+[
+  { "id": "angular", "name": "Angular", "alias": "a", "path": "angular" },
+  {
+    "id": "react",
+    "name": "React",
+    "alias": "r",
+    "path": "react",
+    "default": true
+  },
+  { "id": "node", "name": "Node", "alias": "n", "path": "node" }
+]

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxNestResolverGenerator",
+  "title": "Nest Resolver Options Schema.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The name of the resolver.",
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use?"
+    },
+    "project": {
+      "description": "The Nest project to target.",
+      "type": "string",
+      "$default": {
+        "$source": "projectName"
+      },
+      "alias": "p",
+      "x-prompt": "What Nest project would you like to target?"
+    },
+    "directory": {
+      "description": "Directory where the generated files are placed.",
+      "type": "string",
+      "aliases": ["dir", "path"]
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "unitTestRunner": {
+      "description": "Test runner to use for unit tests.",
+      "type": "string",
+      "enum": ["jest", "none"],
+      "default": "jest"
+    },
+    "flat": {
+      "description": "Flag to indicate if a directory is created.",
+      "type": "boolean",
+      "default": false
+    },
+    "language": {
+      "description": "Nest resolver language.",
+      "type": "string",
+      "enum": ["js", "ts"]
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name", "project"]
+}

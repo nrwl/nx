@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/storybook:configuration should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration should have the proper typings 1`] = `
+Array [
+  "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+  "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+  "../../../node_modules/@nrwl/react/typings/image.d.ts",
+]
+`;
+
+exports[`@nrwl/storybook:configuration should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
+"const rootMain = require('../../../.storybook/main');
+const rootWebpackConfig = require('../../../.storybook/webpack.config'); 
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    // for backwards compatibility call the \`rootWebpackConfig\`
+      // this can be removed once that one is migrated fully to
+      // use the \`webpackFinal\` property in the \`main.js\` file
+      config = rootWebpackConfig({ config });
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;

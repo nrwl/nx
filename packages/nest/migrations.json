@@ -1,0 +1,74 @@
+{
+  "schematics": {
+    "update-8-7-0.": {
+      "version": "8.7.0-beta.1",
+      "description": "Update Nest.js libraries",
+      "factory": "./src/migrations/update-8-7-0/update-8-7-0"
+    },
+    "update-10-0-0": {
+      "version": "10.0.0-beta.1",
+      "description": "Update Nest.js libraries",
+      "factory": "./src/migrations/update-10-0-0/update-10-0-0"
+    }
+  },
+  "packageJsonUpdates": {
+    "8.7.0": {
+      "version": "8.7.0-beta.1",
+      "packages": {
+        "@nestjs/common": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/core": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/platform-express": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/schematics": {
+          "version": "^6.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/testing": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "reflect-metadata": {
+          "version": "^0.1.13",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.0.0": {
+      "version": "10.0.0-beta.1",
+      "packages": {
+        "@nestjs/common": {
+          "version": "^7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/core": {
+          "version": "^7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/platform-express": {
+          "version": "^7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/schematics": {
+          "version": "^7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/testing": {
+          "version": "^7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "rxjs": {
+          "version": "~6.5.5",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    }
+  }
+}

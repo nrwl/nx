@@ -1,0 +1,2684 @@
+{
+  "hash": "2b07a7e3a85d36b3b567c3a8e11febc1e73f81d021a42221cba01217bca649e2",
+  "projects": [
+    {
+      "name": "nx-cloud-private-cloud-feature-community-on-public-cloud",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/private-cloud/feature-community-on-public-cloud",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-private-cloud-feature-installation",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/private-cloud/feature-installation",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-workspace-setup",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:feature"],
+        "root": "libs/nx-cloud/reference/feature-workspace-setup",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-invite-members",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/reference/feature-invite-members",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-data-access-workspace",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:data-access"],
+        "root": "libs/nx-cloud/reference/data-access-workspace",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-access-token",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature"],
+        "root": "libs/nx-cloud/reference/feature-access-token",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-private-cloud-feature-landing",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/private-cloud/feature-landing",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-util-org-membership",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/reference/util-org-membership",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-style-guide",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/pages/feature-style-guide",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-contact-us",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/pages/feature-contact-us",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-workspace",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:feature"],
+        "root": "libs/nx-cloud/reference/feature-workspace",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-make-ng-cli-faster",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/feature-make-ng-cli-faster",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-private-cloud-feature-home",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/private-cloud/feature-home",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-branches",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/reference/feature-branches",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-nrwl-changelog",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/data-access-nrwl-changelog",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-about-us",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nrwlio-site/pages/feature-about-us",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-products",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/pages/feature-products",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-services",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/pages/feature-services",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-billing",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:feature"],
+        "root": "libs/nx-cloud/reference/feature-billing",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-careers",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/pages/feature-careers",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-terms-of-service",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/feature-terms-of-service",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-live-events",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/data-access-live-events",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-data-access-graphql",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:data-access"],
+        "root": "libs/nrwlio-site/data-access-graphql",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-runs",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/reference/feature-runs",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-live-broadcast",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature"],
+        "root": "libs/platform/feature-live-broadcast",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-nrwl-changelog",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-nrwl-changelog",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pages-feature-home",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/pages/feature-home",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-admin-feature-support",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/admin/feature-support",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-reference-feature-org",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/reference/feature-org",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-live-workshop",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature", "platform:client", "scope:live-workshop"],
+        "root": "libs/platform/feature-live-workshop",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-organizations",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-organizations",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-cookbook",
+      "type": "lib",
+      "data": {
+        "tags": ["data-access"],
+        "root": "libs/platform/data-access-cookbook",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-landing-page",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature"],
+        "root": "libs/platform/feature-landing-page",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-organization",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-organization",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-data-access-graphql",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:data-access"],
+        "root": "libs/nx-cloud/data-access-graphql",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-courses",
+      "type": "lib",
+      "data": {
+        "tags": ["type:data-access"],
+        "root": "libs/platform/data-access-courses",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-graphql",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/data-access-graphql",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-live-events",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-live-events",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-ui-text-sliders",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:ui"],
+        "root": "libs/nrwlio-site/ui/text-sliders",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-promotions",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/feature-promotions",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-expert-bio",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature"],
+        "root": "libs/platform/feature-expert-bio",
+        "files": []
+      }
+    },
+    {
+      "name": "design-system-testimonials",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "libs/design-system/testimonials",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-ui-breadcrumb-nav",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/ui/breadcrumb-nav",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-blurb",
+      "type": "lib",
+      "data": {
+        "tags": ["type:data-access"],
+        "root": "libs/platform/data-access-blurb",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-dashboard",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-dashboard",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-feature-pages",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:feature"],
+        "root": "libs/nrwlio-site/feature-pages",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-policies",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/feature-policies",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-data-access-book",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/data-access-book",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-cookbook",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-cookbook",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-policies",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-policies",
+        "files": []
+      }
+    },
+    {
+      "name": "shared-utils-download-csv",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/shared/utils/download-csv",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-landing",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/nx-cloud/feature-landing",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-pricing",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:feature"],
+        "root": "libs/nx-cloud/feature-pricing",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-courses",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature"],
+        "root": "libs/platform/feature-courses",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-reports",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-reports",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-topics",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "libs/platform/feature-topics",
+        "files": []
+      }
+    },
+    {
+      "name": "shared-google-analytics",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:shared"],
+        "root": "libs/shared/google-analytics",
+        "files": []
+      }
+    },
+    {
+      "name": "design-system-contents",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "libs/design-system/contents",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-contentful",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio"],
+        "root": "libs/nrwlio-site/contentful",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-about",
+      "type": "lib",
+      "data": {
+        "tags": ["type:feature"],
+        "root": "libs/platform/feature-about",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-feature-books",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/feature-books", "files": [] }
+    },
+    {
+      "name": "platform-feature-users",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/feature-users", "files": [] }
+    },
+    {
+      "name": "platform-ui-expert-bio",
+      "type": "lib",
+      "data": {
+        "tags": ["type:ui"],
+        "root": "libs/platform/ui-expert-bio",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-ui-footer",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:ui"],
+        "root": "libs/nrwlio-site/ui/footer",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-ui-header",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:ui"],
+        "root": "libs/nrwlio-site/ui/header",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-ui-styles",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:ui"],
+        "root": "libs/nrwlio-site/ui/styles",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-auth",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:feature"],
+        "root": "libs/nx-cloud/feature-auth",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-docs",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/feature-docs", "files": [] }
+    },
+    {
+      "name": "nx-cloud-ui-sparkline",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/ui/sparkline", "files": [] }
+    },
+    {
+      "name": "platform-feature-auth",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/feature-auth", "files": [] }
+    },
+    {
+      "name": "design-system-heroes",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "libs/design-system/heroes",
+        "files": []
+      }
+    },
+    {
+      "name": "design-system-images",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "libs/design-system/images",
+        "files": []
+      }
+    },
+    {
+      "name": "design-system-styles",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "libs/design-system/styles",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-ui-heros",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:ui"],
+        "root": "libs/nrwlio-site/ui/heros",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-feature-faq",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:feature"],
+        "root": "libs/nx-cloud/feature-faq",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-ui-terminal",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/ui/terminal", "files": [] }
+    },
+    {
+      "name": "nx-packages-nx-cloud",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-packages/nx-cloud", "files": [] }
+    },
+    {
+      "name": "ui-article-container",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/ui/article-container", "files": [] }
+    },
+    {
+      "name": "nrwlio-site-hubspot",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio"],
+        "root": "libs/nrwlio-site/hubspot",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-components",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/components", "files": [] }
+    },
+    {
+      "name": "platform-scss-utils",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/scss-utils", "files": [] }
+    },
+    {
+      "name": "platform-ui-courses",
+      "type": "lib",
+      "data": {
+        "tags": ["type:ui"],
+        "root": "libs/platform/ui-courses",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-ui-twitter",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/ui-twitter", "files": [] }
+    },
+    {
+      "name": "nrwl-api-reporting",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nrwl-api/reporting", "files": [] }
+    },
+    {
+      "name": "nrwlio-site-assets",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio", "type:ui"],
+        "root": "libs/nrwlio-site/assets",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-ui-alerts",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/ui/alerts", "files": [] }
+    },
+    {
+      "name": "nx-cloud-ui-footer",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/ui/footer", "files": [] }
+    },
+    {
+      "name": "nx-cloud-ui-header",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/ui/header", "files": [] }
+    },
+    {
+      "name": "nx-cloud-ui-styles",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/ui/styles", "files": [] }
+    },
+    {
+      "name": "shared-ui-markdown",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/shared/ui-markdown", "files": [] }
+    },
+    {
+      "name": "design-system-e2e",
+      "type": "e2e",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "apps/design-system-e2e",
+        "files": []
+      }
+    },
+    {
+      "name": "private-nx-cloud",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/private-nx-cloud/", "files": [] }
+    },
+    {
+      "name": "nx-cloud-hubspot",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nx-cloud", "type:util"],
+        "root": "libs/nx-cloud/hubspot",
+        "files": []
+      }
+    },
+    {
+      "name": "ui-article-media",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/ui/article-media", "files": [] }
+    },
+    {
+      "name": "common-platform",
+      "type": "lib",
+      "data": {
+        "tags": ["common:platform"],
+        "root": "libs/common-platform",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwlio-site-pwa",
+      "type": "lib",
+      "data": {
+        "tags": ["scope:nrwlio"],
+        "root": "libs/nrwlio-site/pwa",
+        "files": []
+      }
+    },
+    {
+      "name": "nx-cloud-assets",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/nx-cloud/assets", "files": [] }
+    },
+    {
+      "name": "nx-packages-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/nx-packages-e2e", "files": [] }
+    },
+    {
+      "name": "ui-testimonials",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/testimonials", "files": [] }
+    },
+    {
+      "name": "nx-cloud-utils",
+      "type": "lib",
+      "data": {
+        "tags": ["nx-cloud", "type:util"],
+        "root": "libs/nx-cloud/utils",
+        "files": []
+      }
+    },
+    {
+      "name": "platform-utils",
+      "type": "lib",
+      "data": { "tags": [], "root": "libs/platform/utils", "files": [] }
+    },
+    {
+      "name": "design-system",
+      "type": "app",
+      "data": {
+        "tags": ["scope:design-system", "type:ui"],
+        "root": "apps/design-system",
+        "files": []
+      }
+    },
+    {
+      "name": "nrwl-api-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/nrwl-api-e2e", "files": [] }
+    },
+    {
+      "name": "nx-cloud-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/nx-cloud-e2e", "files": [] }
+    },
+    {
+      "name": "platform-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/platform-e2e", "files": [] }
+    },
+    {
+      "name": "ui-downloads",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/downloads", "files": [] }
+    },
+    {
+      "name": "cloud-proxy",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/cloud-proxy", "files": [] }
+    },
+    {
+      "name": "common-site",
+      "type": "lib",
+      "data": {
+        "tags": ["common:site"],
+        "root": "libs/common-site",
+        "files": []
+      }
+    },
+    {
+      "name": "file-server",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/file-server", "files": [] }
+    },
+    {
+      "name": "ui-articles",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/articles", "files": [] }
+    },
+    {
+      "name": "ui-callouts",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/callouts", "files": [] }
+    },
+    {
+      "name": "ui-contents",
+      "type": "lib",
+      "data": { "tags": ["type:ui"], "root": "libs/ui/contents", "files": [] }
+    },
+    {
+      "name": "ui-features",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/features", "files": [] }
+    },
+    {
+      "name": "nrwlio-e2e",
+      "type": "e2e",
+      "data": {
+        "tags": ["scope:nrwlio"],
+        "root": "apps/nrwlio-e2e",
+        "files": []
+      }
+    },
+    {
+      "name": "ui-banners",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/banners", "files": [] }
+    },
+    {
+      "name": "platform",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/platform/", "files": [] }
+    },
+    {
+      "name": "ui-images",
+      "type": "lib",
+      "data": { "tags": ["type:ui"], "root": "libs/ui/images", "files": [] }
+    },
+    {
+      "name": "ui-styles",
+      "type": "lib",
+      "data": { "tags": ["type:ui"], "root": "libs/ui/styles", "files": [] }
+    },
+    {
+      "name": "nrwl-api",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/nrwl-api", "files": [] }
+    },
+    {
+      "name": "nx-cloud",
+      "type": "app",
+      "data": { "tags": ["nx-cloud"], "root": "apps/nx-cloud", "files": [] }
+    },
+    {
+      "name": "ui-heros",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/heros", "files": [] }
+    },
+    {
+      "name": "nx-api",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/nx-api/", "files": [] }
+    },
+    {
+      "name": "nrwlio",
+      "type": "app",
+      "data": { "tags": ["scope:nrwlio"], "root": "apps/nrwlio", "files": [] }
+    },
+    {
+      "name": "ui-ads",
+      "type": "lib",
+      "data": { "tags": ["ui"], "root": "libs/ui/ads", "files": [] }
+    }
+  ],
+  "dependencies": {
+    "nx-cloud-private-cloud-feature-community-on-public-cloud": [
+      {
+        "source": "nx-cloud-private-cloud-feature-community-on-public-cloud",
+        "target": "nx-cloud-feature-billing",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-private-cloud-feature-community-on-public-cloud",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-private-cloud-feature-community-on-public-cloud",
+        "target": "nx-cloud-private-cloud-feature-landing",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-private-cloud-feature-community-on-public-cloud",
+        "target": "nx-cloud-data-access-workspace",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-private-cloud-feature-installation": [],
+    "nx-cloud-reference-feature-workspace-setup": [
+      {
+        "source": "nx-cloud-reference-feature-workspace-setup",
+        "target": "nx-cloud-ui-terminal",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace-setup",
+        "target": "nx-cloud-ui-alerts",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace-setup",
+        "target": "nx-cloud-data-access-workspace",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-reference-feature-invite-members": [
+      {
+        "source": "nx-cloud-reference-feature-invite-members",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-invite-members",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-data-access-workspace": [],
+    "nx-cloud-reference-feature-access-token": [
+      {
+        "source": "nx-cloud-reference-feature-access-token",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-access-token",
+        "target": "nx-cloud-ui-alerts",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-access-token",
+        "target": "nx-cloud-reference-util-org-membership",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-access-token",
+        "target": "nx-cloud-data-access-workspace",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-private-cloud-feature-landing": [
+      {
+        "source": "nx-cloud-private-cloud-feature-landing",
+        "target": "ui-images",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-reference-util-org-membership": [],
+    "nrwlio-site-pages-feature-style-guide": [
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-contents",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-ads",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-articles",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-downloads",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-features",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-heros",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-images",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-style-guide",
+        "target": "ui-testimonials",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-pages-feature-contact-us": [
+      {
+        "source": "nrwlio-site-pages-feature-contact-us",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-contact-us",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-contact-us",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-contact-us",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-contact-us",
+        "target": "nrwlio-site-feature-pages",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-contact-us",
+        "target": "nrwlio-site-hubspot",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-reference-feature-workspace": [
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-data-access-workspace",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-reference-feature-access-token",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-feature-billing",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-reference-util-org-membership",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-ui-alerts",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-ui-breadcrumb-nav",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-ui-terminal",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-ui-sparkline",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-reference-feature-workspace-setup",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-workspace",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-make-ng-cli-faster": [
+      {
+        "source": "nx-cloud-feature-make-ng-cli-faster",
+        "target": "common-site",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-make-ng-cli-faster",
+        "target": "common-platform",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-make-ng-cli-faster",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-make-ng-cli-faster",
+        "target": "ui-images",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-private-cloud-feature-home": [
+      {
+        "source": "nx-cloud-private-cloud-feature-home",
+        "target": "ui-images",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-reference-feature-branches": [
+      {
+        "source": "nx-cloud-reference-feature-branches",
+        "target": "nx-cloud-ui-breadcrumb-nav",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-branches",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      }
+    ],
+    "platform-data-access-nrwl-changelog": [],
+    "nrwlio-site-pages-feature-about-us": [
+      {
+        "source": "nrwlio-site-pages-feature-about-us",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-about-us",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-about-us",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-pages-feature-products": [
+      {
+        "source": "nrwlio-site-pages-feature-products",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-products",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-products",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-products",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-pages-feature-services": [
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "ui-images",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "ui-heros",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "ui-ads",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-services",
+        "target": "nrwlio-site-feature-pages",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-billing": [
+      {
+        "source": "nx-cloud-feature-billing",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-billing",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-billing",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-billing",
+        "target": "nx-cloud-data-access-workspace",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-billing",
+        "target": "nx-cloud-ui-alerts",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-pages-feature-careers": [
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "shared-google-analytics",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "ui-contents",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "ui-testimonials",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "nrwlio-site-hubspot",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-careers",
+        "target": "nrwlio-site-feature-pages",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-terms-of-service": [],
+    "platform-data-access-live-events": [],
+    "nrwlio-site-data-access-graphql": [],
+    "nx-cloud-reference-feature-runs": [
+      {
+        "source": "nx-cloud-reference-feature-runs",
+        "target": "nx-cloud-ui-alerts",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-runs",
+        "target": "nx-cloud-ui-breadcrumb-nav",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-runs",
+        "target": "nx-cloud-ui-terminal",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-runs",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      }
+    ],
+    "platform-feature-live-broadcast": [
+      {
+        "source": "platform-feature-live-broadcast",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-broadcast",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-broadcast",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-broadcast",
+        "target": "platform-feature-auth",
+        "type": "static"
+      }
+    ],
+    "platform-feature-nrwl-changelog": [
+      {
+        "source": "platform-feature-nrwl-changelog",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-nrwl-changelog",
+        "target": "platform-data-access-nrwl-changelog",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-nrwl-changelog",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-nrwl-changelog",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-nrwl-changelog",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-pages-feature-home": [
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "nrwlio-site-ui-heros",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "ui-images",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "ui-contents",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "ui-ads",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "ui-callouts",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-pages-feature-home",
+        "target": "nrwlio-site-feature-pages",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-admin-feature-support": [
+      {
+        "source": "nx-cloud-admin-feature-support",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-admin-feature-support",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-admin-feature-support",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-reference-feature-org": [
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-data-access-workspace",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-reference-feature-workspace",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "ui-images",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-reference-feature-invite-members",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-reference-util-org-membership",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-ui-alerts",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-ui-breadcrumb-nav",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-reference-feature-org",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "platform-feature-live-workshop": [
+      {
+        "source": "platform-feature-live-workshop",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-workshop",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-workshop",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-workshop",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-workshop",
+        "target": "platform-feature-auth",
+        "type": "static"
+      }
+    ],
+    "platform-feature-organizations": [
+      {
+        "source": "platform-feature-organizations",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-organizations",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "platform-data-access-cookbook": [],
+    "platform-feature-landing-page": [
+      {
+        "source": "platform-feature-landing-page",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-landing-page",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "platform-feature-organization": [
+      {
+        "source": "platform-feature-organization",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-organization",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-data-access-graphql": [],
+    "platform-data-access-courses": [],
+    "platform-data-access-graphql": [],
+    "platform-feature-live-events": [
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-data-access-live-events",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-feature-live-broadcast",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-ui-twitter",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-live-events",
+        "target": "platform-feature-auth",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-ui-text-sliders": [],
+    "nx-cloud-feature-promotions": [
+      {
+        "source": "nx-cloud-feature-promotions",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-promotions",
+        "target": "common-platform",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-promotions",
+        "target": "common-site",
+        "type": "static"
+      }
+    ],
+    "platform-feature-expert-bio": [
+      {
+        "source": "platform-feature-expert-bio",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-expert-bio",
+        "target": "platform-ui-expert-bio",
+        "type": "static"
+      }
+    ],
+    "design-system-testimonials": [
+      {
+        "source": "design-system-testimonials",
+        "target": "design-system-styles",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system-testimonials",
+        "target": "design-system-images",
+        "type": "static"
+      },
+      {
+        "source": "design-system-testimonials",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-ui-breadcrumb-nav": [],
+    "platform-data-access-blurb": [],
+    "platform-feature-dashboard": [
+      {
+        "source": "platform-feature-dashboard",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-courses",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-book",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-nrwl-changelog",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-live-events",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-dashboard",
+        "target": "platform-data-access-cookbook",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-feature-pages": [
+      {
+        "source": "nrwlio-site-feature-pages",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-feature-pages",
+        "target": "nrwlio-site-ui-header",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-feature-pages",
+        "target": "nrwlio-site-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-feature-pages",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-feature-pages",
+        "target": "common-platform",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-policies": [],
+    "platform-data-access-book": [],
+    "platform-feature-cookbook": [
+      {
+        "source": "platform-feature-cookbook",
+        "target": "platform-data-access-cookbook",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-cookbook",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-cookbook",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-cookbook",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-cookbook",
+        "target": "platform-ui-twitter",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-cookbook",
+        "target": "platform-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-cookbook",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "platform-feature-policies": [
+      {
+        "source": "platform-feature-policies",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "shared-utils-download-csv": [],
+    "nx-cloud-feature-landing": [
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "nx-cloud-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "ui-heros",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "ui-articles",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "ui-ads",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "ui-images",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-landing",
+        "target": "ui-article-media",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-pricing": [
+      {
+        "source": "nx-cloud-feature-pricing",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-pricing",
+        "target": "ui-images",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-pricing",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-pricing",
+        "target": "nx-cloud-hubspot",
+        "type": "static"
+      }
+    ],
+    "platform-feature-courses": [
+      {
+        "source": "platform-feature-courses",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-courses",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-courses",
+        "target": "platform-data-access-courses",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-courses",
+        "target": "platform-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-courses",
+        "target": "platform-ui-courses",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-courses",
+        "target": "platform-ui-twitter",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-courses",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "platform-feature-reports": [
+      {
+        "source": "platform-feature-reports",
+        "target": "shared-utils-download-csv",
+        "type": "static"
+      }
+    ],
+    "platform-feature-topics": [
+      {
+        "source": "platform-feature-topics",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-topics",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-topics",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-topics",
+        "target": "platform-ui-twitter",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-topics",
+        "target": "platform-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-topics",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "shared-google-analytics": [],
+    "design-system-contents": [
+      {
+        "source": "design-system-contents",
+        "target": "design-system-styles",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system-contents",
+        "target": "design-system-images",
+        "type": "static"
+      },
+      {
+        "source": "design-system-contents",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-contentful": [
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-ads",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-articles",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-contents",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-downloads",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-heros",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-features",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "ui-testimonials",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "nrwlio-site-hubspot",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-contentful",
+        "target": "common-platform",
+        "type": "static"
+      }
+    ],
+    "platform-feature-about": [
+      {
+        "source": "platform-feature-about",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-about",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-about",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "platform-feature-books": [
+      {
+        "source": "platform-feature-books",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-books",
+        "target": "platform-data-access-book",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-books",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-books",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-books",
+        "target": "platform-ui-twitter",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-books",
+        "target": "platform-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-books",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "platform-feature-users": [
+      {
+        "source": "platform-feature-users",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-users",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "platform-ui-expert-bio": [
+      {
+        "source": "platform-ui-expert-bio",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-ui-footer": [
+      {
+        "source": "nrwlio-site-ui-footer",
+        "target": "nrwlio-site-hubspot",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-ui-footer",
+        "target": "shared-google-analytics",
+        "type": "static"
+      }
+    ],
+    "nrwlio-site-ui-header": [],
+    "nrwlio-site-ui-styles": [],
+    "nx-cloud-feature-auth": [
+      {
+        "source": "nx-cloud-feature-auth",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-auth",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-feature-auth",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-docs": [
+      {
+        "source": "nx-cloud-feature-docs",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-ui-sparkline": [],
+    "platform-feature-auth": [
+      {
+        "source": "platform-feature-auth",
+        "target": "platform-utils",
+        "type": "static"
+      },
+      {
+        "source": "platform-feature-auth",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "design-system-heroes": [
+      {
+        "source": "design-system-heroes",
+        "target": "design-system-styles",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system-heroes",
+        "target": "design-system-images",
+        "type": "static"
+      },
+      {
+        "source": "design-system-heroes",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "design-system-images": [
+      {
+        "source": "design-system-images",
+        "target": "design-system-styles",
+        "type": "implicit"
+      }
+    ],
+    "design-system-styles": [],
+    "nrwlio-site-ui-heros": [
+      {
+        "source": "nrwlio-site-ui-heros",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-ui-heros",
+        "target": "nrwlio-site-ui-text-sliders",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio-site-ui-heros",
+        "target": "ui-images",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-feature-faq": [
+      {
+        "source": "nx-cloud-feature-faq",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-ui-terminal": [
+      {
+        "source": "nx-cloud-ui-terminal",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      }
+    ],
+    "nx-packages-nx-cloud": [],
+    "ui-article-container": [],
+    "nrwlio-site-hubspot": [],
+    "platform-components": [
+      {
+        "source": "platform-components",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "platform-components",
+        "target": "platform-utils",
+        "type": "static"
+      }
+    ],
+    "platform-scss-utils": [],
+    "platform-ui-courses": [
+      {
+        "source": "platform-ui-courses",
+        "target": "platform-data-access-courses",
+        "type": "static"
+      }
+    ],
+    "platform-ui-twitter": [],
+    "nrwl-api-reporting": [],
+    "nrwlio-site-assets": [],
+    "nx-cloud-ui-alerts": [],
+    "nx-cloud-ui-footer": [],
+    "nx-cloud-ui-header": [
+      {
+        "source": "nx-cloud-ui-header",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-ui-header",
+        "target": "nx-cloud-utils",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-ui-header",
+        "target": "nx-cloud-feature-billing",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-ui-header",
+        "target": "nx-cloud-admin-feature-support",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-ui-header",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud-ui-header",
+        "target": "ui-images",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-ui-styles": [],
+    "shared-ui-markdown": [],
+    "design-system-e2e": [
+      {
+        "source": "design-system-e2e",
+        "target": "design-system",
+        "type": "implicit"
+      }
+    ],
+    "private-nx-cloud": [],
+    "nx-cloud-hubspot": [],
+    "ui-article-media": [
+      {
+        "source": "ui-article-media",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      { "source": "ui-article-media", "target": "ui-images", "type": "static" }
+    ],
+    "common-platform": [],
+    "nrwlio-site-pwa": [],
+    "nx-cloud-assets": [],
+    "nx-packages-e2e": [
+      { "source": "nx-packages-e2e", "target": "nx-api", "type": "implicit" },
+      {
+        "source": "nx-packages-e2e",
+        "target": "nx-packages-nx-cloud",
+        "type": "implicit"
+      }
+    ],
+    "ui-testimonials": [
+      { "source": "ui-testimonials", "target": "ui-images", "type": "static" },
+      {
+        "source": "ui-testimonials",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nx-cloud-utils": [
+      {
+        "source": "nx-cloud-utils",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "platform-utils": [
+      {
+        "source": "platform-utils",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      }
+    ],
+    "design-system": [
+      {
+        "source": "design-system",
+        "target": "design-system-styles",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system",
+        "target": "design-system-heroes",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system",
+        "target": "design-system-images",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system",
+        "target": "design-system-contents",
+        "type": "implicit"
+      },
+      {
+        "source": "design-system",
+        "target": "design-system-testimonials",
+        "type": "implicit"
+      }
+    ],
+    "nrwl-api-e2e": [
+      { "source": "nrwl-api-e2e", "target": "nrwl-api", "type": "static" }
+    ],
+    "nx-cloud-e2e": [
+      { "source": "nx-cloud-e2e", "target": "nrwl-api", "type": "implicit" }
+    ],
+    "platform-e2e": [],
+    "ui-downloads": [
+      {
+        "source": "ui-downloads",
+        "target": "shared-google-analytics",
+        "type": "static"
+      },
+      {
+        "source": "ui-downloads",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      { "source": "ui-downloads", "target": "ui-images", "type": "static" }
+    ],
+    "cloud-proxy": [],
+    "common-site": [
+      { "source": "common-site", "target": "common-platform", "type": "static" }
+    ],
+    "file-server": [],
+    "ui-articles": [
+      {
+        "source": "ui-articles",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      { "source": "ui-articles", "target": "ui-images", "type": "static" }
+    ],
+    "ui-callouts": [],
+    "ui-contents": [
+      {
+        "source": "ui-contents",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      },
+      { "source": "ui-contents", "target": "ui-images", "type": "static" }
+    ],
+    "ui-features": [
+      { "source": "ui-features", "target": "ui-images", "type": "static" },
+      {
+        "source": "ui-features",
+        "target": "shared-ui-markdown",
+        "type": "static"
+      }
+    ],
+    "nrwlio-e2e": [],
+    "ui-banners": [],
+    "platform": [
+      {
+        "source": "platform",
+        "target": "platform-data-access-graphql",
+        "type": "static"
+      },
+      { "source": "platform", "target": "platform-utils", "type": "static" },
+      {
+        "source": "platform",
+        "target": "platform-data-access-blurb",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-components",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-landing-page",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-dashboard",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-books",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-topics",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-cookbook",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-live-events",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-nrwl-changelog",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-users",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-organizations",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-organization",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-courses",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-expert-bio",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-policies",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-live-broadcast",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-live-workshop",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-reports",
+        "type": "static"
+      },
+      {
+        "source": "platform",
+        "target": "platform-feature-about",
+        "type": "static"
+      }
+    ],
+    "ui-images": [],
+    "ui-styles": [],
+    "nrwl-api": [
+      { "source": "nrwl-api", "target": "nrwl-api-reporting", "type": "static" }
+    ],
+    "nx-cloud": [
+      { "source": "nx-cloud", "target": "nx-cloud-assets", "type": "implicit" },
+      { "source": "nx-cloud", "target": "nx-cloud-utils", "type": "static" },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-auth",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-ui-footer",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-ui-header",
+        "type": "static"
+      },
+      { "source": "nx-cloud", "target": "nx-cloud-hubspot", "type": "static" },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-docs",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-private-cloud-feature-home",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-landing",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-reference-feature-org",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-reference-feature-invite-members",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-reference-feature-runs",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-reference-feature-branches",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-promotions",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-policies",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-faq",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-terms-of-service",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-make-ng-cli-faster",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-feature-pricing",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-private-cloud-feature-community-on-public-cloud",
+        "type": "static"
+      },
+      {
+        "source": "nx-cloud",
+        "target": "nx-cloud-private-cloud-feature-installation",
+        "type": "static"
+      }
+    ],
+    "ui-heros": [
+      { "source": "ui-heros", "target": "ui-images", "type": "static" },
+      { "source": "ui-heros", "target": "shared-ui-markdown", "type": "static" }
+    ],
+    "nx-api": [],
+    "nrwlio": [
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-home",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-services",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-about-us",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-products",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-contact-us",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-careers",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-pages-feature-style-guide",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-data-access-graphql",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-contentful",
+        "type": "static"
+      },
+      {
+        "source": "nrwlio",
+        "target": "nrwlio-site-feature-pages",
+        "type": "static"
+      },
+      { "source": "nrwlio", "target": "nrwlio-site-hubspot", "type": "static" },
+      { "source": "nrwlio", "target": "common-platform", "type": "static" }
+    ],
+    "ui-ads": [
+      { "source": "ui-ads", "target": "shared-ui-markdown", "type": "static" },
+      { "source": "ui-ads", "target": "ui-images", "type": "static" }
+    ]
+  },
+  "layout": { "appsDir": "apps", "libsDir": "libs" },
+  "changes": { "added": [] },
+  "affected": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}

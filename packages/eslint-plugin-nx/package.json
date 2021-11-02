@@ -1,0 +1,43 @@
+{
+  "name": "@nrwl/eslint-plugin-nx",
+  "version": "0.0.1",
+  "description": "ESLint Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint-plugin-nx"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Lint",
+    "ESLint",
+    "CLI"
+  ],
+  "files": [
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "peerDependencies": {
+    "@typescript-eslint/parser": "~4.33.0",
+    "eslint-config-prettier": "^8.1.0"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "*",
+    "@nrwl/workspace": "*",
+    "@typescript-eslint/experimental-utils": "~4.33.0",
+    "confusing-browser-globals": "^1.0.9",
+    "ts-node": "^9.1.1",
+    "tsconfig-paths": "^3.9.0"
+  }
+}

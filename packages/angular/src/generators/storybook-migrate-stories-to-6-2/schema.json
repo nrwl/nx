@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularStorybookMigrateStoriesTo62Generator",
+  "type": "object",
+  "cli": "nx",
+  "properties": {},
+  "additionalProperties": false,
+  "required": []
+}

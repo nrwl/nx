@@ -1,0 +1,86 @@
+{
+  "root": "packages/cli",
+  "sourceRoot": "packages/cli",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/cli/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/cli"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/cli",
+        "tsConfig": "packages/cli/tsconfig.lib.json",
+        "packageJson": "packages/cli/package.json",
+        "main": "packages/cli/bin/nx.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/cli",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/cli",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/cli",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/cli",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/cli",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/cli"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/cli/bin/nx.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js cli"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/cli/**/*.ts",
+          "packages/cli/**/*.spec.ts",
+          "packages/cli/**/*_spec.ts",
+          "packages/cli/**/*.spec.tsx",
+          "packages/cli/**/*.spec.js",
+          "packages/cli/**/*.spec.jsx",
+          "packages/cli/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["workspace"]
+}

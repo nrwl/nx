@@ -1,0 +1,28 @@
+<% if (styledModule && styledModule !== 'styled-jsx') {
+  var wrapper = 'StyledPage';
+%>import styled from '<%= styledModule %>';<% } else {
+  var wrapper = 'div';
+%>
+  <%- style !== 'styled-jsx' ? `import styles from './${fileName}.module.${style}';` : '' %>
+<% }
+%>
+
+<% if (styledModule && styledModule !== 'styled-jsx') { %>
+const StyledPage = styled.div`<%- pageStyleContent %>`;
+<% }%>
+
+export function Index() {
+  /*
+   * Replace the elements below with your own.
+   *
+   * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
+   */
+  return (
+    <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
+      <%- styledModule === 'styled-jsx' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
+      <%- appContent %>
+    </<%= wrapper %>>
+  );
+};
+
+export default Index;

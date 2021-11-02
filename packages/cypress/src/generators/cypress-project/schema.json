@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressProjectGeneratorSchema",
+  "cli": "nx",
+  "title": "Create Cypress Configuration for the workspace",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the frontend project to test.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the E2E Project",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the e2e project?"
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint", "none"],
+      "default": "eslint"
+    },
+    "js": {
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "type": "boolean",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean"
+    }
+  },
+  "required": ["name"]
+}

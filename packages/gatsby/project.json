@@ -1,0 +1,88 @@
+{
+  "root": "packages/gatsby",
+  "sourceRoot": "packages/gatsby",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/gatsby/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/gatsby"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/gatsby",
+        "tsConfig": "packages/gatsby/tsconfig.lib.json",
+        "packageJson": "packages/gatsby/package.json",
+        "main": "packages/gatsby/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/gatsby/src",
+            "glob": "**/.babelrc*",
+            "output": "./src"
+          },
+          {
+            "input": "packages/gatsby/src",
+            "glob": "**/*.!(ts)",
+            "output": "./src"
+          },
+          {
+            "input": "packages/gatsby/plugins",
+            "glob": "**/*.!(ts)",
+            "output": "./plugins"
+          },
+          {
+            "input": "packages/gatsby",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/gatsby",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/gatsby",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/gatsby"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js gatsby"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/gatsby/**/*.ts",
+          "packages/gatsby/**/*.spec.ts",
+          "packages/gatsby/**/*_spec.ts",
+          "packages/gatsby/**/*.spec.tsx",
+          "packages/gatsby/**/*.spec.js",
+          "packages/gatsby/**/*.spec.jsx",
+          "packages/gatsby/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "tags": []
+}

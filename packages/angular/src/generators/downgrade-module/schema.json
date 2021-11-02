@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxDowngradeModuleGenerator",
+  "title": "Generates downgradeModule setup.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project."
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the main AngularJS module.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "angularJsImport": {
+      "type": "string",
+      "description": "Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`)."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name", "project"]
+}

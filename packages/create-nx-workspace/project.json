@@ -1,0 +1,86 @@
+{
+  "root": "packages/create-nx-workspace",
+  "sourceRoot": "packages/create-nx-workspace",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/create-nx-workspace/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/create-nx-workspace"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/create-nx-workspace",
+        "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
+        "packageJson": "packages/create-nx-workspace/package.json",
+        "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/create-nx-workspace"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js create-nx-workspace"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/create-nx-workspace/**/*.ts",
+          "packages/create-nx-workspace/**/*.spec.ts",
+          "packages/create-nx-workspace/**/*_spec.ts",
+          "packages/create-nx-workspace/**/*.spec.tsx",
+          "packages/create-nx-workspace/**/*.spec.js",
+          "packages/create-nx-workspace/**/*.spec.jsx",
+          "packages/create-nx-workspace/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["workspace"]
+}

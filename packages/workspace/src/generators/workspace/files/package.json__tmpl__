@@ -1,0 +1,19 @@
+{
+  "name": "<%= formattedNames.fileName %>",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+  },
+  "private": true,
+  "dependencies": {
+  },
+  "devDependencies": {
+     <% if(cli === 'angular') { %>"@angular/cli": "<%= angularCliVersion %>",<% } %>
+    "@nrwl/tao": "<%= nxVersion %>",
+    "@nrwl/cli": "<%= nxVersion %>",
+    "@nrwl/workspace": "<%= nxVersion %>",
+    "@types/node": "14.14.33",
+    "typescript": "<%= typescriptVersion %>",
+    "prettier": "<%= prettierVersion %>"
+  }
+}

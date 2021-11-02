@@ -1,0 +1,167 @@
+{
+  "name": "Nx React",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#reactInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/react plugin",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/generators/application/application#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+
+    "component": {
+      "factory": "./src/generators/component/component#componentSchematic",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a component",
+      "aliases": "c"
+    },
+
+    "redux": {
+      "factory": "./src/generators/redux/redux#reduxSchematic",
+      "schema": "./src/generators/redux/schema.json",
+      "description": "Create a redux slice for a project",
+      "aliases": ["slice"]
+    },
+
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a react library",
+      "hidden": false
+    },
+
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Schematic",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStorySchematic",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate storybook story for a react component",
+      "hidden": false
+    },
+
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesSchematic",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in a library",
+      "hidden": false
+    },
+
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressSchematic",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Create a cypress spec for a ui component that has a story",
+      "hidden": false
+    },
+
+    "hook": {
+      "factory": "./src/generators/hook/hook#chookSchematic",
+      "schema": "./src/generators/hook/schema.json",
+      "description": "Create a hook",
+      "aliases": "h"
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#reactInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/react plugin",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library#libraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+
+    "component": {
+      "factory": "./src/generators/component/component#componentGenerator",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a component",
+      "aliases": "c"
+    },
+
+    "redux": {
+      "factory": "./src/generators/redux/redux#reduxGenerator",
+      "schema": "./src/generators/redux/schema.json",
+      "description": "Create a redux slice for a project",
+      "aliases": ["slice"]
+    },
+
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a react library",
+      "hidden": false
+    },
+
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Generator",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate storybook story for a react component",
+      "hidden": false
+    },
+
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesGenerator",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in a library",
+      "hidden": false
+    },
+
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Create a cypress spec for a ui component that has a story",
+      "hidden": false
+    },
+
+    "hook": {
+      "factory": "./src/generators/hook/hook#hookGenerator",
+      "schema": "./src/generators/hook/schema.json",
+      "description": "Create a hook",
+      "aliases": "c"
+    }
+  }
+}

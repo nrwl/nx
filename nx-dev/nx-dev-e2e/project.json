@@ -1,0 +1,29 @@
+{
+  "root": "nx-dev/nx-dev-e2e",
+  "sourceRoot": "nx-dev/nx-dev-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e-disabled": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "nx-dev/nx-dev-e2e/cypress.json",
+        "tsConfig": "nx-dev/nx-dev-e2e/tsconfig.e2e.json",
+        "devServerTarget": "nx-dev:serve"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "nx-dev:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/nx-dev-e2e/**/*.{js,ts}"]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "tags": ["scope:nx-dev", "type:e2e"],
+  "implicitDependencies": ["nx-dev"]
+}

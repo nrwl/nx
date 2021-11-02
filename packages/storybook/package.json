@@ -1,0 +1,41 @@
+{
+  "name": "@nrwl/storybook",
+  "version": "0.0.1",
+  "description": "Storybook plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/storybook"
+  },
+  "keywords": [
+    "Angular",
+    "React",
+    "Web",
+    "Storybook",
+    "Cypress"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Isaac Mann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/workspace": "*",
+    "core-js": "^3.6.5",
+    "semver": "7.3.4",
+    "ts-loader": "^9.2.6",
+    "tsconfig-paths-webpack-plugin": "3.4.1"
+  }
+}

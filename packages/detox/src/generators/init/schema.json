@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Add Detox Schematics",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": []
+}

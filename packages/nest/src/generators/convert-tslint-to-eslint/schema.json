@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "nest-convert-tslint-to-eslint",
+  "cli": "nx",
+  "title": "Convert a NestJS project from TSLint to ESLint.",
+  "description": "NOTE: Does not work in --dry-run mode",
+  "examples": [
+    {
+      "command": "g convert-tslint-to-eslint myapp",
+      "description": "Convert the NestJS project `myapp` from TSLint to ESLint"
+    }
+  ],
+  "type": "object",
+  "properties": {
+    "project": {
+      "description": "The name of the NestJS project to convert.",
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Which NestJS project would you like to convert from TSLint to ESLint?"
+    },
+    "ignoreExistingTslintConfig": {
+      "description": "If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config.",
+      "type": "boolean",
+      "default": false,
+      "x-prompt": "Would you like to ignore the existing TSLint config? Recommended if the TSLint config has not been altered much as it makes the new ESLint config cleaner."
+    },
+    "removeTSLintIfNoMoreTSLintTargets": {
+      "description": "If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.",
+      "type": "boolean",
+      "default": true,
+      "x-prompt": "Would you like to remove TSLint and its related config if there are no TSLint projects remaining after this conversion?"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
+    }
+  },
+  "required": ["project"]
+}

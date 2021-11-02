@@ -1,0 +1,63 @@
+{
+  "implicitDependencies": {
+    "package.json": "*",
+    ".eslintrc.json": "*",
+    "scripts/vercel/*": ["nx-dev"],
+    ".circleci/config.yml": "*"
+  },
+  "affected": {
+    "defaultBase": "master"
+  },
+  "npmScope": "nrwl",
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/nx-cloud",
+      "options": {
+        "accessToken": "YzVhYjFiNzAtYTYxZS00OWM3LTlkOGYtZjRmOGRlNDY4MTJhfHJlYWQtd3JpdGU=",
+        "cacheableOperations": [
+          "build",
+          "build-base",
+          "test",
+          "lint",
+          "e2e",
+          "sitemap"
+        ],
+        "canTrackAnalytics": false,
+        "showUsageWarnings": true,
+        "runtimeCacheInputs": [
+          "echo $SELECTED_CLI",
+          "echo $NX_E2E_CI_CACHE_KEY"
+        ],
+        "cacheDirectory": "/tmp/nx-cache"
+      }
+    }
+  },
+  "targetDependencies": {
+    "build": [
+      {
+        "target": "build-base",
+        "projects": "self"
+      }
+    ],
+    "build-base": [
+      {
+        "target": "build-base",
+        "projects": "dependencies"
+      }
+    ]
+  },
+  "workspaceLayout": {
+    "libsDir": "",
+    "appsDir": ""
+  },
+  "cli": {
+    "defaultCollection": "@nrwl/react"
+  },
+  "generators": {
+    "@nrwl/react": {
+      "application": {
+        "babel": true
+      }
+    }
+  }
+}

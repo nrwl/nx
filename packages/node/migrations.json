@@ -1,0 +1,20 @@
+{
+  "schematics": {
+    "set-build-libs-from-source": {
+      "version": "9.2.0-beta.1",
+      "description": "Set buildLibsFromSource property to true to not break existing projects.",
+      "factory": "./src/migrations/update-9-2-0/set-build-libs-from-source"
+    },
+    "remove-root-dir": {
+      "version": "10.1.0-beta.1",
+      "description": "Removes rootDir from node libs' tsconfig",
+      "factory": "./src/migrations/update-10-1-0/remove-root-dir"
+    },
+    "remove-webpack-5-packages": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Remove packages installed by Nx 12's `@nrwl/node:webpack5` generator.",
+      "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
+    }
+  }
+}

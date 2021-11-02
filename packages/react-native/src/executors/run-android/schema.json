@@ -1,0 +1,60 @@
+{
+  "cli": "nx",
+  "$id": "NxReactNativeRunAndroid",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Run Android application",
+  "description": "Run Android target options",
+  "type": "object",
+  "properties": {
+    "variant": {
+      "type": "string",
+      "description": "Specify your app's build variant (e.g. debug, release).",
+      "default": "debug"
+    },
+    "appId": {
+      "type": "string",
+      "description": "Specify an applicationId to launch after build. If not specified, 'package' from AndroidManifest.xml will be used."
+    },
+    "appIdSuffix": {
+      "type": "string",
+      "description": "Specify an applicationIdSuffix to launch after build."
+    },
+    "mainActivity": {
+      "type": "string",
+      "description": "Name of the activity to start.",
+      "default": "MainActivity"
+    },
+    "deviceId": {
+      "type": "string",
+      "description": "Builds your app and starts it on a specific device/simulator with the given device id (listed by running \"adb devices\" on the command line)."
+    },
+    "tasks": {
+      "type": "string",
+      "description": "Run custom gradle tasks. If this argument is provided, then --variant option is ignored. Example: yarn react-native run-android --tasks clean,installDebug."
+    },
+    "jetifier": {
+      "type": "boolean",
+      "description": "Run jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
+      "default": true
+    },
+    "sync": {
+      "type": "boolean",
+      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
+      "default": true
+    },
+    "port": {
+      "type": "number",
+      "description": "The port where the packager server is listening on.",
+      "default": 8081
+    },
+    "terminal": {
+      "type": "string",
+      "description": "Launches the Metro Bundler in a new window using the specified terminal path."
+    },
+    "packager": {
+      "type": "boolean",
+      "description": "Starts the packager server",
+      "default": true
+    }
+  }
+}

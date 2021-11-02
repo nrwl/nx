@@ -1,0 +1,83 @@
+{
+  "root": "packages/detox",
+  "sourceRoot": "packages/detox/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/detox/**/*.ts",
+          "packages/detox/**/*.spec.ts",
+          "packages/detox/**/*.spec.tsx",
+          "packages/detox/**/*.spec.js",
+          "packages/detox/**/*.spec.jsx",
+          "packages/detox/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/detox/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/detox"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/detox",
+        "tsConfig": "packages/detox/tsconfig.lib.json",
+        "packageJson": "packages/detox/package.json",
+        "main": "packages/detox/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**/.babelrc.template",
+            "output": "/"
+          },
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**/.detoxrc.json.template",
+            "output": "/"
+          },
+          {
+            "input": "./packages/detox",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json"],
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "build": {
+        "executor": "@nrwl/workspace:run-commands",
+        "outputs": ["build/packages/detox"],
+        "options": {
+          "command": "node ./scripts/copy-readme.js detox"
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/detox"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js detox"
+      }
+    }
+  }
+}

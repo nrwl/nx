@@ -1,0 +1,53 @@
+{
+  "name": "@nrwl/next",
+  "version": "0.0.1",
+  "description": "Next.js Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/next"
+  },
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Next",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "peerDependencies": {
+    "next": "^12.0.0"
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-decorators": "^7.14.5",
+    "@nrwl/react": "*",
+    "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/web": "*",
+    "@nrwl/workspace": "*",
+    "@svgr/webpack": "^5.5.0",
+    "chalk": "4.1.0",
+    "eslint-config-next": "^12.0.0",
+    "fs-extra": "^9.1.0",
+    "url-loader": "^4.1.1",
+    "tsconfig-paths": "^3.9.0",
+    "ts-node": "~9.1.1",
+    "webpack-merge": "^5.8.0"
+  }
+}

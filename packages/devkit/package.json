@@ -1,0 +1,37 @@
+{
+  "name": "@nrwl/devkit",
+  "version": "0.0.1",
+  "description": "Smart, Extensible Build Framework",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/devkit"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "@nrwl/tao": "*",
+    "ejs": "^3.1.5",
+    "ignore": "^5.0.4",
+    "rxjs": "^6.5.4",
+    "semver": "7.3.4",
+    "tslib": "^2.0.0"
+  }
+}

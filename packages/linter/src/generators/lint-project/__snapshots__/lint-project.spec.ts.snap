@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint config 1`] = `
+"{
+  \\"extends\\": [
+    \\"../../.eslintrc.json\\"
+  ],
+  \\"ignorePatterns\\": [
+    \\"!**/*\\"
+  ],
+  \\"overrides\\": [
+    {
+      \\"files\\": [
+        \\"*.ts\\",
+        \\"*.tsx\\",
+        \\"*.js\\",
+        \\"*.jsx\\"
+      ],
+      \\"rules\\": {}
+    },
+    {
+      \\"files\\": [
+        \\"*.ts\\",
+        \\"*.tsx\\"
+      ],
+      \\"rules\\": {}
+    },
+    {
+      \\"files\\": [
+        \\"*.js\\",
+        \\"*.jsx\\"
+      ],
+      \\"rules\\": {}
+    }
+  ]
+}
+"
+`;
+
+exports[`@nrwl/linter:lint-project --linter tslint should generate a tslint config 1`] = `
+"{
+  \\"extends\\": \\"../../tslint.json\\",
+  \\"linterOptions\\": {
+    \\"exclude\\": [
+      \\"!**/*\\"
+    ]
+  },
+  \\"rules\\": {}
+}
+"
+`;

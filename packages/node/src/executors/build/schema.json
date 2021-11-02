@@ -1,0 +1,216 @@
+{
+  "title": "Node Application Build Target",
+  "description": "Node application build target options for Build Facade",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "main": {
+      "type": "string",
+      "description": "The name of the main entry-point file."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The name of the Typescript configuration file."
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Run build when files change.",
+      "default": false
+    },
+    "poll": {
+      "type": "number",
+      "description": "Frequency of file watcher in ms."
+    },
+    "sourceMap": {
+      "type": "boolean",
+      "description": "Produce source maps.",
+      "default": true
+    },
+    "progress": {
+      "type": "boolean",
+      "description": "Log progress to the console while building.",
+      "default": false
+    },
+    "assets": {
+      "type": "array",
+      "description": "List of static application assets.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
+    "externalDependencies": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["none", "all"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "Dependencies to keep external to the bundle. (\"all\" (default), \"none\", or an array of module names)",
+      "default": "all"
+    },
+    "statsJson": {
+      "type": "boolean",
+      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.",
+      "default": false
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Emits verbose output",
+      "default": false
+    },
+    "extractLicenses": {
+      "type": "boolean",
+      "description": "Extract all licenses in a separate file, in the case of production builds only.",
+      "default": false
+    },
+    "optimization": {
+      "type": "boolean",
+      "description": "Defines the optimization level of the build.",
+      "default": false
+    },
+    "maxWorkers": {
+      "type": "number",
+      "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
+    },
+    "memoryLimit": {
+      "type": "number",
+      "description": "Memory limit for type checking service process in MB. (defaults to 2048)"
+    },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced."
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
+    "webpackConfig": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    },
+    "generatePackageJson": {
+      "type": "boolean",
+      "description": "Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.",
+      "default": false
+    },
+    "tsPlugins": {
+      "type": "array",
+      "description": "List of TypeScript Compiler Plugins.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/tsPluginPattern"
+      }
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entryName": {
+            "type": "string",
+            "description": "Name of the additional entry file"
+          },
+          "entryPath": {
+            "type": "string",
+            "description": "Path to the additional entry file"
+          }
+        }
+      }
+    }
+  },
+  "required": ["tsConfig", "main"],
+  "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output": {
+              "type": "string",
+              "description": "Absolute path within the output."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input", "output"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "tsPluginPattern": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["name"]
+        }
+      ]
+    }
+  }
+}

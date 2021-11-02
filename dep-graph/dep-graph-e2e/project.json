@@ -1,0 +1,32 @@
+{
+  "root": "dep-graph/dep-graph-e2e",
+  "sourceRoot": "dep-graph/dep-graph-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e-disabled": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",
+        "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
+        "devServerTarget": "dep-graph-dep-graph:serve"
+      }
+    },
+    "e2e-watch-disabled": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "dep-graph/dep-graph-e2e/cypress-watch-mode.json",
+        "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
+        "devServerTarget": "dep-graph-dep-graph:serve:watch"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:lint",
+      "options": {
+        "linter": "eslint",
+        "tsConfig": ["dep-graph/dep-graph-e2e/tsconfig.e2e.json"],
+        "exclude": ["**/node_modules/**", "!dep-graph/dep-graph-e2e/**/*"]
+      }
+    }
+  },
+  "implicitDependencies": ["dep-graph-dep-graph"]
+}

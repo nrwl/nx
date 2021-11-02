@@ -1,0 +1,232 @@
+[
+  {
+    "name": "@codebrew/nx-aws-cdk",
+    "description": "An Nx plugin for aws cdk develop.",
+    "url": "https://github.com/codebrewlab/nx-plugins/tree/main/packages/nx-aws-cdk"
+  },
+  {
+    "name": "@rxap/plugin-localazy",
+    "description": "An Nx plugin for localazy.com upload and download tasks.",
+    "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
+  },
+  {
+    "name": "nx-electron",
+    "description": "An Nx plugin for developing Electron applications",
+    "url": "https://github.com/bennymeg/nx-electron"
+  },
+  {
+    "name": "nx-stylelint",
+    "description": "Nx plugin to use stylelint in a nx workspace",
+    "url": "https://github.com/Phillip9587/nx-stylelint"
+  },
+  {
+    "name": "@nxtend/ionic-react",
+    "description": "An Nx plugin for developing Ionic React applications and libraries",
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-react"
+  },
+  {
+    "name": "@nxtend/ionic-angular",
+    "description": "An Nx plugin for developing Ionic Angular applications and libraries",
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-angular"
+  },
+  {
+    "name": "@nxtend/capacitor",
+    "description": "An Nx plugin for developing cross-platform applications using Capacitor",
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/capacitor"
+  },
+  {
+    "name": "@nxtend/firebase",
+    "description": "An Nx plugin for developing applications using Firebase",
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/firebase"
+  },
+  {
+    "name": "@angular-architects/ddd",
+    "description": "Nx plugin for structuring a monorepo with domains and layers",
+    "url": "https://github.com/angular-architects/nx-ddd-plugin"
+  },
+  {
+    "name": "@offeringsolutions/nx-karma-to-jest",
+    "description": "Nx plugin for replacing karma with jest in an Nx workspace",
+    "url": "https://github.com/FabianGosebrink/nx-karma-to-jest"
+  },
+  {
+    "name": "@flowaccount/nx-serverless",
+    "description": "Nx plugin for node/angular-universal schematics and deployment builders in an Nx workspace",
+    "url": "https://github.com/flowaccount/nx-plugins"
+  },
+  {
+    "name": "@ns3/nx-serverless",
+    "description": "Nx plugin for node serverless applications in an Nx workspace",
+    "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-serverless"
+  },
+  {
+    "name": "@ns3/nx-jest-playwright",
+    "description": "Nx plugin to run jest-playwright e2e tests in an Nx workspace",
+    "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-jest-playwright"
+  },
+  {
+    "name": "@dev-thought/nx-deploy-it",
+    "description": "Nx plugin to deploy applications on your favorite cloud provider",
+    "url": "https://github.com/Dev-Thought/nx-plugins/tree/master/libs/nx-deploy-it"
+  },
+  {
+    "name": "@offeringsolutions/nx-protractor-to-cypress",
+    "description": "Nx plugin to replace protractor with cypress in an nx workspace",
+    "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
+  },
+  {
+    "name": "@nx-tools/nx-docker",
+    "description": "Nx plugin to build docker images of your affected apps",
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
+  },
+  {
+    "name": "@angular-custom-builders/lite-serve",
+    "description": "Nx plugin to run the e2e test on an existing dist folder",
+    "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
+  },
+  {
+    "name": "@nx-plus/nuxt",
+    "description": "Nx plugin adding first class support for Nuxt in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/nuxt"
+  },
+  {
+    "name": "@nx-plus/vue",
+    "description": "Nx plugin adding first class support for Vue in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/vue"
+  },
+  {
+    "name": "@nx-plus/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus"
+  },
+  {
+    "name": "@twittwer/compodoc",
+    "description": "Nx Plugin to integrate the generation of documentation with Compodoc in the Nx workflow",
+    "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
+  },
+  {
+    "name": "@nxext/svelte",
+    "description": "Nx plugin to use Svelte within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
+  },
+  {
+    "name": "@nxext/stencil",
+    "description": "Nx plugin to use StencilJs within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/stencil"
+  },
+  {
+    "name": "@joelcode/gcp-function",
+    "description": "Nx plugin to generate, test, lint, build, serve, & deploy Google Cloud Function",
+    "url": "https://github.com/JoelCode/gcp-function"
+  },
+  {
+    "name": "@nx-go/nx-go",
+    "description": "Nx plugin to use Go in a Nx workspace",
+    "url": "https://github.com/nx-go/nx-go"
+  },
+  {
+    "name": "@angular-architects/module-federation",
+    "description": "Nx plugin to use webpack module federation",
+    "url": "https://github.com/angular-architects/module-federation-plugin"
+  },
+  {
+    "name": "@nxrocks/nx-spring-boot",
+    "description": "Nx plugin to generate, run, package, build (and more) Spring Boot projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-spring-boot"
+  },
+  {
+    "name": "@trumbitta/nx-plugin-openapi",
+    "description": "OpenAPI Plugin for Nx. Keep your API spec files in libs, and auto-generate sources.",
+    "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-openapi"
+  },
+  {
+    "name": "@trumbitta/nx-plugin-unused-deps",
+    "description": "Check the dependency graph of your monorepo, looking for unused NPM packages.",
+    "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-unused-deps"
+  },
+  {
+    "name": "@nxrocks/nx-flutter",
+    "description": "Nx Plugin adding first class support for Flutter in your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-flutter"
+  },
+  {
+    "name": "@srleecode/domain",
+    "description": "Nx Plugin for allowing operations to occur at the domain level instead of the default library level",
+    "url": "https://github.com/srlee309/domain"
+  },
+  {
+    "name": "@jscutlery/semver",
+    "description": "Nx plugin to automate semantic versioning and CHANGELOG generation.",
+    "url": "https://github.com/jscutlery/semver"
+  },
+  {
+    "name": "ngx-deploy-npm",
+    "description": "Publish your libraries to NPM with just one command.",
+    "url": "https://github.com/bikecoders/ngx-deploy-npm"
+  },
+  {
+    "name": "@trafilea/nx-shopify",
+    "description": "Nx plugin for developing performance-first Shopify themes",
+    "url": "https://github.com/trafilea/nx-shopify"
+  },
+  {
+    "name": "nx-dotnet",
+    "description": "Nx plugin for developing and housing .NET projects within an Nx workspace.",
+    "url": "https://github.com/nx-dotnet/nx-dotnet"
+  },
+  {
+    "name": "@nxrocks/nx-quarkus",
+    "description": "Nx plugin to generate, run, package, build (and more) Quarkus projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-quarkus"
+  },
+  {
+    "name": "@nx-extend/gcp-secrets",
+    "description": "Nx plugin to generate and securely deploy your Google Cloud Secrets",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-secrets"
+  },
+  {
+    "name": "@nx-extend/gcp-storage",
+    "description": "Nx plugin to upload to Google Cloud Storage",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-storage"
+  },
+  {
+    "name": "@nx-extend/gcp-functions",
+    "description": "Nx plugin to generate, run, build and deploy your Google Cloud Functions",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-functions"
+  },
+  {
+    "name": "@nx-extend/gcp-deployment-manager",
+    "description": "Nx plugin to deploy your Google Cloud Deployments",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-deployment-manager"
+  },
+  {
+    "name": "@nx-extend/gcp-cloud-run",
+    "description": "Nx plugin to build and deploy your docker container to Google Cloud Run",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-cloud-run"
+  },
+  {
+    "name": "@nx-extend/translations",
+    "description": "Nx plugin to extract, pull, push and translate your apps translations",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
+  },
+  {
+    "name": "@nativescript/nx",
+    "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
+    "url": "https://github.com/nativescript/nx"
+  },
+  {
+    "name": "@nx-clean/plugin-core",
+    "description": "Nx Plugin to generate projects following Clean Architecture practices",
+    "url": "https://github.com/guiseek/nx-clean/tree/main/libs/plugin/core"
+  },
+  {
+    "name": "@jnxplus/nx-boot-gradle",
+    "description": "Nx plugin to add Spring Boot and Gradle multi-project builds support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-gradle"
+  },
+  {
+    "name": "@jnxplus/nx-boot-maven",
+    "description": "Nx plugin to add Spring Boot and Maven multi-module project support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-maven"
+  }
+]

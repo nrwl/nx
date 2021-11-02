@@ -1,0 +1,70 @@
+{
+  "name": "Nx Storybook",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add storybook configuration to the workspace",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration#configurationSchematic",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add storybook configuration to a ui library or an application",
+      "hidden": false
+    },
+    "cypress-project": {
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectSchematic",
+      "schema": "./src/generators/cypress-project/schema.json",
+      "description": "Add cypress e2e app to test a ui library that is set up for storybook",
+      "hidden": false
+    },
+    "migrate-defaults-5-to-6": {
+      "factory": "./src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6#migrateDefaultsSchematic",
+      "schema": "./src/generators/migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+    "migrate-stories-to-6-2": {
+      "factory": "./src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2#migrateStoriesSchematic",
+      "schema": "./src/generators/migrate-stories-to-6-2/schema.json",
+      "description": "Migrate stories syntax to 6.2",
+      "hidden": false
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add storybook configuration to the workspace",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add storybook configuration to a ui library or an application",
+      "hidden": false
+    },
+    "cypress-project": {
+      "factory": "./src/generators/cypress-project/cypress-project",
+      "schema": "./src/generators/cypress-project/schema.json",
+      "description": "Add cypress e2e app to test a ui library that is set up for storybook",
+      "hidden": false
+    },
+    "migrate-defaults-5-to-6": {
+      "factory": "./src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6",
+      "schema": "./src/generators/migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+    "migrate-stories-to-6-2": {
+      "factory": "./src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2",
+      "schema": "./src/generators/migrate-stories-to-6-2/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    }
+  }
+}

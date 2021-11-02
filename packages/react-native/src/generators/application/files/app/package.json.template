@@ -1,0 +1,12 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-native": "*",
+    "@testing-library/react-native": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-svg": "*"
+  }
+}

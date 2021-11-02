@@ -1,28 +1,44 @@
 #!/usr/bin/env node
 
+const { types, scopes } = require('../.cz-config.js');
+
 console.log('🐟🐟🐟 Validating git commit message 🐟🐟🐟');
 const gitMessage = require('child_process')
   .execSync('git log -1 --no-merges')
   .toString()
   .trim();
-const matchTest = /([a-z]){0,8}\([a-z.0-9\-]+\):\s(([a-z0-9:\-\s])+)/g.test(
-  gitMessage
-);
-const exitCode = +!matchTest;
+
+const allowedTypes = types.map((type) => type.value);
+const allowedScopes = scopes.map((scope) => scope.name);
+
+const commitMsgRegex = `(${allowedTypes.join('|')})\\((${allowedScopes.join(
+  '|'
+)})\\):\\s(([a-z0-9:\-\s])+)`;
+
+const matchCommit = new RegExp(commitMsgRegex, 'g').test(gitMessage);
+const matchRevert = /Revert/gi.test(gitMessage);
+const matchRelease = /Release/gi.test(gitMessage);
+const exitCode = +!(matchRelease || matchRevert || matchCommit);
 
 if (exitCode === 0) {
-  console.log('Commit ACCEPTED 👌');
+  console.log('Commit ACCEPTED 👍');
 } else {
   console.log(
-    '[Error]: Ho no! 😦 Your commit message: \n' +
+    '[Error]: Oh no! 😦 Your commit message: \n' +
+      '-------------------------------------------------------------------\n' +
       gitMessage +
-      '\ndoes not follow the commit message convention specified in the CONTRIBUTING.MD file.'
+      '\n-------------------------------------------------------------------' +
+      '\n\n 👉️ Does not follow the commit message convention specified in the CONTRIBUTING.MD file.'
   );
   console.log('\ntype(scope): subject \n BLANK LINE \n body');
+  console.log('\n');
+  console.log(`possible types: ${allowedTypes.join('|')}`);
   console.log(
-    '\nExample: \n ' +
-      'feat(schematics): add an option to generate lazy-loadable modules\n' +
-      '\n`ng generate lib mylib --lazy` provisions the mylib project in tslint.json'
+    `possible scopes: ${allowedScopes.join('|')} (if unsure use "core")`
+  );
+  console.log(
+    '\nEXAMPLE: \n' +
+      'feat(nx): add an option to generate lazy-loadable modules\n'
   );
 }
 process.exit(exitCode);

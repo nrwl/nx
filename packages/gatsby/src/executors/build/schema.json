@@ -1,0 +1,36 @@
+{
+  "cli": "nx",
+  "$schema": "http://json-schema.org/schema",
+  "title": "GatsbyPlugin builder",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "prefixPaths": {
+      "type": "boolean",
+      "description": "Build site with link paths prefixed (set pathPrefix in your config)."
+    },
+    "uglify": {
+      "type": "boolean",
+      "description": "Build site without uglifying JS bundles (true by default).",
+      "default": true
+    },
+    "profile": {
+      "type": "boolean",
+      "description": "Build site with react profiling."
+    },
+    "openTracingConfigFile": {
+      "type": "string",
+      "description": "Tracer configuration file (OpenTracing compatible)."
+    },
+    "graphqlTracing": {
+      "type": "boolean",
+      "description": "Trace every graphql resolver, may have performance implications."
+    },
+    "color": {
+      "type": "boolean",
+      "description": "Enable colored terminal output.",
+      "default": true
+    }
+  },
+  "required": []
+}

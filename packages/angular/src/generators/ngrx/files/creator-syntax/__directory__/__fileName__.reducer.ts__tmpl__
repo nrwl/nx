@@ -1,0 +1,41 @@
+import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createReducer, on, Action } from '@ngrx/store';
+
+import * as <%= className %>Actions from './<%= fileName %>.actions';
+import { <%= className %>Entity } from './<%= fileName %>.models';
+
+export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
+
+export interface State extends EntityState<<%= className %>Entity> {
+  selectedId?: string | number; // which <%= className %> record has been selected
+  loaded: boolean; // has the <%= className %> list been loaded
+  error?: string | null; // last known error (if any)
+}
+
+export interface <%= className %>PartialState {
+  readonly [<%= constantName %>_FEATURE_KEY]: State;
+}
+
+export const <%= propertyName %>Adapter: EntityAdapter<<%= className %>Entity> = createEntityAdapter<<%= className %>Entity>();
+
+export const initialState: State = <%= propertyName %>Adapter.getInitialState({
+  // set initial required properties
+  loaded: false
+});
+
+const <%= propertyName %>Reducer = createReducer(
+  initialState,
+  on(<%= className %>Actions.init,
+    state => ({ ...state, loaded: false, error: null })
+  ),
+  on(<%= className %>Actions.load<%= className %>Success,
+    (state, { <%= propertyName %> }) => <%= propertyName %>Adapter.setAll(<%= propertyName %>, { ...state, loaded: true })
+  ),
+  on(<%= className %>Actions.load<%= className %>Failure,
+    (state, { error }) => ({ ...state, error })
+  ),
+);
+
+export function reducer(state: State | undefined, action: Action) {
+  return <%= propertyName %>Reducer(state, action);
+}

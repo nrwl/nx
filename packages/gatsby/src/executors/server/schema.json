@@ -1,0 +1,32 @@
+{
+  "cli": "nx",
+  "title": "Gatsby development server",
+  "description": "Gatsby development server",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "https": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open the site in your (default) browser for you."
+    }
+  },
+  "required": []
+}

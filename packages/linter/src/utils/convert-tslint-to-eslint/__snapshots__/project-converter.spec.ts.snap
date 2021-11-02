@@ -1,0 +1,349 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 1`] = `
+Object {
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "rules": Object {
+        "some-converted-rule": "error",
+      },
+    },
+  ],
+  "rules": Object {
+    "some-recommended-root-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 2`] = `
+Object {
+  "rules": Object {
+    "some-converted-rule": "error",
+    "some-recommended-project-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 1`] = `
+Object {
+  "rules": Object {
+    "some-recommended-root-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 2`] = `
+Object {
+  "rules": Object {
+    "some-recommended-project-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "codelyzer": "latest",
+    "tslint": "latest",
+  },
+  "name": "test-name",
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 2`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "generators": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "library": Object {
+        "linter": "tslint",
+      },
+    },
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 3`] = `
+Object {
+  "generators": Object {
+    "@nrwl/angular:application": Object {
+      "e2eTestRunner": "cypress",
+      "linter": "eslint",
+      "unitTestRunner": "jest",
+    },
+    "@nrwl/angular:library": Object {
+      "linter": "tslint",
+    },
+  },
+  "projectType": "application",
+  "root": "apps/foo",
+  "targets": Object {
+    "lint": Object {
+      "executor": "@angular-devkit/build-angular:tslint",
+      "options": Object {
+        "exclude": Array [
+          "**/node_modules/**",
+          "!apps/foo/**/*",
+        ],
+        "tsConfig": Array [
+          "apps/foo/tsconfig.app.json",
+        ],
+      },
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 4`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {},
+  "name": "test-name",
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 5`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 6`] = `
+Object {
+  "generators": Object {
+    "@nrwl/angular:application": Object {
+      "e2eTestRunner": "cypress",
+      "unitTestRunner": "jest",
+    },
+  },
+  "projectType": "application",
+  "root": "apps/foo",
+  "targets": Object {
+    "lint": Object {
+      "executor": "@angular-devkit/build-angular:tslint",
+      "options": Object {
+        "exclude": Array [
+          "**/node_modules/**",
+          "!apps/foo/**/*",
+        ],
+        "tsConfig": Array [
+          "apps/foo/tsconfig.app.json",
+        ],
+      },
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove the entry in generators for convert-tslint-to-eslint because it is no longer needed 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "generators": Object {
+    "@nrwl/angular": Object {
+      "convert-tslint-to-eslint": Object {
+        "removeTSLintIfNoMoreTSLintTargets": true,
+      },
+    },
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter removeTSLintFromWorkspace() should remove the entry in generators for convert-tslint-to-eslint because it is no longer needed 2`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter setDefaults() should save in nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "generators": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "library": Object {
+        "linter": "tslint",
+      },
+    },
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter setDefaults() should save in nx.json 2`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "generators": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "convert-tslint-to-eslint": Object {
+        "ignoreExistingTslintConfig": true,
+        "removeTSLintIfNoMoreTSLintTargets": true,
+      },
+      "library": Object {
+        "linter": "tslint",
+      },
+    },
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter setDefaults() should save in nx.json 3`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "generators": Object {
+    "@nrwl/angular": Object {
+      "application": Object {
+        "linter": "tslint",
+      },
+      "convert-tslint-to-eslint": Object {
+        "ignoreExistingTslintConfig": false,
+        "removeTSLintIfNoMoreTSLintTargets": false,
+      },
+      "library": Object {
+        "linter": "tslint",
+      },
+    },
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`ProjectConverter should throw if --dry-run is set 1`] = `
+"NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the \\"Run\\" button.
+"
+`;
+
+exports[`ProjectConverter should throw if --dryRun is set 1`] = `
+"NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the \\"Run\\" button.
+"
+`;
+
+exports[`ProjectConverter should throw if -d is set 1`] = `
+"NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the \\"Run\\" button.
+"
+`;
+
+exports[`ProjectConverter should throw if no project tslint.json is found 1`] = `"We could not find a tslint.json for the selected project \\"apps/foo/tslint.json\\", maybe you have already migrated to ESLint?"`;
+
+exports[`ProjectConverter should throw if no root tslint.json is found 1`] = `"We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?"`;

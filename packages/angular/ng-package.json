@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/ng-packagr/ng-package.schema.json",
+  "lib": {
+    "entryFile": "index.ts",
+    "umdModuleIds": {
+      "@ngrx/effects": "ngrx.effects",
+      "@ngrx/entity": "ngrx.entity",
+      "@ngrx/router-store": "ngrx.routerStore",
+      "@ngrx/store": "ngrx.store",
+      "jasmine-marbles": "jasmine-marbles"
+    }
+  },
+  "allowedNonPeerDependencies": [
+    "@nrwl/",
+    "@angular-devkit",
+    "@angular-eslint/",
+    "@schematics",
+    "@phenomnomnominal/tsquery",
+    "ignore",
+    "jasmine-marbles",
+    "rxjs-for-await",
+    "webpack-merge"
+  ],
+  "keepLifecycleScripts": true
+}

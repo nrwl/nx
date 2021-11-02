@@ -1,0 +1,32 @@
+<% if (classComponent) { %>
+import { Component } from 'react';
+<% } else { %>
+import React from 'react';
+<% } %>
+import { View, Text } from 'react-native';
+
+/* eslint-disable-next-line */
+export interface <%= className %>Props {
+}
+
+<% if (classComponent) { %>
+export class <%= className %> extends Component<<%= className %>Props> {
+  render() {
+    return (
+      <View>
+        <Text>Welcome to <%= name %>!</Text>
+      </View>
+    );
+  }
+}
+<% } else { %>
+export function <%= className %>(props: <%= className %>Props) {
+  return (
+    <View>
+      <Text>Welcome to <%= name %>!</Text>
+    </View>
+  );
+};
+<% } %>
+
+export default <%= className %>;

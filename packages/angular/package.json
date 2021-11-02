@@ -1,0 +1,50 @@
+{
+  "name": "@nrwl/angular",
+  "version": "0.0.1",
+  "description": "Angular Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/angular"
+  },
+  "scripts": {
+    "postinstall": "node ./scripts/nx-cli-warning.js"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./bundles/nrwl-angular.umd.js",
+  "types": "./nrwl-angular.d.ts",
+  "module": "esm5/nrwl-angular.js",
+  "es2015": "esm2015/nrwl-angular.js",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "builders": "./executors.json",
+  "schematics": "./generators.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@angular-devkit/schematics": "~12.2.0",
+    "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/storybook": "*",
+    "@schematics/angular": "~12.2.0",
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "ignore": "^5.0.4",
+    "jasmine-marbles": "~0.8.4",
+    "rxjs-for-await": "0.0.2",
+    "webpack-merge": "5.7.3"
+  }
+}

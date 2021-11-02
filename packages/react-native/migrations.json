@@ -1,0 +1,267 @@
+{
+  "schematics": {
+    "update-jest-for-react-native": {
+      "version": "12.5.0-beta.0",
+      "cli": "nx",
+      "description": "Update jest for react native",
+      "factory": "./src/migrations/update-12-5-0/update-jest-for-react-native"
+    },
+    "add-react-native-svg-12-10-0": {
+      "version": "12.10.0-beta.1",
+      "cli": "nx",
+      "description": "Add support to display svg in react native",
+      "factory": "./src/migrations/update-12-10-0/add-react-native-svg-12-10-0"
+    }
+  },
+  "packageJsonUpdates": {
+    "11.4.0": {
+      "version": "11.4.0-beta.0",
+      "packages": {
+        "metro": {
+          "version": "0.59.0",
+          "addToPackageJson": "devDependencies",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.59.0",
+          "addToPackageJson": "devDependencies",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "4.14.0",
+          "addToPackageJson": "devDependencies",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "4.14.0",
+          "addToPackageJson": "devDependencies",
+          "alwaysAddToPackageJson": false
+        },
+        "react": {
+          "version": "17.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "16.9.56",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.63.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.63.18",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.3.6": {
+      "version": "12.3.6-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.64.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/react": {
+          "version": "12.3.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/jest": {
+          "version": "12.3.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/linter": {
+          "version": "12.3.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "17.0.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.64.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "5.0.1-alpha.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "5.0.1-alpha.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "5.0.1-alpha.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.66.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "7.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.66.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.66.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.5.0": {
+      "version": "12.5.0-beta.0",
+      "packages": {
+        "@nrwl/jest": {
+          "version": "12.5.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/linter": {
+          "version": "12.5.7",
+          "alwaysAddToPackageJson": false
+        },
+        "react": {
+          "version": "17.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.65.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "17.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-codegen": {
+          "version": "0.0.7",
+          "addToPackageJson": "devDependencies",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.64.10",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "6.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "6.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "6.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "8.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.8.0": {
+      "version": "12.8.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.65.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.64.13",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "17.0.19",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.66.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.66.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.66.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.10.0-beta.1": {
+      "version": "12.10.0-beta.1",
+      "packages": {
+        "react-native-svg-transformer": {
+          "version": "0.14.3",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        },
+        "react-native-svg": {
+          "version": "12.1.1",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        },
+        "react-native": {
+          "version": "0.66.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.65.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
+      "packages": {
+        "react-native": {
+          "version": "0.66.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.65.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "8.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

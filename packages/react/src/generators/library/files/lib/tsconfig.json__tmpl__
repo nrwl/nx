@@ -1,0 +1,17 @@
+{
+  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

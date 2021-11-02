@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxGatsbyApp",
+  "title": "",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use?"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the project (used for linting)",
+      "alias": "t"
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed",
+      "alias": "d"
+    },
+    "unitTestRunner": {
+      "description": "Adds the specified unit test runner",
+      "type": "string",
+      "enum": ["jest", "none"],
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "description": "Adds the specified e2e test runner",
+      "type": "string",
+      "enum": ["cypress", "none"],
+      "default": "cypress"
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "alias": "s",
+      "default": "css",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "css",
+            "label": "CSS"
+          },
+          {
+            "value": "scss",
+            "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS              [ http://lesscss.org            ]"
+          },
+          {
+            "value": "styled-components",
+            "label": "styled-components [ https://styled-components.com ]"
+          },
+          {
+            "value": "@emotion/styled",
+            "label": "emotion           [ https://emotion.sh            ]"
+          },
+          {
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
+          }
+        ]
+      }
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean"
+    }
+  },
+  "required": ["name"]
+}

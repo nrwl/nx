@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxNestLibraryGenerator",
+  "title": "Create a NestJS Library for Nx",
+  "cli": "nx",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g lib mylib --directory=myapp",
+      "description": "Generate libs/myapp/mylib"
+    }
+  ],
+  "properties": {
+    "name": {
+      "description": "Library name.",
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the library?"
+    },
+    "directory": {
+      "description": "A directory where the library is placed.",
+      "type": "string",
+      "alias": "dir"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
+    "unitTestRunner": {
+      "description": "Test runner to use for unit tests.",
+      "type": "string",
+      "enum": ["jest", "none"],
+      "default": "jest"
+    },
+    "tags": {
+      "description": "Add tags to the library (used for linting).",
+      "type": "string",
+      "alias": "t"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipTsConfig": {
+      "description": "Do not update tsconfig.base.json for development experience.",
+      "type": "boolean",
+      "default": false
+    },
+    "publishable": {
+      "description": "Create a publishable library.",
+      "type": "boolean"
+    },
+    "buildable": {
+      "description": "Generate a buildable library.",
+      "type": "boolean",
+      "default": false
+    },
+    "importPath": {
+      "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.",
+      "type": "string"
+    },
+    "global": {
+      "description": "Add the Global decorator to the generated module.",
+      "type": "boolean",
+      "default": false
+    },
+    "service": {
+      "description": "Include a service with the library.",
+      "type": "boolean",
+      "default": false
+    },
+    "controller": {
+      "description": "Include a controller with the library.",
+      "type": "boolean",
+      "default": false
+    },
+    "testEnvironment": {
+      "description": "The test environment for jest, for node applications this should stay as node unless doing DOM testing.",
+      "type": "string",
+      "enum": ["jsdom", "node"],
+      "default": "node"
+    },
+    "target": {
+      "description": "The ES target, Nest suggest using es6 or higher.",
+      "type": "string",
+      "default": "es6",
+      "enum": [
+        "es5",
+        "es6",
+        "esnext",
+        "es2015",
+        "es2016",
+        "es2017",
+        "es2018",
+        "es2019",
+        "es2020"
+      ]
+    },
+    "strict": {
+      "description": "Whether to enable tsconfig strict mode or not.",
+      "type": "boolean",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean"
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name"]
+}

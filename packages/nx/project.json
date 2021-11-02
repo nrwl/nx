@@ -1,0 +1,74 @@
+{
+  "root": "packages/nx",
+  "sourceRoot": "packages/nx",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/nx",
+        "tsConfig": "packages/nx/tsconfig.lib.json",
+        "packageJson": "packages/nx/package.json",
+        "main": "packages/nx/bin/nx.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/nx",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/nx"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js nx"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/nx/**/*.ts",
+          "packages/nx/**/*.spec.ts",
+          "packages/nx/**/*_spec.ts",
+          "packages/nx/**/*.spec.tsx",
+          "packages/nx/**/*.spec.js",
+          "packages/nx/**/*.spec.jsx",
+          "packages/nx/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

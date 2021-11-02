@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularMove",
+  "cli": "nx",
+  "title": "Nx Angular Move",
+  "description": "Move an Angular project to another folder in the workspace",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib",
+      "description": "Move libs/my-feature-lib to libs/shared/my-feature-lib"
+    }
+  ],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "alias": "project",
+      "description": "The name of the Angular project to move."
+    },
+    "destination": {
+      "type": "string",
+      "description": "The folder to move the Angular project into.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The new import path to use in the `tsconfig.base.json`."
+    },
+    "updateImportPath": {
+      "type": "boolean",
+      "description": "Update the import path to reflect the new location.",
+      "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "aliases": ["skip-format"],
+      "description": "Skip formatting files.",
+      "default": false
+    }
+  },
+  "required": ["projectName", "destination"]
+}

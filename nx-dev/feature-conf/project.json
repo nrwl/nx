@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/feature-conf",
+  "sourceRoot": "nx-dev/feature-conf/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/feature-conf/**/*.{ts,tsx,js,jsx}"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/feature-conf"],
+      "options": {
+        "jestConfig": "nx-dev/feature-conf/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

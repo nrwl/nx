@@ -1,0 +1,15 @@
+[
+  "angular",
+  "cypress",
+  "detox",
+  "gatsby",
+  "jest",
+  "linter",
+  "next",
+  "node",
+  "nx-plugin",
+  "react-native",
+  "storybook",
+  "web",
+  "workspace"
+]

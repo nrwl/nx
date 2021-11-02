@@ -1,0 +1,2518 @@
+{
+  "hash": "c8e83d3404dae40dbf14d99157b763c2d0ad0c5fec363244d2ef84caa1152fef",
+  "projects": [
+    {
+      "name": "@storybook/addon-storyshots-puppeteer",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "addons/storyshots/storyshots-puppeteer",
+        "files": []
+      }
+    },
+    {
+      "name": "web-components-kitchen-sink",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "examples/web-components-kitchen-sink",
+        "files": []
+      }
+    },
+    {
+      "name": "@storybook/addon-storyshots",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "addons/storyshots/storyshots-core",
+        "files": []
+      }
+    },
+    {
+      "name": "cra-ts-kitchen-sink",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "examples/cra-ts-kitchen-sink",
+        "files": []
+      }
+    },
+    {
+      "name": "preact-example",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "examples/preact-kitchen-sink",
+        "files": []
+      }
+    },
+    {
+      "name": "server-kitchen-sink",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "examples/server-kitchen-sink",
+        "files": []
+      }
+    },
+    {
+      "name": "svelte-example",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "examples/svelte-kitchen-sink",
+        "files": []
+      }
+    },
+    {
+      "name": "official-storybook",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/official-storybook", "files": [] }
+    },
+    {
+      "name": "standalone-preview",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/standalone-preview", "files": [] }
+    },
+    {
+      "name": "@storybook/example-react-ts-webpack4",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/react-ts-webpack4", "files": [] }
+    },
+    {
+      "name": "cra-ts-essentials",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/cra-ts-essentials", "files": [] }
+    },
+    {
+      "name": "html-kitchen-sink",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/html-kitchen-sink", "files": [] }
+    },
+    {
+      "name": "cra-kitchen-sink",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/cra-kitchen-sink", "files": [] }
+    },
+    {
+      "name": "vue-example",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/vue-kitchen-sink", "files": [] }
+    },
+    {
+      "name": "@storybook/channel-postmessage",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/channel-postmessage", "files": [] }
+    },
+    {
+      "name": "@storybook/channel-websocket",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/channel-websocket", "files": [] }
+    },
+    {
+      "name": "@storybook/builder-webpack4",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/builder-webpack4", "files": [] }
+    },
+    {
+      "name": "@storybook/builder-webpack5",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/builder-webpack5", "files": [] }
+    },
+    {
+      "name": "@storybook/manager-webpack4",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/manager-webpack4", "files": [] }
+    },
+    {
+      "name": "@storybook/manager-webpack5",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/manager-webpack5", "files": [] }
+    },
+    {
+      "name": "angular-cli",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/angular-cli", "files": [] }
+    },
+    {
+      "name": "cra-react15",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/cra-react15", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-backgrounds",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/backgrounds", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-storysource",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/storysource", "files": [] }
+    },
+    {
+      "name": "@storybook/web-components",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/web-components", "files": [] }
+    },
+    {
+      "name": "ember-example",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/ember-cli", "files": [] }
+    },
+    {
+      "name": "vue-3-cli-example",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/vue-3-cli", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-essentials",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/essentials", "files": [] }
+    },
+    {
+      "name": "@storybook/client-logger",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/client-logger", "files": [] }
+    },
+    {
+      "name": "@storybook/example-react-ts",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/react-ts", "files": [] }
+    },
+    {
+      "name": "@storybook/source-loader",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/source-loader", "files": [] }
+    },
+    {
+      "name": "storybook",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/cli-storybook", "files": [] }
+    },
+    {
+      "name": "vue-cli-example",
+      "type": "lib",
+      "data": { "tags": [], "root": "examples/vue-cli", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-controls",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/controls", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-toolbars",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/toolbars", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-viewport",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/viewport", "files": [] }
+    },
+    {
+      "name": "@storybook/core-client",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/core-client", "files": [] }
+    },
+    {
+      "name": "@storybook/core-common",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/core-common", "files": [] }
+    },
+    {
+      "name": "@storybook/core-events",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/core-events", "files": [] }
+    },
+    {
+      "name": "@storybook/core-server",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/core-server", "files": [] }
+    },
+    {
+      "name": "@storybook/node-logger",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/node-logger", "files": [] }
+    },
+    {
+      "name": "@storybook/postinstall",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/postinstall", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-actions",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/actions", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-measure",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/measure", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-outline",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/outline", "files": [] }
+    },
+    {
+      "name": "@storybook/client-api",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/client-api", "files": [] }
+    },
+    {
+      "name": "@storybook/components",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/components", "files": [] }
+    },
+    {
+      "name": "@storybook/csf-tools",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/csf-tools", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-links",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/links", "files": [] }
+    },
+    {
+      "name": "@storybook/channels",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/channels", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-a11y",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/a11y", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-docs",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/docs", "files": [] }
+    },
+    {
+      "name": "@storybook/addon-jest",
+      "type": "lib",
+      "data": { "tags": [], "root": "addons/jest", "files": [] }
+    },
+    {
+      "name": "@storybook/angular",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/angular", "files": [] }
+    },
+    {
+      "name": "@storybook/codemod",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/codemod", "files": [] }
+    },
+    {
+      "name": "@storybook/theming",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/theming", "files": [] }
+    },
+    {
+      "name": "@storybook/addons",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/addons", "files": [] }
+    },
+    {
+      "name": "@storybook/preact",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/preact", "files": [] }
+    },
+    {
+      "name": "@storybook/router",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/router", "files": [] }
+    },
+    {
+      "name": "@storybook/server",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/server", "files": [] }
+    },
+    {
+      "name": "@storybook/svelte",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/svelte", "files": [] }
+    },
+    {
+      "name": "sb",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/cli-sb", "files": [] }
+    },
+    {
+      "name": "@storybook/ember",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/ember", "files": [] }
+    },
+    {
+      "name": "@storybook/react",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/react", "files": [] }
+    },
+    {
+      "name": "@storybook/core",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/core", "files": [] }
+    },
+    {
+      "name": "@storybook/html",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/html", "files": [] }
+    },
+    {
+      "name": "@storybook/vue3",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/vue3", "files": [] }
+    },
+    {
+      "name": "@storybook/api",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/api", "files": [] }
+    },
+    {
+      "name": "@storybook/cli",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/cli", "files": [] }
+    },
+    {
+      "name": "@storybook/vue",
+      "type": "lib",
+      "data": { "tags": [], "root": "app/vue", "files": [] }
+    },
+    {
+      "name": "@storybook/ui",
+      "type": "lib",
+      "data": { "tags": [], "root": "lib/ui", "files": [] }
+    }
+  ],
+  "dependencies": {
+    "@storybook/addon-storyshots-puppeteer": [
+      {
+        "source": "@storybook/addon-storyshots-puppeteer",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      }
+    ],
+    "web-components-kitchen-sink": [
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-jest",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "web-components-kitchen-sink",
+        "target": "@storybook/web-components",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-storyshots": [
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/angular",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/react",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/vue",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storyshots",
+        "target": "@storybook/vue3",
+        "type": "static"
+      }
+    ],
+    "cra-ts-kitchen-sink": [
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-kitchen-sink",
+        "target": "@storybook/react",
+        "type": "static"
+      }
+    ],
+    "preact-example": [
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/preact",
+        "type": "static"
+      },
+      {
+        "source": "preact-example",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      }
+    ],
+    "server-kitchen-sink": [
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "server-kitchen-sink",
+        "target": "@storybook/server",
+        "type": "static"
+      }
+    ],
+    "svelte-example": [
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      },
+      {
+        "source": "svelte-example",
+        "target": "@storybook/svelte",
+        "type": "static"
+      }
+    ],
+    "official-storybook": [
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-jest",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-storyshots-puppeteer",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-toolbars",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/cli",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/react",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      },
+      {
+        "source": "official-storybook",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "standalone-preview": [
+      {
+        "source": "standalone-preview",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "standalone-preview",
+        "target": "@storybook/react",
+        "type": "static"
+      }
+    ],
+    "@storybook/example-react-ts-webpack4": [
+      {
+        "source": "@storybook/example-react-ts-webpack4",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts-webpack4",
+        "target": "@storybook/addon-essentials",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts-webpack4",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts-webpack4",
+        "target": "@storybook/react",
+        "type": "static"
+      }
+    ],
+    "cra-ts-essentials": [
+      {
+        "source": "cra-ts-essentials",
+        "target": "@storybook/addon-essentials",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-essentials",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-essentials",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "cra-ts-essentials",
+        "target": "@storybook/react",
+        "type": "static"
+      }
+    ],
+    "html-kitchen-sink": [
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-jest",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/html",
+        "type": "static"
+      },
+      {
+        "source": "html-kitchen-sink",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      }
+    ],
+    "cra-kitchen-sink": [
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-jest",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/react",
+        "type": "static"
+      },
+      {
+        "source": "cra-kitchen-sink",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "vue-example": [
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "vue-example",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      },
+      { "source": "vue-example", "target": "@storybook/vue", "type": "static" }
+    ],
+    "@storybook/channel-postmessage": [
+      {
+        "source": "@storybook/channel-postmessage",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/channel-postmessage",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/channel-postmessage",
+        "target": "@storybook/core-events",
+        "type": "static"
+      }
+    ],
+    "@storybook/channel-websocket": [
+      {
+        "source": "@storybook/channel-websocket",
+        "target": "@storybook/channels",
+        "type": "static"
+      }
+    ],
+    "@storybook/builder-webpack4": [
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/channel-postmessage",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/router",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/theming",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack4",
+        "target": "@storybook/ui",
+        "type": "static"
+      }
+    ],
+    "@storybook/builder-webpack5": [
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/channel-postmessage",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/router",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/builder-webpack5",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/manager-webpack4": [
+      {
+        "source": "@storybook/manager-webpack4",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack4",
+        "target": "@storybook/core-client",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack4",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack4",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack4",
+        "target": "@storybook/theming",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack4",
+        "target": "@storybook/ui",
+        "type": "static"
+      }
+    ],
+    "@storybook/manager-webpack5": [
+      {
+        "source": "@storybook/manager-webpack5",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack5",
+        "target": "@storybook/core-client",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack5",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack5",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack5",
+        "target": "@storybook/theming",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/manager-webpack5",
+        "target": "@storybook/ui",
+        "type": "static"
+      }
+    ],
+    "angular-cli": [
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-jest",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/angular",
+        "type": "static"
+      },
+      {
+        "source": "angular-cli",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      }
+    ],
+    "cra-react15": [
+      {
+        "source": "cra-react15",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "cra-react15",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "cra-react15",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "cra-react15",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "cra-react15",
+        "target": "@storybook/react",
+        "type": "static"
+      },
+      {
+        "source": "cra-react15",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-backgrounds": [
+      {
+        "source": "@storybook/addon-backgrounds",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-backgrounds",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-backgrounds",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-backgrounds",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-backgrounds",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-backgrounds",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-storysource": [
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/router",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-storysource",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/web-components": [
+      {
+        "source": "@storybook/web-components",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/web-components",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/web-components",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/web-components",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "ember-example": [
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-a11y",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/ember",
+        "type": "static"
+      },
+      {
+        "source": "ember-example",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      }
+    ],
+    "vue-3-cli-example": [
+      {
+        "source": "vue-3-cli-example",
+        "target": "@storybook/vue3",
+        "type": "static"
+      },
+      {
+        "source": "vue-3-cli-example",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "vue-3-cli-example",
+        "target": "@storybook/addon-essentials",
+        "type": "static"
+      },
+      {
+        "source": "vue-3-cli-example",
+        "target": "@storybook/addon-links",
+        "type": "static"
+      },
+      {
+        "source": "vue-3-cli-example",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-essentials": [
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-actions",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-backgrounds",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-docs",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-measure",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-outline",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-toolbars",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addon-viewport",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-essentials",
+        "target": "@storybook/vue",
+        "type": "static"
+      }
+    ],
+    "@storybook/client-logger": [],
+    "@storybook/example-react-ts": [
+      {
+        "source": "@storybook/example-react-ts",
+        "target": "@storybook/addon-essentials",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts",
+        "target": "@storybook/addon-storyshots",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts",
+        "target": "@storybook/addon-storysource",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts",
+        "target": "@storybook/react",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/example-react-ts",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/source-loader": [
+      {
+        "source": "@storybook/source-loader",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/source-loader",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      }
+    ],
+    "storybook": [
+      { "source": "storybook", "target": "@storybook/cli", "type": "static" }
+    ],
+    "vue-cli-example": [
+      {
+        "source": "vue-cli-example",
+        "target": "@storybook/addon-controls",
+        "type": "static"
+      },
+      {
+        "source": "vue-cli-example",
+        "target": "@storybook/addon-essentials",
+        "type": "static"
+      },
+      {
+        "source": "vue-cli-example",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      },
+      {
+        "source": "vue-cli-example",
+        "target": "@storybook/vue",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-controls": [
+      {
+        "source": "@storybook/addon-controls",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-controls",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-controls",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-controls",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-controls",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-controls",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-toolbars": [
+      {
+        "source": "@storybook/addon-toolbars",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-toolbars",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-toolbars",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-toolbars",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-toolbars",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-viewport": [
+      {
+        "source": "@storybook/addon-viewport",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-viewport",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-viewport",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-viewport",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-viewport",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-viewport",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/core-client": [
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/channel-postmessage",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/ui",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-client",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "@storybook/core-common": [
+      {
+        "source": "@storybook/core-common",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      }
+    ],
+    "@storybook/core-events": [],
+    "@storybook/core-server": [
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/core-client",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/csf-tools",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/manager-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core-server",
+        "target": "@storybook/builder-webpack5",
+        "type": "static"
+      }
+    ],
+    "@storybook/node-logger": [],
+    "@storybook/postinstall": [],
+    "@storybook/addon-actions": [
+      {
+        "source": "@storybook/addon-actions",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-actions",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-actions",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-actions",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-actions",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-actions",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-measure": [
+      {
+        "source": "@storybook/addon-measure",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-measure",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-measure",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-measure",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-measure",
+        "target": "@storybook/core-events",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-outline": [
+      {
+        "source": "@storybook/addon-outline",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-outline",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-outline",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-outline",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-outline",
+        "target": "@storybook/core-events",
+        "type": "static"
+      }
+    ],
+    "@storybook/client-api": [
+      {
+        "source": "@storybook/client-api",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/client-api",
+        "target": "@storybook/channel-postmessage",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/client-api",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/client-api",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/client-api",
+        "target": "@storybook/core-events",
+        "type": "static"
+      }
+    ],
+    "@storybook/components": [
+      {
+        "source": "@storybook/components",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/components",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/csf-tools": [],
+    "@storybook/addon-links": [
+      {
+        "source": "@storybook/addon-links",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-links",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-links",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-links",
+        "target": "@storybook/router",
+        "type": "static"
+      }
+    ],
+    "@storybook/channels": [],
+    "@storybook/addon-a11y": [
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-a11y",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-docs": [
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/builder-webpack4",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/csf-tools",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/postinstall",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/source-loader",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/theming",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/angular",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/react",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/vue",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/web-components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-docs",
+        "target": "@storybook/vue3",
+        "type": "static"
+      }
+    ],
+    "@storybook/addon-jest": [
+      {
+        "source": "@storybook/addon-jest",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-jest",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-jest",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-jest",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addon-jest",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/angular": [
+      {
+        "source": "@storybook/angular",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/angular",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/angular",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/angular",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/angular",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/angular",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      }
+    ],
+    "@storybook/codemod": [
+      {
+        "source": "@storybook/codemod",
+        "target": "@storybook/csf-tools",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/codemod",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      }
+    ],
+    "@storybook/theming": [
+      {
+        "source": "@storybook/theming",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      }
+    ],
+    "@storybook/addons": [
+      {
+        "source": "@storybook/addons",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addons",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addons",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addons",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addons",
+        "target": "@storybook/router",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/addons",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/preact": [
+      {
+        "source": "@storybook/preact",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/preact",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/preact",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "@storybook/router": [
+      {
+        "source": "@storybook/router",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      }
+    ],
+    "@storybook/server": [
+      {
+        "source": "@storybook/server",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/server",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/server",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/server",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/server",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/server",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      }
+    ],
+    "@storybook/svelte": [
+      {
+        "source": "@storybook/svelte",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/svelte",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/svelte",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "sb": [{ "source": "sb", "target": "@storybook/cli", "type": "static" }],
+    "@storybook/ember": [
+      {
+        "source": "@storybook/ember",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ember",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "@storybook/react": [
+      {
+        "source": "@storybook/react",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/react",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/react",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/react",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/react",
+        "target": "@storybook/client-api",
+        "type": "static"
+      }
+    ],
+    "@storybook/core": [
+      {
+        "source": "@storybook/core",
+        "target": "@storybook/core-client",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/core",
+        "target": "@storybook/core-server",
+        "type": "static"
+      }
+    ],
+    "@storybook/html": [
+      {
+        "source": "@storybook/html",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/html",
+        "target": "@storybook/client-api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/html",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/html",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "@storybook/vue3": [
+      {
+        "source": "@storybook/vue3",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/vue3",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/vue3",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "@storybook/api": [
+      {
+        "source": "@storybook/api",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/api",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/api",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/api",
+        "target": "@storybook/router",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/api",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ],
+    "@storybook/cli": [
+      {
+        "source": "@storybook/cli",
+        "target": "@storybook/codemod",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/cli",
+        "target": "@storybook/core-common",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/cli",
+        "target": "@storybook/node-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/cli",
+        "target": "@storybook/client-api",
+        "type": "static"
+      }
+    ],
+    "@storybook/vue": [
+      {
+        "source": "@storybook/vue",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/vue",
+        "target": "@storybook/core",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/vue",
+        "target": "@storybook/core-common",
+        "type": "static"
+      }
+    ],
+    "@storybook/ui": [
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/addons",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/api",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/channels",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/client-logger",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/components",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/core-events",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/router",
+        "type": "static"
+      },
+      {
+        "source": "@storybook/ui",
+        "target": "@storybook/theming",
+        "type": "static"
+      }
+    ]
+  },
+  "layout": { "appsDir": "apps", "libsDir": "libs" },
+  "changes": { "added": [] },
+  "affected": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}

@@ -1,0 +1,82 @@
+{
+  "root": "packages/web",
+  "sourceRoot": "packages/web",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/web/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/web"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/web",
+        "tsConfig": "packages/web/tsconfig.lib.json",
+        "packageJson": "packages/web/package.json",
+        "main": "packages/web/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/web",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/web",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/web",
+            "glob": "**/files/**/.babelrc__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/web",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/web",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/web",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/web"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js web"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/web/**/*.ts",
+          "packages/web/**/*.spec.ts",
+          "packages/web/**/*_spec.ts",
+          "packages/web/**/*.spec.tsx",
+          "packages/web/**/*.spec.js",
+          "packages/web/**/*.spec.jsx",
+          "packages/web/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

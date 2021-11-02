@@ -1,0 +1,55 @@
+{
+  "name": "@nrwl/react",
+  "version": "0.0.1",
+  "description": "React Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/react"
+  },
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-react": "^7.14.5",
+    "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/storybook": "*",
+    "@nrwl/web": "*",
+    "@nrwl/workspace": "*",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
+    "@svgr/webpack": "^5.5.0",
+    "chalk": "4.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.23.1",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "react-refresh": "^0.10.0",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.58.1",
+    "webpack-merge": "^5.8.0",
+    "@storybook/node-logger": "6.1.20",
+    "semver": "7.3.4"
+  }
+}

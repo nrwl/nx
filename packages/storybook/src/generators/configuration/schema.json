@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxStorybookConfigure",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Library or application name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook UI Framework to use",
+      "enum": ["@storybook/angular", "@storybook/react"],
+      "x-prompt": "What UI framework plugin should storybook use?"
+    },
+    "configureCypress": {
+      "type": "boolean",
+      "description": "Run the cypress-configure generator",
+      "x-prompt": "Configure a cypress e2e app to run against the storybook instance?"
+    },
+    "cypressDirectory": {
+      "type": "string",
+      "description": "A directory where the Cypress project will be placed. Added at root by default."
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint", "none"],
+      "default": "eslint"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean"
+    }
+  },
+  "required": ["name"]
+}

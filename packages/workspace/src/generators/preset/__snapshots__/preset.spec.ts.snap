@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`preset should create files (preset = angular) 1`] = `
+Array [
+  "src",
+  "tsconfig.editor.json",
+  "tsconfig.json",
+  ".browserslistrc",
+  "tsconfig.app.json",
+  "tsconfig.spec.json",
+  ".eslintrc.json",
+  "jest.config.js",
+]
+`;
+
+exports[`preset should create files (preset = angular) 2`] = `
+Array [
+  "favicon.ico",
+  "index.html",
+  "main.ts",
+  "polyfills.ts",
+  "styles.css",
+  "assets",
+  "environments",
+  "app",
+  "test-setup.ts",
+]
+`;
+
+exports[`preset should create files (preset = angular) 3`] = `
+Array [
+  "app.module.ts",
+  "app.component.css",
+  "app.component.html",
+  "app.component.spec.ts",
+  "app.component.ts",
+]
+`;

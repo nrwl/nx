@@ -1,94 +1,149 @@
-<h1 align="center">Nrwl Extensions for Angular (Nx)</h1>
-<img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png" align="center">
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" 
+width="100%" alt="Nx - Smart, Extensible Build Framework"></p>
 
-<p align="center">
+<div style="text-align: center;">
 
-[![Build Status](https://travis-ci.org/nrwl/nx.svg?branch=master)](https://travis-ci.org/nrwl/nx)
-[![License](https://img.shields.io/npm/l/@nrwl/schematics.svg?style=flat-square)]()
-[![NPM Version](https://badge.fury.io/js/%40nrwl%2Fnx.svg)](https://www.npmjs.com/@nrwl/nx)
-[![NPM Downloads](https://img.shields.io/npm/dt/@nrwl/schematics.svg?style=flat-square)](https://www.npmjs.com/@nrwl/nx)
+[![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
+[![License](https://img.shields.io/npm/l/@nrwl/workspace.svg?style=flat-square)]()
+[![NPM Version](https://badge.fury.io/js/%40nrwl%2Fworkspace.svg)](https://www.npmjs.com/@nrwl/workspace)
 [![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)]()
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![Join the chat at https://gitter.im/nrwl-nx/community](https://badges.gitter.im/nrwl-nx/community.svg)](https://gitter.im/nrwl-nx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join us @nrwl/community on slack](https://img.shields.io/badge/slack-%40nrwl%2Fcommunity-brightgreen)](https://go.nrwl.io/join-slack)
 
-</p>
+</div>
 
 <hr>
 
 # What is Nx?
 
-🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experience working at Google and helping the Fortune 500 build ambitious Angular applications. It provides an opinionated approach to application project structure and patterns.
+🔎 **Smart, Extensible Build Framework**
 
-Nx is an extension for the the Angular CLI implementing the monorepo-style development. It is also a collection of runtime libraries, linters, and code generators helping large teams build better with Angular.
+Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
 
-# Why Nx?
+### Best-in-Class Support for Monorepos
 
-On the surface, large and small organizations care about the same things: consistency, writing robust, maintainable code, making changes with confidence, being able to understand how the system works.
+<strong>Nx</strong> provides distributed graph-based task execution and computation caching.
 
-What’s different about large organizations is that they have hundreds of Angular engineers building dozens of apps. So they have a lot of code, which changes everything.
+<strong>Nx</strong> is smart. It analyzes your workspace and figures out what can be affected by every code change.
+That's why Nx doesn't rebuild and retest everything on every commit--<strong>it only rebuilds what is necessary</strong>
+.
 
-* While ten (10) developers can reach a consensus on best practices by chatting over lunch, five hundred (500) developers cannot. You have to establish best practices, team standards, **and use tools to promote them**.
-* With three (3) projects developers will know what needs to be retested after making a change, with thirty (30) projects, however, this is no longer a simple process. Informal team rules to manage change will no longer work with large teams and multi-team, multi-project efforts. **You have to rely on the automated CI process instead.** …
+<strong>Nx</strong> partitions commands into a graph of smaller tasks. Nx then runs those tasks in parallel,
+and <strong>it can even distribute them across multiple machines without any configuration</strong>.
 
-In other words, small organizations can often get by with informal ad-hoc processes, whereas large organizations cannot. **Large organizations must rely on tooling to enable that. Nx is this tooling.**
+<strong>Nx also uses a distributed computation cache.</strong> If someone has already built or tested similar code, Nx
+will use their results to speed up the command for everyone else.
 
-# Getting Started
+### Holistic Dev Experience Powered by an Advanced CLI and Editor Plugins
 
-An Nx workspace is an Angular CLI project that has been enhanced to be enterprise ready. Being an Angular CLI project means it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn as well.
+<strong>Nx</strong> helps scale your development from one team building one application to many teams building multiple
+frontend and backend applications all in the same workspace. <strong >When using Nx, developers have a holistic dev
+experience powered by an advanced CLI</strong > (with editor plugins), capabilities for controlled code sharing and
+consistent code generation.
 
-```
-npm install -g @angular/cli
-```
+### Rich Plugin Ecosystem
 
-> Note: If you do not have the Angular CLI installed globally you may not be able to use ng from the terminal to run CLI commands within the project. But the package.json file comes with npm scripts to run ng commands, so you can run npm start to ng serve and you can run npm run ng <command> to run any of the ng commands.
+<strong>Nx</strong> is an open platform with plugins for many modern tools and frameworks. It has support for
+TypeScript, React, Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a
+consistent dev experience regardless of the tools used.
 
-After you have installed the Angular CLI, install `@nrwl/schematics`.
+# Documentation & Resources
 
-```
-npm install -g @nrwl/schematics
-```
+Even though Nx isn't technology specific, we provide 3 separate flavours of the documentation site to it make it easier
+for you to get up and running. For every link below, you will be able to select whether you want your examples to be
+written in React, Node or Angular.
 
-After installing it you can create a new Nx workspace by running:
+- [Nx Documentation and Guides](https://nx.dev)
+- [Intro into Nx](https://nx.dev/getting-started/intro)
+- [Interactive Tutorial with Videos](https://nx.dev/tutorial/01-create-application)
 
-```
-ng new myworkspacename --collection=@nrwl/schematics
-```
+### Quick Start Videos
 
-You can also add Nx capabilities to an existing CLI project by running:
+- [Scale Your React Development with Nx](https://www.youtube.com/watch?v=sNz-4PUM0k8)
+- [Scale your Node Development with Nx](https://www.youtube.com/watch?v=iIh5h_G52kI)
+- [Modern Angular with Nx Dev Tools](https://www.youtube.com/watch?v=cXOkmOy-8dk)
 
-```
-ng add @nrwl/schematics
-```
+### Courses
 
-You are good to go!
+<table>
+  <tr>
+    <td><strong>Scale React Development with Nx</strong></td>
+    <td><strong>Nx Workspaces</strong></td>
+    <td><strong>Advanced Nx Workspaces</strong></td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://egghead.io/playlists/scale-react-development-with-nx-4038" target="_blank">
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px" alt="Nx - Scale React Development with Nx video course"></p>
+      </a>
+    </td>
+    <td>
+      <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
+        <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350" alt="Nx Workspaces video course"></p>
+      </a>
+    </td>
+    <td>  
+      <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350" alt="Nx Advanced Workspaces video course"></p>
+      </a>
+    </td>
+  </tr>
+</table>
 
-## Quick Start & Documentation
+### Videos, Blogs, Books, Examples
 
-### Documentation
+- [Nx Dev Tools for Monorepos, In-Depth Explainer (React)](https://www.youtube.com/watch?v=jCf92IyR-GE)
 
-* [Nx Documentation and Guides](https://nrwl.io/nx)
+- [Nx Dev Tools for Monorepos, In-Depth Explainer (Angular)](https://youtu.be/h5FIGDn5YM0)
 
-### Videos
+- [Youtube Channel with Nx-Related Videos](https://www.youtube.com/playlist?list=PLakNactNC1dHHWx4JIORwfnEajRv6FG5m)
 
-* [5-minute video on how to get started with Nx.](http://nrwl.io/nx)
-* [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
+- [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
-### Talks
+- [Angular Enterprise Monorepo Patterns Book (free)](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
-* [Angular at Large Organizations](https://www.youtube.com/watch?v=piQ0EZhtus0)
-* [Nx: The New Way to Build Enterprise Angular Apps](https://www.youtube.com/watch?v=xo-1SDmvM8Y)
-* [Supercharging the Angular CLI](https://www.youtube.com/watch?v=bMkKz8AedHc)
-* [Hands on Full Stack development with Nx and Bazel](https://www.youtube.com/watch?v=1KDDIhcQORM)
+- [Nx Examples Repo](https://github.com/nrwl/nx-examples)
 
-### Podcasts and Shows
+# Engage with the Core Team and the Community
 
-* [ngAir 140: Nx for Enterprise Angular Development](https://www.youtube.com/watch?v=qYNiOKDno_I)
-* [ngHouston: NX Demo](https://www.youtube.com/watch?v=E_UlU2Yv4G0)
-
-## Misc
-
-* [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
-* [xplat - Cross-platform tools for Nx workspaces](https://nstudio.io/xplat/)
+- [Nx Office Hours Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's
+  a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
+- [Follow Nx on Twitter](https://twitter.com/NxDevTools)
 
 ## Want to help?
 
-If you want to file a bug or submit a PR, read up on our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md).
+If you want to file a bug or submit a PR, read up on
+our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md) and watch this video that will
+help you get started.
+
+<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank">
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
+</a>
+
+## Core Team
+
+| Victor Savkin                                                          | Jason Jean                                                            | Benjamin Cabanes                                                            | Brandon Roberts                                                          |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ![Victor Savkin](https://avatars1.githubusercontent.com/u/35996?s=150) | ![Jason Jean](https://avatars2.githubusercontent.com/u/8104246?s=150) | ![Benjamin Cabanes](https://avatars2.githubusercontent.com/u/3447705?s=150) | ![Brandon Roberts](https://avatars1.githubusercontent.com/u/42211?s=150) |
+| [vsavkin](https://github.com/vsavkin)                                  | [FrozenPandaz](https://github.com/FrozenPandaz)                       | [bcabanes](https://github.com/bcabanes)                                     | [brandonroberts](https://github.com/brandonroberts)                      |
+
+| Jack Hsu                                                          | Jo Hanna Pearce                                                           | Jon Cammisuli                                                            | Isaac Mann                                                           |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| ![Jack Hsu](https://avatars0.githubusercontent.com/u/53559?s=150) | ![Jo Hanna Pearce](https://avatars1.githubusercontent.com/u/439121?s=150) | ![Jon Cammisuli](https://avatars2.githubusercontent.com/u/4332460?s=150) | ![Isaac Mann](https://avatars1.githubusercontent.com/u/861504?s=150) |
+| [jaysoo](https://github.com/jaysoo)                               | [jdpearce](https://github.com/jdpearce)                                   | [cammisuli](https://github.com/cammisuli)                                | [isaacplmann](https://github.com/isaacplmann)                        |
+
+| Juri Strumpflohner                                                           | Philip Fulcher                                                            | Kirils Ladovs                                                           | Katerina Skroumpelou                                                            |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| ![Juri Strumpflohner](https://avatars1.githubusercontent.com/u/542458?s=150) | ![Philip Fulcher](https://avatars1.githubusercontent.com/u/1536471?s=150) | ![Kirils Ladovs](https://avatars.githubusercontent.com/u/9858620?s=150) | ![Katerina Skroumpelou](https://avatars0.githubusercontent.com/u/6603745?s=150) |
+| [juristr](https://github.com/juristr)                                        | [philipjfulcher](https://github.com/philipjfulcher)                       | [kirjai](https://github.com/kirjai)                                     | [mandarini](https://github.com/mandarini)                                       |
+
+| Colum Ferry                                                            | Emily Xiong                                                            | Miroslav Jonaš                                                          | Leosvel Pérez Espinosa                                                            |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| ![Colum Ferry](https://avatars.githubusercontent.com/u/12140467?s=150) | ![Emily Xiong](https://avatars.githubusercontent.com/u/16211801?s=150) | ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=150) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=150) |
+| [Coly010](https://github.com/Coly010)                                  | [xiongemi](https://github.com/xiongemi)                                | [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   |
+
+| Zachary DeRose                                                           | Craigory Coppola                                                           | Chau Tran                                                            |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=150) | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=150) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=150) |
+| [ZackDeRose](https://github.com/ZackDeRose)                              | [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    |

@@ -1,0 +1,29 @@
+name: NPM Audit
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Run a security audit
+      run: npx audit-ci --critical --report-type summary
+
+    - name: Report Status
+      if: ${{ always() && github.repository_owner == 'nrwl' }}
+      uses: ravsamhq/notify-slack-action@v1
+      with:
+        status: ${{ job.status }}
+        message_format: '{emoji} *{workflow}* {status_message} on <{commit_url}|{commit_sha}>'
+        notification_title: '{workflow} has {status_message}'
+        footer: 'From <{repo_url}|{repo}>'
+        mention_users: 'U01UELKLYF2'
+        mention_users_when: 'failure,warnings'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

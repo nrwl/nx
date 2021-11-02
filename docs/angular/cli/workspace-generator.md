@@ -1,0 +1,29 @@
+# workspace-generator
+
+Runs a workspace generator from the tools/generators directory
+
+## Usage
+
+```bash
+nx workspace-generator
+```
+
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+
+## Options
+
+### help
+
+Show help
+
+### list-generators
+
+List the available workspace-generators
+
+### name
+
+The name of your generator`
+
+### version
+
+Show version number

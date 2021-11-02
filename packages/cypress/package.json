@@ -1,0 +1,59 @@
+{
+  "name": "@nrwl/cypress",
+  "version": "0.0.1",
+  "description": "Cypress plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/cypress"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/workspace": "*",
+    "@cypress/webpack-preprocessor": "^5.9.1",
+    "chalk": "4.1.0",
+    "enhanced-resolve": "^5.8.3",
+    "ts-loader": "^9.2.6",
+    "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths-webpack-plugin": "3.4.1",
+    "webpack-node-externals": "^3.0.0",
+    "fork-ts-checker-webpack-plugin": "6.2.10",
+    "rxjs": "^6.5.4",
+    "tslib": "^2.0.0",
+    "yargs-parser": "20.0.0"
+  },
+  "peerDependencies": {
+    "cypress": ">= 3 < 9"
+  },
+  "peerDependenciesMeta": {
+    "cypress": {
+      "optional": true
+    }
+  }
+}

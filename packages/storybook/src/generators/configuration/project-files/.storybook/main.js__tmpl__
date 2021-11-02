@@ -1,0 +1,31 @@
+const rootMain = require('<%= offsetFromRoot %>../.storybook/main');
+<% if (existsRootWebpackConfig){ %>const rootWebpackConfig = require('<%= offsetFromRoot %>../.storybook/webpack.config'); <% } %>
+
+module.exports = {
+  ...rootMain,
+  <% if (useWebpack5) { %>
+  core: { ...rootMain.core, builder: 'webpack5' },
+  <% } %>
+  stories: [
+    ...rootMain.stories,
+    '../src/<%= projectType %>/**/*.stories.mdx',
+    '../src/<%= projectType %>/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons <% if(uiFramework === '@storybook/react') { %>, '@nrwl/react/plugins/storybook' <% } %>],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    <% if (existsRootWebpackConfig) { %>// for backwards compatibility call the `rootWebpackConfig`
+      // this can be removed once that one is migrated fully to
+      // use the `webpackFinal` property in the `main.js` file
+      config = rootWebpackConfig({ config });
+    <% } %>
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};

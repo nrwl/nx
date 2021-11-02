@@ -1,0 +1,29 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      "@nrwl/workspace",
+      "@angular-devkit/core",
+      "@angular-devkit/architect",
+      "@angular-devkit/schematics"
+    ]
+  },
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": ["error"]
+      }
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    }
+  ]
+}

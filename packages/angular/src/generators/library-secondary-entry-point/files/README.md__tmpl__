@@ -1,0 +1,3 @@
+# <%= secondaryEntryPoint %>
+
+Secondary entry point of `<%= mainEntryPoint %>`. It can be used by importing from `<%= secondaryEntryPoint %>`.

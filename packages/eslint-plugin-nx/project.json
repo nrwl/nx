@@ -1,0 +1,77 @@
+{
+  "root": "packages/eslint-plugin-nx",
+  "sourceRoot": "packages/eslint-plugin-nx",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/eslint-plugin-nx/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/eslint-plugin-nx"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/eslint-plugin-nx",
+        "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
+        "packageJson": "packages/eslint-plugin-nx/package.json",
+        "main": "packages/eslint-plugin-nx/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/eslint-plugin-nx",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin-nx",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin-nx",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin-nx",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin-nx",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/eslint-plugin-nx"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/eslint-plugin-nx/**/*.ts",
+          "packages/eslint-plugin-nx/**/*.spec.ts",
+          "packages/eslint-plugin-nx/**/*_spec.ts",
+          "packages/eslint-plugin-nx/**/*.spec.tsx",
+          "packages/eslint-plugin-nx/**/*.spec.js",
+          "packages/eslint-plugin-nx/**/*.spec.jsx",
+          "packages/eslint-plugin-nx/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "root": "packages/workspace",
+  "sourceRoot": "packages/workspace/src",
+  "projectType": "library",
+  "implicitDependencies": ["dep-graph-dep-graph"],
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/workspace/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/workspace"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/workspace",
+        "tsConfig": "packages/workspace/tsconfig.lib.json",
+        "packageJson": "packages/workspace/package.json",
+        "main": "packages/workspace/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/workspace",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/**/decorate-angular-cli.js__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/*.{js,css,html,svg}",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/workspace"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-dep-graph.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js workspace"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/workspace/**/*.ts",
+          "packages/workspace/**/*.spec.ts",
+          "packages/workspace/**/*.spec.tsx",
+          "packages/workspace/**/*.spec.js",
+          "packages/workspace/**/*.spec.jsx",
+          "packages/workspace/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

@@ -1,0 +1,579 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convert-tslint-to-eslint should work for NestJS applications 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "@nrwl/eslint-plugin-nx": "*",
+    "@nrwl/linter": "*",
+    "@typescript-eslint/eslint-plugin": "~4.33.0",
+    "@typescript-eslint/parser": "~4.33.0",
+    "eslint": "7.32.0",
+    "eslint-config-prettier": "8.1.0",
+    "eslint-plugin-import": "latest",
+  },
+  "name": "test-name",
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS applications 2`] = `
+Object {
+  "projectType": "application",
+  "root": "apps/nest-app-1",
+  "targets": Object {
+    "lint": Object {
+      "executor": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/nest-app-1/**/*.ts",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
+Object {
+  "ignorePatterns": Array [
+    "**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {
+        "@nrwl/nx/enforce-module-boundaries": Array [
+          "error",
+          Object {
+            "allow": Array [
+              "@nx-example/shared/product/data/testing",
+            ],
+            "depConstraints": Array [
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:feature",
+                  "type:ui",
+                ],
+                "sourceTag": "type:app",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:ui",
+                  "type:data",
+                  "type:types",
+                  "type:state",
+                ],
+                "sourceTag": "type:feature",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                ],
+                "sourceTag": "type:types",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:state",
+                  "type:types",
+                  "type:data",
+                ],
+                "sourceTag": "type:state",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                ],
+                "sourceTag": "type:data",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:e2e-utils",
+                ],
+                "sourceTag": "type:e2e",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                  "type:ui",
+                ],
+                "sourceTag": "type:ui",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "scope:products",
+                  "scope:shared",
+                ],
+                "sourceTag": "scope:products",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "scope:cart",
+                  "scope:shared",
+                ],
+                "sourceTag": "scope:cart",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/typescript",
+      ],
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/javascript",
+      ],
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "plugins": Array [
+        "eslint-plugin-import",
+        "@typescript-eslint",
+      ],
+      "rules": Object {
+        "@typescript-eslint/consistent-type-definitions": "error",
+        "@typescript-eslint/dot-notation": "off",
+        "@typescript-eslint/explicit-member-accessibility": Array [
+          "off",
+          Object {
+            "accessibility": "explicit",
+          },
+        ],
+        "@typescript-eslint/member-ordering": "error",
+        "@typescript-eslint/naming-convention": "error",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-empty-interface": "error",
+        "@typescript-eslint/no-inferrable-types": Array [
+          "error",
+          Object {
+            "ignoreParameters": true,
+          },
+        ],
+        "@typescript-eslint/no-misused-new": "error",
+        "@typescript-eslint/no-non-null-assertion": "error",
+        "@typescript-eslint/no-shadow": Array [
+          "error",
+          Object {
+            "hoist": "all",
+          },
+        ],
+        "@typescript-eslint/no-unused-expressions": "error",
+        "@typescript-eslint/prefer-function-type": "error",
+        "@typescript-eslint/unified-signatures": "error",
+        "arrow-body-style": "error",
+        "constructor-super": "error",
+        "eqeqeq": Array [
+          "error",
+          "smart",
+        ],
+        "guard-for-in": "error",
+        "id-blacklist": "off",
+        "id-match": "off",
+        "import/no-deprecated": "warn",
+        "no-bitwise": "error",
+        "no-caller": "error",
+        "no-console": Array [
+          "error",
+          Object {
+            "allow": Array [
+              "log",
+              "warn",
+              "dir",
+              "timeLog",
+              "assert",
+              "clear",
+              "count",
+              "countReset",
+              "group",
+              "groupEnd",
+              "table",
+              "dirxml",
+              "error",
+              "groupCollapsed",
+              "_buffer",
+              "_counters",
+              "_timers",
+              "_groupDepth",
+              "Console",
+            ],
+          },
+        ],
+        "no-debugger": "error",
+        "no-empty": "off",
+        "no-eval": "error",
+        "no-fallthrough": "error",
+        "no-new-wrappers": "error",
+        "no-restricted-imports": Array [
+          "error",
+          "rxjs/Rx",
+        ],
+        "no-throw-literal": "error",
+        "no-undef-init": "error",
+        "no-underscore-dangle": "off",
+        "no-var": "error",
+        "prefer-const": "error",
+        "radix": "error",
+      },
+    },
+  ],
+  "plugins": Array [
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS applications 4`] = `
+Object {
+  "extends": Array [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+  ],
+  "plugins": Array [
+    "@typescript-eslint",
+  ],
+  "rules": Object {
+    "@typescript-eslint/no-empty-interface": "error",
+  },
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS libraries 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "@nrwl/eslint-plugin-nx": "*",
+    "@nrwl/linter": "*",
+    "@typescript-eslint/eslint-plugin": "~4.33.0",
+    "@typescript-eslint/parser": "~4.33.0",
+    "eslint": "7.32.0",
+    "eslint-config-prettier": "8.1.0",
+    "eslint-plugin-import": "latest",
+  },
+  "name": "test-name",
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS libraries 2`] = `
+Object {
+  "projectType": "library",
+  "root": "libs/nest-lib-1",
+  "targets": Object {
+    "lint": Object {
+      "executor": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "libs/nest-lib-1/**/*.ts",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS libraries 3`] = `
+Object {
+  "ignorePatterns": Array [
+    "**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {
+        "@nrwl/nx/enforce-module-boundaries": Array [
+          "error",
+          Object {
+            "allow": Array [
+              "@nx-example/shared/product/data/testing",
+            ],
+            "depConstraints": Array [
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:feature",
+                  "type:ui",
+                ],
+                "sourceTag": "type:app",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:ui",
+                  "type:data",
+                  "type:types",
+                  "type:state",
+                ],
+                "sourceTag": "type:feature",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                ],
+                "sourceTag": "type:types",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:state",
+                  "type:types",
+                  "type:data",
+                ],
+                "sourceTag": "type:state",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                ],
+                "sourceTag": "type:data",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:e2e-utils",
+                ],
+                "sourceTag": "type:e2e",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                  "type:ui",
+                ],
+                "sourceTag": "type:ui",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "scope:products",
+                  "scope:shared",
+                ],
+                "sourceTag": "scope:products",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "scope:cart",
+                  "scope:shared",
+                ],
+                "sourceTag": "scope:cart",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/typescript",
+      ],
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/javascript",
+      ],
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "plugins": Array [
+        "eslint-plugin-import",
+        "@typescript-eslint",
+      ],
+      "rules": Object {
+        "@typescript-eslint/consistent-type-definitions": "error",
+        "@typescript-eslint/dot-notation": "off",
+        "@typescript-eslint/explicit-member-accessibility": Array [
+          "off",
+          Object {
+            "accessibility": "explicit",
+          },
+        ],
+        "@typescript-eslint/member-ordering": "error",
+        "@typescript-eslint/naming-convention": "error",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-empty-interface": "error",
+        "@typescript-eslint/no-inferrable-types": Array [
+          "error",
+          Object {
+            "ignoreParameters": true,
+          },
+        ],
+        "@typescript-eslint/no-misused-new": "error",
+        "@typescript-eslint/no-non-null-assertion": "error",
+        "@typescript-eslint/no-shadow": Array [
+          "error",
+          Object {
+            "hoist": "all",
+          },
+        ],
+        "@typescript-eslint/no-unused-expressions": "error",
+        "@typescript-eslint/prefer-function-type": "error",
+        "@typescript-eslint/unified-signatures": "error",
+        "arrow-body-style": "error",
+        "constructor-super": "error",
+        "eqeqeq": Array [
+          "error",
+          "smart",
+        ],
+        "guard-for-in": "error",
+        "id-blacklist": "off",
+        "id-match": "off",
+        "import/no-deprecated": "warn",
+        "no-bitwise": "error",
+        "no-caller": "error",
+        "no-console": Array [
+          "error",
+          Object {
+            "allow": Array [
+              "log",
+              "warn",
+              "dir",
+              "timeLog",
+              "assert",
+              "clear",
+              "count",
+              "countReset",
+              "group",
+              "groupEnd",
+              "table",
+              "dirxml",
+              "error",
+              "groupCollapsed",
+              "_buffer",
+              "_counters",
+              "_timers",
+              "_groupDepth",
+              "Console",
+            ],
+          },
+        ],
+        "no-debugger": "error",
+        "no-empty": "off",
+        "no-eval": "error",
+        "no-fallthrough": "error",
+        "no-new-wrappers": "error",
+        "no-restricted-imports": Array [
+          "error",
+          "rxjs/Rx",
+        ],
+        "no-throw-literal": "error",
+        "no-undef-init": "error",
+        "no-underscore-dangle": "off",
+        "no-var": "error",
+        "prefer-const": "error",
+        "radix": "error",
+      },
+    },
+  ],
+  "plugins": Array [
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for NestJS libraries 4`] = `
+Object {
+  "extends": Array [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+  ],
+  "plugins": Array [
+    "@typescript-eslint",
+  ],
+  "rules": Object {
+    "@typescript-eslint/no-empty-interface": "error",
+  },
+}
+`;

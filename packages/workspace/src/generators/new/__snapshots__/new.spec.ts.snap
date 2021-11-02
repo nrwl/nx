@@ -1,0 +1,120 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`new --preset angular should generate necessary npm dependencies 1`] = `
+Object {
+  "dependencies": Object {
+    "@nrwl/angular": "*",
+  },
+  "devDependencies": Object {
+    "@nrwl/cli": "*",
+    "@nrwl/tao": "*",
+    "@nrwl/workspace": "*",
+    "@types/node": "14.14.33",
+    "prettier": "^2.3.1",
+    "typescript": "~4.3.5",
+  },
+  "license": "MIT",
+  "name": "my-workspace",
+  "private": true,
+  "scripts": Object {
+    "build": "nx build",
+    "start": "nx serve",
+    "test": "nx test",
+  },
+  "version": "0.0.0",
+}
+`;
+
+exports[`new --preset empty should generate necessary npm dependencies 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "@nrwl/cli": "*",
+    "@nrwl/tao": "*",
+    "@nrwl/workspace": "*",
+    "@types/node": "14.14.33",
+    "prettier": "^2.3.1",
+    "typescript": "~4.3.5",
+  },
+  "license": "MIT",
+  "name": "my-workspace",
+  "private": true,
+  "scripts": Object {
+    "build": "nx build",
+    "start": "nx serve",
+    "test": "nx test",
+  },
+  "version": "0.0.0",
+}
+`;
+
+exports[`new --preset react should generate necessary npm dependencies 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "@nrwl/cli": "*",
+    "@nrwl/react": "*",
+    "@nrwl/tao": "*",
+    "@nrwl/workspace": "*",
+    "@types/node": "14.14.33",
+    "prettier": "^2.3.1",
+    "typescript": "~4.3.5",
+  },
+  "license": "MIT",
+  "name": "my-workspace",
+  "private": true,
+  "scripts": Object {
+    "build": "nx build",
+    "start": "nx serve",
+    "test": "nx test",
+  },
+  "version": "0.0.0",
+}
+`;
+
+exports[`new should generate an empty nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "cli": Object {
+    "defaultCollection": "@nrwl/workspace",
+  },
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "npmScope",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`new should generate an empty workspace.json 1`] = `
+Object {
+  "projects": Object {},
+  "version": 2,
+}
+`;

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "title": "Next Build",
+  "description": "Build a Next.js app",
+  "type": "object",
+  "properties": {
+    "root": {
+      "description": "The source root",
+      "type": "string"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files."
+    },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced."
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
+    "nextConfig": {
+      "description": "Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. next.config.js).",
+      "type": "string"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    }
+  },
+  "required": ["root", "outputPath"]
+}

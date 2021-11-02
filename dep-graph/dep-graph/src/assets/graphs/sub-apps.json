@@ -1,0 +1,55 @@
+{
+  "hash": "1c2b69586aa096dc5e42eb252d0b5bfb94f20dc969a1e7b6f381a3b13add6928",
+  "layout": { "appsDir": "apps", "libsDir": "libs" },
+  "projects": [
+    {
+      "name": "sub/app-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/sub/app-e2e" }
+    },
+    {
+      "name": "webapp-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/webapp-e2e" }
+    },
+    {
+      "name": "first-e2e",
+      "type": "e2e",
+      "data": { "tags": [], "root": "apps/first-e2e" }
+    },
+    {
+      "name": "sub-app",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/sub/app" }
+    },
+    {
+      "name": "webapp",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/webapp" }
+    },
+    {
+      "name": "first",
+      "type": "app",
+      "data": { "tags": [], "root": "apps/first" }
+    }
+  ],
+  "dependencies": {
+    "sub/app-e2e": [
+      { "type": "implicit", "source": "sub/app-e2e", "target": "sub-app" }
+    ],
+    "webapp-e2e": [
+      { "type": "implicit", "source": "webapp-e2e", "target": "webapp" }
+    ],
+    "first-e2e": [
+      { "type": "implicit", "source": "first-e2e", "target": "first" }
+    ],
+    "sub-app": [],
+    "webapp": [],
+    "first": []
+  },
+  "changes": { "added": [] },
+  "affected": [],
+  "focus": null,
+  "exclude": [],
+  "groupByFolder": false
+}

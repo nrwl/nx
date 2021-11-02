@@ -1,0 +1,47 @@
+import { <%= className %>Action, <%= className %>ActionTypes } from './<%= fileName %>.actions';
+
+export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
+
+/**
+ * Interface for the '<%= className %>' data used in
+ *  - <%= className %>State, and the reducer function
+ *
+ *  Note: replace if already defined in another module
+ */
+export interface Entity {
+  id: string;
+  name: string;
+}
+
+export interface <%= className %>State {
+  list: Entity[]; // list of <%= className %>; analogous to a sql normalized table
+  selectedId?: string | number; // which <%= className %> record has been selected
+  loaded: boolean; // has the <%= className %> list been loaded
+  error?: any; // last none error (if any)
+};
+
+export interface <%= className %>PartialState {
+  readonly [<%= constantName %>_FEATURE_KEY]: <%= className %>State;
+}
+
+export const initialState: <%= className %>State = {
+  list: [],
+  loaded: false
+};
+
+export function reducer(
+  state: <%= className %>State = initialState, 
+  action: <%= className %>Action): <%= className %>State
+{
+  switch (action.type) {
+    case <%= className %>ActionTypes.<%= className %>Loaded: {
+      state = {
+        ...state,
+        list: action.payload,
+        loaded: true
+      };
+      break;
+    }
+  }
+  return state;
+}

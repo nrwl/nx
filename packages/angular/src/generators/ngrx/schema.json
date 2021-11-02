@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxNgrxGenerator",
+  "title": "Add NgRx support to an application or library.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the NgRx feature state? An example would be `users`."
+    },
+    "module": {
+      "type": "string",
+      "description": "The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.",
+      "x-prompt": "What is the path to the module where this NgRx state should be registered?"
+    },
+    "directory": {
+      "type": "string",
+      "default": "+state",
+      "description": "The name of the folder used to contain/group the generated NgRx files."
+    },
+    "root": {
+      "type": "boolean",
+      "default": false,
+      "description": "Setup root or feature state management with NgRx.",
+      "x-prompt": "Is this the root state of the application?"
+    },
+    "facade": {
+      "type": "boolean",
+      "default": false,
+      "description": "Create a Facade class for the the feature.",
+      "x-prompt": "Would you like to use a Facade with your NgRx state?"
+    },
+    "skipImport": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate NgRx feature files without registering the feature in the NgModule."
+    },
+    "minimal": {
+      "type": "boolean",
+      "default": true,
+      "description": "Only register the root state management setup or feature state."
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not update the `package.json` with NgRx dependencies."
+    },
+    "syntax": {
+      "type": "string",
+      "enum": ["classes", "creators"],
+      "default": "creators",
+      "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects."
+    },
+    "useDataPersistence": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators."
+    },
+    "barrels": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use barrels to re-export actions, state and selectors."
+    }
+  },
+  "additionalProperties": false,
+  "required": ["module", "name"]
+}

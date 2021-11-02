@@ -1,0 +1,22 @@
+{
+  "cli": "nx",
+  "title": "Add Storybook Configuration to the workspace",
+  "$id": "init-storybook-plugin",
+  "type": "object",
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook UI Framework to use",
+      "enum": [
+        "@storybook/angular",
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "x-prompt": "What UI framework plugin should storybook use?"
+    }
+  }
+}

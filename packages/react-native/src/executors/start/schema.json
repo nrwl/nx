@@ -1,0 +1,20 @@
+{
+  "cli": "nx",
+  "$id": "NxReactNativeStart",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Packager Server for React Native",
+  "description": "Packager Server target options",
+  "type": "object",
+  "properties": {
+    "port": {
+      "type": "number",
+      "description": "The port to listen on.",
+      "default": 8081
+    },
+    "resetCache": {
+      "type": "boolean",
+      "description": "Resets metro cache.",
+      "default": false
+    }
+  }
+}

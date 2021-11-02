@@ -1,0 +1,35 @@
+{
+  "name": "nx/web",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#webInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add @nrwl/web to a project",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    }
+  },
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#webInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add @nrwl/web to a project",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    }
+  }
+}

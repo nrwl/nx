@@ -1,0 +1,87 @@
+{
+  "root": "packages/tao",
+  "sourceRoot": "packages/tao",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/tao/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/tao"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/tao",
+        "tsConfig": "packages/tao/tsconfig.lib.json",
+        "packageJson": "packages/tao/package.json",
+        "main": "packages/tao/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/tao",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/tao"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/tao/index.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js tao"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js tao nx@*"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/tao/**/*.ts",
+          "packages/tao/**/*.spec.ts",
+          "packages/tao/**/*.spec.tsx",
+          "packages/tao/**/*.spec.js",
+          "packages/tao/**/*.spec.jsx",
+          "packages/tao/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

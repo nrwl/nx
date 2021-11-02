@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularComponentCypressSpecGenerator",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "The name of the project.",
+      "examples": ["ui-samples"]
+    },
+    "projectPath": {
+      "type": "string",
+      "description": "Path to the project.",
+      "examples": ["libs/ui-samples"]
+    },
+    "componentName": {
+      "type": "string",
+      "description": "Class name of the component.",
+      "examples": ["AwesomeComponent"]
+    },
+    "componentPath": {
+      "type": "string",
+      "description": "Relative path to the component file from the project root.",
+      "examples": ["awesome"]
+    },
+    "componentFileName": {
+      "type": "string",
+      "description": "Component file name without the `.ts` extension.",
+      "examples": ["awesome.component"]
+    },
+    "cypressProject": {
+      "type": "string",
+      "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "projectName",
+    "projectPath",
+    "componentName",
+    "componentPath",
+    "componentFileName"
+  ]
+}

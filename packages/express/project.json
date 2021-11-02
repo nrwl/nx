@@ -1,0 +1,78 @@
+{
+  "root": "packages/express",
+  "sourceRoot": "packages/express",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/express/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/express"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/express",
+        "tsConfig": "packages/express/tsconfig.lib.json",
+        "packageJson": "packages/express/package.json",
+        "main": "packages/express/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/express",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/express",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/express",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/express",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/express",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/express"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js express"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/express/**/*.ts",
+          "packages/express/**/*.spec.ts",
+          "packages/express/**/*_spec.ts",
+          "packages/express/**/*.spec.tsx",
+          "packages/express/**/*.spec.js",
+          "packages/express/**/*.spec.jsx",
+          "packages/express/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["node"]
+}

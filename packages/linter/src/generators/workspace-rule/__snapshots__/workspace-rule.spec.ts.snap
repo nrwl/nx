@@ -1,0 +1,205 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory 1`] = `
+"/**
+ * This file sets you up with with structure needed for an ESLint rule.
+ *
+ * It leverages utilities from @typescript-eslint to allow TypeScript to
+ * provide autocompletions etc for the configuration.
+ *
+ * Your rule's custom logic will live within the create() method below
+ * and you can learn more about writing ESLint rules on the official guide:
+ *
+ * https://eslint.org/docs/developer-guide/working-with-rules
+ *
+ * You can also view many examples of existing rules here:
+ *
+ * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
+ */
+
+import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+
+// NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/another-rule\\"
+export const RULE_NAME = 'another-rule';
+
+export const rule = ESLintUtils.RuleCreator(() => __filename)({
+  name: RULE_NAME,
+  meta: {
+    type: 'problem',
+    docs: {
+      description: \`\`,
+      category: 'Possible Errors',
+      recommended: 'error',
+    },
+    schema: [],
+    messages: {},
+  },
+  defaultOptions: [],
+  create(context) {
+    return {};
+  },
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory 2`] = `
+"import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { rule, RULE_NAME } from './another-rule';
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+});
+
+ruleTester.run(RULE_NAME, rule, {
+  valid: [\`const example = true;\`],
+  invalid: [],
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 1`] = `
+"/**
+ * This file sets you up with with structure needed for an ESLint rule.
+ *
+ * It leverages utilities from @typescript-eslint to allow TypeScript to
+ * provide autocompletions etc for the configuration.
+ *
+ * Your rule's custom logic will live within the create() method below
+ * and you can learn more about writing ESLint rules on the official guide:
+ *
+ * https://eslint.org/docs/developer-guide/working-with-rules
+ *
+ * You can also view many examples of existing rules here:
+ *
+ * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
+ */
+
+import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+
+// NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/one-more-rule\\"
+export const RULE_NAME = 'one-more-rule';
+
+export const rule = ESLintUtils.RuleCreator(() => __filename)({
+  name: RULE_NAME,
+  meta: {
+    type: 'problem',
+    docs: {
+      description: \`\`,
+      category: 'Possible Errors',
+      recommended: 'error',
+    },
+    schema: [],
+    messages: {},
+  },
+  defaultOptions: [],
+  create(context) {
+    return {};
+  },
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 2`] = `
+"import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { rule, RULE_NAME } from './one-more-rule';
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+});
+
+ruleTester.run(RULE_NAME, rule, {
+  valid: [\`const example = true;\`],
+  invalid: [],
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule should generate the required files 1`] = `
+"/**
+ * This file sets you up with with structure needed for an ESLint rule.
+ *
+ * It leverages utilities from @typescript-eslint to allow TypeScript to
+ * provide autocompletions etc for the configuration.
+ *
+ * Your rule's custom logic will live within the create() method below
+ * and you can learn more about writing ESLint rules on the official guide:
+ *
+ * https://eslint.org/docs/developer-guide/working-with-rules
+ *
+ * You can also view many examples of existing rules here:
+ *
+ * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
+ */
+
+import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+
+// NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/my-rule\\"
+export const RULE_NAME = 'my-rule';
+
+export const rule = ESLintUtils.RuleCreator(() => __filename)({
+  name: RULE_NAME,
+  meta: {
+    type: 'problem',
+    docs: {
+      description: \`\`,
+      category: 'Possible Errors',
+      recommended: 'error',
+    },
+    schema: [],
+    messages: {},
+  },
+  defaultOptions: [],
+  create(context) {
+    return {};
+  },
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule should generate the required files 2`] = `
+"import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { rule, RULE_NAME } from './my-rule';
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+});
+
+ruleTester.run(RULE_NAME, rule, {
+  valid: [\`const example = true;\`],
+  invalid: [],
+});
+"
+`;
+
+exports[`@nrwl/linter:workspace-rule should update the plugin index.ts with the new rule 1`] = `
+"import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
+/**
+ * Import your custom workspace rules at the top of this file.
+ * 
+ * For example:
+ * 
+ * import { RULE_NAME as myCustomRuleName, rule as myCustomRule } from './rules/my-custom-rule';
+ * 
+ * In order to quickly get started with writing rules you can use the
+ * following generator command and provide your desired rule name:
+ * 
+ * \`\`\`sh
+ * npx nx g @nrwl/linter:workspace-rule {{ NEW_RULE_NAME }}
+ * \`\`\`
+ */
+
+module.exports = {
+  /**
+   * Apply the imported custom rules here.
+   * 
+   * For example (using the example import above):
+   * 
+   * rules: {
+   *  [myCustomRuleName]: myCustomRule
+   * }
+   */
+  rules: {[myRuleName]: myRule
+}
+};
+"
+`;

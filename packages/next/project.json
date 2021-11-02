@@ -1,0 +1,82 @@
+{
+  "root": "packages/next",
+  "sourceRoot": "packages/next",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/next/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/next"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/next",
+        "tsConfig": "packages/next/tsconfig.lib.json",
+        "packageJson": "packages/next/package.json",
+        "main": "packages/next/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/next",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/next",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/next",
+            "glob": "**/files/**/.babelrc__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/next",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/next",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/next",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/next"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js next"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/next/**/*.ts",
+          "packages/next/**/*.spec.ts",
+          "packages/next/**/*_spec.ts",
+          "packages/next/**/*.spec.tsx",
+          "packages/next/**/*.spec.js",
+          "packages/next/**/*.spec.jsx",
+          "packages/next/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

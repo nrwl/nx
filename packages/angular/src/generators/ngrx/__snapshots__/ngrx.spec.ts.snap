@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ngrx should add a root module with feature module when minimal is set to false 1`] = `
+"
+     import { NgModule } from '@angular/core';
+     import { BrowserModule } from '@angular/platform-browser';
+     import { RouterModule } from '@angular/router';
+     import { AppComponent } from './app.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { NxModule } from '@nrwl/angular';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { environment } from '../environments/environment';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+     @NgModule({
+       imports: [BrowserModule, RouterModule.forRoot([]), NxModule.forRoot(), StoreModule.forRoot({}, {
+      metaReducers: !environment.production ? [] : [],
+      runtimeChecks: {
+        strictActionImmutability: true,
+        strictStateImmutability: true
+      }
+    }), EffectsModule.forRoot([UsersEffects]), !environment.production ? StoreDevtoolsModule.instrument() : [], StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.reducer)],
+       declarations: [AppComponent],
+       bootstrap: [AppComponent]
+     })
+     export class AppModule {}
+  "
+`;
+
+exports[`ngrx should add an empty root module when minimal and root are set to true 1`] = `
+"
+     import { NgModule } from '@angular/core';
+     import { BrowserModule } from '@angular/platform-browser';
+     import { RouterModule } from '@angular/router';
+     import { AppComponent } from './app.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { environment } from '../environments/environment';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+     @NgModule({
+       imports: [BrowserModule, RouterModule.forRoot([]), StoreModule.forRoot({}, {
+      metaReducers: !environment.production ? [] : [],
+      runtimeChecks: {
+        strictActionImmutability: true,
+        strictStateImmutability: true
+      }
+    }), EffectsModule.forRoot([]), !environment.production ? StoreDevtoolsModule.instrument() : [], StoreRouterConnectingModule.forRoot()],
+       declarations: [AppComponent],
+       bootstrap: [AppComponent]
+     })
+     export class AppModule {}
+  "
+`;
+
+exports[`ngrx should not generate imports when skipImport is true 1`] = `
+"
+     import { NgModule } from '@angular/core';
+     import { BrowserModule } from '@angular/platform-browser';
+     import { RouterModule } from '@angular/router';
+     import { AppComponent } from './app.component';
+     @NgModule({
+       imports: [BrowserModule, RouterModule.forRoot([])],
+       declarations: [AppComponent],
+       bootstrap: [AppComponent]
+     })
+     export class AppModule {}
+  "
+`;

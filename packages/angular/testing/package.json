@@ -1,0 +1,15 @@
+{
+  "name": "@nrwl/angular/testing",
+  "typings": "./index.d.ts",
+  "main": "../bundles/nrwl-nx-testing.umd.js",
+  "module": "../esm5/nrwl-nx-testing.js",
+  "es2015": "../esm2015/nrwl-nx-testing.js",
+  "ngPackage": {
+    "lib": {
+      "entryFile": "index.ts",
+      "umdModuleIds": {
+        "jasmine-marbles": "jasmine-marbles"
+      }
+    }
+  }
+}

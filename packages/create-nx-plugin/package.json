@@ -1,0 +1,38 @@
+{
+  "name": "create-nx-plugin",
+  "version": "0.0.1",
+  "description": "Smart, Extensible Build Framework",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/create-nx-plugin"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "create-nx-plugin": "./bin/create-nx-plugin.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "@nrwl/workspace": "*",
+    "enquirer": "~2.3.6",
+    "fs-extra": "^9.1.0",
+    "tmp": "~0.2.1",
+    "yargs": "15.4.1",
+    "yargs-parser": "20.0.0"
+  }
+}

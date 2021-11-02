@@ -1,0 +1,78 @@
+{
+  "root": "packages/nest",
+  "sourceRoot": "packages/nest",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nest/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/nest"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/nest",
+        "tsConfig": "packages/nest/tsconfig.lib.json",
+        "packageJson": "packages/nest/package.json",
+        "main": "packages/nest/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/nest",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/nest",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/nest",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nest",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/nest",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/nest"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js nest"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/nest/**/*.ts",
+          "packages/nest/**/*.spec.ts",
+          "packages/nest/**/*_spec.ts",
+          "packages/nest/**/*.spec.tsx",
+          "packages/nest/**/*.spec.js",
+          "packages/nest/**/*.spec.jsx",
+          "packages/nest/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["node", "linter"]
+}

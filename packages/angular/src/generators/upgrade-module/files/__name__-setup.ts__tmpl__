@@ -1,0 +1,39 @@
+import {Component, ElementRef, Injector} from '@angular/core';
+import {setAngularJSGlobal, UpgradeComponent, downgradeComponent, UpgradeModule} from '@angular/upgrade/static';<% if (router) { %>
+import {Router} from '@angular/router';
+import {setUpLocationSync} from '@angular/router/upgrade';<% } %>
+import * as angular from 'angular'; // replace with const angular = (<any>window).angular; if Angular is available globally
+
+import '<%= angularJsImport %>'; // import your application files here.
+if (! angular.module('<%= angularJsModule %>')) {
+  throw new Error('"<%= angularJsModule %>" is not loaded');
+}
+
+// all components downgraded from Angular to AngularJS go here
+import {<%= bootstrapComponentClassName %>} from '<%= bootstrapComponentFileName %>';
+angular.module('downgraded', []).
+  directive('appRoot', downgradeComponent({component: <%= bootstrapComponentClassName %>}));<% if (angularJsCmpSelector) { %>
+
+// all components upgraded from AngularJS to Angular go here
+@Component({
+  selector: '<%= angularJsCmpSelector %>',
+  template: '',
+})
+export class <%= className %>Component extends UpgradeComponent {
+  constructor(ref: ElementRef, inj: Injector) {
+    super('<%= angularJsCmpSelector %>', ref, inj);
+  }
+}
+export const upgradedComponents = [<%= className %>Component];<% } %><% if (!angularJsCmpSelector) { %>
+export const upgradedComponents = [];<% } %>
+
+// additional configuration invoked right before bootstrap
+export function configure<%= className %>(i: Injector) {
+  setAngularJSGlobal(angular);
+  
+  //  Insert additional configuration here<% if (router) { %>
+  angular.module('downgraded').run(() => {
+    setUpLocationSync(i.get(UpgradeModule));
+    i.get(Router).initialNavigation();
+  });<% } %>
+}

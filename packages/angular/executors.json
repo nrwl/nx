@@ -1,0 +1,56 @@
+{
+  "executors": {
+    "delegate-build": {
+      "implementation": "./src/executors/delegate-build/delegate-build.impl",
+      "schema": "./src/executors/delegate-build/schema.json",
+      "description": "Delegates the build to a different target while supporting incremental builds."
+    },
+    "ng-packagr-lite": {
+      "implementation": "./src/executors/ng-packagr-lite/ng-packagr-lite.impl",
+      "schema": "./src/executors/ng-packagr-lite/schema.json",
+      "description": "Builds a library with support for incremental builds."
+    },
+    "package": {
+      "implementation": "./src/executors/package/package.impl",
+      "schema": "./src/executors/package/schema.json",
+      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds."
+    },
+    "webpack-browser": {
+      "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
+      "schema": "./src/builders/webpack-browser/schema.json",
+      "description": "Builds a browser application with support for incremental builds and custom webpack configuration."
+    },
+    "webpack-server": {
+      "implementation": "./src/builders/webpack-server/webpack-server.impl",
+      "schema": "./src/builders/webpack-server/schema.json",
+      "description": "Serves a browser application with support for a custom webpack configuration."
+    }
+  },
+  "builders": {
+    "delegate-build": {
+      "implementation": "./src/executors/delegate-build/compat",
+      "schema": "./src/executors/delegate-build/schema.json",
+      "description": "Delegates the build to a different target while supporting incremental builds."
+    },
+    "ng-packagr-lite": {
+      "implementation": "./src/executors/ng-packagr-lite/compat",
+      "schema": "./src/executors/ng-packagr-lite/schema.json",
+      "description": "Builds a library with support for incremental builds."
+    },
+    "package": {
+      "implementation": "./src/executors/package/compat",
+      "schema": "./src/executors/package/schema.json",
+      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds."
+    },
+    "webpack-browser": {
+      "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
+      "schema": "./src/builders/webpack-browser/schema.json",
+      "description": "Builds a browser application with support for incremental builds and custom webpack configuration."
+    },
+    "webpack-server": {
+      "implementation": "./src/builders/webpack-server/webpack-server.impl",
+      "schema": "./src/builders/webpack-server/schema.json",
+      "description": "Serves a browser application with support for a custom webpack configuration."
+    }
+  }
+}

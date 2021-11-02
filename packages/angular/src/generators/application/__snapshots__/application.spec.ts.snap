@@ -1,0 +1,536 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`app --mfe should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
+"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
+const mf = require(\\"@angular-architects/module-federation/webpack\\");
+const path = require(\\"path\\");
+
+
+/**
+* We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+* builder as it will generate a temporary tsconfig file which contains any required remappings of
+* shared libraries.
+* A remapping will occur when a library is buildable, as webpack needs to know the location of the
+* built files for the buildable library.
+* This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+* the location of the generated temporary tsconfig file.
+*/
+const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.base.json');
+
+const workspaceRootPath = path.join(__dirname, '../../');
+const sharedMappings = new mf.SharedMappings();
+sharedMappings.register(tsConfigPath, [
+  /* mapped paths to share */
+], workspaceRootPath);
+
+module.exports = {
+  output: {
+    uniqueName: \\"app1\\",
+    publicPath: \\"auto\\",
+  },
+  optimization: {
+    runtimeChunk: false,
+    minimize: false,
+  },
+  resolve: {
+    alias: {
+      ...sharedMappings.getAliases(),
+    },
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      remotes: {
+    		\\"remote1\\": 'remote1@http://localhost:4201/remoteEntry.js',
+    		\\"remote2\\": 'remote2@http://localhost:4202/remoteEntry.js',
+      
+      },
+      shared: {
+        \\"@angular/core\\": { singleton: true, strictVersion: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true },
+        ...sharedMappings.getDescriptors(),
+      },
+    }),
+    sharedMappings.getPlugin(),
+  ],
+};
+"
+`;
+
+exports[`app --mfe should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
+"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
+const mf = require(\\"@angular-architects/module-federation/webpack\\");
+const path = require(\\"path\\");
+
+
+/**
+* We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+* builder as it will generate a temporary tsconfig file which contains any required remappings of
+* shared libraries.
+* A remapping will occur when a library is buildable, as webpack needs to know the location of the
+* built files for the buildable library.
+* This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+* the location of the generated temporary tsconfig file.
+*/
+const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.base.json');
+
+const workspaceRootPath = path.join(__dirname, '../../');
+const sharedMappings = new mf.SharedMappings();
+sharedMappings.register(tsConfigPath, [
+  /* mapped paths to share */
+], workspaceRootPath);
+
+module.exports = {
+  output: {
+    uniqueName: \\"app1\\",
+    publicPath: \\"auto\\",
+  },
+  optimization: {
+    runtimeChunk: false,
+    minimize: false,
+  },
+  resolve: {
+    alias: {
+      ...sharedMappings.getAliases(),
+    },
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      remotes: {
+    		\\"remote1\\": 'remote1@http://localhost:4200/remoteEntry.js',
+      
+      },
+      shared: {
+        \\"@angular/core\\": { singleton: true, strictVersion: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true },
+        ...sharedMappings.getDescriptors(),
+      },
+    }),
+    sharedMappings.getPlugin(),
+  ],
+};
+"
+`;
+
+exports[`app --mfe should generate a Module Federation correctly for a each app 1`] = `
+"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
+const mf = require(\\"@angular-architects/module-federation/webpack\\");
+const path = require(\\"path\\");
+
+
+/**
+* We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+* builder as it will generate a temporary tsconfig file which contains any required remappings of
+* shared libraries.
+* A remapping will occur when a library is buildable, as webpack needs to know the location of the
+* built files for the buildable library.
+* This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+* the location of the generated temporary tsconfig file.
+*/
+const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.base.json');
+
+const workspaceRootPath = path.join(__dirname, '../../');
+const sharedMappings = new mf.SharedMappings();
+sharedMappings.register(tsConfigPath, [
+  /* mapped paths to share */
+], workspaceRootPath);
+
+module.exports = {
+  output: {
+    uniqueName: \\"my-app\\",
+    publicPath: \\"auto\\",
+  },
+  optimization: {
+    runtimeChunk: false,
+    minimize: false,
+  },
+  resolve: {
+    alias: {
+      ...sharedMappings.getAliases(),
+    },
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      remotes: {
+      
+      },
+      shared: {
+        \\"@angular/core\\": { singleton: true, strictVersion: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true },
+        ...sharedMappings.getDescriptors(),
+      },
+    }),
+    sharedMappings.getPlugin(),
+  ],
+};
+"
+`;
+
+exports[`app --mfe should generate a Module Federation correctly for a each app 2`] = `
+"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
+const mf = require(\\"@angular-architects/module-federation/webpack\\");
+const path = require(\\"path\\");
+
+
+/**
+* We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+* builder as it will generate a temporary tsconfig file which contains any required remappings of
+* shared libraries.
+* A remapping will occur when a library is buildable, as webpack needs to know the location of the
+* built files for the buildable library.
+* This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+* the location of the generated temporary tsconfig file.
+*/
+const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.base.json');
+
+const workspaceRootPath = path.join(__dirname, '../../');
+const sharedMappings = new mf.SharedMappings();
+sharedMappings.register(tsConfigPath, [
+  /* mapped paths to share */
+], workspaceRootPath);
+
+module.exports = {
+  output: {
+    uniqueName: \\"my-app\\",
+    publicPath: \\"auto\\",
+  },
+  optimization: {
+    runtimeChunk: false,
+    minimize: false,
+  },
+  resolve: {
+    alias: {
+      ...sharedMappings.getAliases(),
+    },
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: \\"my-app\\",
+      filename: \\"remoteEntry.js\\",
+      exposes: {
+        './Module': 'apps/my-app/src/app/remote-entry/entry.module.ts',
+      },
+      shared: {
+        \\"@angular/core\\": { singleton: true, strictVersion: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true },
+        ...sharedMappings.getDescriptors(),
+      },
+    }),
+    sharedMappings.getPlugin(),
+  ],
+};
+"
+`;
+
+exports[`app nested should update workspace.json 1`] = `
+Object {
+  "architect": Object {
+    "build": Object {
+      "builder": "@angular-devkit/build-angular:browser",
+      "configurations": Object {
+        "development": Object {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
+        "production": Object {
+          "budgets": Array [
+            Object {
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
+              "type": "initial",
+            },
+            Object {
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/my-dir/my-app/src/environments/environment.ts",
+              "with": "apps/my-dir/my-app/src/environments/environment.prod.ts",
+            },
+          ],
+          "outputHashing": "all",
+        },
+      },
+      "defaultConfiguration": "production",
+      "options": Object {
+        "assets": Array [
+          "apps/my-dir/my-app/src/favicon.ico",
+          "apps/my-dir/my-app/src/assets",
+        ],
+        "index": "apps/my-dir/my-app/src/index.html",
+        "main": "apps/my-dir/my-app/src/main.ts",
+        "outputPath": "dist/apps/my-dir/my-app",
+        "polyfills": "apps/my-dir/my-app/src/polyfills.ts",
+        "scripts": Array [],
+        "styles": Array [
+          "apps/my-dir/my-app/src/styles.css",
+        ],
+        "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
+      },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
+    },
+    "extract-i18n": Object {
+      "builder": "@angular-devkit/build-angular:extract-i18n",
+      "options": Object {
+        "browserTarget": "my-dir-my-app:build",
+      },
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/my-dir/my-app/src/**/*.ts",
+          "apps/my-dir/my-app/src/**/*.html",
+        ],
+      },
+    },
+    "serve": Object {
+      "builder": "@angular-devkit/build-angular:dev-server",
+      "configurations": Object {
+        "development": Object {
+          "browserTarget": "my-dir-my-app:build:development",
+        },
+        "production": Object {
+          "browserTarget": "my-dir-my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+    },
+    "test": Object {
+      "builder": "@nrwl/jest:jest",
+      "options": Object {
+        "jestConfig": "apps/my-dir/my-app/jest.config.js",
+        "passWithNoTests": true,
+      },
+      "outputs": Array [
+        "coverage/apps/my-dir/my-app",
+      ],
+    },
+  },
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "apps/my-dir/my-app",
+  "sourceRoot": "apps/my-dir/my-app/src",
+  "tags": Array [],
+}
+`;
+
+exports[`app nested should update workspace.json 2`] = `
+Object {
+  "architect": Object {
+    "e2e": Object {
+      "builder": "@nrwl/cypress:cypress",
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "my-dir-my-app:serve:production",
+        },
+      },
+      "options": Object {
+        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+        "devServerTarget": "my-dir-my-app:serve:development",
+      },
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/my-dir/my-app-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
+    },
+  },
+  "implicitDependencies": Array [
+    "my-dir-my-app",
+  ],
+  "projectType": "application",
+  "root": "apps/my-dir/my-app-e2e",
+  "sourceRoot": "apps/my-dir/my-app-e2e/src",
+  "tags": Array [],
+}
+`;
+
+exports[`app not nested should generate files 1`] = `
+Object {
+  "angularCompilerOptions": Object {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": Object {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+  ],
+}
+`;
+
+exports[`app not nested should update workspace.json 1`] = `
+Object {
+  "architect": Object {
+    "build": Object {
+      "builder": "@angular-devkit/build-angular:browser",
+      "configurations": Object {
+        "development": Object {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
+        "production": Object {
+          "budgets": Array [
+            Object {
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
+              "type": "initial",
+            },
+            Object {
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/my-app/src/environments/environment.ts",
+              "with": "apps/my-app/src/environments/environment.prod.ts",
+            },
+          ],
+          "outputHashing": "all",
+        },
+      },
+      "defaultConfiguration": "production",
+      "options": Object {
+        "assets": Array [
+          "apps/my-app/src/favicon.ico",
+          "apps/my-app/src/assets",
+        ],
+        "index": "apps/my-app/src/index.html",
+        "main": "apps/my-app/src/main.ts",
+        "outputPath": "dist/apps/my-app",
+        "polyfills": "apps/my-app/src/polyfills.ts",
+        "scripts": Array [],
+        "styles": Array [
+          "apps/my-app/src/styles.css",
+        ],
+        "tsConfig": "apps/my-app/tsconfig.app.json",
+      },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
+    },
+    "extract-i18n": Object {
+      "builder": "@angular-devkit/build-angular:extract-i18n",
+      "options": Object {
+        "browserTarget": "my-app:build",
+      },
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/my-app/src/**/*.ts",
+          "apps/my-app/src/**/*.html",
+        ],
+      },
+    },
+    "serve": Object {
+      "builder": "@angular-devkit/build-angular:dev-server",
+      "configurations": Object {
+        "development": Object {
+          "browserTarget": "my-app:build:development",
+        },
+        "production": Object {
+          "browserTarget": "my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+    },
+    "test": Object {
+      "builder": "@nrwl/jest:jest",
+      "options": Object {
+        "jestConfig": "apps/my-app/jest.config.js",
+        "passWithNoTests": true,
+      },
+      "outputs": Array [
+        "coverage/apps/my-app",
+      ],
+    },
+  },
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "apps/my-app",
+  "sourceRoot": "apps/my-app/src",
+  "tags": Array [],
+}
+`;
+
+exports[`app not nested should update workspace.json 2`] = `
+Object {
+  "architect": Object {
+    "e2e": Object {
+      "builder": "@nrwl/cypress:cypress",
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "my-app:serve:production",
+        },
+      },
+      "options": Object {
+        "cypressConfig": "apps/my-app-e2e/cypress.json",
+        "devServerTarget": "my-app:serve:development",
+      },
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/my-app-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
+    },
+  },
+  "implicitDependencies": Array [
+    "my-app",
+  ],
+  "projectType": "application",
+  "root": "apps/my-app-e2e",
+  "sourceRoot": "apps/my-app-e2e/src",
+  "tags": Array [],
+}
+`;

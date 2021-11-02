@@ -1,0 +1,37 @@
+import { Injectable } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { <% if (useDataPersistence) { %>DataPersistence<% } %><% if (!useDataPersistence) { %>fetch<% } %> } from '@nrwl/angular';
+
+import * as <%= className %>Actions from './<%= fileName %>.actions';
+import * as <%= className %>Feature from './<%= fileName %>.reducer';
+
+@Injectable()
+export class <%= className %>Effects {
+  <% if (useDataPersistence) { %>init$ = createEffect(() => this.dataPersistence.fetch(<%= className %>Actions.init, {
+    run: (action: ReturnType<typeof <%= className %>Actions.init>, state: <%= className %>Feature.<%= className %>PartialState) => {
+      // Your custom service 'load' logic goes here. For now just return a success action...
+      return <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] });
+    },
+    onError: (action: ReturnType<typeof <%= className %>Actions.init>, error) => {
+      console.error('Error', error);
+      return <%= className %>Actions.load<%= className %>Failure({ error });
+    }
+  }));<% } else { %>init$ = createEffect(() => this.actions$.pipe(
+    ofType(<%= className %>Actions.init),
+    fetch({
+      run: action => {
+        // Your custom service 'load' logic goes here. For now just return a success action...
+        return <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] });
+      },
+      onError: (action, error) => {
+        console.error('Error', error);
+        return <%= className %>Actions.load<%= className %>Failure({ error });
+      }
+    })
+  ));<% } %>
+
+  constructor(
+    private readonly actions$: Actions<% if (useDataPersistence) { %>,
+    private readonly dataPersistence: DataPersistence<<%= className %>Feature.<%= className %>PartialState><% } %>
+  ) {}
+}

@@ -1,0 +1,55 @@
+{
+  "schematics": {
+    "update-8.1.0": {
+      "version": "8.1.0-beta.1",
+      "description": "Update cypress",
+      "factory": "./src/migrations/update-8-1-0/update-8-1-0"
+    },
+    "update-8.2.0": {
+      "version": "8.2.0-beta.1",
+      "description": "Update Cypress Config",
+      "factory": "./src/migrations/update-8-2-0/update-8-2-0"
+    },
+    "update-8.10.0": {
+      "version": "8.10.0-beta.1",
+      "description": "Update Cypress to 3.6.1",
+      "factory": "./src/migrations/update-8-10-0/update-8-10-0"
+    },
+    "update-8.12.0": {
+      "version": "8.12.0-beta.1",
+      "description": "Update Cypress to ^3.8.2",
+      "factory": "./src/migrations/update-8-12-0/update-8-12-0"
+    },
+    "add-cypress-eslint-plugin-9.4.0": {
+      "version": "9.4.0-beta.1",
+      "description": "Add Cypress ESLint plugin",
+      "factory": "./src/migrations/update-9-4-0/add-cypress-eslint-plugin-9-4-0"
+    },
+    "remove-typescript-plugin": {
+      "cli": "nx",
+      "version": "12.8.0-beta.0",
+      "description": "Remove Typescript Preprocessor Plugin",
+      "factory": "./src/migrations/update-12-8-0/remove-typescript-plugin"
+    }
+  },
+  "packageJsonUpdates": {
+    "8.10.0": {
+      "version": "8.10.0-beta.1",
+      "packages": {
+        "cypress": {
+          "version": "3.6.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "8.12.0": {
+      "version": "8.12.0-beta.1",
+      "packages": {
+        "cypress": {
+          "version": "^3.8.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/feature-doc-viewer",
+  "sourceRoot": "nx-dev/feature-doc-viewer/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/feature-doc-viewer/**/*.{ts,tsx,js,jsx}"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/feature-doc-viewer"],
+      "options": {
+        "jestConfig": "nx-dev/feature-doc-viewer/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:feature"]
+}

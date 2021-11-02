@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "module": "commonjs",
+    "types": ["jest", "node"]
+  },<% if(setupFile !== 'none') { %>
+  "files": ["src/test-setup.ts"],<% } %>
+  "include": [
+    "**/*.spec.ts",<% if (supportTsx) { %>
+    "**/*.spec.tsx",
+    "**/*.spec.js",
+    "**/*.spec.jsx",<% } %>
+    "**/*.d.ts"
+  ]
+}

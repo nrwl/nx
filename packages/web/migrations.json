@@ -1,0 +1,50 @@
+{
+  "schematics": {
+    "update-builder-8.5.0": {
+      "version": "8.5.0-beta.1",
+      "description": "Update web build builder",
+      "factory": "./src/migrations/update-8-5-0/update-builder-8-5-0"
+    },
+    "update-builder-9.0.0": {
+      "version": "9.0.0-beta.1",
+      "description": "Rename @nrwl/web:bundle => @nrwl/web:package",
+      "factory": "./src/migrations/update-9-0-0/update-builder-9-0-0"
+    },
+    "set-build-libs-from-source": {
+      "version": "9.2.0-beta.1",
+      "description": "Set buildLibsFromSource property to true to not break existing projects.",
+      "factory": "./src/migrations/update-9-2-0/set-build-libs-from-source"
+    },
+    "update-root-babel-config-11-5-2": {
+      "cli": "nx",
+      "version": "11.5.2-beta.1",
+      "description": "Remove presets from the root babel.config.json file to prevent conflicts with babel presets used in apps.",
+      "factory": "./src/migrations/update-11-5-2/update-root-babel-config"
+    },
+    "create-babelrc-for-workspace-libs-11-5-2": {
+      "cli": "nx",
+      "version": "11.5.2-beta.1",
+      "description": "Create .babelrc files for workspace libs to fix compatibility with the new babel.config.json setup.",
+      "factory": "./src/migrations/update-11-5-2/create-babelrc-for-workspace-libs"
+    },
+    "update-existing-babelrc-files-11-5-2": {
+      "cli": "nx",
+      "version": "11.5.2-beta.1",
+      "description": "Update existing .babelrc files to add missing '@nrwl/web/babel' preset if necessary.",
+      "factory": "./src/migrations/update-11-5-2/update-existing-babelrc-files"
+    },
+    "remove-node-sass-13-0-0": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Removes deprecated node-sass package (sass is already a dependency of @nrwl/web).",
+      "factory": "./src/migrations/update-13-0-0/remove-node-sass-13-0-0"
+    },
+    "remove-webpack-5-packages": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Remove packages installed by Nx 12's `@nrwl/web:webpack5` generator.",
+      "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
+    }
+  },
+  "packageJsonUpdates": {}
+}

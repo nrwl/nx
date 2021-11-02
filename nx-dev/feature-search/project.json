@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/feature-search",
+  "sourceRoot": "nx-dev/feature-search/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/feature-search/**/*.{ts,tsx,js,jsx}"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/feature-search"],
+      "options": {
+        "jestConfig": "nx-dev/feature-search/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:feature"]
+}

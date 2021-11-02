@@ -1,0 +1,39 @@
+{
+  "name": "create-nx-workspace",
+  "version": "0.0.1",
+  "description": "Smart, Extensible Build Framework",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/create-nx-workspace"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "create-nx-workspace": "./bin/create-nx-workspace.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "tmp": "~0.2.1",
+    "yargs-parser": "20.0.0",
+    "enquirer": "~2.3.6",
+    "flat": "^5.0.2",
+    "chalk": "4.1.0",
+    "ora": "5.3.0",
+    "tslib": "^2.0.0"
+  }
+}

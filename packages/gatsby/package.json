@@ -1,0 +1,43 @@
+{
+  "name": "@nrwl/gatsby",
+  "version": "0.0.1",
+  "description": "Gatsby Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/gatsby"
+  },
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Express",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/cypress": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/node": "*",
+    "@nrwl/react": "*",
+    "@nrwl/workspace": "*",
+    "gatsby-cli": "^3.14.0",
+    "gatsby-codemods": "^2.14.0"
+  }
+}

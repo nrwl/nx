@@ -1,0 +1,76 @@
+{
+  "executors": {
+    "run-android": {
+      "implementation": "./src/executors/run-android/run-android.impl",
+      "schema": "./src/executors/run-android/schema.json",
+      "description": "Runs Android application."
+    },
+    "run-ios": {
+      "implementation": "./src/executors/run-ios/run-ios.impl",
+      "schema": "./src/executors/run-ios/schema.json",
+      "description": "Runs iOS application."
+    },
+    "bundle": {
+      "implementation": "./src/executors/bundle/bundle.impl",
+      "schema": "./src/executors/bundle/schema.json",
+      "description": "Builds the JS bundle."
+    },
+    "build-android": {
+      "implementation": "./src/executors/build-android/build-android.impl",
+      "schema": "./src/executors/build-android/schema.json",
+      "description": "Release Build for Android."
+    },
+    "start": {
+      "implementation": "./src/executors/start/start.impl",
+      "schema": "./src/executors/start/schema.json",
+      "description": "Starts the dev server for JS bundle."
+    },
+    "sync-deps": {
+      "implementation": "./src/executors/sync-deps/sync-deps.impl",
+      "schema": "./src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "./src/executors/ensure-symlink/ensure-symlink.impl",
+      "schema": "./src/executors/ensure-symlink//schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    }
+  },
+  "builders": {
+    "run-android": {
+      "implementation": "./src/executors/run-android/compat",
+      "schema": "./src/executors/run-android/schema.json",
+      "description": "Runs Android application."
+    },
+    "run-ios": {
+      "implementation": "./src/executors/run-ios/compat",
+      "schema": "./src/executors/run-ios/schema.json",
+      "description": "Runs iOS application."
+    },
+    "bundle": {
+      "implementation": "./src/executors/bundle/compat",
+      "schema": "./src/executors/bundle/schema.json",
+      "description": "Builds the JS bundle."
+    },
+    "build-android": {
+      "implementation": "./src/executors/build-android/compat",
+      "schema": "./src/executors/build-android/schema.json",
+      "description": "Release Build for Android."
+    },
+    "start": {
+      "implementation": "./src/executors/start/compat",
+      "schema": "./src/executors/start/schema.json",
+      "description": "Starts the dev server for JS bundle."
+    },
+    "sync-deps": {
+      "implementation": "./src/executors/sync-deps/compat",
+      "schema": "./src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "./src/executors/ensure-symlink/compat",
+      "schema": "./src/executors/ensure-symlink//schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    }
+  }
+}

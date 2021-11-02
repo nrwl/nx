@@ -1,0 +1,43 @@
+{
+  "name": "@nrwl/detox",
+  "version": "0.0.1",
+  "description": "Detox Plugin for Nx",
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "Native",
+    "CLI",
+    "Detox"
+  ],
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/detox"
+  },
+  "license": "MIT",
+  "author": "Victor Savkin",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/react": "*",
+    "chalk": "^4.1.0"
+  },
+  "peerDependencies": {
+    "@nrwl/workspace": "*",
+    "detox": "^18.22.2"
+  },
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "schematics": "./generators.json"
+}

@@ -1,0 +1,13 @@
+{
+  "presets": [
+    [
+      "@nrwl/react/babel", {
+        "runtime": "automatic"<% if (style === '@emotion/styled') { %>,<% } %>
+        <% if (style === '@emotion/styled') { %>"importSource": "@emotion/react" <% } %>
+      }
+    ]
+  ],
+  "plugins": [
+    <% if (style === 'styled-components') { %>["styled-components", { "pure": true, "ssr": true }]<% } %><% if (style === 'styled-jsx') { %>"styled-jsx/babel"<% } %><% if (style === '@emotion/styled') { %>"@emotion/babel-plugin"<% } %>
+  ]
+}

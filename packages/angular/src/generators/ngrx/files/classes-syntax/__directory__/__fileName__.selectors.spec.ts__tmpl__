@@ -1,0 +1,57 @@
+import { Entity, <%= className %>PartialState } from './<%= fileName %>.reducer';
+import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
+
+describe('<%= className %> Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const get<%= className %>Id = (it: Entity) => it.id;
+
+  let storeState: <%= className %>PartialState;
+
+  beforeEach(() => {
+    const create<%= className %> = (id: string, name = ''): Entity => ({
+      id,
+      name: name || `name-${id}`
+    });
+    storeState = {
+      <%= propertyName %>: {
+        list : [
+          create<%= className %>('PRODUCT-AAA'),
+          create<%= className %>('PRODUCT-BBB'),
+          create<%= className %>('PRODUCT-CCC')
+        ],
+        selectedId: 'PRODUCT-BBB',
+        error: ERROR_MSG,
+        loaded: true
+      }
+    };
+  });
+
+  describe('<%= className %> Selectors', () => {
+    it('getAll<%= className %>() should return the list of <%= className %>', () => {
+      const results = <%= propertyName %>Query.getAll<%= className %>(storeState);
+      const selId = get<%= className %>Id(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('getSelected<%= className %>() should return the selected Entity', () => {
+      const result = <%= propertyName %>Query.getSelected<%= className %>(storeState) as Entity;
+      const selId = get<%= className %>Id(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('getLoaded() should return the current "loaded" status', () => {
+      const result = <%= propertyName %>Query.getLoaded(storeState);
+
+      expect(result).toBe(true);
+    });
+
+    it('getError() should return the current "error" storeState', () => {
+      const result = <%= propertyName %>Query.getError(storeState);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});

@@ -1,0 +1,77 @@
+{
+  "root": "packages/nx-plugin",
+  "sourceRoot": "packages/nx-plugin",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx-plugin/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/nx-plugin"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/nx-plugin",
+        "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
+        "packageJson": "packages/nx-plugin/package.json",
+        "main": "packages/nx-plugin/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/nx-plugin"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js nx-plugin"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/nx-plugin/**/*.ts",
+          "packages/nx-plugin/**/*.spec.ts",
+          "packages/nx-plugin/**/*_spec.ts",
+          "packages/nx-plugin/**/*.spec.tsx",
+          "packages/nx-plugin/**/*.spec.js",
+          "packages/nx-plugin/**/*.spec.jsx",
+          "packages/nx-plugin/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

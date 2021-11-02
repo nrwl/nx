@@ -1,0 +1,39 @@
+{
+  "name": "@nrwl/nx-plugin",
+  "version": "0.0.1",
+  "description": "Plugin for creating plugins for Nx :)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx-plugin"
+  },
+  "keywords": [
+    "Monorepo",
+    "Nx",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "author": "Nrwl",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/node": "*",
+    "fs-extra": "^9.1.0",
+    "rxjs": "^6.5.4",
+    "tslib": "^2.0.0",
+    "yargs": "15.4.1"
+  }
+}

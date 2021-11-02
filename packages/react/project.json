@@ -1,0 +1,87 @@
+{
+  "root": "packages/react",
+  "sourceRoot": "packages/react",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/react/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/react"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/react",
+        "tsConfig": "packages/react/tsconfig.lib.json",
+        "packageJson": "packages/react/package.json",
+        "main": "packages/react/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/react",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/react",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/react",
+            "glob": "**/files/**/.babelrc__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/react",
+            "glob": "**/files/**/.browserslistrc__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/react",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/react",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "packages/react",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/react"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js react"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/react/**/*.ts",
+          "packages/react/**/*.spec.ts",
+          "packages/react/**/*_spec.ts",
+          "packages/react/**/*.spec.tsx",
+          "packages/react/**/*.spec.js",
+          "packages/react/**/*.spec.jsx",
+          "packages/react/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

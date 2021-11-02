@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/data-access-documents",
+  "sourceRoot": "nx-dev/data-access-documents/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/data-access-documents/**/*.ts"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/data-access-documents"],
+      "options": {
+        "jestConfig": "nx-dev/data-access-documents/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:data-access"]
+}

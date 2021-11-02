@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Adjust Storybook React Typings in Storybook tsconfig should add outDir to the storybook tsconfig to avoid VSCode errors 1`] = `
+Object {
+  "compilerOptions": Object {
+    "emitDecoratorMetadata": true,
+  },
+  "extends": "../tsconfig.json",
+  "files": Array [
+    "../../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../../node_modules/@nrwl/react/typings/image.d.ts",
+  ],
+}
+`;

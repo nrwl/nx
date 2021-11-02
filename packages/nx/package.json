@@ -1,14 +1,33 @@
 {
-  "name": "@nrwl/nx",
+  "name": "nx",
   "version": "0.0.1",
-  "description": "Nrwl Extensions for Angular",
-  "main": "bundles/nrwl-nx.umd.js",
-  "types": "nrwl-nx.d.ts",
-  "module": "esm5/nrwl-nx.js",
-  "es2015": "esm2015/nrwl-nx.js",
-  "peerDependencies": {
-    "jasmine-marbles": "0.3.1"
+  "description": "Smart, Extensible Build Framework",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "nx": "./bin/nx.js"
   },
   "author": "Victor Savkin",
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "@nrwl/cli": "*"
+  }
 }

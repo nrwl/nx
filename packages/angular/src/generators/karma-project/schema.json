@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxKarmaProjectGenerator",
+  "title": "Create Karma Configuration for a project",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["project"]
+}

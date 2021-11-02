@@ -1,0 +1,233 @@
+{
+  "name": "Nx Angular",
+  "version": "0.1",
+  "extends": ["@schematics/angular", "@nrwl/workspace"],
+  "schematics": {
+    "add-linting": {
+      "factory": "./src/generators/add-linting/compat",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Adds linting configuration to an Angular project.",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application.compat#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Creates an Angular application."
+    },
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/compat",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Creates a Cypress spec for a UI component that has a story.",
+      "hidden": true
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/compat",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Creates a stories.ts file for a component.",
+      "hidden": true
+    },
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Converts a project from TSLint to ESLint."
+    },
+    "downgrade-module": {
+      "factory": "./src/generators/downgrade-module/compat",
+      "schema": "./src/generators/downgrade-module/schema.json",
+      "description": "Sets up a Downgrade Module."
+    },
+    "init": {
+      "factory": "./src/generators/init/init.compat#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initializes the @nrwl/angular plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "karma": {
+      "factory": "./src/generators/karma/compat",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Adds Karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/compat",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Adds Karma configuration to a project."
+    },
+    "library": {
+      "factory": "./src/generators/library/library.compat#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Creates an Angular library."
+    },
+    "library-secondary-entry-point": {
+      "factory": "./src/generators/library-secondary-entry-point/compat",
+      "schema": "./src/generators/library-secondary-entry-point/schema.json",
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library."
+    },
+    "move": {
+      "factory": "./src/generators/move/move#angularMoveSchematic",
+      "schema": "./src/generators/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "ngrx": {
+      "factory": "./src/generators/ngrx/compat",
+      "schema": "./src/generators/ngrx/schema.json",
+      "description": "Adds NgRx support to an application or library."
+    },
+    "stories": {
+      "factory": "./src/generators/stories/compat",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Creates stories/specs for all components declared in a project."
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/compat",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Adds Storybook configuration to a project."
+    },
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
+    },
+    "storybook-migrate-stories-to-6-2": {
+      "factory": "./src/generators/storybook-migrate-stories-to-6-2/compat",
+      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
+      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export."
+    },
+    "upgrade-module": {
+      "factory": "./src/generators/upgrade-module/compat",
+      "schema": "./src/generators/upgrade-module/schema.json",
+      "description": "Sets up an Upgrade Module."
+    },
+
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/compat",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+
+    "web-worker": {
+      "factory": "./src/generators/web-worker/compat",
+      "schema": "./src/generators/web-worker/schema.json",
+      "description": "Creates a Web Worker."
+    }
+  },
+  "generators": {
+    "add-linting": {
+      "factory": "./src/generators/add-linting/add-linting",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Adds linting configuration to an Angular project.",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Creates an Angular application."
+    },
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/setup-mfe",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Creates a Cypress spec for a UI component that has a story.",
+      "hidden": true
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Creates a stories.ts file for a component.",
+      "hidden": true
+    },
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Converts a project from TSLint to ESLint."
+    },
+    "downgrade-module": {
+      "factory": "./src/generators/downgrade-module/downgrade-module",
+      "schema": "./src/generators/downgrade-module/schema.json",
+      "description": "Sets up a Downgrade Module."
+    },
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initializes the @nrwl/angular plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "karma": {
+      "factory": "./src/generators/karma/karma",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Adds Karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/karma-project",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Adds Karma configuration to a project."
+    },
+    "library": {
+      "factory": "./src/generators/library/library",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Creates an Angular library."
+    },
+    "library-secondary-entry-point": {
+      "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
+      "schema": "./src/generators/library-secondary-entry-point/schema.json",
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library."
+    },
+    "move": {
+      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "schema": "./src/generators/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "ngrx": {
+      "factory": "./src/generators/ngrx/ngrx",
+      "schema": "./src/generators/ngrx/schema.json",
+      "description": "Adds NgRx support to an application or library."
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Creates stories/specs for all components declared in a project."
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/storybook-configuration",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Adds Storybook configuration to a project."
+    },
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
+    },
+    "storybook-migrate-stories-to-6-2": {
+      "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
+      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
+      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export."
+    },
+    "upgrade-module": {
+      "factory": "./src/generators/upgrade-module/upgrade-module",
+      "schema": "./src/generators/upgrade-module/schema.json",
+      "description": "Sets up an Upgrade Module."
+    },
+    "web-worker": {
+      "factory": "./src/generators/web-worker/web-worker",
+      "schema": "./src/generators/web-worker/schema.json",
+      "description": "Creates a Web Worker."
+    }
+  }
+}

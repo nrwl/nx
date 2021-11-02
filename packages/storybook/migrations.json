@@ -1,0 +1,100 @@
+{
+  "schematics": {
+    "update-builder-8.8.2": {
+      "version": "8.8.2",
+      "description": "Update storybook builder and tsconfig",
+      "factory": "./src/migrations/update-8-8-2/update-builder-8-8-2"
+    },
+    "update-9.2.0": {
+      "version": "9.2.0-beta.1",
+      "cli": "nx",
+      "description": "Add build-storybook to cacheable operations",
+      "factory": "./src/migrations/update-9-2-0/update-9-2-0"
+    },
+    "update-10.2.1": {
+      "version": "10.2.1-beta.1",
+      "description": "Adjusts the tsconfig mapping",
+      "factory": "./src/migrations/update-10-2-1/update-10-2-1"
+    },
+    "update-10.3.1": {
+      "version": "10.3.1-beta.1",
+      "description": "Add missing storybook config to lint target",
+      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    },
+    "update-11-0-12": {
+      "version": "11.0.12",
+      "description": "Update storybook if installed and above 6",
+      "factory": "./src/migrations/update-11-0-12/update-storybook"
+    },
+    "update-11-5-3": {
+      "version": "11.5.3-beta.1",
+      "description": "Update react storybook lint config",
+      "factory": "./src/migrations/update-11-5-3/update-lint-ignores"
+    },
+    "update-11-6-0": {
+      "version": "11.6.4",
+      "cli": "nx",
+      "description": "Update storybook if installed and above 6 but below 6.2.9",
+      "factory": "./src/migrations/update-11-6-0/update-storybook"
+    },
+    "update-12-1-0": {
+      "version": "12.1.0-beta.7",
+      "cli": "nx",
+      "description": "Update react storybook tsconfig to avoid VSCode errors",
+      "factory": "./src/migrations/update-12-1-0/fix-storybook-tsconfig"
+    },
+    "update-12-3-0": {
+      "version": "12.3.0-rc.1",
+      "cli": "nx",
+      "description": "Update storybook if installed and above 6 but below 6.2.9",
+      "factory": "./src/migrations/update-11-6-0/update-storybook"
+    },
+    "update-12-5-0": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Upgrade Storybook to v6.3",
+      "factory": "./src/migrations/update-12-5-0/migrate-storybook-6-3"
+    },
+    "install-addon-essentials": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Install the @storybook/addon-essentials package",
+      "factory": "./src/migrations/update-12-5-0/install-addon-essentials"
+    },
+    "update-12-5-9-beta.1": {
+      "version": "12.5.9-beta.1",
+      "cli": "nx",
+      "description": "Update Storybook React typings in tsconfig files",
+      "factory": "./src/migrations/update-12-5-9/update-storybook-react-typings"
+    },
+    "update-12-8.0": {
+      "version": "12.8.0-beta.11",
+      "cli": "nx",
+      "description": "Adjust Storybook tsconfig to add styled-jsx typings",
+      "factory": "./src/migrations/update-12-8-0/update-storybook-styled-jsx-typings"
+    }
+  },
+  "packageJsonUpdates": {
+    "9.0.0": {
+      "version": "9.0.0-beta.1",
+      "packages": {
+        "@storybook/angular": {
+          "version": "5.3.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "5.3.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "5.3.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-knobs": {
+          "version": "5.3.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

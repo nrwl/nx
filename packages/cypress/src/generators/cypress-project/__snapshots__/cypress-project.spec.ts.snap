@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`schematic:cypress-project Cypress Project nested should set right path names in \`tsconfig.e2e.json\` 1`] = `
+Object {
+  "compilerOptions": Object {
+    "allowJs": true,
+    "outDir": "../../../dist/out-tsc",
+    "sourceMap": false,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+  ],
+}
+`;
+
+exports[`schematic:cypress-project Cypress Project should set right path names in \`tsconfig.e2e.json\` 1`] = `
+Object {
+  "compilerOptions": Object {
+    "allowJs": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+  ],
+}
+`;

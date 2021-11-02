@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularComponentStoryGenerator",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "projectPath": {
+      "type": "string",
+      "description": "Path to the project.",
+      "examples": ["libs/ui-samples"]
+    },
+    "componentName": {
+      "type": "string",
+      "description": "Class name of the component.",
+      "examples": ["AwesomeComponent"]
+    },
+    "componentPath": {
+      "type": "string",
+      "description": "Relative path to the component file from the project root.",
+      "examples": ["awesome"]
+    },
+    "componentFileName": {
+      "type": "string",
+      "description": "Component file name without the `.ts` extension.",
+      "examples": ["awesome.component"]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "projectPath",
+    "componentName",
+    "componentPath",
+    "componentFileName"
+  ]
+}

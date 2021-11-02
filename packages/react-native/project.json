@@ -1,0 +1,76 @@
+{
+  "root": "packages/react-native",
+  "sourceRoot": "packages/react-native/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/react-native/**/*.ts",
+          "packages/react-native/**/*.spec.ts",
+          "packages/react-native/**/*.spec.tsx",
+          "packages/react-native/**/*.spec.js",
+          "packages/react-native/**/*.spec.jsx",
+          "packages/react-native/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/react-native/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/react-native"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/react-native",
+        "tsConfig": "packages/react-native/tsconfig.lib.json",
+        "packageJson": "packages/react-native/package.json",
+        "main": "packages/react-native/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/react-native/*.md",
+          {
+            "input": "packages/react-native",
+            "glob": "**/files/**/.babelrc__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/react-native",
+            "glob": "**/files/**/.babelrc.template",
+            "output": "/"
+          },
+          {
+            "input": "./packages/react-native/src",
+            "glob": "**/*.!(ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/react-native",
+            "glob": "*.rb",
+            "output": "."
+          },
+          {
+            "input": "./packages/react-native",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json"],
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/react-native"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js react-native"
+      }
+    }
+  }
+}

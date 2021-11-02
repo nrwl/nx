@@ -1,0 +1,56 @@
+{
+  "name": "@nrwl/node",
+  "version": "0.0.1",
+  "description": "Node Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/node"
+  },
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/workspace": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
+    "chalk": "4.1.0",
+    "copy-webpack-plugin": "^9.0.1",
+    "enhanced-resolve": "^5.8.3",
+    "fork-ts-checker-webpack-plugin": "6.2.10",
+    "fs-extra": "^9.1.0",
+    "glob": "7.1.4",
+    "license-webpack-plugin": "2.3.15",
+    "rxjs": "^6.5.4",
+    "source-map-support": "0.5.19",
+    "tree-kill": "1.2.2",
+    "ts-loader": "^9.2.6",
+    "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths-webpack-plugin": "3.4.1",
+    "tslib": "^2.0.0",
+    "webpack": "^5.58.1",
+    "webpack-merge": "^5.8.0",
+    "webpack-node-externals": "^3.0.0",
+    "rxjs-for-await": "0.0.2"
+  }
+}

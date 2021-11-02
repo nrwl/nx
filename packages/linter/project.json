@@ -1,0 +1,78 @@
+{
+  "root": "packages/linter",
+  "sourceRoot": "packages/linter",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/linter/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/linter"]
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/linter",
+        "tsConfig": "packages/linter/tsconfig.lib.json",
+        "packageJson": "packages/linter/package.json",
+        "main": "packages/linter/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/linter",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/linter",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/linter",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/linter",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/linter",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/linter"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js linter"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/linter/**/*.ts",
+          "packages/linter/**/*.spec.ts",
+          "packages/linter/**/*_spec.ts",
+          "packages/linter/**/*.spec.tsx",
+          "packages/linter/**/*.spec.js",
+          "packages/linter/**/*.spec.jsx",
+          "packages/linter/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["eslint-plugin-nx"]
+}

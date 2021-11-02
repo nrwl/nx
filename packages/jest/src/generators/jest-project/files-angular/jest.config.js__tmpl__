@@ -1,0 +1,26 @@
+module.exports = {
+  displayName: '<%= project %>',
+  preset: '<%= offsetFromRoot %>jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    }
+  },<% if(testEnvironment) { %>
+  testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
+  transform: {
+    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformer == 'babel-jest') { %>'babel-jest'<% } else { %> 'ts-jest' <% } %>
+  },<% if (supportTsx) { %>
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>
+    moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
+  transform: {
+    '^.+\\.(ts|js|html)$': 'jest-preset-angular'
+  }<% if(!skipSerializers) { %>,
+  snapshotSerializers: [
+    'jest-preset-angular/build/serializers/no-ng-attributes',
+    'jest-preset-angular/build/serializers/ng-snapshot',
+    'jest-preset-angular/build/serializers/html-comment',
+  ]<% } %>
+};

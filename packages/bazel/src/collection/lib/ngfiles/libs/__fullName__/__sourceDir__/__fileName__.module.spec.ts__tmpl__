@@ -1,7 +1,0 @@
-import { <%= className %>Module } from './<%=fileName%>.module';
-
-describe('<%= className %>Module', () => {
-  it('should work', () => {
-    expect(new <%= className %>Module()).toBeDefined();
-  });
-});

@@ -1,0 +1,75 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "sourceMap": true,
+    "importHelpers": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "outDir": "build",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+    "lib": ["es2019"],
+    "declaration": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "rootDir": ".",
+    "paths": {
+      "@nrwl/angular": ["./packages/angular"],
+      "@nrwl/angular/*": ["./packages/angular/*"],
+      "@nrwl/cli": ["./packages/cli"],
+      "@nrwl/cli/*": ["./packages/cli/*"],
+      "@nrwl/cypress": ["./packages/cypress"],
+      "@nrwl/cypress/*": ["./packages/cypress/*"],
+      "@nrwl/detox": ["./packages/detox"],
+      "@nrwl/devkit": ["./packages/devkit"],
+      "@nrwl/devkit/ngcli-adapter": ["./packages/devkit/ngcli-adapter"],
+      "@nrwl/devkit/testing": ["./packages/devkit/testing"],
+      "@nrwl/e2e/cli": ["./e2e/cli"],
+      "@nrwl/e2e/utils": ["./e2e/utils"],
+      "@nrwl/express": ["./packages/express"],
+      "@nrwl/gatsby": ["./packages/gatsby"],
+      "@nrwl/jest": ["./packages/jest"],
+      "@nrwl/jest/*": ["./packages/jest/*"],
+      "@nrwl/linter": ["./packages/linter"],
+      "@nrwl/nest": ["./packages/nest"],
+      "@nrwl/next": ["./packages/next"],
+      "@nrwl/node": ["./packages/node"],
+      "@nrwl/node/*": ["./packages/node/*"],
+      "@nrwl/nx-dev/data-access-documents": [
+        "./nx-dev/data-access-documents/src/index.ts"
+      ],
+      "@nrwl/nx-dev/feature-analytics": [
+        "./nx-dev/feature-analytics/src/index.ts"
+      ],
+      "@nrwl/nx-dev/feature-conf": ["./nx-dev/feature-conf/src/index.ts"],
+      "@nrwl/nx-dev/feature-doc-viewer": [
+        "./nx-dev/feature-doc-viewer/src/index.ts"
+      ],
+      "@nrwl/nx-dev/feature-flavor-selection": [
+        "./nx-dev/feature-flavor-selection/src/index.ts"
+      ],
+      "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"],
+      "@nrwl/nx-dev/feature-storage": ["./nx-dev/feature-storage/src/index.ts"],
+      "@nrwl/nx-dev/feature-versions-and-flavors": [
+        "./nx-dev/feature-versions-and-flavors/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui/common": ["./nx-dev/ui/common/src/index.ts"],
+      "@nrwl/nx-dev/ui/member-card": ["./nx-dev/ui/member-card/src/index.ts"],
+      "@nrwl/nx-dev/ui/sponsor-card": ["./nx-dev/ui/sponsor-card/src/index.ts"],
+      "@nrwl/react": ["./packages/react"],
+      "@nrwl/react-native": ["./packages/react-native"],
+      "@nrwl/react/*": ["./packages/react/*"],
+      "@nrwl/storybook": ["./packages/storybook"],
+      "@nrwl/tao": ["./packages/tao"],
+      "@nrwl/tao/*": ["./packages/tao/*"],
+      "@nrwl/typedoc-theme": ["/typedoc-theme/src/index.ts"],
+      "@nrwl/web": ["./packages/web"],
+      "@nrwl/web/*": ["./packages/web/*"],
+      "@nrwl/workspace": ["./packages/workspace"],
+      "@nrwl/workspace/*": ["./packages/workspace/*"],
+      "@nrwl/workspace/testing": ["./packages/workspace/testing"]
+    }
+  }
+}
