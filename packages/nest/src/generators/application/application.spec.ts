@@ -4,8 +4,7 @@ import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import * as semver from 'semver';
 import {
-  nestJsSchematicsVersion7,
-  nestJsSchematicsVersion8,
+  nestJsSchematicsVersion,
   nestJsVersion7,
   nestJsVersion8,
   rxjsVersion6,
@@ -81,7 +80,7 @@ describe('application generator', () => {
       expect(pkg.dependencies['rxjs']).toBe(rxjsVersion7);
       expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion8);
       expect(pkg.devDependencies['@nestjs/schematics']).toBe(
-        nestJsSchematicsVersion8
+        nestJsSchematicsVersion
       );
     });
 
@@ -99,7 +98,7 @@ describe('application generator', () => {
       expect(pkg.dependencies['rxjs']).toBe(rxjsVersion7);
       expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion8);
       expect(pkg.devDependencies['@nestjs/schematics']).toBe(
-        nestJsSchematicsVersion8
+        nestJsSchematicsVersion
       );
     });
 
@@ -117,7 +116,7 @@ describe('application generator', () => {
       expect(pkg.dependencies['rxjs']).toBe('~7.4.0');
       expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion8);
       expect(pkg.devDependencies['@nestjs/schematics']).toBe(
-        nestJsSchematicsVersion8
+        nestJsSchematicsVersion
       );
     });
 
@@ -132,7 +131,7 @@ describe('application generator', () => {
       );
       expect(pkg.dependencies['@nestjs/common']).toBe(nestJsVersion7);
       expect(pkg.devDependencies['@nestjs/schematics']).toBe(
-        nestJsSchematicsVersion7
+        nestJsSchematicsVersion
       );
     });
   });

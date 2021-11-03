@@ -9,7 +9,7 @@ import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 import { checkAndCleanWithSemver } from '@nrwl/workspace';
 import { satisfies } from 'semver';
 import {
-  nestJsSchematicsVersion8,
+  nestJsSchematicsVersion,
   nestJsVersion8,
   rxjsVersion7,
 } from '../../utils/versions';
@@ -33,23 +33,23 @@ export default async function update(tree: Tree) {
 async function isUpdatable(tree: Tree) {
   const json = readJson(tree, 'package.json');
 
-  if (json.dependencies['@angular/common']) {
+  if (json.dependencies['@angular/core']) {
     const rxjs = checkAndCleanWithSemver('rxjs', json.dependencies['rxjs']);
     if (satisfies(rxjs, rxjsVersion7)) {
       return true;
-    } else {
-      const { Confirm } = require('enquirer');
-      const prompt = new Confirm({
-        name: 'question',
-        message: 'Do you want to update to RxJS 7 + Nest 8?',
-        initial: true,
-      });
-
-      return await prompt.run();
     }
-  } else {
-    return true;
+
+    const { Confirm } = require('enquirer');
+    const prompt = new Confirm({
+      name: 'question',
+      message: 'Do you want to update to RxJS 7 + Nest 8?',
+      initial: true,
+    });
+
+    return await prompt.run();
   }
+
+  return true;
 }
 
 function updateVersion(tree: Tree) {
@@ -78,7 +78,7 @@ function updateVersion(tree: Tree) {
 
     json.devDependencies = {
       ...json.devDependencies,
-      '@nestjs/schematics': nestJsSchematicsVersion8,
+      '@nestjs/schematics': nestJsSchematicsVersion,
       '@nestjs/testing': nestJsVersion8,
     };
 

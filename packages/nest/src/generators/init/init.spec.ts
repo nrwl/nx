@@ -2,7 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
-  nestJsSchematicsVersion8,
+  nestJsSchematicsVersion,
   nestJsVersion8,
   nxVersion,
 } from '../../utils/versions';
@@ -30,7 +30,7 @@ describe('init generator', () => {
     expect(packageJson.dependencies['tslib']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/nest']).toBeUndefined();
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
-      nestJsSchematicsVersion8
+      nestJsSchematicsVersion
     );
     expect(packageJson.devDependencies['@nestjs/testing']).toBe(nestJsVersion8);
     expect(packageJson.devDependencies['@nrwl/nest']).toBe(nxVersion);
