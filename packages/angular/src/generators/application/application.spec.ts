@@ -571,10 +571,10 @@ describe('app', () => {
       it('should create the e2e project in v2 workspace', async () => {
         appTree = createTreeWithEmptyWorkspace(2);
 
-        await generateApp(appTree, 'myApp', {
+        expect(() => await generateApp(appTree, 'myApp', {
           e2eTestRunner: E2eTestRunner.Protractor,
           standaloneConfig: true,
-        });
+        })).not.toThrow();
       });
 
       it('should update workspace.json', async () => {
