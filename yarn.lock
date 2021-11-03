@@ -15987,10 +15987,10 @@ next@12.0.0:
     "@next/swc-win32-ia32-msvc" "12.0.0"
     "@next/swc-win32-x64-msvc" "12.0.0"
 
-ng-packagr@~13.0.0-rc.3:
-  version "13.0.0-rc.3"
-  resolved "https://registry.yarnpkg.com/ng-packagr/-/ng-packagr-13.0.0-rc.3.tgz#f604e4d0d3ac50bd8d4624ecad03d46ae8abdb16"
-  integrity sha512-p+gRs/dtaag/4vO3HaXZnd+IqJyuKvMEOsWsPZsRT/pF4C6P+IhEvsmlV+jVf1J/dz8CFnN19A3AQpTAVUCnUw==
+ng-packagr@~13.0.0:
+  version "13.0.0"
+  resolved "https://registry.yarnpkg.com/ng-packagr/-/ng-packagr-13.0.0.tgz#de80187148cccf54e3a29e664476124b0bf0d16f"
+  integrity sha512-Si0BMJLFy0A1JTDbNrbwwCmgG00h3QFhKLgenHFRwICGPJxAmCqwMmp5miWT7wknAJvqptFyObQ+SbBrUvl4cg==
   dependencies:
     "@rollup/plugin-json" "^4.1.0"
     "@rollup/plugin-node-resolve" "^13.0.0"
@@ -19698,7 +19698,7 @@ rxjs@6.6.7, rxjs@^6.4.0, rxjs@^6.5.0, rxjs@^6.5.4, rxjs@^6.6.7:
   dependencies:
     tslib "^1.9.0"
 
-rxjs@7.4.0, rxjs@^7.2.0:
+rxjs@^7.2.0:
   version "7.4.0"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.4.0.tgz#a12a44d7eebf016f5ff2441b87f28c9a51cebc68"
   integrity sha512-7SQDi7xeTMCJpqViXh8gL/lebcwlp3d831F05+9B44A4B0WfsEwUQHR64gsH1kvJ+Ep/J9K2+n1hVl1CsGN23w==
