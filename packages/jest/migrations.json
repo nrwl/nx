@@ -13,6 +13,5 @@
       "factory": "./src/migrations/update-13-1-2/update-tsconfigs-for-tests"
     }
   },
-  "packageJsonUpdates": {
-  }
+  "packageJsonUpdates": {}
 }

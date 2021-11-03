@@ -38,7 +38,8 @@ function generateSchematicList(
   const schematicCollectionFilePath = path.join(config.root, 'generators.json');
   const schematicCollectionFile = readJsonSync(schematicCollectionFilePath);
   removeSync(config.schematicOutput);
-  const schematicCollection = schematicCollectionFile.schematics || schematicCollectionFile.generators;
+  const schematicCollection =
+    schematicCollectionFile.schematics || schematicCollectionFile.generators;
   return Object.keys(schematicCollection).map((schematicName) => {
     const schematic = {
       name: schematicName,
