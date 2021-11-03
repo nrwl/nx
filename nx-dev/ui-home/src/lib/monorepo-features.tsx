@@ -13,9 +13,9 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-pink-500',
-    link: '#',
+    link: '/core-concepts/mental-model#affected-commands',
     title: 'Smart rebuilds',
-    subTitle: 'Only rebuilds and retests what is affected by your change',
+    subTitle: 'Nx only rebuilds and retests what is affected by your change.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -35,10 +35,10 @@ const featureItems: {
   },
   {
     classNames: 'bg-green-nx-base',
-    link: '#',
-    title: 'Project graph',
+    link: '/core-concepts/mental-model',
+    title: 'Project graph#the-project-graph',
     subTitle:
-      'Analyzes your workspace to improve performance and developer experience',
+      'Nx analyzes your workspace to improve performance and developer experience.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -58,10 +58,10 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '#',
+    link: '/core-concepts/mental-model#distributed-task-execution',
     title: 'Distributed task execution',
     subTitle:
-      'Distributes any command across multiple machines without any configuration',
+      'Nx distributes any command across multiple machines without any configuration.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -81,9 +81,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-blue-500',
-    link: '#',
+    link: '/core-concepts/mental-model#computation-hashing-and-caching',
     title: 'Computation caching',
-    subTitle: 'Never rebuilds or tests the same code twice',
+    subTitle: 'Nx never rebuilds or tests the same code twice.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -103,9 +103,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '#',
+    link: '/structure/monorepo-tags',
     title: 'Easy code sharing',
-    subTitle: 'Simplifies extracting and refactoring shared libraries',
+    subTitle: 'Nx simplifies extracting and refactoring shared libraries.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -125,10 +125,10 @@ const featureItems: {
   },
   {
     classNames: 'bg-red-500',
-    link: '#',
+    link: '/structure/monorepo-tags',
     title: 'Ownership management',
     subTitle:
-      'Statically enforces the separation of shared and app-specific code',
+      'Nx statically enforces the separation of shared and app-specific code.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -212,15 +212,15 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
                 className="mt-4 text-lg text-gray-500"
               >
                 Nx builds a project graph by analyzing your workspace, which it
-                then uses to only rebuild what is necessary, and to never run
-                the same computation twice. Nx also helps establish structured
-                code sharing and ownership management to keep the workspace
+                then uses to only rebuild what is necessary and to never run the
+                same computation twice. Nx also helps establish structured code
+                sharing and ownership management to keep the workspace
                 maintainable.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Get started
+                    Learn More
                   </a>
                 </Link>
               </motion.div>

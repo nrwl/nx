@@ -72,7 +72,7 @@ export function CloudSupport(): ReactComponentElement<any> {
                 how to improve your project and build.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="#">
+                <Link href="https://nx.app">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
                     Enable Nx Cloud
                   </a>

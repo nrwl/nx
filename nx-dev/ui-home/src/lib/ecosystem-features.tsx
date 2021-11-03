@@ -13,8 +13,8 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-green-nx-base',
-    link: '#',
-    title: 'Rich plugin ecosystem',
+    link: '/core-concepts/nx-devkit',
+    title: 'Plugins for everything',
     subTitle:
       ' React, React Native, Angular, NativeScript, Cypress, Nest.js, Storybook, Ionic, Go among others',
     svg: (
@@ -36,9 +36,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-pink-500',
-    link: '#',
+    link: '/getting-started/nx-cli',
     title: 'Consistent DX',
-    subTitle: 'Improves dev mobility, experimentation and collaboration',
+    subTitle: 'Nx improves dev mobility, experimentation and collaboration.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -58,10 +58,10 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '#',
+    link: '/core-concepts/updating-nx',
     title: 'Automatic upgrades',
     subTitle:
-      'Updates your source code to work with the newest versions of popular tools',
+      'Nx updates your source code to work with the newest versions of popular tools.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -81,9 +81,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '#',
+    link: '/core-concepts/updating-nx',
     title: 'Repeatable migrations',
-    subTitle: 'Enables large scale refactorings',
+    subTitle: 'Nx enables large scale refactorings.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -103,9 +103,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-red-500',
-    link: '#',
+    link: '/community',
     title: 'Large community',
-    subTitle: 'A community of more than 600k developers. Tripling every year.',
+    subTitle: 'A community of more than 600k developers, doubling every year',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -125,9 +125,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-blue-500',
-    link: '#',
+    link: 'https://github.com/nrwl/nx',
     title: 'Open source',
-    subTitle: 'MIT-licensed, clear roadmap.',
+    subTitle: 'MIT-licensed, clear roadmap',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -217,7 +217,7 @@ export function EcosystemFeatures(): ReactComponentElement<any> {
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Get started
+                    Learn More
                   </a>
                 </Link>
               </motion.div>

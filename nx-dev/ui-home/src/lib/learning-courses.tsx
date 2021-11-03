@@ -34,14 +34,13 @@ export function LearningCourses(): ReactComponentElement<any> {
         <div className="pt-10 pb-12 px-6 sm:pt-16 sm:px-16 lg:py-16 lg:pr-0 xl:py-20 xl:px-20">
           <div className="lg:self-center">
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-              <span className="block">Carefully crafted</span>
-              <span className="block">free learning materials</span>
+              <span className="block">Scale React Development</span>
+              <span className="block">with Nx</span>
             </h2>
             <p className="mt-4 text-lg leading-6 text-gray-100">
-              Nx Tutorials and resources are continuously updated with the
-              latest version.
+              Free course on egghead.io
             </p>
-            <Link href="/getting-started/intro#learn-nx-fundamentals">
+            <Link href="/https://egghead.io/courses/scale-react-development-with-nx-4038">
               <a
                 rel="nofollow"
                 target="_blank"

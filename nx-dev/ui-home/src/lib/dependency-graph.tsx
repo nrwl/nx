@@ -70,7 +70,7 @@ export function DependencyGraph(): ReactComponentElement<any> {
                 and understand your workspace.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="#">
+                <Link href="/structure/dependency-graph">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
                     Learn about "nx dep-graph"
                   </a>

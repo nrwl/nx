@@ -109,41 +109,44 @@ export function Performance(): ReactComponentElement<any> {
         </div>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:col-start-1">
           <div className="col-span-1 flex flex-col justify-center pb-8 pl-8 border-r border-b border-gray-100">
-            <div className="text-lg text-gray-600">Average</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
-              <Counter from={0} to={300} round={0} progress={progress} />{' '}
-              <span className="-ml-3 text-3xl">%</span>
-            </div>
-            <div className="text-md font-medium text-gray-600">sf</div>
-          </div>
-          <div className="col-span-1 flex flex-col justify-center pb-8 pl-8 border-l border-b border-gray-100">
-            <div className="text-lg text-gray-600">Average</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
-              <Counter from={0} to={250} round={0} progress={progress} />{' '}
-              <span className="-ml-3 text-3xl">%</span>
-            </div>
-            <div className="text-md font-medium text-gray-600">
-              Reduction in CI computation time due to caching
-            </div>
-          </div>
-          <div className="col-span-1 flex flex-col justify-center pt-8 pl-8 border-r border-t border-gray-100">
-            <div className="text-lg text-gray-600">Down to</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
-              <Counter from={0} to={105} round={0} progress={progress} />{' '}
-              <span className="-ml-3 text-3xl">ms</span>
-            </div>
-            <div className="text-md font-medium text-gray-600">
-              Graph calculations for 1k projects
-            </div>
-          </div>
-          <div className="col-span-1 flex flex-col justify-center pt-8 pl-8 border-l border-t border-gray-100">
             <div className="text-lg text-gray-600">Up to</div>
             <div className="my-2 text-7xl font-bold text-gray-800">
-              <Counter from={0} to={10} round={0} progress={progress} />{' '}
+              <Counter from={0} to={3} round={0} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">x</span>
             </div>
             <div className="text-md font-medium text-gray-600">
-              Faster CI for larger proj
+              reduction in CI time for mid-size projects with standard CI setups
+            </div>
+          </div>
+          <div className="col-span-1 flex flex-col justify-center pb-8 pl-8 border-l border-b border-gray-100">
+            <div className="text-lg text-gray-600">Up to</div>
+            <div className="my-2 text-7xl font-bold text-gray-800">
+              <Counter from={0} to={14} round={0} progress={progress} />{' '}
+              <span className="-ml-3 text-3xl">x</span>
+            </div>
+            <div className="text-md font-medium text-gray-600">
+              reduction in CI time for large projects with standard CI setups
+            </div>
+          </div>
+          <div className="col-span-1 flex flex-col justify-center pt-8 pl-8 border-r border-t border-gray-100">
+            <div className="text-lg text-gray-600">Up to</div>
+            <div className="my-2 text-7xl font-bold text-gray-800">
+              <Counter from={0} to={50} round={0} progress={progress} />{' '}
+              <span className="-ml-3 text-3xl">%</span>
+            </div>
+            <div className="text-md font-medium text-gray-600">
+              reduction in CI time for large projects with highly-optimized
+              distributed CI setups
+            </div>
+          </div>
+          <div className="col-span-1 flex flex-col justify-center pt-8 pl-8 border-l border-t border-gray-100">
+            <div className="text-lg text-gray-600">Average</div>
+            <div className="my-2 text-7xl font-bold text-gray-800">
+              <Counter from={0} to={2.5} round={1} progress={progress} />{' '}
+              <span className="-ml-3 text-3xl">x</span>
+            </div>
+            <div className="text-md font-medium text-gray-600">
+              reduction in computation time
             </div>
           </div>
         </div>

@@ -13,7 +13,7 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-blue-500',
-    link: '#',
+    link: '/getting-started/console',
     title: 'Editor plugins',
     subTitle: 'Nx-aware autocompletion and refactoring',
     svg: (
@@ -30,7 +30,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-red-500',
-    link: '#',
+    link: 'https://github.com/apps/nx-cloud',
     title: 'GitHub & Continuous Integration',
     subTitle: 'Searchable and filterable CI outputs, analytics, and more',
     svg: (
@@ -46,9 +46,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-pink-500',
-    link: '#',
+    link: '/getting-started/nx-cli#modifying-code',
     title: 'Powerful code generation',
-    subTitle: 'Automates repeatable tasks and refactorings',
+    subTitle: 'Nx automates repeatable tasks and refactorings.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -74,10 +74,10 @@ const featureItems: {
   },
   {
     classNames: 'bg-green-nx-base',
-    link: '#',
+    link: '/structure/dependency-graph',
     title: 'Interactive visualizations',
     subTitle:
-      'An evergreen architecture diagram to help explore your workspace',
+      'An evergreen architecture diagram to help explore and understand your workspace',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -97,9 +97,9 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '#',
+    link: '/generators/workspace-generators',
     title: 'Workspace generators',
-    subTitle: 'Enforces best practices and organizational standards',
+    subTitle: 'Nx helps enforce best practices and organizational standards.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -119,10 +119,10 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '#',
+    link: '/core-concepts/nx-devkit',
     title: 'Nx Devkit',
     subTitle:
-      'Enables a custom dev experience to match the needs of your organization',
+      'Nx enables a custom dev experience to match the needs of your organization.',
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -212,7 +212,7 @@ export function ExperienceFeatures(): ReactComponentElement<any> {
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="#">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
-                    Get started
+                    Learn More
                   </a>
                 </Link>
               </motion.div>

@@ -73,7 +73,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
                 necessary.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="#">
+                <Link href="/core-extended/affected">
                   <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-purple-nx-base transition">
                     Learn about "nx affected"
                   </a>
