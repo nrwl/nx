@@ -3,10 +3,5 @@
   "name": "js",
   "version": "0.0.1",
   "generators": {
-    "js": {
-      "factory": "./src/generators/js/generator",
-      "schema": "./src/generators/js/schema.json",
-      "description": "js generator"
-    }
   }
 }

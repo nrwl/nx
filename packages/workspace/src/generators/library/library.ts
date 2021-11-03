@@ -43,7 +43,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   if (options.buildable) {
     const { libsDir } = getWorkspaceLayout(tree);
     projectConfiguration.targets.build = {
-      executor: '@nrwl/workspace:tsc',
+      executor: '@nrwl/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
