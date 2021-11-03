@@ -572,7 +572,7 @@ describe('app', () => {
         appTree = createTreeWithEmptyWorkspace(2);
 
         expect(
-          () =>
+          async () =>
             await generateApp(appTree, 'myApp', {
               e2eTestRunner: E2eTestRunner.Protractor,
               standaloneConfig: true,

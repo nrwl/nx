@@ -5,7 +5,6 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addProtractor(host: Tree, options: NormalizedSchema) {
