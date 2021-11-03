@@ -32,6 +32,7 @@
       "@nrwl/gatsby": ["./packages/gatsby"],
       "@nrwl/jest": ["./packages/jest"],
       "@nrwl/jest/*": ["./packages/jest/*"],
+      "@nrwl/js": ["js/src/index.ts"],
       "@nrwl/linter": ["./packages/linter"],
       "@nrwl/nest": ["./packages/nest"],
       "@nrwl/next": ["./packages/next"],

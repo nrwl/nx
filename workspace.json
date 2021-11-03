@@ -34,6 +34,8 @@
     "express": "packages/express",
     "gatsby": "packages/gatsby",
     "jest": "packages/jest",
+    "js": "packages/js",
+    "e2e-js": "e2e/js",
     "linter": "packages/linter",
     "nest": "packages/nest",
     "next": "packages/next",

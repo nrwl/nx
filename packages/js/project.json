@@ -1,0 +1,56 @@
+{
+  "root": "js",
+  "sourceRoot": "js/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["js/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/js"],
+      "options": {
+        "jestConfig": "js/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build": {
+      "executor": "@nrwl/node:package",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist//js",
+        "tsConfig": "js/tsconfig.lib.json",
+        "packageJson": "js/package.json",
+        "main": "js/src/index.ts",
+        "assets": [
+          "js/*.md",
+          {
+            "input": "./js/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./js/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./js",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "./js",
+            "glob": "executors.json",
+            "output": "."
+          }
+        ]
+      }
+    }
+  },
+  "tags": []
+}
