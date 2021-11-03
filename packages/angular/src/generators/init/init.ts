@@ -1,5 +1,5 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
-import { GeneratorCallback, readJson, Tree } from '@nrwl/devkit';
+import { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -10,14 +10,12 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { satisfies, clean } from 'semver';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularVersion,
   angularDevkitVersion,
   jestPresetAngularVersion,
   rxjsVersion,
-  rxjs7Version,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
@@ -80,14 +78,6 @@ function addPostInstall(host: Tree) {
 }
 
 function updateDependencies(host: Tree): GeneratorCallback {
-  // GET THE WORKSPACE VERSION OF RXJS
-  // INSTALL THAT
-  const pkgJson = readJson(host, 'package.json');
-  const pkgRxJsVersion = clean(pkgJson.dependencies?.rxjs);
-  const rxjsVersionToUse = satisfies(pkgRxJsVersion, rxjs7Version)
-    ? rxjs7Version
-    : rxjsVersion;
-
   return addDependenciesToPackageJson(
     host,
     {
@@ -99,7 +89,7 @@ function updateDependencies(host: Tree): GeneratorCallback {
       '@angular/platform-browser': angularVersion,
       '@angular/platform-browser-dynamic': angularVersion,
       '@angular/router': angularVersion,
-      rxjs: rxjsVersionToUse,
+      rxjs: rxjsVersion,
       tslib: '^2.0.0',
       'zone.js': '~0.11.4',
     },

@@ -38,18 +38,18 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~13.0.0-rc.2",
+    "@angular-devkit/schematics": "~13.0.0",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
-    "@schematics/angular": "~13.0.0-rc.2",
+    "@schematics/angular": "~13.0.0",
     "@phenomnomnominal/tsquery": "4.1.1",
     "ignore": "^5.0.4",
-    "jasmine-marbles": "~0.9.1",
+    "jasmine-marbles": "~0.8.4",
     "rxjs-for-await": "0.0.2",
     "webpack-merge": "5.7.3",
-    "find-parent-dir": "0.3.1"
+    "find-parent-dir": "^0.3.1"
   }
 }

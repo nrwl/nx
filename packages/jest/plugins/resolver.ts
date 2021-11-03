@@ -50,7 +50,13 @@ module.exports = function (path: string, options: ResolveOptions) {
   }
   // Try to use the defaultResolver
   try {
-    return options.defaultResolver(path, options);
+    return options.defaultResolver(path, {
+      ...options,
+      packageFilter: (pkg) => ({
+        ...pkg,
+        main: pkg.main || pkg.es2015 || pkg.module,
+      }),
+    });
   } catch (e) {
     if (
       path === 'jest-sequencer-@jest/test-sequencer' ||
