@@ -43,6 +43,7 @@ export interface WebBuildExecutorOptions extends BuildBuilderOptions {
 
   vendorChunk?: boolean;
   commonChunk?: boolean;
+  runtimeChunk?: boolean;
 
   namedChunks?: boolean;
 
