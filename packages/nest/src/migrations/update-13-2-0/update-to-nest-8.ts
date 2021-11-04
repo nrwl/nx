@@ -1,10 +1,4 @@
-import {
-  formatFiles,
-  installPackagesTask,
-  readJson,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
+import { formatFiles, logger, readJson, Tree, updateJson } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 import { checkAndCleanWithSemver } from '@nrwl/workspace';
 import { satisfies } from 'semver';
@@ -26,7 +20,9 @@ export default async function update(tree: Tree) {
   await formatFiles(tree);
 
   return (): void => {
-    installPackagesTask(tree);
+    logger.info(
+      'Please make sure to run npm install or yarn install to get the latest packages added by this migration'
+    );
   };
 }
 
