@@ -1,19 +1,19 @@
-jest.mock('../../core/project-graph');
-jest.mock('../../utilities/assets');
-jest.mock('../../utilities/buildable-libs-utils');
-jest.mock('../../utilities/fileutils');
-jest.mock('../../utilities/typescript/compilation');
+jest.mock('@nrwl/workspace/src/core/project-graph');
+jest.mock('@nrwl/workspace/src/utilities/assets');
+jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
+jest.mock('@nrwl/tao/src/utils/fileutils');
+jest.mock('@nrwl/workspace/src/utilities/typescript/compilation');
 
 import { ExecutorContext } from '@nrwl/devkit';
 import { join } from 'path';
-import { copyAssets } from '../../utilities/assets';
+import { copyAssets } from '@nrwl/workspace/src/utilities/assets';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-} from '../../utilities/buildable-libs-utils';
-import { readJsonFile, writeJsonFile } from '../../utilities/fileutils';
-import { compileTypeScript } from '../../utilities/typescript/compilation';
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+import { compileTypeScript } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { TypeScriptExecutorOptions } from './schema';
 import { tscExecutor } from './tsc.impl';
 

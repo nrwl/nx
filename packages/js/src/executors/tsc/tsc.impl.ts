@@ -1,5 +1,9 @@
-import { ExecutorContext, normalizePath } from '@nrwl/devkit';
-import { basename, dirname, join, relative } from 'path';
+import {
+  ExecutorContext,
+  normalizePath,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { copyAssets } from '@nrwl/workspace/src/utilities/assets';
 import {
@@ -7,8 +11,9 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { compileTypeScript } from '@nrwl/workspace/src/utilities/typescript/compilation';
+import { basename, dirname, join, relative } from 'path';
+
 import { TypeScriptExecutorOptions } from './schema';
 
 export async function tscExecutor(

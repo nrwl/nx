@@ -1,14 +1,10 @@
 module.exports = {
-  displayName: 'js-e2e',
-  preset: '../jest.preset.js',
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-    },
-  },
+  preset: '../../jest.preset.js',
   transform: {
-    '^.+\\.[tj]s$': 'ts-jest',
+    '^.+\\.[tj]sx?$': 'ts-jest',
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../coverage/js-e2e',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  maxWorkers: 1,
+  globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
+  displayName: 'e2e-js',
 };
