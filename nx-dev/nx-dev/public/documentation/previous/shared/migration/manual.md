@@ -1,4 +1,4 @@
-# Migrating existing code bases
+# Manual migration of existing code bases
 
 ## What you’ll accomplish
 

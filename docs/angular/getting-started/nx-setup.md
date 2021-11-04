@@ -30,7 +30,7 @@ If you're ready to fully transform your repo into an Nx workspace, run this comm
 ng add @nrwl/workspace
 ```
 
-For more information on adding Nx to an existing repository see the [migration guides](/{{framework}}/migration/overview)
+For more information on adding Nx to an existing repository see the [migration guide](/angular/migration/migration-angular)
 
 ## Configuration
 
