@@ -114,14 +114,6 @@
     "@jridgewell/resolve-uri" "1.0.0"
     sourcemap-codec "1.4.8"
 
-"@angular-devkit/architect@0.1300.0":
-  version "0.1300.0"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.1300.0.tgz#074f2505f6e67a9ed5ddbc90013bb3203f2c7ef8"
-  integrity sha512-bLbCrsp2SIMgdNWESJEXodAZ1R0SIDbrnGB3euFwKt8srJinayECEBczAVhRBstOOlLJKVRCQMX4ho4SqeWqLw==
-  dependencies:
-    "@angular-devkit/core" "13.0.0"
-    rxjs "6.6.7"
-
 "@angular-devkit/architect@0.1300.1":
   version "0.1300.1"
   resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.1300.1.tgz#974725b1bc0f82cc6c310d5b59da5e44b6a46b51"
@@ -202,22 +194,14 @@
   optionalDependencies:
     esbuild "0.13.12"
 
-"@angular-devkit/build-optimizer@0.1300.0":
-  version "0.1300.0"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/build-optimizer/-/build-optimizer-0.1300.0.tgz#537f0dd36c4344cec4016bfc1cfc7a0f17584762"
-  integrity sha512-cyzDgc0YStTOaFymVKGIBWKVMNVtBT27ZRdFT/QJIoVmC8YHmBAwU9+kezs7NzzJokwlW2wQ2/XUd4F6HYEjfg==
+"@angular-devkit/build-optimizer@0.1300.1":
+  version "0.1300.1"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/build-optimizer/-/build-optimizer-0.1300.1.tgz#75019895cc5ba256b59018fe82019ac5aa2122eb"
+  integrity sha512-Y97HdkZQmKggDrAvgqKtikYKwwuUiHdQPMxmclN2zlw7vskmkhLF3Te1pWW/i1W3bgcS4nc244vf/cWLhyTy/w==
   dependencies:
     source-map "0.7.3"
     tslib "2.3.1"
     typescript "4.4.4"
-
-"@angular-devkit/build-webpack@0.1300.0":
-  version "0.1300.0"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/build-webpack/-/build-webpack-0.1300.0.tgz#263095ff4b6ad7c05d2a2336115f06220673f286"
-  integrity sha512-En00FVrYdCP17fWJPPfP7QIQlqkFfCgkVnjImH02sUiSe70yGf930/3VNgKXfhawWI+X/gBewAvRNXtoSGmw/g==
-  dependencies:
-    "@angular-devkit/architect" "0.1300.0"
-    rxjs "6.6.7"
 
 "@angular-devkit/build-webpack@0.1300.1":
   version "0.1300.1"
@@ -234,18 +218,6 @@
   dependencies:
     ajv "8.2.0"
     ajv-formats "2.0.2"
-    fast-json-stable-stringify "2.1.0"
-    magic-string "0.25.7"
-    rxjs "6.6.7"
-    source-map "0.7.3"
-
-"@angular-devkit/core@13.0.0":
-  version "13.0.0"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-13.0.0.tgz#7560902ec06a40f574e09d223354360f3d8db453"
-  integrity sha512-dWybyCroiil+1cmX/tGmx1lHRaCU9lsCL/fubTTe+GFp32hGQGtFgdm8uuVx0GUi83wgRJQDYj58za82llqHrw==
-  dependencies:
-    ajv "8.6.3"
-    ajv-formats "2.1.1"
     fast-json-stable-stringify "2.1.0"
     magic-string "0.25.7"
     rxjs "6.6.7"

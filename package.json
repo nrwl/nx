@@ -26,10 +26,10 @@
     "prepare": "is-ci || husky install"
   },
   "devDependencies": {
-    "@angular-devkit/architect": "0.1300.0",
+    "@angular-devkit/architect": "0.1300.1",
     "@angular-devkit/build-angular": "~13.0.0",
-    "@angular-devkit/build-optimizer": "0.1300.0",
-    "@angular-devkit/build-webpack": "0.1300.0",
+    "@angular-devkit/build-optimizer": "0.1300.1",
+    "@angular-devkit/build-webpack": "0.1300.1",
     "@angular-devkit/core": "~13.0.0",
     "@angular-devkit/schematics": "~13.0.0",
     "@angular-eslint/eslint-plugin": "~12.6.0",
