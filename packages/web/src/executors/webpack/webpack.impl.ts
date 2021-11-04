@@ -50,6 +50,7 @@ export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
 
   vendorChunk?: boolean;
   commonChunk?: boolean;
+  runtimeChunk?: boolean;
 
   namedChunks?: boolean;
 
