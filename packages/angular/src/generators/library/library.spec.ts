@@ -159,17 +159,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
-    it('should update tsconfig.lib.prod.json when enableIvy', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({
-        buildable: true,
-      });
-
-      // ASSERT
-      const tsConfig = readJson(appTree, '/libs/my-lib/tsconfig.lib.prod.json');
-      expect(tsConfig.angularCompilerOptions['enableIvy']).toBe(true);
-    });
-
     it('should update workspace.json', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
