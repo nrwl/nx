@@ -230,7 +230,7 @@ export function ReactPage() {
                     </a>
                   </Link>{' '}
                   or{' '}
-                  <Link href="/l/r/migration/migration-cra">
+                  <Link href="/l/r/migration/adding-to-monorepo">
                     <a className="underline pointer">
                       "Adding Nx to Yarn/Lerna monorepo" migration
                     </a>

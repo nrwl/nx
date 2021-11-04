@@ -111,9 +111,9 @@ export function AngularPage() {
                       get started by creating a modern Angular workspace with Nx
                     </a>
                     , or{' '}
-                    <Link href="/l/a/migration/overview">
+                    <Link href="/l/a/migration/migration-angular">
                       <a className="underline pointer">
-                        add it to an existing Angular workspace
+                        migrate an existing Angular workspace
                       </a>
                     </Link>{' '}
                     .
@@ -213,7 +213,7 @@ export function AngularPage() {
                 </div>
                 <p className="italic sm:text-lg my-6">
                   If you want to{' '}
-                  <Link href="/l/a/migration/overview">
+                  <Link href="/l/a/migration/migration-angular">
                     <a className="underline pointer">
                       add Nx to an existing Angular project, check out this
                       guide
