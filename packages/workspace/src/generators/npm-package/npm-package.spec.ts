@@ -1,11 +1,14 @@
 import {
+  getProjects,
   readJson,
+  readProjectConfiguration,
   readWorkspaceConfiguration,
   Tree,
   updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { getWorkspacePath } from '@nrwl/devkit';
 import { npmPackageGenerator } from './npm-package';
 
 describe('@nrwl/workspace:npm-package', () => {
@@ -26,8 +29,8 @@ describe('@nrwl/workspace:npm-package', () => {
       name: 'my-package',
     });
 
-    const { projects } = readJson(tree, 'workspace.json');
-    expect(projects['my-package']).toMatchInlineSnapshot(`
+    const projects = getProjects(tree);
+    expect(projects.get('my-package')).toMatchInlineSnapshot(`
       Object {
         "root": "packages/my-package",
       }
@@ -86,6 +89,25 @@ describe('@nrwl/workspace:npm-package', () => {
       expect(tree.read('packages/my-package/index.ts').toString()).toEqual(
         existingIndex
       );
+    });
+  });
+
+  describe('for workspaces without workspace.json', () => {
+    it('should not create workspace.json or project.json', async () => {
+      tree.delete(getWorkspacePath(tree));
+      await npmPackageGenerator(tree, {
+        name: 'my-package',
+      });
+
+      expect(tree.exists('workspace.json')).toBeFalsy();
+      expect(tree.exists('angular.json')).toBeFalsy();
+      expect(tree.exists('packages/my-package/project.json')).toBeFalsy();
+      expect(tree.exists('packages/my-package/package.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, 'my-package')).toEqual({
+        root: 'packages/my-package',
+        sourceRoot: 'packages/my-package',
+        projectType: 'library',
+      });
     });
   });
 });

@@ -26,6 +26,7 @@ import isCI = require('is-ci');
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
 import { join } from 'path';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -508,21 +509,21 @@ export function runCommand(command: string): string {
  */
 function setMaxWorkers() {
   if (isCI) {
+    const ws = new Workspaces(tmpProjPath());
     const workspaceFile = workspaceConfigName();
-    const workspace = readJson(workspaceFile);
+    const workspaceFileExists = fileExists(workspaceFile);
+    const workspace = ws.readWorkspaceConfiguration();
+    const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
 
     Object.keys(workspace.projects).forEach((appName) => {
       let project = workspace.projects[appName];
-      if (typeof project === 'string') {
-        project = readJson(path.join(project, 'project.json'));
-      }
-      const { build } = project.targets ?? project.architect;
+      const { build } = project.targets;
 
       if (!build) {
         return;
       }
 
-      const executor = build.builder ?? build.executor;
+      const executor = build.executor;
       if (
         executor.startsWith('@nrwl/node') ||
         executor.startsWith('@nrwl/web') ||
@@ -530,9 +531,20 @@ function setMaxWorkers() {
       ) {
         build.options.maxWorkers = 4;
       }
-    });
 
-    updateFile(workspaceFile, JSON.stringify(workspace));
+      if (
+        !workspaceFileExists ||
+        typeof rawWorkspace.projects[appName] === 'string'
+      ) {
+        updateFile(
+          join(project.root, 'project.json'),
+          JSON.stringify(project, null, 2)
+        );
+      }
+    });
+    if (workspaceFileExists) {
+      updateFile(workspaceFile, JSON.stringify(workspace));
+    }
   }
 }
 

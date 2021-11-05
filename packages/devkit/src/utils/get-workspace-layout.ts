@@ -48,7 +48,12 @@ export function getWorkspaceLayout(tree: Tree): {
   };
 }
 
-export function getWorkspacePath(tree: Tree): string {
-  const possibleFiles = ['/angular.json', '/workspace.json'];
+export function getWorkspacePath(
+  tree: Tree
+): '/angular.json' | '/workspace.json' | null {
+  const possibleFiles: ('/angular.json' | '/workspace.json')[] = [
+    '/angular.json',
+    '/workspace.json',
+  ];
   return possibleFiles.filter((path) => tree.exists(path))[0];
 }

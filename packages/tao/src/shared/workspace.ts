@@ -638,7 +638,7 @@ export function toProjectName(
   return subpath
     .replace(/([a-z\d])([A-Z])/g, '$1_$2')
     .toLowerCase()
-    .replace(/[ _]/g, '-');
+    .replace(/[ _\/]/g, '-');
 }
 
 let projectGlobCache: string[];
@@ -701,6 +701,7 @@ export function buildWorkspaceConfigurationFromGlobs(
   // a directory. This is used to skip inferring a new project
   // from package.json in the same directory.
   const projectsFromProjectJsons = new Set<string>();
+  const npmPrefix = `@${nxJson.npmScope}/`;
 
   for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');
@@ -714,7 +715,11 @@ export function buildWorkspaceConfigurationFromGlobs(
       fileName === 'package.json' &&
       !projectsFromProjectJsons.has(directory)
     ) {
-      const { name } = readJson(file);
+      let { name }: { name: string } = readJson(file);
+      if (name.startsWith(npmPrefix)) {
+        name = name.replace(npmPrefix, '');
+      }
+
       const root = directory;
       if (configurations[name]) {
         continue;
