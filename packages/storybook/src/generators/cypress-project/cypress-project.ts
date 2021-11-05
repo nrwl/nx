@@ -1,19 +1,25 @@
 import {
   convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-
 import { Linter } from '@nrwl/linter';
-import { cypressProjectGenerator as _cypressProjectGenerator } from '@nrwl/cypress';
+import {
+  cypressProjectGenerator as _cypressProjectGenerator,
+  cypressInitGenerator as _cypressInitGenerator,
+} from '@nrwl/cypress';
+
 import {
   getE2eProjectName,
   getUnscopedLibName,
 } from '@nrwl/cypress/src/utils/project-name';
 import { safeFileDelete } from '../../utils/utilities';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export interface CypressConfigureSchema {
   name: string;
@@ -32,6 +38,13 @@ export async function cypressProjectGenerator(
   const cypressProjectName = `${
     schema.directory ? getUnscopedLibName(libRoot) : schema.name
   }-e2e`;
+
+  const tasks: GeneratorCallback[] = [];
+
+  if (!projectAlreadyHasCypress(tree)) {
+    tasks.push(_cypressInitGenerator(tree));
+  }
+
   const installTask = await _cypressProjectGenerator(tree, {
     name: cypressProjectName,
     project: schema.name,
@@ -40,6 +53,8 @@ export async function cypressProjectGenerator(
     directory: schema.directory,
     standaloneConfig: schema.standaloneConfig,
   });
+  tasks.push(installTask);
+
   const generatedCypressProjectName = getE2eProjectName(
     schema.name,
     libRoot,
@@ -51,7 +66,7 @@ export async function cypressProjectGenerator(
 
   await formatFiles(tree);
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {
@@ -91,6 +106,16 @@ function updateAngularJsonBuilder(
     },
   };
   updateProjectConfiguration(tree, e2eProjectName, project);
+}
+
+function projectAlreadyHasCypress(tree: Tree): boolean {
+  const packageJsonContents = readJson(tree, 'package.json');
+  return (
+    (packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
+      packageJsonContents?.['dependencies']?.['@nrwl/cypress']) &&
+    (packageJsonContents?.['devDependencies']?.['cypress'] ||
+      packageJsonContents?.['dependencies']?.['cypress'])
+  );
 }
 
 export default cypressProjectGenerator;
