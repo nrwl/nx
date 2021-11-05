@@ -1,0 +1,1303 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`composition generator should change the ports on workspace.json if useExistingPorts is false and update the main project's main.js accordingly 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+module.exports = {
+  refs: {\\"test-ui-one\\":{\\"title\\":\\"test-ui-one\\",\\"url\\":\\"http://localhost:4401\\"},\\"test-ui-three\\":{\\"title\\":\\"test-ui-three\\",\\"url\\":\\"http://localhost:4402\\"},\\"test-ui-two\\":{\\"title\\":\\"test-ui-two\\",\\"url\\":\\"http://localhost:4403\\"}},...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`composition generator should change the ports on workspace.json if useExistingPorts is false and update the main project's main.js accordingly 2`] = `
+"{
+  \\"version\\": 1,
+  \\"projects\\": {
+    \\"main-host-lib\\": {
+      \\"root\\": \\"libs/main-host-lib\\",
+      \\"sourceRoot\\": \\"libs/main-host-lib/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/main-host-lib/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/main-host-lib\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/main-host-lib/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/main-host-lib/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/main-host-lib\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/main-host-lib/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"storybook-composition\\": {
+          \\"builder\\": \\"@nrwl/storybook:composition\\",
+          \\"options\\": {
+            \\"projects\\": \\"test-ui-one,test-ui-three,test-ui-two\\"
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"main-host-lib-e2e\\": {
+      \\"root\\": \\"apps/main-host-lib-e2e\\",
+      \\"sourceRoot\\": \\"apps/main-host-lib-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/main-host-lib-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"main-host-lib:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"main-host-lib:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/main-host-lib-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/main-host-lib-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"main-host-lib\\"
+      ]
+    },
+    \\"test-ui-one\\": {
+      \\"root\\": \\"libs/test-ui-one\\",
+      \\"sourceRoot\\": \\"libs/test-ui-one/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-one/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-one\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-one/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4401,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-one/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-one\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-one/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-one-e2e\\": {
+      \\"root\\": \\"apps/test-ui-one-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-one-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-one-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-one:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-one:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-one-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-one-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-one\\"
+      ]
+    },
+    \\"test-ui-three\\": {
+      \\"root\\": \\"libs/test-ui-three\\",
+      \\"sourceRoot\\": \\"libs/test-ui-three/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-three/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-three\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-three/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4402,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-three/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-three\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-three/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-three-e2e\\": {
+      \\"root\\": \\"apps/test-ui-three-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-three-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-three-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-three:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-three:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-three-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-three-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-three\\"
+      ]
+    },
+    \\"test-ui-two\\": {
+      \\"root\\": \\"libs/test-ui-two\\",
+      \\"sourceRoot\\": \\"libs/test-ui-two/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-two/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-two\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-two/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4403,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-two/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-two\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-two/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-two-e2e\\": {
+      \\"root\\": \\"apps/test-ui-two-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-two-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-two-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-two:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-two:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-two-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-two-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-two\\"
+      ]
+    }
+  }
+}
+"
+`;
+
+exports[`composition generator should not change ports on workspace.json if useExistingPorts is true and update the main project's main.js accordingly 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+module.exports = {
+  refs: {\\"test-ui-one\\":{\\"title\\":\\"test-ui-one\\",\\"url\\":\\"http://localhost:4400\\"},\\"test-ui-three\\":{\\"title\\":\\"test-ui-three\\",\\"url\\":\\"http://localhost:4400\\"},\\"test-ui-two\\":{\\"title\\":\\"test-ui-two\\",\\"url\\":\\"http://localhost:4400\\"}},...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`composition generator should not change ports on workspace.json if useExistingPorts is true and update the main project's main.js accordingly 2`] = `
+"{
+  \\"version\\": 1,
+  \\"projects\\": {
+    \\"main-host-lib\\": {
+      \\"root\\": \\"libs/main-host-lib\\",
+      \\"sourceRoot\\": \\"libs/main-host-lib/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/main-host-lib/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/main-host-lib\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/main-host-lib/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/main-host-lib/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/main-host-lib\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/main-host-lib/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"storybook-composition\\": {
+          \\"builder\\": \\"@nrwl/storybook:composition\\",
+          \\"options\\": {
+            \\"projects\\": \\"test-ui-one,test-ui-three,test-ui-two\\"
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"main-host-lib-e2e\\": {
+      \\"root\\": \\"apps/main-host-lib-e2e\\",
+      \\"sourceRoot\\": \\"apps/main-host-lib-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/main-host-lib-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"main-host-lib:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"main-host-lib:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/main-host-lib-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/main-host-lib-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"main-host-lib\\"
+      ]
+    },
+    \\"test-ui-one\\": {
+      \\"root\\": \\"libs/test-ui-one\\",
+      \\"sourceRoot\\": \\"libs/test-ui-one/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-one/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-one\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-one/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-one/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-one\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-one/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-one-e2e\\": {
+      \\"root\\": \\"apps/test-ui-one-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-one-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-one-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-one:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-one:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-one-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-one-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-one\\"
+      ]
+    },
+    \\"test-ui-three\\": {
+      \\"root\\": \\"libs/test-ui-three\\",
+      \\"sourceRoot\\": \\"libs/test-ui-three/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-three/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-three\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-three/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-three/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-three\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-three/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-three-e2e\\": {
+      \\"root\\": \\"apps/test-ui-three-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-three-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-three-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-three:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-three:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-three-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-three-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-three\\"
+      ]
+    },
+    \\"test-ui-two\\": {
+      \\"root\\": \\"libs/test-ui-two\\",
+      \\"sourceRoot\\": \\"libs/test-ui-two/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-two/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-two\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-two/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-two/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-two\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-two/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-two-e2e\\": {
+      \\"root\\": \\"apps/test-ui-two-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-two-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-two-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-two:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-two:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-two-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-two-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-two\\"
+      ]
+    }
+  }
+}
+"
+`;
+
+exports[`composition generator should only generate composition for selected projects 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+module.exports = {
+  refs: {\\"test-ui-one\\":{\\"title\\":\\"test-ui-one\\",\\"url\\":\\"http://localhost:4401\\"},\\"test-ui-two\\":{\\"title\\":\\"test-ui-two\\",\\"url\\":\\"http://localhost:4402\\"}},...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`composition generator should only generate composition for selected projects 2`] = `
+"{
+  \\"version\\": 1,
+  \\"projects\\": {
+    \\"main-host-lib\\": {
+      \\"root\\": \\"libs/main-host-lib\\",
+      \\"sourceRoot\\": \\"libs/main-host-lib/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/main-host-lib/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/main-host-lib\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/main-host-lib/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/main-host-lib/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/main-host-lib\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/main-host-lib/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"storybook-composition\\": {
+          \\"builder\\": \\"@nrwl/storybook:composition\\",
+          \\"options\\": {
+            \\"projects\\": \\"test-ui-one,test-ui-two\\"
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"main-host-lib-e2e\\": {
+      \\"root\\": \\"apps/main-host-lib-e2e\\",
+      \\"sourceRoot\\": \\"apps/main-host-lib-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/main-host-lib-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"main-host-lib:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"main-host-lib:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/main-host-lib-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/main-host-lib-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"main-host-lib\\"
+      ]
+    },
+    \\"test-ui-one\\": {
+      \\"root\\": \\"libs/test-ui-one\\",
+      \\"sourceRoot\\": \\"libs/test-ui-one/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-one/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-one\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-one/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4401,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-one/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-one\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-one/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-one-e2e\\": {
+      \\"root\\": \\"apps/test-ui-one-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-one-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-one-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-one:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-one:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-one-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-one-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-one\\"
+      ]
+    },
+    \\"test-ui-three\\": {
+      \\"root\\": \\"libs/test-ui-three\\",
+      \\"sourceRoot\\": \\"libs/test-ui-three/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-three/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-three\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-three/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4400,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-three/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-three\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-three/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-three-e2e\\": {
+      \\"root\\": \\"apps/test-ui-three-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-three-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-three-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-three:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-three:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-three-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-three-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-three\\"
+      ]
+    },
+    \\"test-ui-two\\": {
+      \\"root\\": \\"libs/test-ui-two\\",
+      \\"sourceRoot\\": \\"libs/test-ui-two/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/test-ui-two/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"coverage/libs/test-ui-two\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"libs/test-ui-two/jest.config.js\\",
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:storybook\\",
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"port\\": 4402,
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-two/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        },
+        \\"build-storybook\\": {
+          \\"builder\\": \\"@nrwl/storybook:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"uiFramework\\": \\"@storybook/react\\",
+            \\"outputPath\\": \\"dist/storybook/test-ui-two\\",
+            \\"config\\": {
+              \\"configFolder\\": \\"libs/test-ui-two/.storybook\\"
+            }
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"quiet\\": true
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    },
+    \\"test-ui-two-e2e\\": {
+      \\"root\\": \\"apps/test-ui-two-e2e\\",
+      \\"sourceRoot\\": \\"apps/test-ui-two-e2e/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"e2e\\": {
+          \\"builder\\": \\"@nrwl/cypress:cypress\\",
+          \\"options\\": {
+            \\"cypressConfig\\": \\"apps/test-ui-two-e2e/cypress.json\\",
+            \\"devServerTarget\\": \\"test-ui-two:storybook\\"
+          },
+          \\"configurations\\": {
+            \\"ci\\": {
+              \\"devServerTarget\\": \\"test-ui-two:storybook:ci\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@angular-devkit/build-angular:tslint\\",
+          \\"options\\": {
+            \\"tsConfig\\": [
+              \\"apps/test-ui-two-e2e/tsconfig.json\\"
+            ],
+            \\"exclude\\": [
+              \\"**/node_modules/**\\",
+              \\"!apps/test-ui-two-e2e/**/*\\"
+            ]
+          }
+        }
+      },
+      \\"tags\\": [],
+      \\"implicitDependencies\\": [
+        \\"test-ui-two\\"
+      ]
+    }
+  }
+}
+"
+`;

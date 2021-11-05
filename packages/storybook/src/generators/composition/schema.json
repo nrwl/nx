@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "composition",
+  "type": "object",
+  "properties": {
+    "mainProject": {
+      "type": "string",
+      "description": "The one project that will be used as the main entrypoint for Storybook Composition. This project will run on port 4400 and will not be added as a composition reference. All references will be added to it, instead.",
+      "$default": {
+        "$source": "projectName",
+        "index": 0
+      },
+      "x-prompt": "Which project do  you want to use as the entrypoint (the project which will host the composition)?"
+    },
+    "projects": {
+      "type": "string",
+      "description": "Projects to add in the composition (comma delimited)",
+      "x-prompt": "Which projects do  you want to add in the composition? (leave blank for all)",
+      "default": " "
+    },
+    "all": {
+      "type": "boolean",
+      "description": "Compose all Storybook instances.",
+      "x-prompt": "Do you want to add all your Storybook instances to the Storybook Composition?",
+      "default": false
+    },
+    "useExistingPorts": {
+      "type": "boolean",
+      "description": "If false, the Storybook ports in workspace.json/angular.json will be overwritten. If true, the Storybook ports in workspace.json/angular.json will not be overwritten and Storybook Composition will use ordinal numbers to name your instances.",
+      "x-prompt": "Do you want to use random ports for your Storybook instances and ordinal names for your compositions?",
+      "default": false
+    }
+  },
+  "required": ["mainProject"]
+}

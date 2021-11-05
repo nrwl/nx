@@ -32,6 +32,12 @@
       "schema": "./src/generators/migrate-stories-to-6-2/schema.json",
       "description": "Migrate stories syntax to 6.2",
       "hidden": false
+    },
+    "composition": {
+      "factory": "./src/generators/composition/composition#compositionSchematic",
+      "schema": "./src/generators/composition/schema.json",
+      "description": "Generate Storybook composition setup.",
+      "hidden": false
     }
   },
   "generators": {
@@ -64,6 +70,12 @@
       "factory": "./src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2",
       "schema": "./src/generators/migrate-stories-to-6-2/schema.json",
       "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+    "composition": {
+      "factory": "./src/generators/composition/composition",
+      "schema": "./src/generators/composition/schema.json",
+      "description": "Generate Storybook composition setup.",
       "hidden": false
     }
   }

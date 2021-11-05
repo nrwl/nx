@@ -647,9 +647,19 @@
             "file": "angular/guides/storybook/storybook-v6"
           },
           {
+            "id": "setup-storybook-composition",
+            "name": "Setup Storybook Composition",
+            "file": "angular/guides/storybook/storybook-composition"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "angular/api-storybook/generators/configuration"
+          },
+          {
+            "name": "composition generator",
+            "id": "composition",
+            "file": "angular/api-storybook/generators/composition"
           },
           {
             "name": "migrate-defaults-5-to-6 generator",
@@ -1971,9 +1981,19 @@
             "file": "react/guides/storybook/storybook-v6"
           },
           {
+            "id": "setup-storybook-composition",
+            "name": "Setup Storybook Composition",
+            "file": "react/guides/storybook/storybook-composition"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "react/api-storybook/generators/configuration"
+          },
+          {
+            "name": "composition generator",
+            "id": "composition",
+            "file": "react/api-storybook/generators/composition"
           },
           {
             "name": "cypress-project generator",
@@ -3251,6 +3271,11 @@
             "name": "configuration generator",
             "id": "configuration",
             "file": "node/api-storybook/generators/configuration"
+          },
+          {
+            "name": "composition generator",
+            "id": "composition",
+            "file": "node/api-storybook/generators/composition"
           },
           {
             "name": "migrate-defaults-5-to-6 generator",
