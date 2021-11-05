@@ -100,6 +100,7 @@
     "terser": "4.3.8",
     "terser-webpack-plugin": "^5.1.1",
     "ts-loader": "^9.2.6",
+    "ts-node": "~9.1.1",
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-webpack-plugin": "3.4.1",
     "tslib": "^2.0.0",
