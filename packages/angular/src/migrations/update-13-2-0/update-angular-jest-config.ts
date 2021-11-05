@@ -4,7 +4,7 @@ import type {
   ObjectLiteralExpression,
   PropertyAssignment,
 } from 'typescript';
-import { getProjects } from '@nrwl/devkit';
+import { formatFiles, getProjects } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 type AngularProjectWithJestConfig = Record<string, [string, string]>; // Record<projectName, [jestConfigPath, jestConfigFileContents]
@@ -38,6 +38,8 @@ export default async function (tree: Tree) {
       replaceTransformAndAddIgnorePattern(jestFileContents)
     );
   }
+
+  await formatFiles(tree);
 }
 
 export function replaceTransformAndAddIgnorePattern(fileContents: string) {
