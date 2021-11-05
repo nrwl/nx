@@ -260,6 +260,30 @@ describe('Enforce Module Boundaries (eslint)', () => {
             version: '0.0.0',
           },
         },
+        'npm:npm-package2': {
+          name: 'npm:npm-package2',
+          type: 'npm',
+          data: {
+            packageName: 'npm-package2',
+            version: '0.0.0',
+          },
+        },
+        'npm:1npm-package': {
+          name: 'npm:1npm-package',
+          type: 'npm',
+          data: {
+            packageName: '1npm-package',
+            version: '0.0.0',
+          },
+        },
+        'npm:npm-awesome-package': {
+          name: 'npm:npm-awesome-package',
+          type: 'npm',
+          data: {
+            packageName: 'npm-awesome-package',
+            version: '0.0.0',
+          },
+        },
       },
       dependencies: {},
     };
@@ -329,6 +353,30 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
+    });
+
+    it('should allow wildcards for defining forbidden npm packages', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-*ge'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import 'npm-awesome-package';
+          import 'npm-package2';
+          import '1npm-package';
+        `,
+        graph
+      );
+
+      const message = (packageName) =>
+        `A project tagged with "api" is not allowed to import the "${packageName}" package`;
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message('npm-package'));
+      expect(failures[1].message).toEqual(message('npm-awesome-package'));
     });
 
     it('should error when the target library is untagged', () => {
