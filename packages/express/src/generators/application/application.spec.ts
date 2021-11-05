@@ -81,24 +81,25 @@ describe('app', () => {
     const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.types).toContain('express');
     expect(tsconfig).toMatchInlineSnapshot(`
-      Object {
-        "compilerOptions": Object {
-          "module": "commonjs",
-          "outDir": "../../dist/out-tsc",
-          "types": Array [
-            "node",
-            "express",
-          ],
-        },
-        "exclude": Array [
-          "**/*.spec.ts",
-        ],
-        "extends": "./tsconfig.json",
-        "include": Array [
-          "**/*.ts",
-        ],
-      }
-    `);
+Object {
+  "compilerOptions": Object {
+    "module": "commonjs",
+    "outDir": "../../dist/out-tsc",
+    "types": Array [
+      "node",
+      "express",
+    ],
+  },
+  "exclude": Array [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "include": Array [
+    "**/*.ts",
+  ],
+}
+`);
   });
 
   describe('--js flag', () => {
@@ -123,7 +124,12 @@ describe('app', () => {
         'apps/my-node-app/tsconfig.app.json'
       );
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
-      expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+      expect(tsConfigApp.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.js',
+        '**/*.test.js',
+      ]);
     });
   });
 });

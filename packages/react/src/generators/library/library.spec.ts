@@ -122,6 +122,21 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
+    it('should ignore test files in tsconfig.lib.json', async () => {
+      await libraryGenerator(appTree, defaultSchema);
+      const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
+      expect(tsconfigJson.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.tsx',
+        '**/*.test.tsx',
+        '**/*.spec.js',
+        '**/*.test.js',
+        '**/*.spec.jsx',
+        '**/*.test.jsx',
+      ]);
+    });
+
     it('should generate files', async () => {
       await libraryGenerator(appTree, defaultSchema);
       expect(appTree.exists('libs/my-lib/package.json')).toBeFalsy();

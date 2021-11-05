@@ -356,6 +356,7 @@ describe('lib', () => {
         expect(tsconfigJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
       });
 
@@ -367,7 +368,11 @@ describe('lib', () => {
 
         // ASSERT
         const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsconfigJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
+        expect(tsconfigJson.exclude).toEqual([
+          'src/test.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
+        ]);
       });
 
       it('should remove the excludes when unitTestRunner is none', async () => {
@@ -378,7 +383,7 @@ describe('lib', () => {
 
         // ASSERT
         const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsconfigJson.exclude).toEqual([]);
+        expect(tsconfigJson.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
       });
     });
 
@@ -690,6 +695,9 @@ describe('lib', () => {
           appTree,
           'apps/myapp/tsconfig.app.json'
         );
+        const tsConfigLibJson = parseJson(
+          appTree.read('libs/my-dir/my-lib/tsconfig.lib.json').toString()
+        );
 
         await runLibraryGeneratorWithOpts({
           name: 'myLib2',
@@ -706,6 +714,9 @@ describe('lib', () => {
 
         const tsConfigAppJson2 = parseJson(
           appTree.read('apps/myapp/tsconfig.app.json').toString()
+        );
+        const tsConfigLibJson2 = parseJson(
+          appTree.read('libs/my-dir/my-lib2/tsconfig.lib.json').toString()
         );
 
         await runLibraryGeneratorWithOpts({
@@ -725,8 +736,11 @@ describe('lib', () => {
           appTree.read('apps/myapp/tsconfig.app.json').toString()
         );
 
-        // ASSERT
+        const tsConfigLibJson3 = parseJson(
+          appTree.read('libs/my-dir/my-lib3/tsconfig.lib.json').toString()
+        );
 
+        // ASSERT
         expect(moduleContents).toContain('RouterModule.forRoot([');
         expect(moduleContents).toContain(
           `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
@@ -735,6 +749,11 @@ describe('lib', () => {
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
           '../../libs/my-dir/my-lib/src/index.ts',
+        ]);
+        expect(tsConfigLibJson.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
 
         expect(moduleContents2).toContain('RouterModule.forRoot([');
@@ -749,6 +768,11 @@ describe('lib', () => {
           '**/*.ts',
           '../../libs/my-dir/my-lib/src/index.ts',
           '../../libs/my-dir/my-lib2/src/index.ts',
+        ]);
+        expect(tsConfigLibJson2.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
 
         expect(moduleContents3).toContain('RouterModule.forRoot([');
@@ -767,6 +791,11 @@ describe('lib', () => {
           '../../libs/my-dir/my-lib/src/index.ts',
           '../../libs/my-dir/my-lib2/src/index.ts',
           '../../libs/my-dir/my-lib3/src/index.ts',
+        ]);
+        expect(tsConfigLibJson3.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts',
+          '**/*.test.ts',
         ]);
       });
 
