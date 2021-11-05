@@ -491,7 +491,7 @@ describe('Node Libraries', () => {
 
     runCLI(`build ${nglib}`);
     runCLI(`build ${nodelib}`);
-    checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
+    checkFilesExist(`./dist/libs/${nodelib}/esm2020/index.js`);
   }, 300000);
 
   it('should fail when trying to compile typescript files that are invalid', () => {

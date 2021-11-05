@@ -122,6 +122,11 @@ describe('application generator', () => {
 
     it('should use NestJs 7 for Angular + RxJS 6 workspace', async () => {
       await angularApplicationGenerator(tree, { name: 'angular-app' });
+      devkit.updateJson(tree, 'package.json', (json) => {
+        json.dependencies.rxjs = rxjsVersion6;
+        return json;
+      });
+
       await applicationGenerator(tree, { name: appName });
 
       const pkg = devkit.readJson(tree, `package.json`);

@@ -23,7 +23,7 @@
   "es2015": "esm2015/nrwl-angular.js",
   "exports": {
     "./generators": "./generators.js",
-    "./generators/utils": "./src/generators/utils/index.js"
+    "./src/generators/utils": "./src/generators/utils/index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
