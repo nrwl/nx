@@ -47,7 +47,7 @@ describe('@nrwl/workspace:library', () => {
     it('should support jest', async () => {
       const libName = uniq('mylib');
 
-      runCLI(`generate @nrwl/workspace:lib ${libName} --linter tslint`);
+      runCLI(`generate @nrwl/workspace:lib ${libName}`);
 
       const { stderr: result } = await runCLIAsync(`test ${libName}`);
 
