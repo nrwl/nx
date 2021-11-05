@@ -5,9 +5,10 @@ import { readJsonFile } from '../utils/fileutils';
 import type { NxJsonConfiguration } from './nx';
 import { TaskGraph } from './tasks';
 import { logger } from './logger';
-import { sync as globSync } from 'glob';
+import { sync as globSync } from 'fast-glob';
 import ignore from 'ignore';
-import { basename, dirname, join, relative } from 'path';
+import { basename, dirname, join } from 'path';
+import { performance } from 'perf_hooks';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -640,7 +641,10 @@ export function toProjectName(
     .replace(/[ _]/g, '-');
 }
 
+let projectGlobCache: string[];
 export function globForProjectFiles(root) {
+  if (projectGlobCache) return projectGlobCache;
+  performance.mark('start-glob-for-projects');
   /**
    * This configures the files and directories which we always want to ignore as part of file watching
    * and which we know the location of statically (meaning irrespective of user configuration files).
@@ -667,12 +671,19 @@ export function globForProjectFiles(root) {
     ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
   } catch {}
 
-  return globSync('**/@(project.json|package.json)', {
+  projectGlobCache = globSync('**/@(project.json|package.json)', {
     ignore: ALWAYS_IGNORE,
     absolute: false,
     cwd: root,
     // If part of .nxignore, .gitignore, or the root package.json
   }).filter((file) => !ig.ignores(file) && file !== 'package.json');
+  performance.mark('finish-glob-for-projects');
+  performance.measure(
+    'glob-for-project-files',
+    'start-glob-for-projects',
+    'finish-glob-for-projects'
+  );
+  return projectGlobCache;
 }
 
 export function buildWorkspaceConfigurationFromGlobs(
