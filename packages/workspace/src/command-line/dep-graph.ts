@@ -285,7 +285,7 @@ export async function generateGraph(
 
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
-      html = html.replace('<base href="/">', '');
+      html = html.replace('<base href="/" />', '');
       html = html.replace(/type="module"/g, '');
 
       writeFileSync(fullFilePath, html);
