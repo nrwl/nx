@@ -1,6 +1,6 @@
 {
-  "root": "/nx-dev/ui/sponsor-card",
-  "sourceRoot": "/nx-dev/ui/sponsor-card/src",
+  "root": "nx-dev/ui/sponsor-card",
+  "sourceRoot": "nx-dev/ui/sponsor-card/src",
   "projectType": "library",
   "tags": [],
   "targets": {

@@ -219,6 +219,7 @@ commands:
             - run:
                 name: Run Linting
                 command: |
+                  npx nx workspace-lint
                   npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=4
       - when:
           condition:
