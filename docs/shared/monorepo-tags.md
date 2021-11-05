@@ -327,7 +327,7 @@ A common example of this is for backend projects that use NestJS and frontend pr
 }
 ```
 
-Another common example is ensuring that util libraries stay framework-free by banning imports from these frameworks. A workspace using React would have a configuration like this.
+Another common example is ensuring that util libraries stay framework-free by banning imports from these frameworks. You can use wildcard `*` to match multiple projects e.g. `react*` would match `react`, but also `react-dom`, `react-native` etc. You can also have multiple wildcards e.g. `*react*` would match any package with word `react` in it's name. A workspace using React would have a configuration like this.
 
 ```jsonc
 {
@@ -339,10 +339,10 @@ Another common example is ensuring that util libraries stay framework-free by ba
       "allow": [],
       // update depConstraints based on your tags
       "depConstraints": [
-        // projects tagged with "type:ui" can't import from "react" or "react-dom"
+        // projects tagged with "type:ui" can't import from "react" or related projects
         {
           "sourceTag": "type:ui",
-          "bannedExternalImports": ["react", "react-dom"]
+          "bannedExternalImports": ["*react*"]
         }
       ]
     }
