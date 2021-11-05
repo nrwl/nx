@@ -14,7 +14,7 @@ import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   addProjectToNx(host, options);
-  updateTsConfigCompilerOptions(host, options);
+  updateTsConfigOptions(host, options);
   updateAppAndE2EProjectConfigurations(host, options);
 }
 
@@ -28,7 +28,7 @@ function addProjectToNx(host: Tree, options: NormalizedSchema) {
   updateProjectConfiguration(host, options.name, resultJson);
 }
 
-function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {
+function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
   // tsconfig.app.json
   updateJson(host, `${options.appProjectRoot}/tsconfig.app.json`, (json) => ({
     ...json,
@@ -37,6 +37,9 @@ function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {
       ...json.compilerOptions,
       outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
     },
+    exclude: [
+      ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
+    ],
   }));
 }
 

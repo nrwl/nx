@@ -89,6 +89,12 @@
       "cli": "nx",
       "description": "Uses `getJestProjects()` to populate projects array in root level `jest.config.js` file.",
       "factory": "./src/migrations/update-12-6-0/update-base-jest-config"
+    },
+    "update-ts-config-for-test-filenames": {
+      "version": "13.1.2-beta.0",
+      "cli": "nx",
+      "description": "Support .test. file names in tsconfigs",
+      "factory": "./src/migrations/update-13-1-2/update-tsconfigs-for-tests"
     }
   },
   "packageJsonUpdates": {

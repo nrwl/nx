@@ -165,14 +165,16 @@ async function buildProjectGraphUsingContext(
   return r;
 }
 
-async function buildExplicitDependencies(
+function buildExplicitDependencies(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder
 ) {
   let totalNumOfFilesToProcess = totalNumberOfFilesToProcess(ctx);
   // using workers has an overhead, so we only do it when the number of
-  // files we need to process is >= 100
-  if (totalNumOfFilesToProcess < 100) {
+  // files we need to process is >= 100 and there are more than 2 CPUs
+  // to be able to use at least 2 workers (1 worker per CPU and
+  // 1 CPU for the main thread)
+  if (totalNumOfFilesToProcess < 100 || os.cpus().length < 3) {
     return buildExplicitDependenciesWithoutWorkers(ctx, builder);
   } else {
     return buildExplicitDependenciesUsingWorkers(

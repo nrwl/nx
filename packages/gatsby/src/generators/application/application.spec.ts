@@ -394,7 +394,14 @@ describe('app', () => {
 
       const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.app.json');
       expect(tsConfigApp.include).toContain('**/*.js');
-      expect(tsConfigApp.exclude).toContain('**/*.spec.js');
+      expect(tsConfigApp.exclude).toEqual(
+        expect.arrayContaining([
+          '**/*.spec.js',
+          '**/*.test.js',
+          '**/*.spec.jsx',
+          '**/*.test.jsx',
+        ])
+      );
     });
   });
 });

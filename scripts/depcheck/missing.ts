@@ -104,6 +104,7 @@ const IGNORE_MATCHES = {
     'webpack',
     'webpack-dev-server',
   ],
+  nest: ['semver'],
 };
 
 export default async function getMissingDependencies(

@@ -33,6 +33,6 @@
     "@nrwl/linter": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@nestjs/schematics": "^7.0.0"
+    "@nestjs/schematics": "^8.0.0"
   }
 }

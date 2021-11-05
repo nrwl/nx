@@ -65,6 +65,7 @@ export function updateImports(
 
       visitNotIgnoredFiles(tree, definition.root, (file) => {
         const contents = tree.read(file, 'utf-8');
+        replaceProjectRef.lastIndex = 0;
         if (!replaceProjectRef.test(contents)) {
           return;
         }
