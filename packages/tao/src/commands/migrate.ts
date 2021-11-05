@@ -603,7 +603,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       logger.info(`- Run 'nx migrate --run-migrations'`);
     }
     logger.info(
-      `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
+      `- To learn more go to https://nx.dev/core-concepts/updating-nxxxxxxxx`
     );
 
     if (showConnectToCloudMessage()) {
