@@ -1,5 +1,5 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
-import { GeneratorCallback, Tree } from '@nrwl/devkit';
+import { GeneratorCallback, logger, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -30,6 +30,7 @@ export async function angularInitGenerator(
   const depsTask = updateDependencies(host);
   const unitTestTask = addUnitTestRunner(host, options);
   const e2eTask = addE2ETestRunner(host, options);
+  addGitIgnoreEntry(host, '.angular');
 
   if (!options.skipFormat) {
     await formatFiles(host);
@@ -144,6 +145,15 @@ function addE2ETestRunner(
       return cypressInitGenerator(host);
     default:
       return () => {};
+  }
+}
+function addGitIgnoreEntry(host: Tree, entry: string) {
+  if (host.exists('.gitignore')) {
+    let content = host.read('.gitignore', 'utf-8');
+    content = `${content}\n${entry}\n`;
+    host.write('.gitignore', content);
+  } else {
+    logger.warn(`Couldn't find .gitignore file to update`);
   }
 }
 

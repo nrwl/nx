@@ -316,4 +316,17 @@ describe('init', () => {
       }
     );
   });
+
+  it('should add .angular to gitignore', async () => {
+    host.write('.gitignore', '');
+
+    await init(host, {
+      unitTestRunner: UnitTestRunner.Jest,
+      e2eTestRunner: E2eTestRunner.Cypress,
+      linter: Linter.EsLint,
+      skipFormat: false,
+    });
+
+    expect(host.read('.gitignore').toString()).toContain('.angular');
+  });
 });

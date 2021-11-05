@@ -67,6 +67,7 @@ describe('Angular Package', () => {
       expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-    }, 1000000);
+      // TODO: Decrease this timeout if jest timing improves
+    }, 10000000);
   });
 });
