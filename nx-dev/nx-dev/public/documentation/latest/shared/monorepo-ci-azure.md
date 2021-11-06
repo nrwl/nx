@@ -36,7 +36,7 @@ jobs:
   - job: main
     pool:
       vmImage: 'ubuntu-latest'
-    condition: ne(variables['Build.Reason'], 'PullRequest'))
+    condition: ne(variables['Build.Reason'], 'PullRequest')
     steps:
       - script: npm i
       - script: npx nx affected --base=HEAD~1 --target=build --parallel --max-parallel=3
@@ -45,7 +45,7 @@ jobs:
   - job: pr
     pool:
       vmImage: 'ubuntu-latest'
-    condition: eq(variables['Build.Reason'], 'PullRequest'))
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     steps:
       - script: npm i
       - script: npx nx affected --target=build --parallel --max-parallel=3
