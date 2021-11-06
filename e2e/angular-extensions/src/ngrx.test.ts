@@ -10,7 +10,7 @@ import {
 
 describe('Angular Package', () => {
   describe('ngrx', () => {
-    beforeEach(() => newProject());
+    beforeAll(() => newProject());
     afterAll(() => removeProject({ onlyOnCI: true }));
 
     it('should work', async () => {
@@ -67,7 +67,6 @@ describe('Angular Package', () => {
       expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      // TODO: Decrease this timeout if jest timing improves
-    }, 10000000);
+    }, 1000000);
   });
 });
