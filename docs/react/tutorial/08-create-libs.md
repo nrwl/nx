@@ -31,17 +31,18 @@ myorg/
 │   └── ui/
 │       ├── src/
 │       │   ├── lib/
-│       │   │   └── ui/
-│       │   │       ├── ui.css
-│       │   │       ├── ui.spec.tsx
-│       │   │       └── ui.tsx
+│       │   │   ├── ui.css
+│       │   │   ├── ui.spec.tsx
+│       │   │   └── ui.tsx
 │       │   └── index.ts
 │       ├── jest.conf.js
-│       ├── tsconfig.app.json
+│       ├── project.json
 │       ├── tsconfig.json
+│       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json
+├── workspace.json
 ├── package.json
 └── tsconfig.base.json
 ```
@@ -49,19 +50,18 @@ myorg/
 The `libs/ui/src/lib/ui.tsx` file looks like this:
 
 ```typescript
-import React from 'react';
+import './ui.module.css';
 
-import './ui.css';
-
+/* eslint-disable-next-line */
 export interface UiProps {}
 
-export const Ui = (props: UiProps) => {
+export function Ui(props: UiProps) {
   return (
     <div>
-      <h1>Welcome to ui!</h1>
+      <h1>Welcome to Ui!</h1>
     </div>
   );
-};
+}
 
 export default Ui;
 ```
@@ -87,18 +87,18 @@ myorg/
 │   └── ui/
 │       ├── src/
 │       │   ├── lib/
-│       │   │   ├── ui/
-│       │   │   │   ├── ui.css
-│       │   │   │   ├── ui.spec.tsx
-│       │   │   │   └── ui.tsx
 │       │   │   └── todos/
-│       │   │       ├── todos.css
-│       │   │       ├── todos.spec.tsx
-│       │   │       └── todos.tsx
+│       │   │   │   ├── todos.css
+│       │   │   │   ├── todos.spec.tsx
+│       │   │   │   └── todos.tsx
+│       │   │   ├── ui.css
+│       │   │   ├── ui.spec.tsx
+│       │   │   └── ui.tsx
 │       │   └── index.ts
 │       ├── jest.conf.js
-│       ├── tsconfig.app.json
+│       ├── project.json
 │       ├── tsconfig.json
+│       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── tools/
 ├── workspace.json
@@ -110,10 +110,14 @@ myorg/
 **Implement the Todos component.**
 
 ```typescript
-import React from 'react';
 import { Todo } from '@myorg/data';
+import './todos.module.css';
 
-export const Todos = (props: { todos: Todo[] }) => {
+export interface TodosProps {
+  todos: Todo[];
+}
+
+export function Todos(props: TodosProps) {
   return (
     <ul>
       {props.todos.map((t) => (
@@ -121,7 +125,7 @@ export const Todos = (props: { todos: Todo[] }) => {
       ))}
     </ul>
   );
-};
+}
 
 export default Todos;
 ```

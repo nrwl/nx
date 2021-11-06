@@ -54,41 +54,4 @@ Nx read the output from cache instead of running the command for 1 out of 2 proj
 
 Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/{{framework}}/core-extended/computation-caching).
 
-## --with-deps
-
-As we saw already, Nx is smart, so it knows how applications and libraries in the workspace depend on each other.
-
-**Run `npx nx lint todos --with-deps`, and you see that Nx lints both the `todos` app and the libraries it depends on.**
-
-```bash
->  NX  Running target lint for project todos and its 2 deps.
-
-———————————————————————————————————————————————
-
-> npx nx run todos:lint
-
-Linting "todos"...
-
-All files pass linting.
-
-
-> npx nx run ui:lint
-
-Linting "ui"...
-
-All files pass linting.
-
-
-> npx nx run data:lint
-
-Linting "data"...
-
-All files pass linting.
-
-
-———————————————————————————————————————————————
-
->  NX   SUCCESS  Running target "lint" succeeded
-```
-
 > Add --parallel to any command, and Nx does most of the work in parallel.
