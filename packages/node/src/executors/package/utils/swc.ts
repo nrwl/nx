@@ -3,14 +3,47 @@ import {
   TypeScriptCompilationOptions,
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { exec, execSync } from 'child_process';
+import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { join } from 'path';
+import { forkTypeDeclarationEmitter } from './fork-type-declaration-emitter';
 
 export async function execSwc(
   tscOptions: TypeScriptCompilationOptions,
+  hasDependencies: boolean,
   completeCallback: () => void | Promise<void>
 ) {
   const normalizedTscOptions = normalizeOptions(tscOptions);
 
   try {
+    console.log(
+      `Generating d.ts files for ${normalizedTscOptions.projectName}...`
+    );
+
+    let validTypes = true;
+    try {
+      await forkTypeDeclarationEmitter({
+        workspaceRoot: appRootPath,
+        projectRoot: join(
+          appRootPath,
+          hasDependencies ? 'tmp' : '',
+          normalizedTscOptions.projectRoot
+        ),
+        configPath: normalizedTscOptions.tsConfig,
+        outDir: normalizedTscOptions.outputPath.replace(
+          normalizedTscOptions.projectRoot,
+          ''
+        ),
+      });
+      console.log(
+        `Done generating d.ts files for ${normalizedTscOptions.projectName}`
+      );
+    } catch {
+      validTypes = false;
+    }
+    if (!validTypes) {
+      return { success: false };
+    }
+
     console.log(
       `Compiling with SWC for ${normalizedTscOptions.projectName}...`
     );
@@ -31,10 +64,7 @@ export async function execSwc(
     }
 
     const swcCmdLog = execSync(swcCmd).toString();
-    console.log(swcCmdLog);
-    console.log(
-      `Done compiling with SWC for ${normalizedTscOptions.projectName}.`
-    );
+    console.log(swcCmdLog.replace(/\n/, ''));
     await completeCallback();
     return { success: true };
   } catch (e) {

@@ -66,7 +66,7 @@ const IGNORE_MATCHES = {
     'tsconfig-paths-webpack-plugin',
     'webpack',
   ],
-  node: ['swc-loader'],
+  node: ['swc-loader', 'js-tokens'],
   react: [
     'babel-plugin-emotion',
     'babel-plugin-styled-components',

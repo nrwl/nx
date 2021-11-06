@@ -46,7 +46,7 @@ export default async function compileTypeScriptFiles(
   };
 
   if (options.experimentalSwc) {
-    return execSwc(tscOptions, async () => {
+    return execSwc(tscOptions, projectDependencies.length > 0, async () => {
       await postCompleteAction();
     });
   }

@@ -35,6 +35,7 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "chalk": "4.1.0",
+    "charcodes": "^0.2.0",
     "copy-webpack-plugin": "^9.0.1",
     "enhanced-resolve": "^5.8.3",
     "fork-ts-checker-webpack-plugin": "6.2.10",
