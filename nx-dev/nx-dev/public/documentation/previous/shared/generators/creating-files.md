@@ -112,8 +112,8 @@ This is my <%= uppercase(name) %>
 
 ```typescript
 // typescript file
-function uppercase(val) {
-  val.toUppercase();
+function uppercase(val: string) {
+  return val.toUpperCase();
 }
 
 // later
