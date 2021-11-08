@@ -122,6 +122,22 @@ export function Index() {
             <FeatureList />
           </div>
 
+          {/*NX BANNER PROMOTION*/}
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
+            <a
+              href="https://nxplaybook.com/p/advanced-nx-workspaces?utm_source=nx.dev"
+              className="cursor-pointer flex"
+              target="_blank"
+              rel="nofollow"
+            >
+              <img
+                className="w-full rounded-lg"
+                src="/images/nx-playbook-banner.svg"
+                alt="Nx Playbook promotion banner"
+              />
+            </a>
+          </div>
+
           {/*SELECTION COMPONENT*/}
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             <div className="mt-6 md:mt-24 mb-20 flex md:flex-row flex-col justify-center">
