@@ -511,9 +511,10 @@ function setMaxWorkers() {
   if (isCI) {
     const ws = new Workspaces(tmpProjPath());
     const workspaceFile = workspaceConfigName();
-    const workspaceFileExists = fileExists(workspaceFile);
+    const workspaceFileExists = fileExists(tmpProjPath(workspaceFile));
     const workspace = ws.readWorkspaceConfiguration();
     const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
+    let requireWorkspaceFileUpdate = false;
 
     Object.keys(workspace.projects).forEach((appName) => {
       let project = workspace.projects[appName];
@@ -540,9 +541,11 @@ function setMaxWorkers() {
           join(project.root, 'project.json'),
           JSON.stringify(project, null, 2)
         );
+      } else {
+        requireWorkspaceFileUpdate = true;
       }
     });
-    if (workspaceFileExists) {
+    if (workspaceFileExists && requireWorkspaceFileUpdate) {
       updateFile(workspaceFile, JSON.stringify(workspace));
     }
   }

@@ -293,7 +293,11 @@ export class Workspaces {
     const workspacePath = path.join(this.root, workspaceConfigName(this.root));
     const workspace = existsSync(workspacePath)
       ? this.readFromWorkspaceJson()
-      : buildWorkspaceConfigurationFromGlobs(nxJson);
+      : buildWorkspaceConfigurationFromGlobs(
+          nxJson,
+          globForProjectFiles(this.root),
+          (path) => readJsonFile(join(this.root, path))
+        );
 
     assertValidWorkspaceConfiguration(nxJson);
     return { ...workspace, ...nxJson };

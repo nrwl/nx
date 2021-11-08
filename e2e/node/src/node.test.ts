@@ -646,6 +646,17 @@ exports.FooModel = FooModel;
         `
     );
   }, 300000);
+
+  it('should support workspaces w/o workspace config file', async () => {
+    removeFile('workspace.json');
+    const app2 = uniq('app2');
+    runCLI(`generate @nrwl/node:app ${app2} --directory=myDir`);
+
+    runCLI(`build my-dir-${app2}`);
+    expect(() =>
+      checkFilesDoNotExist('workspace.json', 'angular.json')
+    ).not.toThrow();
+  }, 1000000);
 });
 
 describe('with dependencies', () => {
@@ -769,16 +780,5 @@ describe('with dependencies', () => {
       { silenceError: true }
     );
     expect(failedBuild).toContain(`Can't resolve`);
-  }, 1000000);
-
-  it('should support workspaces w/o workspace config file', async () => {
-    removeFile('workspace.json');
-    const app2 = uniq('app2');
-    runCLI(`generate @nrwl/node:app ${app2} --directory=myDir`);
-
-    runCLI(`build my-dir-${app2}`);
-    expect(() =>
-      checkFilesDoNotExist('workspace.json', 'angular.json')
-    ).not.toThrow();
   }, 1000000);
 });
