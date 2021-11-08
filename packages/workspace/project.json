@@ -28,6 +28,11 @@
           },
           {
             "input": "packages/workspace",
+            "glob": "**/files/**/.prettierignore",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
             "glob": "**/files/**/.gitkeep",
             "output": "/"
           },
