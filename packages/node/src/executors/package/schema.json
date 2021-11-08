@@ -97,6 +97,11 @@
             "output": {
               "type": "string",
               "description": "Absolute path within the output."
+            },
+            "dot": {
+              "type": "boolean",
+              "description": "Wether or not files beginning with '.' should be included. Defaults to false",
+              "default": false
             }
           },
           "additionalProperties": false,
