@@ -1,6 +1,9 @@
 import {
   checkFilesExist,
+  expectTestsPass,
   getSelectedPackageManager,
+  isOSX,
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -34,15 +37,14 @@ describe('react native', () => {
       return updated;
     });
 
-    const appTestResults = await runCLIAsync(`test ${appName}`);
-    expect(appTestResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
+    expectTestsPass(await runCLIAsync(`test ${libName}`));
 
-    const libTestResults = await runCLIAsync(`test ${libName}`);
-    expect(libTestResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
+    const appLintResults = await runCLIAsync(`lint ${appName}`);
+    expect(appLintResults.combinedOutput).toContain('All files pass linting.');
+
+    const libLintResults = await runCLIAsync(`lint ${libName}`);
+    expect(libLintResults.combinedOutput).toContain('All files pass linting.');
 
     const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
     expect(iosBundleResult.combinedOutput).toContain(
