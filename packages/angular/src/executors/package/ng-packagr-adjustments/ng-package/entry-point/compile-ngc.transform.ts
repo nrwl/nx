@@ -9,7 +9,6 @@ import {
   Transform,
   transformFromPromise,
 } from 'ng-packagr/lib/graph/transform';
-import * as ivy from 'ng-packagr/lib/ivy';
 import {
   EntryPointNode,
   isEntryPoint,
@@ -19,18 +18,11 @@ import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { compileSourceFiles } from 'ng-packagr/lib/ngc/compile-source-files';
 import { NgccProcessor } from 'ng-packagr/lib/ngc/ngcc-processor';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
+import { ngccCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import * as ora from 'ora';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { StylesheetProcessor as IvyStylesheetProcessor } from '../../ivy/styles/stylesheet-processor';
 import { StylesheetProcessor as StylesheetProcessorClass } from '../../styles/stylesheet-processor';
-
-function isEnabled(variable: string | undefined): variable is string {
-  return (
-    typeof variable === 'string' &&
-    (variable === '1' || variable.toLowerCase() === 'true')
-  );
-}
 
 export const compileNgcTransformFactory = (
   StylesheetProcessor: typeof StylesheetProcessorClass,
@@ -52,79 +44,50 @@ export const compileNgcTransformFactory = (
       );
 
       // Compile TypeScript sources
-      const { esm2015, declarations } = entryPoint.data.destinationFiles;
+      const { esm2020, declarations } = entryPoint.data.destinationFiles;
       const { basePath, cssUrl, styleIncludePaths } =
         entryPoint.data.entryPoint;
       const { moduleResolutionCache, ngccProcessingCache } = entryPoint.cache;
 
-      let ngccProcessor: NgccProcessor | undefined;
-      if (tsConfig.options.enableIvy !== false) {
-        spinner.start(
-          `Compiling with Angular sources in Ivy ${
-            tsConfig.options.compilationMode || 'full'
-          } compilation mode.`
-        );
-        ngccProcessor = new NgccProcessor(
-          ngccProcessingCache,
-          tsConfig.project,
-          tsConfig.options,
-          entryPoints
-        );
-        if (!entryPoint.data.entryPoint.isSecondaryEntryPoint) {
-          // Only run the async version of NGCC during the primary entrypoint processing.
-          await ngccProcessor.process();
-        }
-      } else {
-        spinner.start(
-          `Compiling with Angular in legacy View Engine compilation mode.`
-        );
+      spinner.start(
+        `Compiling with Angular sources in Ivy ${
+          tsConfig.options.compilationMode || 'full'
+        } compilation mode.`
+      );
+      const ngccProcessor = new NgccProcessor(
+        await ngccCompilerCli(),
+        ngccProcessingCache,
+        tsConfig.project,
+        tsConfig.options,
+        entryPoints
+      );
+      if (!entryPoint.data.entryPoint.isSecondaryEntryPoint) {
+        // Only run the async version of NGCC during the primary entrypoint processing.
+        await ngccProcessor.process();
       }
 
-      if (
-        tsConfig.options.enableIvy !== false &&
-        !isEnabled(process.env['NG_BUILD_LIB_LEGACY'])
-      ) {
-        entryPoint.cache.stylesheetProcessor ??= new IvyStylesheetProcessor(
-          basePath,
-          cssUrl,
-          styleIncludePaths
-        ) as any;
+      entryPoint.cache.stylesheetProcessor ??= new StylesheetProcessor(
+        basePath,
+        cssUrl,
+        styleIncludePaths,
+        options.cacheEnabled && options.cacheDirectory,
+        options.watch
+      ) as any;
 
-        await ivy.compileSourceFiles(
-          graph,
-          tsConfig,
-          moduleResolutionCache,
-          {
-            outDir: path.dirname(esm2015),
-            declarationDir: path.dirname(declarations),
-            declaration: true,
-            target: ts.ScriptTarget.ES2015,
-          },
-          entryPoint.cache.stylesheetProcessor as any,
-          ngccProcessor,
-          options.watch
-        );
-      } else {
-        entryPoint.cache.stylesheetProcessor ??= new StylesheetProcessor(
-          basePath,
-          cssUrl,
-          styleIncludePaths,
-          options.watch
-        ) as any;
-        await compileSourceFiles(
-          graph,
-          tsConfig,
-          moduleResolutionCache,
-          entryPoint.cache.stylesheetProcessor as any,
-          {
-            outDir: path.dirname(esm2015),
-            declarationDir: path.dirname(declarations),
-            declaration: true,
-            target: ts.ScriptTarget.ES2015,
-          },
-          ngccProcessor
-        );
-      }
+      await compileSourceFiles(
+        graph,
+        tsConfig,
+        moduleResolutionCache,
+        {
+          outDir: path.dirname(esm2020),
+          declarationDir: path.dirname(declarations),
+          declaration: true,
+          target: ts.ScriptTarget.ES2020,
+        },
+        entryPoint.cache.stylesheetProcessor,
+        ngccProcessor,
+        options.watch
+      );
     } catch (error) {
       spinner.fail();
       throw error;

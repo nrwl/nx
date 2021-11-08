@@ -38,7 +38,7 @@
     "semver": "7.3.4",
     "jsonc-parser": "3.0.0",
     "tmp": "~0.2.1",
-    "tslib": "^2.0.0",
+    "tslib": "^2.3.0",
     "yargs-parser": "20.0.0"
   }
 }

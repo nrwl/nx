@@ -1,12 +1,12 @@
-jest.mock('@angular/compiler-cli');
+jest.mock('ng-packagr/lib/utils/ng-compiler-cli');
 jest.mock('@nrwl/workspace/src/core/project-graph');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('ng-packagr');
 
-import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
 import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import * as ngPackagr from 'ng-packagr';
+import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import { BehaviorSubject } from 'rxjs';
 import packageExecutor from './package.impl';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
@@ -78,10 +78,13 @@ describe('Package executor', () => {
     (
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
+    (ngCompilerCli as jest.Mock).mockImplementation(() =>
+      Promise.resolve({ readConfiguration: jest.fn() })
+    );
 
     const result = await packageExecutor(options, context).next();
 
-    expect(ng.readConfiguration).not.toHaveBeenCalled();
+    expect((await ngCompilerCli()).readConfiguration).not.toHaveBeenCalled();
     expect(buildableLibsUtils.updatePaths).not.toHaveBeenCalled();
     expect(ngPackagrWithTsConfigMock).not.toHaveBeenCalled();
     expect(ngPackagrBuildMock).toHaveBeenCalled();
@@ -99,7 +102,9 @@ describe('Package executor', () => {
         enableIvy: true,
       },
     };
-    (ng.readConfiguration as jest.Mock).mockImplementation(() => tsConfig);
+    (ngCompilerCli as jest.Mock).mockImplementation(() =>
+      Promise.resolve({ readConfiguration: () => tsConfig })
+    );
     const tsConfigPath = '/root/my-lib/tsconfig.app.json';
 
     const result = await packageExecutor(

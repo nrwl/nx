@@ -16,17 +16,5 @@ export interface Schema {
   disableHostCheck?: boolean;
   hmr?: boolean;
   watch?: boolean;
-  hmrWarning?: boolean;
-  servePathDefaultWarning?: boolean;
-  optimization?: boolean | { scripts: boolean; styles: boolean };
-  aot?: boolean;
-  sourceMap?:
-    | boolean
-    | { scripts: boolean; styles: boolean; hidden: boolean; vendor: boolean };
-  vendorChunk?: boolean;
-  commonChunk?: boolean;
-  baseHref?: string;
-  deployUrl?: string;
-  progress?: boolean;
   poll?: number;
 }

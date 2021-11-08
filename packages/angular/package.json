@@ -21,6 +21,10 @@
   "types": "./nrwl-angular.d.ts",
   "module": "esm5/nrwl-angular.js",
   "es2015": "esm2015/nrwl-angular.js",
+  "exports": {
+    "./generators": "./generators.js",
+    "./src/generators/utils": "./src/generators/utils/index.js"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -34,17 +38,18 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~12.2.0",
+    "@angular-devkit/schematics": "~13.0.0",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
-    "@schematics/angular": "~12.2.0",
+    "@schematics/angular": "~13.0.0",
     "@phenomnomnominal/tsquery": "4.1.1",
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
     "rxjs-for-await": "0.0.2",
-    "webpack-merge": "5.7.3"
+    "webpack-merge": "5.7.3",
+    "find-parent-dir": "^0.3.1"
   }
 }

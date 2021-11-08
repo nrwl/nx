@@ -41,24 +41,13 @@ describe('@nrwl/workspace:library', () => {
       expect(result).toContain(`Linting "${libName}"...`);
       expect(result).toContain('All files pass linting.');
     });
-
-    it('should support tslint', () => {
-      const libName = uniq('mylib');
-
-      runCLI(`generate @nrwl/workspace:lib ${libName} --linter tslint`);
-
-      const result = runCLI(`lint ${libName}`);
-
-      expect(result).toContain(`Linting "${libName}"...`);
-      expect(result).toContain('All files pass linting.');
-    });
   });
 
   describe('unit testing', () => {
     it('should support jest', async () => {
       const libName = uniq('mylib');
 
-      runCLI(`generate @nrwl/workspace:lib ${libName} --linter tslint`);
+      runCLI(`generate @nrwl/workspace:lib ${libName}`);
 
       const { stderr: result } = await runCLIAsync(`test ${libName}`);
 

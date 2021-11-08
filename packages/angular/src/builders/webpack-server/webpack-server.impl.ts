@@ -7,7 +7,7 @@ import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import {
   DevServerBuilderOptions,
   serveWebpackBrowser,
-} from '@angular-devkit/build-angular/src/dev-server';
+} from '@angular-devkit/build-angular/src/builders/dev-server';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 import { normalizeOptions } from './lib';

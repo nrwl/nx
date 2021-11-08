@@ -177,6 +177,7 @@ describe('ngrx', () => {
     expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
       ngrxVersion
     );
+    expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
   });
 
   it('should not update package.json when skipPackageJson is true', async () => {

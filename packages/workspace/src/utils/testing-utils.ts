@@ -166,7 +166,7 @@ export class MockBuilderContext implements BuilderContext {
     return this.architect.scheduleBuilder(name, overrides, scheduleOptions);
   }
 
-  getTargetOptions(target: Target) {
+  getTargetOptions(target: Target): Promise<JsonObject> {
     return this.architectHost.getOptionsForTarget(target);
   }
 

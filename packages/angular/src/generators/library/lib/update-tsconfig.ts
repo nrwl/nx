@@ -33,13 +33,13 @@ function updateProjectConfig(host: Tree, options: NormalizedSchema) {
   });
 }
 
-function updateProjectProdConfig(host: Tree, options: NormalizedSchema) {
-  if (options.enableIvy) {
+function updateProjectIvyConfig(host: Tree, options: NormalizedSchema) {
+  if (options.buildable || options.publishable) {
     return updateJson(
       host,
       `${options.projectRoot}/tsconfig.lib.prod.json`,
       (json) => {
-        json.angularCompilerOptions['enableIvy'] = true;
+        json.angularCompilerOptions['compilationMode'] = 'partial';
         return json;
       }
     );
@@ -49,5 +49,5 @@ function updateProjectProdConfig(host: Tree, options: NormalizedSchema) {
 export function updateTsConfig(host: Tree, options: NormalizedSchema) {
   updateRootConfig(host, options);
   updateProjectConfig(host, options);
-  updateProjectProdConfig(host, options);
+  updateProjectIvyConfig(host, options);
 }

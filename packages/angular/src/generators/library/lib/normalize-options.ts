@@ -12,7 +12,6 @@ export function normalizeOptions(
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
-    enableIvy: false,
     linter: Linter.EsLint,
     name: '', // JSON validation will ensure this is set
     publishable: false,

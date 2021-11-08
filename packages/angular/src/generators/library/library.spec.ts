@@ -23,7 +23,6 @@ describe('lib', () => {
       name: 'myLib',
       publishable: false,
       buildable: false,
-      enableIvy: false,
       linter: Linter.EsLint,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
@@ -158,18 +157,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['postcss-import']).toBeDefined();
       expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
-    });
-
-    it('should update tsconfig.lib.prod.json when enableIvy', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({
-        buildable: true,
-        enableIvy: true,
-      });
-
-      // ASSERT
-      const tsConfig = readJson(appTree, '/libs/my-lib/tsconfig.lib.prod.json');
-      expect(tsConfig.angularCompilerOptions['enableIvy']).toBe(true);
     });
 
     it('should update workspace.json', async () => {

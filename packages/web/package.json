@@ -103,7 +103,7 @@
     "ts-node": "~9.1.1",
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-webpack-plugin": "3.4.1",
-    "tslib": "^2.0.0",
+    "tslib": "^2.3.0",
     "webpack": "^5.58.1",
     "webpack-merge": "^5.8.0",
     "webpack-sources": "^3.0.2",
