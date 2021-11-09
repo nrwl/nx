@@ -12,7 +12,12 @@ import {
 
 describe('dep-graph-client', () => {
   beforeEach(() => {
+    cy.intercept('/assets/graphs/*').as('getGraph');
+
     cy.visit('/');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
   });
 
   it('should display message to select projects', () => {
@@ -51,12 +56,12 @@ describe('dep-graph-client', () => {
 
   describe('selecting projects', () => {
     it('should select a project by clicking on the project name', () => {
-      // cy.get('[data-project="nx-dev"]').should('have.data', 'active', false);
-      cy.get('[data-project="nx-dev"]')
-        .click({
-          force: true,
-        })
-        .should('have.data', 'active', true);
+      cy.get('[data-project="nx-dev"]').should('have.data', 'active', false);
+      cy.get('[data-project="nx-dev"]').click({
+        force: true,
+      });
+
+      cy.get('[data-project="nx-dev"]').should('have.data', 'active', true);
     });
 
     it('should deselect a project by clicking on the project name again', () => {

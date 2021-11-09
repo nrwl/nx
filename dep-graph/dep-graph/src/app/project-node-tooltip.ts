@@ -1,4 +1,5 @@
 import * as cy from 'cytoscape';
+import { useDepGraphService } from './machines/dep-graph.service';
 
 export class ProjectNodeToolTip {
   constructor(private node: cy.NodeSingular) {}
@@ -53,13 +54,15 @@ export class ProjectNodeToolTip {
 
     wrapper.classList.add('flex');
 
+    const [_, send] = useDepGraphService();
+
     focusButton.addEventListener('click', () =>
-      window.focusProject(this.node.attr('id'))
+      send({ type: 'focusProject', projectName: this.node.attr('id') })
     );
     focusButton.innerText = 'Focus';
 
     excludeButton.addEventListener('click', () => {
-      window.excludeProject(this.node.attr('id'));
+      send({ type: 'deselectProject', projectName: this.node.attr('id') });
     });
 
     excludeButton.innerText = 'Exclude';

@@ -8,7 +8,8 @@
       "options": {
         "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",
         "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
-        "devServerTarget": "dep-graph-dep-graph:serve"
+        "devServerTarget": "dep-graph-dep-graph:serve-for-e2e",
+        "baseUrl": "http://localhost:4200"
       }
     },
     "e2e-watch-disabled": {
@@ -16,7 +17,8 @@
       "options": {
         "cypressConfig": "dep-graph/dep-graph-e2e/cypress-watch-mode.json",
         "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
-        "devServerTarget": "dep-graph-dep-graph:serve:watch"
+        "devServerTarget": "dep-graph-dep-graph:serve-for-e2e:watch",
+        "baseUrl": "http://localhost:4200"
       }
     },
     "lint": {

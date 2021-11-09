@@ -1,9 +1,15 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraph,
+  ProjectGraphDependency,
+  ProjectGraphNode,
+} from '@nrwl/devkit';
+import type { VirtualElement } from '@popperjs/core';
 import * as cy from 'cytoscape';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
 import { Subject } from 'rxjs';
 import type { Instance } from 'tippy.js';
+import { useDepGraphService } from './machines/dep-graph.service';
 import { ProjectNodeToolTip } from './project-node-tooltip';
 import { edgeStyles, nodeStyles } from './styles-graph';
 import { GraphTooltipService } from './tooltip-service';
@@ -13,7 +19,6 @@ import {
   ProjectEdge,
   ProjectNode,
 } from './util-cytoscape';
-import type { VirtualElement } from '@popperjs/core';
 
 export interface GraphPerfReport {
   renderTime: number;
@@ -24,22 +29,57 @@ export class GraphComponent {
   private graph: cy.Core;
   private openTooltip: Instance = null;
 
-  affectedProjects: string[];
-  projectGraph: ProjectGraph;
-
   private renderTimesSubject = new Subject<GraphPerfReport>();
   renderTimes$ = this.renderTimesSubject.asObservable();
 
+  private send;
   constructor(private tooltipService: GraphTooltipService) {
     cy.use(cytoscapeDagre);
     cy.use(popper);
+
+    const [state$, send] = useDepGraphService();
+    this.send = send;
+
+    state$.subscribe((state) => {
+      const projects = state.context.selectedProjects.map((projectName) =>
+        state.context.projects.find((project) => project.name === projectName)
+      );
+      this.render(
+        projects,
+        state.context.groupByFolder,
+        state.context.workspaceLayout,
+        state.context.focusedProject,
+        state.context.affectedProjects,
+        state.context.dependencies
+      );
+    });
   }
 
-  render(selectedProjects: ProjectGraphNode[], groupByFolder: boolean) {
+  render(
+    selectedProjects: ProjectGraphNode[],
+    groupByFolder: boolean,
+    workspaceLayout,
+    focusedProject: string,
+    affectedProjects: string[],
+    dependencies: Record<string, ProjectGraphDependency[]>
+  ) {
     const time = Date.now();
 
+    if (selectedProjects.length === 0) {
+      document.getElementById('no-projects-chosen').style.display = 'flex';
+    } else {
+      document.getElementById('no-projects-chosen').style.display = 'none';
+    }
+
     this.tooltipService.hideAll();
-    this.generateCytoscapeLayout(selectedProjects, groupByFolder);
+    this.generateCytoscapeLayout(
+      selectedProjects,
+      groupByFolder,
+      workspaceLayout,
+      focusedProject,
+      affectedProjects,
+      dependencies
+    );
     this.listenForProjectNodeClicks();
     this.listenForProjectNodeHovers();
 
@@ -56,9 +96,20 @@ export class GraphComponent {
 
   private generateCytoscapeLayout(
     selectedProjects: ProjectGraphNode[],
-    groupByFolder: boolean
+    groupByFolder: boolean,
+    workspaceLayout,
+    focusedProject: string,
+    affectedProjects: string[],
+    dependencies: Record<string, ProjectGraphDependency[]>
   ) {
-    const elements = this.createElements(selectedProjects, groupByFolder);
+    const elements = this.createElements(
+      selectedProjects,
+      groupByFolder,
+      workspaceLayout,
+      focusedProject,
+      affectedProjects,
+      dependencies
+    );
 
     this.graph = cy({
       container: document.getElementById('graph-container'),
@@ -84,7 +135,14 @@ export class GraphComponent {
 
   private createElements(
     selectedProjects: ProjectGraphNode[],
-    groupByFolder: boolean
+    groupByFolder: boolean,
+    workspaceLayout: {
+      appsDir: string;
+      libsDir: string;
+    },
+    focusedProject: string,
+    affectedProjects: string[],
+    dependencies: Record<string, ProjectGraphDependency[]>
   ) {
     let elements: cy.ElementDefinition[] = [];
     const filteredProjectNames = selectedProjects.map(
@@ -101,21 +159,21 @@ export class GraphComponent {
     selectedProjects.forEach((project) => {
       const workspaceRoot =
         project.type === 'app' || project.type === 'e2e'
-          ? window.workspaceLayout.appsDir
-          : window.workspaceLayout.libsDir;
+          ? workspaceLayout.appsDir
+          : workspaceLayout.libsDir;
 
       const projectNode = new ProjectNode(project, workspaceRoot);
-      projectNode.focused = project.name === window.focusedProject;
-      projectNode.affected = this.affectedProjects.includes(project.name);
+      projectNode.focused = project.name === focusedProject;
+      projectNode.affected = affectedProjects.includes(project.name);
 
       projectNodes.push(projectNode);
 
-      this.projectGraph.dependencies[project.name].forEach((dep) => {
+      dependencies[project.name].forEach((dep) => {
         if (filteredProjectNames.includes(dep.target)) {
           const edge = new ProjectEdge(dep);
           edge.affected =
-            this.affectedProjects.includes(dep.source) &&
-            this.affectedProjects.includes(dep.target);
+            affectedProjects.includes(dep.source) &&
+            affectedProjects.includes(dep.target);
           edgeNodes.push(edge);
         }
       });
