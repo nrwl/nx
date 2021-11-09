@@ -1549,11 +1549,11 @@ Utility to act on all files in a tree that are not ignored by git.
 
 #### Parameters
 
-| Name      | Type                                         |
-| :-------- | :------------------------------------------- |
-| `tree`    | [`Tree`](../../angular/nx-devkit/index#tree) |
-| `dirPath` | `string`                                     |
-| `visitor` | (`path`: `string`) => `void`                 |
+| Name      | Type                                         | Default value |
+| :-------- | :------------------------------------------- | :------------ |
+| `tree`    | [`Tree`](../../angular/nx-devkit/index#tree) | `undefined`   |
+| `dirPath` | `string`                                     | `tree.root`   |
+| `visitor` | (`path`: `string`) => `void`                 | `undefined`   |
 
 #### Returns
 
