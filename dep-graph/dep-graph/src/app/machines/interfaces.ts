@@ -22,7 +22,6 @@ export type DepGraphEvents =
   | { type: 'selectAffected' }
   | { type: 'setGroupByFolder'; groupByFolder: boolean }
   | { type: 'setIncludeProjectsByPath'; includeProjectsByPath: boolean }
-  | { type: 'setSearchDepth'; searchDepth: number }
   | { type: 'incrementSearchDepth' }
   | { type: 'decrementSearchDepth' }
   | { type: 'setSearchDepthEnabled'; searchDepthEnabled: boolean }

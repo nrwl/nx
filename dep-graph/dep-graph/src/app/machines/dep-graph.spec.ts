@@ -256,5 +256,129 @@ describe('dep-graph machine', () => {
       expect(result.value).toEqual('unselected');
       expect(result.context.selectedProjects).toEqual([]);
     });
+
+    it('should not decrement search depth below 1', () => {
+      let result = depGraphMachine.transition(depGraphMachine.initialState, {
+        type: 'initGraph',
+        projects: mockProjects,
+        dependencies: mockDependencies,
+        affectedProjects: [],
+        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+      });
+
+      result = depGraphMachine.transition(result, {
+        type: 'focusProject',
+        projectName: 'app1',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+
+      result = depGraphMachine.transition(result, {
+        type: 'incrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(2);
+
+      result = depGraphMachine.transition(result, {
+        type: 'incrementSearchDepth',
+      });
+
+      result = depGraphMachine.transition(result, {
+        type: 'incrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(4);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(2);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+    });
+  });
+
+  describe('filtering projects by text', () => {
+    it('should not decrement search depth below 1', () => {
+      let result = depGraphMachine.transition(depGraphMachine.initialState, {
+        type: 'initGraph',
+        projects: mockProjects,
+        dependencies: mockDependencies,
+        affectedProjects: [],
+        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+      });
+
+      result = depGraphMachine.transition(result, {
+        type: 'filterByText',
+        search: 'app1',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+
+      result = depGraphMachine.transition(result, {
+        type: 'incrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(2);
+
+      result = depGraphMachine.transition(result, {
+        type: 'incrementSearchDepth',
+      });
+
+      result = depGraphMachine.transition(result, {
+        type: 'incrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(4);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(2);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+
+      result = depGraphMachine.transition(result, {
+        type: 'decrementSearchDepth',
+      });
+
+      expect(result.context.searchDepth).toEqual(1);
+    });
   });
 });

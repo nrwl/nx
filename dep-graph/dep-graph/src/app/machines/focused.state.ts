@@ -40,7 +40,7 @@ export const focusedStateConfig: DepGraphStateNodeConfig = {
     decrementSearchDepth: {
       actions: [
         assign((ctx) => {
-          const searchDepth = ctx.searchDepth - 1;
+          const searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
           const selectedProjects = selectProjectsForFocusedProject(
             ctx.projects,
             ctx.dependencies,
