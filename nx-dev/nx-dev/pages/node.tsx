@@ -569,7 +569,7 @@ export function Node() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Tune into regular Nx Office Hours livestreams
+                      Tune into regular Nx Show livestreams
                     </a>
                   </li>
                   <li className="mt-4">
