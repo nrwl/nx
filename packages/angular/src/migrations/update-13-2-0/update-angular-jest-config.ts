@@ -72,7 +72,7 @@ export function replaceTransformAndAddIgnorePattern(fileContents: string) {
   const TRANSFORM_OBJECT_AST_QUERY =
     'PropertyAssignment:has(Identifier[name=transform])';
   let TRANSFORM_IGNORE_PATTERN_STRING =
-    "transformIgnorePatterns: ['node_modules/(?!.*(@angular))'],";
+    "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],";
 
   ast = tsquery.ast(updatedFileContents);
 
