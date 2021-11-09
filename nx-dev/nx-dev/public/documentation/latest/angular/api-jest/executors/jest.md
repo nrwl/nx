@@ -176,6 +176,12 @@ Type: `string`
 
 Run only tests with a name that matches the regex pattern. (https://jestjs.io/docs/cli#--testnamepatternregex)
 
+### testPathIgnorePatterns
+
+Type: `array`
+
+An array of regexp pattern strings that is matched against all tests paths before executing the test. Only run those tests with a path that does not match with the provided regexp expressions. (https://jestjs.io/docs/cli#--testpathignorepatternsregexarray)
+
 ### testPathPattern
 
 Type: `array`
