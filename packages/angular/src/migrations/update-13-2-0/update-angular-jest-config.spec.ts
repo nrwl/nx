@@ -93,7 +93,7 @@ coverageDirectory: '../../coverage/apps/app1',
 transform: {
 '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
 },
-transformIgnorePatterns: ['node_modules/(?!.*(@angular))'],
+transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
 snapshotSerializers: [
   'jest-preset-angular/build/serializers/no-ng-attributes',
   'jest-preset-angular/build/serializers/ng-snapshot',
@@ -145,7 +145,7 @@ transform: {
 '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
 '^.+\\.(json)$': 'json_transformer',
 },
-transformIgnorePatterns: ['node_modules/(?!.*(@angular))'],
+transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
 snapshotSerializers: [
   'jest-preset-angular/build/serializers/no-ng-attributes',
   'jest-preset-angular/build/serializers/ng-snapshot',
@@ -192,7 +192,7 @@ transform: {
 '^.+\\.(json)$': 'json_transformer',
 '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
 },
-transformIgnorePatterns: ['node_modules/(?!.*(@angular))'],
+transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
 };`);
   });
 
