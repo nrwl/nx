@@ -193,6 +193,13 @@ export function hasBannedImport(
   );
 }
 
+export function isDirectDependency(
+  source: ProjectGraphNode,
+  target: ProjectGraphNode
+): boolean {
+  return true;
+}
+
 /**
  * Maps import with wildcards to regex pattern
  * @param importDefinition
