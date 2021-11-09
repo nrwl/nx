@@ -11,7 +11,6 @@ import {
   ProjectGraphNode,
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
-import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utilities/output';
 import { projectHasTarget } from '../utilities/project-graph-utils';
@@ -19,11 +18,10 @@ import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { parseFiles } from './shared';
-import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import type { NxArgs, RawNxArgs } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { performance } from 'perf_hooks';
 import type { Environment } from '../core/shared-interfaces';
-import { EmptyReporter } from '../tasks-runner/empty-reporter';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
@@ -122,7 +120,7 @@ export async function affected(
           env,
           nxArgs,
           overrides,
-          nxArgs.hideCachedOutput ? new EmptyReporter() : new DefaultReporter(),
+          nxArgs.hideCachedOutput ? 'hide-cached-output' : 'default',
           null
         );
         break;

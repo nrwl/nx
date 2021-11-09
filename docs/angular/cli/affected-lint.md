@@ -18,12 +18,6 @@ Run lint in parallel:
 nx affected:lint --parallel=5
 ```
 
-Rerun the lint target only for the projects that failed last time:
-
-```bash
-nx affected:lint --only-failed
-```
-
 Run the lint target for all projects:
 
 ```bash
