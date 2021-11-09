@@ -99,25 +99,25 @@
     },
     "update-angular-config": {
       "cli": "nx",
-      "version": "13.2.0",
+      "version": "13.2.0-bata.1",
       "description": "Remove deprecated options from webpack-server and webpack-browser.",
       "factory": "./src/migrations/update-13-2-0/update-angular-config"
     },
     "update-libraries": {
       "cli": "nx",
-      "version": "13.2.0",
+      "version": "13.2.0-bata.1",
       "description": "Remove enableIvy and add compilationMode to library tsconfig and remove deprecated ng-packagr options.",
       "factory": "./src/migrations/update-13-2-0/update-libraries"
     },
     "update-angular-jest-config": {
       "cli": "nx",
-      "version": "13.2.0",
+      "version": "13.2.0-bata.1",
       "description": "Update jest config to support jest-preset-angular",
       "factory": "./src/migrations/update-13-2-0/update-angular-jest-config"
     },
     "update-testing-imports": {
       "cli": "nx",
-      "version": "13.2.0",
+      "version": "13.2.0-bata.1",
       "description": "Move some imports from @nrwl/angular/testing to jasmine-marbles",
       "factory": "./src/migrations/update-13-2-0/update-testing-imports"
     }
