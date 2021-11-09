@@ -1027,34 +1027,6 @@
           "version": "^13.0.0",
           "alwaysAddToPackageJson": false
         },
-        "@ngrx/store": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/effects": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/entity": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/router-store": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/schematics": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/store-devtools": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@ngrx/component-store": {
-          "version": "~13.0.0-beta.0",
-          "alwaysAddToPackageJson": false
-        },
         "zone.js": {
           "version": "~0.11.4",
           "alwaysAddToPackageJson": false
