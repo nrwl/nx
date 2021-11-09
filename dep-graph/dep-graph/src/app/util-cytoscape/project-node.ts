@@ -48,10 +48,6 @@ export class ProjectNode {
   private getClasses(): string {
     let classes = this.project.type ?? '';
 
-    if (this.focused) {
-      classes += ' focused';
-    }
-
     if (this.affected) {
       classes += ' affected';
     }

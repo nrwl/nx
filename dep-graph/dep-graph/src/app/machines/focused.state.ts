@@ -1,19 +1,16 @@
 import { assign } from '@xstate/immer';
+import { send } from 'xstate';
 import { selectProjectsForFocusedProject } from '../util';
 import { DepGraphStateNodeConfig } from './interfaces';
 
 export const focusedStateConfig: DepGraphStateNodeConfig = {
   entry: [
-    assign((ctx, event: any) => {
-      ctx.selectedProjects = selectProjectsForFocusedProject(
-        ctx.projects,
-        ctx.dependencies,
-        event.projectName,
-        ctx.searchDepthEnabled ? ctx.searchDepth : -1
-      );
+    assign((ctx, event) => {
+      if (event.type !== 'focusProject') return;
 
       ctx.focusedProject = event.projectName;
     }),
+    'notifyGraphFocusProject',
   ],
   exit: [
     assign((ctx) => {
@@ -22,69 +19,35 @@ export const focusedStateConfig: DepGraphStateNodeConfig = {
   ],
   on: {
     incrementSearchDepth: {
-      actions: [
-        assign((ctx) => {
-          const searchDepth = ctx.searchDepth + 1;
-          const selectedProjects = selectProjectsForFocusedProject(
-            ctx.projects,
-            ctx.dependencies,
-            ctx.focusedProject,
-            ctx.searchDepthEnabled ? searchDepth : -1
-          );
-
-          ctx.selectedProjects = selectedProjects;
-          ctx.searchDepth = searchDepth;
-        }),
-      ],
+      actions: ['incrementSearchDepth', 'notifyGraphFocusProject'],
     },
     decrementSearchDepth: {
-      actions: [
-        assign((ctx) => {
-          const searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
-          const selectedProjects = selectProjectsForFocusedProject(
-            ctx.projects,
-            ctx.dependencies,
-            ctx.focusedProject,
-            ctx.searchDepthEnabled ? searchDepth : -1
-          );
-
-          ctx.selectedProjects = selectedProjects;
-          ctx.searchDepth = searchDepth;
-        }),
-      ],
+      actions: ['decrementSearchDepth', 'notifyGraphFocusProject'],
     },
     setSearchDepthEnabled: {
-      actions: [
-        assign((ctx, event) => {
-          const selectedProjects = selectProjectsForFocusedProject(
-            ctx.projects,
-            ctx.dependencies,
-            ctx.focusedProject,
-            event.searchDepthEnabled ? ctx.searchDepth : -1
-          );
-
-          (ctx.searchDepthEnabled = event.searchDepthEnabled),
-            (ctx.selectedProjects = selectedProjects);
-        }),
-      ],
+      actions: ['setSearchDepthEnabled', 'notifyGraphFocusProject'],
     },
     unfocusProject: {
       target: 'unselected',
     },
     updateGraph: {
       actions: [
-        assign((ctx, event) => {
-          const selectedProjects = selectProjectsForFocusedProject(
-            event.projects,
-            event.dependencies,
-            ctx.focusedProject,
-            ctx.searchDepthEnabled ? ctx.searchDepth : -1
-          );
-
-          ctx.projects = event.projects;
-          ctx.dependencies = event.dependencies;
-          ctx.selectedProjects = selectedProjects;
-        }),
+        'setGraph',
+        send(
+          (ctx, event) => ({
+            type: 'notifyGraphUpdateGraph',
+            projects: ctx.projects,
+            dependencies: ctx.dependencies,
+            affectedProjects: ctx.affectedProjects,
+            workspaceLayout: ctx.workspaceLayout,
+            groupByFolder: ctx.groupByFolder,
+            selectedProjects: ctx.selectedProjects,
+          }),
+          {
+            to: (context) => context.graph,
+          }
+        ),
+        'notifyGraphFocusProject',
       ],
     },
   },

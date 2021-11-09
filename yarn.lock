@@ -4569,7 +4569,7 @@
   dependencies:
     postcss "5 - 7"
 
-"@types/cytoscape@^3.14.12":
+"@types/cytoscape@^3.18.2":
   version "3.19.0"
   resolved "https://registry.yarnpkg.com/@types/cytoscape/-/cytoscape-3.19.0.tgz#1acd8df260af0eb088191f84df8ca055353f6196"
   integrity sha512-EbUrbDqequXtSkpPvtpX1Xf7nDFh+eB/2h/Sv1SiQ9IjCJENSwi9Wfv/vRkH9YTcgNoCot20eyIyMbxHfh0YDg==

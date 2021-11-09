@@ -1,15 +1,11 @@
-import type {
-  ProjectGraph,
-  ProjectGraphDependency,
-  ProjectGraphNode,
-} from '@nrwl/devkit';
+import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
 import type { VirtualElement } from '@popperjs/core';
 import * as cy from 'cytoscape';
-import cytoscapeDagre from 'cytoscape-dagre';
-import popper from 'cytoscape-popper';
+import * as cytoscapeDagre from 'cytoscape-dagre';
+import * as popper from 'cytoscape-popper';
 import { Subject } from 'rxjs';
 import type { Instance } from 'tippy.js';
-import { useDepGraphService } from './machines/dep-graph.service';
+import { GraphRenderEvents } from './machines/interfaces';
 import { ProjectNodeToolTip } from './project-node-tooltip';
 import { edgeStyles, nodeStyles } from './styles-graph';
 import { GraphTooltipService } from './tooltip-service';
@@ -25,129 +21,350 @@ export interface GraphPerfReport {
   numNodes: number;
   numEdges: number;
 }
-export class GraphComponent {
-  private graph: cy.Core;
+export class GraphService {
+  private traversalGraph: cy.Core;
+  private renderGraph: cy.Core;
+
   private openTooltip: Instance = null;
 
   private renderTimesSubject = new Subject<GraphPerfReport>();
   renderTimes$ = this.renderTimesSubject.asObservable();
 
-  private send;
-  constructor(private tooltipService: GraphTooltipService) {
+  constructor(
+    private tooltipService: GraphTooltipService,
+    private containerId: string
+  ) {
     cy.use(cytoscapeDagre);
     cy.use(popper);
-
-    const [state$, send] = useDepGraphService();
-    this.send = send;
-
-    state$.subscribe((state) => {
-      const projects = state.context.selectedProjects.map((projectName) =>
-        state.context.projects.find((project) => project.name === projectName)
-      );
-      this.render(
-        projects,
-        state.context.groupByFolder,
-        state.context.workspaceLayout,
-        state.context.focusedProject,
-        state.context.affectedProjects,
-        state.context.dependencies
-      );
-    });
   }
 
-  render(
-    selectedProjects: ProjectGraphNode[],
-    groupByFolder: boolean,
-    workspaceLayout,
-    focusedProject: string,
-    affectedProjects: string[],
-    dependencies: Record<string, ProjectGraphDependency[]>
-  ) {
+  handleEvent(event: GraphRenderEvents): string[] {
     const time = Date.now();
 
-    if (selectedProjects.length === 0) {
-      document.getElementById('no-projects-chosen').style.display = 'flex';
-    } else {
-      document.getElementById('no-projects-chosen').style.display = 'none';
+    if (
+      this.renderGraph &&
+      event.type !== 'notifyGraphFocusProject' &&
+      event.type !== 'notifyGraphUpdateGraph'
+    ) {
+      this.renderGraph.nodes('.focused').removeClass('focused');
     }
 
-    this.tooltipService.hideAll();
-    this.generateCytoscapeLayout(
-      selectedProjects,
-      groupByFolder,
-      workspaceLayout,
-      focusedProject,
-      affectedProjects,
-      dependencies
-    );
-    this.listenForProjectNodeClicks();
-    this.listenForProjectNodeHovers();
+    switch (event.type) {
+      case 'notifyGraphInitGraph':
+        this.initGraph(
+          event.projects,
+          event.groupByFolder,
+          event.workspaceLayout,
+          event.dependencies,
+          event.affectedProjects
+        );
+        break;
 
-    const renderTime = Date.now() - time;
+      case 'notifyGraphUpdateGraph':
+        this.initGraph(
+          event.projects,
+          event.groupByFolder,
+          event.workspaceLayout,
+          event.dependencies,
+          event.affectedProjects
+        );
+        this.setShownProjects(event.selectedProjects);
+        break;
 
-    const report: GraphPerfReport = {
-      renderTime,
-      numNodes: this.graph.nodes().length,
-      numEdges: this.graph.edges().length,
-    };
+      case 'notifyGraphFocusProject':
+        this.focusProject(event.projectName, event.searchDepth);
+        break;
 
-    this.renderTimesSubject.next(report);
+      case 'notifyGraphFilterProjectsByText':
+        this.filterProjectsByText(
+          event.search,
+          event.includeProjectsByPath,
+          event.searchDepth
+        );
+        break;
+
+      case 'notifyGraphShowProject':
+        this.showProjects([event.projectName]);
+        break;
+
+      case 'notifyGraphHideProject':
+        this.hideProject(event.projectName);
+        break;
+
+      case 'notifyGraphShowAllProjects':
+        this.showAllProjects();
+        break;
+
+      case 'notifyGraphHideAllProjects':
+        this.hideAllProjects();
+        break;
+
+      case 'notifyGraphShowAffectedProjects':
+        this.showAffectedProjects();
+        break;
+    }
+
+    let visibleProjects: string[] = [];
+
+    if (this.renderGraph) {
+      this.renderGraph
+        .elements()
+        .sort((a, b) => a.id().localeCompare(b.id()))
+        .layout(<CytoscapeDagreConfig>{
+          name: 'dagre',
+          nodeDimensionsIncludeLabels: true,
+          rankSep: 75,
+          rankDir: 'TB',
+          edgeSep: 50,
+          ranker: 'network-simplex',
+        })
+        .run();
+
+      this.renderGraph.fit().center().resize();
+
+      visibleProjects = this.renderGraph
+        .nodes('[type!="dir"]')
+        .map((node) => node.id());
+
+      const renderTime = Date.now() - time;
+
+      const report: GraphPerfReport = {
+        renderTime,
+        numNodes: this.renderGraph.nodes().length,
+        numEdges: this.renderGraph.edges().length,
+      };
+
+      this.renderTimesSubject.next(report);
+    }
+
+    return visibleProjects;
   }
 
-  private generateCytoscapeLayout(
-    selectedProjects: ProjectGraphNode[],
-    groupByFolder: boolean,
-    workspaceLayout,
-    focusedProject: string,
-    affectedProjects: string[],
-    dependencies: Record<string, ProjectGraphDependency[]>
-  ) {
-    const elements = this.createElements(
-      selectedProjects,
-      groupByFolder,
-      workspaceLayout,
+  setShownProjects(selectedProjectNames: string[]) {
+    let nodesToAdd = this.traversalGraph.collection();
+
+    selectedProjectNames.forEach((name) => {
+      nodesToAdd = nodesToAdd.union(this.traversalGraph.$id(name));
+    });
+
+    const ancestorsToAdd = nodesToAdd.ancestors();
+
+    const nodesToRender = nodesToAdd.union(ancestorsToAdd);
+    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
+
+    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
+  }
+
+  showProjects(selectedProjectNames: string[]) {
+    const currentNodes =
+      this.renderGraph?.nodes() ?? this.traversalGraph.collection();
+
+    let nodesToAdd = this.traversalGraph.collection();
+
+    selectedProjectNames.forEach((name) => {
+      nodesToAdd = nodesToAdd.union(this.traversalGraph.$id(name));
+    });
+
+    const ancestorsToAdd = nodesToAdd.ancestors();
+
+    const nodesToRender = currentNodes.union(nodesToAdd).union(ancestorsToAdd);
+    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
+
+    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
+  }
+
+  hideProject(projectName: string) {
+    const currentNodes =
+      this.renderGraph?.nodes() ?? this.traversalGraph.collection();
+    const nodeToHide = this.renderGraph.$id(projectName);
+
+    const nodesToAdd = currentNodes.difference(nodeToHide);
+    const ancestorsToAdd = nodesToAdd.ancestors();
+    const nodesToRender = nodesToAdd.union(ancestorsToAdd);
+    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
+
+    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
+  }
+
+  showAffectedProjects() {
+    const affectedProjects = this.traversalGraph.nodes('.affected');
+    const affectedAncestors = affectedProjects.ancestors();
+
+    const affectedNodes = affectedProjects.union(affectedAncestors);
+    const affectedEdges = affectedNodes.edgesTo(affectedNodes);
+
+    this.transferToRenderGraph(affectedNodes.union(affectedEdges));
+  }
+
+  focusProject(focusedProjectName: string, searchDepth: number = 1) {
+    const focusedProject = this.traversalGraph.$id(focusedProjectName);
+
+    const includedProjects = this.includeProjectsByDepth(
       focusedProject,
-      affectedProjects,
-      dependencies
+      searchDepth
     );
 
-    this.graph = cy({
-      container: document.getElementById('graph-container'),
-      elements: [...elements],
-      layout: <CytoscapeDagreConfig>{
-        name: 'dagre',
-        nodeDimensionsIncludeLabels: true,
-        rankSep: 75,
-        edgeSep: 50,
-        ranker: 'network-simplex',
-      },
+    const includedNodes = focusedProject.union(includedProjects);
+
+    const includedAncestors = includedNodes.ancestors();
+
+    const nodesToRender = includedNodes.union(includedAncestors);
+    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
+
+    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
+
+    this.renderGraph.$id(focusedProjectName).addClass('focused');
+  }
+
+  showAllProjects() {
+    this.transferToRenderGraph(this.traversalGraph.elements());
+  }
+
+  hideAllProjects() {
+    this.transferToRenderGraph(this.traversalGraph.collection());
+  }
+
+  filterProjectsByText(
+    search: string,
+    includePath: boolean,
+    searchDepth: number = -1
+  ) {
+    const split = search.split(',');
+
+    let filteredProjects = this.traversalGraph.nodes().filter((node) => {
+      return split.findIndex((splitItem) => node.id().includes(splitItem)) > -1;
+    });
+
+    if (includePath) {
+      filteredProjects = filteredProjects.union(
+        this.includeProjectsByDepth(filteredProjects, searchDepth)
+      );
+    }
+
+    filteredProjects = filteredProjects.union(filteredProjects.ancestors());
+    const edgesToRender = filteredProjects.edgesTo(filteredProjects);
+
+    this.transferToRenderGraph(filteredProjects.union(edgesToRender));
+  }
+
+  private transferToRenderGraph(elements: cy.Collection) {
+    let currentFocusedProjectName;
+    if (this.renderGraph) {
+      currentFocusedProjectName = this.renderGraph
+        .nodes('.focused')
+        .first()
+        .id();
+      this.renderGraph.destroy();
+      delete this.renderGraph;
+    }
+    const container = document.getElementById(this.containerId);
+
+    this.renderGraph = cy({
+      container: container,
+      headless: !container,
       boxSelectionEnabled: false,
       style: [...nodeStyles, ...edgeStyles],
     });
 
-    this.graph.on('zoom', () => {
+    this.renderGraph.add(elements);
+
+    if (!!currentFocusedProjectName) {
+      this.renderGraph.$id(currentFocusedProjectName).addClass('focused');
+    }
+    this.renderGraph.on('zoom', () => {
       if (this.openTooltip) {
         this.openTooltip.hide();
         this.openTooltip = null;
       }
     });
+    this.listenForProjectNodeClicks();
+    this.listenForProjectNodeHovers();
+  }
+
+  private includeProjectsByDepth(
+    projects: cy.NodeCollection | cy.NodeSingular,
+    depth: number = -1
+  ) {
+    let predecessors = this.traversalGraph.collection();
+
+    if (depth === -1) {
+      predecessors = projects.predecessors();
+    } else {
+      predecessors = projects.incomers();
+
+      for (let i = 1; i < depth; i++) {
+        predecessors = predecessors.union(predecessors.incomers());
+      }
+    }
+
+    let successors = this.traversalGraph.collection();
+
+    if (depth === -1) {
+      successors = projects.successors();
+    } else {
+      successors = projects.outgoers();
+
+      for (let i = 1; i < depth; i++) {
+        successors = successors.union(successors.outgoers());
+      }
+    }
+
+    return projects.union(predecessors).union(successors);
+  }
+
+  initGraph(
+    allProjects: ProjectGraphNode[],
+    groupByFolder: boolean,
+    workspaceLayout,
+    dependencies: Record<string, ProjectGraphDependency[]>,
+    affectedProjectIds: string[]
+  ) {
+    this.tooltipService.hideAll();
+
+    this.generateCytoscapeLayout(
+      allProjects,
+      groupByFolder,
+      workspaceLayout,
+      dependencies,
+      affectedProjectIds
+    );
+  }
+
+  private generateCytoscapeLayout(
+    allProjects: ProjectGraphNode[],
+    groupByFolder: boolean,
+    workspaceLayout,
+    dependencies: Record<string, ProjectGraphDependency[]>,
+    affectedProjectIds: string[]
+  ) {
+    const elements = this.createElements(
+      allProjects,
+      groupByFolder,
+      workspaceLayout,
+      dependencies,
+      affectedProjectIds
+    );
+
+    this.traversalGraph = cy({
+      headless: true,
+      elements: [...elements],
+      boxSelectionEnabled: false,
+      style: [...nodeStyles, ...edgeStyles],
+    });
   }
 
   private createElements(
-    selectedProjects: ProjectGraphNode[],
+    projects: ProjectGraphNode[],
     groupByFolder: boolean,
     workspaceLayout: {
       appsDir: string;
       libsDir: string;
     },
-    focusedProject: string,
-    affectedProjects: string[],
-    dependencies: Record<string, ProjectGraphDependency[]>
+    dependencies: Record<string, ProjectGraphDependency[]>,
+    affectedProjectIds: string[]
   ) {
     let elements: cy.ElementDefinition[] = [];
-    const filteredProjectNames = selectedProjects.map(
-      (project) => project.name
-    );
+    const filteredProjectNames = projects.map((project) => project.name);
 
     const projectNodes: ProjectNode[] = [];
     const edgeNodes: ProjectEdge[] = [];
@@ -156,24 +373,21 @@ export class GraphComponent {
       { id: string; parentId: string; label: string }
     > = {};
 
-    selectedProjects.forEach((project) => {
+    projects.forEach((project) => {
       const workspaceRoot =
         project.type === 'app' || project.type === 'e2e'
           ? workspaceLayout.appsDir
           : workspaceLayout.libsDir;
 
       const projectNode = new ProjectNode(project, workspaceRoot);
-      projectNode.focused = project.name === focusedProject;
-      projectNode.affected = affectedProjects.includes(project.name);
+
+      projectNode.affected = affectedProjectIds.includes(project.name);
 
       projectNodes.push(projectNode);
 
       dependencies[project.name].forEach((dep) => {
         if (filteredProjectNames.includes(dep.target)) {
           const edge = new ProjectEdge(dep);
-          edge.affected =
-            affectedProjects.includes(dep.source) &&
-            affectedProjects.includes(dep.target);
           edgeNodes.push(edge);
         }
       });
@@ -205,7 +419,7 @@ export class GraphComponent {
   }
 
   listenForProjectNodeClicks() {
-    this.graph.$('node:childless').on('click', (event) => {
+    this.renderGraph.$('node:childless').on('click', (event) => {
       const node = event.target;
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
@@ -217,11 +431,11 @@ export class GraphComponent {
   }
 
   listenForProjectNodeHovers(): void {
-    this.graph.on('mouseover', (event) => {
+    this.renderGraph.on('mouseover', (event) => {
       const node = event.target;
       if (!node.isNode || !node.isNode() || node.isParent()) return;
 
-      this.graph
+      this.renderGraph
         .elements()
         .difference(node.outgoers().union(node.incomers()))
         .not(node)
@@ -232,11 +446,12 @@ export class GraphComponent {
         .union(node.incomers())
         .addClass('highlight');
     });
-    this.graph.on('mouseout', (event) => {
+
+    this.renderGraph.on('mouseout', (event) => {
       const node = event.target;
       if (!node.isNode || !node.isNode() || node.isParent()) return;
 
-      this.graph.elements().removeClass('transparent');
+      this.renderGraph.elements().removeClass('transparent');
       node
         .removeClass('highlight')
         .outgoers()

@@ -1,8 +1,13 @@
 import { assign } from '@xstate/immer';
-import { Machine } from 'xstate';
+import { Machine, send, spawn } from 'xstate';
+import { useGraphService } from '../graph.service';
 import { customSelectedStateConfig } from './custom-selected.state';
 import { focusedStateConfig } from './focused.state';
-import { DepGraphContext, DepGraphEvents, DepGraphSchema } from './interfaces';
+import {
+  DepGraphContext,
+  DepGraphUIEvents,
+  DepGraphSchema,
+} from './interfaces';
 import { textFilteredStateConfig } from './text-filtered.state';
 import { unselectedStateConfig } from './unselected.state';
 
@@ -21,12 +26,25 @@ export const initialContext: DepGraphContext = {
     libsDir: '',
     appsDir: '',
   },
+  graph: null,
+};
+
+const graphActor = (callback, receive) => {
+  const graphService = useGraphService();
+
+  receive((e) => {
+    const selectedProjectNames = graphService.handleEvent(e);
+    callback({
+      type: 'setSelectedProjectsFromGraph',
+      selectedProjectNames,
+    });
+  });
 };
 
 export const depGraphMachine = Machine<
   DepGraphContext,
   DepGraphSchema,
-  DepGraphEvents
+  DepGraphUIEvents
 >(
   {
     id: 'DepGraph',
@@ -42,37 +60,39 @@ export const depGraphMachine = Machine<
     on: {
       initGraph: {
         target: 'unselected',
+        actions: [
+          'setGraph',
+          send(
+            (ctx, event) => ({
+              type: 'notifyGraphInitGraph',
+              projects: ctx.projects,
+              dependencies: ctx.dependencies,
+              affectedProjects: ctx.affectedProjects,
+              workspaceLayout: ctx.workspaceLayout,
+              groupByFolder: ctx.groupByFolder,
+            }),
+            {
+              to: (context) => context.graph,
+            }
+          ),
+        ],
+      },
+      setSelectedProjectsFromGraph: {
         actions: assign((ctx, event) => {
-          ctx.projects = event.projects;
-          ctx.affectedProjects = event.affectedProjects;
-          ctx.dependencies = event.dependencies;
-          ctx.workspaceLayout = event.workspaceLayout;
+          ctx.selectedProjects = event.selectedProjectNames;
         }),
       },
-
       selectProject: {
         target: 'customSelected',
-        actions: [
-          assign((ctx, event) => {
-            ctx.selectedProjects.push(event.projectName);
-          }),
-        ],
+        actions: ['notifyGraphShowProject'],
       },
       selectAll: {
         target: 'customSelected',
-        actions: [
-          assign((ctx) => {
-            ctx.selectedProjects = ctx.projects.map((project) => project.name);
-          }),
-        ],
+        actions: ['notifyGraphShowAllProjects'],
       },
       selectAffected: {
         target: 'customSelected',
-        actions: [
-          assign((ctx) => {
-            ctx.selectedProjects = ctx.affectedProjects;
-          }),
-        ],
+        actions: ['notifyGraphShowAffectedProjects'],
       },
       deselectProject: [
         {
@@ -81,15 +101,7 @@ export const depGraphMachine = Machine<
         },
         {
           target: 'customSelected',
-          actions: [
-            assign((ctx, event) => {
-              const index = ctx.selectedProjects.findIndex(
-                (project) => project === event.projectName
-              );
-
-              ctx.selectedProjects.splice(index, 1);
-            }),
-          ],
+          actions: ['notifyGraphHideProject'],
         },
       ],
       deselectAll: {
@@ -100,9 +112,21 @@ export const depGraphMachine = Machine<
       },
       setGroupByFolder: {
         actions: [
-          assign((ctx, event: any) => {
-            ctx.groupByFolder = event.groupByFolder;
-          }),
+          'setGroupByFolder',
+          send(
+            (ctx, event) => ({
+              type: 'notifyGraphUpdateGraph',
+              projects: ctx.projects,
+              dependencies: ctx.dependencies,
+              affectedProjects: ctx.affectedProjects,
+              workspaceLayout: ctx.workspaceLayout,
+              groupByFolder: ctx.groupByFolder,
+              selectedProjects: ctx.selectedProjects,
+            }),
+            {
+              to: (context) => context.graph,
+            }
+          ),
         ],
       },
       setIncludeProjectsByPath: {
@@ -113,25 +137,13 @@ export const depGraphMachine = Machine<
         ],
       },
       incrementSearchDepth: {
-        actions: [
-          assign((ctx) => {
-            ctx.searchDepth = ctx.searchDepth + 1;
-          }),
-        ],
+        actions: ['incrementSearchDepth'],
       },
       decrementSearchDepth: {
-        actions: [
-          assign((ctx) => {
-            ctx.searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
-          }),
-        ],
+        actions: ['decrementSearchDepth'],
       },
       setSearchDepthEnabled: {
-        actions: [
-          assign((ctx, event) => {
-            ctx.searchDepthEnabled = event.searchDepthEnabled;
-          }),
-        ],
+        actions: ['setSearchDepthEnabled'],
       },
       filterByText: {
         target: 'textFiltered',
@@ -143,6 +155,112 @@ export const depGraphMachine = Machine<
       deselectLastProject: (ctx) => {
         return ctx.selectedProjects.length <= 1;
       },
+    },
+    actions: {
+      setGroupByFolder: assign((ctx, event) => {
+        if (event.type !== 'setGroupByFolder') return;
+
+        ctx.groupByFolder = event.groupByFolder;
+      }),
+      incrementSearchDepth: assign((ctx) => {
+        ctx.searchDepth = ctx.searchDepth + 1;
+      }),
+      decrementSearchDepth: assign((ctx) => {
+        ctx.searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
+      }),
+      setSearchDepthEnabled: assign((ctx, event) => {
+        if (event.type !== 'setSearchDepthEnabled') return;
+
+        ctx.searchDepthEnabled = event.searchDepthEnabled;
+      }),
+      setIncludeProjectsByPath: assign((ctx, event) => {
+        if (event.type !== 'setIncludeProjectsByPath') return;
+
+        ctx.includePath = event.includeProjectsByPath;
+      }),
+      setGraph: assign((ctx, event) => {
+        if (event.type !== 'initGraph' && event.type !== 'updateGraph') return;
+
+        ctx.projects = event.projects;
+        ctx.dependencies = event.dependencies;
+        ctx.graph = spawn(graphActor, 'graphActor');
+
+        if (event.type === 'initGraph') {
+          ctx.workspaceLayout = event.workspaceLayout;
+          ctx.affectedProjects = event.affectedProjects;
+        }
+      }),
+      notifyGraphShowProject: send(
+        (context, event) => {
+          if (event.type !== 'selectProject') return;
+
+          return {
+            type: 'notifyGraphShowProject',
+            projectName: event.projectName,
+          };
+        },
+        {
+          to: (context) => context.graph,
+        }
+      ),
+      notifyGraphHideProject: send(
+        (context, event) => {
+          if (event.type !== 'deselectProject') return;
+
+          return {
+            type: 'notifyGraphHideProject',
+            projectName: event.projectName,
+          };
+        },
+        {
+          to: (context) => context.graph,
+        }
+      ),
+      notifyGraphShowAllProjects: send(
+        (context, event) => ({
+          type: 'notifyGraphShowAllProjects',
+        }),
+        {
+          to: (context) => context.graph,
+        }
+      ),
+      notifyGraphHideAllProjects: send(
+        (context, event) => ({
+          type: 'notifyGraphHideAllProjects',
+        }),
+        {
+          to: (context) => context.graph,
+        }
+      ),
+      notifyGraphShowAffectedProjects: send(
+        {
+          type: 'notifyGraphShowAffectedProjects',
+        },
+        {
+          to: (ctx) => ctx.graph,
+        }
+      ),
+      notifyGraphFocusProject: send(
+        (context, event) => ({
+          type: 'notifyGraphFocusProject',
+          projectName: context.focusedProject,
+          searchDepth: context.searchDepthEnabled ? context.searchDepth : -1,
+        }),
+        {
+          to: (context) => context.graph,
+        }
+      ),
+      notifyGraphFilterProjectsByText: send(
+        (context, event) => ({
+          type: 'notifyGraphFilterProjectsByText',
+          search: context.textFilter,
+          includeProjectsByPath: context.includePath,
+          searchDepth: context.searchDepthEnabled ? context.searchDepth : -1,
+        }),
+        {
+          to: (context) => context.graph,
+        }
+      ),
     },
   }
 );

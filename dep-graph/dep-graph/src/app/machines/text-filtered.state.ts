@@ -1,19 +1,15 @@
 import { assign } from '@xstate/immer';
-import { filterProjectsByText } from '../util';
+import { send } from 'xstate';
 import { DepGraphStateNodeConfig } from './interfaces';
 
 export const textFilteredStateConfig: DepGraphStateNodeConfig = {
   entry: [
-    assign((ctx, event: any) => {
+    assign((ctx, event) => {
+      if (event.type !== 'filterByText') return;
+
       ctx.textFilter = event.search;
-      ctx.selectedProjects = filterProjectsByText(
-        event.search,
-        ctx.includePath,
-        ctx.searchDepthEnabled ? ctx.searchDepth : -1,
-        ctx.projects,
-        ctx.dependencies
-      );
     }),
+    'notifyGraphFilterProjectsByText',
   ],
   on: {
     clearTextFilter: {
@@ -24,79 +20,35 @@ export const textFilteredStateConfig: DepGraphStateNodeConfig = {
       }),
     },
     setIncludeProjectsByPath: {
-      actions: [
-        assign((ctx, event) => {
-          ctx.includePath = event.includeProjectsByPath;
-          ctx.selectedProjects = filterProjectsByText(
-            ctx.textFilter,
-            event.includeProjectsByPath,
-            ctx.searchDepthEnabled ? ctx.searchDepth : -1,
-            ctx.projects,
-            ctx.dependencies
-          );
-        }),
-      ],
+      actions: ['setIncludeProjectsByPath', 'notifyGraphFilterProjectsByText'],
     },
     incrementSearchDepth: {
-      actions: [
-        assign((ctx) => {
-          const searchDepth = ctx.searchDepth + 1;
-          ctx.selectedProjects = filterProjectsByText(
-            ctx.textFilter,
-            ctx.includePath,
-            ctx.searchDepthEnabled ? searchDepth : -1,
-            ctx.projects,
-            ctx.dependencies
-          );
-
-          ctx.searchDepth = searchDepth;
-        }),
-      ],
+      actions: ['incrementSearchDepth', 'notifyGraphFilterProjectsByText'],
     },
     decrementSearchDepth: {
-      actions: [
-        assign((ctx) => {
-          const searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
-          ctx.selectedProjects = filterProjectsByText(
-            ctx.textFilter,
-            ctx.includePath,
-            ctx.searchDepthEnabled ? searchDepth : -1,
-            ctx.projects,
-            ctx.dependencies
-          );
-
-          ctx.searchDepth = searchDepth;
-        }),
-      ],
+      actions: ['decrementSearchDepth', 'notifyGraphFilterProjectsByText'],
     },
     setSearchDepthEnabled: {
-      actions: [
-        assign((ctx, event) => {
-          ctx.searchDepthEnabled = event.searchDepthEnabled;
-          ctx.selectedProjects = filterProjectsByText(
-            ctx.textFilter,
-            ctx.includePath,
-            event.searchDepthEnabled ? ctx.searchDepth : -1,
-            ctx.projects,
-            ctx.dependencies
-          );
-        }),
-      ],
+      actions: ['setSearchDepthEnabled', 'notifyGraphFilterProjectsByText'],
     },
     updateGraph: {
       actions: [
-        assign((ctx, event) => {
-          ctx.selectedProjects = filterProjectsByText(
-            ctx.textFilter,
-            ctx.includePath,
-            ctx.searchDepthEnabled ? ctx.searchDepth : -1,
-            event.projects,
-            event.dependencies
-          );
-
-          ctx.projects = event.projects;
-          ctx.dependencies = event.dependencies;
-        }),
+        'setGraph',
+        send(
+          (ctx, event) => ({
+            type: 'notifyGraphUpdateGraph',
+            projects: ctx.projects,
+            dependencies: ctx.dependencies,
+            affectedProjects: ctx.affectedProjects,
+            workspaceLayout: ctx.workspaceLayout,
+            groupByFolder: ctx.groupByFolder,
+            selectedProjects: ctx.selectedProjects,
+          }),
+          {
+            to: (context) => context.graph,
+          }
+        ),
+        'notifyGraphFilterProjectsByText',
       ],
     },
   },
