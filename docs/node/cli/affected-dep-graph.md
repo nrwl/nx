@@ -110,7 +110,7 @@ Open the dependency graph in the browser.
 
 ### port
 
-Bind the dependecy graph server to a specific port.
+Bind the dependency graph server to a specific port.
 
 ### runner
 

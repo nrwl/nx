@@ -209,9 +209,9 @@ that adding a `require()` creates a dependency and that some dependencies cannot
 
 ### Nx Orchestrates Tasks
 
-Running `yarn nx run-many --target=test --all --parallel` will test all projects in parallel.
+Running `yarn nx run-many --target=test --all --parallel=5` will test all projects in parallel.
 
-Running `yarn nx run-many --target=build --projects=app1,app2 --parallel` will build `proj1` and `proj2` and their
+Running `yarn nx run-many --target=build --projects=app1,app2 --parallel=5` will build `proj1` and `proj2` and their
 dependencies in parallel. Note that if `app1` depends on the output of its dependency (e.g., `shared-components`), Nx
 will build `shared-components` first and only then will build the app.
 

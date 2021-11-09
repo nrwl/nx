@@ -187,6 +187,12 @@
       "description": "Move global settings into nx.json, and project specific settings into workspace.json",
       "cli": "nx",
       "implementation": "./src/migrations/update-13-0-0/config-locations/config-locations"
+    },
+    "set-parallel-default": {
+      "version": "13.2.0",
+      "description": "Set --parallel=1 for existing repos to preserve the existing behavior",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-2-0/set-parallel-default"
     }
   },
   "packageJsonUpdates": {

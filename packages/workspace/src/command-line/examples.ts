@@ -37,7 +37,7 @@ export const examples: Record<string, Example[]> = {
       description: 'Run custom target for all affected projects',
     },
     {
-      command: 'affected --target=test --parallel --maxParallel=5',
+      command: 'affected --target=test --parallel=5',
       description: 'Run tests in parallel',
     },
     {
@@ -67,7 +67,7 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:test': [
     {
-      command: 'affected:test --parallel --maxParallel=5',
+      command: 'affected:test --parallel=5',
       description: 'Run tests in parallel',
     },
     {
@@ -97,7 +97,7 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:build': [
     {
-      command: 'affected:build --parallel --maxParallel=5',
+      command: 'affected:build --parallel=5',
       description: 'Run build in parallel',
     },
     {
@@ -127,7 +127,7 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:e2e': [
     {
-      command: 'affected:e2e --parallel --maxParallel=5',
+      command: 'affected:e2e --parallel=5',
       description: 'Run tests in parallel',
     },
     {
@@ -157,7 +157,7 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:lint': [
     {
-      command: 'affected:lint --parallel --maxParallel=5',
+      command: 'affected:lint --parallel=5',
       description: 'Run lint in parallel',
     },
     {
@@ -313,8 +313,7 @@ export const examples: Record<string, Example[]> = {
       description: 'Test proj1 and proj2',
     },
     {
-      command:
-        'run-many --target=test --projects=proj1,proj2 --parallel --maxParallel=2',
+      command: 'run-many --target=test --projects=proj1,proj2 --parallel=2',
       description: 'Test proj1 and proj2 in parallel',
     },
   ],

@@ -516,7 +516,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
     })
     .option('port', {
-      describe: 'Bind the dependecy graph server to a specific port.',
+      describe: 'Bind the dependency graph server to a specific port.',
       type: 'number',
     })
     .option('watch', {
@@ -540,18 +540,10 @@ function parseCSV(args: string[]) {
 }
 
 function withParallel(yargs: yargs.Argv): yargs.Argv {
-  return yargs
-    .option('parallel', {
-      describe: 'Parallelize the command',
-      type: 'boolean',
-      default: false,
-    })
-    .option('maxParallel', {
-      describe:
-        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
-      type: 'number',
-      default: 3,
-    });
+  return yargs.option('parallel', {
+    describe: 'Max number of parallel processes [default is 3]',
+    type: 'string',
+  });
 }
 
 function withTarget(yargs: yargs.Argv): yargs.Argv {
