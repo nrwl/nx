@@ -195,4 +195,47 @@ transform: {
 transformIgnorePatterns: ['node_modules/(?!.*(@angular))'],
 };`);
   });
+
+  it('should not transform contents of unmatching configs', () => {
+    // ARRANGE
+    const jestConfig = `module.exports = {
+      preset: '../../jest.preset.js',
+      coverageDirectory: '../../coverage/libs/common-platform',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      globals: {
+        'ts-jest': {
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+          astTransformers: [
+            'jest-preset-angular/build/InlineFilesTransformer',
+            'jest-preset-angular/build/StripStylesTransformer',
+          ],
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+        },
+      },
+      displayName: 'common-platform',
+    };
+    `;
+
+    // ACT
+    const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
+
+    // ASSERT
+    expect(updatedFile).toEqual(`module.exports = {
+      preset: '../../jest.preset.js',
+      coverageDirectory: '../../coverage/libs/common-platform',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      globals: {
+        'ts-jest': {
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+          astTransformers: [
+            'jest-preset-angular/build/InlineFilesTransformer',
+            'jest-preset-angular/build/StripStylesTransformer',
+          ],
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+        },
+      },
+      displayName: 'common-platform',
+    };
+    `);
+  });
 });
