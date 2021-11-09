@@ -1,13 +1,13 @@
-import { AffectedEventType, TasksRunner } from './tasks-runner';
+import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { Reporter, ReporterArgs } from './reporter';
+import { ReporterArgs } from './reporter';
 import * as yargs from 'yargs';
 import type {
+  NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
-  NxJsonConfiguration,
   Task,
 } from '@nrwl/devkit';
 import { logger } from '@nrwl/devkit';
@@ -21,9 +21,40 @@ import {
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { getDependencyConfigs } from './utils';
-import { Hasher } from '../core/hasher/hasher';
+import { CompositeLifeCycle, LifeCycle } from './life-cycle';
+import { RunManyTerminalOutputLifeCycle } from './run-many-terminal-output-life-cycle';
+import { EmptyTerminalOutputLifeCycle } from './empty-terminal-output-life-cycle';
+import { RunOneTerminalOutputLifeCycle } from './run-one-terminal-output-life-cycle';
+import { TaskTimingsLifeCycle } from './task-timings-life-cycle';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
+
+function getTerminalOutputLifeCycle(
+  initiatingProject: string,
+  terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
+  projectsToRun: ProjectGraphNode[],
+  tasks: Task[],
+  nxArgs: NxArgs,
+  overrides: any
+) {
+  if (terminalOutputStrategy === 'run-one') {
+    return new RunOneTerminalOutputLifeCycle(
+      initiatingProject,
+      projectsToRun.map((t) => t.name),
+      tasks,
+      nxArgs
+    );
+  } else if (terminalOutputStrategy === 'hide-cached-output') {
+    return new EmptyTerminalOutputLifeCycle();
+  } else {
+    return new RunManyTerminalOutputLifeCycle(
+      projectsToRun.map((t) => t.name),
+      tasks,
+      nxArgs,
+      overrides
+    );
+  }
+}
 
 export async function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
@@ -31,9 +62,14 @@ export async function runCommand<T extends RunArgs>(
   { nxJson, workspaceResults }: Environment,
   nxArgs: NxArgs,
   overrides: any,
-  reporter: Reporter,
+  terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
   initiatingProject: string | null
 ) {
+  if (nxArgs.onlyFailed || nxArgs['only-failed']) {
+    output.warn({
+      title: '--only-failed has been removed. Nx is executing all the tasks.',
+    });
+  }
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
   // Doing this for backwards compatibility, should be removed in v14
@@ -52,81 +88,68 @@ export async function runCommand<T extends RunArgs>(
     defaultDependencyConfigs
   );
 
-  reporter.beforeRun(
-    projectsToRun.map((p) => p.name),
+  const lifeCycles = [
+    getTerminalOutputLifeCycle(
+      initiatingProject,
+      terminalOutputStrategy,
+      projectsToRun,
+      tasks,
+      nxArgs,
+      overrides
+    ),
+  ] as LifeCycle[];
+  if (process.env.NX_PERF_LOGGING) {
+    lifeCycles.push(new TaskTimingsLifeCycle());
+  }
+  const lifeCycle = new CompositeLifeCycle(lifeCycles);
+
+  const promiseOrObservable = tasksRunner(
     tasks,
-    nxArgs,
-    overrides
+    { ...runnerOptions, lifeCycle },
+    {
+      initiatingProject,
+      target: nxArgs.target,
+      projectGraph,
+      nxJson,
+    }
   );
 
-  // TODO: vsavkin remove hashing after Nx 13
-  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
-  const res = await Promise.all(
-    tasks.map((t) => hasher.hashTaskWithDepsAndContext(t))
-  );
-  for (let i = 0; i < res.length; ++i) {
-    tasks[i].hash = res[i].value;
-    tasks[i].hashDetails = res[i].details;
+  let anyFailures;
+  if ((promiseOrObservable as any).subscribe) {
+    anyFailures = await anyFailuresInObservable(promiseOrObservable);
+  } else {
+    // simply await the promise
+    anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
   }
 
-  const cachedTasks: Task[] = [];
-  const failedTasks: Task[] = [];
-  const tasksWithFailedDependencies: Task[] = [];
-  tasksRunner(tasks, runnerOptions, {
-    initiatingProject,
-    target: nxArgs.target,
-    projectGraph,
-    nxJson,
-    hideCachedOutput: nxArgs.hideCachedOutput,
-  }).subscribe({
-    next: (event) => {
-      if (
-        projectsToRun
-          .map((project) => project.name)
-          .includes(event.task.target.project) &&
-        event.task.target.target === nxArgs.target
-      ) {
-        workspaceResults.setResult(event.task.target.project, event.success);
-      }
-      switch (event.type) {
-        case AffectedEventType.TaskComplete: {
-          if (!event.success) {
-            failedTasks.push(event.task);
-          }
-          break;
-        }
-        case AffectedEventType.TaskDependencyFailed: {
-          tasksWithFailedDependencies.push(event.task);
-          break;
-        }
-        case AffectedEventType.TaskCacheRead: {
-          cachedTasks.push(event.task);
-          if (!event.success) {
-            failedTasks.push(event.task);
-          }
-          break;
-        }
-      }
-    },
-    error: console.error,
-    complete: () => {
-      // fix for https://github.com/nrwl/nx/issues/1666
-      if (process.stdin['unref']) (process.stdin as any).unref();
+  // fix for https://github.com/nrwl/nx/issues/1666
+  if (process.stdin['unref']) (process.stdin as any).unref();
 
-      workspaceResults.saveResults();
-      reporter.printResults(
-        nxArgs,
-        workspaceResults.startedWithFailedProjects,
-        tasks,
-        failedTasks,
-        tasksWithFailedDependencies,
-        cachedTasks
-      );
+  process.exit(anyFailures ? 1 : 0);
+}
 
-      if (workspaceResults.hasFailure) {
-        process.exit(1);
+async function anyFailuresInPromise(
+  promise: Promise<{ [id: string]: TaskStatus }>
+) {
+  return Object.values(await promise).some(
+    (v) => v === 'failure' || v === 'skipped'
+  );
+}
+
+async function anyFailuresInObservable(obs: any) {
+  await new Promise((res) => {
+    let anyFailures = false;
+    obs.subscribe(
+      (t) => {
+        if (!t.success) {
+          anyFailures = true;
+        }
+      },
+      (error) => {},
+      () => {
+        res(anyFailures);
       }
-    },
+    );
   });
 }
 
@@ -365,7 +388,7 @@ export function getRunner(
   nxJson: NxJsonConfiguration
 ): {
   tasksRunner: TasksRunner;
-  runnerOptions: unknown;
+  runnerOptions: any;
 } {
   let runner = nxArgs.runner;
 

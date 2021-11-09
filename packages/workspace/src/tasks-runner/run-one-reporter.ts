@@ -2,6 +2,10 @@ import { output } from '../utilities/output';
 import { Reporter, ReporterArgs } from './reporter';
 import type { Task } from '@nrwl/devkit';
 
+/**
+ * @deprecated the reporter API is no longer supported
+ * The class will be removed after Nx 14 is released.
+ */
 export class RunOneReporter implements Reporter {
   constructor(private readonly initiatingProject: string) {}
 

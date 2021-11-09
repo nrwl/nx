@@ -1,12 +1,10 @@
 import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import type { NxArgs, RawNxArgs } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { createProjectGraphAsync } from '../core/project-graph';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
-import { DefaultReporter } from '../tasks-runner/default-reporter';
-import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
@@ -34,7 +32,7 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
     env,
     nxArgs,
     overrides,
-    nxArgs.hideCachedOutput ? new EmptyReporter() : new DefaultReporter(),
+    nxArgs.hideCachedOutput ? 'hide-cached-output' : 'default',
     null
   );
 }

@@ -14,7 +14,6 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
 import type { NxArgs } from '../command-line/utils';
-import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { appendArray } from '../utilities/array';
 import { fileExists, readJsonFile } from '../utilities/fileutils';
@@ -393,9 +392,7 @@ export function readEnvironment(
 ): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readWorkspaceJson();
-  const workspaceResults = new WorkspaceResults(target, projects);
-
-  return { nxJson, workspaceJson, workspaceResults } as any;
+  return { nxJson, workspaceJson, workspaceResults: null } as any;
 }
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {

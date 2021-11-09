@@ -271,50 +271,6 @@ describe('run-many', () => {
     });
     expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
   }, 1000000);
-
-  it('should run only failed projects', () => {
-    const myapp = uniq('myapp');
-    const myapp2 = uniq('myapp2');
-    runCLI(`generate @nrwl/angular:app ${myapp}`);
-    runCLI(`generate @nrwl/angular:app ${myapp2}`);
-
-    // set broken test for myapp
-    updateFile(
-      `apps/${myapp}/src/app/app.component.spec.ts`,
-      `
-              describe('sample test', () => {
-                it('should test', () => {
-                  expect(1).toEqual(2);
-                });
-              });
-            `
-    );
-
-    const failedTests = runCLI(`run-many --target=test --all`, {
-      silenceError: true,
-    });
-    expect(failedTests).toContain(`Running target test for 2 project(s):`);
-    expect(failedTests).toContain(`- ${myapp}`);
-    expect(failedTests).toContain(`- ${myapp2}`);
-    expect(failedTests).toContain(`Failed tasks:`);
-
-    // Fix failing Unit Test
-    updateFile(
-      `apps/${myapp}/src/app/app.component.spec.ts`,
-      readFile(`apps/${myapp}/src/app/app.component.spec.ts`).replace(
-        '.toEqual(2)',
-        '.toEqual(1)'
-      )
-    );
-
-    const isolatedTests = runCLI(`run-many --target=test --all --only-failed`);
-    expect(isolatedTests).toContain(`Running target test for 1 project(s)`);
-    expect(isolatedTests).toContain(`- ${myapp}`);
-    expect(isolatedTests).not.toContain(`- ${myapp2}`);
-
-    const interpolatedTests = runCLI(`run-many --target=test --all`);
-    expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
-  }, 1000000);
 });
 
 describe('affected:*', () => {
@@ -447,23 +403,6 @@ describe('affected:*', () => {
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${mypublishablelib}`);
     expect(failedTests).toContain(`Failed tasks:`);
-    expect(failedTests).toContain(
-      'You can isolate the above projects by passing: --only-failed'
-    );
-    expect(
-      readJson(
-        `${
-          process.env.NX_CACHE_DIRECTORY ?? 'node_modules/.cache/nx'
-        }/results.json`
-      )
-    ).toEqual({
-      command: 'test',
-      results: {
-        [myapp]: false,
-        [mylib]: true,
-        [mypublishablelib]: true,
-      },
-    });
 
     // Fix failing Unit Test
     updateFile(
@@ -473,17 +412,6 @@ describe('affected:*', () => {
         '.toEqual(1)'
       )
     );
-
-    const isolatedTests = runCLI(
-      `affected:test --files="libs/${mylib}/src/index.ts" --only-failed`
-    );
-    expect(isolatedTests).toContain(`Running target test for 1 project(s)`);
-    expect(isolatedTests).toContain(`- ${myapp}`);
-
-    const interpolatedTests = runCLI(
-      `affected --target test --files="libs/${mylib}/src/index.ts" --jest-config {project.root}/jest.config.js`
-    );
-    expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
   }, 1000000);
 });
 
