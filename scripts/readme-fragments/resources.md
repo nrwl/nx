@@ -55,5 +55,5 @@ Even though Nx isn't technology specific, we provide 3 separate flavours of the 
 
 # Engage with the Core Team and the Community
 
-- [Nx Office Hours Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
+- [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
 - [Follow Nx on Twitter](https://twitter.com/NxDevTools)

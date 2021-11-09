@@ -121,11 +121,11 @@ export function Community(props: CommunityProps) {
                 </p>
 
                 <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  Office Hours & Twitter
+                  Livestreams & Twitter
                 </h2>
                 <p className="sm:text-lg mb-6">
-                  Our live Nx Office Hours take place every second and fourth
-                  Monday, from 1:00 - 2:00 PM EST on the{' '}
+                  The Nx Show takes place every second and fourth Monday, from
+                  1:00 - 2:00 PM EST on the{' '}
                   <a
                     className="underline cursor-pointer"
                     target="_blank"
@@ -134,7 +134,7 @@ export function Community(props: CommunityProps) {
                   >
                     Nrwl YouTube channel
                   </a>
-                  . Info about upcoming Office Hours sessions is shared on the{' '}
+                  . Info about upcoming sessions is shared on the{' '}
                   <a
                     className="underline cursor-pointer"
                     target="_blank"
@@ -151,7 +151,7 @@ export function Community(props: CommunityProps) {
                     rel="noreferrer"
                     href="https://www.youtube.com/watch?v=JS3m1wIwRBg&list=PLakNactNC1dH8LCp2mvx5lbO6maNrlBVN"
                   >
-                    'Nx Office Hours' Youtube Playlist
+                    'Nx Show' Youtube Playlist
                   </a>
                   .
                 </p>
@@ -160,13 +160,13 @@ export function Community(props: CommunityProps) {
                   In each session, members of the Nx core team answer your
                   questions, help get you up and running with Nx, and address
                   particular challenges. If you have a question or topic you’d
-                  like to see covered in Nx Office Hours, you can{' '}
+                  like to see covered during The Nx Show, you can{' '}
                   <a
                     className="underline cursor-pointer"
                     target="_blank"
                     rel="noreferrer"
-                    aria-label="Nx Office Hours Questions and Suggestions Form"
-                    title="Nx Office Hours Questions and Suggestions Form"
+                    aria-label="Nx Show Questions and Suggestions Form"
+                    title="Nx Show Questions and Suggestions Form"
                     href="https://forms.gle/ehzCjzcF1xxNaviC7"
                   >
                     submit them here
