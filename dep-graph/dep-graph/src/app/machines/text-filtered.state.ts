@@ -37,17 +37,35 @@ export const textFilteredStateConfig: DepGraphStateNodeConfig = {
         }),
       ],
     },
-    setSearchDepth: {
+    incrementSearchDepth: {
       actions: [
-        assign((ctx, event) => {
-          ctx.searchDepth = event.searchDepth;
+        assign((ctx) => {
+          const searchDepth = ctx.searchDepth + 1;
           ctx.selectedProjects = filterProjectsByText(
             ctx.textFilter,
             ctx.includePath,
-            ctx.searchDepthEnabled ? event.searchDepth : -1,
+            ctx.searchDepthEnabled ? searchDepth : -1,
             ctx.projects,
             ctx.dependencies
           );
+
+          ctx.searchDepth = searchDepth;
+        }),
+      ],
+    },
+    decrementSearchDepth: {
+      actions: [
+        assign((ctx) => {
+          const searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
+          ctx.selectedProjects = filterProjectsByText(
+            ctx.textFilter,
+            ctx.includePath,
+            ctx.searchDepthEnabled ? searchDepth : -1,
+            ctx.projects,
+            ctx.dependencies
+          );
+
+          ctx.searchDepth = searchDepth;
         }),
       ],
     },

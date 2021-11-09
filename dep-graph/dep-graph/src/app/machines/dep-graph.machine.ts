@@ -111,13 +111,6 @@ export const depGraphMachine = Machine<
           }),
         ],
       },
-      setSearchDepth: {
-        actions: [
-          assign((ctx, event) => {
-            ctx.searchDepth = event.searchDepth;
-          }),
-        ],
-      },
       incrementSearchDepth: {
         actions: [
           assign((ctx) => {
@@ -128,7 +121,7 @@ export const depGraphMachine = Machine<
       decrementSearchDepth: {
         actions: [
           assign((ctx) => {
-            ctx.searchDepth = ctx.searchDepth - 1;
+            ctx.searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
           }),
         ],
       },
