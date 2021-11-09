@@ -58,10 +58,7 @@ export class TaskOrchestrator {
     const threads = [];
 
     // initial seeding of the queue
-    const maxParallel = this.options.parallel
-      ? this.options.maxParallel || 3
-      : 1;
-    for (let i = 0; i < maxParallel; ++i) {
+    for (let i = 0; i < this.options.parallel; ++i) {
       threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
     }
     await Promise.all(threads);
