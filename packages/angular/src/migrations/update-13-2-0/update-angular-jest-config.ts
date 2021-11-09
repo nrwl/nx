@@ -57,6 +57,10 @@ export function replaceTransformAndAddIgnorePattern(fileContents: string) {
     }
   )[0] as Node;
 
+  if (!transformerExpressionNode) {
+    return fileContents;
+  }
+
   const transformerIndex = transformerExpressionNode.pos;
   const transformerEndIndex = transformerExpressionNode.end;
 
@@ -75,6 +79,10 @@ export function replaceTransformAndAddIgnorePattern(fileContents: string) {
   const transformObjectNode = tsquery(ast, TRANSFORM_OBJECT_AST_QUERY, {
     visitAllChildren: true,
   })[0] as PropertyAssignment;
+
+  if (!transformObjectNode) {
+    return updatedFileContents;
+  }
 
   let transformEndIndex = transformObjectNode.getEnd();
   if (updatedFileContents.charAt(transformEndIndex) == ',') {
