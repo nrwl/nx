@@ -55,6 +55,11 @@
   "peerDependencies": {
     "prettier": "^2.3.0"
   },
+  "peerDependenciesMeta": {
+    "prettier": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@parcel/watcher": "2.0.0-alpha.11",
     "@nrwl/cli": "*",
