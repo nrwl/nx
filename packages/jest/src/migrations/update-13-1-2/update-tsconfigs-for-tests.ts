@@ -3,9 +3,7 @@ import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import {
   formatFiles,
   joinPathFragments,
-  logger,
   readProjectConfiguration,
-  stripIndents,
   Tree,
 } from '@nrwl/devkit';
 
@@ -16,37 +14,41 @@ function updateTsConfigsForTests(tree: Tree) {
     (jestOptions, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
 
-      const tsconfigSpecPath = joinPathFragments(
-        projectConfig.root,
-        'tsconfig.spec.json'
-      );
+      const tsConfig = joinPathFragments(projectConfig.root, 'tsconfig.json');
 
-      if (!tree.exists(tsconfigSpecPath)) {
+      if (!tree.exists(tsConfig)) {
         return;
       }
 
-      updateTsConfigInclude(tree, tsconfigSpecPath);
+      const tsConfigContent: TsConfig = JSON.parse(
+        tree.read(tsConfig, 'utf-8')
+      );
 
-      switch (projectConfig.projectType) {
-        case 'library':
-          const tsConfigLibPath = joinPathFragments(
-            projectConfig.root,
-            'tsconfig.lib.json'
-          );
-          updateTsConfigExclude(tree, tsConfigLibPath);
-          break;
-        case 'application':
-          const tsConfigAppPath = joinPathFragments(
-            projectConfig.root,
-            'tsconfig.app.json'
-          );
-          updateTsConfigExclude(tree, tsConfigAppPath);
-          break;
-        default:
-          logger.error(
-            `Unable to update tsconfig for project type ${projectConfig.projectType} since it is unknown type in ${projectName}`
-          );
+      const specTsConfigRef = tsConfigContent?.references.find((ref) =>
+        ref.path.endsWith('tsconfig.spec.json')
+      );
+
+      const appLibTsConfigRefs = tsConfigContent?.references.filter(
+        (ref) =>
+          ref.path.endsWith('tsconfig.app.json') ||
+          ref.path.endsWith('tsconfig.lib.json')
+      );
+
+      if (!specTsConfigRef || appLibTsConfigRefs?.length === 0) {
+        // couldn't find any files to update. just leave it be.
+        return;
       }
+
+      for (const config of appLibTsConfigRefs) {
+        const tsConfigPath = joinPathFragments(projectConfig.root, config.path);
+        updateTsConfigExclude(tree, tsConfigPath);
+      }
+
+      const tsconfigSpecPath = joinPathFragments(
+        projectConfig.root,
+        specTsConfigRef.path
+      );
+      updateTsConfigInclude(tree, tsconfigSpecPath);
     }
   );
 
@@ -55,15 +57,9 @@ function updateTsConfigsForTests(tree: Tree) {
    * where .spec. patterns are found.
    */
   function updateTsConfigExclude(tree: Tree, tsConfigPath: string) {
-    if (tree.exists(tsConfigPath)) {
-      const appConfig = JSON.parse(tree.read(tsConfigPath, 'utf-8'));
-      appConfig.exclude = makeAllPatternsFromSpecPatterns(appConfig.exclude);
-      tree.write(tsConfigPath, JSON.stringify(appConfig));
-    } else {
-      logger.warn(
-        stripIndents`Unable update ${tsConfigPath} to exclude new test files patterns since it does not exist.`
-      );
-    }
+    const appConfig = JSON.parse(tree.read(tsConfigPath, 'utf-8'));
+    appConfig.exclude = makeAllPatternsFromSpecPatterns(appConfig.exclude);
+    tree.write(tsConfigPath, JSON.stringify(appConfig));
   }
 
   /**
@@ -71,15 +67,9 @@ function updateTsConfigsForTests(tree: Tree) {
    * where .spec. patterns are found.
    */
   function updateTsConfigInclude(tree: Tree, tsconfigSpecPath: string) {
-    if (tree.exists(tsconfigSpecPath)) {
-      const specConfig = JSON.parse(tree.read(tsconfigSpecPath, 'utf-8'));
-      specConfig.include = makeAllPatternsFromSpecPatterns(specConfig.include);
-      tree.write(tsconfigSpecPath, JSON.stringify(specConfig));
-    } else {
-      logger.warn(
-        stripIndents`Unable update ${tsconfigSpecPath} to include new test files patterns since it does not exist.`
-      );
-    }
+    const specConfig = JSON.parse(tree.read(tsconfigSpecPath, 'utf-8'));
+    specConfig.include = makeAllPatternsFromSpecPatterns(specConfig.include);
+    tree.write(tsconfigSpecPath, JSON.stringify(specConfig));
   }
 }
 
@@ -108,4 +98,13 @@ function makeUniquePatterns(items: string[] = []): string[] {
 export default async function update(tree: Tree) {
   updateTsConfigsForTests(tree);
   await formatFiles(tree);
+}
+
+interface TsConfig {
+  files?: string[];
+  include?: string[];
+  exclude?: string[];
+  references?: {
+    path: string;
+  }[];
 }
