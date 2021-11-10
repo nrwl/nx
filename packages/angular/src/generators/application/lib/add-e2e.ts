@@ -10,7 +10,7 @@ import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
 import { updateE2eProject } from './update-e2e-project';
 import { convertToNxProjectGenerator } from '@nrwl/workspace';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { joinPathFragments } from '@nrwl/devkit';
+import { getWorkspaceLayout, joinPathFragments } from '@nrwl/devkit';
 
 /**
  * Add E2E Config
@@ -45,8 +45,11 @@ export async function addE2e(
 
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
     updateE2eProject(tree, options);
-    if (options.standaloneConfig) {
-      convertToNxProjectGenerator(tree, {
+    if (
+      options.standaloneConfig ??
+      getWorkspaceLayout(tree).standaloneAsDefault
+    ) {
+      await convertToNxProjectGenerator(tree, {
         project: `${options.e2eProjectName}`,
       });
     }

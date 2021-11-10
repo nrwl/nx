@@ -7,12 +7,11 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from './application';
+import type { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
@@ -575,6 +574,18 @@ describe('app', () => {
 
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
+      it('should create the e2e project in v2 workspace', async () => {
+        appTree = createTreeWithEmptyWorkspace(2);
+
+        expect(
+          async () =>
+            await generateApp(appTree, 'myApp', {
+              e2eTestRunner: E2eTestRunner.Protractor,
+              standaloneConfig: true,
+            })
+        ).not.toThrow();
+      });
+
       it('should update workspace.json', async () => {
         await generateApp(appTree, 'myApp', {
           e2eTestRunner: E2eTestRunner.Protractor,
