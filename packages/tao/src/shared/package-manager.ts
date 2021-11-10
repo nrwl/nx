@@ -49,15 +49,22 @@ export function getPackageManagerCommand(
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       list: 'yarn list',
     }),
-    pnpm: () => ({
-      install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
-      add: 'pnpm add',
-      addDev: 'pnpm add -D',
-      rm: 'pnpm rm',
-      exec: 'pnpx',
-      run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
-      list: 'pnpm ls --depth 100',
-    }),
+    pnpm: () => {
+      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
+      let useExec = false;
+      if (+major >= 6 && +minor >= 13) {
+        useExec = true;
+      }
+      return {
+        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
+        add: 'pnpm add',
+        addDev: 'pnpm add -D',
+        rm: 'pnpm rm',
+        exec: useExec ? 'pnpm exec' : 'pnpx',
+        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
+        list: 'pnpm ls --depth 100',
+      };
+    },
     npm: () => {
       process.env.npm_config_legacy_peer_deps ??= 'true';
 
