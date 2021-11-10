@@ -147,9 +147,14 @@ function addE2ETestRunner(
       return () => {};
   }
 }
+
 function addGitIgnoreEntry(host: Tree, entry: string) {
   if (host.exists('.gitignore')) {
     let content = host.read('.gitignore', 'utf-8');
+    if (/^\.angular$/gm.test(content)) {
+      return;
+    }
+
     content = `${content}\n${entry}\n`;
     host.write('.gitignore', content);
   } else {
