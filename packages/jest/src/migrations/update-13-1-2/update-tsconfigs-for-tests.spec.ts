@@ -48,6 +48,21 @@ const reactTsConfigs = {
       '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
   },
+  base: {
+    include: [],
+    files: [],
+    references: [
+      {
+        path: './tsconfig.app.json',
+      },
+      {
+        path: './tsconfig.lib.json',
+      },
+      {
+        path: './tsconfig.spec.json',
+      },
+    ],
+  },
   expectedFilesToContain: [
     '**/*.spec.ts',
     '**/*.test.ts',
@@ -96,6 +111,32 @@ const angularTsConfigs = {
   },
   expectedFilesToContain: ['**/*.spec.ts', '**/*.test.ts'],
 };
+
+const tsConfigLibBase = {
+  include: [],
+  files: [],
+  references: [
+    {
+      path: './tsconfig.lib.json',
+    },
+    {
+      path: './tsconfig.spec.json',
+    },
+  ],
+};
+const tsConfigAppBase = {
+  include: [],
+  files: [],
+  references: [
+    {
+      path: './tsconfig.app.json',
+    },
+    {
+      path: './tsconfig.spec.json',
+    },
+  ],
+};
+
 [
   // test TSX/JSX support
   { name: 'React App', configs: reactTsConfigs },
@@ -116,12 +157,20 @@ const angularTsConfigs = {
         String.raw`${JSON.stringify(configs.spec, null, 2)}`
       );
       tree.write(
+        `apps/project-one/tsconfig.json`,
+        String.raw`${JSON.stringify(tsConfigAppBase, null, 2)}`
+      );
+      tree.write(
         'libs/lib-one/tsconfig.lib.json',
         String.raw`${JSON.stringify(configs.lib, null, 2)}`
       );
       tree.write(
         'libs/lib-one/tsconfig.spec.json',
         String.raw`${JSON.stringify(configs.spec, null, 2)}`
+      );
+      tree.write(
+        `libs/lib-one/tsconfig.json`,
+        String.raw`${JSON.stringify(tsConfigLibBase, null, 2)}`
       );
 
       addProjectConfiguration(tree, 'lib-one', {
