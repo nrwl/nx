@@ -43,6 +43,18 @@ export default async function (tree: Tree) {
 }
 
 export function replaceTransformAndAddIgnorePattern(fileContents: string) {
+  let updatedFileContents = updateTransformProperty(fileContents);
+  updatedFileContents = updateTransformIgnorePattern(updatedFileContents);
+
+  if (fileContents === updatedFileContents) {
+    return updatedFileContents;
+  }
+
+  updatedFileContents = updateModuleFileExtenstions(updatedFileContents);
+  return updatedFileContents;
+}
+
+function updateTransformProperty(fileContents: string) {
   const JEST_PRESET_ANGULAR_AST_QUERY =
     'Identifier[name=transform] ~ ObjectLiteralExpression > PropertyAssignment:has(StringLiteral[value=jest-preset-angular])';
 
@@ -64,40 +76,86 @@ export function replaceTransformAndAddIgnorePattern(fileContents: string) {
   const transformerIndex = transformerExpressionNode.pos;
   const transformerEndIndex = transformerExpressionNode.end;
 
-  let updatedFileContents = `${fileContents.slice(
+  return `${fileContents.slice(
     0,
     transformerIndex
   )}\n${TRANSFORMER_STRING}${fileContents.slice(transformerEndIndex)}`;
+}
 
+function updateTransformIgnorePattern(fileContents: string) {
   const TRANSFORM_OBJECT_AST_QUERY =
     'PropertyAssignment:has(Identifier[name=transform])';
   let TRANSFORM_IGNORE_PATTERN_STRING =
     "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],";
 
-  ast = tsquery.ast(updatedFileContents);
+  const ast = tsquery.ast(fileContents);
 
   const transformObjectNode = tsquery(ast, TRANSFORM_OBJECT_AST_QUERY, {
     visitAllChildren: true,
   })[0] as PropertyAssignment;
 
   if (!transformObjectNode) {
-    return updatedFileContents;
+    return fileContents;
   }
 
   let transformEndIndex = transformObjectNode.getEnd();
-  if (updatedFileContents.charAt(transformEndIndex) == ',') {
+  if (fileContents.charAt(transformEndIndex) == ',') {
     transformEndIndex = transformObjectNode.getEnd() + 1;
     TRANSFORM_IGNORE_PATTERN_STRING = `\n${TRANSFORM_IGNORE_PATTERN_STRING}`;
   } else {
     TRANSFORM_IGNORE_PATTERN_STRING = `,\n${TRANSFORM_IGNORE_PATTERN_STRING}`;
   }
 
-  updatedFileContents = `${updatedFileContents.slice(
+  return `${fileContents.slice(
     0,
     transformEndIndex
-  )}${TRANSFORM_IGNORE_PATTERN_STRING}${updatedFileContents.slice(
-    transformEndIndex
-  )}`;
+  )}${TRANSFORM_IGNORE_PATTERN_STRING}${fileContents.slice(transformEndIndex)}`;
+}
 
-  return updatedFileContents;
+function updateModuleFileExtenstions(fileContents: string) {
+  const MODULE_FILE_EXTENSIONS_AST_QUERY =
+    'Identifier[name=moduleFileExtensions] ~ ArrayLiteralExpression > StringLiteral';
+  const MODULE_FILE_EXTENSIONS_STRING = 'mjs';
+  const MODULE_FILE_EXTENSIONS_FULL_STRING = `moduleFileExtensions: ['mjs', 'ts', 'js', 'html'],`;
+
+  const ast = tsquery.ast(fileContents);
+
+  const moduleFileExtensionsNodes = tsquery(
+    ast,
+    MODULE_FILE_EXTENSIONS_AST_QUERY,
+    {
+      visitAllChildren: true,
+    }
+  );
+
+  if (!moduleFileExtensionsNodes || moduleFileExtensionsNodes.length === 0) {
+    // add the full property
+    const insertPosition = fileContents.lastIndexOf('}') - 1;
+
+    return `${fileContents.slice(
+      0,
+      insertPosition
+    )}\n${MODULE_FILE_EXTENSIONS_FULL_STRING}${fileContents.slice(
+      insertPosition
+    )}`;
+  }
+
+  // check if the extension already exists
+  const hasExtensionAlready = Boolean(
+    moduleFileExtensionsNodes.find((node) =>
+      node.getText().includes(MODULE_FILE_EXTENSIONS_STRING)
+    )
+  );
+  if (hasExtensionAlready) {
+    return fileContents;
+  }
+
+  // add the extension
+  const insertPosition =
+    moduleFileExtensionsNodes[moduleFileExtensionsNodes.length - 1].getEnd();
+
+  return `${fileContents.slice(
+    0,
+    insertPosition
+  )}, '${MODULE_FILE_EXTENSIONS_STRING}'${fileContents.slice(insertPosition)}`;
 }
