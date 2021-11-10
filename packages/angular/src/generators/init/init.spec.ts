@@ -327,6 +327,30 @@ describe('init', () => {
       skipFormat: false,
     });
 
-    expect(host.read('.gitignore').toString()).toContain('.angular');
+    expect(host.read('.gitignore', 'utf-8')).toContain('.angular');
+  });
+
+  it('should not add .angular to gitignore when it already exists', async () => {
+    host.write(
+      '.gitignore',
+      `foo
+bar
+
+.angular
+
+`
+    );
+
+    await init(host, {
+      unitTestRunner: UnitTestRunner.Jest,
+      e2eTestRunner: E2eTestRunner.Cypress,
+      linter: Linter.EsLint,
+      skipFormat: false,
+    });
+
+    const angularEntries = host
+      .read('.gitignore', 'utf-8')
+      .match(/^.angular$/gm);
+    expect(angularEntries).toHaveLength(1);
   });
 });
