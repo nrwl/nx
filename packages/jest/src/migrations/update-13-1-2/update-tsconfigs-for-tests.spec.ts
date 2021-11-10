@@ -156,6 +156,9 @@ const tsConfigAppBase = {
     },
   ],
 };
+const tsConfigWithExclude = {
+  exclude: ['**/*.spec.ts', '**/*_spec.ts'],
+};
 
 [
   // test TSX/JSX support
@@ -262,6 +265,32 @@ const tsConfigAppBase = {
       expect(tsLibConfig.exclude).toEqual(
         expect.arrayContaining(configs.expectedFilesToContain)
       );
+    });
+
+    it('should not update tsconfig without spec. patterns for include or exclude', async () => {
+      await update(tree);
+      const tsConfig = JSON.parse(
+        tree.read('apps/project-one/tsconfig.json', 'utf-8')
+      );
+      expect(tsConfig).toEqual(tsConfigAppBase);
+    });
+
+    it('should update any tsconfig with spec pattern for include or exclude', async () => {
+      tree.write(
+        'apps/project-one/tsconfig.random.json',
+        String.raw`${JSON.stringify(tsConfigWithExclude, null, 2)}`
+      );
+      await update(tree);
+
+      const randomTsConfig = JSON.parse(
+        tree.read('apps/project-one/tsconfig.random.json', 'utf-8')
+      );
+      expect(randomTsConfig.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*_spec.ts',
+        '**/*_test.ts',
+      ]);
     });
   });
 });
