@@ -79,27 +79,30 @@ snapshotSerializers: [
     const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
 
     // ASSERT
-    expect(updatedFile).toEqual(`module.exports = {
-displayName: 'app1',
-preset: '../../jest.preset.js',
-setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-globals: {
-  'ts-jest': {
-    tsconfig: '<rootDir>/tsconfig.spec.json',
-    stringifyContentPathRegex: '\\.(html|svg)$',
-  },
-},
-coverageDirectory: '../../coverage/apps/app1',
-transform: {
-'^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
-},
-transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-snapshotSerializers: [
-  'jest-preset-angular/build/serializers/no-ng-attributes',
-  'jest-preset-angular/build/serializers/ng-snapshot',
-  'jest-preset-angular/build/serializers/html-comment',
-],
-};`);
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+      displayName: 'app1',
+      preset: '../../jest.preset.js',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      globals: {
+        'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+        },
+      },
+      coverageDirectory: '../../coverage/apps/app1',
+      transform: {
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+      },
+      transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+      snapshotSerializers: [
+        'jest-preset-angular/build/serializers/no-ng-attributes',
+        'jest-preset-angular/build/serializers/ng-snapshot',
+        'jest-preset-angular/build/serializers/html-comment',
+      ],
+      moduleFileExtensions: ['mjs', 'ts', 'js', 'html'],
+      };"
+    `);
   });
 
   it('should replace the transformer and add the ignore pattern correctly regardless of additional transformers', () => {
@@ -130,28 +133,31 @@ snapshotSerializers: [
     const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
 
     // ASSERT
-    expect(updatedFile).toEqual(`module.exports = {
-displayName: 'app1',
-preset: '../../jest.preset.js',
-setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-globals: {
-  'ts-jest': {
-    tsconfig: '<rootDir>/tsconfig.spec.json',
-    stringifyContentPathRegex: '\\.(html|svg)$',
-  },
-},
-coverageDirectory: '../../coverage/apps/app1',
-transform: {
-'^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
-'^.+\\.(json)$': 'json_transformer',
-},
-transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-snapshotSerializers: [
-  'jest-preset-angular/build/serializers/no-ng-attributes',
-  'jest-preset-angular/build/serializers/ng-snapshot',
-  'jest-preset-angular/build/serializers/html-comment',
-],
-};`);
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+      displayName: 'app1',
+      preset: '../../jest.preset.js',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      globals: {
+        'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+        },
+      },
+      coverageDirectory: '../../coverage/apps/app1',
+      transform: {
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+      '^.+\\\\.(json)$': 'json_transformer',
+      },
+      transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+      snapshotSerializers: [
+        'jest-preset-angular/build/serializers/no-ng-attributes',
+        'jest-preset-angular/build/serializers/ng-snapshot',
+        'jest-preset-angular/build/serializers/html-comment',
+      ],
+      moduleFileExtensions: ['mjs', 'ts', 'js', 'html'],
+      };"
+    `);
   });
 
   it('should replace the transformer and add the ignore pattern correctly regardless of additional serializers', () => {
@@ -177,23 +183,26 @@ transform: {
     const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
 
     // ASSERT
-    expect(updatedFile).toEqual(`module.exports = {
-displayName: 'app1',
-preset: '../../jest.preset.js',
-setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-globals: {
-  'ts-jest': {
-    tsconfig: '<rootDir>/tsconfig.spec.json',
-    stringifyContentPathRegex: '\\.(html|svg)$',
-  },
-},
-coverageDirectory: '../../coverage/apps/app1',
-transform: {
-'^.+\\.(json)$': 'json_transformer',
-'^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
-},
-transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-};`);
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+      displayName: 'app1',
+      preset: '../../jest.preset.js',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      globals: {
+        'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+        },
+      },
+      coverageDirectory: '../../coverage/apps/app1',
+      transform: {
+      '^.+\\\\.(json)$': 'json_transformer',
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+      },
+      transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+      moduleFileExtensions: ['mjs', 'ts', 'js', 'html'],
+      };"
+    `);
   });
 
   it('should not transform contents of unmatching configs', () => {
@@ -220,10 +229,37 @@ transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
     const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
 
     // ASSERT
-    expect(updatedFile).toEqual(`module.exports = {
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+            preset: '../../jest.preset.js',
+            coverageDirectory: '../../coverage/libs/common-platform',
+            setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+            globals: {
+              'ts-jest': {
+                stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+                astTransformers: [
+                  'jest-preset-angular/build/InlineFilesTransformer',
+                  'jest-preset-angular/build/StripStylesTransformer',
+                ],
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+              },
+            },
+            displayName: 'common-platform',
+          };
+          "
+    `);
+  });
+
+  it('should add the mjs extension to a config with existing moduleFileExtensions property', () => {
+    // ARRANGE
+    const jestConfig = `module.exports = {
       preset: '../../jest.preset.js',
       coverageDirectory: '../../coverage/libs/common-platform',
+      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
       setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      transform: {
+        '^.+\\.(ts|js|html)$': 'jest-preset-angular',
+        },
       globals: {
         'ts-jest': {
           stringifyContentPathRegex: '\\\\.(html|svg)$',
@@ -236,6 +272,142 @@ transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
       },
       displayName: 'common-platform',
     };
+    `;
+
+    // ACT
+    const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
+
+    // ASSERT
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+            preset: '../../jest.preset.js',
+            coverageDirectory: '../../coverage/libs/common-platform',
+            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html', 'mjs'],
+            setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+            transform: {
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+              },
+      transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+            globals: {
+              'ts-jest': {
+                stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+                astTransformers: [
+                  'jest-preset-angular/build/InlineFilesTransformer',
+                  'jest-preset-angular/build/StripStylesTransformer',
+                ],
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+              },
+            },
+            displayName: 'common-platform',
+          };
+          "
+    `);
+  });
+
+  it('should not add the mjs extension to a config with existing moduleFileExtensions property with mjs extension', () => {
+    // ARRANGE
+    const jestConfig = `module.exports = {
+      preset: '../../jest.preset.js',
+      coverageDirectory: '../../coverage/libs/common-platform',
+      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html', 'mjs'],
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      transform: {
+        '^.+\\.(ts|js|html)$': 'jest-preset-angular',
+        },
+      globals: {
+        'ts-jest': {
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+          astTransformers: [
+            'jest-preset-angular/build/InlineFilesTransformer',
+            'jest-preset-angular/build/StripStylesTransformer',
+          ],
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+        },
+      },
+      displayName: 'common-platform',
+    };
+    `;
+
+    // ACT
+    const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
+
+    // ASSERT
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+            preset: '../../jest.preset.js',
+            coverageDirectory: '../../coverage/libs/common-platform',
+            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html', 'mjs'],
+            setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+            transform: {
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+              },
+      transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+            globals: {
+              'ts-jest': {
+                stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+                astTransformers: [
+                  'jest-preset-angular/build/InlineFilesTransformer',
+                  'jest-preset-angular/build/StripStylesTransformer',
+                ],
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+              },
+            },
+            displayName: 'common-platform',
+          };
+          "
+    `);
+  });
+
+  it('should add the moduleFileExtensions property with mjs extension', () => {
+    // ARRANGE
+    const jestConfig = `module.exports = {
+      preset: '../../jest.preset.js',
+      coverageDirectory: '../../coverage/libs/common-platform',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      transform: {
+        '^.+\\.(ts|js|html)$': 'jest-preset-angular',
+        },
+      globals: {
+        'ts-jest': {
+          stringifyContentPathRegex: '\\\\.(html|svg)$',
+          astTransformers: [
+            'jest-preset-angular/build/InlineFilesTransformer',
+            'jest-preset-angular/build/StripStylesTransformer',
+          ],
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+        },
+      },
+      displayName: 'common-platform',
+    };
+    `;
+
+    // ACT
+    const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
+
+    // ASSERT
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+            preset: '../../jest.preset.js',
+            coverageDirectory: '../../coverage/libs/common-platform',
+            setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+            transform: {
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+              },
+      transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+            globals: {
+              'ts-jest': {
+                stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+                astTransformers: [
+                  'jest-preset-angular/build/InlineFilesTransformer',
+                  'jest-preset-angular/build/StripStylesTransformer',
+                ],
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+              },
+            },
+            displayName: 'common-platform',
+         
+      moduleFileExtensions: ['mjs', 'ts', 'js', 'html'], };
+          "
     `);
   });
 });
