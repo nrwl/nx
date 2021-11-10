@@ -102,6 +102,9 @@ function storybookOptionMapper(
 ) {
   setStorybookAppProject(context, builderOptions.projectBuildConfig);
 
+  const buildProject =
+    context.workspace.projects[builderOptions.projectBuildConfig];
+
   const storybookConfig = findOrCreateConfig(builderOptions.config, context);
   return {
     ...builderOptions,
@@ -110,6 +113,25 @@ function storybookOptionMapper(
     configDir: storybookConfig,
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
+    angularBrowserTarget: 'demo:build',
+    angularBuilderContext: {
+      target: {
+        ...buildProject.targets['build'],
+        project: builderOptions.projectBuildConfig,
+      },
+      workspaceRoot: process.cwd(),
+      getProjectMetadata: () => {
+        return buildProject;
+      },
+      getTargetOptions: () => {
+        return buildProject.targets['build'].options;
+      },
+      logger: {
+        createChild(name) {
+          return logger;
+        },
+      },
+    },
   };
 }
 
