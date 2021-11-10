@@ -13,7 +13,13 @@ const reactTsConfigs = {
       '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
       '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
-    exclude: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    exclude: [
+      '**/*.spec.ts',
+      '**/*_spec.ts',
+      '**/*.spec.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+    ],
     include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
   },
   lib: {
@@ -26,7 +32,13 @@ const reactTsConfigs = {
       '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
       '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
-    exclude: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    exclude: [
+      '**/*.spec.ts',
+      '**/*_spec.ts',
+      '**/*.spec.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+    ],
     include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
   },
   spec: {
@@ -38,6 +50,7 @@ const reactTsConfigs = {
     },
     include: [
       '**/*.spec.ts',
+      '**/*_spec.ts',
       '**/*.spec.tsx',
       '**/*.spec.js',
       '**/*.spec.jsx',
@@ -66,6 +79,8 @@ const reactTsConfigs = {
   expectedFilesToContain: [
     '**/*.spec.ts',
     '**/*.test.ts',
+    '**/*_spec.ts',
+    '**/*_test.ts',
     '**/*.spec.tsx',
     '**/*.test.tsx',
     '**/*.spec.js',
@@ -83,7 +98,7 @@ const angularTsConfigs = {
     },
     files: ['src/main.ts', 'src/polyfills.ts'],
     include: ['src/**/*.d.ts'],
-    exclude: ['**/*.spec.ts'],
+    exclude: ['**/*.spec.ts', '**/*_spec.ts'],
   },
   lib: {
     extends: './tsconfig.json',
@@ -107,9 +122,14 @@ const angularTsConfigs = {
       types: ['jest', 'node'],
     },
     files: ['src/test-setup.ts'],
-    include: ['**/*.spec.ts', '**/*.d.ts'],
+    include: ['**/*.spec.ts', '**/*_spec.ts', '**/*.d.ts'],
   },
-  expectedFilesToContain: ['**/*.spec.ts', '**/*.test.ts'],
+  expectedFilesToContain: [
+    '**/*.spec.ts',
+    '**/*.test.ts',
+    '**/*_spec.ts',
+    '**/*_test.ts',
+  ],
 };
 
 const tsConfigLibBase = {

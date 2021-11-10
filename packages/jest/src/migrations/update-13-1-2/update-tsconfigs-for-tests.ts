@@ -83,8 +83,9 @@ function makeAllPatternsFromSpecPatterns(
   return makeUniquePatterns(
     specGlobs.reduce((patterns, current) => {
       patterns.push(current);
-      if (current.includes('.spec.')) {
-        patterns.push(current.replace('.spec.', '.test.'));
+      // .spec. and _spec. can used as testing file name patterns
+      if (current.includes('spec.')) {
+        patterns.push(current.replace('spec.', 'test.'));
       }
       return patterns;
     }, [])
