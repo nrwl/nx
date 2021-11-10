@@ -1,42 +1,97 @@
 import {
   checkFilesExist,
-  ensureNxProject,
+  newProject,
   readJson,
-  runNxCommandAsync,
+  runCLI,
+  runCLIAsync,
+  runCommand,
   uniq,
-} from '@nrwl/nx-plugin/testing';
-describe('js e2e', () => {
-  it('should create js', async () => {
-    const plugin = uniq('js');
-    ensureNxProject('@nrwl/js', 'dist//js');
-    await runNxCommandAsync(`generate @nrwl/js:js ${plugin}`);
+  updateFile,
+} from '../../utils';
 
-    const result = await runNxCommandAsync(`build ${plugin}`);
-    expect(result.stdout).toContain('Executor ran');
+describe('js e2e', () => {
+  it('should create libs and apps with npm scripts', () => {
+    const scope = newProject();
+    const npmScriptsLib = uniq('npmscriptslib');
+    runCLI(`generate @nrwl/js:lib ${npmScriptsLib} --config=npm-scripts`);
+    const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
+    expect(libPackageJson.scripts.test).toBeDefined();
+    expect(libPackageJson.scripts.build).toBeDefined();
+    expect(runCLI(`test ${npmScriptsLib}`)).toContain('implement test');
+    expect(runCLI(`test ${npmScriptsLib}`)).toContain('match the cache');
+
+    const npmScriptsApp = uniq('npmscriptsapp');
+    runCLI(`generate @nrwl/js:app ${npmScriptsApp} --config=npm-scripts`);
+    const appPackageJson = readJson(`apps/${npmScriptsApp}/package.json`);
+    expect(appPackageJson.scripts.test).toBeDefined();
+    expect(appPackageJson.scripts.build).toBeDefined();
+    expect(runCLI(`test ${npmScriptsApp}`)).toContain('implement test');
+    expect(runCLI(`test ${npmScriptsApp}`)).toContain('match the cache');
+
+    const tsconfig = readJson(`tsconfig.base.json`);
+    expect(tsconfig.compilerOptions.paths).toEqual({
+      [`@${scope}/${npmScriptsLib}`]: [`libs/${npmScriptsLib}/src/index.ts`],
+    });
   }, 120000);
 
-  describe('--directory', () => {
-    it('should create src in the specified directory', async () => {
-      const plugin = uniq('js');
-      ensureNxProject('@nrwl/js', 'dist//js');
-      await runNxCommandAsync(
-        `generate @nrwl/js:js ${plugin} --directory subdir`
-      );
-      expect(() =>
-        checkFilesExist(`libs/subdir/${plugin}/src/index.ts`)
-      ).not.toThrow();
-    }, 120000);
-  });
+  it('should create libs and apps with js executors (--compiler=tsc)', async () => {
+    const scope = newProject();
+    const lib = uniq('lib');
+    runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=tsc`);
+    const libPackageJson = readJson(`libs/${lib}/package.json`);
+    expect(libPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+      'Ran all test suites'
+    );
+    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+      'match the cache'
+    );
 
-  describe('--tags', () => {
-    it('should add tags to the project', async () => {
-      const plugin = uniq('js');
-      ensureNxProject('@nrwl/js', 'dist//js');
-      await runNxCommandAsync(
-        `generate @nrwl/js:js ${plugin} --tags e2etag,e2ePackage`
-      );
-      const project = readJson(`libs/${plugin}/project.json`);
-      expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
-    }, 120000);
-  });
+    expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/src/index.js`,
+      `dist/libs/${lib}/src/lib/${lib}.js`
+    );
+
+    const app = uniq('app');
+    runCLI(`generate @nrwl/js:app ${app} --buildable --compiler=tsc`);
+    const appPackageJson = readJson(`apps/${app}/package.json`);
+    expect(appPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
+      'Ran all test suites'
+    );
+    expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
+      'match the cache'
+    );
+
+    expect(runCLI(`build ${app}`)).toContain('Done compiling TypeScript files');
+    checkFilesExist(
+      `dist/apps/${app}/package.json`,
+      `dist/apps/${app}/src/index.js`,
+      `dist/apps/${app}/src/app/${app}.js`
+    );
+
+    expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(
+      `Running ${app}`
+    );
+
+    const tsconfig = readJson(`tsconfig.base.json`);
+    expect(tsconfig.compilerOptions.paths).toEqual({
+      [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
+    });
+
+    updateFile(`apps/${app}/src/index.ts`, () => {
+      return `
+        import { ${lib} } from '@${scope}/${lib}'
+        console.log('Running ' + ${lib}())
+      `;
+    });
+
+    const output = runCLI(`build ${app}`);
+    expect(output).toContain('1 task(s) that it depends on');
+    expect(output).toContain('Done compiling TypeScript files');
+
+    // expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(`Running ${lib}`)
+  }, 120000);
 });

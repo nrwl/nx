@@ -6,6 +6,8 @@
   "executors": "./executors.json",
   "dependencies": {
     "@nrwl/workspace": "*",
-    "@nrwl/devkit": "*"
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*"
   }
 }

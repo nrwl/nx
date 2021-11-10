@@ -360,6 +360,16 @@
         "id": "js",
         "itemList": [
           {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-js/generators/library"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "angular/api-js/executors/tsc"
@@ -1674,6 +1684,16 @@
         "id": "js",
         "itemList": [
           {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-js/generators/library"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "react/api-js/executors/tsc"
@@ -2951,6 +2971,16 @@
         "name": "js",
         "id": "js",
         "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-js/generators/library"
+          },
           {
             "name": "tsc executor",
             "id": "tsc",
