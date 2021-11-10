@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  expectTestsPass,
   newProject,
   runCLI,
   runCLIAsync,
@@ -31,16 +32,17 @@ describe('Gatsby Applications', () => {
       return updated;
     });
 
-    let result = runCLI(`build ${appName}`);
-    expect(result).toContain('Done building in');
+    runCLI(`build ${appName}`);
+    checkFilesExist(
+      `apps/${appName}/public/index.html`,
+      `apps/${appName}/public/404.html`,
+      `apps/${appName}/public/manifest.webmanifest`
+    );
 
-    result = runCLI(`lint ${appName}`);
+    const result = runCLI(`lint ${appName}`);
     expect(result).not.toMatch('Lint errors found in the listed files');
 
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
   }, 600000);
 
   it('should support styled-jsx', async () => {
@@ -48,13 +50,17 @@ describe('Gatsby Applications', () => {
 
     runCLI(`generate @nrwl/gatsby:app ${appName} --style styled-jsx`);
 
-    let result = runCLI(`build ${appName}`);
-    expect(result).toContain('Done building in');
+    runCLI(`build ${appName}`);
+    checkFilesExist(
+      `apps/${appName}/public/index.html`,
+      `apps/${appName}/public/404.html`,
+      `apps/${appName}/public/manifest.webmanifest`
+    );
 
-    result = runCLI(`lint ${appName}`);
+    const result = runCLI(`lint ${appName}`);
     expect(result).not.toMatch('Lint errors found in the listed files');
 
-    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
   }, 300000);
 
   it('should support scss', async () => {
@@ -68,7 +74,7 @@ describe('Gatsby Applications', () => {
     result = runCLI(`lint ${appName}`);
     expect(result).not.toMatch('Lint errors found in the listed files');
 
-    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
   }, 300000);
 
   it('should support --js option', async () => {
@@ -81,7 +87,11 @@ describe('Gatsby Applications', () => {
       `apps/${app}/src/pages/index.spec.js`
     );
 
-    const result = runCLI(`build ${app}`);
-    expect(result).toContain('Done building in');
+    runCLI(`build ${app}`);
+    checkFilesExist(
+      `apps/${app}/public/index.html`,
+      `apps/${app}/public/404.html`,
+      `apps/${app}/public/manifest.webmanifest`
+    );
   }, 300000);
 });
