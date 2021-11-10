@@ -25,7 +25,7 @@ import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 /**
  * @WhatItDoes: Generates default documentation from the schematics' schema.
  *    We need to construct an Array of objects containing all the information
- *    of the schematics and their associates schema info. It should be easily
+ *    of the schematics and their associated schema info. It should be easily
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */

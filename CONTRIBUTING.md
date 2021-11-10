@@ -222,8 +222,8 @@ The type must be one of the following:
 
 The scope must be one of the following:
 
-- angular - anything Angular specific
 - core - anything Nx core specific
+- js - anything related to @nrwl/js package or general js/ts support
 - nxdev - anything related to docs infrastructure
 - nextjs - anything Next specific
 - nest - anything Nest specific
@@ -234,6 +234,7 @@ The scope must be one of the following:
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., jest or cypress)
 - repo - anything related to managing the repo itself
+- angular - anything Angular specific
 - misc - misc stuff
 - devkit - devkit-related changes
 

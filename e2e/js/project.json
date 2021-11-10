@@ -14,7 +14,7 @@
             "command": "yarn e2e-build-package-publish"
           },
           {
-            "command": "nx run-e2e-tests e2e-jest"
+            "command": "nx run-e2e-tests e2e-js"
           }
         ],
         "parallel": false
