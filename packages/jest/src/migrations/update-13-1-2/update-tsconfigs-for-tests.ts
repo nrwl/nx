@@ -2,8 +2,11 @@ import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-o
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import {
   formatFiles,
+  logger,
   readProjectConfiguration,
+  stripIndents,
   Tree,
+  updateJson,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { basename } from 'path';
@@ -17,51 +20,29 @@ function updateTsConfigsForTests(tree: Tree) {
 
       visitNotIgnoredFiles(tree, projectConfig.root, (path) => {
         const fileName = basename(path);
-        if (fileName.startsWith('tsconfig.') && fileName.endsWith('.json')) {
-          updateTsConfigInclude(tree, path);
-          updateTsConfigExclude(tree, path);
+        if (fileName.startsWith('tsconfig') && fileName.endsWith('.json')) {
+          updateTsConfig(tree, path);
         }
       });
     }
   );
 
-  /**
-   * will update the TSConfig file pass in exclude property to include .test. patterns
-   * where .spec. patterns are found.
-   * will not update if exclude property is not present.
-   */
-  function updateTsConfigExclude(tree: Tree, tsConfigPath: string) {
+  function updateTsConfig(tree: Tree, tsconfigSpecPath: string) {
     try {
-      const appConfig = JSON.parse(tree.read(tsConfigPath, 'utf-8'));
-      if (appConfig.exclude) {
-        appConfig.exclude = makeAllPatternsFromSpecPatterns(
-          appConfig.exclude || []
-        );
-        tree.write(tsConfigPath, JSON.stringify(appConfig));
-      }
-    } catch (error) {
-      // issue trying to parse the tsconfig file bc it's invalid JSON from template markup/comments
-      // ignore and move on
-    }
-  }
+      updateJson<TsConfig>(tree, tsconfigSpecPath, (value) => {
+        if (value.include) {
+          value.include = makeAllPatternsFromSpecPatterns(value.include);
+        }
 
-  /**
-   * will update the TSConfig file pass in include property to include .test. patterns
-   * where .spec. patterns are found.
-   * will not update if include property is not present.
-   */
-  function updateTsConfigInclude(tree: Tree, tsconfigSpecPath: string) {
-    try {
-      const specConfig = JSON.parse(tree.read(tsconfigSpecPath, 'utf-8'));
-      if (specConfig.include) {
-        specConfig.include = makeAllPatternsFromSpecPatterns(
-          specConfig.include
-        );
-        tree.write(tsconfigSpecPath, JSON.stringify(specConfig));
-      }
+        if (value.exclude) {
+          value.exclude = makeAllPatternsFromSpecPatterns(value.exclude);
+        }
+        return value;
+      });
     } catch (error) {
       // issue trying to parse the tsconfig file bc it's invalid JSON from template markup/comments
       // ignore and move on
+      logger.warn(stripIndents`Unable to update ${tsconfigSpecPath}. `);
     }
   }
 }
