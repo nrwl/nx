@@ -60,6 +60,12 @@ describe('Node Applications', () => {
   it('should be able to generate the correct outFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+
+    updateProjectConfig(nodeapp, (config) => {
+      config.targets.build.options.outFileName = 'index.js';
+      return config;
+    });
+
     await runCLIAsync(`build ${nodeapp}`);
     checkFilesExist(`dist/apps/${nodeapp}/index.js`);
   }, 300000);
