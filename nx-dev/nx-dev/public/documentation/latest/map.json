@@ -439,7 +439,7 @@
           },
           {
             "name": "library-secondary-entry-point generator",
-            "id": "library-secondary-entry-point",
+            "id": "library",
             "file": "angular/api-angular/generators/library-secondary-entry-point"
           },
           {
@@ -1747,7 +1747,7 @@
           },
           {
             "name": "library-secondary-entry-point generator",
-            "id": "library-secondary-entry-point",
+            "id": "library",
             "file": "react/api-angular/generators/library-secondary-entry-point"
           },
           {
@@ -3019,7 +3019,7 @@
           },
           {
             "name": "library-secondary-entry-point generator",
-            "id": "library-secondary-entry-point",
+            "id": "library",
             "file": "node/api-angular/generators/library-secondary-entry-point"
           },
           {

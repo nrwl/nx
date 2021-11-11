@@ -190,7 +190,7 @@ code. This is crucial for the following reasons:
 
 ### Some Things You Can Do
 
-- `npx nx run-many --target --test --all --parallel` tests all projects in parallel.
+- `npx nx run-many --target --test --all --parallel=5` tests all projects in parallel.
 - `npx nx affected --target --test --all` tests all the projects affected by the current PR. To see this in action,
   check in all your changes, and create a new branch.
 
