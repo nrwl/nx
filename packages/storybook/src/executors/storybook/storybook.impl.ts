@@ -1,24 +1,18 @@
-import 'dotenv/config';
-import { basename, join, sep } from 'path';
-import { tmpdir } from 'os';
 import {
-  constants,
-  copyFileSync,
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  statSync,
-} from 'fs';
-
+  ExecutorContext,
+  logger,
+  parseTargetString,
+  readTargetOptions,
+} from '@nrwl/devkit';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { buildDevStandalone } from '@storybook/core/server';
-
-import {
-  getStorybookFrameworkPath,
-  runStorybookSetupCheck,
-  setStorybookAppProject,
-} from '../utils';
-import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import 'dotenv/config';
+import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
+import { tmpdir } from 'os';
+import { basename, join, sep } from 'path';
 import { CommonNxStorybookConfig, StorybookConfig } from '../models';
+import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+
 export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   host?: string;
   port?: number;
@@ -100,39 +94,93 @@ function storybookOptionMapper(
   frameworkOptions: any,
   context: ExecutorContext
 ) {
-  setStorybookAppProject(context, builderOptions.projectBuildConfig);
-
-  const buildProject =
-    context.workspace.projects[builderOptions.projectBuildConfig];
+  // setStorybookAppProject(context, builderOptions.projectBuildConfig);
 
   const storybookConfig = findOrCreateConfig(builderOptions.config, context);
-  return {
+  const storybookOptions = {
     ...builderOptions,
     mode: 'dev',
     workspaceRoot: context.root,
     configDir: storybookConfig,
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
-    angularBrowserTarget: 'demo:build',
-    angularBuilderContext: {
+  };
+
+  if (builderOptions.uiFramework === '@storybook/angular') {
+    let buildProjectName;
+    let targetName = 'build'; // default
+    let targetOptions = null;
+
+    if (builderOptions.projectBuildConfig) {
+      const targetString = normalizeTargetString(
+        builderOptions.projectBuildConfig,
+        targetName
+      );
+
+      const { project, target, configuration } =
+        parseTargetString(targetString);
+
+      // set the extracted target name
+      targetName = target;
+      buildProjectName = project;
+
+      targetOptions = readTargetOptions(
+        { project, target, configuration },
+        context
+      );
+
+      storybookOptions.angularBrowserTarget = targetString;
+    } else {
+      // to preserve the backwards compatibility for our users Nx resolves the
+      // default project just as Storybook used to before
+
+      const ws = new Workspaces(context.root);
+      const defaultProjectName = ws.calculateDefaultProjectName(
+        context.cwd,
+        context.workspace
+      );
+
+      buildProjectName = defaultProjectName;
+
+      targetOptions = readTargetOptions(
+        {
+          project: defaultProjectName,
+          target: targetName,
+          configuration: '',
+        },
+        context
+      );
+
+      storybookOptions.angularBrowserTarget = normalizeTargetString(
+        defaultProjectName,
+        targetName
+      );
+    }
+
+    const project = context.workspace.projects[buildProjectName];
+
+    // construct a builder object for Storybook
+    storybookOptions.angularBuilderContext = {
       target: {
-        ...buildProject.targets['build'],
-        project: builderOptions.projectBuildConfig,
+        ...project.targets[targetName],
+        project: buildProjectName,
       },
-      workspaceRoot: process.cwd(),
+      workspaceRoot: context.cwd,
       getProjectMetadata: () => {
-        return buildProject;
+        return project;
       },
       getTargetOptions: () => {
-        return buildProject.targets['build'].options;
+        return targetOptions;
       },
       logger: {
         createChild(name) {
           return logger;
         },
       },
-    },
-  };
+    };
+  }
+
+  return storybookOptions;
 }
 
 function findOrCreateConfig(
@@ -185,4 +233,14 @@ function createStorybookConfig(
     constants.COPYFILE_EXCL
   );
   return tmpFolder;
+}
+
+function normalizeTargetString(
+  appName: string,
+  defaultTarget: string = 'build'
+) {
+  if (appName.includes(':')) {
+    return appName;
+  }
+  return `${appName}:${defaultTarget}`;
 }
