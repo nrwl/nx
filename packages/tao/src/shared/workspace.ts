@@ -7,7 +7,7 @@ import { TaskGraph } from './tasks';
 import { logger } from './logger';
 import { sync as globSync } from 'fast-glob';
 import ignore from 'ignore';
-import { basename, dirname, join } from 'path';
+import { basename, dirname, join, toNamespacedPath } from 'path';
 import { performance } from 'perf_hooks';
 
 export interface Workspace
@@ -690,6 +690,24 @@ export function globForProjectFiles(root) {
   return projectGlobCache;
 }
 
+export function buildProjectConfigurationFromPackageJson(
+  path: string,
+  packageJson: { name: string },
+  nxJson: NxJsonConfiguration
+): ProjectConfiguration & { name: string } {
+  const directory = dirname(path).split('\\').join('/');
+  const npmPrefix = `@${nxJson.npmScope}/`;
+  let { name } = packageJson;
+  if (name.startsWith(npmPrefix)) {
+    name = name.replace(npmPrefix, '');
+  }
+  return {
+    root: directory,
+    sourceRoot: directory,
+    name,
+  };
+}
+
 export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
   projectFiles: string[] = globForProjectFiles(appRootPath), // making this parameter allows devkit to pick up newly created projects
@@ -705,7 +723,6 @@ export function buildWorkspaceConfigurationFromGlobs(
   // a directory. This is used to skip inferring a new project
   // from package.json in the same directory.
   const projectsFromProjectJsons = new Set<string>();
-  const npmPrefix = `@${nxJson.npmScope}/`;
 
   for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');
@@ -719,20 +736,16 @@ export function buildWorkspaceConfigurationFromGlobs(
       fileName === 'package.json' &&
       !projectsFromProjectJsons.has(directory)
     ) {
-      let { name }: { name: string } = readJson(file);
-      if (name.startsWith(npmPrefix)) {
-        name = name.replace(npmPrefix, '');
-      }
-
-      const root = directory;
+      const { name, ...config } = buildProjectConfigurationFromPackageJson(
+        file,
+        readJson(file),
+        nxJson
+      );
       if (configurations[name]) {
         continue;
       }
-      configurations[name] = {
-        root,
-        sourceRoot: root,
-        projectType: 'library',
-      };
+      configurations[name] = config;
+
       projectsFromPackageJsons.set(directory, name);
     } else if (fileName === 'project.json') {
       //  Nx specific project configuration (`project.json` files) in the same

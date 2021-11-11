@@ -23,7 +23,6 @@ const libConfig = (name) => ({
 const packageLibConfig = (root) => ({
   root,
   sourceRoot: root,
-  projectType: 'library',
 });
 
 describe('workspace', () => {

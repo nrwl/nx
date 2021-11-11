@@ -106,7 +106,6 @@ describe('@nrwl/workspace:npm-package', () => {
       expect(readProjectConfiguration(tree, 'my-package')).toEqual({
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
-        projectType: 'library',
       });
     });
   });

@@ -1,4 +1,5 @@
 import {
+  buildProjectConfigurationFromPackageJson,
   buildWorkspaceConfigurationFromGlobs,
   globForProjectFiles,
   ProjectConfiguration,
@@ -254,9 +255,10 @@ export function readNxJson(tree: Tree): NxJsonConfiguration | null {
  */
 export function isStandaloneProject(tree: Tree, project: string): boolean {
   const path = getWorkspacePath(tree);
-  const rawWorkspace = tree.exists(path)
-    ? readJson<RawWorkspaceJsonConfiguration>(tree, path)
-    : null;
+  const rawWorkspace =
+    path && tree.exists(path)
+      ? readJson<RawWorkspaceJsonConfiguration>(tree, path)
+      : null;
   if (rawWorkspace) {
     const projectConfig = rawWorkspace.projects?.[project];
     return typeof projectConfig === 'string';
@@ -320,10 +322,7 @@ function addProjectToWorkspaceJson(
   standalone: boolean = false
 ) {
   const path = getWorkspacePath(tree);
-  const workspaceJson =
-    path && tree.exists(path)
-      ? readJson<RawWorkspaceJsonConfiguration>(tree, path)
-      : cachedWorkspaceBuiltFromGlobs ?? readRawWorkspaceJson(tree);
+  const workspaceJson = readRawWorkspaceJson(tree);
 
   validateProjectConfigurationOperations(
     mode,
@@ -343,13 +342,15 @@ function addProjectToWorkspaceJson(
       tree.delete(configFile);
       delete workspaceJson.projects[projectName];
     } else {
-      if (mode === 'create') {
-        workspaceJson.projects[projectName] = project.root;
-      }
-      writeJson(tree, configFile, project);
+      // Keep cached workspace up to date
       if (cachedWorkspaceBuiltFromGlobs) {
         workspaceJson.projects[projectName] = project;
+      } else if (mode === 'create') {
+        // keep real workspace up to date
+        workspaceJson.projects[projectName] = project.root;
       }
+      // update the project.json file
+      writeJson(tree, configFile, project);
     }
   } else if (mode === 'delete') {
     delete workspaceJson.projects[projectName];
@@ -401,6 +402,12 @@ function inlineProjectConfigurationsWithTree(
   return workspaceJson as WorkspaceJsonConfiguration;
 }
 
+/**
+ * Used to ensure that projects created during
+ * the same devkit generator run show up when
+ * there is no workspace.json file, as `glob`
+ * cannot find them.
+ */
 function findCreatedProjects(tree: Tree) {
   return tree.listChanges().filter((f) => {
     const fileName = basename(f.path);
@@ -415,20 +422,32 @@ let cachedWorkspaceBuiltFromGlobs: RawWorkspaceJsonConfiguration;
 function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
+    // `workspace.json` exists, use it.
     return readJson<RawWorkspaceJsonConfiguration>(tree, path);
   } else {
     const createdProjects = findCreatedProjects(tree);
     const nxJson = readNxJson(tree);
+    // We already have built a cache
     if (cachedWorkspaceBuiltFromGlobs) {
       createdProjects.forEach((project) => {
-        const configuration: ProjectConfiguration = parseJson(
-          project.content.toString()
-        );
+        const json = parseJson(project.content.toString());
+        const configuration: ProjectConfiguration = project.path.endsWith(
+          'project.json'
+        )
+          ? (json as ProjectConfiguration) // `project.json` is a ProjectConfiguration
+          : buildProjectConfigurationFromPackageJson(
+              // Build it from package.json
+              project.path,
+              json,
+              nxJson
+            );
         const name = configuration.name || toProjectName(project.path, nxJson);
+        // make sure that newly created projects are in cache
         cachedWorkspaceBuiltFromGlobs.projects[name] ??= configuration;
       });
       return cachedWorkspaceBuiltFromGlobs;
     } else {
+      // No cache, build from scratch and cache it.
       cachedWorkspaceBuiltFromGlobs = buildWorkspaceConfigurationFromGlobs(
         readNxJson(tree),
         [
