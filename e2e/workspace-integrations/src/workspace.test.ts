@@ -653,7 +653,7 @@ describe('print-affected', () => {
         project: myapp,
         target: 'test',
       },
-      command: `${runNx} test ${myapp}`,
+      command: `${runNx} run ${myapp}:test`,
       outputs: [`coverage/apps/${myapp}`],
     });
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
@@ -674,7 +674,7 @@ describe('print-affected', () => {
         project: myapp,
         target: 'build',
       },
-      command: `${runNx} build ${myapp} --configuration production`,
+      command: `${runNx} run ${myapp}:build:production`,
       outputs: [`dist/apps/${myapp}`],
     });
 
@@ -685,7 +685,7 @@ describe('print-affected', () => {
         project: mypublishablelib,
         target: 'build',
       },
-      command: `${runNx} build ${mypublishablelib}`,
+      command: `${runNx} run ${mypublishablelib}:build`,
       outputs: [`dist/libs/${mypublishablelib}`],
     });
 

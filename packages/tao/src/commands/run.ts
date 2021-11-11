@@ -19,6 +19,7 @@ import {
 import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
 import { NxJsonConfiguration } from '../shared/nx';
+import { splitTarget } from '../utils/split-target';
 
 export interface Target {
   project: string;
@@ -56,8 +57,10 @@ function parseRunOpts(
     throwInvalidInvocation();
   }
   // eslint-disable-next-line prefer-const
-  let [project, target, configuration]: [string, string, string] =
-    runOptions._[0].split(':');
+  let [project, target, configuration]: [string, string, string] = splitTarget(
+    runOptions._[0]
+  );
+
   if (!project && defaultProjectName) {
     logger.debug(
       `No project name specified. Using default project : ${chalk.bold(

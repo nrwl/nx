@@ -100,15 +100,15 @@ export function parseRunOneOptions(
     project = parsedArgs._[1];
     parsedArgs._ = parsedArgs._.slice(2);
   }
+  if (parsedArgs.project) {
+    project = parsedArgs.project;
+  }
 
   const projectIsNotSetExplicitly = !project;
   if (!project && defaultProjectName) {
     project = defaultProjectName;
   }
 
-  if (parsedArgs.project) {
-    project = parsedArgs.project;
-  }
   // we need both to be able to run a target, no tasks runner
   if (!project || !target) {
     return false;
