@@ -1,4 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import { storybookVersion } from '../../utils/versions';
 import { assertCompatibleStorybookVersion } from './lib/assert-compatible-storybook-version';
 import { generateStories } from './lib/generate-stories';
 import { generateStorybookConfiguration } from './lib/generate-storybook-configuration';
@@ -11,13 +13,31 @@ export async function storybookConfigurationGenerator(
 ): Promise<GeneratorCallback> {
   assertCompatibleStorybookVersion();
   validateOptions(options);
-  const installTask = await generateStorybookConfiguration(tree, options);
+
+  // TODO(coly010/juristr): remove when @nrwl/storybook has been updated
+  const angularStorybookInstallTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@storybook/angular': storybookVersion,
+      '@storybook/manager-webpack5': storybookVersion,
+      '@storybook/builder-webpack5': storybookVersion,
+      '@storybook/addon-essentials': storybookVersion,
+    }
+  );
+  const storybookGeneratorInstallTask = await generateStorybookConfiguration(
+    tree,
+    options
+  );
 
   if (options.generateStories) {
     generateStories(tree, options);
   }
 
-  return installTask;
+  return () => {
+    angularStorybookInstallTask();
+    storybookGeneratorInstallTask();
+  };
 }
 
 export default storybookConfigurationGenerator;

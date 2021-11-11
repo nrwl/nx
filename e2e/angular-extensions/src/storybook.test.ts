@@ -15,8 +15,7 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Angular Package', () => {
-  // TODO(juristr): Re-enable these when storybook supports Angular 13
-  xdescribe('storybook schematics', () => {
+  describe('storybook schematics', () => {
     let proj: string;
 
     beforeEach(() => (proj = newProject()));
