@@ -170,6 +170,11 @@
     "testTimeout": {
       "description": "Default timeout of a test in milliseconds. Default value: 5000. (https://jestjs.io/docs/cli#--testtimeoutnumber)",
       "type": "number"
+    },
+    "testWithArtifacts": {
+      "description": "Tells jest to check to ensure all dependencies of the project being tested have been built so that the prebuilt artifacts can be used instead of transpiling on the fly.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["jestConfig"]
