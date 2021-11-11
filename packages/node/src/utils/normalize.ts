@@ -36,6 +36,7 @@ export function normalizeBuildOptions(
       root,
       options.additionalEntryPoints ?? []
     ),
+    outputFileName: options.outputFileName ?? 'main.js',
   };
 }
 

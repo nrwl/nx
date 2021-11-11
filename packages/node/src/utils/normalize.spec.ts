@@ -144,4 +144,24 @@ describe('normalizeBuildOptions', () => {
       },
     ]);
   });
+
+  it('should resolve outputFileName correctly', () => {
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
+    expect(result.outputFileName).toEqual('main.js');
+  });
+
+  it('should resolve outputFileName to "main.js" if not passed in', () => {
+    const result = normalizeBuildOptions(
+      { ...testOptions, outputFileName: 'index.js' },
+      root,
+      sourceRoot,
+      projectRoot
+    );
+    expect(result.outputFileName).toEqual('index.js');
+  });
 });
