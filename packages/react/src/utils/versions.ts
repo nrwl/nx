@@ -15,7 +15,6 @@ export const emotionReactVersion = '11.5.0';
 export const emotionBabelPlugin = '11.3.0';
 
 export const styledJsxVersion = '4.0.1';
-export const typesStyledJsxVersion = '3.4.4';
 
 export const reactRouterDomVersion = '5.3.0';
 export const typesReactRouterDomVersion = '5.3.1';
