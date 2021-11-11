@@ -1,19 +1,19 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import type { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import {
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   updateBuildableProjectPackageJsonDependencies,
-  updatePaths,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
-import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import { resolve } from 'path';
 import { from } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 import { mapTo, switchMap, tap } from 'rxjs/operators';
-import * as ts from 'typescript';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import {
   NX_PACKAGE_PROVIDERS,
@@ -34,16 +34,14 @@ async function initializeNgPackagr(
   packager.forProject(resolve(context.root, options.project));
   packager.withBuildTransform(NX_PACKAGE_TRANSFORM.provide);
 
-  // read the tsconfig and modify its path in memory to
-  // pass it on to ngpackagr if specified
   if (options.tsConfig) {
-    // read the tsconfig and modify its path in memory to
-    // pass it on to ngpackagr
-    const parsedTSConfig = (await ngCompilerCli()).readConfiguration(
-      options.tsConfig
+    const tsConfigPath = createTmpTsConfig(
+      options.tsConfig,
+      context.root,
+      context.workspace.projects[context.projectName].root,
+      projectDependencies
     );
-    updatePaths(projectDependencies, parsedTSConfig.options.paths);
-    packager.withTsConfig(parsedTSConfig);
+    packager.withTsConfig(tsConfigPath);
   }
 
   return packager;
