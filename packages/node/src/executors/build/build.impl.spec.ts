@@ -64,6 +64,23 @@ describe('Node Build Executor', () => {
     );
   });
 
+  it('should use outFileName if passed in', async () => {
+    await buildExecutor(
+      { ...options, outFileName: 'index.js' },
+      context
+    ).next();
+
+    expect(runWebpack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        output: expect.objectContaining({
+          filename: 'index.js',
+          libraryTarget: 'commonjs',
+          path: '/root/dist/apps/wibble',
+        }),
+      })
+    );
+  });
+
   describe('webpackConfig', () => {
     it('should handle custom path', async () => {
       jest.mock(

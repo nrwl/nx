@@ -14,7 +14,6 @@ import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 // TODO(jack): Remove once the patch lands in original package
 import TsConfigPathsPlugin from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
 
-export const OUT_FILENAME = 'main.js';
 export const OUT_FILENAME_TEMPLATE = '[name].js';
 
 export function getBaseWebpackPartial(
@@ -49,7 +48,7 @@ export function getBaseWebpackPartial(
       filename:
         options.additionalEntryPoints?.length > 0
           ? OUT_FILENAME_TEMPLATE
-          : OUT_FILENAME,
+          : options.outFileName,
       hashFunction: 'xxhash64',
       // Disabled for performance
       pathinfo: false,

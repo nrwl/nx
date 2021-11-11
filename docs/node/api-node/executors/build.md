@@ -110,6 +110,14 @@ Type: `boolean`
 
 Defines the optimization level of the build.
 
+### outFileName
+
+Default: `main.js`
+
+Type: `string`
+
+Name of the main output file. (defaults to 'main.js')
+
 ### outputPath
 
 Type: `string`

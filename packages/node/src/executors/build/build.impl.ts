@@ -13,7 +13,6 @@ import { eachValueFrom } from 'rxjs-for-await';
 import { resolve } from 'path';
 
 import { getNodeWebpackConfig } from '../../utils/node.config';
-import { OUT_FILENAME } from '../../utils/config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
@@ -90,7 +89,11 @@ export async function* buildExecutor(
       map((stats) => {
         return {
           success: !stats.hasErrors(),
-          outfile: resolve(context.root, options.outputPath, OUT_FILENAME),
+          outfile: resolve(
+            context.root,
+            options.outputPath,
+            options.outFileName
+          ),
         } as NodeBuildEvent;
       })
     )

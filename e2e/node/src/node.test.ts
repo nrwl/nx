@@ -57,6 +57,13 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
+  it('should be able to generate the correct outFileName in options', async () => {
+    const nodeapp = uniq('nodeapp');
+    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    await runCLIAsync(`build ${nodeapp}`);
+    checkFilesExist(`dist/apps/${nodeapp}/index.js`);
+  }, 300000);
+
   // TODO: This test fails in CI, but succeeds locally. It should be re-enabled once the reasoning is understood.
   xit('should be able to generate an empty application with standalone configuration', async () => {
     const nodeapp = uniq('nodeapp');
