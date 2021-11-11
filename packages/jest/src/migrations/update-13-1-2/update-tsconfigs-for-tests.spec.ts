@@ -13,7 +13,13 @@ const reactTsConfigs = {
       '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
       '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
-    exclude: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    exclude: [
+      '**/*.spec.ts',
+      '**/*_spec.ts',
+      '**/*.spec.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+    ],
     include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
   },
   lib: {
@@ -26,7 +32,13 @@ const reactTsConfigs = {
       '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
       '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
-    exclude: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    exclude: [
+      '**/*.spec.ts',
+      '**/*_spec.ts',
+      '**/*.spec.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+    ],
     include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
   },
   spec: {
@@ -38,6 +50,7 @@ const reactTsConfigs = {
     },
     include: [
       '**/*.spec.ts',
+      '**/*_spec.ts',
       '**/*.spec.tsx',
       '**/*.spec.js',
       '**/*.spec.jsx',
@@ -48,9 +61,26 @@ const reactTsConfigs = {
       '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
   },
+  base: {
+    include: [],
+    files: [],
+    references: [
+      {
+        path: './tsconfig.app.json',
+      },
+      {
+        path: './tsconfig.lib.json',
+      },
+      {
+        path: './tsconfig.spec.json',
+      },
+    ],
+  },
   expectedFilesToContain: [
     '**/*.spec.ts',
     '**/*.test.ts',
+    '**/*_spec.ts',
+    '**/*_test.ts',
     '**/*.spec.tsx',
     '**/*.test.tsx',
     '**/*.spec.js',
@@ -68,7 +98,7 @@ const angularTsConfigs = {
     },
     files: ['src/main.ts', 'src/polyfills.ts'],
     include: ['src/**/*.d.ts'],
-    exclude: ['**/*.spec.ts'],
+    exclude: ['**/*.spec.ts', '**/*_spec.ts'],
   },
   lib: {
     extends: './tsconfig.json',
@@ -92,10 +122,44 @@ const angularTsConfigs = {
       types: ['jest', 'node'],
     },
     files: ['src/test-setup.ts'],
-    include: ['**/*.spec.ts', '**/*.d.ts'],
+    include: ['**/*.spec.ts', '**/*_spec.ts', '**/*.d.ts'],
   },
-  expectedFilesToContain: ['**/*.spec.ts', '**/*.test.ts'],
+  expectedFilesToContain: [
+    '**/*.spec.ts',
+    '**/*.test.ts',
+    '**/*_spec.ts',
+    '**/*_test.ts',
+  ],
 };
+
+const tsConfigLibBase = {
+  include: [],
+  files: [],
+  references: [
+    {
+      path: './tsconfig.lib.json',
+    },
+    {
+      path: './tsconfig.spec.json',
+    },
+  ],
+};
+const tsConfigAppBase = {
+  include: [],
+  files: [],
+  references: [
+    {
+      path: './tsconfig.app.json',
+    },
+    {
+      path: './tsconfig.spec.json',
+    },
+  ],
+};
+const tsConfigWithExclude = {
+  exclude: ['**/*.spec.ts', '**/*_spec.ts'],
+};
+
 [
   // test TSX/JSX support
   { name: 'React App', configs: reactTsConfigs },
@@ -116,12 +180,20 @@ const angularTsConfigs = {
         String.raw`${JSON.stringify(configs.spec, null, 2)}`
       );
       tree.write(
+        `apps/project-one/tsconfig.json`,
+        String.raw`${JSON.stringify(tsConfigAppBase, null, 2)}`
+      );
+      tree.write(
         'libs/lib-one/tsconfig.lib.json',
         String.raw`${JSON.stringify(configs.lib, null, 2)}`
       );
       tree.write(
         'libs/lib-one/tsconfig.spec.json',
         String.raw`${JSON.stringify(configs.spec, null, 2)}`
+      );
+      tree.write(
+        `libs/lib-one/tsconfig.json`,
+        String.raw`${JSON.stringify(tsConfigLibBase, null, 2)}`
       );
 
       addProjectConfiguration(tree, 'lib-one', {
@@ -193,6 +265,32 @@ const angularTsConfigs = {
       expect(tsLibConfig.exclude).toEqual(
         expect.arrayContaining(configs.expectedFilesToContain)
       );
+    });
+
+    it('should not update tsconfig without spec. patterns for include or exclude', async () => {
+      await update(tree);
+      const tsConfig = JSON.parse(
+        tree.read('apps/project-one/tsconfig.json', 'utf-8')
+      );
+      expect(tsConfig).toEqual(tsConfigAppBase);
+    });
+
+    it('should update any tsconfig with spec pattern for include or exclude', async () => {
+      tree.write(
+        'apps/project-one/tsconfig.random.json',
+        String.raw`${JSON.stringify(tsConfigWithExclude, null, 2)}`
+      );
+      await update(tree);
+
+      const randomTsConfig = JSON.parse(
+        tree.read('apps/project-one/tsconfig.random.json', 'utf-8')
+      );
+      expect(randomTsConfig.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*_spec.ts',
+        '**/*_test.ts',
+      ]);
     });
   });
 });

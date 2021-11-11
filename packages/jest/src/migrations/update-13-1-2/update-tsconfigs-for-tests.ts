@@ -2,12 +2,14 @@ import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-o
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import {
   formatFiles,
-  joinPathFragments,
   logger,
   readProjectConfiguration,
   stripIndents,
   Tree,
+  updateJson,
+  visitNotIgnoredFiles,
 } from '@nrwl/devkit';
+import { basename } from 'path';
 
 function updateTsConfigsForTests(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
@@ -16,69 +18,31 @@ function updateTsConfigsForTests(tree: Tree) {
     (jestOptions, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
 
-      const tsconfigSpecPath = joinPathFragments(
-        projectConfig.root,
-        'tsconfig.spec.json'
-      );
-
-      if (!tree.exists(tsconfigSpecPath)) {
-        return;
-      }
-
-      updateTsConfigInclude(tree, tsconfigSpecPath);
-
-      switch (projectConfig.projectType) {
-        case 'library':
-          const tsConfigLibPath = joinPathFragments(
-            projectConfig.root,
-            'tsconfig.lib.json'
-          );
-          updateTsConfigExclude(tree, tsConfigLibPath);
-          break;
-        case 'application':
-          const tsConfigAppPath = joinPathFragments(
-            projectConfig.root,
-            'tsconfig.app.json'
-          );
-          updateTsConfigExclude(tree, tsConfigAppPath);
-          break;
-        default:
-          logger.error(
-            `Unable to update tsconfig for project type ${projectConfig.projectType} since it is unknown type in ${projectName}`
-          );
-      }
+      visitNotIgnoredFiles(tree, projectConfig.root, (path) => {
+        const fileName = basename(path);
+        if (fileName.startsWith('tsconfig') && fileName.endsWith('.json')) {
+          updateTsConfig(tree, path);
+        }
+      });
     }
   );
 
-  /**
-   * will update the TSConfig file pass in exclude property to include .test. patterns
-   * where .spec. patterns are found.
-   */
-  function updateTsConfigExclude(tree: Tree, tsConfigPath: string) {
-    if (tree.exists(tsConfigPath)) {
-      const appConfig = JSON.parse(tree.read(tsConfigPath, 'utf-8'));
-      appConfig.exclude = makeAllPatternsFromSpecPatterns(appConfig.exclude);
-      tree.write(tsConfigPath, JSON.stringify(appConfig));
-    } else {
-      logger.warn(
-        stripIndents`Unable update ${tsConfigPath} to exclude new test files patterns since it does not exist.`
-      );
-    }
-  }
+  function updateTsConfig(tree: Tree, tsconfigSpecPath: string) {
+    try {
+      updateJson<TsConfig>(tree, tsconfigSpecPath, (value) => {
+        if (value.include) {
+          value.include = makeAllPatternsFromSpecPatterns(value.include);
+        }
 
-  /**
-   * will update the TSConfig file pass in include property to include .test. patterns
-   * where .spec. patterns are found.
-   */
-  function updateTsConfigInclude(tree: Tree, tsconfigSpecPath: string) {
-    if (tree.exists(tsconfigSpecPath)) {
-      const specConfig = JSON.parse(tree.read(tsconfigSpecPath, 'utf-8'));
-      specConfig.include = makeAllPatternsFromSpecPatterns(specConfig.include);
-      tree.write(tsconfigSpecPath, JSON.stringify(specConfig));
-    } else {
-      logger.warn(
-        stripIndents`Unable update ${tsconfigSpecPath} to include new test files patterns since it does not exist.`
-      );
+        if (value.exclude) {
+          value.exclude = makeAllPatternsFromSpecPatterns(value.exclude);
+        }
+        return value;
+      });
+    } catch (error) {
+      // issue trying to parse the tsconfig file bc it's invalid JSON from template markup/comments
+      // ignore and move on
+      logger.warn(stripIndents`Unable to update ${tsconfigSpecPath}. `);
     }
   }
 }
@@ -93,8 +57,9 @@ function makeAllPatternsFromSpecPatterns(
   return makeUniquePatterns(
     specGlobs.reduce((patterns, current) => {
       patterns.push(current);
-      if (current.includes('.spec.')) {
-        patterns.push(current.replace('.spec.', '.test.'));
+      // .spec. and _spec. can used as testing file name patterns
+      if (current.includes('spec.')) {
+        patterns.push(current.replace('spec.', 'test.'));
       }
       return patterns;
     }, [])
@@ -108,4 +73,13 @@ function makeUniquePatterns(items: string[] = []): string[] {
 export default async function update(tree: Tree) {
   updateTsConfigsForTests(tree);
   await formatFiles(tree);
+}
+
+interface TsConfig {
+  files?: string[];
+  include?: string[];
+  exclude?: string[];
+  references?: {
+    path: string;
+  }[];
 }
