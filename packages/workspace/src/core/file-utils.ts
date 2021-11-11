@@ -8,7 +8,7 @@ import type {
   NxJsonConfiguration,
   ProjectGraphNode,
 } from '@nrwl/devkit';
-import { ProjectFileMap } from '@nrwl/devkit';
+import { ProjectFileMap, stripIndents } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
@@ -121,11 +121,11 @@ function getFileData(filePath: string): FileData {
   };
 }
 
-export function allFilesInDir(
+function allFilesInDir(
   dirName: string,
-  recurse: boolean = true
+  recurse: boolean = true,
+  ignoredGlobs: any
 ): FileData[] {
-  const ignoredGlobs = getIgnoredGlobs();
   const relDirName = relative(appRootPath, dirName);
   if (relDirName && ignoredGlobs.ignores(relDirName)) {
     return [];
@@ -144,7 +144,7 @@ export function allFilesInDir(
           // add starting with "apps/myapp/..." or "libs/mylib/..."
           res.push(getFileData(child));
         } else if (s.isDirectory() && recurse) {
-          res = [...res, ...allFilesInDir(child, true)];
+          res = [...res, ...allFilesInDir(child, true, ignoredGlobs)];
         }
       } catch (e) {}
     });
@@ -267,16 +267,14 @@ function readWorkspaceFiles(): FileData[] {
     return r;
   } else {
     const r = [];
-    r.push(...rootWorkspaceFileData());
-
-    // Add known workspace files and directories
-    appendArray(r, allFilesInDir(appRootPath, false));
-    appendArray(r, allFilesInDir(`${appRootPath}/tools`, true));
-    const wl = workspaceLayout();
-    appendArray(r, allFilesInDir(`${appRootPath}/${wl.appsDir}`, true));
-    if (wl.appsDir !== wl.libsDir) {
-      appendArray(r, allFilesInDir(`${appRootPath}/${wl.libsDir}`, true));
-    }
+    const ignoredGlobs = getIgnoredGlobs();
+    ignoredGlobs.add(stripIndents`
+      node_modules
+      tmp
+      dist
+      build    
+    `);
+    appendArray(r, allFilesInDir(appRootPath, true, ignoredGlobs));
     performance.mark('read workspace files:end');
     performance.measure(
       'read workspace files',
