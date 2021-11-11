@@ -1,4 +1,3 @@
-jest.mock('ng-packagr/lib/utils/ng-compiler-cli');
 jest.mock('@nrwl/workspace/src/core/project-graph');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('ng-packagr');
@@ -13,7 +12,6 @@ import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
 } from './ng-packagr-adjustments/package.di';
-import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import ngPackagrLiteExecutor from './ng-packagr-lite.impl';
 
 describe('NgPackagrLite executor', () => {
@@ -24,14 +22,8 @@ describe('NgPackagrLite executor', () => {
   let ngPackagrWithBuildTransformMock: jest.Mock;
   let ngPackagrWithTsConfigMock: jest.Mock;
   let options: BuildAngularLibraryExecutorOptions;
-  let tsConfig: { options: { paths: { [key: string]: string[] } } };
 
   beforeEach(async () => {
-    tsConfig = {
-      options: {
-        paths: { '@myorg/my-package': ['/root/my-package/src/index.ts'] },
-      },
-    };
     (
       buildableLibsUtils.calculateProjectDependencies as jest.Mock
     ).mockImplementation(() => ({
@@ -57,7 +49,8 @@ describe('NgPackagrLite executor', () => {
       projectName: 'my-lib',
       targetName: 'build',
       configurationName: 'production',
-    } as ExecutorContext;
+      workspace: { projects: { 'my-lib': { root: '/libs/my-lib' } } },
+    } as any;
     options = { project: 'my-lib' };
   });
 
@@ -104,31 +97,39 @@ describe('NgPackagrLite executor', () => {
     expect(result.done).toBe(true);
   });
 
+  it('should not set up incremental builds when tsConfig option is not set', async () => {
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
+
+    const result = await ngPackagrLiteExecutor(options, context).next();
+
+    expect(buildableLibsUtils.createTmpTsConfig).not.toHaveBeenCalled();
+    expect(ngPackagrWithTsConfigMock).not.toHaveBeenCalled();
+    expect(ngPackagrBuildMock).toHaveBeenCalled();
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
+  });
+
   it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
     // ARRANGE
     (
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
-
-    (ngCompilerCli as jest.Mock).mockImplementation(() =>
-      Promise.resolve({
-        readConfiguration: (...args) => tsConfig,
-      })
+    const generatedTsConfig = '/root/tmp/my-lib/tsconfig.app.generated.json';
+    (buildableLibsUtils.createTmpTsConfig as jest.Mock).mockImplementation(
+      () => generatedTsConfig
     );
-    const tsConfigPath = '/root/my-lib/tsconfig.app.json';
 
     // ACT
     const result = await ngPackagrLiteExecutor(
-      { ...options, tsConfig: tsConfigPath },
+      { ...options, tsConfig: '/root/my-lib/tsconfig.app.json' },
       context
     ).next();
 
     // ASSERT
-    expect(buildableLibsUtils.updatePaths).toHaveBeenCalledWith(
-      expect.any(Array),
-      tsConfig.options.paths
-    );
-    expect(ngPackagrWithTsConfigMock).toHaveBeenCalledWith(tsConfig);
+    expect(buildableLibsUtils.createTmpTsConfig).toHaveBeenCalled();
+    expect(ngPackagrWithTsConfigMock).toHaveBeenCalledWith(generatedTsConfig);
     expect(ngPackagrBuildMock).toHaveBeenCalled();
     expect(result.value).toEqual({ success: true });
     expect(result.done).toBe(true);
