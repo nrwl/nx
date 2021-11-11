@@ -5,6 +5,6 @@
     "types": ["node"],
     "lib": ["DOM", "es2019"]
   },
-  "exclude": ["**/*.spec.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
   "include": ["**/*.ts"]
 }
