@@ -92,7 +92,7 @@ export async function* buildExecutor(
           outfile: resolve(
             context.root,
             options.outputPath,
-            options.outFileName
+            options.outputFileName
           ),
         } as NodeBuildEvent;
       })

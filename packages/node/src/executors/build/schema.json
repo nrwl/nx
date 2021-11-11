@@ -155,7 +155,7 @@
         }
       }
     },
-    "outFileName": {
+    "outputFileName": {
       "type": "string",
       "description": "Name of the main output file. (defaults to 'main.js')",
       "default": "main.js"

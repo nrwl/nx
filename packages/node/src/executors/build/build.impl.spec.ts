@@ -64,9 +64,9 @@ describe('Node Build Executor', () => {
     );
   });
 
-  it('should use outFileName if passed in', async () => {
+  it('should use outputFileName if passed in', async () => {
     await buildExecutor(
-      { ...options, outFileName: 'index.js' },
+      { ...options, outputFileName: 'index.js' },
       context
     ).next();
 

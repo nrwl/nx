@@ -48,7 +48,7 @@ export function getBaseWebpackPartial(
       filename:
         options.additionalEntryPoints?.length > 0
           ? OUT_FILENAME_TEMPLATE
-          : options.outFileName,
+          : options.outputFileName,
       hashFunction: 'xxhash64',
       // Disabled for performance
       pathinfo: false,

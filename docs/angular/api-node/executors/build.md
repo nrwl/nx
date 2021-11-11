@@ -110,7 +110,7 @@ Type: `boolean`
 
 Defines the optimization level of the build.
 
-### outFileName
+### outputFileName
 
 Default: `main.js`
 

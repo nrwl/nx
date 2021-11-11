@@ -87,7 +87,7 @@ export interface BuildBuilderOptions {
   tsPlugins?: TsPluginEntry[];
 
   additionalEntryPoints?: AdditionalEntryPoint[];
-  outFileName?: string;
+  outputFileName?: string;
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {

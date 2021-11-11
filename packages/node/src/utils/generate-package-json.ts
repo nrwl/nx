@@ -10,7 +10,7 @@ export function generatePackageJson(
   options: BuildNodeBuilderOptions
 ) {
   const packageJson = createPackageJson(projectName, graph, options);
-  packageJson.main = packageJson.main ?? options.outFileName;
+  packageJson.main = packageJson.main ?? options.outputFileName;
   delete packageJson.devDependencies;
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }

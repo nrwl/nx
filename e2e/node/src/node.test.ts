@@ -57,12 +57,12 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
-  it('should be able to generate the correct outFileName in options', async () => {
+  it('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
 
     updateProjectConfig(nodeapp, (config) => {
-      config.targets.build.options.outFileName = 'index.js';
+      config.targets.build.options.outputFileName = 'index.js';
       return config;
     });
 
