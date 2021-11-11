@@ -9,8 +9,8 @@
   },
   "keywords": [
     "Monorepo",
-    "Node",
-    "Express",
+    "Gatsby",
+    "Web",
     "Jest",
     "Cypress",
     "CLI"
@@ -29,12 +29,14 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
+  "peerDependencies": {
+    "gatsby": "^4.1.3"
+  },
   "dependencies": {
     "@nrwl/cypress": "*",
     "@nrwl/linter": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
-    "@nrwl/node": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
     "gatsby-cli": "^4.1.2",

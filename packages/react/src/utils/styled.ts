@@ -8,7 +8,6 @@ import {
   styledJsxVersion,
   typesReactIsVersion,
   typesStyledComponentsVersion,
-  typesStyledJsxVersion,
 } from './versions';
 import { PackageDependencies } from './dependencies';
 
@@ -39,8 +38,6 @@ export const CSS_IN_JS_DEPENDENCIES: {
     dependencies: {
       'styled-jsx': styledJsxVersion,
     },
-    devDependencies: {
-      '@types/styled-jsx': typesStyledJsxVersion,
-    },
+    devDependencies: {},
   },
 };
