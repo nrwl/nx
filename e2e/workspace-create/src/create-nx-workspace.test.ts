@@ -90,7 +90,7 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an gatsby workspace', () => {
+  xit('should be able to create an gatsby workspace', () => {
     const wsName = uniq('gatsby');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {

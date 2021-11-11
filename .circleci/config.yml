@@ -439,7 +439,7 @@ workflows:
       - main:
           name: commit-to-master
           run-cypress-tests: 'true'
-          exclude-projects: 'e2e-react-native,e2e-detox'
+          exclude-projects: 'e2e-react-native,e2e-detox,e2e-gatsby'
           filters:
             branches:
               only: master

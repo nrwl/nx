@@ -48,11 +48,11 @@ describe('Cli', () => {
       `libs/${mylib}/package.json`,
       JSON.stringify({
         name: 'mylib1',
-        scripts: { echo: `echo ECHOED` },
+        scripts: { 'echo:dev': `echo ECHOED` },
       })
     );
 
-    const { stdout } = await runCLIAsync(`echo ${mylib} --a=123`, {
+    const { stdout } = await runCLIAsync(`echo:dev ${mylib} --a=123`, {
       silent: true,
     });
     expect(stdout).toMatch(/ECHOED "?--a=123"?/);
