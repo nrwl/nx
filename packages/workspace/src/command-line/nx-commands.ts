@@ -269,16 +269,23 @@ npx nx daemon
 `),
     (yargs) => linkToNxDevAndExamples(yargs, 'migrate'),
     () => {
-      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-        const p = taoPath();
-        execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
-          stdio: ['inherit', 'inherit', 'inherit'],
-        });
-      } else {
+      const runLocalMigrate = () => {
         const pmc = getPackageManagerCommand();
         execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
         });
+      };
+      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+        const p = taoPath();
+        if (p === null) {
+          runLocalMigrate();
+        } else {
+          execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
+            stdio: ['inherit', 'inherit', 'inherit'],
+          });
+        }
+      } else {
+        runLocalMigrate();
       }
     }
   )
@@ -557,31 +564,36 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
 }
 
 function taoPath() {
-  const packageManager = getPackageManagerCommand();
+  try {
+    const packageManager = getPackageManagerCommand();
 
-  const { dirSync } = require('tmp');
-  const tmpDir = dirSync().name;
-  writeJsonFile(path.join(tmpDir, 'package.json'), {
-    dependencies: {
-      '@nrwl/tao': 'latest',
+    const { dirSync } = require('tmp');
+    const tmpDir = dirSync().name;
+    writeJsonFile(path.join(tmpDir, 'package.json'), {
+      dependencies: {
+        '@nrwl/tao': 'latest',
+      },
+      license: 'MIT',
+    });
 
-      // these deps are required for migrations written using angular devkit
-      '@angular-devkit/architect': 'latest',
-      '@angular-devkit/schematics': 'latest',
-      '@angular-devkit/core': 'latest',
-    },
-    license: 'MIT',
-  });
+    execSync(packageManager.install, {
+      cwd: tmpDir,
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
 
-  execSync(packageManager.install, {
-    cwd: tmpDir,
-    stdio: ['ignore', 'ignore', 'ignore'],
-  });
+    // Set NODE_PATH so that these modules can be used for module resolution
+    addToNodePath(path.join(tmpDir, 'node_modules'));
 
-  // Set NODE_PATH so that these modules can be used for module resolution
-  addToNodePath(path.join(tmpDir, 'node_modules'));
-
-  return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+    return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+  } catch (e) {
+    console.error(
+      'Failed to install the latest version of the migration script. Using the current version.'
+    );
+    if (process.env.NX_VERBOSE_LOGGING) {
+      console.error(e);
+    }
+    return null;
+  }
 }
 
 function addToNodePath(dir: string) {
