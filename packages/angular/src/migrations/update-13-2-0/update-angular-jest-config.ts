@@ -1,9 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import type {
-  Node,
-  ObjectLiteralExpression,
-  PropertyAssignment,
-} from 'typescript';
+import type { Node, PropertyAssignment } from 'typescript';
 import { formatFiles, getProjects } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
@@ -28,6 +24,8 @@ export default async function (tree: Tree) {
         angularProjects[projectName] = [jestConfigPath, jestConfig];
       }
     }
+
+    await formatFiles(tree);
   }
 
   for (const [_, [jestConfigPath, jestFileContents]] of Object.entries(
@@ -50,7 +48,6 @@ export function replaceTransformAndAddIgnorePattern(fileContents: string) {
     return updatedFileContents;
   }
 
-  updatedFileContents = updateModuleFileExtenstions(updatedFileContents);
   return updatedFileContents;
 }
 
@@ -110,52 +107,4 @@ function updateTransformIgnorePattern(fileContents: string) {
     0,
     transformEndIndex
   )}${TRANSFORM_IGNORE_PATTERN_STRING}${fileContents.slice(transformEndIndex)}`;
-}
-
-function updateModuleFileExtenstions(fileContents: string) {
-  const MODULE_FILE_EXTENSIONS_AST_QUERY =
-    'Identifier[name=moduleFileExtensions] ~ ArrayLiteralExpression > StringLiteral';
-  const MODULE_FILE_EXTENSIONS_STRING = 'mjs';
-  const MODULE_FILE_EXTENSIONS_FULL_STRING = `moduleFileExtensions: ['mjs', 'ts', 'js', 'html'],`;
-
-  const ast = tsquery.ast(fileContents);
-
-  const moduleFileExtensionsNodes = tsquery(
-    ast,
-    MODULE_FILE_EXTENSIONS_AST_QUERY,
-    {
-      visitAllChildren: true,
-    }
-  );
-
-  if (!moduleFileExtensionsNodes || moduleFileExtensionsNodes.length === 0) {
-    // add the full property
-    const insertPosition = fileContents.lastIndexOf('}') - 1;
-
-    return `${fileContents.slice(
-      0,
-      insertPosition
-    )}\n${MODULE_FILE_EXTENSIONS_FULL_STRING}${fileContents.slice(
-      insertPosition
-    )}`;
-  }
-
-  // check if the extension already exists
-  const hasExtensionAlready = Boolean(
-    moduleFileExtensionsNodes.find((node) =>
-      node.getText().includes(MODULE_FILE_EXTENSIONS_STRING)
-    )
-  );
-  if (hasExtensionAlready) {
-    return fileContents;
-  }
-
-  // add the extension
-  const insertPosition =
-    moduleFileExtensionsNodes[moduleFileExtensionsNodes.length - 1].getEnd();
-
-  return `${fileContents.slice(
-    0,
-    insertPosition
-  )}, '${MODULE_FILE_EXTENSIONS_STRING}'${fileContents.slice(insertPosition)}`;
 }

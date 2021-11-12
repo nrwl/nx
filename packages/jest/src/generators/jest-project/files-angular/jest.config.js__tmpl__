@@ -8,12 +8,7 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$',
     }
   },<% if(testEnvironment) { %>
-  testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
-  transform: {
-    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformer == 'babel-jest') { %>'babel-jest'<% } else { %> 'ts-jest' <% } %>
-  },<% if (supportTsx) { %>
-    moduleFileExtensions: ['mjs', 'ts', 'tsx', 'js', 'jsx'],<% } else { %>
-    moduleFileExtensions: ['mjs', 'ts', 'js', 'html'],<% } %><% } %>
+  testEnvironment: '<%= testEnvironment %>',<% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular'
