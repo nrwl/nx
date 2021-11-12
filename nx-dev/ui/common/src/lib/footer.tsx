@@ -5,156 +5,282 @@ export interface FooterProps {
   useDarkBackground?: boolean;
 }
 export function Footer({ useDarkBackground }: FooterProps) {
-  return (
-    <footer
-      className={cx(
-        'pt-16 md:pt-32 text-white body-font',
-        useDarkBackground ? 'bg-blue-nx-dark' : 'bg-blue-nx-base'
-      )}
-    >
-      <div className="max-w-screen-sm mx-auto px-5 py-5">
-        {/*FOOTER LINKS*/}
-        <div className="my-12 flex sm:flex-row flex-col items-start text-center sm:text-left">
-          <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
-            <h3 className="text-lg font-extrabold leading-none tracking-tight mb-4">
-              Resources
-            </h3>
-            <ul>
-              <li className="mb-2">
-                <a
-                  href="https://blog.nrwl.io/?utm_source=nx.dev"
-                  target="_blank"
-                  rel="nofollow"
-                  className="cursor-pointer block"
-                >
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://nrwl.io/?utm_source=nx.dev"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="cursor-pointer block"
-                >
-                  Nrwl
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
-            <h3 className="text-lg font-extrabold leading-none tracking-tight mb-4">
-              Help
-            </h3>
-            <ul>
-              <li className="mb-2">
-                <Link href={`/getting-started/intro`}>
-                  <a className="cursor-pointer block">Documentation</a>
-                </Link>
-              </li>
-              <li className="mb-2">
-                <Link href="/community">
-                  <a className="cursor-pointer block">Community</a>
-                </Link>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="https://stackoverflow.com/questions/tagged/nrwl-nx"
-                  target="_blank"
-                  rel="nofollow"
-                  className="cursor-pointer block"
-                >
-                  StackOverflow
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="https://github.com/nrwl/nx/issues?q=is%3Aopen+is%3Aissue"
-                  target="_blank"
-                  rel="nofollow"
-                  className="cursor-pointer block"
-                >
-                  Report Issues
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
-            <h3 className="text-lg font-extrabold leading-none tracking-tight mb-4">
-              Community
-            </h3>
-            <ul>
-              <li className="mb-2">
-                <a
-                  href="https://twitter.com/NXdevtools"
-                  target="_blank"
-                  rel="nofollow"
-                  className="cursor-pointer block"
-                >
-                  Twitter
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="https://github.com/nrwl/nx/"
-                  target="_blank"
-                  rel="nofollow"
-                  className="cursor-pointer block"
-                >
-                  Github
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="https://github.com/nrwl/nx/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Acommunity"
-                  target="_blank"
-                  rel="nofollow"
-                  className="cursor-pointer block"
-                >
-                  Help us
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-16 mb-6 w-full text-center">
-          Created with
-          <svg
-            className="mx-1 h-4 w-4 inline align-baseline"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
+  const navigation = {
+    solutions: [
+      { name: 'Nx', href: 'https://nx.dev' },
+      { name: 'NxCloud', href: 'https://nx.app/?utm_source=nx.dev' },
+      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
+    ],
+    resources: [
+      { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
+      {
+        name: 'Youtube Channel',
+        href: 'https://youtube.com/nrwl_io?utm_source=nx.dev',
+      },
+      {
+        name: 'Nx Playbook',
+        href: 'https://nxplaybook.com/?utm_source=nx.dev',
+      },
+      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
+    ],
+    community: [
+      { name: 'Twitter', href: 'https://twitter.com/NXdevtools' },
+      { name: 'Github', href: 'https://github.com/nrwl/nx/' },
+      {
+        name: 'Newsletter',
+        href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
+      },
+      {
+        name: 'Slack',
+        href: 'https://go.nrwl.io/join-slack?utm_source=nx.dev',
+      },
+      {
+        name: 'Help Us',
+        href: 'https://github.com/nrwl/nx/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Acommunity',
+      },
+    ],
+    help: [
+      { name: 'Documentation', href: '/getting-started/intro' },
+      { name: 'Community', href: '/community' },
+      {
+        name: 'StackOverflow',
+        href: 'https://stackoverflow.com/questions/tagged/nrwl-nx',
+      },
+      {
+        name: 'Report Issues',
+        href: 'https://github.com/nrwl/nx/issues?q=is%3Aopen+is%3Aissue',
+      },
+    ],
+    social: [
+      {
+        name: 'Twitter',
+        href: 'https://twitter.com/NXdevtools?utm_source=nx.dev',
+        icon: (props: any) => (
+          <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+          </svg>
+        ),
+      },
+      {
+        name: 'GitHub',
+        href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
+        icon: (props: any) => (
+          <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
             <path
               fillRule="evenodd"
-              d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+              d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
               clipRule="evenodd"
             />
-          </svg>{' '}
-          by
-          <a
-            href="https://nrwl.io"
-            className="text-gray-600 ml-1 point-cursor"
-            rel="noopener noreferrer"
-            target="_blank"
+          </svg>
+        ),
+      },
+      {
+        name: 'Slack',
+        href: 'https://go.nrwl.io/join-slack?utm_source=nx.dev',
+        icon: (props: any) => (
+          <svg
+            fill="currentColor"
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            {...props}
           >
+            <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
+          </svg>
+        ),
+      },
+      {
+        name: 'Newsletter',
+        href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
+        icon: (props: any) => (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            {...props}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+            />
+          </svg>
+        ),
+      },
+    ],
+  };
+  return (
+    <footer
+      className={cx(useDarkBackground ? 'bg-blue-nx-dark' : 'bg-white')}
+      aria-labelledby="footer-heading"
+    >
+      <h2 id="footer-heading" className="sr-only">
+        Footer
+      </h2>
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+          <div className="text-gray-500 space-y-4 xl:col-span-1">
             <svg
-              className="inline-block align-bottom ml-1 h-6 w-12 text-white"
-              fill="currentcolor"
-              viewBox="0 0 402.32 125.56"
+              className="h-14 subpixel-antialiased"
+              role="img"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <g>
-                <polygon points="123.57 110.54 123.57 125.56 146.66 125.56 146.66 112.72 123.57 110.54" />
-                <path d="M95,102.39l-.14,0c-.08-1.78-1.64-3-2.23-3.76a2.31,2.31,0,0,1-.54-1.18h0A27.52,27.52,0,0,0,67,72h0A8.38,8.38,0,0,0,64,68.75a8.43,8.43,0,0,1-3.19-6.63v0a9.41,9.41,0,0,0-8.34,7.36,23.35,23.35,0,0,1-6.32-37.28,30.16,30.16,0,0,1,22-9.42A30.55,30.55,0,0,1,97.73,45.42a15.3,15.3,0,0,1-9.11,5.36A15.15,15.15,0,0,0,76.28,63.32c5.88,0,9.79,8,20.71,8a9.91,9.91,0,0,0,9.18-6.16,9.93,9.93,0,0,0,9.19,6.16,19.61,19.61,0,0,0,8.56-1.9V50.82l-.19,0C119,50,114.27,46.52,112.67,42h0a57.41,57.41,0,1,0-91.78,59.89,11.81,11.81,0,0,1-3.46-1.25,11.4,11.4,0,0,0-6.55-1.5A11.67,11.67,0,0,0,.78,115a33.3,33.3,0,0,1,9.48-2,33.79,33.79,0,0,1,5.7.1h0a29.56,29.56,0,0,0,4.71.07q1.24-.09,2.46-.27a28.79,28.79,0,0,0,9.82-3.4,54.59,54.59,0,0,0,7.35,2.8A74.29,74.29,0,0,0,90.38,109a8.94,8.94,0,0,0,2-1.25,2.94,2.94,0,0,0,1.24.49L165.42,115ZM29.54,47.26c.11-1.54,1.07-2.72,2.14-2.65s1.86,1.39,1.75,2.93-1.07,2.72-2.15,2.65S29.43,48.8,29.54,47.26ZM30,69.66c1.09-.89,3-.36,4.3,1.2s1.44,3.55.35,4.45-3,.36-4.3-1.2S28.94,70.56,30,69.66Zm-5.33-20c.54,0,1,.59,1,1.36s-.38,1.41-.92,1.43-1-.58-1-1.35S24.17,49.66,24.7,49.63Zm-.78,8.86c1-.24,2.18.78,2.53,2.28s-.22,2.92-1.27,3.16-2.18-.77-2.53-2.28S22.87,58.74,23.92,58.49Zm40.78,41.7a2.87,2.87,0,0,1-5.57-1.35c.35-1.46,1.52-.84,3.06-.46S65.05,98.74,64.7,100.19Z" />
-                <polygon points="179.75 43.56 179.75 87.26 142.97 43.56 123.57 43.56 123.57 103.1 146.66 108.56 146.66 81.87 183.44 125.56 202.84 125.56 202.84 43.56 179.75 43.56" />
-                <path d="M244.47,63.19A34.5,34.5,0,0,1,257.15,61v20A48.15,48.15,0,0,0,252,80.7q-7.26,0-11.37,3.86T236.55,96.4v29.16H213.94V62.07h21.54v7.62A21,21,0,0,1,244.47,63.19Z" />
-                <path d="M362.16,62.07l-18.35,63.49h-21.9l-7.53-29.1-8,29.1H284.48L266.13,62.07h21.43l8.59,32.06,9.07-32.06H324.5l8.71,32.41,9.07-32.41Z" />
-                <path d="M393.28,28.64H370.61v74c0,19.88,12.84,22.41,24.89,22.41,3.67,0,6.82-.35,6.82-.35V107.44s-1.31.12-2.75.12c-5.11,0-6.29-2-6.29-7.59Z" />
-              </g>
+              <title>Nx</title>
+              <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
             </svg>
-          </a>
+            <p className="text-base">Smart, Extensible Build Framework</p>
+            <div className="flex space-x-6">
+              {navigation.social.map((item) => (
+                <Link key={item.name} href={item.href}>
+                  <a
+                    className={cx(
+                      'text-gray-400',
+                      useDarkBackground
+                        ? 'hover:text-gray-300'
+                        : 'hover:text-gray-500'
+                    )}
+                  >
+                    <span className="sr-only">{item.name}</span>
+                    <item.icon className="h-6 w-6" aria-hidden="true" />
+                  </a>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                  Resources
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.resources.map((item) => (
+                    <li key={item.name}>
+                      <Link href={item.href}>
+                        <a
+                          className={cx(
+                            'text-base text-gray-500',
+                            useDarkBackground
+                              ? 'hover:text-gray-200'
+                              : 'hover:text-gray-900'
+                          )}
+                        >
+                          {item.name}
+                        </a>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-12 md:mt-0">
+                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                  Help
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.help.map((item) => (
+                    <li key={item.name}>
+                      <Link href={item.href}>
+                        <a
+                          className={cx(
+                            'text-base text-gray-500',
+                            useDarkBackground
+                              ? 'hover:text-gray-200'
+                              : 'hover:text-gray-900'
+                          )}
+                        >
+                          {item.name}
+                        </a>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                  Community
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.community.map((item) => (
+                    <li key={item.name}>
+                      <Link href={item.href}>
+                        <a
+                          className={cx(
+                            'text-base text-gray-500',
+                            useDarkBackground
+                              ? 'hover:text-gray-200'
+                              : 'hover:text-gray-900'
+                          )}
+                        >
+                          {item.name}
+                        </a>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-12 md:mt-0">
+                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                  Solutions
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.solutions.map((item) => (
+                    <li key={item.name}>
+                      <Link href={item.href}>
+                        <a
+                          className={cx(
+                            'text-base text-gray-500',
+                            useDarkBackground
+                              ? 'hover:text-gray-200'
+                              : 'hover:text-gray-900'
+                          )}
+                        >
+                          {item.name}
+                        </a>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="w-full text-center">© 2021</div>
+        <div className="mt-12 border-t border-gray-200 pt-6">
+          <p className="text-base text-gray-400 xl:text-center">
+            &copy; 2021 made with{' '}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="-mt-0.5 h-5 w-5 inline"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                clipRule="evenodd"
+              />
+            </svg>{' '}
+            by{' '}
+            <Link href="https://nrwl.io/?utm_source=nx.dev">
+              <a target="_blank" rel="nofollow">
+                <svg
+                  className="-mt-0.5 ml-0.5 w-14 h-auto inline"
+                  role="img"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                >
+                  <path d="M3.357 8.258a3.424 3.424 0 00-.845.123l.054-.02a3.437 3.437 0 00-.841.346 3.437 3.437 0 00-.262.168 3.437 3.437 0 00-.11.078 3.424 3.424 0 00-.025.022 3.437 3.437 0 00-.01.005 3.424 3.424 0 00-.103.084 3.437 3.437 0 00-.115.104 3.437 3.437 0 00-.05.045 3.424 3.424 0 00-.08.08 3.424 3.424 0 00-.099.107 3.437 3.437 0 00-.03.034 3.424 3.424 0 00-.071.086 3.437 3.437 0 00-.034.04 3.424 3.424 0 00-.066.088 3.437 3.437 0 00-.006.008 3.424 3.424 0 00-.072.1 3.437 3.437 0 00-.014.02 3.424 3.424 0 00-.082.132 3.424 3.424 0 00-.074.127 3.437 3.437 0 00-.012.026 3.424 3.424 0 00-.062.12 3.424 3.424 0 00-.067.143 3.424 3.424 0 00-.054.135 3.437 3.437 0 00-.008.02 3.424 3.424 0 00-.131.437 3.424 3.424 0 00-.031.152 3.424 3.424 0 00-.026.149 3.437 3.437 0 000 .013 3.424 3.424 0 00-.027.303A3.424 3.424 0 000 11.68a3.437 3.437 0 000 .04 3.424 3.424 0 00.004.124A3.424 3.424 0 00.016 12a3.424 3.424 0 00.015.14 3.437 3.437 0 00.01.057 3.424 3.424 0 00.018.108 3.437 3.437 0 000 .004 3.424 3.424 0 00.025.123 3.437 3.437 0 00.037.15 3.437 3.437 0 00.096.297 3.437 3.437 0 00.056.144 3.437 3.437 0 00.432.745c.014.02.025.024.04.043a3.424 3.424 0 00.007.01 3.424 3.424 0 00.305.33l.011.013c.1.09.16.132.137.129.008.006.02.01.03.018a3.424 3.424 0 00.017.017.711.711 0 01-.205-.08.683.683 0 00-.39-.088.696.696 0 00-.608.947 1.993 1.993 0 01.564-.12 2.088 2.088 0 01.34.007 1.707 1.707 0 00.283.006c.05-.004.098-.01.147-.018a1.714 1.714 0 00.584-.203 3.424 3.424 0 00.437.17 4.43 4.43 0 002.989-.193.528.528 0 00.115-.076.179.179 0 00.076.03l1.789.169v.863H8.75v-.734l1.12.105-4.204-.754a.111.111 0 00-.014-.004c-.01-.1-.095-.172-.13-.218a.134.134 0 01-.03-.07 1.64 1.64 0 00-1.496-1.52.504.504 0 00-.18-.193.503.503 0 01-.187-.4.56.56 0 00-.498.44 1.393 1.393 0 01-.377-2.222 1.798 1.798 0 011.312-.563A1.824 1.824 0 015.83 10.96a.914.914 0 01-.543.32.904.904 0 00-.736.748c.35 0 .585.477 1.236.477a.59.59 0 00.547-.367.592.592 0 00.549.367 1.17 1.17 0 00.49-.106v2.002l1.377.327v-1.592l2.193 2.605H12.1v-4.89h-1.38v2.605L8.53 10.852H7.373v.427c-.283-.05-.556-.255-.65-.52a3.424 3.424 0 00-3.366-2.501zM22.109 9.96v4.414c0 1.186.766 1.336 1.485 1.336.219 0 .406-.02.406-.02v-1.03s-.078.007-.164.007c-.305 0-.375-.12-.375-.453V9.96zm-6.816 1.932a2.057 2.057 0 00-.709.128 1.253 1.253 0 00-.535.385v-.453h-1.285v3.79h1.347v-1.74c0-.316.081-.551.244-.704.164-.154.39-.23.678-.23a2.937 2.937 0 01.307.017v-1.193a2.057 2.057 0 00-.047 0zm.584.06l1.094 3.787h1.306l.477-1.736.45 1.736h1.306l1.094-3.787h-1.186l-.54 1.932-.52-1.932h-1.15l-.542 1.912-.512-1.912zm-12.281 2.14c.03 0 .07.016.117.027.092.023.17.02.15.108a.171.171 0 01-.332-.08c.01-.044.033-.056.065-.055z" />
+                </svg>
+              </a>
+            </Link>
+          </p>
+        </div>
       </div>
     </footer>
   );

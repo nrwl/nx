@@ -123,3 +123,25 @@ iframe[src*='youtube'] {
     background-size: cover !important;
   }
 }
+
+/**
+ * Sponsor carousel
+ */
+#sponsors-carousel {
+  animation: scroll 80s linear infinite;
+  width: calc(192px * 18);
+}
+#sponsors-carousel div {
+  margin: 0 24px;
+  min-width: 144px;
+  width: 144px;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(calc(-192px * 18), 0, 0);
+  }
+}
