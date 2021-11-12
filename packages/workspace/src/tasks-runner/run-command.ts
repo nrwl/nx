@@ -316,7 +316,10 @@ function addTasksForProjectDependencyConfig(
         const depProject =
           projectGraph.nodes[dep.target] ||
           projectGraph.externalNodes[dep.target];
-        if (projectHasTarget(depProject, dependencyConfig.target)) {
+        if (
+          projectHasTarget(depProject, dependencyConfig.target) &&
+          !seenSet.has(depProject.name)
+        ) {
           addTasksForProjectTarget(
             {
               project: depProject,
