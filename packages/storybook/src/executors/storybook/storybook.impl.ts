@@ -5,13 +5,23 @@ import {
   readTargetOptions,
 } from '@nrwl/devkit';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { checkAndCleanWithSemver } from '@nrwl/workspace';
 import { buildDevStandalone } from '@storybook/core/server';
 import 'dotenv/config';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { basename, join, sep } from 'path';
+import { gte } from 'semver';
+import {
+  readCurrentWorkspaceStorybookVersionFromExecutor,
+  readCurrentWorkspaceStorybookVersionFromGenerator,
+} from '../../utils/utilities';
 import { CommonNxStorybookConfig, StorybookConfig } from '../models';
-import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+import {
+  getStorybookFrameworkPath,
+  runStorybookSetupCheck,
+  setStorybookAppProject,
+} from '../utils';
 
 export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   host?: string;
@@ -94,8 +104,6 @@ function storybookOptionMapper(
   frameworkOptions: any,
   context: ExecutorContext
 ) {
-  // setStorybookAppProject(context, builderOptions.projectBuildConfig);
-
   const storybookConfig = findOrCreateConfig(builderOptions.config, context);
   const storybookOptions = {
     ...builderOptions,
@@ -106,7 +114,11 @@ function storybookOptionMapper(
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
   };
 
-  if (builderOptions.uiFramework === '@storybook/angular') {
+  if (
+    builderOptions.uiFramework === '@storybook/angular' &&
+    // just for new 6.4 with Angular
+    isStorybookGTE6_4()
+  ) {
     let buildProjectName;
     let targetName = 'build'; // default
     let targetOptions = null;
@@ -156,7 +168,6 @@ function storybookOptionMapper(
         targetName
       );
     }
-
     const project = context.workspace.projects[buildProjectName];
 
     // construct a builder object for Storybook
@@ -178,6 +189,9 @@ function storybookOptionMapper(
         },
       },
     };
+  } else {
+    // keep the backwards compatibility
+    setStorybookAppProject(context, builderOptions.projectBuildConfig);
   }
 
   return storybookOptions;
@@ -243,4 +257,13 @@ function normalizeTargetString(
     return appName;
   }
   return `${appName}:${defaultTarget}`;
+}
+
+function isStorybookGTE6_4() {
+  const storybookVersion = readCurrentWorkspaceStorybookVersionFromExecutor();
+
+  return gte(
+    checkAndCleanWithSemver('@storybook/core', storybookVersion),
+    '6.4.0-beta.30'
+  );
 }

@@ -19,7 +19,11 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Linter } from '@nrwl/linter';
 import { join } from 'path';
 
-import { isFramework, TsConfig } from '../../utils/utilities';
+import {
+  isFramework,
+  readCurrentWorkspaceStorybookVersionFromGenerator,
+  TsConfig,
+} from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
@@ -35,7 +39,7 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion(tree);
+  const workspaceStorybookVersion = getCurrentWorkspaceStorybookVersion(tree);
 
   const { projectType } = readProjectConfiguration(tree, schema.name);
 
@@ -334,37 +338,10 @@ function addStorybookTask(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
-  const packageJsonContents = readJson(tree, 'package.json');
-  let workspaceStorybookVersion = storybookVersion;
-  if (packageJsonContents && packageJsonContents['devDependencies']) {
-    if (packageJsonContents['devDependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/core'];
-    }
-  }
-  if (packageJsonContents && packageJsonContents['dependencies']) {
-    if (packageJsonContents['dependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/core'];
-    }
-  }
+function getCurrentWorkspaceStorybookVersion(tree: Tree): string {
+  let workspaceStorybookVersion =
+    readCurrentWorkspaceStorybookVersionFromGenerator(tree);
+
   if (
     gte(
       checkAndCleanWithSemver('@storybook/core', workspaceStorybookVersion),

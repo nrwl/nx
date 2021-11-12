@@ -1,8 +1,7 @@
-import { Tree } from '@nrwl/devkit';
-import { join } from 'path';
+import { readJson, readJsonFile, Tree } from '@nrwl/devkit';
 import { CompilerOptions } from 'typescript';
+import { storybookVersion } from './versions';
 import path = require('path');
-import { statSync } from 'fs';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -71,6 +70,54 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
   } else {
     return false;
   }
+}
+
+export function readCurrentWorkspaceStorybookVersionFromGenerator(
+  tree: Tree
+): string {
+  const packageJsonContents = readJson(tree, 'package.json');
+  return determineStorybookWorkspaceVersion(packageJsonContents);
+}
+
+export function readCurrentWorkspaceStorybookVersionFromExecutor() {
+  const packageJsonContents = readJsonFile('package.json');
+  return determineStorybookWorkspaceVersion(packageJsonContents);
+}
+
+function determineStorybookWorkspaceVersion(packageJsonContents) {
+  let workspaceStorybookVersion = storybookVersion;
+
+  if (packageJsonContents && packageJsonContents['devDependencies']) {
+    if (packageJsonContents['devDependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/core'];
+    }
+  }
+
+  if (packageJsonContents && packageJsonContents['dependencies']) {
+    if (packageJsonContents['dependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/core'];
+    }
+  }
+
+  return workspaceStorybookVersion;
 }
 
 export type TsConfig = {
