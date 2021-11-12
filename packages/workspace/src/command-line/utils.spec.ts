@@ -212,6 +212,88 @@ describe('splitArgs', () => {
       exclude: 'file',
     });
   });
+
+  describe('--parallel', () => {
+    it('should be a number', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          _: [],
+          $0: '',
+          parallel: '5',
+        },
+        'affected'
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(5);
+    });
+
+    it('should default to 3', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          _: [],
+          $0: '',
+          parallel: '',
+        },
+        'affected'
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(3);
+    });
+
+    it('should be 3 when set to true', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          _: [],
+          $0: '',
+          parallel: 'true',
+        },
+        'affected'
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(3);
+    });
+
+    it('should be 1 when set to false', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          _: [],
+          $0: '',
+          parallel: 'false',
+        },
+        'affected'
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(1);
+    });
+
+    it('should use the maxParallel option when given', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          _: [],
+          $0: '',
+          parallel: '',
+          maxParallel: 5,
+        },
+        'affected'
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(5);
+    });
+
+    it('should use the maxParallel option when given', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          _: [],
+          $0: '',
+          parallel: '',
+          maxParallel: 5,
+        },
+        'affected'
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(5);
+    });
+  });
 });
 
 describe('getAffectedConfig', () => {

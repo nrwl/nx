@@ -192,7 +192,11 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   if (args['parallel'] === 'false' || args['parallel'] === false) {
     nxArgs['parallel'] = 1;
-  } else if (args['parallel'] === 'true' || args['parallel'] === true) {
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === ''
+  ) {
     nxArgs['parallel'] = Number(
       nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
     );
