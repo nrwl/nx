@@ -21,6 +21,5 @@ transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
           'jest-preset-angular/build/serializers/ng-snapshot',
           'jest-preset-angular/build/serializers/html-comment',
         ],
-       
-moduleFileExtensions: ['mjs', 'ts', 'js', 'html'], };"
+        };"
 `;
