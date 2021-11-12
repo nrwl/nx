@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/ui-commands",
+  "sourceRoot": "nx-dev/ui-commands/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:ui"],
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["nx-dev/ui-commands/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/ui-commands"],
+      "options": {
+        "jestConfig": "nx-dev/ui-commands/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

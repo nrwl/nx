@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin:auto;background:transparent;display:block;z-index:1;position:relative" width="2480" height="841" preserveAspectRatio="xMidYMid" viewBox="0 0 2480 841">
+<svg xmlns="http://www.w3.org/2000/svg"
+     style="margin:auto;background:transparent;display:block;z-index:1;position:relative" width="2480" height="841"
+     preserveAspectRatio="xMidYMid" viewBox="0 0 2480 841">
   <g transform="translate(1240,420.5) scale(1,1) translate(-1240,-420.5)"><linearGradient id="lg-0.2519962050414528" x1="0" x2="1" y1="0" y2="0">
     <stop stop-color="#8154e8" offset="0"></stop>
     <stop stop-color="#47bc99" offset="1"></stop>

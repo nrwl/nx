@@ -19,6 +19,9 @@ module.exports = {
         green: {
           'nx-base': 'hsla(162, 47%, 50%, 1)',
         },
+        purple: {
+          'nx-base': 'hsla(258, 76%, 62%, 1)',
+        },
       },
       typography: {
         DEFAULT: {
@@ -43,5 +46,9 @@ module.exports = {
   variants: {
     extend: {},
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [
+    require('@tailwindcss/aspect-ratio'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+  ],
 };
