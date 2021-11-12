@@ -240,8 +240,12 @@ export function createRollupOptions(
       output: {
         globals,
         format,
-        file: `${options.outputPath}/${context.projectName}.${format}.js`,
+        dir: `${options.outputPath}`,
         name: options.umdName || names(context.projectName).className,
+        entryFileNames: `[name].${format}.js`,
+        chunkFileNames: `[name].${format}.js`,
+        // umd doesn't support code-split bundles
+        inlineDynamicImports: format === 'umd',
       },
       external: (id) =>
         externalPackages.some(
@@ -286,7 +290,7 @@ function updatePackageJson(
   dependencies: DependentBuildableProjectNode[],
   packageJson: any
 ) {
-  const entryFileTmpl = `./${context.projectName}.<%= extension %>.js`;
+  const entryFileTmpl = `./index.<%= extension %>.js`;
   const typingsFile = relative(options.entryRoot, options.entryFile).replace(
     /\.[jt]sx?$/,
     '.d.ts'

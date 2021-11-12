@@ -46,16 +46,22 @@ describe('packageExecutor', () => {
 
       expect(result.map((x) => x.output)).toEqual([
         {
-          file: '/root/dist/ui/example.esm.js',
+          dir: '/root/dist/ui',
           format: 'esm',
           globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
+          inlineDynamicImports: false,
+          chunkFileNames: '[name].esm.js',
+          entryFileNames: '[name].esm.js',
         },
         {
-          file: '/root/dist/ui/example.umd.js',
+          dir: '/root/dist/ui',
           format: 'umd',
           globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
+          inlineDynamicImports: true,
+          chunkFileNames: '[name].umd.js',
+          entryFileNames: '[name].umd.js',
         },
       ]);
     });
