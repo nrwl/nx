@@ -78,7 +78,11 @@ function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
 }
 
 function getExecArgv(options: NodeExecuteBuilderOptions) {
-  const args = ['-r', 'source-map-support/register', ...options.runtimeArgs];
+  const args = [
+    '-r',
+    require.resolve('source-map-support/register'),
+    ...options.runtimeArgs,
+  ];
 
   if (options.inspect === true) {
     options.inspect = InspectType.Inspect;
