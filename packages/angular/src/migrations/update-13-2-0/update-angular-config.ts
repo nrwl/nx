@@ -1,46 +1,50 @@
 import type { Tree } from '@nrwl/devkit';
-import { getProjects, updateProjectConfiguration } from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+
+import { Schema as WebpackServerOptions } from '../../builders/webpack-server/schema';
+import { BrowserBuilderSchema as WebpackBrowserOptions } from '../../builders/webpack-browser/webpack-browser.impl';
 
 export default async function (tree: Tree) {
-  const projects = getProjects(tree);
-  for (const [projectName, project] of projects.entries()) {
-    for (const [targetName, target] of Object.entries(project.targets)) {
-      if (target.executor === '@nrwl/angular:webpack-server') {
-        updateProjectConfiguration(tree, projectName, {
-          ...project,
-          targets: {
-            ...project.targets,
-            [targetName]: {
-              ...target,
-              options: {
-                ...target.options,
-                optimization: undefined,
-                aot: undefined,
-                progress: undefined,
-                deployUrl: undefined,
-                sourceMap: undefined,
-                vendorChunk: undefined,
-                commonChunk: undefined,
-                baseHref: undefined,
-                servePathDefaultWarning: undefined,
-                hmrWarning: undefined,
-                extractCss: undefined,
-              },
-            },
-          },
-        });
-      } else if (target.executor === '@nrwl/angular:webpack-browser') {
-        updateProjectConfiguration(tree, projectName, {
-          ...project,
-          [targetName]: {
-            ...target,
-            options: {
-              ...target.options,
-              extractCss: undefined,
-            },
-          },
-        });
-      }
+  forEachExecutorOptions<WebpackServerOptions>(
+    tree,
+    '@nrwl/angular:webpack-server',
+    (options: any, projectName, targetName, configurationName) => {
+      const projectConfiguration = readProjectConfiguration(tree, projectName);
+      const config = configurationName
+        ? projectConfiguration.targets[targetName].configurations[
+            configurationName
+          ]
+        : projectConfiguration.targets[targetName].options;
+      delete config.optimization;
+      delete config.aot;
+      delete config.progress;
+      delete config.deployUrl;
+      delete config.sourceMap;
+      delete config.vendorChunk;
+      delete config.commonChunk;
+      delete config.baseHref;
+      delete config.servePathDefaultWarning;
+      delete config.hmrWarning;
+      delete config.extractCss;
+      updateProjectConfiguration(tree, projectName, projectConfiguration);
     }
-  }
+  );
+  forEachExecutorOptions<WebpackBrowserOptions>(
+    tree,
+    '@nrwl/angular:webpack-browser',
+    (options: any, projectName, targetName, configurationName) => {
+      const projectConfiguration = readProjectConfiguration(tree, projectName);
+      const config = configurationName
+        ? projectConfiguration.targets[targetName].configurations[
+            configurationName
+          ]
+        : projectConfiguration.targets[targetName];
+      delete config.extractCss;
+      updateProjectConfiguration(tree, projectName, projectConfiguration);
+    }
+  );
 }

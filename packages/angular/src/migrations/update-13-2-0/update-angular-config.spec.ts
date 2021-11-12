@@ -75,4 +75,19 @@ describe('update-angular-config migration', () => {
     expect(targets.build.options.somethingThatShouldNotBeRemoved).toBeDefined();
     expect(targets.build.options.extractCss).toBeUndefined();
   });
+
+  it('should not fail for projects with no targets', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'testing', {
+      root: 'apps/testing',
+    });
+
+    // ACT
+    await updateAngularConfig(tree);
+
+    // ASSERT
+    const { targets } = readProjectConfiguration(tree, 'testing');
+    expect(targets).toBeUndefined();
+  });
 });
