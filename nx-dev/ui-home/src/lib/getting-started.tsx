@@ -1,8 +1,7 @@
-import { ReactComponentElement, useEffect, useState } from 'react';
+import { ReactComponentElement, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { AnimatePresence, motion, useAnimation } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
+import { AnimatePresence, motion } from 'framer-motion';
 import cx from 'classnames';
 import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
@@ -987,17 +986,11 @@ export function GettingStarted(): ReactComponentElement<any> {
     },
   ];
   const [activeId, setActiveId] = useState('typescript');
-  const controls = useAnimation();
-  const [, inView] = useInView({ threshold: 0.5, triggerOnce: true });
-  useEffect(() => {
-    if (!inView) return;
-    controls.start('visible');
-  }, [controls, inView]);
 
   return (
     <div id="getting-started">
       <Tabs tabs={tabs} activeTab={activeId} setActiveTab={setActiveId} />
-      <AnimatePresence exitBeforeEnter>
+      <AnimatePresence>
         {panes.find((pane) => pane.id === activeId)?.element()}
       </AnimatePresence>
     </div>
