@@ -93,12 +93,9 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
 
 function build(nxVersion: string) {
   try {
-    execSync(
-      'npx nx run-many --target=build --all --parallel --max-parallel=8',
-      {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }
-    );
+    execSync('npx nx run-many --target=build --all --parallel=8', {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
     console.log('Packages built successfully');
   } catch (e) {
     console.log(e.output.toString());
