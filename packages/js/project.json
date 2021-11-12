@@ -1,0 +1,70 @@
+{
+  "root": "packages/js",
+  "sourceRoot": "packages/js/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/js/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/js"],
+      "options": {
+        "jestConfig": "packages/js/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/node:package",
+      "options": {
+        "outputPath": "build/packages/js",
+        "tsConfig": "packages/js/tsconfig.lib.json",
+        "packageJson": "packages/js/package.json",
+        "main": "packages/js/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/js",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/js",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/js",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/js",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/js",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/js"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js js"
+      }
+    }
+  },
+  "tags": []
+}

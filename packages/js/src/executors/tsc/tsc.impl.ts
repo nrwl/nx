@@ -1,14 +1,19 @@
-import { ExecutorContext, normalizePath } from '@nrwl/devkit';
-import { basename, dirname, join, relative } from 'path';
-import { readCachedProjectGraph } from '../../core/project-graph';
-import { copyAssets } from '../../utilities/assets';
+import {
+  ExecutorContext,
+  normalizePath,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { copyAssets } from '@nrwl/workspace/src/utilities/assets';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-} from '../../utilities/buildable-libs-utils';
-import { readJsonFile, writeJsonFile } from '../../utilities/fileutils';
-import { compileTypeScript } from '../../utilities/typescript/compilation';
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { compileTypeScript } from '@nrwl/workspace/src/utilities/typescript/compilation';
+import { basename, dirname, join, relative } from 'path';
+
 import { TypeScriptExecutorOptions } from './schema';
 
 export async function tscExecutor(

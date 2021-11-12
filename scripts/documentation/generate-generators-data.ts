@@ -35,9 +35,11 @@ function generateSchematicList(
   config: Configuration,
   flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  const schematicCollectionFile = path.join(config.root, 'generators.json');
+  const schematicCollectionFilePath = path.join(config.root, 'generators.json');
+  const schematicCollectionFile = readJsonSync(schematicCollectionFilePath);
   removeSync(config.schematicOutput);
-  const schematicCollection = readJsonSync(schematicCollectionFile).schematics;
+  const schematicCollection =
+    schematicCollectionFile.schematics || schematicCollectionFile.generators;
   return Object.keys(schematicCollection).map((schematicName) => {
     const schematic = {
       name: schematicName,

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "executors": {
+    "tsc": {
+      "implementation": "./src/executors/tsc/tsc.impl",
+      "schema": "./src/executors/tsc/schema.json",
+      "description": "Build a project using TypeScript."
+    }
+  },
+  "builders": {
+    "tsc": {
+      "implementation": "./src/executors/tsc/compat",
+      "schema": "./src/executors/tsc/schema.json",
+      "description": "Build a project using TypeScript."
+    }
+  }
+}

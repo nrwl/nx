@@ -352,11 +352,17 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
-          },
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "angular/api-workspace/executors/tsc"
+            "file": "angular/api-js/executors/tsc"
           }
         ]
       },
@@ -1660,11 +1666,17 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
-          },
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "react/api-workspace/executors/tsc"
+            "file": "react/api-js/executors/tsc"
           }
         ]
       },
@@ -2932,11 +2944,17 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
-          },
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "node/api-workspace/executors/tsc"
+            "file": "node/api-js/executors/tsc"
           }
         ]
       },
