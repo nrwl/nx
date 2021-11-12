@@ -272,6 +272,6 @@ function isStorybookGTE6_4() {
 
   return gte(
     checkAndCleanWithSemver('@storybook/core', storybookVersion),
-    '6.4.0-beta.30'
+    '6.4.0-rc.1'
   );
 }
