@@ -53,12 +53,17 @@ export function getPackageManagerCommand(
       };
 
     case 'pnpm':
+      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
+      let useExec = false;
+      if (+major >= 6 && +minor >= 13) {
+        useExec = true;
+      }
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         add: 'pnpm add',
         addDev: 'pnpm add -D',
         rm: 'pnpm rm',
-        exec: 'pnpx',
+        exec: useExec ? 'pnpm exec' : 'pnpx',
         run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
         list: 'pnpm ls --depth 100',
       };
