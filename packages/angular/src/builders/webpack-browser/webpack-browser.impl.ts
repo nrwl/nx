@@ -19,7 +19,7 @@ import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 
-type BrowserBuilderSchema = Schema & {
+export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
     path: string;
   };
