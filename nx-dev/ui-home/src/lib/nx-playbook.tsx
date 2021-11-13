@@ -37,7 +37,7 @@ export function NxPlaybook(): ReactComponentElement<any> {
               <a
                 rel="nofollow"
                 target="_blank"
-                className="absolute -top-12 left-0 bg-blue-nx-dark bg-opacity-25 shadow-inner inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-gray-100 group hover:text-white hover:bg-green-nx-base transition"
+                className="absolute -top-7 sm:-top-12 left-0 bg-blue-nx-dark bg-opacity-25 shadow-inner inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-gray-100 group hover:text-white hover:bg-green-nx-base transition"
               >
                 <span className="-ml-0.5 mr-2 relative inline-flex justify-center items-center h-4 w-4">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-nx-base group-hover:bg-blue-nx-dark opacity-75 transtion" />
