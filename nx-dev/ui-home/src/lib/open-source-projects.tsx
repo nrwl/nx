@@ -265,28 +265,26 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         }}
         className="lg:mx-auto lg:max-w-7xl p-4 flex"
       >
-        <div className="rounded-lg bg-gray-200 overflow-hidden shadow divide-y divide-gray-200 sm:divide-y-0 sm:grid sm:grid-cols-2 sm:gap-px">
+        <div className="w-full rounded-lg bg-gray-200 overflow-hidden shadow divide-y divide-gray-200 divide-y-0 grid grid-cols-2 gap-px">
           {projectList.map((project, index: number) => (
             <motion.div
-              key={project.title}
+              key={project.title + '-' + index}
               custom={0.12 * index + 0.24}
               variants={opacityTranslateXVariant}
               className={cx(
-                index === 0
-                  ? 'rounded-tl-lg rounded-tr-lg sm:rounded-tr-none'
-                  : '',
+                index === 0 ? 'rounded-tl-lg' : '',
                 index === 1 ? 'sm:rounded-tr-lg' : '',
-                index === projectList.length - 2 ? 'sm:rounded-bl-lg' : '',
+                index === projectList.length - 2 ? 'rounded-bl-lg' : '',
                 index === projectList.length - 1
-                  ? 'rounded-bl-lg rounded-br-lg sm:rounded-bl-none'
+                  ? 'rounded-br-lg rounded-bl-none'
                   : '',
-                'relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-nx-base'
+                'relative w-full group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-nx-base'
               )}
             >
               <div>
                 <span className="rounded-lg inline-flex">{project.icon}</span>
               </div>
-              <div className="mt-2">
+              <div className="sm:mt-2">
                 <h3 className="text-lg font-medium">
                   <Link href={project.href}>
                     <a
@@ -300,7 +298,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                     </a>
                   </Link>
                 </h3>
-                <p className="mt-2 text-sm text-gray-400">
+                <p className="mt-2 hidden sm:block text-sm text-gray-400">
                   {project.description}
                 </p>
               </div>
