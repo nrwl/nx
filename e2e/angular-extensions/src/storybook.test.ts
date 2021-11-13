@@ -58,7 +58,8 @@ describe('Angular Package', () => {
     });
 
     describe('build storybook', () => {
-      it('should execute e2e tests using Cypress running against Storybook', async () => {
+      // TODO(@juristr): See below
+      xit('should execute e2e tests using Cypress running against Storybook', async () => {
         if (isNotWindows()) {
           const myapp = uniq('myapp');
           runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
@@ -100,7 +101,7 @@ describe('Angular Package', () => {
           writeFileSync(
             tmpProjPath(`libs/${myReactLib}/src/lib/button.stories.tsx`),
             `
-          import { Story, Meta } from '@storybook/react';
+          import  { Story, Meta } from '@storybook/react';
           import { Button, ButtonProps } from './button';
 
           export default {
@@ -189,6 +190,7 @@ describe('Angular Package', () => {
             expect(await killPorts()).toBeTruthy();
           }
 
+          // TODO(@juristr): There is a bug in storybook where it resolves a publishable library's package.json to try and determine the @angular/cli version
           runCLI(`run ${myAngularLib}:build-storybook`);
 
           checkFilesExist(`dist/storybook/${myAngularLib}/index.html`);
