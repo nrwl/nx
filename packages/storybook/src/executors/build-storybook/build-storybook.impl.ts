@@ -1,17 +1,12 @@
-import 'dotenv/config';
-import { basename, join, sep } from 'path';
-import { tmpdir } from 'os';
-import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
-
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import * as build from '@storybook/core/standalone';
-
+import 'dotenv/config';
+import { CommonNxStorybookConfig } from '../models';
 import {
   getStorybookFrameworkPath,
+  resolveCommonStorybookOptionMapper,
   runStorybookSetupCheck,
-  setStorybookAppProject,
 } from '../utils';
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { CommonNxStorybookConfig, StorybookConfig } from '../models';
 
 export interface StorybookBuilderOptions extends CommonNxStorybookConfig {
   quiet?: boolean;
@@ -49,69 +44,16 @@ function storybookOptionMapper(
   frameworkOptions: any,
   context: ExecutorContext
 ) {
-  setStorybookAppProject(context, builderOptions.projectBuildConfig);
-
-  const storybookConfig = findOrCreateConfig(builderOptions.config, context);
-  const optionsWithFramework = {
+  const storybookOptions = {
     ...builderOptions,
+    ...resolveCommonStorybookOptionMapper(
+      builderOptions,
+      frameworkOptions,
+      context
+    ),
     mode: 'static',
     outputDir: builderOptions.outputPath,
-    workspaceRoot: context.root,
-    configDir: storybookConfig,
-    ...frameworkOptions,
-    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
-    watch: false,
   };
-  optionsWithFramework.config;
-  return optionsWithFramework;
-}
 
-function findOrCreateConfig(
-  config: StorybookConfig,
-  context: ExecutorContext
-): string {
-  if (config.configFolder && statSync(config.configFolder).isDirectory()) {
-    return config.configFolder;
-  } else if (
-    statSync(config.configPath).isFile() &&
-    statSync(config.pluginPath).isFile() &&
-    statSync(config.srcRoot).isFile()
-  ) {
-    return createStorybookConfig(
-      config.configPath,
-      config.pluginPath,
-      config.srcRoot
-    );
-  } else {
-    const sourceRoot = context.workspace.projects[context.projectName].root;
-    if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
-      return join(context.root, sourceRoot, '.storybook');
-    }
-  }
-  throw new Error('No configuration settings');
-}
-
-function createStorybookConfig(
-  configPath: string,
-  pluginPath: string,
-  srcRoot: string
-): string {
-  const tmpDir = tmpdir();
-  const tmpFolder = mkdtempSync(`${tmpDir}${sep}`);
-  copyFileSync(
-    configPath,
-    `${tmpFolder}${basename(configPath)}`,
-    constants.COPYFILE_EXCL
-  );
-  copyFileSync(
-    pluginPath,
-    `${tmpFolder}${basename(pluginPath)}`,
-    constants.COPYFILE_EXCL
-  );
-  copyFileSync(
-    srcRoot,
-    `${tmpFolder}${basename(srcRoot)}`,
-    constants.COPYFILE_EXCL
-  );
-  return tmpFolder;
+  return storybookOptions;
 }

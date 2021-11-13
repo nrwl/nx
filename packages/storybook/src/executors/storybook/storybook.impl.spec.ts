@@ -56,9 +56,24 @@ describe('@nrwl/storybook:storybook', () => {
           proj: {
             root: '',
             sourceRoot: 'src',
-            targets: {},
+            targets: {
+              build: {
+                executor: '@angular-devkit/build-angular:browser',
+                options: {
+                  main: 'apps/proj/src/main.ts',
+                  outputPath: 'dist/apps/proj',
+                  tsConfig: 'apps/proj/tsconfig.app.json',
+                  index: 'apps/proj/src/index.html',
+                },
+              },
+              storybook: {
+                executor: '@nrwl/storybook:storybook',
+                options,
+              },
+            },
           },
         },
+        defaultProject: 'proj',
         npmScope: 'test',
       },
       isVerbose: false,

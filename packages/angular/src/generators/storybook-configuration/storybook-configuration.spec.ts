@@ -33,7 +33,7 @@ describe('StorybookConfiguration generator', () => {
     });
     jest.resetModules();
     jest.doMock('@storybook/angular/package.json', () => ({
-      version: '6.2.0',
+      version: '6.4.0-rc.1',
     }));
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
@@ -43,7 +43,7 @@ describe('StorybookConfiguration generator', () => {
     });
   });
 
-  it('should throw when the @storybook/angular version is lower than 6.2.0', async () => {
+  it('should throw when the @storybook/angular version is lower than 6.4.0-rc.1', async () => {
     jest.doMock('@storybook/angular/package.json', () => ({
       version: '5.1.0',
     }));
@@ -52,7 +52,9 @@ describe('StorybookConfiguration generator', () => {
       storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
         name: libName,
       })
-    ).rejects.toThrow('Incompatible Storybook Version');
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      '"Incompatible Storybook Version: Please use a version of @storybook/angular higher than 6.4.0-rc.1"'
+    );
   });
 
   it('should throw when generateCypressSpecs is true and generateStories is false', async () => {
