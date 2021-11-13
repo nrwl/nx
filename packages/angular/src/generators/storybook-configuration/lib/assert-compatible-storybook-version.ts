@@ -8,7 +8,9 @@ export function assertCompatibleStorybookVersion() {
     )).version;
   } catch {}
 
-  if (storybookVersion && lt(storybookVersion, '6.2.0')) {
-    throw new Error('Incompatible Storybook Version');
+  if (storybookVersion && lt(storybookVersion, '6.4.0-rc.1')) {
+    throw new Error(
+      'Incompatible Storybook Version: Please use a version of @storybook/angular higher than 6.4.0-rc.1'
+    );
   }
 }

@@ -1,8 +1,10 @@
-import { Tree } from '@nrwl/devkit';
-import { join } from 'path';
+import { ExecutorContext, readJson, readJsonFile, Tree } from '@nrwl/devkit';
 import { CompilerOptions } from 'typescript';
-import path = require('path');
-import { statSync } from 'fs';
+import { storybookVersion } from './versions';
+import { StorybookConfig } from '../executors/models';
+import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
+import { tmpdir } from 'os';
+import { basename, join, sep } from 'path';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -73,6 +75,54 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
   }
 }
 
+export function readCurrentWorkspaceStorybookVersionFromGenerator(
+  tree: Tree
+): string {
+  const packageJsonContents = readJson(tree, 'package.json');
+  return determineStorybookWorkspaceVersion(packageJsonContents);
+}
+
+export function readCurrentWorkspaceStorybookVersionFromExecutor() {
+  const packageJsonContents = readJsonFile('package.json');
+  return determineStorybookWorkspaceVersion(packageJsonContents);
+}
+
+function determineStorybookWorkspaceVersion(packageJsonContents) {
+  let workspaceStorybookVersion = storybookVersion;
+
+  if (packageJsonContents && packageJsonContents['devDependencies']) {
+    if (packageJsonContents['devDependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/core'];
+    }
+  }
+
+  if (packageJsonContents && packageJsonContents['dependencies']) {
+    if (packageJsonContents['dependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/core'];
+    }
+  }
+
+  return workspaceStorybookVersion;
+}
+
 export type TsConfig = {
   extends: string;
   compilerOptions: CompilerOptions;
@@ -81,3 +131,54 @@ export type TsConfig = {
   exclude?: string[];
   references?: Array<{ path: string }>;
 };
+
+export function findOrCreateConfig(
+  config: StorybookConfig,
+  context: ExecutorContext
+): string {
+  if (config.configFolder && statSync(config.configFolder).isDirectory()) {
+    return config.configFolder;
+  } else if (
+    statSync(config.configPath).isFile() &&
+    statSync(config.pluginPath).isFile() &&
+    statSync(config.srcRoot).isFile()
+  ) {
+    return createStorybookConfig(
+      config.configPath,
+      config.pluginPath,
+      config.srcRoot
+    );
+  } else {
+    const sourceRoot = context.workspace.projects[context.projectName].root;
+    if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
+      return join(context.root, sourceRoot, '.storybook');
+    }
+  }
+  throw new Error('No configuration settings');
+}
+
+function createStorybookConfig(
+  configPath: string,
+  pluginPath: string,
+  srcRoot: string
+): string {
+  const tmpDir = tmpdir();
+  const tmpFolder = `${tmpDir}${sep}`;
+  mkdtempSync(tmpFolder);
+  copyFileSync(
+    configPath,
+    `${tmpFolder}/${basename(configPath)}`,
+    constants.COPYFILE_EXCL
+  );
+  copyFileSync(
+    pluginPath,
+    `${tmpFolder}/${basename(pluginPath)}`,
+    constants.COPYFILE_EXCL
+  );
+  copyFileSync(
+    srcRoot,
+    `${tmpFolder}/${basename(srcRoot)}`,
+    constants.COPYFILE_EXCL
+  );
+  return tmpFolder;
+}
