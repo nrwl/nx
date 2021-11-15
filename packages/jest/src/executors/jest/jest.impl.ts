@@ -15,7 +15,10 @@ import {
   TaskGraph,
 } from '@nrwl/devkit';
 import { getSummary } from './summary';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  createProjectGraphAsync,
+  readCachedProjectGraph,
+} from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -100,6 +103,8 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  await createProjectGraphAsync();
+
   const config = await jestConfigParser(options, context);
 
   const { results } = await runCLI(config, [
