@@ -127,6 +127,9 @@ export async function* run(
       `Node version ${nodeVersion} is not supported. Supported range is "${supportedRange.raw}".`
     );
   }
+
+  process.env.NODE_ENV ||= 'production';
+
   const metadata = context.workspace.projects[context.projectName];
 
   if (!options.buildLibsFromSource && context.targetName) {
