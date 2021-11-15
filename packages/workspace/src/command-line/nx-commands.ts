@@ -10,6 +10,7 @@ import * as yargs from 'yargs';
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -583,6 +584,7 @@ function taoPath() {
 
     // Set NODE_PATH so that these modules can be used for module resolution
     addToNodePath(path.join(tmpDir, 'node_modules'));
+    addToNodePath(path.join(appRootPath, 'node_modules'));
 
     return path.join(tmpDir, `node_modules`, '.bin', 'tao');
   } catch (e) {
