@@ -34,7 +34,7 @@ export function ensureNodeModulesSymlink(
     throw new Error(`Cannot find ${worksapceNodeModulesPath}`);
   }
 
-  const appNodeModulesPath = join(projectRoot, 'node_modules');
+  const appNodeModulesPath = join(workspaceRoot, projectRoot, 'node_modules');
   // `mklink /D` requires admin privilege in Windows so we need to use junction
   const symlinkType = platform() === 'win32' ? 'junction' : 'dir';
 

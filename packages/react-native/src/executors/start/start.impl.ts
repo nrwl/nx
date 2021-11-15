@@ -81,7 +81,7 @@ function startAsync(
     childProcess = fork(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
       ['start', ...createStartOptions(options)],
-      { cwd: projectRoot }
+      { cwd: join(workspaceRoot, projectRoot) }
     );
 
     // Ensure the child process is killed when the parent exits

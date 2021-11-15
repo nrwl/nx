@@ -36,6 +36,14 @@ Type: `number`
 
 The port where the packager server is listening on.
 
+### resetCache
+
+Default: `false`
+
+Type: `boolean`
+
+Resets metro cache
+
 ### scheme
 
 Type: `string`
