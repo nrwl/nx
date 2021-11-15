@@ -167,6 +167,14 @@ Type: `string`
 
 The name of the file to test.
 
+### testFromSource
+
+Default: `true`
+
+Type: `boolean`
+
+Will use the source in the tests when true otherwise it will use the compiled artifacts
+
 ### testLocationInResults
 
 Type: `boolean`
@@ -204,14 +212,6 @@ Node module that implements a custom results processor. (https://jestjs.io/docs/
 Type: `number`
 
 Default timeout of a test in milliseconds. Default value: 5000. (https://jestjs.io/docs/cli#--testtimeoutnumber)
-
-### testWithArtifacts
-
-Default: `false`
-
-Type: `boolean`
-
-Tells jest to check to ensure all dependencies of the project being tested have been built so that the prebuilt artifacts can be used instead of transpiling on the fly.
 
 ### ~~tsConfig~~
 

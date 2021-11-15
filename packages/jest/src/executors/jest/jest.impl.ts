@@ -2,8 +2,9 @@ import 'dotenv/config';
 import { runCLI } from 'jest';
 import { readConfig } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
-import { makeEmptyAggregatedTestResult, addResult } from '@jest/test-result';
+import { addResult, makeEmptyAggregatedTestResult } from '@jest/test-result';
 import * as path from 'path';
+import { join } from 'path';
 import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
 import {
@@ -13,78 +14,87 @@ import {
   readJsonFile,
   TaskGraph,
 } from '@nrwl/devkit';
-import { join } from 'path';
 import { getSummary } from './summary';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { mkdirSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 
 process.env.NODE_ENV ??= 'test';
 
-const createTmpJestConfig = (projectName: string, root: string) => {
-  const offset = offsetFromRoot(root);
-  return `const path = require('path')
-module.exports = {
-  displayName: '${projectName}',
-  preset: '${offset}jest.preset.js',
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/${offset}tmp/${root}tsconfig.spec.json'
-    }
-  },
-  rootDir: path.join(__dirname, '../${offset}${root}'),
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\\\.[tj]s$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../${offset}coverage/${root}'
-};
-`;
-};
-
-const createTmpTsconfigSpecJson = (
-  projectRoot: string,
+const createTmpJestConfig = (
+  jestConfigPath: string,
+  root: string,
   context: ExecutorContext,
   dependencies: DependentBuildableProjectNode[]
-) => {
-  const offset = offsetFromRoot(projectRoot);
+): string => {
+  const jestConfig = readFileSync(
+    path.resolve(context.cwd, jestConfigPath)
+  ).toString();
 
-  const sourcePath = `../${offset}${projectRoot}`;
+  const overrides = createJestOverrides(root, context, dependencies);
 
-  const tsConfig = readJsonFile(
-    path.join(context.cwd, projectRoot, 'tsconfig.spec.json')
-  );
+  return `
+    const path = require('path');
+    const { pathsToModuleNameMapper } = require('ts-jest/utils')
+    ${jestConfig}
+    ${overrides}
+  `;
+};
 
-  const tsAliasPrefix = `${context.workspace.npmScope}/`;
+export function createJestOverrides(
+  root: string,
+  context: ExecutorContext,
+  dependencies: DependentBuildableProjectNode[]
+): string {
+  const offset = offsetFromRoot(root);
 
-  tsConfig.extends = `${sourcePath}/tsconfig.json`;
-  // Will override the includes array from
-  // "include": ["**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
-  // to:
-  // "include": ["../libs/lib1/**/*.test.ts", "../libs/lib1/**/*.spec.ts", "../libs/lib1/**/*.d.ts"]
-  tsConfig.include = tsConfig.include.map(
-    (includePath) => `${sourcePath}/${includePath}`
-  );
-  tsConfig.compilerOptions.paths = dependencies
+  const tsAliasPrefix = `@${context.workspace.npmScope}/`;
+
+  const paths = dependencies
     .filter((dep) => !dep.node.name.startsWith('npm:'))
     .reduce((prev, dep) => {
       const node = dep.node as ProjectGraphProjectNode;
 
-      return {
-        ...prev,
-        // Will set the path alias for this dependency to something like: "@scope/lib1": ["../dist/libs/lib1"]
-        [`${tsAliasPrefix}${node.data.root.replace(node.type, '')}`]: [
-          `../${offset}${node.data.targets['build'].options['outputPath']}`,
-        ],
-      };
-    }, {});
+      const rootPath = node.data.root.split('/');
+      rootPath.shift();
 
-  return tsConfig;
-};
+      const distPackageJson = readJsonFile(
+        path.join(context.cwd, 'dist', node.data.root, 'package.json')
+      );
+
+      const indexFile = distPackageJson['main'] ?? distPackageJson['esm2015'];
+
+      if (!indexFile) {
+        return prev;
+      }
+
+      return [
+        ...prev,
+        `"${tsAliasPrefix}${rootPath.join('/')}": [
+          path.join(__dirname, '../${offset}dist/', '${
+          node.data.root
+        }', '${indexFile}')
+        ]`,
+      ];
+    }, []);
+
+  return `
+  module.exports = {
+    ...module.exports,
+    preset: '${offset}jest.preset.js',
+    rootDir: path.join(__dirname, '../${offset}${root}'),
+    coverageDirectory: '../${offset}coverage/${root}',
+    moduleNameMapper: {
+      ...(module.exports.moduleNameMapper || {}),
+      ...pathsToModuleNameMapper({
+        ${paths.join(',')}
+      })
+    }
+  }`;
+}
 
 export async function jestExecutor(
   options: JestExecutorOptions,
@@ -92,7 +102,9 @@ export async function jestExecutor(
 ): Promise<{ success: boolean }> {
   const config = await jestConfigParser(options, context);
 
-  const { results } = await runCLI(config, [options.jestConfig]);
+  const { results } = await runCLI(config, [
+    options.testFromSource ? config.config : options.jestConfig,
+  ]);
 
   return { success: results.success };
 }
@@ -195,7 +207,7 @@ export async function jestConfigParser(
    * Will enable jest to run tests using already compiled artifacts instead of
    * using ts-jest to compile the dependencies
    */
-  if (options.testWithArtifacts && !options.watch && !options.watchAll) {
+  if (!options.testFromSource && !options.watch && !options.watchAll) {
     const projGraph = readCachedProjectGraph();
     const { dependencies } = calculateProjectDependencies(
       projGraph,
@@ -207,31 +219,20 @@ export async function jestConfigParser(
 
     const projectRoot = context.workspace.projects[context.projectName].root;
 
-    const temporaryJestConfig = createTmpJestConfig(
-      context.projectName,
-      projectRoot
-    );
-
     const tmpProjectFolder = path.join(context.cwd, `tmp/${projectRoot}`);
     mkdirSync(tmpProjectFolder, { recursive: true });
 
-    // Write the temporary jest config with correct paths
-    writeFileSync(
-      path.join(tmpProjectFolder, 'jest.config.js'),
-      temporaryJestConfig,
-      'utf8'
-    );
-
-    const temporaryTsConfig = createTmpTsconfigSpecJson(
+    const temporaryJestConfig = createTmpJestConfig(
+      options.jestConfig,
       projectRoot,
       context,
       dependencies
     );
 
-    // Write the temporary tsconfig spec json
+    // Write the temporary jest config with correct paths
     writeFileSync(
-      path.join(tmpProjectFolder, `tsconfig.spec.json`),
-      JSON.stringify(temporaryTsConfig),
+      path.join(tmpProjectFolder, 'jest.config.js'),
+      temporaryJestConfig,
       'utf8'
     );
 
