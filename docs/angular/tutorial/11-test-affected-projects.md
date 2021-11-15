@@ -23,15 +23,15 @@ git checkout -b testbranch
 Run the command to see affected apps.
 
 ```sh
-npm run affected:apps
+npx nx affected:apps
 ```
 
 You should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
 
 Run the command to see affected libraries
 
-```
-npm run affected:libs
+```sh
+npx nx affected:libs
 ```
 
 You should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
@@ -67,7 +67,7 @@ Note that Nx only tried to retest `ui` and `todos`. It didn't retest `api` or `d
 Run the command to retest the failed projects.
 
 ```sh
-npm run affected:test -- --only-failed
+npx nx affected:test -- --only-failed
 ```
 
 ## Affected:
