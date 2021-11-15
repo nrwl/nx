@@ -33,19 +33,6 @@ export function NxPlaybook(): ReactComponentElement<any> {
       >
         <div className="pt-10 pb-12 px-6 sm:pt-16 sm:px-16 lg:py-16 lg:pr-0 xl:py-20 xl:px-20">
           <div className="lg:self-center relative">
-            <Link href="https://nxplaybook.com/p/advanced-nx-workspaces?utm_source=nx.dev">
-              <a
-                rel="nofollow"
-                target="_blank"
-                className="absolute -top-7 sm:-top-12 left-0 bg-blue-nx-dark bg-opacity-25 shadow-inner inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-gray-100 group hover:text-white hover:bg-green-nx-base transition"
-              >
-                <span className="-ml-0.5 mr-2 relative inline-flex justify-center items-center h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-nx-base group-hover:bg-blue-nx-dark opacity-75 transtion" />
-                  <span className="inline-flex h-2 w-2 rounded-full bg-green-nx-base group-hover:bg-blue-nx-dark transition" />
-                </span>
-                Get 50% off until November 14th, 2021
-              </a>
-            </Link>
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
               <span className="block">Premium courses</span>
               <span className="block">to know everything</span>
