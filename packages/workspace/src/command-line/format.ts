@@ -29,7 +29,6 @@ export async function format(
   args: yargs.Arguments
 ): Promise<void> {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
-  const workspaceJsonPath = workspaceConfigName(appRootPath);
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     (p) => `"${p}"`
   );
@@ -43,7 +42,7 @@ export async function format(
       sortWorkspaceJson();
       sortTsConfig();
       movePropertiesToNewLocations();
-      chunkList.push([workspaceJsonPath, 'nx.json', 'tsconfig.base.json']);
+      addRootConfigFiles(chunkList, nxArgs);
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
@@ -97,6 +96,24 @@ async function getPatternsFromApps(
     Object.keys(affectedGraph.nodes),
     matchAllPattern
   );
+}
+
+function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
+  if (nxArgs.all) {
+    return;
+  }
+
+  const chunk = [];
+  const workspaceJsonPath = workspaceConfigName(appRootPath);
+  [workspaceJsonPath, 'nx.json', 'tsconfig.base.json'].forEach((file) => {
+    if (chunkList.every((c) => !c.includes(`"${file}"`))) {
+      chunk.push(file);
+    }
+  });
+
+  if (chunk.length > 0) {
+    chunkList.push(chunk);
+  }
 }
 
 function getPatternsFromProjects(
