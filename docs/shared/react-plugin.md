@@ -84,7 +84,7 @@ React applications are built using the executors from the `@nrwl/web` plugin.
 ## Generators
 
 - [application](/{{framework}}/react/application) - Create an React application
-- [component](/{{framework}}/react/component) - Create an React library
+- [component](/{{framework}}/react/component) - Create an React component
 - [library](/{{framework}}/react/library) - Create an React library
 - [redux](/{{framework}}/react/redux) - Generate a Redux slice for a project
 - [storybook-configuration](/{{framework}}/react/storybook-configuration) - Set up Storybook for a react library
