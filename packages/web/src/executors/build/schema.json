@@ -87,7 +87,8 @@
       "description": "External Scripts which will be included before the main application entry",
       "items": {
         "$ref": "#/definitions/extraEntryPoint"
-      }
+      },
+      "default": []
     },
     "styles": {
       "type": "array",
