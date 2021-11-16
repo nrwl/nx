@@ -27,7 +27,7 @@ nx run-many --target=test --projects=proj1,proj2
 Test proj1 and proj2 in parallel:
 
 ```bash
-nx run-many --target=test --projects=proj1,proj2 --parallel --maxParallel=2
+nx run-many --target=test --projects=proj1,proj2 --parallel=2
 ```
 
 ## Options
@@ -50,12 +50,6 @@ Exclude certain projects from being processed
 
 Show help
 
-### maxParallel
-
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
-
 ### only-failed
 
 Default: `false`
@@ -64,9 +58,7 @@ Only run the target on projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Max number of parallel processes [default is 3]
 
 ### projects
 

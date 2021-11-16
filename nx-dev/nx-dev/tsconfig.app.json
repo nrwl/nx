@@ -5,6 +5,6 @@
     "types": ["node", "jest"],
     "lib": ["dom", "es2019"]
   },
-  "exclude": ["**/*.spec.ts", "**/*.spec.tsx"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/*.spec.tsx", "**/*.test.tsx"],
   "include": ["**/*.js", "**/*.ts", "**/*.tsx", "next-env.d.ts"]
 }

@@ -21,7 +21,7 @@ nx affected --target=custom-target
 Run tests in parallel:
 
 ```bash
-nx affected --target=test --parallel --maxParallel=5
+nx affected --target=test --parallel=5
 ```
 
 Rerun the test target only for the projects that failed last time:
@@ -86,12 +86,6 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
-### maxParallel
-
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
-
 ### only-failed
 
 Default: `false`
@@ -100,9 +94,7 @@ Isolate projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Max number of parallel processes [default is 3]
 
 ### runner
 

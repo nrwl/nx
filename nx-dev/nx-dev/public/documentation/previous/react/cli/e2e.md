@@ -44,7 +44,7 @@ The options below are common to the E2E commands used within an Nx workspace. Cy
 
 ### baseUrl
 
-Use this to pass directly the address of your distant server address with the port running your application.
+Use this to pass directly the address of your distant server address with the port running your application. Setting this will ignore any local server targets. To skip running local targets, reset the `devServerTarget` to empty string.
 
 ### configuration (-c)
 

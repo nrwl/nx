@@ -8,7 +8,7 @@ import {
   renameSync as fsRenameSync,
 } from 'fs';
 import { ensureDirSync } from 'fs-extra';
-import { basename, dirname, resolve } from 'path';
+import { basename, dirname, resolve as pathResolve } from 'path';
 import {
   parseJson,
   serializeJson,
@@ -40,7 +40,7 @@ export function updateJsonFile(path: string, callback: (a: any) => any) {
 export function copyFile(file: string, target: string) {
   const f = basename(file);
   const source = createReadStream(file);
-  const dest = createWriteStream(resolve(target, f));
+  const dest = createWriteStream(pathResolve(target, f));
   source.pipe(dest);
   source.on('error', (e) => console.error(e));
 }
@@ -62,7 +62,7 @@ export function fileExists(filePath: string): boolean {
 }
 
 export function createDirectory(directoryPath: string) {
-  const parentPath = resolve(directoryPath, '..');
+  const parentPath = pathResolve(directoryPath, '..');
   if (!directoryExists(parentPath)) {
     createDirectory(parentPath);
   }
@@ -84,7 +84,7 @@ export function renameSync(
     }
 
     // Make sure parent path exists
-    const parentPath = resolve(to, '..');
+    const parentPath = pathResolve(to, '..');
     createDirectory(parentPath);
 
     fsRenameSync(from, to);
@@ -102,3 +102,5 @@ export function isRelativePath(path: string): boolean {
     path.startsWith('../')
   );
 }
+
+export const resolve = require.resolve;

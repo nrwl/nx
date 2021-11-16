@@ -22,8 +22,7 @@
           "e2e",
           "sitemap"
         ],
-        "canTrackAnalytics": false,
-        "showUsageWarnings": true,
+        "useDaemonProcess": true,
         "runtimeCacheInputs": [
           "echo $SELECTED_CLI",
           "echo $NX_E2E_CI_CACHE_KEY"

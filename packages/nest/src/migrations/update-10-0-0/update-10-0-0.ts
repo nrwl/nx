@@ -14,8 +14,6 @@ import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { join, relative } from 'path';
 import {
   createSourceFile,
-  isDecorator,
-  isImportClause,
   isImportDeclaration,
   isStringLiteral,
   ScriptTarget,

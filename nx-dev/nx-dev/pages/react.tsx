@@ -3,14 +3,10 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import Head from 'next/head';
-import {
-  Footer,
-  Header,
-  InlineCommand,
-  NxUsersShowcase,
-} from '@nrwl/nx-dev/ui/common';
+import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui/common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
+import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 
 export function ReactPage() {
   const router = useRouter();
@@ -230,7 +226,7 @@ export function ReactPage() {
                     </a>
                   </Link>{' '}
                   or{' '}
-                  <Link href="/l/r/migration/migration-cra">
+                  <Link href="/l/r/migration/adding-to-monorepo">
                     <a className="underline pointer">
                       "Adding Nx to Yarn/Lerna monorepo" migration
                     </a>
@@ -535,7 +531,7 @@ export function ReactPage() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Tune into regular Nx Office Hours livestreams
+                      Tune into regular Nx Show livestreams
                     </a>
                   </li>
                   <li className="mt-4">

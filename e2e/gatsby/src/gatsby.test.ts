@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  expectTestsPass,
   newProject,
   runCLI,
   runCLIAsync,
@@ -14,8 +15,10 @@ describe('Gatsby Applications', () => {
 
   it('should generate a valid gatsby application', async () => {
     const appName = uniq('app');
-    runCLI(`generate @nrwl/gatsby:app ${appName}`);
-    runCLI(`generate @nrwl/gatsby:component header --project ${appName}`);
+    runCLI(`generate @nrwl/gatsby:app ${appName} --style css --no-interactive`);
+    runCLI(
+      `generate @nrwl/gatsby:component header --project ${appName} --style css --no-interactive`
+    );
 
     checkFilesExist(
       `apps/${appName}/package.json`,
@@ -31,49 +34,64 @@ describe('Gatsby Applications', () => {
       return updated;
     });
 
-    let result = runCLI(`build ${appName}`);
-    expect(result).toContain('Done building in');
-
-    result = runCLI(`lint ${appName}`);
-    expect(result).not.toMatch('Lint errors found in the listed files');
-
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
+    runCLI(`build ${appName}`);
+    checkFilesExist(
+      `apps/${appName}/public/index.html`,
+      `apps/${appName}/public/404.html`,
+      `apps/${appName}/public/manifest.webmanifest`
     );
+
+    const result = runCLI(`lint ${appName}`);
+    expect(result).toContain('All files pass linting.');
+
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
   }, 600000);
 
   it('should support styled-jsx', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/gatsby:app ${appName} --style styled-jsx`);
+    runCLI(
+      `generate @nrwl/gatsby:app ${appName} --style styled-jsx --no-interactive`
+    );
 
-    let result = runCLI(`build ${appName}`);
-    expect(result).toContain('Done building in');
+    runCLI(`build ${appName}`);
+    checkFilesExist(
+      `apps/${appName}/public/index.html`,
+      `apps/${appName}/public/404.html`,
+      `apps/${appName}/public/manifest.webmanifest`
+    );
 
-    result = runCLI(`lint ${appName}`);
-    expect(result).not.toMatch('Lint errors found in the listed files');
+    const result = runCLI(`lint ${appName}`);
+    expect(result).toContain('All files pass linting.');
 
-    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
   }, 300000);
 
   it('should support scss', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/gatsby:app ${appName} --style scss`);
+    runCLI(
+      `generate @nrwl/gatsby:app ${appName} --style scss --no-interactive`
+    );
 
-    let result = runCLI(`build ${appName}`);
-    expect(result).toContain('Done building in');
+    runCLI(`build ${appName}`);
+    checkFilesExist(
+      `apps/${appName}/public/index.html`,
+      `apps/${appName}/public/404.html`,
+      `apps/${appName}/public/manifest.webmanifest`
+    );
 
-    result = runCLI(`lint ${appName}`);
-    expect(result).not.toMatch('Lint errors found in the listed files');
+    const result = runCLI(`lint ${appName}`);
+    expect(result).toContain('All files pass linting.');
 
-    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
   }, 300000);
 
   it('should support --js option', async () => {
     const app = uniq('app');
-    runCLI(`generate @nrwl/gatsby:app ${app} --js`);
+    runCLI(
+      `generate @nrwl/gatsby:app ${app} --js --style css --no-interactive`
+    );
 
     checkFilesExist(
       `apps/${app}/package.json`,
@@ -81,7 +99,12 @@ describe('Gatsby Applications', () => {
       `apps/${app}/src/pages/index.spec.js`
     );
 
-    const result = runCLI(`build ${app}`);
-    expect(result).toContain('Done building in');
+    runCLI(`build ${app}`);
+    checkFilesExist(
+      `apps/${app}/public/index.html`,
+      `apps/${app}/public/404.html`,
+      `apps/${app}/public/manifest.webmanifest`
+    );
+    expectTestsPass(await runCLIAsync(`test ${app}`));
   }, 300000);
 });

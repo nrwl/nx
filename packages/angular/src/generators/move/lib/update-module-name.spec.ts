@@ -52,7 +52,6 @@ describe('updateModuleName Rule', () => {
       await libraryGenerator(tree, {
         name: 'my-first',
         buildable: false,
-        enableIvy: false,
         linter: Linter.EsLint,
         publishable: false,
         simpleModuleName: true,
@@ -62,7 +61,6 @@ describe('updateModuleName Rule', () => {
       await libraryGenerator(tree, {
         name: 'my-second',
         buildable: false,
-        enableIvy: false,
         linter: Linter.EsLint,
         publishable: false,
         simpleModuleName: true,
@@ -169,7 +167,6 @@ describe('updateModuleName Rule', () => {
       await libraryGenerator(tree, {
         name: 'my-destination',
         buildable: false,
-        enableIvy: false,
         linter: Linter.EsLint,
         publishable: false,
         simpleModuleName: true,
@@ -215,7 +212,6 @@ describe('updateModuleName Rule', () => {
       await libraryGenerator(tree, {
         name: 'my-importer',
         buildable: false,
-        enableIvy: false,
         linter: Linter.EsLint,
         publishable: false,
         simpleModuleName: true,

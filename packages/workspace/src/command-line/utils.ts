@@ -43,9 +43,7 @@ export interface NxArgs {
   target?: string;
   configuration?: string;
   runner?: string;
-  parallel?: boolean;
-  maxParallel?: number;
-  'max-parallel'?: number;
+  parallel?: number;
   untracked?: boolean;
   uncommitted?: boolean;
   all?: boolean;
@@ -190,6 +188,22 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   if (!nxArgs.skipNxCache) {
     nxArgs.skipNxCache = false;
+  }
+
+  if (args['parallel'] === 'false' || args['parallel'] === false) {
+    nxArgs['parallel'] = 1;
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === ''
+  ) {
+    nxArgs['parallel'] = Number(
+      nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
+    );
+  } else if (args['parallel'] !== undefined) {
+    nxArgs['parallel'] = Number(args['parallel']);
+  } else {
+    nxArgs['parallel'] = undefined;
   }
 
   return { nxArgs, overrides };

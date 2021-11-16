@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  detectPackageManager,
   GeneratorCallback,
   Tree,
   updateJson,
@@ -42,7 +43,7 @@ function updateDependencies(host: Tree) {
     return json;
   });
 
-  const isPnpm = host.exists('pnpm-lock.yaml');
+  const isPnpm = detectPackageManager(host.root) === 'pnpm';
   return addDependenciesToPackageJson(
     host,
     {

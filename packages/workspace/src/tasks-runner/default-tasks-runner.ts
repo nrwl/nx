@@ -36,8 +36,7 @@ class NoopLifeCycle implements LifeCycle {
 }
 
 export interface DefaultTasksRunnerOptions {
-  parallel?: boolean;
-  maxParallel?: number;
+  parallel?: number;
   cacheableOperations?: string[];
   cacheableTargets?: string[];
   runtimeCacheInputs?: string[];
@@ -59,6 +58,20 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     hideCachedOutput?: boolean;
   }
 ): Observable<TaskCompleteEvent> => {
+  if (
+    (options as any)['parallel'] === 'false' ||
+    (options as any)['parallel'] === false
+  ) {
+    (options as any)['parallel'] = 1;
+  } else if (
+    (options as any)['parallel'] === 'true' ||
+    (options as any)['parallel'] === true
+  ) {
+    (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
+  } else if (options.parallel === undefined) {
+    options.parallel = 3;
+  }
+
   if (!options.lifeCycle) {
     options.lifeCycle = new NoopLifeCycle();
   }

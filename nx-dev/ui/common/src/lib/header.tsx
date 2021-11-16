@@ -24,7 +24,6 @@ export function Header(props: HeaderProps) {
     'version' in props ? props.version : { name: 'Latest', value: 'l' };
   const flavor =
     'flavor' in props ? props.flavor : { name: 'React', value: 'r' };
-
   return (
     <header
       className={cx(
@@ -79,24 +78,12 @@ export function Header(props: HeaderProps) {
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
-            <Link
-              href={
-                version && flavor
-                  ? `/${version.value}/${flavor.value}/getting-started/intro`
-                  : `/getting-started/intro`
-              }
-            >
+            <Link href="/getting-started/intro">
               <a className="font-bold px-3 py-2 text-white leading-tight">
                 Docs
               </a>
             </Link>
-            <Link
-              href={
-                version && flavor
-                  ? `/${version.value}/${flavor.value}/core-concepts/nx-devkit`
-                  : `/core-concepts/nx-devkit`
-              }
-            >
+            <Link href="/core-concepts/nx-devkit">
               <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
                 Plugins
               </a>

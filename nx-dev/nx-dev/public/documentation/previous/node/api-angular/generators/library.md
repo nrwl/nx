@@ -50,14 +50,6 @@ Type: `string`
 
 A directory where the library is placed.
 
-### enableIvy
-
-Default: `false`
-
-Type: `boolean`
-
-Enable Ivy for library in `tsconfig.lib.prod.json`. Should not be used with publishable libraries.
-
 ### importPath
 
 Type: `string`

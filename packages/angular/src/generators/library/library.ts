@@ -32,10 +32,6 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     throw new Error(`To use --lazy option, --routing must also be set.`);
   }
 
-  if (schema.enableIvy === true && !schema.buildable) {
-    throw new Error('enableIvy must only be used with buildable.');
-  }
-
   if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`

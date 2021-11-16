@@ -7,12 +7,11 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from './application';
+import type { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
@@ -92,6 +91,7 @@ describe('app', () => {
       );
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
+      expect(tsconfigApp.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
 
       const eslintrcJson = parseJson(
         appTree.read('apps/my-app/.eslintrc.json', 'utf-8')
@@ -240,6 +240,11 @@ describe('app', () => {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc',
+        },
+        {
+          path: 'apps/my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['**/*.test.ts', '**/*.spec.ts'],
         },
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
@@ -569,6 +574,18 @@ describe('app', () => {
 
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
+      it('should create the e2e project in v2 workspace', async () => {
+        appTree = createTreeWithEmptyWorkspace(2);
+
+        expect(
+          async () =>
+            await generateApp(appTree, 'myApp', {
+              e2eTestRunner: E2eTestRunner.Protractor,
+              standaloneConfig: true,
+            })
+        ).not.toThrow();
+      });
+
       it('should update workspace.json', async () => {
         await generateApp(appTree, 'myApp', {
           e2eTestRunner: E2eTestRunner.Protractor,

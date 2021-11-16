@@ -30,7 +30,7 @@ If you have an existing Lerna or Yarn monorepo, you can gain the benefits of Nx'
 npx add-nx-to-monorepo
 ```
 
-For more information on adding Nx to an existing repository see the [migration guides](/{{framework}}/migration/overview)
+For more information on adding Nx to an existing repository see the [migration guide](/react/migration/migration-cra)
 
 ## Configuration
 

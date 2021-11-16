@@ -94,7 +94,8 @@
       "description": "External Styles which will be included with the application",
       "items": {
         "$ref": "#/definitions/extraEntryPoint"
-      }
+      },
+      "default": []
     },
     "budgets": {
       "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",

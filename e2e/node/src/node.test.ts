@@ -57,6 +57,19 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
+  it('should be able to generate the correct outputFileName in options', async () => {
+    const nodeapp = uniq('nodeapp');
+    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+
+    updateProjectConfig(nodeapp, (config) => {
+      config.targets.build.options.outputFileName = 'index.js';
+      return config;
+    });
+
+    await runCLIAsync(`build ${nodeapp}`);
+    checkFilesExist(`dist/apps/${nodeapp}/index.js`);
+  }, 300000);
+
   // TODO: This test fails in CI, but succeeds locally. It should be re-enabled once the reasoning is understood.
   xit('should be able to generate an empty application with standalone configuration', async () => {
     const nodeapp = uniq('nodeapp');
@@ -261,11 +274,11 @@ describe('Build Node apps', () => {
     expect(packageJson).toEqual(
       expect.objectContaining({
         dependencies: {
-          '@nestjs/common': '^7.0.0',
-          '@nestjs/core': '^7.0.0',
-          '@nestjs/platform-express': '^7.0.0',
+          '@nestjs/common': '^8.0.0',
+          '@nestjs/core': '^8.0.0',
+          '@nestjs/platform-express': '^8.0.0',
           'reflect-metadata': '^0.1.13',
-          rxjs: '~6.6.3',
+          rxjs: '^7.0.0',
         },
         main: 'main.js',
         name: expect.any(String),
@@ -374,7 +387,7 @@ describe('Node Libraries', () => {
         declaration: true,
         types: ['node'],
       },
-      exclude: ['**/*.spec.ts'],
+      exclude: ['**/*.spec.ts', '**/*.test.ts'],
       include: ['**/*.ts'],
     });
     await runCLIAsync(`build ${nodeLib}`);
@@ -491,7 +504,7 @@ describe('Node Libraries', () => {
 
     runCLI(`build ${nglib}`);
     runCLI(`build ${nodelib}`);
-    checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
+    checkFilesExist(`./dist/libs/${nodelib}/esm2020/index.mjs`);
   }, 300000);
 
   it('should fail when trying to compile typescript files that are invalid', () => {

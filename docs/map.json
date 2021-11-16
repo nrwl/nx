@@ -128,11 +128,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "From Angular CLI",
             "id": "migration-angular"
           },
@@ -149,6 +144,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -352,11 +352,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "angular/api-workspace/executors/tsc"
+            "file": "angular/api-js/executors/tsc"
           }
         ]
       },
@@ -1440,11 +1456,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "From CRA",
             "id": "migration-cra"
           },
@@ -1457,6 +1468,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -1660,11 +1676,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "react/api-workspace/executors/tsc"
+            "file": "react/api-js/executors/tsc"
           }
         ]
       },
@@ -2716,11 +2748,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
@@ -2729,6 +2756,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -2932,11 +2964,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "node/api-workspace/executors/tsc"
+            "file": "node/api-js/executors/tsc"
           }
         ]
       },

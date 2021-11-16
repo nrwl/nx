@@ -1,51 +1,34 @@
-import { BehaviorSubject, combineLatest, Subject } from 'rxjs';
-import { distinctUntilChanged, map, withLatestFrom } from 'rxjs/operators';
+import { useDepGraphService } from '../machines/dep-graph.service';
+import { DepGraphSend } from '../machines/interfaces';
 import { removeChildrenFromContainer } from '../util';
 
 export class DisplayOptionsPanel {
-  private showAffected = false;
-  private groupByFolder = false;
-  private selectAffectedSubject = new Subject<void>();
-  private selectAllSubject = new Subject<void>();
-  private deselectAllSubject = new Subject<void>();
-  private groupByFolderSubject = new Subject<boolean>();
-  private searchByDepthSubject = new BehaviorSubject<number>(1);
-  private searchByDepthEnabledSubject = new BehaviorSubject<boolean>(false);
-  private searchDepthChangesSubject = new Subject<'increment' | 'decrement'>();
-
-  selectAffected$ = this.selectAffectedSubject.asObservable();
-  selectAll$ = this.selectAllSubject.asObservable();
-  deselectAll$ = this.deselectAllSubject.asObservable();
-  groupByFolder$ = this.groupByFolderSubject.asObservable();
-  searchDepth$ = combineLatest([
-    this.searchByDepthSubject,
-    this.searchByDepthEnabledSubject,
-  ]).pipe(
-    map(([searchDepth, enabled]) => {
-      return enabled ? searchDepth : -1;
-    }),
-    distinctUntilChanged()
-  );
-
   searchDepthDisplay: HTMLSpanElement;
+  affectedButtonElement: HTMLElement;
+  groupByFolderCheckboxElement: HTMLInputElement;
 
-  constructor(showAffected = false, groupByFolder = false) {
-    this.showAffected = showAffected;
-    this.groupByFolder = groupByFolder;
+  send: DepGraphSend;
 
-    this.searchDepthChangesSubject
-      .pipe(withLatestFrom(this.searchByDepthSubject))
-      .subscribe(([action, current]) => {
-        if (action === 'decrement' && current > 1) {
-          this.searchByDepthSubject.next(current - 1);
-        } else if (action === 'increment') {
-          this.searchByDepthSubject.next(current + 1);
-        }
-      });
+  constructor(private container: HTMLElement) {
+    const [state$, send] = useDepGraphService();
+    this.send = send;
+    this.render();
 
-    this.searchByDepthSubject.subscribe((current) => {
-      if (this.searchDepthDisplay) {
-        this.searchDepthDisplay.innerText = current.toString();
+    state$.subscribe((state) => {
+      if (state.context.affectedProjects.length > 0) {
+        this.affectedButtonElement.classList.remove('hidden');
+        this.affectedButtonElement.addEventListener('click', () =>
+          this.send({ type: 'selectAffected' })
+        );
+      }
+
+      this.searchDepthDisplay.innerText = state.context.searchDepth.toString();
+
+      if (
+        this.groupByFolderCheckboxElement.checked !==
+        state.context.groupByFolder
+      ) {
+        this.groupByFolderCheckboxElement.checked = state.context.groupByFolder;
       }
     });
   }
@@ -119,44 +102,39 @@ export class DisplayOptionsPanel {
     return render.content.firstChild as HTMLElement;
   }
 
-  render(container: HTMLElement) {
-    removeChildrenFromContainer(container);
+  private render() {
+    removeChildrenFromContainer(this.container);
 
     const element = DisplayOptionsPanel.renderHtmlTemplate();
 
-    const affectedButtonElement: HTMLElement = element.querySelector(
+    this.affectedButtonElement = element.querySelector(
       '[data-cy="affectedButton"]'
     );
-
-    if (this.showAffected) {
-      affectedButtonElement.classList.remove('hidden');
-      affectedButtonElement.addEventListener('click', () =>
-        this.selectAffectedSubject.next()
-      );
-    }
 
     const selectAllButtonElement: HTMLElement = element.querySelector(
       '[data-cy="selectAllButton"]'
     );
     selectAllButtonElement.addEventListener('click', () => {
-      this.selectAllSubject.next();
+      this.send({ type: 'selectAll' });
     });
 
     const deselectAllButtonElement: HTMLElement = element.querySelector(
       '[data-cy="deselectAllButton"]'
     );
     deselectAllButtonElement.addEventListener('click', () => {
-      this.deselectAllSubject.next();
+      this.send({ type: 'deselectAll' });
     });
 
-    const groupByFolderCheckboxElement: HTMLInputElement =
+    this.groupByFolderCheckboxElement =
       element.querySelector('#displayOptions');
-    groupByFolderCheckboxElement.checked = this.groupByFolder;
 
-    groupByFolderCheckboxElement.addEventListener(
+    this.groupByFolderCheckboxElement.addEventListener(
       'change',
       (event: InputEvent) =>
-        this.groupByFolderSubject.next((<HTMLInputElement>event.target).checked)
+        this.send({
+          type: 'setGroupByFolder',
+          groupByFolder: (event.target as HTMLInputElement).checked,
+        })
     );
 
     this.searchDepthDisplay = element.querySelector('#depthFilterValue');
@@ -170,18 +148,19 @@ export class DisplayOptionsPanel {
       element.querySelector('#depthFilter');
 
     incrementButtonElement.addEventListener('click', () => {
-      this.searchDepthChangesSubject.next('increment');
+      this.send({ type: 'incrementSearchDepth' });
     });
     decrementButtonElement.addEventListener('click', () => {
-      this.searchDepthChangesSubject.next('decrement');
+      this.send({ type: 'decrementSearchDepth' });
     });
 
     searchDepthEnabledElement.addEventListener('change', (event: InputEvent) =>
-      this.searchByDepthEnabledSubject.next(
-        (<HTMLInputElement>event.target).checked
-      )
+      this.send({
+        type: 'setSearchDepthEnabled',
+        searchDepthEnabled: (<HTMLInputElement>event.target).checked,
+      })
     );
 
-    container.appendChild(element);
+    this.container.appendChild(element);
   }
 }

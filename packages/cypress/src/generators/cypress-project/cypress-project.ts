@@ -20,7 +20,10 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { join } from 'path';
 // app
 import { Schema } from './schema';
-import { eslintPluginCypressVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  eslintPluginCypressVersion,
+} from '../../utils/versions';
 import { filePathPrefix } from '../../utils/project-name';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -84,7 +87,8 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
     tags: [],
     implicitDependencies: options.project ? [options.project] : undefined,
   };
-  if (installedCypressVersion() < 7) {
+  const detectedCypressVersion = installedCypressVersion() ?? cypressVersion;
+  if (detectedCypressVersion < 7) {
     project.targets.e2e.options.tsConfig = joinPathFragments(
       options.projectRoot,
       'tsconfig.json'

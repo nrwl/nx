@@ -12,9 +12,11 @@ import {
   GeneratorCallback,
   joinPathFragments,
   ProjectConfiguration,
+  addDependenciesToPackageJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 // nx-ignore-next-line
@@ -42,8 +44,9 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 
   if (options.buildable) {
     const { libsDir } = getWorkspaceLayout(tree);
+    addDependenciesToPackageJson(tree, {}, { '@nrwl/js': nxVersion });
     projectConfiguration.targets.build = {
-      executor: '@nrwl/workspace:tsc',
+      executor: '@nrwl/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,

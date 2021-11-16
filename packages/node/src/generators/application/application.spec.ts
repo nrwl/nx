@@ -127,7 +127,7 @@ describe('app', () => {
       const tsconfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-
+      expect(tsconfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
       const eslintrc = readJson(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
         Object {
@@ -241,6 +241,11 @@ describe('app', () => {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.types,
           expectedValue: ['node'],
+        },
+        {
+          path: 'apps/my-dir/my-node-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['**/*.spec.ts', '**/*.test.ts'],
         },
         {
           path: 'apps/my-dir/my-node-app/.eslintrc.json',
@@ -384,7 +389,12 @@ describe('app', () => {
 
       const tsConfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
-      expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+      expect(tsConfigApp.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.js',
+        '**/*.test.js',
+      ]);
     });
 
     it('should update workspace.json', async () => {

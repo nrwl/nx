@@ -7,9 +7,13 @@
   },<% if(setupFile !== 'none') { %>
   "files": ["src/test-setup.ts"],<% } %>
   "include": [
+    "**/*.test.ts",
     "**/*.spec.ts",<% if (supportTsx) { %>
+    "**/*.test.tsx",
     "**/*.spec.tsx",
+    "**/*.test.js",
     "**/*.spec.js",
+    "**/*.test.jsx",
     "**/*.spec.jsx",<% } %>
     "**/*.d.ts"
   ]

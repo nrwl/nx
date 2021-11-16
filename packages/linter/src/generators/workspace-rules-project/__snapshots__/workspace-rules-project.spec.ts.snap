@@ -73,6 +73,7 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
     \\"types\\": [\\"jest\\", \\"node\\"]
   },
   \\"include\\": [
+    \\"**/*.test.ts\\",
     \\"**/*.spec.ts\\",
     \\"**/*.d.ts\\"
   ]

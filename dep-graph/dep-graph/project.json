@@ -32,39 +32,16 @@
       },
       "configurations": {
         "dev": {
-          "fileReplacements": [
-            {
-              "replace": "dep-graph/dep-graph/src/environments/environment.ts",
-              "with": "dep-graph/dep-graph/src/environments/environment.dev.ts"
-            }
-          ],
+          "fileReplacements": [],
           "assets": [
             "dep-graph/dep-graph/src/favicon.ico",
-            "dep-graph/dep-graph/src/assets"
-          ],
-          "optimization": false,
-          "outputHashing": "none",
-          "sourceMap": true,
-          "extractCss": true,
-          "namedChunks": false,
-          "extractLicenses": false,
-          "vendorChunk": true,
-          "budgets": [
+            "dep-graph/dep-graph/src/assets/graphs/",
             {
-              "type": "initial",
-              "maximumWarning": "2mb",
-              "maximumError": "5mb"
-            }
-          ]
-        },
-        "watch": {
-          "fileReplacements": [
-            {
-              "replace": "dep-graph/dep-graph/src/environments/environment.ts",
-              "with": "dep-graph/dep-graph/src/environments/environment.watch.ts"
+              "input": "dep-graph/dep-graph/src/assets",
+              "output": "/",
+              "glob": "environment.js"
             }
           ],
-          "assets": [],
           "optimization": false,
           "outputHashing": "none",
           "sourceMap": true,
@@ -83,15 +60,10 @@
       },
       "outputs": ["{options.outputPath}"]
     },
-    "serve": {
+    "serve-base": {
       "executor": "@nrwl/web:dev-server",
       "options": {
         "buildTarget": "dep-graph-dep-graph:build-base:dev"
-      },
-      "configurations": {
-        "watch": {
-          "buildTarget": "dep-graph-dep-graph:build-base:watch"
-        }
       }
     },
     "lint": {
@@ -111,6 +83,44 @@
       "options": {
         "jestConfig": "dep-graph/dep-graph/jest.config.js",
         "passWithNoTests": true
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts dev",
+          "nx serve-base dep-graph-dep-graph"
+        ]
+      },
+      "configurations": {
+        "watch": {
+          "commands": [
+            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
+            "nx serve-base dep-graph-dep-graph"
+          ]
+        }
+      }
+    },
+    "serve-for-e2e": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts dev",
+          "nx serve-base dep-graph-dep-graph"
+        ],
+        "readyWhen": "No issues found."
+      },
+      "configurations": {
+        "watch": {
+          "commands": [
+            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
+            "nx serve-base dep-graph-dep-graph"
+          ],
+          "readyWhen": "No issues found."
+        }
       }
     }
   },

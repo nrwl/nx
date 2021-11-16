@@ -1,7 +1,8 @@
-import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
-import type { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { updatePaths } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import {
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';
@@ -26,11 +27,13 @@ async function initializeNgPackgrLite(
   packager.withBuildTransform(NX_PACKAGE_TRANSFORM.provide);
 
   if (options.tsConfig) {
-    // read the tsconfig and modify its path in memory to
-    // pass it on to ngpackagr
-    const parsedTSConfig = ng.readConfiguration(options.tsConfig);
-    updatePaths(projectDependencies, parsedTSConfig.options.paths);
-    packager.withTsConfig(parsedTSConfig);
+    const tsConfigPath = createTmpTsConfig(
+      options.tsConfig,
+      context.root,
+      context.workspace.projects[context.projectName].root,
+      projectDependencies
+    );
+    packager.withTsConfig(tsConfigPath);
   }
 
   return packager;

@@ -1,7 +1,7 @@
 import { ProjectGraph, stripIndents } from '@nrwl/devkit';
 import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
-import { workspaceFileName } from '../file-utils';
+import { readNxJson, workspaceFileName } from '../file-utils';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -48,11 +48,10 @@ export function readCachedProjectGraph(
 export async function createProjectGraphAsync(
   projectGraphVersion = '5.0'
 ): Promise<ProjectGraph> {
-  /**
-   * Using the daemon is currently an undocumented, opt-in feature while we build out its capabilities.
-   * If the environment variable is not set to true, fallback to using the existing in-process logic.
-   */
-  if (process.env.NX_DAEMON !== 'true') {
+  const nxJson = readNxJson();
+  const useDaemonProcessOption =
+    nxJson.tasksRunnerOptions['default']?.options?.useDaemonProcess;
+  if (useDaemonProcessOption !== true && process.env.NX_DAEMON !== 'true') {
     return projectGraphAdapter(
       '5.0',
       projectGraphVersion,

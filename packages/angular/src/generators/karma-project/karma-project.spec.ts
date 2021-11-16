@@ -16,7 +16,6 @@ describe('karmaProject', () => {
     await libraryGenerator(tree, {
       name: 'lib1',
       buildable: false,
-      enableIvy: false,
       linter: Linter.EsLint,
       publishable: false,
       simpleModuleName: false,

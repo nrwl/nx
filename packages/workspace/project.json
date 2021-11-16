@@ -24,7 +24,8 @@
           {
             "input": "packages/workspace",
             "glob": "**/files/**",
-            "output": "/"
+            "output": "/",
+            "dot": true
           },
           {
             "input": "packages/workspace",

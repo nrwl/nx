@@ -850,7 +850,7 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeTruthy();
       expect(workspaceJson.projects['my-lib'].architect.build.builder).toBe(
-        '@nrwl/workspace:tsc'
+        '@nrwl/js:tsc'
       );
     });
 

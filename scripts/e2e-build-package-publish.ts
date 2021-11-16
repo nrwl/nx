@@ -69,7 +69,7 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
 
     // NPM@7 requires a token to publish, thus, is just a matter of fake a token to bypass npm.
     // See: https://twitter.com/verdaccio_npm/status/1357798427283910660
-    if (npmMajorVersion === 7) {
+    if (npmMajorVersion >= 7) {
       writeFileSync(
         `${packagePath}/.npmrc`,
         `registry=${
@@ -88,17 +88,15 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
     });
   } catch (e) {
     console.log(e);
+    process.exit(1);
   }
 }
 
 function build(nxVersion: string) {
   try {
-    execSync(
-      'npx nx run-many --target=build --all --parallel --max-parallel=8',
-      {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }
-    );
+    execSync('npx nx run-many --target=build --all --parallel=8', {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
     console.log('Packages built successfully');
   } catch (e) {
     console.log(e.output.toString());

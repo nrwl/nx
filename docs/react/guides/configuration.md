@@ -73,8 +73,7 @@ Tasks runners can accept different options. The following are the options suppor
 by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
 - `cacheableOperations` defines the list of targets/operations that are cached by Nx.
-- `parallel` defines whether to run targets in parallel
-- `maxParallel` defines the max number of processes used.
+- `parallel` defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)
 - `captureStderr` defines whether the cache captures stderr or just stdout
 - `skipNxCache` defines whether the Nx Cache should be skipped. Defaults to `false`
 - `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
@@ -102,8 +101,8 @@ by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 }
 ```
 
-You can configure `parallel` and `maxParallel` in `nx.json`, but you can also pass them when invoking a
-command `nx run-many --target=test --parallel`.
+You can configure `parallel` in `nx.json`, but you can also pass it when invoking a
+command `nx run-many --target=test --parallel=5`.
 
 ### Implicit Dependencies
 
@@ -415,7 +414,7 @@ building the project. You can specify this using the `dependsOn`.
 ```
 
 In this case, running `nx build myapp` builds all the buildable libraries `myapp` depends on first. In other
-words, `nx build myapp` results in multiple tasks executing. The `--parallel`, and `--max-parallel` flags have the same
+words, `nx build myapp` results in multiple tasks executing. The `--parallel` flag has the same
 effect as they would with `run-many` or `affected`.
 
 It is also possible to define dependencies between the targets of the same project.

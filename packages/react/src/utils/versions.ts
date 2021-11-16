@@ -15,7 +15,6 @@ export const emotionReactVersion = '11.5.0';
 export const emotionBabelPlugin = '11.3.0';
 
 export const styledJsxVersion = '4.0.1';
-export const typesStyledJsxVersion = '3.4.4';
 
 export const reactRouterDomVersion = '5.3.0';
 export const typesReactRouterDomVersion = '5.3.1';
@@ -25,6 +24,7 @@ export const testingLibraryReactHooksVersion = '7.0.2';
 
 export const reduxjsToolkitVersion = '1.6.2';
 export const reactReduxVersion = '7.2.5';
+export const reactTestRendererVersion = '17.0.2';
 
 export const eslintPluginImportVersion = '2.25.2';
 export const eslintPluginJsxA11yVersion = '6.4.1';

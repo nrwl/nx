@@ -118,11 +118,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "From Angular CLI",
             "id": "migration-angular"
           },
@@ -139,6 +134,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -1410,11 +1410,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "From CRA",
             "id": "migration-cra"
           },
@@ -1427,6 +1422,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -2687,11 +2687,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
@@ -2700,6 +2695,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },

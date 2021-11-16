@@ -26,6 +26,4 @@ export interface Schema {
 
   linter: Exclude<Linter, Linter.TsLint>;
   unitTestRunner: UnitTestRunner;
-
-  enableIvy: boolean;
 }

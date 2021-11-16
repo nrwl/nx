@@ -22,7 +22,6 @@ export async function createStorybookTestWorkspaceForLib(
   await libraryGenerator(tree, {
     name: libName,
     buildable: false,
-    enableIvy: false,
     linter: Linter.EsLint,
     publishable: false,
     simpleModuleName: false,

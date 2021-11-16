@@ -75,7 +75,7 @@ export function Sidebar({ menu, navIsOpen }: SidebarProps) {
             }))}
             selected={{ label: flavor.name, value: flavor.alias }}
             onChange={(item) =>
-              router.push(
+              !!router.push(
                 createNextPath(version.alias, item.value, router.asPath)
               ) &&
               item.data &&
@@ -89,8 +89,8 @@ export function Sidebar({ menu, navIsOpen }: SidebarProps) {
           data-testid="navigation"
           className="px-1 pt-1 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
         >
-          {menu.sections.map((section) => (
-            <SidebarSection key={section.id} section={section} />
+          {menu.sections.map((section, index) => (
+            <SidebarSection key={section.id + '-' + index} section={section} />
           ))}
         </nav>
       </div>
@@ -111,8 +111,8 @@ function SidebarSection({ section }: { section: MenuSection }) {
       )}
       <ul>
         <li className="mt-2">
-          {section.itemList.map((item) => (
-            <SidebarSectionItems key={item.id} item={item} />
+          {section.itemList.map((item, index) => (
+            <SidebarSectionItems key={item.id + '-' + index} item={item} />
           ))}
         </li>
       </ul>
@@ -153,10 +153,13 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
         )}
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
-        {(item.itemList as MenuItem[]).map((item) => {
+        {(item.itemList as MenuItem[]).map((item, index) => {
           const isActiveLink = item.url === withoutAnchors(router?.asPath);
           return (
-            <li key={item.id} data-testid={`section-li:${item.id}`}>
+            <li
+              key={item.id + '-' + index}
+              data-testid={`section-li:${item.id}`}
+            >
               <Link href={item.url as string}>
                 <a
                   className={cx(

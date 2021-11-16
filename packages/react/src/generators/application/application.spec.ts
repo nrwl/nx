@@ -88,6 +88,16 @@ describe('app', () => {
       const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
+      expect(tsconfigApp.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.tsx',
+        '**/*.test.tsx',
+        '**/*.spec.js',
+        '**/*.test.js',
+        '**/*.spec.jsx',
+        '**/*.test.jsx',
+      ]);
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
       expect(eslintJson.extends).toEqual([
@@ -175,6 +185,20 @@ Object {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc',
+        },
+        {
+          path: 'apps/my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: [
+            '**/*.spec.ts',
+            '**/*.test.ts',
+            '**/*.spec.tsx',
+            '**/*.test.tsx',
+            '**/*.spec.js',
+            '**/*.test.js',
+            '**/*.spec.jsx',
+            '**/*.test.jsx',
+          ],
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.json',

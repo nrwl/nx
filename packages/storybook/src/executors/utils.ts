@@ -1,7 +1,20 @@
-import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import {
+  ExecutorContext,
+  joinPathFragments,
+  logger,
+  parseTargetString,
+  readTargetOptions,
+} from '@nrwl/devkit';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { gte } from 'semver';
+import {
+  findOrCreateConfig,
+  readCurrentWorkspaceStorybookVersionFromExecutor,
+} from '../utils/utilities';
 import { CommonNxStorybookConfig } from './models';
 
 export interface NodePackage {
@@ -145,4 +158,120 @@ function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
     `
     );
   }
+}
+
+export function resolveCommonStorybookOptionMapper(
+  builderOptions: CommonNxStorybookConfig,
+  frameworkOptions: any,
+  context: ExecutorContext
+) {
+  const storybookConfig = findOrCreateConfig(builderOptions.config, context);
+  const storybookOptions = {
+    workspaceRoot: context.root,
+    configDir: storybookConfig,
+    ...frameworkOptions,
+    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
+    watch: false,
+  };
+
+  if (
+    builderOptions.uiFramework === '@storybook/angular' &&
+    // just for new 6.4 with Angular
+    isStorybookGTE6_4()
+  ) {
+    let buildProjectName;
+    let targetName = 'build'; // default
+    let targetOptions = null;
+
+    if (builderOptions.projectBuildConfig) {
+      const targetString = normalizeTargetString(
+        builderOptions.projectBuildConfig,
+        targetName
+      );
+
+      const { project, target, configuration } =
+        parseTargetString(targetString);
+
+      // set the extracted target name
+      targetName = target;
+      buildProjectName = project;
+
+      targetOptions = readTargetOptions(
+        { project, target, configuration },
+        context
+      );
+
+      storybookOptions.angularBrowserTarget = targetString;
+    } else {
+      // to preserve the backwards compatibility for our users Nx resolves the
+      // default project just as Storybook used to before
+
+      const ws = new Workspaces(context.root);
+      const defaultProjectName = ws.calculateDefaultProjectName(
+        context.cwd,
+        context.workspace
+      );
+
+      buildProjectName = defaultProjectName;
+
+      targetOptions = readTargetOptions(
+        {
+          project: defaultProjectName,
+          target: targetName,
+          configuration: '',
+        },
+        context
+      );
+
+      storybookOptions.angularBrowserTarget = normalizeTargetString(
+        defaultProjectName,
+        targetName
+      );
+    }
+    const project = context.workspace.projects[buildProjectName];
+
+    // construct a builder object for Storybook
+    storybookOptions.angularBuilderContext = {
+      target: {
+        ...project.targets[targetName],
+        project: buildProjectName,
+      },
+      workspaceRoot: context.cwd,
+      getProjectMetadata: () => {
+        return project;
+      },
+      getTargetOptions: () => {
+        return targetOptions;
+      },
+      logger: {
+        createChild(name) {
+          return logger;
+        },
+      },
+    };
+  } else {
+    // keep the backwards compatibility
+    setStorybookAppProject(context, builderOptions.projectBuildConfig);
+  }
+
+  return storybookOptions;
+}
+
+function normalizeTargetString(
+  appName: string,
+  defaultTarget: string = 'build'
+) {
+  if (appName.includes(':')) {
+    return appName;
+  }
+  return `${appName}:${defaultTarget}`;
+}
+
+function isStorybookGTE6_4() {
+  const storybookVersion = readCurrentWorkspaceStorybookVersionFromExecutor();
+
+  return gte(
+    checkAndCleanWithSemver('@storybook/core', storybookVersion),
+    '6.4.0-rc.1'
+  );
 }

@@ -1,0 +1,13 @@
+{
+  "name": "@nrwl/js",
+  "version": "0.0.1",
+  "main": "src/index.js",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "dependencies": {
+    "@nrwl/workspace": "*",
+    "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*"
+  }
+}

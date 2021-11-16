@@ -10,6 +10,7 @@ import * as yargs from 'yargs';
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -269,16 +270,23 @@ npx nx daemon
 `),
     (yargs) => linkToNxDevAndExamples(yargs, 'migrate'),
     () => {
-      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-        const p = taoPath();
-        execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
-          stdio: ['inherit', 'inherit', 'inherit'],
-        });
-      } else {
+      const runLocalMigrate = () => {
         const pmc = getPackageManagerCommand();
         execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
         });
+      };
+      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+        const p = taoPath();
+        if (p === null) {
+          runLocalMigrate();
+        } else {
+          execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
+            stdio: ['inherit', 'inherit', 'inherit'],
+          });
+        }
+      } else {
+        runLocalMigrate();
       }
     }
   )
@@ -516,7 +524,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
     })
     .option('port', {
-      describe: 'Bind the dependecy graph server to a specific port.',
+      describe: 'Bind the dependency graph server to a specific port.',
       type: 'number',
     })
     .option('watch', {
@@ -540,18 +548,10 @@ function parseCSV(args: string[]) {
 }
 
 function withParallel(yargs: yargs.Argv): yargs.Argv {
-  return yargs
-    .option('parallel', {
-      describe: 'Parallelize the command',
-      type: 'boolean',
-      default: false,
-    })
-    .option('maxParallel', {
-      describe:
-        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
-      type: 'number',
-      default: 3,
-    });
+  return yargs.option('parallel', {
+    describe: 'Max number of parallel processes [default is 3]',
+    type: 'string',
+  });
 }
 
 function withTarget(yargs: yargs.Argv): yargs.Argv {
@@ -565,31 +565,37 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
 }
 
 function taoPath() {
-  const packageManager = getPackageManagerCommand();
+  try {
+    const packageManager = getPackageManagerCommand();
 
-  const { dirSync } = require('tmp');
-  const tmpDir = dirSync().name;
-  writeJsonFile(path.join(tmpDir, 'package.json'), {
-    dependencies: {
-      '@nrwl/tao': 'latest',
+    const { dirSync } = require('tmp');
+    const tmpDir = dirSync().name;
+    writeJsonFile(path.join(tmpDir, 'package.json'), {
+      dependencies: {
+        '@nrwl/tao': 'latest',
+      },
+      license: 'MIT',
+    });
 
-      // these deps are required for migrations written using angular devkit
-      '@angular-devkit/architect': 'latest',
-      '@angular-devkit/schematics': 'latest',
-      '@angular-devkit/core': 'latest',
-    },
-    license: 'MIT',
-  });
+    execSync(packageManager.install, {
+      cwd: tmpDir,
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
 
-  execSync(packageManager.install, {
-    cwd: tmpDir,
-    stdio: ['ignore', 'ignore', 'ignore'],
-  });
+    // Set NODE_PATH so that these modules can be used for module resolution
+    addToNodePath(path.join(tmpDir, 'node_modules'));
+    addToNodePath(path.join(appRootPath, 'node_modules'));
 
-  // Set NODE_PATH so that these modules can be used for module resolution
-  addToNodePath(path.join(tmpDir, 'node_modules'));
-
-  return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+    return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+  } catch (e) {
+    console.error(
+      'Failed to install the latest version of the migration script. Using the current version.'
+    );
+    if (process.env.NX_VERBOSE_LOGGING) {
+      console.error(e);
+    }
+    return null;
+  }
 }
 
 function addToNodePath(dir: string) {

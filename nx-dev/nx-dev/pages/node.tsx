@@ -2,15 +2,11 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Footer,
-  Header,
-  InlineCommand,
-  NxUsersShowcase,
-} from '@nrwl/nx-dev/ui/common';
+import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui/common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
 import Head from 'next/head';
+import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 
 export function Node() {
   const sectionItemList = [
@@ -569,7 +565,7 @@ export function Node() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Tune into regular Nx Office Hours livestreams
+                      Tune into regular Nx Show livestreams
                     </a>
                   </li>
                   <li className="mt-4">

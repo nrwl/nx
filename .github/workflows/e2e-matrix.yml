@@ -125,11 +125,25 @@ jobs:
         sudo apt-get install lsof
         echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
+    - name: Homebrew cache directory path
+      if: ${{ matrix.os == 'macos-latest' }}
+      id: homebrew-cache-dir-path
+      run: echo "::set-output name=dir::$(brew --cache)"
+
+    - name: Cache Homebrew
+      if: ${{ matrix.os == 'macos-latest' }}
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
+        key: brew-${{ matrix.node-version }}
+        restore-keys: |
+          brew-
+
     - name: Install applesimutils, reset ios simulators
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-        brew install applesimutils
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
         xcrun simctl shutdown all && xcrun simctl erase all
 
     - name: Run e2e tests

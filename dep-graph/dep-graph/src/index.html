@@ -10,6 +10,8 @@
     href="https://fonts.googleapis.com/css?family=Montserrat&display=swap"
     rel="stylesheet"
   />
+
+  <script id="environment" src="environment.js"></script>
 </head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
@@ -143,17 +145,4 @@
       <div id="graph-container"></div>
     </div>
   </div>
-  <script>
-    window.watch = false;
-    window.projects = [];
-    window.graph = {};
-    window.affected = [];
-    window.focusedProject = null;
-    window.filteredProjects = [];
-    window.groupByFolder = false;
-    window.exclude = [];
-    window.workspaceLayout = null;
-    window.localMode = 'serve';
-    window.projectGraphResponse = null;
-  </script>
 </body>

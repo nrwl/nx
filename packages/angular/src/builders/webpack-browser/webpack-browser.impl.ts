@@ -14,12 +14,12 @@ import {
 import { joinPathFragments } from '@nrwl/devkit';
 import { join } from 'path';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
+import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 
-type BrowserBuilderSchema = Schema & {
+export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
     path: string;
   };

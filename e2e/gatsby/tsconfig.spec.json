@@ -9,8 +9,11 @@
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "**/*.test.tsx",
     "**/*.spec.js",
+    "**/*.test.js",
     "**/*.spec.jsx",
+    "**/*.test.jsx",
     "**/*.d.ts"
   ]
 }

@@ -187,8 +187,20 @@ export function hasBannedImport(
       c.bannedExternalImports.length
   );
   return depConstraints.find((constraint) =>
-    constraint.bannedExternalImports.includes(target.data.packageName)
+    constraint.bannedExternalImports.some((importDefinition) =>
+      parseImportWildcards(importDefinition).test(target.data.packageName)
+    )
   );
+}
+
+/**
+ * Maps import with wildcards to regex pattern
+ * @param importDefinition
+ * @returns
+ */
+function parseImportWildcards(importDefinition: string): RegExp {
+  const mappedWildcards = importDefinition.split('*').join('.*');
+  return new RegExp(`^${new RegExp(mappedWildcards).source}$`);
 }
 
 /**
