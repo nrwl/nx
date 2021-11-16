@@ -58,7 +58,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -1386,7 +1386,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {

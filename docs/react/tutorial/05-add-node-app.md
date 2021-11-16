@@ -11,12 +11,13 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 ```bash
 >  NX  Installed plugins:
 
-  @nrwl/cypress (executors,generators)
-  @nrwl/jest (executors,generators)
-  @nrwl/linter (builders)
+  @nrwl/cypress (builders,generators)
+  @nrwl/jest (builders,generators)
+  @nrwl/linter (builders,generators)
   @nrwl/react (generators)
-  @nrwl/web (executors,generators)
-  @nrwl/workspace (executors,generators)
+  @nrwl/storybook (builders,generators)
+  @nrwl/web (builders,generators)
+  @nrwl/workspace (builders,generators)
 
 
 >  NX  Also available:
@@ -27,7 +28,6 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
   @nrwl/next (executors,generators)
   @nrwl/node (executors,generators)
   @nrwl/nx-plugin (executors,generators)
-  @nrwl/storybook (executors,generators)
 
 
 >  NX  Community plugins:
@@ -72,7 +72,10 @@ After this is done, you should see something like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
+│   ├── todos/
+│   │   ├── src/
+│   │   ├── project.json
+│   │   └── proxy.conf.json
 │   ├── todos-e2e/
 │   └── api/
 │       ├── src/
@@ -83,7 +86,7 @@ myorg/
 │       │   │   └── environment.prod.ts
 │       │   └── main.ts
 │       ├── jest.conf.js
-│       ├── proxy.conf.json
+│       ├── project.json
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
@@ -147,3 +150,7 @@ const server = app.listen(port, () => {
 });
 server.on('error', console.error);
 ```
+
+**Now run `npx nx serve api` to run the api server**
+
+Refresh the application in the browser. The React app is now able to fetch and create todos by calling the API.
