@@ -85,6 +85,14 @@ function updateTransformIgnorePattern(fileContents: string) {
   let TRANSFORM_IGNORE_PATTERN_STRING =
     "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],";
 
+  if (
+    fileContents.includes(
+      "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)']"
+    )
+  ) {
+    return fileContents;
+  }
+
   const ast = tsquery.ast(fileContents);
 
   const transformObjectNode = tsquery(ast, TRANSFORM_OBJECT_AST_QUERY, {

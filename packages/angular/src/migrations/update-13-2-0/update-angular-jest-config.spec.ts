@@ -246,4 +246,49 @@ transform: {
           "
     `);
   });
+
+  it('should not add multiple transform ignore patterns', () => {
+    // ARRANGE
+    const jestConfig = `module.exports = {
+      displayName: 'app1',
+      preset: '../../jest.preset.js',
+      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+      globals: {
+        'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json',
+          stringifyContentPathRegex: '\\.(html|svg)$',
+        },
+      },
+      coverageDirectory: '../../coverage/apps/app1',
+      transform: {
+      '^.+\\.(json)$': 'json_transformer',
+      '^.+\\.(ts|js|html)$': 'jest-preset-angular',
+      },
+      transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
+      };`;
+
+    // ACT
+    const updatedFile = replaceTransformAndAddIgnorePattern(jestConfig);
+
+    // ASSERT
+    expect(updatedFile).toMatchInlineSnapshot(`
+      "module.exports = {
+            displayName: 'app1',
+            preset: '../../jest.preset.js',
+            setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+            globals: {
+              'ts-jest': {
+                tsconfig: '<rootDir>/tsconfig.spec.json',
+                stringifyContentPathRegex: '\\\\.(html|svg)$',
+              },
+            },
+            coverageDirectory: '../../coverage/apps/app1',
+            transform: {
+            '^.+\\\\.(json)$': 'json_transformer',
+      '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+            },
+            transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+            };"
+    `);
+  });
 });
