@@ -1056,19 +1056,23 @@
           "alwaysAddToPackageJson": false
         },
         "@storybook/manager-webpack5": {
-          "version": "6.4.0-rc.1",
+          "version": "6.4.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@storybook/builder-webpack5": {
-          "version": "6.4.0-rc.1",
+          "version": "6.4.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@storybook/angular": {
-          "version": "6.4.0-rc.1",
+          "version": "6.4.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "6.4.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@storybook/addon-essentials": {
-          "version": "6.4.0-rc.1",
+          "version": "6.4.0-rc.3",
           "alwaysAddToPackageJson": false
         }
       }
