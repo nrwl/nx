@@ -192,9 +192,6 @@ describe('Angular Package', () => {
           runCLI(`run ${myAngularLib}:build-storybook`);
 
           checkFilesExist(`dist/storybook/${myAngularLib}/index.html`);
-          expect(
-            readFile(`dist/storybook/${myAngularLib}/index.html`)
-          ).toContain(`<title>Storybook</title>`);
         }
       }, 1000000);
 
