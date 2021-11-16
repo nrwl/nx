@@ -25,9 +25,9 @@ Application name                    todos
 Default stylesheet format           CSS
 ```
 
-> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
+Enter the indicated answers.
 
-When asked about 'preset', select `react`, and `todos` for the app name.
+> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
 ```treeview
 myorg/
@@ -46,6 +46,7 @@ myorg/
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
 │   │   ├── jest.config.js
+│   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.spec.json
@@ -63,7 +64,7 @@ myorg/
 │       │       └── index.ts
 │       ├── .eslintrc.json
 │       ├── cypress.json
-│       ├── tsconfig.e2e.json
+│       ├── project.json
 │       └── tsconfig.json
 ├── libs/
 ├── tools/
