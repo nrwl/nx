@@ -101,7 +101,7 @@ describe('NodeExecuteBuilder', () => {
     expect(fork).toHaveBeenCalledWith('outfile.js', [], {
       execArgv: [
         '-r',
-        'source-map-support/register',
+        require.resolve('source-map-support/register'),
         '--inspect=localhost:9229',
       ],
     });
@@ -123,7 +123,7 @@ describe('NodeExecuteBuilder', () => {
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
-            'source-map-support/register',
+            require.resolve('source-map-support/register'),
             '--inspect=localhost:9229',
           ],
         });
@@ -143,7 +143,7 @@ describe('NodeExecuteBuilder', () => {
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
-            'source-map-support/register',
+            require.resolve('source-map-support/register'),
             '--inspect-brk=localhost:9229',
           ],
         });
@@ -165,7 +165,7 @@ describe('NodeExecuteBuilder', () => {
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
-            'source-map-support/register',
+            require.resolve('source-map-support/register'),
             '--inspect=0.0.0.0:9229',
           ],
         });
@@ -187,7 +187,7 @@ describe('NodeExecuteBuilder', () => {
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
-            'source-map-support/register',
+            require.resolve('source-map-support/register'),
             '--inspect=localhost:1234',
           ],
         });
@@ -208,7 +208,7 @@ describe('NodeExecuteBuilder', () => {
       expect(fork).toHaveBeenCalledWith('outfile.js', [], {
         execArgv: [
           '-r',
-          'source-map-support/register',
+          require.resolve('source-map-support/register'),
           '-r',
           'node-register',
           '--inspect=localhost:9229',
@@ -258,7 +258,7 @@ describe('NodeExecuteBuilder', () => {
     )) {
     }
     expect(fork).toHaveBeenCalledWith('outfile.js', ['arg1', 'arg2'], {
-      execArgv: ['-r', 'source-map-support/register'],
+      execArgv: ['-r', require.resolve('source-map-support/register')],
     });
   });
 
