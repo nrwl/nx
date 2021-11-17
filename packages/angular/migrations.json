@@ -1074,6 +1074,34 @@
         "@storybook/addon-essentials": {
           "version": "6.4.0-rc.3",
           "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }
