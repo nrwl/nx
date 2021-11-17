@@ -75,6 +75,7 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/nx/package.json',
     'build/npm/react-native/package.json',
     'build/npm/detox/package.json',
+    'build/npm/js/package.json',
   ];
   if (isLocal) {
     pkgFiles = pkgFiles.filter((f) => f !== 'package.json');

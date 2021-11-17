@@ -2,10 +2,7 @@ import {
   defaultTasksRunner,
   DefaultTasksRunnerOptions,
 } from './default-tasks-runner';
-import {
-  Task,
-  TaskStatus,
-} from '@nrwl/workspace/src/tasks-runner/tasks-runner';
+import { Task, TaskStatus } from './tasks-runner';
 import { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 import { Subject } from 'rxjs/internal/Subject';
 import type { Observable } from 'rxjs';
@@ -29,7 +26,6 @@ export const tasksRunnerV2 = (
   }
 ): Observable<any> => {
   const r = new Subject<any>();
-
   (defaultTasksRunner(tasks, options, context) as any)
     .then((tasks: { [id: string]: TaskStatus }) => {
       convertCompletedTasksToOutputFormat(tasks).forEach((k) => r.next(k));
