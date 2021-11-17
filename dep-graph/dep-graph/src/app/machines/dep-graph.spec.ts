@@ -78,7 +78,7 @@ export const mockDependencies: Record<string, ProjectGraphDependency[]> = {
 
 describe('dep-graph machine', () => {
   describe('initGraph', () => {
-    it('should set projects and dependencies', () => {
+    it('should set projects, dependencies, and workspaceLayout', () => {
       const result = depGraphMachine.transition(depGraphMachine.initialState, {
         type: 'initGraph',
         projects: mockProjects,
@@ -88,6 +88,10 @@ describe('dep-graph machine', () => {
       });
       expect(result.context.projects).toEqual(mockProjects);
       expect(result.context.dependencies).toEqual(mockDependencies);
+      expect(result.context.workspaceLayout).toEqual({
+        appsDir: 'apps',
+        libsDir: 'libs',
+      });
     });
 
     it('should start with no projects selected', () => {
