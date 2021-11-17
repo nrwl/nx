@@ -154,7 +154,11 @@ export function packageInstall(
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const install = execSync(`${pm.addDev} ${pkg}@${version}`, {
+  const pkgsWithVersions = pkg
+    .split(' ')
+    .map((pgk) => `${pgk}@${version}`)
+    .join(' ');
+  const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
     cwd,
     stdio: [0, 1, 2],
     env: process.env,
