@@ -89,7 +89,7 @@ export function NpxCreateNxWorkspace() {
       transition: { ease: 'easeOut', duration: 0.24 },
     });
     return await wrapper.start({
-      y: -82,
+      y: -100,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
   };
