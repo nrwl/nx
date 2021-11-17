@@ -46,6 +46,7 @@ const IGNORE_MATCHES = {
     '@jest/types',
     'identity-obj-proxy',
     '@angular-devkit/schematics',
+    'resolve.exports',
   ],
   linter: [
     'eslint',
