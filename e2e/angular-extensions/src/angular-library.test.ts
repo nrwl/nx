@@ -136,43 +136,44 @@ describe('Angular Package', () => {
 
       afterEach(() => removeProject({ onlyOnCI: true }));
 
-      it('empty test to make jest happy', () => {});
-
       // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
+      // therefore switch to yarn
+      const previousPackageRunner = process.env.SELECTED_PM;
       if (
-        getSelectedPackageManager() !== 'pnpm' ||
-        testConfig === 'publishable'
+        getSelectedPackageManager() === 'pnpm' &&
+        testConfig !== 'publishable'
       ) {
-        it('should build the library when it does not have any deps', () => {
-          runCLI(`build ${childLib}`);
-
-          checkFilesExist(`dist/libs/${childLib}/package.json`);
-        });
-
-        it('should properly add references to any dependency into the parent package.json', () => {
-          runCLI(`build ${childLib}`);
-          runCLI(`build ${childLib2}`);
-          runCLI(`build ${parentLib}`);
-
-          checkFilesExist(
-            `dist/libs/${childLib}/package.json`,
-            `dist/libs/${childLib2}/package.json`,
-            `dist/libs/${parentLib}/package.json`
-          );
-
-          const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-
-          expect(jsonFile.dependencies['tslib']).toMatch(/\^2\.\d+\.\d+/); // match any ^2.x.x
-          expect(
-            jsonFile.peerDependencies[`@${proj}/${childLib}`]
-          ).toBeDefined();
-          expect(
-            jsonFile.peerDependencies[`@${proj}/${childLib2}`]
-          ).toBeDefined();
-          expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
-          expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
-        });
+        process.env.SELECTED_PM = 'yarn';
       }
+      it('should build the library when it does not have any deps', () => {
+        runCLI(`build ${childLib}`);
+
+        checkFilesExist(`dist/libs/${childLib}/package.json`);
+      });
+
+      it('should properly add references to any dependency into the parent package.json', () => {
+        runCLI(`build ${childLib}`);
+        runCLI(`build ${childLib2}`);
+        runCLI(`build ${parentLib}`);
+
+        checkFilesExist(
+          `dist/libs/${childLib}/package.json`,
+          `dist/libs/${childLib2}/package.json`,
+          `dist/libs/${parentLib}/package.json`
+        );
+
+        const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+
+        expect(jsonFile.dependencies['tslib']).toMatch(/\^2\.\d+\.\d+/); // match any ^2.x.x
+        expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
+        expect(
+          jsonFile.peerDependencies[`@${proj}/${childLib2}`]
+        ).toBeDefined();
+        expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
+        expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
+      });
+
+      process.env.SELECTED_PM = previousPackageRunner;
     });
   });
 
