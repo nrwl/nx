@@ -1,10 +1,7 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 
-import {
-  readJsonFile,
-  writeJsonFile,
-  writeToFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
+import { writeToFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { chmodSync } from 'fs-extra';
 import { NormalizedBuilderOptions } from './models';
 

@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { readJsonFile } from '../fileutils';
+import { readJsonFile } from '@nrwl/devkit';
 import { output } from '../output';
 import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';

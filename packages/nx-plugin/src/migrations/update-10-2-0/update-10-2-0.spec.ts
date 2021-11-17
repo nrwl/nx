@@ -1,6 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/devkit';
 import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
@@ -14,7 +13,7 @@ describe('update 10.2.0', () => {
 
     initialTree.overwrite(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         version: 1,
         projects: {
           'my-plugin-e2e': {

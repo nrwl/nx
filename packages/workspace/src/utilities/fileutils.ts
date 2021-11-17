@@ -9,14 +9,7 @@ import {
 } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { basename, dirname, resolve as pathResolve } from 'path';
-import {
-  parseJson,
-  serializeJson,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
-
-export { readJsonFile, writeJsonFile, serializeJson };
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 
 export function writeToFile(filePath: string, str: string) {
   ensureDirSync(dirname(filePath));

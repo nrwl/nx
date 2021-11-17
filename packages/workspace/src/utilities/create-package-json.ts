@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nrwl/devkit';
-import { readJsonFile } from './fileutils';
+import { readJsonFile } from '@nrwl/devkit';
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.

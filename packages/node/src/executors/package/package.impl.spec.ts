@@ -20,6 +20,13 @@ import * as fs from 'fs-extra';
 
 jest.mock('@nrwl/workspace/src/utilities/fileutils');
 import * as fsUtility from '@nrwl/workspace/src/utilities/fileutils';
+import * as devkit from '@nrwl/devkit';
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<typeof devkit>('@nrwl/devkit'),
+  writeJsonFile: jest.fn(),
+  readJsonFile: jest.fn(),
+}));
+
 import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
 import * as ts from 'typescript';
 
@@ -28,7 +35,7 @@ describe('NodePackageBuilder', () => {
   let context: ExecutorContext;
 
   beforeEach(async () => {
-    mocked(fsUtility.readJsonFile).mockImplementation((path: string) => {
+    mocked(devkit.readJsonFile).mockImplementation((path: string) => {
       if (path.endsWith('tsconfig.lib.json')) {
         return {
           extends: './tsconfig.json',
@@ -47,7 +54,7 @@ describe('NodePackageBuilder', () => {
         };
       }
     });
-    mocked(fsUtility.writeJsonFile).mockImplementation(
+    mocked(devkit.writeJsonFile).mockImplementation(
       (_: string, _2: unknown) => {
         //empty
         return;
@@ -135,7 +142,7 @@ describe('NodePackageBuilder', () => {
 
     it('should update the package.json after compiling typescript', async () => {
       await packageExecutor(testOptions, context);
-      expect(fsUtility.writeJsonFile).toHaveBeenCalledWith(
+      expect(devkit.writeJsonFile).toHaveBeenCalledWith(
         `${testOptions.outputPath}/package.json`,
         {
           name: 'nodelib',

@@ -1,6 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
 
 import * as path from 'path';
 
@@ -12,7 +11,7 @@ describe('Update 8.1.0', () => {
     initialTree = Tree.empty();
     initialTree.create(
       'package.json',
-      serializeJson({
+      JSON.stringify({
         scripts: {},
       })
     );

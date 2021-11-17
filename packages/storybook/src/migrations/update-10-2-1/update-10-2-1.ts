@@ -9,11 +9,11 @@ import {
 import {
   formatFiles,
   updateWorkspaceInTree,
-  serializeJson,
   readJsonInTree,
 } from '@nrwl/workspace';
 
 import { TsConfig } from '../../utils/utilities';
+import { serializeJson } from '@nrwl/devkit';
 
 interface ProjectDefinition {
   root: string;

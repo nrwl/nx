@@ -4,7 +4,6 @@ import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
 import { join } from 'path';
 
 describe('Update 8.3.0', () => {
@@ -16,7 +15,7 @@ describe('Update 8.3.0', () => {
 
     tree.create(
       'package.json',
-      serializeJson({
+      JSON.stringify({
         devDependencies: {
           '@angular/cli': '8.0.0',
           '@angular-devkit/build-angular': '^0.800.0',

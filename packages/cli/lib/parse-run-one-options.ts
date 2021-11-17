@@ -4,6 +4,7 @@ import type {
   WorkspaceJsonConfiguration,
   NxJsonConfiguration,
 } from '@nrwl/devkit';
+import { readJsonFile } from '@nrwl/tao/src/utils/fileutils';
 
 function calculateDefaultProjectName(
   cwd: string,
@@ -123,9 +124,7 @@ export function parseRunOneOptions(
 
   let targets;
   if (typeof p === 'string') {
-    targets = JSON.parse(
-      fs.readFileSync(`${p}/project.json`).toString()
-    ).targets;
+    targets = readJsonFile(`${p}/project.json`).targets;
   } else {
     targets = p.architect ?? p.targets;
   }

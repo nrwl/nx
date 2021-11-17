@@ -4,7 +4,6 @@ import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
 import { runMigration } from '../../utils/testing';
 
 describe('Update 8.5.0', () => {
@@ -19,7 +18,7 @@ describe('Update 8.5.0', () => {
     it('should update @angular/cli', async () => {
       tree.create(
         'package.json',
-        serializeJson({
+        JSON.stringify({
           devDependencies: {
             '@angular/cli': '8.0.0',
           },
@@ -36,7 +35,7 @@ describe('Update 8.5.0', () => {
     it('should coerce a version with a caret into a valid version', async () => {
       tree.create(
         'package.json',
-        serializeJson({
+        JSON.stringify({
           devDependencies: {
             '@angular/cli': '^8.0.0',
           },
@@ -53,7 +52,7 @@ describe('Update 8.5.0', () => {
     it('should coerce a version with a tilde into a valid version', async () => {
       tree.create(
         'package.json',
-        serializeJson({
+        JSON.stringify({
           devDependencies: {
             '@angular/cli': '~8.0.0',
           },
@@ -72,7 +71,7 @@ describe('Update 8.5.0', () => {
 
       tree.create(
         'package.json',
-        serializeJson({
+        JSON.stringify({
           devDependencies: {
             '@angular/cli': '>=8.0.0',
           },

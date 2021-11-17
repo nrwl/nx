@@ -1,9 +1,5 @@
-import { ExecutorContext } from '@nrwl/devkit';
-
-import {
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
+import type { ExecutorContext } from '@nrwl/devkit';
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { basename, join } from 'path';
 import { NormalizedBuilderOptions } from './models';
 

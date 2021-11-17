@@ -3,7 +3,6 @@ import { readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { serializeJson } from '@nrwl/workspace';
 
 describe('Update 9.0.0', () => {
   let initialTree: Tree;
@@ -19,12 +18,12 @@ describe('Update 9.0.0', () => {
 
     initialTree.overwrite(
       'package.json',
-      serializeJson({ devDependencies: { 'jest-preset-angular': '7.0.0' } })
+      JSON.stringify({ devDependencies: { 'jest-preset-angular': '7.0.0' } })
     );
 
     initialTree.overwrite(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         projects: {
           'angular-one': {
             root: 'apps/angular-one/',

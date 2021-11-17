@@ -1,5 +1,5 @@
 import { createDirectory } from '@nrwl/workspace/src/utilities/fileutils';
-import { toFileName } from '@nrwl/workspace/src/devkit-reexport';
+import { names } from '@nrwl/devkit';
 import { dirname, join, relative, sep } from 'path';
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ChildProcess, fork } from 'child_process';
@@ -62,7 +62,7 @@ function runCliBuild(workspaceRoot, projectRoot, options) {
 function createBundleOptions(options) {
   return Object.keys(options).reduce((acc, _k) => {
     const v = options[_k];
-    const k = toFileName(_k);
+    const k = names(_k).fileName;
     if (v === undefined) return acc;
     acc.push(`--${k}`, v);
     return acc;

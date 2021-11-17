@@ -1,6 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '../../utils/ast-utils';
-import { serializeJson } from '../../utilities/fileutils';
 import { runMigration } from '../../utils/testing';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 
@@ -16,7 +15,7 @@ describe('Update 8.12.0: package.json deps', () => {
     it('should update the Angular devkit core packages', async () => {
       tree.overwrite(
         'package.json',
-        serializeJson({
+        JSON.stringify({
           devDependencies: {
             '@angular-devkit/architect': '0.803.14',
             '@angular-devkit/build-angular': '0.803.14',

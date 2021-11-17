@@ -8,7 +8,7 @@ import type {
   NxJsonConfiguration,
   ProjectGraphNode,
 } from '@nrwl/devkit';
-import { ProjectFileMap, stripIndents } from '@nrwl/devkit';
+import { ProjectFileMap, stripIndents, readJsonFile } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
@@ -16,7 +16,7 @@ import { performance } from 'perf_hooks';
 import type { NxArgs } from '../command-line/utils';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { appendArray } from '../utilities/array';
-import { fileExists, readJsonFile } from '../utilities/fileutils';
+import { fileExists } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
 import type { Environment } from './shared-interfaces';

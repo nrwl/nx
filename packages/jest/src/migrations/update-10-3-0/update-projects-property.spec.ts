@@ -1,7 +1,6 @@
 import { tags } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 
@@ -53,7 +52,7 @@ describe('update projects property', () => {
 
     initialTree.overwrite(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         version: 1,
         projects: {
           products: {

@@ -1,6 +1,6 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { tags } from '@angular-devkit/core';
-import { getWorkspace, serializeJson } from '@nrwl/workspace';
+import { serializeJson } from '@nrwl/devkit';
+import { getWorkspace } from '@nrwl/workspace';
 
 export default function (): Rule {
   return async (host: Tree) => {
@@ -33,11 +33,9 @@ export default function (): Rule {
 
     host.create(
       '.vscode/extensions.json',
-      tags.stripIndents` 
-{
- "recommendations": ${serializeJson(extensions)}
-} 
-    `
+      serializeJson({
+        recommendations: extensions,
+      })
     );
   };
 }

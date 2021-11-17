@@ -10,7 +10,6 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { Tree, SchematicContext, TaskId } from '@angular-devkit/schematics';
-import { serializeJson } from '../utilities/fileutils';
 import { createEmptyWorkspace } from './testing-utils';
 
 describe('readJsonInTree', () => {
@@ -22,7 +21,7 @@ describe('readJsonInTree', () => {
   it('should read JSON from the tree', () => {
     tree.create(
       'data.json',
-      serializeJson({
+      JSON.stringify({
         data: 'data',
       })
     );

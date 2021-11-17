@@ -3,7 +3,6 @@ import { readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { serializeJson } from '@nrwl/workspace';
 import { readFileSync } from 'fs';
 
 describe('Update 9.0.1', () => {
@@ -44,7 +43,7 @@ describe('Update 9.0.1', () => {
   it('should add passWithNoTests to workspace.json where it does not exist', async () => {
     initialTree.overwrite(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         version: 1,
         projects: {
           'angular-one': {

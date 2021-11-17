@@ -2,7 +2,6 @@ import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
-import { serializeJson } from '@nrwl/workspace';
 import { jestConfigObject } from '../utils/config/legacy/functions';
 
 import { getJestObject } from './require-jest-config';
@@ -65,7 +64,7 @@ describe('update 10.0.0', () => {
     initialTree.create('apps/cart/jest.config.js', jestConfigReact);
     initialTree.overwrite(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         version: 1,
         projects: {
           products: {

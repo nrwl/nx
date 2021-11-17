@@ -1,7 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree, updateWorkspace } from '@nrwl/workspace';
 import { callRule, createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { serializeJson } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
 import { runMigration } from '../../utils/testing';
 import {
@@ -55,7 +54,7 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
   it('should update the current (v10.3.0) root .eslintrc.json file to the use the eslint-plugin-nx shared config', async () => {
     tree.create(
       '.eslintrc.json',
-      serializeJson({
+      JSON.stringify({
         root: true,
         parser: '@typescript-eslint/parser',
         parserOptions: {
@@ -403,22 +402,22 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
 
     tree.create(
       'apps/reactapp/.eslintrc.json',
-      serializeJson(reactESLintConfig)
+      JSON.stringify(reactESLintConfig)
     );
 
     tree.create(
       'apps/notreactapp/.eslintrc.json',
-      serializeJson(notReactESLintConfig)
+      JSON.stringify(notReactESLintConfig)
     );
 
     tree.create(
       'libs/reactlib/.eslintrc.json',
-      serializeJson(reactESLintConfig)
+      JSON.stringify(reactESLintConfig)
     );
 
     tree.create(
       'libs/notreactlib/.eslintrc.json',
-      serializeJson(notReactESLintConfig)
+      JSON.stringify(notReactESLintConfig)
     );
 
     const result = await runMigration(

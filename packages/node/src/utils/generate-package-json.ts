@@ -1,5 +1,5 @@
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import type { ProjectGraph } from '@nrwl/devkit';
+import { writeJsonFile } from '@nrwl/devkit';
 
 import { BuildNodeBuilderOptions } from './types';
 import { createPackageJson } from '@nrwl/workspace/src/utilities/create-package-json';

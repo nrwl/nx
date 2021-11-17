@@ -1,10 +1,8 @@
-import { ExecutorContext } from '@nrwl/devkit';
-
+import type { ExecutorContext } from '@nrwl/devkit';
+import { writeJsonFile } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { createPackageJson as generatePackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
-
-import { NextBuildBuilderOptions } from '../../../utils/types';
+import type { NextBuildBuilderOptions } from '../../../utils/types';
 
 export async function createPackageJson(
   options: NextBuildBuilderOptions,

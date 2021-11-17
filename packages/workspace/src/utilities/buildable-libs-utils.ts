@@ -1,7 +1,7 @@
 import { isNpmProject, ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
-import { directoryExists, readJsonFile, writeJsonFile } from './fileutils';
-import { stripIndents } from '@nrwl/devkit';
+import { directoryExists } from './fileutils';
+import { stripIndents, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
