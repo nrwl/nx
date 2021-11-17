@@ -7,7 +7,6 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { addDepsToPackageJson } from '@nrwl/workspace';
 import { nxVersion } from '../../utils/versions';
 
 export async function updateTscExecutorLocation(
@@ -17,7 +16,7 @@ export async function updateTscExecutorLocation(
   let used = false;
   for (const [project, projectConfig] of projects.entries()) {
     for (const [target, targetConfig] of Object.entries(
-      projectConfig.targets
+      projectConfig.targets || {}
     )) {
       if (targetConfig.executor === '@nrwl/workspace:tsc') {
         projectConfig.targets[target].executor = '@nrwl/js:tsc';

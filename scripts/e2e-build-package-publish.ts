@@ -122,6 +122,7 @@ function build(nxVersion: string) {
       'workspace',
       'react-native',
       'detox',
+      'js',
     ].map((f) => `${f}/src/utils/versions.js`),
     ...[
       'react',
@@ -146,6 +147,7 @@ function build(nxVersion: string) {
       'nx-plugin',
       'react-native',
       'detox',
+      'js',
     ].map((f) => `${f}/package.json`),
     'create-nx-workspace/bin/create-nx-workspace.js',
     'create-nx-plugin/bin/create-nx-plugin.js',

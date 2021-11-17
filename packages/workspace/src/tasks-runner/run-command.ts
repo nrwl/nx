@@ -98,6 +98,7 @@ export async function runCommand<T extends RunArgs>(
       overrides
     ),
   ] as LifeCycle[];
+
   if (process.env.NX_PERF_LOGGING) {
     lifeCycles.push(new TaskTimingsLifeCycle());
   }
@@ -137,7 +138,7 @@ async function anyFailuresInPromise(
 }
 
 async function anyFailuresInObservable(obs: any) {
-  await new Promise((res) => {
+  return await new Promise((res) => {
     let anyFailures = false;
     obs.subscribe(
       (t) => {
@@ -145,7 +146,13 @@ async function anyFailuresInObservable(obs: any) {
           anyFailures = true;
         }
       },
-      (error) => {},
+      (error) => {
+        output.error({
+          title: 'Unhandled error in task executor',
+        });
+        console.error(error);
+        res(true);
+      },
       () => {
         res(anyFailures);
       }
