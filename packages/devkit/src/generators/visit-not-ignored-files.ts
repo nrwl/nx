@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { join } from 'path';
 import ignore, { Ignore } from 'ignore';
+import { join, relative, sep } from 'path';
 
 /**
  * Utility to act on all files in a tree that are not ignored by git.
@@ -15,6 +15,7 @@ export function visitNotIgnoredFiles(
     ig = ignore();
     ig.add(tree.read('.gitignore', 'utf-8'));
   }
+  dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
   if (dirPath !== '' && ig?.ignores(dirPath)) {
     return;
   }
@@ -29,4 +30,8 @@ export function visitNotIgnoredFiles(
       visitNotIgnoredFiles(tree, fullPath, visitor);
     }
   }
+}
+
+function normalizePathRelativeToRoot(path: string, root: string): string {
+  return relative(root, join(root, path)).split(sep).join('/');
 }
