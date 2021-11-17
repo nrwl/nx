@@ -1,8 +1,9 @@
 /**
- * Adapted from original ng-packagr
+ * Adapted from the original ng-packagr.
  *
- * Change the package.json metadata to only use
- * the ESM2015 output as it's the only one generated.
+ * Changes made:
+ * - Change the package.json metadata to only use the ESM2020 output as it's the only one generated.
+ * - Remove package exports.
  */
 
 import { logger } from '@nrwl/devkit';
@@ -18,13 +19,7 @@ import {
 } from 'ng-packagr/lib/ng-package/nodes';
 import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
-import {
-  copyFile,
-  exists,
-  rmdir,
-  stat,
-  writeFile,
-} from 'ng-packagr/lib/utils/fs';
+import { copyFile, rmdir, stat, writeFile } from 'ng-packagr/lib/utils/fs';
 import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import * as path from 'path';
@@ -110,7 +105,8 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
         ngEntryPoint,
         ngPackage,
         {
-          module: relativeUnixFromDestPath(destinationFiles.fesm2015),
+          module: relativeUnixFromDestPath(destinationFiles.esm2020),
+          es2020: relativeUnixFromDestPath(destinationFiles.esm2020),
           esm2020: relativeUnixFromDestPath(destinationFiles.esm2020),
           typings: relativeUnixFromDestPath(destinationFiles.declarations),
           // webpack v4+ specific flag to enable advanced optimizations and code splitting
