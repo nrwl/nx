@@ -1,8 +1,8 @@
 /**
- * Adapted from original ng-packagr source
+ * Adapted from the original ng-packagr source.
  *
- * Remove writing bundles as they are not needed
- * for incremental builds.
+ * Changes made:
+ * - Removed writing bundles as we don't generate them for incremental builds.
  */
 
 import { logger } from '@nrwl/devkit';
@@ -26,8 +26,8 @@ import { pipe } from 'rxjs';
  *  - downlevelTs
  *  - relocateSourceMaps
  *  - writePackage
- *  - copyStagedFiles (esm, dts, sourcemaps)
- *  - writePackageJson
+ *    - copyStagedFiles (esm, dts, sourcemaps)
+ *    - writePackageJson
  *
  * The transformation pipeline is pluggable through the dependency injection system.
  * Sub-transformations are passed to this factory function as arguments.

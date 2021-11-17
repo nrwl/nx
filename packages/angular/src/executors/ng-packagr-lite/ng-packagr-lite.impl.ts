@@ -7,11 +7,11 @@ import { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
-import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/entry-point.di';
+import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
-} from './ng-packagr-adjustments/package.di';
+} from './ng-packagr-adjustments/ng-package/package.di';
 
 async function initializeNgPackgrLite(
   options: BuildAngularLibraryExecutorOptions,

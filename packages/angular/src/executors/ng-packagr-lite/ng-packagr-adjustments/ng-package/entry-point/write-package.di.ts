@@ -1,3 +1,10 @@
+/**
+ * Adapted from the original ng-packagr source.
+ *
+ * Changes made:
+ * - Provide our own writePackageTransform function.
+ */
+
 import { InjectionToken } from 'injection-js';
 import type { Transform } from 'ng-packagr/lib/graph/transform';
 import {
@@ -5,7 +12,7 @@ import {
   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
 import { OPTIONS_TOKEN } from 'ng-packagr/lib/ng-package/options.di';
-import { nxWritePackageTransform } from './write-package';
+import { nxWritePackageTransform } from './write-package.transform';
 
 export const NX_WRITE_PACKAGE_TRANSFORM_TOKEN = new InjectionToken<Transform>(
   `nx.v1.writePackageTransform`
