@@ -7,11 +7,11 @@ import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-lib
 import * as ngPackagr from 'ng-packagr';
 import { BehaviorSubject } from 'rxjs';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
-import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/entry-point.di';
+import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
-} from './ng-packagr-adjustments/package.di';
+} from './ng-packagr-adjustments/ng-package/package.di';
 import ngPackagrLiteExecutor from './ng-packagr-lite.impl';
 
 describe('NgPackagrLite executor', () => {

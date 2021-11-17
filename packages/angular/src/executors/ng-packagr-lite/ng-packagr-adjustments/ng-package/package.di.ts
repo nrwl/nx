@@ -1,8 +1,8 @@
 /**
- * Adapted from the original ng-packagr
+ * Adapted from the original ng-packagr.
  *
- * Wires everything together and provides it to the DI, but exchanges the parts
- * we want to implement with Nx specific functions
+ * Changes made:
+ * - Use NX_ENTRY_POINT_TRANSFORM_TOKEN instead of ENTRY_POINT_TRANSFORM_TOKEN.
  */
 
 import type { Provider } from 'injection-js';
@@ -23,7 +23,7 @@ import {
 } from 'ng-packagr/lib/ng-package/options.di';
 import { packageTransformFactory } from 'ng-packagr/lib/ng-package/package.transform';
 import { PROJECT_TOKEN } from 'ng-packagr/lib/project.di';
-import { NX_ENTRY_POINT_TRANSFORM_TOKEN } from './entry-point.di';
+import { NX_ENTRY_POINT_TRANSFORM_TOKEN } from './entry-point/entry-point.di';
 
 export const NX_PACKAGE_TRANSFORM_TOKEN = new InjectionToken<Transform>(
   `nx.v1.packageTransform`
