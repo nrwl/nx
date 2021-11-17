@@ -10054,7 +10054,7 @@ esbuild@0.13.12:
     esbuild-windows-64 "0.13.12"
     esbuild-windows-arm64 "0.13.12"
 
-esbuild@^0.13.0:
+esbuild@0.13.13, esbuild@^0.13.0:
   version "0.13.13"
   resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.13.13.tgz#0b5399c20f219f663c8c1048436fb0f59ab17a41"
   integrity sha512-Z17A/R6D0b4s3MousytQ/5i7mTCbaF+Ua/yPfoe71vdTv4KBvVAvQ/6ytMngM2DwGJosl8WxaD75NOQl2QF26Q==
@@ -13920,12 +13920,12 @@ jest-pnp-resolver@^1.2.2:
   resolved "https://registry.yarnpkg.com/jest-pnp-resolver/-/jest-pnp-resolver-1.2.2.tgz#b704ac0ae028a89108a4d040b3f919dfddc8e33c"
   integrity sha512-olV41bKSMm8BdnuMsewT4jqlZ8+3TCARAXjZGT9jcoSnrfUnRCqnMoF9XEeoWjbzObpqF9dRhHQj0Xb9QdF6/w==
 
-jest-preset-angular@11.0.0-rc.3:
-  version "11.0.0-rc.3"
-  resolved "https://registry.yarnpkg.com/jest-preset-angular/-/jest-preset-angular-11.0.0-rc.3.tgz#ef689b19c23574bad4627b43d669096d6d924370"
-  integrity sha512-BI3qDaGraDYKi0SgphBRz0MdHbiX6RpJL/Yq1MYeddLHjcVpQtOWcDaM5K7157ZuSyn7gRGKKMPxvIriIjL38g==
+jest-preset-angular@11.0.0-rc.4:
+  version "11.0.0-rc.4"
+  resolved "https://registry.yarnpkg.com/jest-preset-angular/-/jest-preset-angular-11.0.0-rc.4.tgz#90befd3cfaf23cc8e1a546dd0ee19b9305839e54"
+  integrity sha512-j4qnzFZUUXTcWUdz6HGY1cD8gLm02qA92k1V3P3RqQ6pjFCjlvBCLTjShkhsYoBBbJWx6KR0Jbe1zzZrJJ0jBQ==
   dependencies:
-    esbuild "0.13.12"
+    esbuild "0.13.13"
     jest-environment-jsdom "^27.0.0"
     pretty-format "^27.0.0"
     ts-jest "^27.0.0"
