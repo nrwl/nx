@@ -46,6 +46,7 @@ export const depGraphMachine = Machine<
           ctx.projects = event.projects;
           ctx.affectedProjects = event.affectedProjects;
           ctx.dependencies = event.dependencies;
+          ctx.workspaceLayout = event.workspaceLayout;
         }),
       },
 
