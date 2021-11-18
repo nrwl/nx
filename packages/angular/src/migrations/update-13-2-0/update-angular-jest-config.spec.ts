@@ -49,6 +49,15 @@ describe('update-angular-jest-config migration', () => {
     const updatedJestFile = tree.read('apps/testing/jest.config.js', 'utf-8');
     expect(updatedJestFile).toMatchSnapshot();
   });
+
+  it("shouldn't error on null targets", async () => {
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/testing',
+    });
+    const promise = updateAngularJestConfig(tree);
+    await expect(promise).resolves.not.toThrow();
+  });
 });
 
 describe('ast transformations', () => {
