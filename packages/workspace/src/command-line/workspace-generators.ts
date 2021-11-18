@@ -65,7 +65,14 @@ function compileTools() {
 }
 
 function getToolsOutDir() {
-  return path.resolve(toolsDir, toolsTsConfig().compilerOptions.outDir);
+  const outDir = toolsTsConfig().compilerOptions.outDir;
+
+  if (!outDir) {
+    logger.error('tsconfig.tools.json must specify an outDir');
+    process.exit(1);
+  }
+
+  return path.resolve(toolsDir, outDir);
 }
 
 function compileToolsDir(outDir: string) {
