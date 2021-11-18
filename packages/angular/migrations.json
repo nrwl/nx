@@ -1105,5 +1105,22 @@
         }
       }
     }
+  },
+  "13.3.0": {
+    "version": "13.3.0-beta.0",
+    "packages": {
+      "@angular-eslint/eslint-plugin": {
+        "version": "13.0.0-alpha.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-eslint/eslint-plugin-template": {
+        "version": "13.0.0-alpha.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-eslint/template-parser": {
+        "version": "13.0.0-alpha.0",
+        "alwaysAddToPackageJson": false
+      }
+    }
   }
 }
