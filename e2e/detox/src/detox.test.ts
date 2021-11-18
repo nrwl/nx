@@ -5,7 +5,6 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-  getSelectedPackageManager,
   killPorts,
 } from '@nrwl/e2e/utils';
 
@@ -13,8 +12,6 @@ describe('Detox', () => {
   beforeEach(() => newProject());
 
   it('should create files and run lint command', async () => {
-    // currently react native does not support pnpm: https://github.com/pnpm/pnpm/issues/3321
-    if (getSelectedPackageManager() === 'pnpm') return;
     const appName = uniq('myapp');
     runCLI(
       `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint`
