@@ -31,7 +31,7 @@ export function componentStoryGenerator(
   generateFiles(tree, templatesDir, destinationDir, {
     componentFileName: componentFileName,
     componentName: componentName,
-    props,
+    props: props.filter((p) => typeof p.defaultValue !== 'undefined'),
     tmpl: '',
   });
 }
