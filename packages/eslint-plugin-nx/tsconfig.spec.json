@@ -9,6 +9,7 @@
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
+    "**/*_test.ts",
     "**/*.spec.tsx",
     "**/*.test.tsx",
     "**/*.spec.js",
