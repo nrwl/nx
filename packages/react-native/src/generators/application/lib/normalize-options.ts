@@ -36,7 +36,11 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const entryFile = join(host.root, appProjectRoot, '/src/main.tsx');
+  const entryFile = join(
+    host.root,
+    appProjectRoot,
+    options.js ? 'src/main.js' : '/src/main.tsx'
+  );
 
   /**
    * if options.name is "my-app"
