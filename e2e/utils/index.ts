@@ -183,9 +183,10 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject({ name = uniq('proj') } = {}): string {
-  const packageManager = getSelectedPackageManager();
-
+export function newProject({
+  name = uniq('proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
   try {
     const useBackupProject = packageManager !== 'pnpm';
     const projScope = useBackupProject ? 'proj' : name;

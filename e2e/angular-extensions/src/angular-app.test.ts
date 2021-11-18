@@ -23,19 +23,19 @@ describe('Angular Package', () => {
     let buildableLib;
     let proj: string;
 
-    // This fails with pnpm due to incompatibilities with ngcc.
-    // Since this suite has a single test, we wrap everything to avoid the hooks to run and
-    // waste time.
-    // therefore switch to yarn
-    const previousPackageRunner = process.env.SELECTED_PM;
-    if (getSelectedPackageManager() === 'pnpm') {
-      process.env.SELECTED_PM = 'yarn';
-    }
     beforeEach(() => {
       app = uniq('app');
       buildableLib = uniq('buildlib1');
 
-      proj = newProject();
+      // This fails with pnpm due to incompatibilities with ngcc.
+      // Since this suite has a single test, we wrap everything to avoid the hooks to run and
+      // waste time.
+      // therefore switch to yarn
+
+      proj =
+        getSelectedPackageManager() === 'pnpm'
+          ? newProject({ packageManager: 'yarn' })
+          : newProject();
 
       runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);
       runCLI(
@@ -87,8 +87,6 @@ describe('Angular Package', () => {
       const mainBundle = readFile(`dist/apps/${app}/main.js`);
       expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
     });
-
-    process.env.SELECTED_PM = previousPackageRunner;
   });
 });
 

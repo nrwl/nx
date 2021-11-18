@@ -36,7 +36,12 @@ describe('Angular Package', () => {
         childLib = uniq('childlib');
         childLib2 = uniq('childlib2');
 
-        proj = newProject();
+        // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
+        // therefore switch to yarn
+        proj =
+          getSelectedPackageManager() === 'pnpm' && testConfig !== 'publishable'
+            ? newProject({ packageManager: 'yarn' })
+            : newProject();
 
         if (testConfig === 'buildable') {
           runCLI(
@@ -136,15 +141,6 @@ describe('Angular Package', () => {
 
       afterEach(() => removeProject({ onlyOnCI: true }));
 
-      // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
-      // therefore switch to yarn
-      const previousPackageRunner = process.env.SELECTED_PM;
-      if (
-        getSelectedPackageManager() === 'pnpm' &&
-        testConfig !== 'publishable'
-      ) {
-        process.env.SELECTED_PM = 'yarn';
-      }
       it('should build the library when it does not have any deps', () => {
         runCLI(`build ${childLib}`);
 
@@ -172,8 +168,6 @@ describe('Angular Package', () => {
         expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
         expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
       });
-
-      process.env.SELECTED_PM = previousPackageRunner;
     });
   });
 
