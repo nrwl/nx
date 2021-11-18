@@ -61,7 +61,6 @@ export default createESLintRule<Options, MessageIds>({
     type: 'suggestion',
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
-      category: 'Best Practices',
       recommended: 'error',
     },
     fixable: 'code',

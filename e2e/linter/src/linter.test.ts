@@ -79,7 +79,7 @@ describe('Linter', () => {
           return config;
         });
         expect(() => runCLI(`lint ${myapp} --linter=tslint`)).toThrow(
-          /'tslint' option is no longer supported/
+          /"@nrwl\/linter:lint" was deprecated in v10 and is no longer supported\. Update your angular\.json to use "@nrwl\/linter:eslint" builder instead\./
         );
         expect(() => runCLI(`lint ${myapp} --linter=random`)).toThrow(
           /'random' should be one of eslint,tslint/

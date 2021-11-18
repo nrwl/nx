@@ -3,6 +3,16 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = require('path');
 const ts = require('typescript');
 const fs = require('fs');
+
+/**
+ * Custom resolver which will respect package exports (until Jest supports it natively
+ * by resolving https://github.com/facebook/jest/issues/9771)
+ */
+const enhancedResolver = require('enhanced-resolve').create.sync({
+  conditionNames: ['require', 'node', 'default'],
+  extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
+});
+
 function getCompilerSetup(rootDir) {
   const tsConfigPath =
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.spec.json') ||
@@ -57,7 +67,13 @@ module.exports = function (path, options) {
     if (path.indexOf('@nrwl/workspace') > -1) {
       throw 'Reference to local Nx package found. Use local version instead.';
     }
-    return options.defaultResolver(path, options);
+
+    // Global modules which must be resolved by defaultResolver
+    if (['fs', 'http', 'path'].includes(path)) {
+      return options.defaultResolver(path, options);
+    }
+
+    return enhancedResolver(options.basedir, path);
   } catch (e) {
     // Fallback to using typescript
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);

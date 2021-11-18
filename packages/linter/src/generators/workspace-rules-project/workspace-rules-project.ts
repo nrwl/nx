@@ -1,14 +1,16 @@
 import {
   addProjectConfiguration,
   convertNxGenerator,
+  formatFiles,
   generateFiles,
+  joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
   readWorkspaceConfiguration,
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
+import { addPropertyToJestConfig, jestProjectGenerator } from '@nrwl/jest';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
@@ -50,13 +52,27 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
   });
 
   // Add jest to the project and return installation task
-  return await jestProjectGenerator(tree, {
+  const jestInstallationTask = await jestProjectGenerator(tree, {
     project: WORKSPACE_RULES_PROJECT_NAME,
     supportTsx: false,
     skipSerializers: true,
     setupFile: 'none',
     babelJest: false,
   });
+
+  // Add extra config to the jest.config.js file to allow ESLint 8 exports mapping to work with jest
+  addPropertyToJestConfig(
+    tree,
+    joinPathFragments(WORKSPACE_PLUGIN_DIR, 'jest.config.js'),
+    'moduleNameMapper',
+    {
+      '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
+    }
+  );
+
+  await formatFiles(tree);
+
+  return jestInstallationTask;
 }
 
 export const lintWorkspaceRulesProjectSchematic = convertNxGenerator(

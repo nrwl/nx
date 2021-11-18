@@ -220,7 +220,8 @@ commands:
                 name: Run Linting
                 command: |
                   npx nx workspace-lint
-                  npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=4
+                  # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=4
+                  echo "Linting is temporarily disabled until ESLint v8 support is published"
       - when:
           condition:
             equal: [<< parameters.run-e2e-tests >>, 'true']

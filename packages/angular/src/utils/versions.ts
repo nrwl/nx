@@ -5,5 +5,5 @@ export const angularJsVersion = '1.7.9';
 export const ngrxVersion = '~13.0.0';
 export const rxjsVersion = '~7.4.0';
 export const jestPresetAngularVersion = '11.0.0';
-export const angularEslintVersion = '~13.0.0';
+export const angularEslintVersion = '~13.0.1';
 export const storybookVersion = '~6.4.0-rc.3';
