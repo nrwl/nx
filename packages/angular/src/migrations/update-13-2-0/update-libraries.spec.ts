@@ -11,6 +11,7 @@ describe('update-libraries migration', () => {
       targets: {
         build: {
           executor: '@nrwl/angular:ng-packagr-lite',
+          options: {},
         },
       },
     });
@@ -47,6 +48,7 @@ describe('update-libraries migration', () => {
       targets: {
         build: {
           executor: '@nrwl/angular:ng-packagr-lite',
+          options: {},
         },
       },
     });
@@ -73,5 +75,14 @@ describe('update-libraries migration', () => {
     expect(tsconfigFile.includes('umdModuleIds')).toBeFalsy();
     expect(tsconfigFile.includes('amdId')).toBeFalsy();
     expect(tsconfigFile.includes('umdId')).toBeFalsy();
+  });
+
+  it("shouldn't error on null targets", async () => {
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/testing',
+    });
+    const promise = updateLibraries(tree);
+    await expect(promise).resolves.not.toThrow();
   });
 });

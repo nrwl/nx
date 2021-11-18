@@ -11,8 +11,8 @@ export default async function (tree: Tree) {
 
   for (const [projectName, project] of projects.entries()) {
     if (
-      project.targets.test &&
-      project.targets.test.executor === '@nrwl/jest:jest'
+      project.targets?.test &&
+      project.targets?.test.executor === '@nrwl/jest:jest'
     ) {
       const jestConfigPath =
         project.targets.test.options && project.targets.test.options.jestConfig;
