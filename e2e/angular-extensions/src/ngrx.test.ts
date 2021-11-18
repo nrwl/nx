@@ -10,14 +10,6 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Angular Package', () => {
-  // TODO(coly010): remove when ngrx 13 (with ivy) releases
-  // Run Tests with Yarn then reset back
-  const previousPackageRunner = process.env.SELECTED_PM;
-  process.env.SELECTED_PM = 'yarn';
-  afterAll(() => {
-    process.env.SELECTED_PM = previousPackageRunner;
-  });
-
   describe('ngrx', () => {
     beforeAll(() => newProject());
     afterAll(() => removeProject({ onlyOnCI: true }));

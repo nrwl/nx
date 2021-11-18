@@ -1,4 +1,5 @@
 import { dirname, extname } from 'path';
+import { resolve as resolveExports } from 'resolve.exports';
 import type defaultResolver from 'jest-resolve/build/defaultResolver';
 
 interface ResolveOptions {
@@ -60,6 +61,13 @@ module.exports = function (path: string, options: ResolveOptions) {
           ...pkg,
           main: pkg.main || pkg.es2015 || pkg.module,
         }),
+        pathFilter: (pkg) => {
+          if (!pkg.exports) {
+            return path;
+          }
+
+          return resolveExports(pkg, path) || path;
+        },
       });
     }
   } catch (e) {
