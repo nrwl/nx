@@ -1,5 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { getProjects, joinPathFragments, updateJson } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 export default async function (tree: Tree) {
   const LIBRARY_EXECUTORS = [
@@ -10,28 +11,27 @@ export default async function (tree: Tree) {
 
   const tsConfigFilesToUpdate = new Set<string>();
   const ngPackageFilesToUpdate = new Set<string>();
-  for (const [projectName, project] of projects.entries()) {
-    for (const [targetName, target] of Object.entries(project.targets)) {
-      if (LIBRARY_EXECUTORS.includes(target.executor)) {
-        // UPDATE THE TSCONFIG JSON
-        const tsConfigPath = joinPathFragments(
-          project.root,
-          'tsconfig.lib.prod.json'
-        );
-        if (tree.exists(tsConfigPath)) {
-          tsConfigFilesToUpdate.add(tsConfigPath);
-        }
-
-        const ngPackageFilePath = joinPathFragments(
-          project.root,
-          'ng-package.json'
-        );
-        if (tree.exists(ngPackageFilePath)) {
-          ngPackageFilesToUpdate.add(ngPackageFilePath);
-        }
+  LIBRARY_EXECUTORS.forEach((executor) => {
+    forEachExecutorOptions(tree, executor, (opts, projectName) => {
+      const project = projects.get(projectName);
+      // UPDATE THE TSCONFIG JSON
+      const tsConfigPath = joinPathFragments(
+        project.root,
+        'tsconfig.lib.prod.json'
+      );
+      if (tree.exists(tsConfigPath)) {
+        tsConfigFilesToUpdate.add(tsConfigPath);
       }
-    }
-  }
+
+      const ngPackageFilePath = joinPathFragments(
+        project.root,
+        'ng-package.json'
+      );
+      if (tree.exists(ngPackageFilePath)) {
+        ngPackageFilesToUpdate.add(ngPackageFilePath);
+      }
+    });
+  });
 
   for (const tsConfigPath of tsConfigFilesToUpdate) {
     updateJson(tree, tsConfigPath, (json) => {
