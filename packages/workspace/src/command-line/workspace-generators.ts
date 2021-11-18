@@ -68,7 +68,7 @@ function getToolsOutDir() {
   const outDir = toolsTsConfig().compilerOptions.outDir;
 
   if (!outDir) {
-    logger.error('tsconfig.tools.json must specify an outDir');
+    logger.error(`${toolsTsConfigPath} must specify an outDir`);
     process.exit(1);
   }
 
