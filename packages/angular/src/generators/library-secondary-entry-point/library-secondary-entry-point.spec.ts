@@ -47,7 +47,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       'libs/lib1/package.json',
       JSON.stringify({ name: '@my-org/lib1' })
     );
-    tree.write('libs/lib1/testing/package.json', '');
+    tree.write('libs/lib1/testing/ng-package.json', '');
 
     await expect(() =>
       librarySecondaryEntryPointGenerator(tree, {
@@ -72,7 +72,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       library: 'lib1',
     });
 
-    expect(tree.exists('libs/lib1/testing/package.json')).toBeTruthy();
+    expect(tree.exists('libs/lib1/testing/ng-package.json')).toBeTruthy();
     expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
     expect(tree.exists('libs/lib1/testing/src/index.ts')).toBeTruthy();
     expect(
@@ -98,8 +98,8 @@ describe('librarySecondaryEntryPoint generator', () => {
       library: 'lib1',
     });
 
-    const packageJson = readJson(tree, 'libs/lib1/testing/package.json');
-    expect(packageJson.ngPackage.lib.entryFile).toBe('src/index.ts');
+    const ngPackageJson = readJson(tree, 'libs/lib1/testing/ng-package.json');
+    expect(ngPackageJson.lib.entryFile).toBe('src/index.ts');
   });
 
   it('should add the path mapping for the entry point', async () => {
@@ -197,7 +197,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       expect(
         tree.exists('libs/lib1/testing/src/lib/testing.module.ts')
       ).toBeFalsy();
-      expect(tree.exists('libs/lib1/testing/package.json')).toBeTruthy();
+      expect(tree.exists('libs/lib1/testing/ng-package.json')).toBeTruthy();
       expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
       expect(tree.exists('libs/lib1/testing/src/index.ts')).toBeTruthy();
       expect(
