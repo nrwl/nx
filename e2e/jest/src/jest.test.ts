@@ -97,4 +97,16 @@ describe('Jest', () => {
     ); // text
     expect(result.stdout).toContain('Coverage summary'); // text-summary
   }, 90000);
+
+  it('should be able to test node lib with babel-jest', async () => {
+    const libName = uniq('babel-test-lib');
+    runCLI(
+      `generate @nrwl/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
+    );
+
+    const cliResults = await runCLIAsync(`test ${libName}`);
+    expect(cliResults.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+  });
 });
