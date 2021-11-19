@@ -34,7 +34,7 @@ export default async function eslint8Updates(tree: Tree) {
       }
       const categoryPropertyAssignmentNode = tsquery(
         fileAst,
-        'PropertyAssignment[name.escapedText=category]'
+        'PropertyAssignment[name.escapedText=meta] PropertyAssignment[name.escapedText=docs]  PropertyAssignment[name.escapedText=category]'
       )[0];
       if (!categoryPropertyAssignmentNode) {
         return;
