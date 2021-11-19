@@ -25,6 +25,12 @@ export const tasksRunnerV2 = (
     nxJson: NxJsonConfiguration;
   }
 ): Observable<any> => {
+  if (!options.lifeCycle.startCommand) {
+    throw new Error(
+      `If you are using Nx Cloud, update the version of @nrwl/nx-cloud to >=13.0.0`
+    );
+  }
+
   const r = new Subject<any>();
   (defaultTasksRunner(tasks, options, context) as any)
     .then((tasks: { [id: string]: TaskStatus }) => {
