@@ -30,7 +30,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "gatsby": "^4.1.3"
+    "gatsby": "^4.2.0"
   },
   "dependencies": {
     "@nrwl/cypress": "*",
@@ -39,7 +39,7 @@
     "@nrwl/jest": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
-    "gatsby-cli": "^4.1.2",
-    "gatsby-codemods": "^3.1.0"
+    "gatsby-cli": "^4.2.0",
+    "gatsby-codemods": "^3.2.0"
   }
 }
