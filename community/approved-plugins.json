@@ -1,5 +1,10 @@
 [
   {
+    "name": "nx-plugins",
+    "description": "Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.",
+    "url": "https://github.com/LinbuduLab/nx-plugins"
+  },
+  {
     "name": "@codebrew/nx-aws-cdk",
     "description": "An Nx plugin for aws cdk develop.",
     "url": "https://github.com/codebrewlab/nx-plugins/tree/main/packages/nx-aws-cdk"
