@@ -58,7 +58,7 @@ describe('Angular Package', () => {
     });
 
     describe('build storybook', () => {
-      it('should execute e2e tests using Cypress running against Storybook', async () => {
+      xit('should execute e2e tests using Cypress running against Storybook', async () => {
         if (isNotWindows()) {
           const myapp = uniq('myapp');
           runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);

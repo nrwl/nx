@@ -47,7 +47,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> =
         (options as any)['maxParallel'] || 3
       );
     } else if (options.parallel === undefined) {
-      options.parallel = 3;
+      options.parallel = Number((options as any)['maxParallel'] || 3);
     }
 
     options.lifeCycle.startCommand();

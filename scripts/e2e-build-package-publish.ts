@@ -94,10 +94,13 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
 
 function build(nxVersion: string) {
   try {
+    const b = new Date();
     execSync('npx nx run-many --target=build --all --parallel=8', {
       stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, NX_INVOKED_BY_RUNNER: 'false' },
     });
-    console.log('Packages built successfully');
+    const a = new Date();
+    console.log(`Packages built successfully in ${a.getTime() - b.getTime()}`);
   } catch (e) {
     console.log(e.output.toString());
     console.log('Build failed. See error above.');
