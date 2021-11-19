@@ -2,7 +2,7 @@
   {
     "name": "nx-plugins",
     "description": "Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.",
-    "url": "https://github.com/LinbuduLab/nx-plugins"
+    "url": "https://nx-plugins.netlify.app/"
   },
   {
     "name": "@codebrew/nx-aws-cdk",
