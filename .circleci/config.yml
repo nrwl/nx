@@ -197,7 +197,7 @@ jobs:
       - run:
           name: Run E2E Tests
           command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox --parallel --max-parallel=1
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox,e2e-gatsby --parallel --max-parallel=1
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
@@ -255,6 +255,10 @@ workflows:
           name: 'agent8'
       - agent:
           name: 'agent9'
+          pm: 'npm'
+          os: 'macos'
+      - agent:
+          name: 'agent10'
           pm: 'npm'
           os: 'macos'
       # - agent:

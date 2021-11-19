@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/react"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/react",
         "tsConfig": "packages/react/tsconfig.lib.json",
-        "packageJson": "packages/react/package.json",
         "main": "packages/react/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/react",

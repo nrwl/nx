@@ -26,13 +26,11 @@
       "outputs": ["coverage/packages/react-native"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/react-native",
         "tsConfig": "packages/react-native/tsconfig.lib.json",
-        "packageJson": "packages/react-native/package.json",
         "main": "packages/react-native/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/react-native/*.md",
           {

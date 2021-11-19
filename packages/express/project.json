@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/express"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/express",
         "tsConfig": "packages/express/tsconfig.lib.json",
-        "packageJson": "packages/express/package.json",
         "main": "packages/express/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/express",

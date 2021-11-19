@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/storybook"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/storybook",
         "tsConfig": "packages/storybook/tsconfig.lib.json",
-        "packageJson": "packages/storybook/package.json",
         "main": "packages/storybook/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/storybook",

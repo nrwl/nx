@@ -13,7 +13,7 @@
       "outputs": ["coverage/packages/workspace"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/workspace",
         "tsConfig": "packages/workspace/tsconfig.lib.json",
@@ -24,8 +24,7 @@
           {
             "input": "packages/workspace",
             "glob": "**/files/**",
-            "output": "/",
-            "dot": true
+            "output": "/"
           },
           {
             "input": "packages/workspace",

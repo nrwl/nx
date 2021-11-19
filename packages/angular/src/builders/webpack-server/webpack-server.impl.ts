@@ -41,24 +41,28 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
     );
 
     if (existsSync(pathToWebpackConfig)) {
-      return serveWebpackBrowser(options as DevServerBuilderOptions, context, {
-        webpackConfiguration: async (baseWebpackConfig) => {
-          const customWebpackConfiguration = require(pathToWebpackConfig);
-          // The extra Webpack configuration file can export a synchronous or asynchronous function,
-          // for instance: `module.exports = async config => { ... }`.
-          if (typeof customWebpackConfiguration === 'function') {
-            return customWebpackConfiguration(baseWebpackConfig);
-          } else {
-            return merge(
-              baseWebpackConfig,
-              // The extra Webpack configuration file can also export a Promise, for instance:
-              // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
-              // then await will just resolve that object.
-              await customWebpackConfiguration
-            );
-          }
-        },
-      });
+      return serveWebpackBrowser(
+        options as DevServerBuilderOptions,
+        context as any,
+        {
+          webpackConfiguration: async (baseWebpackConfig) => {
+            const customWebpackConfiguration = require(pathToWebpackConfig);
+            // The extra Webpack configuration file can export a synchronous or asynchronous function,
+            // for instance: `module.exports = async config => { ... }`.
+            if (typeof customWebpackConfiguration === 'function') {
+              return customWebpackConfiguration(baseWebpackConfig);
+            } else {
+              return merge(
+                baseWebpackConfig,
+                // The extra Webpack configuration file can also export a Promise, for instance:
+                // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
+                // then await will just resolve that object.
+                await customWebpackConfiguration
+              );
+            }
+          },
+        }
+      );
     } else {
       throw new Error(
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
@@ -66,7 +70,10 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
     }
   }
 
-  return serveWebpackBrowser(options as DevServerBuilderOptions, context);
+  return serveWebpackBrowser(
+    options as DevServerBuilderOptions,
+    context as any
+  );
 }
 
-export default createBuilder<JsonObject & Schema>(webpackServer);
+export default createBuilder<JsonObject & Schema>(webpackServer) as any;

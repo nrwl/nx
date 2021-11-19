@@ -82,13 +82,22 @@ describe('TasksSchedule', () => {
       },
     };
 
-    taskSchedule = new TasksSchedule(taskGraph, workspace as Workspaces, {
-      lifeCycle: {
-        startTask: jest.fn(),
-        endTask: jest.fn(),
-        scheduleTask: jest.fn(),
-      },
-    });
+    const hasher = {
+      hashTaskWithDepsAndContext: () => 'hash',
+    } as any;
+
+    taskSchedule = new TasksSchedule(
+      hasher,
+      taskGraph,
+      workspace as Workspaces,
+      {
+        lifeCycle: {
+          startTask: jest.fn(),
+          endTask: jest.fn(),
+          scheduleTask: jest.fn(),
+        },
+      }
+    );
   });
 
   describe('Without Batch Mode', () => {
@@ -107,14 +116,14 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextTask()).toBeNull();
     });
 
-    it('should schedule root tasks first', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should schedule root tasks first', async () => {
+      await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextTask()).toEqual(lib1Build);
       expect(taskSchedule.nextTask()).toEqual(app2Build);
     });
 
-    it('should not schedule any tasks that still have uncompleted dependencies', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should not schedule any tasks that still have uncompleted dependencies', async () => {
+      await taskSchedule.scheduleNextTasks();
       taskSchedule.nextTask();
       taskSchedule.nextTask();
       expect(taskSchedule.nextTask()).toBeNull();
@@ -124,18 +133,18 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextTask()).toBeNull();
     });
 
-    it('should continue to schedule tasks that have completed dependencies', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should continue to schedule tasks that have completed dependencies', async () => {
+      await taskSchedule.scheduleNextTasks();
       taskSchedule.nextTask();
       taskSchedule.nextTask();
       taskSchedule.complete([lib1Build.id]);
 
-      taskSchedule.scheduleNextTasks();
+      await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextTask()).toEqual(app1Build);
     });
 
-    it('should run out of tasks when they are all complete', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should run out of tasks when they are all complete', async () => {
+      await taskSchedule.scheduleNextTasks();
       taskSchedule.nextTask();
       taskSchedule.nextTask();
       taskSchedule.complete([lib1Build.id, app1Build.id, app2Build.id]);
@@ -143,8 +152,8 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.hasTasks()).toEqual(false);
     });
 
-    it('should not schedule batches', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should not schedule batches', async () => {
+      await taskSchedule.scheduleNextTasks();
 
       expect(taskSchedule.nextTask()).not.toBeNull();
 
@@ -163,8 +172,8 @@ describe('TasksSchedule', () => {
       process.env['NX_BATCH_MODE'] = original;
     });
 
-    it('should schedule batches of tasks by different executors', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should schedule batches of tasks by different executors', async () => {
+      await taskSchedule.scheduleNextTasks();
 
       expect(taskSchedule.nextTask()).toBeNull();
 
@@ -181,8 +190,8 @@ describe('TasksSchedule', () => {
       });
     });
 
-    it('should run out of tasks when all batches are done', () => {
-      taskSchedule.scheduleNextTasks();
+    it('should run out of tasks when all batches are done', async () => {
+      await taskSchedule.scheduleNextTasks();
       taskSchedule.nextBatch();
       taskSchedule.nextBatch();
       taskSchedule.complete(['app1:build', 'lib1:build', 'app2:build']);

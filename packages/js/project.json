@@ -19,13 +19,11 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/js",
         "tsConfig": "packages/js/tsconfig.lib.json",
-        "packageJson": "packages/js/package.json",
         "main": "packages/js/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/js",

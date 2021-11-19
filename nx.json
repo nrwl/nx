@@ -23,8 +23,13 @@
           "sitemap"
         ],
         "useDaemonProcess": true,
-        "runtimeCacheInputs": ["echo $SELECTED_CLI", "echo $E2E_CI_CACHE_KEY"],
-        "cacheDirectory": "/tmp/nx-cache"
+        "runtimeCacheInputs": [
+          "echo $SELECTED_CLI",
+          "echo $NX_E2E_CI_CACHE_KEY"
+        ],
+        "cacheDirectory": "/tmp/nx-cache",
+        "parallel": 1,
+        "scan": false
       }
     }
   },
