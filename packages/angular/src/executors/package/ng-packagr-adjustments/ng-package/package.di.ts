@@ -18,7 +18,6 @@ import {
 import {
   INIT_TS_CONFIG_TOKEN,
   INIT_TS_CONFIG_TRANSFORM,
-  provideTsConfig,
 } from 'ng-packagr/lib/ng-package/entry-point/init-tsconfig.di';
 import {
   DEFAULT_OPTIONS_PROVIDER,
