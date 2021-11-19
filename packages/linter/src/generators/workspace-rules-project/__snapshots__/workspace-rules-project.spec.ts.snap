@@ -94,7 +94,7 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
     '^.+\\\\\\\\.[tj]s$':  'ts-jest' 
   },
     moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/tools/eslint-rules'
+  coverageDirectory: '../../coverage/tools/eslint-rules',\\"moduleNameMapper\\": {\\"@eslint/eslintrc\\":\\"@eslint/eslintrc/dist/eslintrc-universal.cjs\\"}
 };
 "
 `;

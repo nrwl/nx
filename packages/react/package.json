@@ -41,7 +41,7 @@
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
     "@svgr/webpack": "^5.5.0",
     "chalk": "4.1.0",
-    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.23.1",
     "eslint-plugin-react-hooks": "^4.2.0",
