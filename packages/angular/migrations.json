@@ -1104,6 +1104,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.2.1": {
+      "version": "13.2.1-beta.0",
+      "packages": {
+        "@angular/localize": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
