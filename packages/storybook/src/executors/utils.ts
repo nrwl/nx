@@ -232,6 +232,13 @@ export function resolveCommonStorybookOptionMapper(
     }
     const project = context.workspace.projects[buildProjectName];
 
+    const angularDevkitCompatibleLogger = {
+      ...logger,
+      createChild() {
+        return angularDevkitCompatibleLogger;
+      },
+    };
+
     // construct a builder object for Storybook
     storybookOptions.angularBuilderContext = {
       target: {
@@ -245,11 +252,7 @@ export function resolveCommonStorybookOptionMapper(
       getTargetOptions: () => {
         return targetOptions;
       },
-      logger: {
-        createChild(name) {
-          return logger;
-        },
-      },
+      logger: angularDevkitCompatibleLogger,
     };
   } else {
     // keep the backwards compatibility
