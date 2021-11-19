@@ -26,7 +26,7 @@ export function VscodePlugin(): ReactComponentElement<any> {
     },
   };
   const controls = useAnimation();
-  const [ref, inView] = useInView({ threshold: 0.5, triggerOnce: true });
+  const [ref, inView] = useInView({ triggerOnce: true });
 
   useEffect(() => {
     if (!inView) return;
