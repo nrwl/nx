@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/create-nx-workspace"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/create-nx-workspace",
         "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
-        "packageJson": "packages/create-nx-workspace/package.json",
         "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/create-nx-workspace",

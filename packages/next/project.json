@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/next"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/next",
         "tsConfig": "packages/next/tsconfig.lib.json",
-        "packageJson": "packages/next/package.json",
         "main": "packages/next/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/next",

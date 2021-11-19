@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/jest"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/jest",
         "tsConfig": "packages/jest/tsconfig.lib.json",
-        "packageJson": "packages/jest/package.json",
         "main": "packages/jest/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/jest",

@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/tao"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/tao",
         "tsConfig": "packages/tao/tsconfig.lib.json",
-        "packageJson": "packages/tao/package.json",
         "main": "packages/tao/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/tao",

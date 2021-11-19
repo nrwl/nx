@@ -10,7 +10,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
   calculateReverseDeps,
-  getCustomHasher,
   getExecutorForTask,
   getOutputs,
   removeTasksFromTaskGraph,
@@ -22,6 +21,7 @@ export class TaskOrchestrator {
   private workspace = new Workspaces(appRootPath);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
   private tasksSchedule = new TasksSchedule(
+    this.hasher,
     this.taskGraph,
     this.workspace,
     this.options
@@ -46,7 +46,7 @@ export class TaskOrchestrator {
 
   async run() {
     // initial scheduling
-    this.tasksSchedule.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
     performance.mark('task-execution-begins');
 
     const threads = [];
@@ -198,15 +198,6 @@ export class TaskOrchestrator {
         batch
       );
       const batchResultEntries = Object.entries(results);
-
-      // Hash tasks after the batch is done
-      // Tasks that are not at the root might need to be updated
-      await Promise.all(
-        batchResultEntries.map(([taskId]) =>
-          this.hashTask(this.taskGraph.tasks[taskId])
-        )
-      );
-
       return batchResultEntries.map(([taskId, result]) => ({
         task: this.taskGraph.tasks[taskId],
         status: (result.success ? 'success' : 'failure') as TaskStatus,
@@ -288,8 +279,6 @@ export class TaskOrchestrator {
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[]) {
-    // Hash the task before it is run
-    await Promise.all(tasks.map((task) => this.hashTask(task)));
     this.options.lifeCycle.startTasks(tasks);
   }
 
@@ -338,7 +327,7 @@ export class TaskOrchestrator {
       })
     );
 
-    this.tasksSchedule.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
   }
 
   private complete(
@@ -371,15 +360,6 @@ export class TaskOrchestrator {
   //endregion Lifecycle
 
   // region utils
-
-  private async hashTask(task: Task) {
-    const customHasher = getCustomHasher(task, this.workspace);
-    const { value, details } = await (customHasher
-      ? customHasher(task, this.taskGraph, this.hasher)
-      : this.hasher.hashTaskWithDepsAndContext(task));
-    task.hash = value;
-    task.hashDetails = details;
-  }
 
   private pipeOutputCapture(task: Task) {
     try {

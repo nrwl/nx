@@ -68,7 +68,7 @@ function buildAppWithCustomWebpackConfiguration(
   context: BuilderContext,
   pathToWebpackConfig: string
 ) {
-  return executeBrowserBuilder(options, context, {
+  return executeBrowserBuilder(options, context as any, {
     webpackConfiguration: async (baseWebpackConfig) => {
       const customWebpackConfiguration = require(pathToWebpackConfig);
       // The extra Webpack configuration file can export a synchronous or asynchronous function,
@@ -127,4 +127,4 @@ function run(
   );
 }
 
-export default createBuilder<JsonObject & BrowserBuilderSchema>(run);
+export default createBuilder<JsonObject & BrowserBuilderSchema>(run) as any;

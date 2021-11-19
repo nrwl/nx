@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/cli"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/cli",
         "tsConfig": "packages/cli/tsconfig.lib.json",
-        "packageJson": "packages/cli/package.json",
         "main": "packages/cli/bin/nx.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/cli",

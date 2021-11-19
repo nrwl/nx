@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/web"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/web",
         "tsConfig": "packages/web/tsconfig.lib.json",
-        "packageJson": "packages/web/package.json",
         "main": "packages/web/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/web",

@@ -4,11 +4,13 @@ import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 import {
   calculateReverseDeps,
+  getCustomHasher,
   getExecutorForTask,
   getExecutorNameForTask,
   removeTasksFromTaskGraph,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
 
 export interface Batch {
   executorName: string;
@@ -26,18 +28,19 @@ export class TasksSchedule {
   private completedTasks = new Set<string>();
 
   constructor(
+    private readonly hasher: Hasher,
     private taskGraph: TaskGraph,
     private workspace: Workspaces,
     private options: DefaultTasksRunnerOptions
   ) {}
 
-  public scheduleNextTasks() {
+  public async scheduleNextTasks() {
     if (process.env.NX_BATCH_MODE === 'true') {
       this.scheduleBatches();
     }
     for (let root of this.notScheduledTaskGraph.roots) {
       if (this.canBeScheduled(root)) {
-        this.scheduleTask(root);
+        await this.scheduleTask(root);
       }
     }
   }
@@ -75,8 +78,9 @@ export class TasksSchedule {
       : null;
   }
 
-  private scheduleTask(taskId: string) {
+  private async scheduleTask(taskId: string) {
     const task = this.taskGraph.tasks[taskId];
+    await this.hashTask(task);
 
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
@@ -154,5 +158,14 @@ export class TasksSchedule {
     return this.taskGraph.dependencies[taskId].every((id) =>
       this.completedTasks.has(id)
     );
+  }
+
+  private async hashTask(task: Task) {
+    const customHasher = getCustomHasher(task, this.workspace);
+    const { value, details } = await (customHasher
+      ? customHasher(task, this.taskGraph, this.hasher)
+      : this.hasher.hashTaskWithDepsAndContext(task));
+    task.hash = value;
+    task.hashDetails = details;
   }
 }

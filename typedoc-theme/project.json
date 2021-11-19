@@ -4,7 +4,7 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/workspace:tsc",
+      "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/typedoc-theme",
