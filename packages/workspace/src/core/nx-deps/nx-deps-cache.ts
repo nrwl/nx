@@ -183,10 +183,10 @@ export function extractCachedFileData(
   cachedFileData: { [project: string]: { [file: string]: FileData } };
 } {
   const filesToProcess: ProjectFileMap = {};
+  const cachedFileData: Record<string, Record<string, FileData>> = {};
   const currentProjects = Object.keys(fileMap).filter(
     (name) => fileMap[name].length > 0
   );
-  const cachedFileData = {};
   currentProjects.forEach((p) => {
     processProjectNode(p, c.nodes[p], cachedFileData, filesToProcess, fileMap);
   });
