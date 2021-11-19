@@ -3,6 +3,7 @@
  *
  * Changes made:
  * - Added the filePath parameter to the cache key.
+ * - Refactored caching to take into account TailwindCSS processing.
  * - Added PostCSS plugins needed to support TailwindCSS.
  * - Added watch mode parameter.
  */
@@ -20,7 +21,12 @@ import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, resolve } from 'path';
 import * as postcssPresetEnv from 'postcss-preset-env';
 import * as postcssUrl from 'postcss-url';
-import { getTailwindPostCssPluginsIfPresent } from '../utilities/tailwindcss';
+import {
+  getTailwindPostCssPlugins,
+  getTailwindSetup,
+  tailwindDirectives,
+  TailwindSetup,
+} from '../utilities/tailwindcss';
 
 const postcss = require('postcss');
 
@@ -47,6 +53,7 @@ export class StylesheetProcessor {
   private targets: string[];
   private postCssProcessor: ReturnType<typeof postcss>;
   private esbuild = new EsbuildExecutor();
+  private tailwindSetup: TailwindSetup | undefined;
 
   constructor(
     private readonly basePath: string,
@@ -71,6 +78,7 @@ export class StylesheetProcessor {
 
     this.browserslistData = browserslist(undefined, { path: this.basePath });
     this.targets = transformSupportedBrowsersToTargets(this.browserslistData);
+    this.tailwindSetup = getTailwindSetup(this.basePath);
     this.postCssProcessor = this.createPostCssPlugins();
   }
 
@@ -84,11 +92,12 @@ export class StylesheetProcessor {
     let key: string | undefined;
 
     if (
+      this.cacheDirectory &&
       !content.includes('@import') &&
       !content.includes('@use') &&
-      this.cacheDirectory
+      !this.containsTailwindDirectives(content)
     ) {
-      // No transitive deps, we can cache more aggressively.
+      // No transitive deps and no Tailwind directives, we can cache more aggressively.
       key = await generateKey(content, ...this.browserslistData, filePath);
       const result = await readCacheEntry(this.cacheDirectory, key);
       if (result) {
@@ -101,18 +110,23 @@ export class StylesheetProcessor {
     // Render pre-processor language (sass, styl, less)
     const renderedCss = await this.renderCss(filePath, content);
 
-    // We cannot cache CSS re-rendering phase, because a transitive dependency via (@import) can case different CSS output.
-    // Example a change in a mixin or SCSS variable.
-    if (!key) {
-      key = await generateKey(renderedCss, ...this.browserslistData, filePath);
-    }
-
+    let containsTailwindDirectives = false;
     if (this.cacheDirectory) {
-      const cachedResult = await readCacheEntry(this.cacheDirectory, key);
-      if (cachedResult) {
-        cachedResult.warnings.forEach((msg) => log.warn(msg));
+      containsTailwindDirectives = this.containsTailwindDirectives(renderedCss);
+      if (!containsTailwindDirectives) {
+        // No Tailwind directives to process by PostCSS, we can return cached results
+        if (!key) {
+          key = await generateKey(
+            renderedCss,
+            ...this.browserslistData,
+            filePath
+          );
+        }
 
-        return cachedResult.css;
+        const cachedResult = await this.getCachedResult(key);
+        if (cachedResult) {
+          return cachedResult;
+        }
       }
     }
 
@@ -121,6 +135,17 @@ export class StylesheetProcessor {
       from: filePath,
       to: filePath.replace(extname(filePath), '.css'),
     });
+
+    if (this.cacheDirectory && containsTailwindDirectives) {
+      // We had Tailwind directives to process by PostCSS, only now
+      // is safe to return cached results
+      key = await generateKey(result.css, ...this.browserslistData, filePath);
+
+      const cachedResult = await this.getCachedResult(key);
+      if (cachedResult) {
+        return cachedResult;
+      }
+    }
 
     const warnings = result.warnings().map((w) => w.toString());
     const { code, warnings: esBuildWarnings } = await this.esbuild.transform(
@@ -156,19 +181,41 @@ export class StylesheetProcessor {
     return code;
   }
 
+  private async getCachedResult(key: string): Promise<string | undefined> {
+    const cachedResult = await readCacheEntry(
+      this.cacheDirectory as string,
+      key
+    );
+    if (cachedResult) {
+      cachedResult.warnings.forEach((msg) => log.warn(msg));
+
+      return cachedResult.css;
+    }
+
+    return undefined;
+  }
+
+  private containsTailwindDirectives(content: string): boolean {
+    return (
+      this.tailwindSetup && tailwindDirectives.some((d) => content.includes(d))
+    );
+  }
+
   private createPostCssPlugins(): ReturnType<typeof postcss> {
     const postCssPlugins = [];
     if (this.cssUrl !== CssUrl.none) {
       postCssPlugins.push(postcssUrl({ url: this.cssUrl }));
     }
 
-    postCssPlugins.push(
-      ...getTailwindPostCssPluginsIfPresent(
-        this.basePath,
-        this.styleIncludePaths,
-        this.watch
-      )
-    );
+    if (this.tailwindSetup) {
+      postCssPlugins.push(
+        ...getTailwindPostCssPlugins(
+          this.tailwindSetup,
+          this.styleIncludePaths,
+          this.watch
+        )
+      );
+    }
 
     postCssPlugins.push(
       postcssPresetEnv({
@@ -288,7 +335,7 @@ function customSassImporter(
     return undefined;
   }
 
-  const result = resolveImport(url.substr(1), prev);
+  const result = resolveImport(url.substring(1), prev);
   if (!result) {
     return undefined;
   }
