@@ -50,7 +50,7 @@ export async function createProjectGraphAsync(
 ): Promise<ProjectGraph> {
   const nxJson = readNxJson();
   const useDaemonProcessOption =
-    nxJson.tasksRunnerOptions['default']?.options?.useDaemonProcess;
+    nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
   if (useDaemonProcessOption !== true && process.env.NX_DAEMON !== 'true') {
     return projectGraphAdapter(
       '5.0',
