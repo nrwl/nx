@@ -24,6 +24,7 @@ describe('Jest Executor', () => {
   let mockContext: ExecutorContext;
   const defaultOptions: Omit<JestExecutorOptions, 'jestConfig'> = {
     testPathPattern: [],
+    testFromSource: true,
   };
 
   beforeEach(async () => {
@@ -113,6 +114,7 @@ describe('Jest Executor', () => {
           coverageReporters: ['test'],
           coverageDirectory: '/test/coverage',
           watch: false,
+          testFromSource: true,
         },
         mockContext
       );
@@ -193,6 +195,7 @@ describe('Jest Executor', () => {
           watch: false,
           watchAll: false,
           testLocationInResults: true,
+          testFromSource: true,
         },
         mockContext
       );

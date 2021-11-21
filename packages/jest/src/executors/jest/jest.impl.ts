@@ -103,13 +103,9 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  await createProjectGraphAsync();
-
   const config = await jestConfigParser(options, context);
 
-  const { results } = await runCLI(config, [
-    options.testFromSource ? config.config : options.jestConfig,
-  ]);
+  const { results } = await runCLI(config, [options.jestConfig]);
 
   return { success: results.success };
 }
@@ -213,6 +209,8 @@ export async function jestConfigParser(
    * using ts-jest to compile the dependencies
    */
   if (!options.testFromSource && !options.watch && !options.watchAll) {
+    // We only need to create the cached project graph if not testing from source
+    await createProjectGraphAsync();
     const projGraph = readCachedProjectGraph();
     const { dependencies } = calculateProjectDependencies(
       projGraph,
