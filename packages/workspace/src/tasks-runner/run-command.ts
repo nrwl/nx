@@ -217,6 +217,10 @@ function addTasksForProjectTarget(
     errorIfCannotFindConfiguration,
   });
 
+  if (tasksMap.has(task.id)) {
+    return;
+  }
+
   const dependencyConfigs = getDependencyConfigs(
     { project: project.name, target },
     defaultDependencyConfigs,
