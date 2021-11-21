@@ -6,12 +6,12 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Schema } from '../../utils/schema';
+import { GeneratorSchema } from '../../utils/schema';
 import libraryGenerator from './library';
 
 describe('lib', () => {
   let tree: Tree;
-  const defaultOptions: Omit<Schema, 'name'> = {
+  const defaultOptions: Omit<GeneratorSchema, 'name'> = {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,
@@ -667,6 +667,38 @@ describe('lib', () => {
           },
           outputs: ['{options.outputPath}'],
         });
+      });
+
+      it('should generate the build target for swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          compiler: 'swc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build).toEqual({
+          executor: '@nrwl/js:swc',
+          options: {
+            assets: ['libs/my-lib/*.md'],
+            main: 'libs/my-lib/src/index.ts',
+            outputPath: 'dist/libs/my-lib',
+            tsConfig: 'libs/my-lib/tsconfig.lib.json',
+          },
+          outputs: ['{options.outputPath}'],
+        });
+      });
+
+      it('should generate swcrc for swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          compiler: 'swc',
+        });
+
+        expect(tree.exists('libs/my-lib/.swcrc')).toBeTruthy();
       });
 
       it('should generate a package.json file', async () => {

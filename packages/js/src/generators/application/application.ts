@@ -1,9 +1,12 @@
 import { convertNxGenerator, getWorkspaceLayout, Tree } from '@nrwl/devkit';
 import { join } from 'path';
 import { projectGenerator } from '../../utils/project-generator';
-import { Schema } from '../../utils/schema';
+import { GeneratorSchema } from '../../utils/schema';
 
-export async function applicationGenerator(tree: Tree, schema: Schema) {
+export async function applicationGenerator(
+  tree: Tree,
+  schema: GeneratorSchema
+) {
   const { appsDir } = getWorkspaceLayout(tree);
   return projectGenerator(
     tree,

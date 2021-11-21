@@ -5,6 +5,11 @@
       "implementation": "./src/executors/tsc/tsc.impl",
       "schema": "./src/executors/tsc/schema.json",
       "description": "Build a project using TypeScript."
+    },
+    "swc": {
+      "implementation": "./src/executors/swc/swc.impl",
+      "schema": "./src/executors/swc/schema.json",
+      "description": "Build a project using SWC"
     }
   },
   "builders": {
@@ -12,6 +17,11 @@
       "implementation": "./src/executors/tsc/compat",
       "schema": "./src/executors/tsc/schema.json",
       "description": "Build a project using TypeScript."
+    },
+    "swc": {
+      "implementation": "./src/executors/swc/compat",
+      "schema": "./src/executors/swc/schema.json",
+      "description": "Build a project using SWC"
     }
   }
 }

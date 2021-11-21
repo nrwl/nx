@@ -5,23 +5,26 @@ jest.mock('@nrwl/tao/src/utils/fileutils');
 jest.mock('@nrwl/workspace/src/utilities/typescript/compilation');
 
 import { ExecutorContext } from '@nrwl/devkit';
-import { join } from 'path';
-import { copyAssets } from '@nrwl/workspace/src/utilities/assets';
+import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+import {
+  assetGlobsToFiles,
+  copyAssetFiles,
+} from '@nrwl/workspace/src/utilities/assets';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
 import { compileTypeScript } from '@nrwl/workspace/src/utilities/typescript/compilation';
-import { TypeScriptExecutorOptions } from './schema';
+import { join } from 'path';
+import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { tscExecutor } from './tsc.impl';
 
 describe('executor: tsc', () => {
   const assets = ['some-file.md'];
   let context: ExecutorContext;
-  let normalizedOptions: TypeScriptExecutorOptions;
-  let options: TypeScriptExecutorOptions;
+  let normalizedOptions: NormalizedExecutorOptions;
+  let options: ExecutorOptions;
   const defaultPackageJson = { name: 'workspacelib', version: '0.0.1' };
   const compileTypeScriptMock = compileTypeScript as jest.Mock;
   const readJsonFileMock = readJsonFile as jest.Mock;
@@ -65,6 +68,11 @@ describe('executor: tsc', () => {
     };
     normalizedOptions = {
       ...options,
+      files: assetGlobsToFiles(
+        options.assets,
+        context.root,
+        options.outputPath
+      ),
       outputPath: join(context.root, options.outputPath),
       tsConfig: join(context.root, options.tsConfig),
     };
@@ -94,12 +102,7 @@ describe('executor: tsc', () => {
 
   it('should copy assets before typescript compilation', async () => {
     await tscExecutor(options, context);
-
-    expect(copyAssets).toHaveBeenCalledWith(
-      assets,
-      context.root,
-      normalizedOptions.outputPath
-    );
+    expect(copyAssetFiles).toHaveBeenCalledWith(normalizedOptions.files);
   });
 
   describe('update package.json', () => {
