@@ -601,7 +601,7 @@ function taoPath() {
 function addToNodePath(dir: string) {
   // NODE_PATH is a delimited list of paths.
   // The delimiter is different for windows.
-  const delimiter = require('os').platform === 'win32' ? ';' : ':';
+  const delimiter = require('os').platform() === 'win32' ? ';' : ':';
 
   const paths = process.env.NODE_PATH
     ? process.env.NODE_PATH.split(delimiter)
