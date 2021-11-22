@@ -1,4 +1,4 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import type { FileData, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { isWorkspaceProject } from '../core/project-graph/operators';
 
 interface Reach {
@@ -120,10 +120,12 @@ export function findFilesInCircularPath(
 
   for (let i = 0; i < circularPath.length - 1; i++) {
     const next = circularPath[i + 1].name;
-    const files = circularPath[i].data.files;
+    const files: FileData[] = circularPath[i].data.files;
     filePathChain.push(
       Object.keys(files)
-        .filter((key) => files[key].deps?.indexOf(next) !== -1)
+        .filter(
+          (key) => files[key].deps && files[key].deps.indexOf(next) !== -1
+        )
         .map((key) => files[key].file)
     );
   }
