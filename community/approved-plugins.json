@@ -228,5 +228,10 @@
     "name": "@jnxplus/nx-boot-maven",
     "description": "Nx plugin to add Spring Boot and Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-maven"
+  },
+  {
+    "name": "@nxtensions/astro",
+    "description": "Nx plugin adding first class support for Astro (https://astro.build).",
+    "url": "https://github.com/nxtensions/nxtensions/tree/main/packages/astro"
   }
 ]
