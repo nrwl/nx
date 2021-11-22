@@ -26,6 +26,7 @@ import {
   getCachedSerializedProjectGraphPromise,
   resetInternalState,
 } from './project-graph-incremental-recomputation';
+import { statSync } from 'fs';
 
 function respondToClient(socket: Socket, message: string) {
   socket.write(message, () => {
@@ -228,7 +229,14 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
       if (event.type === 'delete') {
         deletedFiles.push(event.path);
       } else {
-        filesToHash.push(event.path);
+        try {
+          const s = statSync(join(appRootPath, event.path));
+          if (!s.isDirectory()) {
+            filesToHash.push(event.path);
+          }
+        } catch (e) {
+          // this can happen when the update file was deleted right after
+        }
       }
     }
     addUpdatedAndDeletedFiles(filesToHash, deletedFiles);

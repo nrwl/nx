@@ -88,9 +88,6 @@ function processCollectedUpdatedAndDeletedFiles() {
     appRootPath
   );
   const deletedFiles = [...collectedDeletedFiles.values()];
-  collectedUpdatedFiles.clear();
-  collectedDeletedFiles.clear();
-
   performance.mark('hash-watched-changes-end');
   performance.measure(
     'hash changed files from watcher',
@@ -119,6 +116,9 @@ function processCollectedUpdatedAndDeletedFiles() {
         )
       : createProjectFileMap(workspaceJson);
   }
+
+  collectedUpdatedFiles.clear();
+  collectedDeletedFiles.clear();
 }
 
 async function createAndSerializeProjectGraph() {

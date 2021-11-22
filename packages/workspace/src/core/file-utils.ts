@@ -332,6 +332,11 @@ export function updateProjectFileMap(
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
   const ignore = getIgnoredGlobs();
   const sortedProjects = sortProjects(workspaceJson);
+  for (let projectName of sortedProjects) {
+    if (!projectFileMap[projectName]) {
+      projectFileMap[projectName] = [];
+    }
+  }
 
   for (const f of updatedFiles.keys()) {
     if (ignore.ignores(f)) continue;
