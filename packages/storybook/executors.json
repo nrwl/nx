@@ -9,6 +9,11 @@
       "implementation": "./src/executors/build-storybook/compat",
       "schema": "./src/executors/build-storybook/schema.json",
       "description": "Build Storybook"
+    },
+    "composition": {
+      "implementation": "./src/executors/composition/compat",
+      "schema": "./src/executors/composition/schema.json",
+      "description": "Compose Storybooks"
     }
   },
   "executors": {
@@ -21,6 +26,11 @@
       "implementation": "./src/executors/build-storybook/build-storybook.impl",
       "schema": "./src/executors/build-storybook/schema.json",
       "description": "Build Storybook"
+    },
+    "composition": {
+      "implementation": "./src/executors/composition/composition.impl",
+      "schema": "./src/executors/composition/schema.json",
+      "description": "Compose Storybooks"
     }
   }
 }

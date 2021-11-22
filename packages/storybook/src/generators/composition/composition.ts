@@ -110,7 +110,8 @@ export async function compositionGenerator(
 
     You can now run the following command to start Storybook composition on http://localhost:4400:
 
-    // TODO: Add new command here
+    nx storybook-composition ${normalizedSchema.mainProject}
+
   `);
 }
 

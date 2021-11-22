@@ -1,0 +1,7 @@
+{
+  "title": "Storybook Composition",
+  "cli": "nx",
+  "description": "Compose Storybooks and serve them",
+  "type": "object",
+  "properties": {}
+}

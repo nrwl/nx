@@ -685,6 +685,11 @@
             "name": "storybook executor",
             "id": "storybook",
             "file": "angular/api-storybook/executors/storybook"
+          },
+          {
+            "name": "storybook composition",
+            "id": "composition",
+            "file": "angular/api-storybook/executors/composition"
           }
         ]
       },
@@ -2023,6 +2028,11 @@
                 "name": "storybook",
                 "id": "storybook",
                 "file": "react/api-storybook/executors/storybook"
+              },
+              {
+                "name": "storybook composition",
+                "id": "composition",
+                "file": "react/api-storybook/executors/composition"
               }
             ]
           }
@@ -3301,6 +3311,11 @@
             "name": "storybook executor",
             "id": "storybook",
             "file": "node/api-storybook/executors/storybook"
+          },
+          {
+            "name": "storybook composition",
+            "id": "composition",
+            "file": "node/api-storybook/executors/composition"
           }
         ]
       },
