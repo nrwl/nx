@@ -27,7 +27,7 @@ import {
 } from '../shared/workspace';
 import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
-import { EMPTY, Observable, of, concat, combineLatest } from 'rxjs';
+import { EMPTY, Observable, of, concat, combineLatest, queueScheduler } from 'rxjs';
 import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import { readJsonFile } from '../utils/fileutils';
@@ -487,7 +487,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               },
             }))
           );
-          observable = observable ? concat(observable, next) : next;
+          observable = observable ? concat(observable, next, queueScheduler) : next;
         }
       }
     );
