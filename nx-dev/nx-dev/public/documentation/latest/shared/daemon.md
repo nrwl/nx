@@ -31,6 +31,6 @@ If you ever need to manually shut down the Nx Daemon, you can run `nx reset` wit
 
 As of v13.0.0, the Nx Daemon is an opt-in feature while we gather real-world feedback. At Nrwl, we are already actively using it on our internal and client workspaces and have seen some huge performance increases for project graph computation on very large workspaces. We encourage you to consider enabling it on your workspace by following the instructions below:
 
-- To opt in to using the Nx Daemon, simply set `useDeamonProcess: true` in the runners options in nx.json.
+- To opt in to using the Nx Daemon, simply set `useDaemonProcess: true` in the runners options in nx.json.
 
 - To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon --help`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.
