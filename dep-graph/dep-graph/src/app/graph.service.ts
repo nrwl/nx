@@ -7,7 +7,7 @@ export function useGraphService(): GraphService {
   if (!graphService) {
     graphService = new GraphService(
       new GraphTooltipService(),
-      'graph-container'
+      'cytoscape-graph'
     );
   }
 

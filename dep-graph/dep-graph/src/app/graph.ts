@@ -281,6 +281,10 @@ export class GraphService {
     this.listenForProjectNodeHovers();
   }
 
+  getImage() {
+    return this.renderGraph.png({ bg: '#fff', full: true });
+  }
+
   private includeProjectsByDepth(
     projects: cy.NodeCollection | cy.NodeSingular,
     depth: number = -1
