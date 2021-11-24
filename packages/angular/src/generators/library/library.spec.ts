@@ -610,6 +610,95 @@ describe('lib', () => {
     });
   });
 
+  describe('at the root', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace(2, {
+        workspaceLayout: { libsDir: '' },
+      });
+    });
+
+    it('should accept numbers in the path', async () => {
+      await runLibraryGeneratorWithOpts({ directory: 'src/1-api' });
+
+      // ASSERT
+      const workspaceJson = readJson(appTree, '/workspace.json');
+
+      expect(workspaceJson.projects['src-api-my-lib']).toEqual(
+        'src/1-api/my-lib'
+      );
+    });
+
+    it('should have root relative routes', async () => {
+      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
+      const workspaceJsonEntry = readJson(appTree, 'workspace.json').projects[
+        'my-dir-my-lib'
+      ];
+      const projectConfig = readProjectConfiguration(appTree, 'my-dir-my-lib');
+      expect(projectConfig.root).toEqual('my-dir/my-lib');
+      expect(workspaceJsonEntry).toEqual('my-dir/my-lib');
+    });
+
+    it('should generate files with correct output paths', async () => {
+      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
+        const content = readJson(appTree, path);
+
+        expect(lookupFn(content)).toEqual(expectedValue);
+      };
+      await runLibraryGeneratorWithOpts({
+        directory: 'myDir',
+        simpleModuleName: true,
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
+
+      const libModulePath = 'my-dir/my-lib/src/lib/my-lib.module.ts';
+      expect(appTree.read(libModulePath, 'utf-8')).toContain(
+        'class MyLibModule'
+      );
+
+      // Make sure these exist
+      [
+        'my-dir/my-lib/jest.config.js',
+        'my-dir/my-lib/ng-package.json',
+        'my-dir/my-lib/project.json',
+        'my-dir/my-lib/tsconfig.lib.prod.json',
+        'my-dir/my-lib/src/index.ts',
+        'my-dir/my-lib/src/lib/my-lib.module.ts',
+      ].forEach((path) => {
+        expect(appTree.exists(path)).toBeTruthy();
+      });
+
+      // Make sure these have properties
+      [
+        {
+          path: 'tsconfig.base.json',
+          lookupFn: (json) => json.compilerOptions.paths['@myorg/lib'],
+          expectedValue: ['my-dir/my-lib/src/index.ts'],
+        },
+        {
+          path: 'my-dir/my-lib/ng-package.json',
+          lookupFn: (json) => json.dest,
+          expectedValue: '../../dist/my-dir/my-lib',
+        },
+        {
+          path: 'my-dir/my-lib/project.json',
+          lookupFn: (json) => json.targets.build.outputs,
+          expectedValue: ['dist/my-dir/my-lib'],
+        },
+        {
+          path: 'my-dir/my-lib/tsconfig.lib.json',
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../dist/out-tsc',
+        },
+        {
+          path: 'my-dir/my-lib/.eslintrc.json',
+          lookupFn: (json) => json.extends,
+          expectedValue: ['../../.eslintrc.json'],
+        },
+      ].forEach(hasJsonValue);
+    });
+  });
+
   describe('router', () => {
     it('should error when lazy is set without routing', async () => {
       try {
