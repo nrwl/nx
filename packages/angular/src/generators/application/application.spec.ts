@@ -255,6 +255,66 @@ describe('app', () => {
     });
   });
 
+  describe('at the root', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace(2, {
+        workspaceLayout: { appsDir: '' },
+      });
+    });
+
+    it('should accept numbers in the path', async () => {
+      // ACT
+      await generateApp(appTree, 'myApp', { directory: 'src/9-websites' });
+
+      // ASSERT
+      const workspaceJson = readJson(appTree, '/workspace.json');
+
+      expect(workspaceJson.projects['src-websites-my-app']).toMatchSnapshot();
+    });
+
+    it('should generate files', async () => {
+      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
+        const content = readJson(appTree, path);
+
+        expect(lookupFn(content)).toEqual(expectedValue);
+      };
+      await generateApp(appTree, 'myApp', { directory: 'myDir' });
+
+      const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
+      expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
+
+      // Make sure these exist
+      [
+        'my-dir/my-app/jest.config.js',
+        'my-dir/my-app/src/main.ts',
+        'my-dir/my-app/src/app/app.module.ts',
+        'my-dir/my-app/src/app/app.component.ts',
+        'my-dir/my-app-e2e/cypress.json',
+      ].forEach((path) => {
+        expect(appTree.exists(path)).toBeTruthy();
+      });
+
+      // Make sure these have properties
+      [
+        {
+          path: 'my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../dist/out-tsc',
+        },
+        {
+          path: 'my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['**/*.test.ts', '**/*.spec.ts'],
+        },
+        {
+          path: 'my-dir/my-app/.eslintrc.json',
+          lookupFn: (json) => json.extends,
+          expectedValue: ['../../.eslintrc.json'],
+        },
+      ].forEach(hasJsonValue);
+    });
+  });
+
   describe('routing', () => {
     it('should include RouterTestingModule', async () => {
       await generateApp(appTree, 'myApp', {

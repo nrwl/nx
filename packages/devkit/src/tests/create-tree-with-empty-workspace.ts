@@ -4,7 +4,7 @@ import type { Tree } from '@nrwl/tao/src/shared/tree';
 /**
  * Creates a host for testing.
  */
-export function createTreeWithEmptyWorkspace(version = 1): Tree {
+export function createTreeWithEmptyWorkspace(version = 1, nxConfig = {}): Tree {
   const tree = new FsTree('/virtual', false);
 
   tree.write('/workspace.json', JSON.stringify({ version, projects: {} }));
@@ -32,6 +32,7 @@ export function createTreeWithEmptyWorkspace(version = 1): Tree {
           },
         },
       },
+      ...nxConfig,
     })
   );
   tree.write(
