@@ -18,6 +18,7 @@ export function normalizeOptions(
     simpleModuleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
+    enableIvy: false,
     ...schema,
   };
 
