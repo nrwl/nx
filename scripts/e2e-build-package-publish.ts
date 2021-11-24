@@ -81,7 +81,7 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
       );
     }
 
-    execSync(`npm publish`, {
+    execSync(`npm publish --allow-same-version`, {
       cwd: packagePath,
       env: process.env,
       stdio: ['ignore', 'ignore', 'ignore'],
