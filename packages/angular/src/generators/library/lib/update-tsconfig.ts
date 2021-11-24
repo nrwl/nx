@@ -39,7 +39,9 @@ function updateProjectIvyConfig(host: Tree, options: NormalizedSchema) {
       host,
       `${options.projectRoot}/tsconfig.lib.prod.json`,
       (json) => {
-        json.angularCompilerOptions['compilationMode'] = 'partial';
+        json.angularCompilerOptions['compilationMode'] = options.enableIvy
+          ? undefined
+          : 'partial';
         return json;
       }
     );

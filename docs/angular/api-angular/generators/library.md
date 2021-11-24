@@ -50,6 +50,14 @@ Type: `string`
 
 A directory where the library is placed.
 
+### enableIvy
+
+Default: `false`
+
+Type: `boolean`
+
+Enable full Ivy compilation in libraries tsconfig (Should not be used for publishable libraries yet)
+
 ### importPath
 
 Type: `string`
