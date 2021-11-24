@@ -3,6 +3,7 @@ export * from './lib/cloud-support';
 export * from './lib/dependency-graph';
 export * from './lib/ecosystem-features';
 export * from './lib/egghead-courses';
+export * from './lib/event-banner';
 export * from './lib/experience-features';
 export * from './lib/getting-started';
 export * from './lib/monorepo-features';

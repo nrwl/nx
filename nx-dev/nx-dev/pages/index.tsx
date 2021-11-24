@@ -16,6 +16,7 @@ import {
   DependencyGraph,
   EcosystemFeatures,
   EggheadCourses,
+  EventBanner,
   ExperienceFeatures,
   GettingStarted,
   MonorepoFeatures,
@@ -130,6 +131,7 @@ export function Index() {
               </div>
             </div>
           </div>
+          <EventBanner />
           <div className="hidden md:block bg-gray-50 border-b border-gray-100">
             {/*COMPANIES*/}
             <NxUsersShowcase />
