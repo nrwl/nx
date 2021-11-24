@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, remove } from 'fs-extra';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import {
   prettierVersion,
   typescriptVersion,
@@ -11,17 +11,18 @@ process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 async function buildPackagePublishAndCleanPorts() {
-  if (!process.env.SKIP_PUBLISH) {
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP) {
     await Promise.all([
       remove('./build'),
       remove('./tmp/nx/proj-backup'),
       remove('./tmp/angular/proj-backup'),
       remove('./tmp/local-registry'),
     ]);
-
+  }
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP || !existsSync('./build')) {
     build(process.env.PUBLISHED_VERSION);
     try {
-      updateVersionsAndPublishPackages();
+      await updateVersionsAndPublishPackages();
     } catch (e) {
       console.log(e);
       process.exit(1);
@@ -34,7 +35,7 @@ const getDirectories = (source: string) =>
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-function updateVersionsAndPublishPackages() {
+async function updateVersionsAndPublishPackages() {
   const npmMajorVersion = execSync(`npm --version`)
     .toString('utf-8')
     .trim()
@@ -42,17 +43,19 @@ function updateVersionsAndPublishPackages() {
 
   const directories = getDirectories('./build/packages');
 
-  directories.map((pkg) => {
-    let versionExists = false;
-    try {
-      updateVersion(`./build/packages/${pkg}`);
-    } catch (e) {
-      versionExists = true;
-    }
-    if (!versionExists) {
-      publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
-    }
-  });
+  await Promise.all(
+    directories.map(async (pkg) => {
+      let versionExists = false;
+      try {
+        updateVersion(`./build/packages/${pkg}`);
+      } catch (e) {
+        versionExists = true;
+      }
+      if (!versionExists) {
+        publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
+      }
+    })
+  );
 }
 
 function updateVersion(packagePath: string) {
@@ -89,22 +92,19 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
     execSync(`npm publish`, {
       cwd: packagePath,
       env: process.env,
-      // stdio: ['ignore', 'ignore', 'ignore'],
+      stdio: ['ignore', 'ignore', 'ignore'],
     });
   } catch (e) {
-    // if version already exists, just ignore it
-    if (e.toString().indexOf('--allow-same-version') === -1) {
-      console.log(e);
-      process.exit(1);
-    }
+    console.log(e);
+    process.exit(1);
   }
 }
 
 function build(nxVersion: string) {
   try {
     const b = new Date();
-    execSync('npx nx run-many --target=build --all --parallel=8 --verbose', {
-      // stdio: ['pipe', 'pipe', 'pipe'],
+    execSync('npx nx run-many --target=build --all --parallel=8', {
+      stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, NX_INVOKED_BY_RUNNER: 'false' },
     });
     const a = new Date();
@@ -148,9 +148,6 @@ function build(nxVersion: string) {
       'storybook',
       'angular',
       'workspace',
-      'react-native',
-      'detox',
-      'js',
       'cli',
       'linter',
       'tao',
@@ -159,16 +156,21 @@ function build(nxVersion: string) {
       'create-nx-workspace',
       'create-nx-plugin',
       'nx-plugin',
+      'react-native',
+      'detox',
+      'js',
     ].map((f) => `${f}/package.json`),
     'create-nx-workspace/bin/create-nx-workspace.js',
     'create-nx-plugin/bin/create-nx-plugin.js',
   ].map((f) => `${BUILD_DIR}/${f}`);
 
   console.log(
-    '______FOUND DIRECTORIES:',
+    '______Built projects (and package.json files):',
     getDirectories('./build/packages').map((directory) => [
       directory,
-      readdirSync(`./build/packages/${directory}`),
+      readdirSync(`./build/packages/${directory}`).filter((p) =>
+        p.startsWith('package')
+      ),
     ])
   );
 
