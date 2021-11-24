@@ -6,7 +6,7 @@ import {
   runCLIAsync,
   runCreateWorkspace,
   uniq,
-  packageInstall,
+  packagesInstall,
   removeProject,
   getSelectedPackageManager,
 } from '@nrwl/e2e/utils';
@@ -19,7 +19,7 @@ describe('custom workspace layout', () => {
     //     const proj = uniq('custom-layout-proj');
     //     const packageManager = getSelectedPackageManager();
     //     runCreateWorkspace(proj, { preset: 'npm', packageManager });
-    //     packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
+    //     packagesInstall(['@nrwl/react','@nrwl/angular','@nrwl/express']);
     //     const nxJson = readJson('nx.json');
     //     expect(nxJson.extends).toEqual('@nrwl/workspace/presets/npm.json');
     //     const reactApp = uniq('reactapp');

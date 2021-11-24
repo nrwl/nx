@@ -147,24 +147,33 @@ export function runCreateWorkspace(
   return create ? create.toString() : '';
 }
 
-export function packageInstall(
-  pkg: string,
-  projName?: string,
-  version = publishedVersion
-) {
+function addPackages(pkgsWithVersions: string[], projName?: string) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const pkgsWithVersions = pkg
-    .split(' ')
-    .map((pgk) => `${pgk}@${version}`)
-    .join(' ');
-  const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
+  const install = execSync(`${pm.addDev} ${pkgsWithVersions.join(' ')}`, {
     cwd,
     stdio: [0, 1, 2],
     env: process.env,
     encoding: 'utf-8',
   });
   return install ? install.toString() : '';
+}
+
+export function packageInstall(
+  pkg: string,
+  projName?: string,
+  version = publishedVersion
+) {
+  return addPackages([`${pkg}@${version}`], projName);
+}
+
+export function packagesInstall(
+  pkgs: string[],
+  projName?: string,
+  version = publishedVersion
+) {
+  const pkgsWithVersions = pkgs.map((pkg) => `${pkg}@${version}`);
+  return addPackages(pkgsWithVersions, projName);
 }
 
 export function runNgNew(projectName: string): string {
@@ -223,7 +232,7 @@ export function newProject({
         `@nrwl/web`,
         `@nrwl/react-native`,
       ];
-      packageInstall(packages.join(` `), projScope);
+      packagesInstall(packages, projScope);
 
       if (useBackupProject) {
         moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
