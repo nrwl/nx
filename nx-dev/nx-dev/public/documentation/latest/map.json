@@ -58,7 +58,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -352,11 +352,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "angular/api-workspace/executors/tsc"
+            "file": "angular/api-js/executors/tsc"
           }
         ]
       },
@@ -1370,7 +1386,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -1660,11 +1676,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "react/api-workspace/executors/tsc"
+            "file": "react/api-js/executors/tsc"
           }
         ]
       },
@@ -2932,11 +2964,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "node/api-workspace/executors/tsc"
+            "file": "node/api-js/executors/tsc"
           }
         ]
       },

@@ -90,13 +90,32 @@ export function Index() {
                     Build Framework
                   </h1>
                   <h2 className="text-2xl font-medium mb-1">
-                    Nx helps architect, test, and build at any scale:
+                    Nx helps <b>architect</b>, <b>test</b>, and <b>build</b> at
+                    any scale:
                   </h2>
-                  <p className="max-w-screen-lg text-lg font-medium mb-10 sm:mb-11">
-                    integrations with modern frameworks, distributed task
-                    execution, computation caching, smart rebuilds of affected
-                    projects, powerful code generators, editor support, GitHub
-                    apps, and more.
+                  <p className="max-w-screen-lg text-lg font-medium mb-10 sm:mb-11 flex flex-wrap">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-pink-500">
+                      integrations with modern frameworks
+                    </span>
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-purple-500">
+                      computation caching
+                    </span>
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-500">
+                      smart rebuilds of affected projects
+                    </span>
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-green-500">
+                      distributed task execution
+                    </span>
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-red-500">
+                      powerful code generators
+                    </span>
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-yellow-500">
+                      editor support
+                    </span>
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-indigo-500">
+                      GitHub apps
+                    </span>
+                    and more.
                   </p>
 
                   <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
