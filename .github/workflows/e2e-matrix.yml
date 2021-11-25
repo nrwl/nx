@@ -111,7 +111,7 @@ jobs:
           ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
 
     - name: Install packages
-      run: yarn install --prefer-offline --non-interactive
+      run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
     - name: Cleanup
       if: ${{ matrix.os == 'ubuntu-latest' }}
