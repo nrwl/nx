@@ -612,9 +612,11 @@ describe('lib', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace(2, {
+      appTree = createTreeWithEmptyWorkspace(2);
+      updateJson(appTree, 'nx.json', (json) => ({
+        ...json,
         workspaceLayout: { libsDir: '' },
-      });
+      }));
     });
 
     it('should accept numbers in the path', async () => {
