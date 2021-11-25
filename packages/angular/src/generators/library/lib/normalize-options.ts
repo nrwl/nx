@@ -18,7 +18,10 @@ export function normalizeOptions(
     simpleModuleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
-    enableIvy: false,
+    // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
+    compilationMode: schema.publishable
+      ? 'partial'
+      : schema.compilationMode ?? 'full',
     ...schema,
   };
 

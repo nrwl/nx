@@ -44,19 +44,19 @@ Type: `boolean`
 
 Generate a buildable library.
 
+### compilationMode
+
+Type: `string`
+
+Possible values: `full`, `partial`
+
+Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.
+
 ### directory
 
 Type: `string`
 
 A directory where the library is placed.
-
-### enableIvy
-
-Default: `false`
-
-Type: `boolean`
-
-Enable full Ivy compilation in libraries tsconfig (Should not be used for publishable libraries yet)
 
 ### importPath
 
