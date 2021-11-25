@@ -26,4 +26,5 @@ export interface Schema {
 
   linter: Exclude<Linter, Linter.TsLint>;
   unitTestRunner: UnitTestRunner;
+  compilationMode?: 'full' | 'partial';
 }
