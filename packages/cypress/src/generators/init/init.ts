@@ -5,7 +5,11 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 
-import { cypressVersion, nxVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  nxVersion,
+  cypressRequestVersion,
+} from '../../utils/versions';
 
 function updateDependencies(host: Tree) {
   updateJson(host, 'package.json', (json) => {
@@ -19,6 +23,7 @@ function updateDependencies(host: Tree) {
     {},
     {
       ['@nrwl/cypress']: nxVersion,
+      ['@cypress/request']: cypressRequestVersion,
       cypress: cypressVersion,
     }
   );
