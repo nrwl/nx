@@ -33,6 +33,7 @@ describe('init', () => {
     expect(dependencies['@angular/router']).toBeDefined();
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['zone.js']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBeDefined();
     expect(devDependencies['@angular/compiler-cli']).toBeDefined();
     expect(devDependencies['@angular/language-service']).toBeDefined();
     expect(devDependencies['@angular-devkit/build-angular']).toBeDefined();
