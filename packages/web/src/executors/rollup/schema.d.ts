@@ -3,7 +3,7 @@ export interface Globals {
   global: string;
 }
 
-export interface WebPackageOptions {
+export interface WebRollupOptions {
   outputPath: string;
   tsConfig: string;
   project: string;

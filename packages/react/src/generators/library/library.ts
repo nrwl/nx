@@ -180,7 +180,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     }
 
     targets.build = {
-      builder: '@nrwl/web:package',
+      builder: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,

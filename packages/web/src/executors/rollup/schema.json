@@ -1,6 +1,6 @@
 {
-  "title": "Web Library Package Target (Experimental)",
-  "description": "Packages a library for web different web usages (UMD, ESM, CJS).",
+  "title": "Web Library Rollup Target (Experimental)",
+  "description": "Packages a library for different web usages (UMD, ESM, CJS).",
   "cli": "nx",
   "type": "object",
   "properties": {

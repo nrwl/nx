@@ -1,4 +1,4 @@
-# @nrwl/web:package
+# @nrwl/web:rollup
 
 Package a library
 

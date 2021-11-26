@@ -20,11 +20,11 @@ import {
 import resolve from '@rollup/plugin-node-resolve';
 
 import { AssetGlobPattern } from '../../utils/shared-models';
-import { WebPackageOptions } from './schema';
+import { WebRollupOptions } from './schema';
 import { runRollup } from './lib/run-rollup';
 import {
-  NormalizedWebPackageOptions,
-  normalizePackageOptions,
+  NormalizedWebRollupOptions,
+  normalizeWebRollupOptions,
 } from './lib/normalize';
 import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
@@ -39,8 +39,8 @@ const postcss = require('rollup-plugin-postcss');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
-export default async function* run(
-  rawOptions: WebPackageOptions,
+export default async function* rollupExecutor(
+  rawOptions: WebRollupOptions,
   context: ExecutorContext
 ) {
   const project = context.workspace.projects[context.projectName];
@@ -64,7 +64,11 @@ export default async function* run(
     throw new Error();
   }
 
-  const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
+  const options = normalizeWebRollupOptions(
+    rawOptions,
+    context.root,
+    sourceRoot
+  );
   const packageJson = readJsonFile(options.project);
 
   const npmDeps = (projectGraph.dependencies[context.projectName] ?? [])
@@ -156,7 +160,7 @@ export default async function* run(
 // -----------------------------------------------------------------------------
 
 export function createRollupOptions(
-  options: NormalizedWebPackageOptions,
+  options: NormalizedWebRollupOptions,
   dependencies: DependentBuildableProjectNode[],
   context: ExecutorContext,
   packageJson: any,
@@ -284,7 +288,7 @@ function createCompilerOptions(format, options, dependencies) {
 }
 
 function updatePackageJson(
-  options: NormalizedWebPackageOptions,
+  options: NormalizedWebRollupOptions,
   context: ExecutorContext,
   target: ProjectGraphNode,
   dependencies: DependentBuildableProjectNode[],

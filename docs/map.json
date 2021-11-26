@@ -409,7 +409,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "angular/api-web/executors/package"
+            "file": "angular/api-web/executors/rollup"
           }
         ]
       },
@@ -1733,7 +1733,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "react/api-web/executors/package"
+            "file": "react/api-web/executors/rollup"
           }
         ]
       },
@@ -3021,7 +3021,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "node/api-web/executors/package"
+            "file": "node/api-web/executors/rollup"
           }
         ]
       },

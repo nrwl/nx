@@ -1,14 +1,14 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import * as rollup from 'rollup';
-import { WebPackageOptions } from './schema';
-import { createRollupOptions } from './package.impl';
-import { normalizePackageOptions } from './lib/normalize';
+import { WebRollupOptions } from './schema';
+import { createRollupOptions } from './rollup.impl';
+import { normalizeWebRollupOptions } from './lib/normalize';
 
 jest.mock('rollup-plugin-copy', () => jest.fn());
 
-describe('packageExecutor', () => {
+describe('rollupExecutor', () => {
   let context: ExecutorContext;
-  let testOptions: WebPackageOptions;
+  let testOptions: WebRollupOptions;
 
   beforeEach(async () => {
     context = {
@@ -36,7 +36,7 @@ describe('packageExecutor', () => {
   describe('createRollupOptions', () => {
     it('should create rollup options for valid config', () => {
       const result: any = createRollupOptions(
-        normalizePackageOptions(testOptions, '/root', '/root/src'),
+        normalizeWebRollupOptions(testOptions, '/root', '/root/src'),
         [],
         context,
         { name: 'example' },
@@ -73,7 +73,7 @@ describe('packageExecutor', () => {
         { virtual: true }
       );
       const result: any = createRollupOptions(
-        normalizePackageOptions(
+        normalizeWebRollupOptions(
           { ...testOptions, rollupConfig: 'custom-rollup.config.ts' },
           '/root',
           '/root/src'
@@ -103,7 +103,7 @@ describe('packageExecutor', () => {
         { virtual: true }
       );
       const result: any = createRollupOptions(
-        normalizePackageOptions(
+        normalizeWebRollupOptions(
           {
             ...testOptions,
             rollupConfig: [
@@ -130,7 +130,7 @@ describe('packageExecutor', () => {
     it(`should always use forward slashes for asset paths`, () => {
       createRollupOptions(
         {
-          ...normalizePackageOptions(testOptions, '/root', '/root/src'),
+          ...normalizeWebRollupOptions(testOptions, '/root', '/root/src'),
           assets: [
             {
               glob: 'README.md',
@@ -153,7 +153,7 @@ describe('packageExecutor', () => {
 
     it(`should treat npm dependencies as external`, () => {
       const options = createRollupOptions(
-        normalizePackageOptions(testOptions, '/root', '/root/src'),
+        normalizeWebRollupOptions(testOptions, '/root', '/root/src'),
         [],
         context,
         { name: 'example' },

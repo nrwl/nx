@@ -114,7 +114,7 @@ export interface TargetConfiguration {
   /**
    * The executor/builder used to implement the target.
    *
-   * Example: '@nrwl/web:package'
+   * Example: '@nrwl/web:rollup'
    */
   executor: string;
 
