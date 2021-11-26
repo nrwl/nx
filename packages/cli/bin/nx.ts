@@ -1,16 +1,17 @@
 #!/usr/bin/env node
-import 'v8-compile-cache';
+import { findWorkspaceRoot } from '../lib/find-workspace-root';
+const workspace = findWorkspaceRoot(process.cwd());
+if (workspace.type === 'nx') {
+  require('v8-compile-cache');
+}
 // polyfill rxjs observable to avoid issues with multiple version fo Observable installed in node_modules
 // https://twitter.com/BenLesh/status/1192478226385428483?s=20
 if (!(Symbol as any).observable)
   (Symbol as any).observable = Symbol('observable polyfill');
 import * as chalk from 'chalk';
-import { findWorkspaceRoot } from '../lib/find-workspace-root';
 import { initLocal } from '../lib/init-local';
 import { output } from '../lib/output';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-
-const workspace = findWorkspaceRoot(process.cwd());
 
 if (!workspace) {
   output.log({
