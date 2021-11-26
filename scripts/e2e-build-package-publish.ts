@@ -12,6 +12,12 @@ process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 async function buildPackagePublishAndCleanPorts() {
   if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP) {
+    if (!process.env.CI) {
+      console.log(`
+  Did you know that you can run the command with:
+    > NX_E2E_SKIP_BUILD_CLEANUP - saves time by reusing the previously built local packages
+    > CI - simulate the CI environment settings\n`);
+    }
     await Promise.all([
       remove('./build'),
       remove('./tmp/nx/proj-backup'),
@@ -27,6 +33,8 @@ async function buildPackagePublishAndCleanPorts() {
       console.log(e);
       process.exit(1);
     }
+  } else {
+    console.log(`\n⏩ Project building skipped. Reusing the existing packages`);
   }
 }
 
