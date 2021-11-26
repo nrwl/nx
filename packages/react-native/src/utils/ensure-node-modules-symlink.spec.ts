@@ -4,19 +4,18 @@ import * as fs from 'fs';
 import { ensureNodeModulesSymlink } from './ensure-node-modules-symlink';
 
 const workspaceDir = join(tmpdir(), 'nx-react-native-test');
+const appDir = 'apps/myapp';
+const appDirAbsolutePath = join(workspaceDir, appDir);
 
 describe('ensureNodeModulesSymlink', () => {
-  let appDir: string;
-
   beforeEach(() => {
-    appDir = join(workspaceDir, 'apps/myapp');
     if (fs.existsSync(workspaceDir))
       fs.rmdirSync(workspaceDir, { recursive: true });
     fs.mkdirSync(workspaceDir);
-    fs.mkdirSync(appDir, { recursive: true });
-    fs.mkdirSync(appDir, { recursive: true });
+    fs.mkdirSync(appDirAbsolutePath, { recursive: true });
+    fs.mkdirSync(appDirAbsolutePath, { recursive: true });
     fs.writeFileSync(
-      join(appDir, 'package.json'),
+      join(appDirAbsolutePath, 'package.json'),
       JSON.stringify({
         name: 'myapp',
         dependencies: { 'react-native': '*' },
@@ -182,7 +181,9 @@ describe('ensureNodeModulesSymlink', () => {
 
   function expectSymlinkToExist(packageName) {
     expect(
-      fs.existsSync(join(appDir, `node_modules/${packageName}/package.json`))
+      fs.existsSync(
+        join(appDirAbsolutePath, `node_modules/${packageName}/package.json`)
+      )
     ).toBe(true);
   }
 });

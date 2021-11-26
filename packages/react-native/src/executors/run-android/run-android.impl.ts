@@ -23,13 +23,13 @@ export default async function* runAndroidExecutor(
 ): AsyncGenerator<ReactNativeRunAndroidOutput> {
   const projectRoot = context.workspace.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
-  chmodSync(join(projectRoot, 'android', 'gradlew'), 0o775);
-  chmodSync(join(projectRoot, 'android', 'gradlew.bat'), 0o775);
+  chmodSync(join(context.root, projectRoot, 'android', 'gradlew'), 0o775);
+  chmodSync(join(context.root, projectRoot, 'android', 'gradlew.bat'), 0o775);
 
   if (options.sync) {
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(context.projectName, projectRoot)
+      await syncDeps(context.projectName, projectRoot, context.root)
     );
   }
 
@@ -37,7 +37,10 @@ export default async function* runAndroidExecutor(
     const tasks = [runCliRunAndroid(context.root, projectRoot, options)];
     if (options.packager) {
       tasks.push(
-        runCliStart(context.root, projectRoot, { port: options.port })
+        runCliStart(context.root, projectRoot, {
+          port: options.port,
+          resetCache: options.resetCache,
+        })
       );
     }
 
@@ -65,7 +68,7 @@ function runCliRunAndroid(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
       ['run-android', ...createRunAndroidOptions(options), '--no-packager'],
       {
-        cwd: projectRoot,
+        cwd: join(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
       }
     );
@@ -87,7 +90,7 @@ function runCliRunAndroid(
   });
 }
 
-const nxOptions = ['sync', 'install', 'packager'];
+const nxOrStartOptions = ['sync', 'install', 'packager', 'port', 'resetCache'];
 
 function createRunAndroidOptions(options) {
   return Object.keys(options).reduce((acc, k) => {
@@ -98,7 +101,7 @@ function createRunAndroidOptions(options) {
       if (!v) {
         acc.push(`--no-jetifier`);
       }
-    } else if (v && !nxOptions.includes(k)) {
+    } else if (v && !nxOrStartOptions.includes(k)) {
       acc.push(`--${k}`, v);
     }
     return acc;

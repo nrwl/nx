@@ -44,14 +44,14 @@ export async function reactNativeApplicationGenerator(
     options.appProjectRoot
   );
   const detoxTask = await addDetox(host, options);
-  const symlinkTask = runSymlink(options.appProjectRoot);
-  const podInstallTask = runPodInstall(options.iosProjectRoot);
+  const symlinkTask = runSymlink(host.root, options.appProjectRoot);
+  const podInstallTask = runPodInstall(join(host.root, options.iosProjectRoot));
   const chmodTaskGradlew = runChmod(
-    join(options.androidProjectRoot, 'gradlew'),
+    join(host.root, options.androidProjectRoot, 'gradlew'),
     0o775
   );
   const chmodTaskGradlewBat = runChmod(
-    join(options.androidProjectRoot, 'gradlew.bat'),
+    join(host.root, options.androidProjectRoot, 'gradlew.bat'),
     0o775
   );
 

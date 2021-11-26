@@ -20,7 +20,12 @@ export default async function* syncDepsExecutor(
   const projectRoot = context.workspace.projects[context.projectName].root;
   displayNewlyAddedDepsMessage(
     context.projectName,
-    await syncDeps(context.projectName, projectRoot, options.include)
+    await syncDeps(
+      context.projectName,
+      projectRoot,
+      context.root,
+      options.include
+    )
   );
 
   yield { success: true };
@@ -29,11 +34,12 @@ export default async function* syncDepsExecutor(
 export async function syncDeps(
   projectName: string,
   projectRoot: string,
+  workspaceRoot: string,
   include?: string
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
   const npmDeps = findAllNpmDependencies(graph, projectName);
-  const packageJsonPath = join(projectRoot, 'package.json');
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const newDeps = [];
   const includeDeps = include?.split(',');
