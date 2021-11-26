@@ -45,15 +45,8 @@ async function updateVersionsAndPublishPackages() {
 
   await Promise.all(
     directories.map(async (pkg) => {
-      let versionExists = false;
-      try {
-        updateVersion(`./build/packages/${pkg}`);
-      } catch (e) {
-        versionExists = true;
-      }
-      if (!versionExists) {
-        publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
-      }
+      updateVersion(`./build/packages/${pkg}`);
+      publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
     })
   );
 }
@@ -115,7 +108,7 @@ function build(nxVersion: string) {
     process.exit(1);
   }
 
-  const BUILD_DIR = './build/packages';
+  const BUILD_DIR = 'build/packages';
 
   const files = [
     ...[
@@ -163,16 +156,6 @@ function build(nxVersion: string) {
     'create-nx-workspace/bin/create-nx-workspace.js',
     'create-nx-plugin/bin/create-nx-plugin.js',
   ].map((f) => `${BUILD_DIR}/${f}`);
-
-  console.log(
-    '______Built projects (and package.json files):',
-    getDirectories('./build/packages').map((directory) => [
-      directory,
-      readdirSync(`./build/packages/${directory}`).filter((p) =>
-        p.startsWith('package')
-      ),
-    ])
-  );
 
   files.forEach((f) => {
     const content = readFileSync(f, 'utf-8')
