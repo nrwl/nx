@@ -613,7 +613,6 @@ async function checkApp(
   const buildResult = runCLI(`build ${appName} --withDeps`);
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
 
   const packageJson = readJson(`dist/apps/${appName}/package.json`);
   expect(packageJson.dependencies.react).toBeDefined();

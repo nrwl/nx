@@ -17,8 +17,8 @@ import init from '../init/init';
 import {
   createFiles,
   normalizeOptions,
-  updateComponentStyles,
-  updateComponentTemplate,
+  updateAppComponentTemplate,
+  updateNxComponentTemplate,
   updateConfigFiles,
   addE2e,
   updateComponentSpec,
@@ -78,8 +78,24 @@ export async function applicationGenerator(
 
   moveFilesToNewDirectory(host, appProjectRoot, options.appProjectRoot);
   updateConfigFiles(host, options);
-  updateComponentTemplate(host, options);
-  updateComponentStyles(host, options);
+  updateAppComponentTemplate(host, options);
+
+  // Create the NxWelcomeComponent
+  const angularComponentSchematic = wrapAngularDevkitSchematic(
+    '@schematics/angular',
+    'component'
+  );
+  await angularComponentSchematic(host, {
+    name: 'NxWelcome',
+    inlineTemplate: true,
+    prefix: options.prefix,
+    skipTests: true,
+    style: 'none',
+    flat: true,
+    viewEncapsulation: 'None',
+    project: options.name,
+  });
+  updateNxComponentTemplate(host, options);
 
   if (options.unitTestRunner !== UnitTestRunner.None) {
     updateComponentSpec(host, options);

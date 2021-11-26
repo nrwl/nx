@@ -15,7 +15,7 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
     spec,
     content.replace(
       `${options.name} app is running!`,
-      `Welcome to ${options.name}!`
+      `Welcome ${options.name}`
     )
   );
 

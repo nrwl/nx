@@ -8,16 +8,9 @@ function CustomApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>Welcome to <%= name %>!</title>
       </Head>
-      <div className="app">
-        <header className="flex">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nx-logo-white.svg" alt="Nx logo" width="75" height="50" />
-          <h1>Welcome to <%= name %>!</h1>
-        </header>
-        <main>
-          <Component {...pageProps}/>
-        </main>
-      </div>
+      <main className="app">
+        <Component {...pageProps}/>
+      </main>
     </>
   );
 };

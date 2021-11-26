@@ -219,7 +219,10 @@ Object {
 
     expect(
       appTree.read('apps/my-dir/my-app/src/app/app.tsx').toString()
-    ).toContain('Welcome to my-dir-my-app');
+    ).toContain(`<NxWelcome title="my-dir-my-app"/>`);
+    expect(
+      appTree.read('apps/my-dir/my-app/src/app/nx-welcome.tsx').toString()
+    ).toContain('Hello there');
   });
 
   it.each`

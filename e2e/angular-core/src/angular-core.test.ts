@@ -44,10 +44,11 @@ describe('Angular Package', () => {
           names(mylib).className
         }Module } from '@${proj}/my-dir/${mylib}';
         import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
 
         @NgModule({
           imports: [BrowserModule, MyDir${names(mylib).className}Module],
-          declarations: [AppComponent],
+          declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
         })
         export class AppModule {}
