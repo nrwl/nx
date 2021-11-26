@@ -7,7 +7,7 @@ interface WithNxOptions {
 }
 
 export function withNxMetro(config: any, opts: WithNxOptions = {}) {
-  const extensions = ['', 'ts', 'tsx', 'js', 'jsx'];
+  const extensions = ['', 'ts', 'tsx', 'js', 'jsx', 'json'];
   if (opts.debug) process.env.NX_REACT_NATIVE_DEBUG = 'true';
   if (opts.extensions) extensions.push(...opts.extensions);
 

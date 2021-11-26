@@ -20,3 +20,5 @@ export const reactTestRendererVersion = '17.0.2';
 
 export const reactNativeSvgTransformerVersion = '0.14.3';
 export const reactNativeSvgVersion = '12.1.1';
+
+export const babelRuntimeVersion = '7.16.3';

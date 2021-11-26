@@ -1,9 +1,6 @@
 import {
   checkFilesExist,
   expectTestsPass,
-  getSelectedPackageManager,
-  isOSX,
-  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -19,9 +16,6 @@ describe('react native', () => {
   beforeEach(() => (proj = newProject()));
 
   it('should test, create ios and android JS bundles', async () => {
-    // currently react native does not support pnpm: https://github.com/pnpm/pnpm/issues/3321
-    if (getSelectedPackageManager() === 'pnpm') return;
-
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
@@ -64,9 +58,6 @@ describe('react native', () => {
   });
 
   it('sync npm dependencies for autolink', async () => {
-    // currently react native does not support pnpm: https://github.com/pnpm/pnpm/issues/3321
-    if (getSelectedPackageManager() === 'pnpm') return;
-
     const appName = uniq('my-app');
     runCLI(`generate @nrwl/react-native:application ${appName}`);
     // Add npm package with native modules
