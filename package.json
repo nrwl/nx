@@ -62,11 +62,10 @@
     "@ngrx/store": "~13.0.0",
     "@ngrx/store-devtools": "~13.0.0",
     "@nrwl/cli": "13.3.0-beta.2",
-    "@nrwl/js": "13.3.0-beta.2",
-    "@nrwl/workspace": "13.3.0-beta.2",
     "@nrwl/cypress": "13.3.0-beta.2",
     "@nrwl/eslint-plugin-nx": "13.3.0-beta.2",
     "@nrwl/jest": "13.3.0-beta.2",
+    "@nrwl/js": "13.3.0-beta.2",
     "@nrwl/linter": "13.3.0-beta.2",
     "@nrwl/next": "13.3.0-beta.2",
     "@nrwl/node": "13.3.0-beta.2",
@@ -74,6 +73,7 @@
     "@nrwl/react": "13.3.0-beta.2",
     "@nrwl/tao": "13.3.0-beta.2",
     "@nrwl/web": "13.3.0-beta.2",
+    "@nrwl/workspace": "13.3.0-beta.2",
     "@parcel/watcher": "2.0.0-alpha.11",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
@@ -270,6 +270,7 @@
     }
   },
   "dependencies": {
+    "@cypress/request": "2.88.9",
     "@docsearch/react": "^1.0.0-alpha.14",
     "@headlessui/react": "^1.1.1",
     "@heroicons/react": "^1.0.1",
@@ -297,7 +298,6 @@
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
-    "**/xmlhttprequest-ssl": "~1.6.2",
-    "@cypress/request": "2.88.7"
+    "**/xmlhttprequest-ssl": "~1.6.2"
   }
 }
