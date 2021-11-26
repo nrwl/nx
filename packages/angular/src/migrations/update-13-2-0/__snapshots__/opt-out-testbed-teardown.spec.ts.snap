@@ -1,0 +1,213 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should not be updated when the test setup file had the teardown options already configured 1`] = `
+"describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              declarations: [AppComponent],
+            }).compileComponents();
+          });
+        });"
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should not be updated when the test setup file was updated 1`] = `
+"describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              declarations: [AppComponent],
+            }).compileComponents();
+          });
+        });"
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should not re-add the teardown property or overwrite when it is already configured for configureTestingModule call 1`] = `
+"describe('AppComponent1', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });
+
+        describe('AppComponent2', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              declarations: [AppComponent],
+              teardown: { destroyAfterEach: true },
+            }).compileComponents();
+          });
+        });
+
+        describe('AppComponent3', () => {
+          test('some test case', async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          
+            expect(true).toBe(true);
+          });
+        });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should update correctly when teardown options and setupFilesAfterEnv are not configured 1`] = `
+"describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });"
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should update correctly when teardown options have not been configured and the initTestEnvironment call is invalid 1`] = `
+"describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });"
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should update correctly when teardown options have not been configured and the specified test setup file does not exist 1`] = `
+"describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });"
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should update correctly when teardown options have not been configured and there is no test setup file configured 1`] = `
+"describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });"
+`;
+
+exports[`opt-out-testbed-teardown migration update configureTestingModule in test files should update correctly when there are multiple calls to configureTestingModule 1`] = `
+"describe('AppComponent1', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });
+
+        describe('AppComponent2', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          });
+        });
+
+        describe('AppComponent3', () => {
+          test('some test case', async () => {
+            await TestBed.configureTestingModule({
+    declarations: [AppComponent],
+    teardown: { destroyAfterEach: false }
+}).compileComponents();
+          
+            expect(true).toBe(true);
+          });
+        });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should not re-add the teardown property twice when it is already being passed to the initTestEnvironment call 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { teardown: { destroyAfterEach: true } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when an aotSummaries arrow function is passed to the initTestEnvironment call 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { aotSummaries: () => [], teardown: { destroyAfterEach: false } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when an aotSummaries function is passed to the initTestEnvironment call 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { aotSummaries: function () { return []; }, teardown: { destroyAfterEach: false } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when an aotSummaries named function is passed to the initTestEnvironment call 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { aotSummaries: function aotSummaries() { return []; }, teardown: { destroyAfterEach: false } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when no options are passed to the initTestEnvironment call 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { teardown: { destroyAfterEach: false } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when the options passed to the initTestEnvironment call does not have the teardown property 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { aotSummaries: () => [], teardown: { destroyAfterEach: false } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when the options passed to the initTestEnvironment call is an empty object 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+        import { getTestBed } from '@angular/core/testing';
+        import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+        getTestBed().resetTestEnvironment();
+        getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), { teardown: { destroyAfterEach: false } });
+        "
+`;
+
+exports[`opt-out-testbed-teardown migration update initTestEnvironment calls in test setup should update correctly when there are no calls to initTestEnvironment 1`] = `
+"import \\"jest-preset-angular/setup-jest\\";
+      import { getTestBed } from '@angular/core/testing';
+      import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+      getTestBed().resetTestEnvironment();
+      getTestBed().initTestEnvironment(
+        BrowserDynamicTestingModule,
+        platformBrowserDynamicTesting(),
+        { teardown: { destroyAfterEach: false } },
+      );
+    "
+`;
