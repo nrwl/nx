@@ -95,6 +95,7 @@ function updateDependencies(host: Tree): GeneratorCallback {
       'zone.js': '~0.11.4',
     },
     {
+      '@angular/cli': angularDevkitVersion,
       '@angular/compiler-cli': angularVersion,
       '@angular/language-service': angularVersion,
       '@angular-devkit/build-angular': angularDevkitVersion,
