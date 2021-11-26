@@ -57,6 +57,39 @@ describe('react native', () => {
     ).not.toThrow();
   });
 
+  it('should support create application with js', async () => {
+    const appName = uniq('my-app');
+    runCLI(`generate @nrwl/react-native:application ${appName} --js`);
+    expect(() =>
+      checkFilesExist(
+        `apps/${appName}/src/main.js`,
+        `apps/${appName}/src/app/App.js`,
+        `apps/${appName}/src/app/App.spec.js`
+      )
+    ).not.toThrow();
+
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
+
+    const appLintResults = await runCLIAsync(`lint ${appName}`);
+    expect(appLintResults.combinedOutput).toContain('All files pass linting.');
+
+    const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
+    expect(iosBundleResult.combinedOutput).toContain(
+      'Done writing bundle output'
+    );
+    expect(() =>
+      checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`)
+    ).not.toThrow();
+
+    const androidBundleResult = await runCLIAsync(`bundle-android ${appName}`);
+    expect(androidBundleResult.combinedOutput).toContain(
+      'Done writing bundle output'
+    );
+    expect(() =>
+      checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`)
+    ).not.toThrow();
+  });
+
   it('sync npm dependencies for autolink', async () => {
     const appName = uniq('my-app');
     runCLI(`generate @nrwl/react-native:application ${appName}`);
