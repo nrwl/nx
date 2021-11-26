@@ -105,7 +105,7 @@ export const webpack = async (
     const babelrc = readJsonFile(
       joinPathFragments(options.configDir, '../', '.babelrc')
     );
-    if (babelrc.plugins.includes('@emotion/babel-plugin')) {
+    if (babelrc?.plugins?.includes('@emotion/babel-plugin')) {
       resolvedEmotionAliases = {
         resolve: {
           alias: {
