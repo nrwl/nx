@@ -40,7 +40,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
-    allowTransitiveDependencies: boolean;
+    banTransitiveDependencies: boolean;
   }
 ];
 export type MessageIds =
@@ -72,7 +72,7 @@ export default createESLintRule<Options, MessageIds>({
         properties: {
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
-          allowTransitiveDependencies: { type: 'boolean' },
+          banTransitiveDependencies: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -110,7 +110,7 @@ export default createESLintRule<Options, MessageIds>({
       depConstraints: [],
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
-      allowTransitiveDependencies: true,
+      banTransitiveDependencies: false,
     },
   ],
   create(
@@ -121,7 +121,7 @@ export default createESLintRule<Options, MessageIds>({
         depConstraints,
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
-        allowTransitiveDependencies,
+        banTransitiveDependencies,
       },
     ]
   ) {
@@ -244,10 +244,7 @@ export default createESLintRule<Options, MessageIds>({
 
       // project => npm package
       if (targetProject.type === 'npm') {
-        if (
-          !allowTransitiveDependencies &&
-          !isDirectDependency(sourceProject, targetProject)
-        ) {
+        if (banTransitiveDependencies && !isDirectDependency(targetProject)) {
           context.report({
             node,
             messageId: 'noTransitiveDependencies',

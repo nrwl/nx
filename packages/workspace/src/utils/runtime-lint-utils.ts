@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { FileData } from '../core/file-utils';
+import { FileData, readFileIfExisting } from '../core/file-utils';
 import {
   ProjectGraph,
   ProjectGraphDependency,
@@ -7,8 +7,12 @@ import {
   ProjectGraphProjectNode,
   normalizePath,
   DependencyType,
+  parseJson,
+  ProjectGraphExternalNode,
 } from '@nrwl/devkit';
 import { TargetProjectLocator } from '../core/target-project-locator';
+import { join } from 'path';
+import { appRootPath } from './app-root';
 
 export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
   data: {
@@ -193,10 +197,24 @@ export function hasBannedImport(
   );
 }
 
-export function isDirectDependency(
-  source: ProjectGraphNode,
-  target: ProjectGraphNode
-): boolean {
+export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
+  const fileName = 'package.json';
+  const content = readFileIfExisting(join(appRootPath, fileName));
+  if (content) {
+    const { dependencies, devDependencies, peerDependencies } =
+      parseJson(content);
+    if (dependencies && dependencies[target.data.packageName]) {
+      return true;
+    }
+    if (peerDependencies && peerDependencies[target.data.packageName]) {
+      return true;
+    }
+    if (devDependencies && devDependencies[target.data.packageName]) {
+      return true;
+    }
+    return false;
+  }
+
   return true;
 }
 
