@@ -1,9 +1,11 @@
 {
   "name": "@nrwl/nx-source",
   "version": "13.3.0-beta.2",
+  "private": true,
   "description": "Smart, Extensible Build Framework",
   "homepage": "https://nx.dev",
-  "private": true,
+  "license": "MIT",
+  "author": "Victor Savkin",
   "scripts": {
     "build": "./scripts/package.sh --local",
     "commit": "git-cz",
@@ -24,6 +26,42 @@
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map && yarn check-internal-links",
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky install"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-customizable"
+    }
+  },
+  "resolutions": {
+    "**/xmlhttprequest-ssl": "~1.6.2",
+    "ng-packagr/rxjs": "6.6.7"
+  },
+  "dependencies": {
+    "@cypress/request": "2.88.9",
+    "@docsearch/react": "^1.0.0-alpha.14",
+    "@headlessui/react": "^1.1.1",
+    "@heroicons/react": "^1.0.1",
+    "@tailwindcss/aspect-ratio": "^0.3.0",
+    "@tailwindcss/forms": "^0.3.4",
+    "classnames": "^2.3.1",
+    "core-js": "^3.6.5",
+    "framer-motion": "^4.1.17",
+    "glob": "7.1.4",
+    "gray-matter": "^4.0.2",
+    "npm-run-path": "^4.0.1",
+    "react": "17.0.2",
+    "react-copy-to-clipboard": "^5.0.3",
+    "react-dom": "17.0.2",
+    "react-intersection-observer": "^8.32.2",
+    "react-markdown": "^6.0.2",
+    "react-syntax-highlighter": "^15.4.3",
+    "regenerator-runtime": "0.13.7",
+    "rehype-autolink-headings": "^5.0.1",
+    "rehype-slug": "^4.0.1",
+    "remark-gfm": "^1.0.0",
+    "send": "0.17.1",
+    "tslib": "^2.3.0",
+    "weak-napi": "^2.0.2"
   },
   "devDependencies": {
     "@angular-devkit/architect": "0.1300.1",
@@ -261,43 +299,5 @@
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "zone.js": "~0.11.4"
-  },
-  "author": "Victor Savkin",
-  "license": "MIT",
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-customizable"
-    }
-  },
-  "dependencies": {
-    "@cypress/request": "2.88.9",
-    "@docsearch/react": "^1.0.0-alpha.14",
-    "@headlessui/react": "^1.1.1",
-    "@heroicons/react": "^1.0.1",
-    "@tailwindcss/aspect-ratio": "^0.3.0",
-    "@tailwindcss/forms": "^0.3.4",
-    "classnames": "^2.3.1",
-    "core-js": "^3.6.5",
-    "framer-motion": "^4.1.17",
-    "glob": "7.1.4",
-    "gray-matter": "^4.0.2",
-    "npm-run-path": "^4.0.1",
-    "react": "17.0.2",
-    "react-copy-to-clipboard": "^5.0.3",
-    "react-dom": "17.0.2",
-    "react-intersection-observer": "^8.32.2",
-    "react-markdown": "^6.0.2",
-    "react-syntax-highlighter": "^15.4.3",
-    "regenerator-runtime": "0.13.7",
-    "rehype-autolink-headings": "^5.0.1",
-    "rehype-slug": "^4.0.1",
-    "remark-gfm": "^1.0.0",
-    "send": "0.17.1",
-    "tslib": "^2.3.0",
-    "weak-napi": "^2.0.2"
-  },
-  "resolutions": {
-    "ng-packagr/rxjs": "6.6.7",
-    "**/xmlhttprequest-ssl": "~1.6.2"
   }
 }

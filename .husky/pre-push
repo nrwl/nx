@@ -1,6 +1,7 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+npx npx sort-package-json
 yarn check-lock-files
 yarn check-commit
 yarn documentation
