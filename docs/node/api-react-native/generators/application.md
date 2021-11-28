@@ -42,6 +42,12 @@ nx g app myapp --classComponent
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the application.
+
 ### directory
 
 Alias(es): d
@@ -83,12 +89,6 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-The name of the application.
 
 ### setParserOptionsProject
 

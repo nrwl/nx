@@ -72,5 +72,5 @@
       "default": "detox"
     }
   },
-  "required": []
+  "required": ["name"]
 }

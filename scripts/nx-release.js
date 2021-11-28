@@ -74,6 +74,7 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/nx-plugin/package.json',
     'build/npm/nx/package.json',
     'build/npm/react-native/package.json',
+    'build/npm/expo/package.json',
     'build/npm/detox/package.json',
     'build/npm/js/package.json',
   ];

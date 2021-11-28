@@ -46,7 +46,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   }
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {});
+    const detoxTask = await detoxInitGenerator(host);
     tasks.push(detoxTask);
   }
 

@@ -50,4 +50,7 @@ buck-out/
 
 ## CocoaPods
 **/ios/Pods/
+
+## Nested node_modules
+**/node_modules/
 `;

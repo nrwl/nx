@@ -9,10 +9,13 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
   }
 
   return detoxApplicationGenerator(host, {
-    ...options,
     linter: Linter.EsLint,
     name: `${options.name}-e2e`,
     directory: options.directory,
     project: options.projectName,
+    type: 'react-native',
+    js: options.js,
+    skipFormat: options.skipFormat,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 }

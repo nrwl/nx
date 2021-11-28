@@ -1,3 +1,3 @@
 export interface Schema {
-  skipFormat?: boolean;
+  skipFormat?: boolean; // default is false
 }

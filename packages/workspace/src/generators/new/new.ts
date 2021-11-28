@@ -8,9 +8,7 @@ import {
   convertNxGenerator,
   names,
   getPackageManagerCommand,
-  WorkspaceJsonConfiguration,
   PackageManager,
-  NxJsonConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -263,6 +261,12 @@ const presetDependencies: Omit<
     dependencies: {},
     dev: {
       '@nrwl/react-native': nxVersion,
+    },
+  },
+  [Preset.Expo]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/expo': nxVersion,
     },
   },
 };

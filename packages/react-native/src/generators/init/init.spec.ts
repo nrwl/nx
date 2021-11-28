@@ -31,7 +31,6 @@ describe('init', () => {
     const content = tree.read('/.gitignore').toString();
 
     expect(content).toMatch(/# React Native/);
-    expect(content).toMatch(/# Nested node_modules/);
   });
 
   describe('defaultCollection', () => {

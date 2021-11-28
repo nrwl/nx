@@ -78,4 +78,4 @@ Default: `Debug`
 
 Type: `string`
 
-Explicitly set the Xcode configuration to use
+Explicitly set the Xcode configuration to use. Debug or Release.

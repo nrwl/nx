@@ -1,0 +1,86 @@
+{
+  "executors": {
+    "build-ios": {
+      "implementation": "./src/executors/build-ios/build-ios.impl",
+      "schema": "./src/executors/build-ios/schema.json",
+      "description": "Build and sign a standalone IPA for the Apple App Store"
+    },
+    "build-android": {
+      "implementation": "./src/executors/build-android/build-android.impl",
+      "schema": "./src/executors/build-android/schema.json",
+      "description": "Build and sign a standalone APK or App Bundle for the Google Play Store"
+    },
+    "build-web": {
+      "implementation": "./src/executors/build-web/build-web.impl",
+      "schema": "./src/executors/build-web/schema.json",
+      "description": "Build the web app for production"
+    },
+    "build-status": {
+      "implementation": "./src/executors/build-status/build-status.impl",
+      "schema": "./src/executors/build-status/schema.json",
+      "description": "Get the status of the latest build for the project"
+    },
+    "run": {
+      "implementation": "./src/executors/run/run.impl",
+      "schema": "./src/executors/run/schema.json",
+      "description": "Run the Android app binary locally or run the iOS app binary locally"
+    },
+    "start": {
+      "implementation": "./src/executors/start/start.impl",
+      "schema": "./src/executors/start/schema.json",
+      "description": "Start a local dev server for the app or start a Webpack dev server for the web app"
+    },
+    "sync-deps": {
+      "implementation": "./src/executors/sync-deps/sync-deps.impl",
+      "schema": "./src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "./src/executors/ensure-symlink/ensure-symlink.impl",
+      "schema": "./src/executors/ensure-symlink//schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    }
+  },
+  "builders": {
+    "build-ios": {
+      "implementation": "./src/executors/build-ios/compat",
+      "schema": "./src/executors/build-ios/schema.json",
+      "description": "Build and sign a standalone IPA for the Apple App Store"
+    },
+    "build-android": {
+      "implementation": "./src/executors/build-android/compat",
+      "schema": "./src/executors/build-android/schema.json",
+      "description": "Build and sign a standalone APK or App Bundle for the Google Play Store"
+    },
+    "build-web": {
+      "implementation": "./src/executors/build-web/compat",
+      "schema": "./src/executors/build-web/schema.json",
+      "description": "Build the web app for production"
+    },
+    "build-status": {
+      "implementation": "./src/executors/build-status/compat",
+      "schema": "./src/executors/build-status/schema.json",
+      "description": "Get the status of the latest build for the project"
+    },
+    "run": {
+      "implementation": "./src/executors/run/compat",
+      "schema": "./src/executors/run/schema.json",
+      "description": "Run the Android app binary locally or run the iOS app binary locally"
+    },
+    "start": {
+      "implementation": "./src/executors/start/compat",
+      "schema": "./src/executors/start/schema.json",
+      "description": "Start a local dev server for the app or start a Webpack dev server for the web app"
+    },
+    "sync-deps": {
+      "implementation": "./src/executors/sync-deps/compat",
+      "schema": "./src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "./src/executors/ensure-symlink/compat",
+      "schema": "./src/executors/ensure-symlink//schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    }
+  }
+}

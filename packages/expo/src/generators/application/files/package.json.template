@@ -1,0 +1,28 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-native": "*",
+    "@testing-library/react-native": "*",
+    "@nrwl/expo": "*",
+    "react": "*",
+    "react-native": "*",
+    "expo": "*",
+    "expo-status-bar": "*",
+    "@expo/metro-config": "*",
+    "expo-splash-screen": "*",
+    "expo-structured-headers": "*",
+    "expo-updates": "*",
+    "react-dom": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-reanimated": "*",
+    "react-native-safe-area-context": "*",
+    "react-native-screens": "*",
+    "react-native-web": "*",
+    "tslib": "*"
+  },
+  "devDependencies": {
+    "typescript": "*"
+  }
+}

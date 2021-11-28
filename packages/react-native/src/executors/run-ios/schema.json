@@ -8,7 +8,7 @@
   "properties": {
     "xcodeConfiguration": {
       "type": "string",
-      "description": "Explicitly set the Xcode configuration to use",
+      "description": "Explicitly set the Xcode configuration to use. Debug or Release.",
       "default": "Debug"
     },
     "scheme": {

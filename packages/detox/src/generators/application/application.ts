@@ -1,6 +1,6 @@
 import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
-
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import detoxInitGenerator from '../init/init';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { addLinting } from './lib/add-linting';

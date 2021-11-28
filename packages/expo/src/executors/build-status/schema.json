@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxExpoBuildStatus",
+  "cli": "nx",
+  "title": "Expo web Build executor",
+  "description": "Get the status of the latest build for the project",
+  "type": "object",
+  "properties": {
+    "publicUrl": {
+      "type": "string",
+      "description": "The URL of an externally hosted manifest (for self-hosted apps)."
+    }
+  },
+  "required": []
+}

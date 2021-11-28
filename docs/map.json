@@ -1012,6 +1012,67 @@
         ]
       },
       {
+        "name": "expo",
+        "id": "expo",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-expo/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "angular/api-expo/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-expo/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "angular/api-expo/executors/build-android"
+          },
+          {
+            "name": "build ios executor",
+            "id": "build-ios",
+            "file": "angular/api-expo/executors/build-ios"
+          },
+          {
+            "name": "build status executor",
+            "id": "build-status",
+            "file": "angular/api-expo/executors/build-status"
+          },
+          {
+            "name": "build web executor",
+            "id": "build-web",
+            "file": "angular/api-expo/executors/build-web"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "angular/api-expo/executors/ensure-symlink"
+          },
+          {
+            "name": "run executor",
+            "id": "run",
+            "file": "angular/api-expo/executors/run"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "angular/api-expo/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "angular/api-expo/executors/sync-deps"
+          }
+        ]
+      },
+      {
         "name": "Nx Plugin",
         "id": "nx-plugin",
         "itemList": [
@@ -2347,6 +2408,67 @@
         ]
       },
       {
+        "name": "expo",
+        "id": "expo",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-expo/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "react/api-expo/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-expo/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "react/api-expo/executors/build-android"
+          },
+          {
+            "name": "build ios executor",
+            "id": "build-ios",
+            "file": "react/api-expo/executors/build-ios"
+          },
+          {
+            "name": "build status executor",
+            "id": "build-status",
+            "file": "react/api-expo/executors/build-status"
+          },
+          {
+            "name": "build web executor",
+            "id": "build-web",
+            "file": "react/api-expo/executors/build-web"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "react/api-expo/executors/ensure-symlink"
+          },
+          {
+            "name": "run executor",
+            "id": "run",
+            "file": "react/api-expo/executors/run"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "react/api-expo/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "react/api-expo/executors/sync-deps"
+          }
+        ]
+      },
+      {
         "name": "Nx Plugin",
         "id": "nx-plugin",
         "itemList": [
@@ -3619,6 +3741,67 @@
             "name": "sync deps executor",
             "id": "sync-deps",
             "file": "node/api-react-native/executors/sync-deps"
+          }
+        ]
+      },
+      {
+        "name": "expo",
+        "id": "expo",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-expo/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "node/api-expo/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-expo/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "node/api-expo/executors/build-android"
+          },
+          {
+            "name": "build ios executor",
+            "id": "build-ios",
+            "file": "node/api-expo/executors/build-ios"
+          },
+          {
+            "name": "build status executor",
+            "id": "build-status",
+            "file": "node/api-expo/executors/build-status"
+          },
+          {
+            "name": "build web executor",
+            "id": "build-web",
+            "file": "node/api-expo/executors/build-web"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "node/api-expo/executors/ensure-symlink"
+          },
+          {
+            "name": "run executor",
+            "id": "run",
+            "file": "node/api-expo/executors/run"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "node/api-expo/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "node/api-expo/executors/sync-deps"
           }
         ]
       },

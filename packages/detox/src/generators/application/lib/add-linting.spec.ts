@@ -17,6 +17,10 @@ describe('Add Linting', () => {
       appFileName: 'my-app',
       appClassName: 'MyApp',
       linter: Linter.EsLint,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
   });
 
@@ -29,6 +33,10 @@ describe('Add Linting', () => {
       appFileName: 'my-app',
       appClassName: 'MyApp',
       linter: Linter.EsLint,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 
@@ -45,6 +53,10 @@ describe('Add Linting', () => {
       appFileName: 'my-app',
       appClassName: 'MyApp',
       linter: Linter.TsLint,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 
@@ -63,6 +75,10 @@ describe('Add Linting', () => {
       appFileName: 'my-app',
       appClassName: 'MyApp',
       linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 

@@ -36,6 +36,10 @@ describe('Add Project', () => {
         appFileName: 'my-app',
         appClassName: 'MyApp',
         linter: Linter.EsLint,
+        js: false,
+        type: 'react-native',
+        skipFormat: false,
+        setParserOptionsProject: false,
       });
     });
 
@@ -63,6 +67,10 @@ describe('Add Project', () => {
         appFileName: 'my-app',
         appClassName: 'MyApp',
         linter: Linter.EsLint,
+        js: false,
+        type: 'react-native',
+        skipFormat: false,
+        setParserOptionsProject: false,
       });
     });
 

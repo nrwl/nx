@@ -1,0 +1,18 @@
+{
+  "build": {
+    "release": {
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "development": {
+      "android": {
+        "developmentClient": true,
+        "distribution": "internal"
+      }
+    }
+  },
+  "cli": {
+    "version": ">= 0.38.1"
+  }
+}

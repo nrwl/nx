@@ -15,10 +15,10 @@ import {
   typesDetoxVersion,
 } from '../../utils/versions';
 
-export async function detoxInitGenerator(host: Tree, schema: Schema) {
+export async function detoxInitGenerator(host: Tree, schema?: Schema) {
   const tasks = [moveDependency(host), updateDependencies(host)];
 
-  if (!schema.skipFormat) {
+  if (!schema?.skipFormat) {
     await formatFiles(host);
   }
 

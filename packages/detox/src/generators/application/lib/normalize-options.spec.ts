@@ -20,6 +20,10 @@ describe('Normalize Options', () => {
       name: 'my-app-e2e',
       project: 'my-app',
       linter: Linter.EsLint,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     };
     const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -30,6 +34,10 @@ describe('Normalize Options', () => {
       appFileName: 'my-app',
       appClassName: 'MyApp',
       linter: Linter.EsLint,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
   });
 
@@ -41,6 +49,11 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'myAppE2e',
       project: 'myApp',
+      linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     };
     const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -50,6 +63,11 @@ describe('Normalize Options', () => {
       project: 'myApp',
       projectName: 'my-app-e2e',
       projectRoot: 'apps/my-app-e2e',
+      linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
   });
 
@@ -62,6 +80,11 @@ describe('Normalize Options', () => {
       name: 'my-app-e2e',
       project: 'my-app',
       directory: 'directory',
+      linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     };
     const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -72,6 +95,11 @@ describe('Normalize Options', () => {
       name: 'my-app-e2e',
       directory: 'directory',
       projectName: 'directory-my-app-e2e',
+      linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
   });
 
@@ -83,6 +111,11 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'directory/my-app-e2e',
       project: 'my-app',
+      linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     };
     const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -92,6 +125,11 @@ describe('Normalize Options', () => {
       projectRoot: 'apps/directory/my-app-e2e',
       name: 'directory/my-app-e2e',
       projectName: 'directory-my-app-e2e',
+      linter: Linter.None,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
   });
 });

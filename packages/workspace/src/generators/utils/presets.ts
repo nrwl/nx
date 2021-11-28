@@ -11,4 +11,5 @@ export enum Preset {
   Nest = 'nest',
   Express = 'express',
   ReactNative = 'react-native',
+  Expo = 'expo',
 }

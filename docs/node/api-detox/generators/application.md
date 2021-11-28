@@ -79,3 +79,13 @@ Default: `false`
 Type: `boolean`
 
 Skip formatting files
+
+### type
+
+Default: `react-native`
+
+Type: `string`
+
+Possible values: `react-native`, `expo`
+
+The type of project to generate detox e2e for

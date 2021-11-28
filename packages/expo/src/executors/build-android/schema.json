@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxExpoBuildAndroid",
+  "cli": "nx",
+  "title": "Expo Android Build executor",
+  "description": "Build and sign a standalone APK or App Bundle for the Google Play Store",
+  "type": "object",
+  "properties": {
+    "clearCredentials": {
+      "type": "boolean",
+      "description": "Clear all credentials stored on Expo servers.",
+      "alias": "c"
+    },
+    "type": {
+      "enum": ["app-bundle", "apk"],
+      "description": "Type of build: [app-bundle⎮apk].",
+      "alias": "t"
+    },
+    "releaseChannel": {
+      "type": "string",
+      "description": "Pull from specified release channel."
+    },
+    "noPublish": {
+      "type": "boolean",
+      "description": "Disable automatic publishing before building."
+    },
+    "noWait": {
+      "type": "boolean",
+      "description": "Exit immediately after scheduling build."
+    },
+    "keystorePath": {
+      "type": "string",
+      "description": "Path to your Keystore: *.jks."
+    },
+    "keystoreAlias": {
+      "type": "string",
+      "description": "Keystore Alias"
+    },
+    "publicUrl": {
+      "type": "string",
+      "description": "The URL of an externally hosted manifest (for self-hosted apps)."
+    },
+    "skipWorkflowCheck": {
+      "type": "boolean",
+      "description": "Skip warning about build service bare workflow limitations."
+    }
+  },
+  "required": []
+}

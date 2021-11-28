@@ -14,6 +14,7 @@ describe('detox application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    tree.write('.gitignore', '');
   });
 
   describe('app at root', () => {
@@ -26,6 +27,10 @@ describe('detox application generator', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.None,
+        js: false,
+        type: 'react-native',
+        skipFormat: false,
+        setParserOptionsProject: false,
       });
     });
 
@@ -59,6 +64,10 @@ describe('detox application generator', () => {
         directory: 'my-dir',
         project: 'my-dir-my-app',
         linter: Linter.None,
+        js: false,
+        type: 'react-native',
+        skipFormat: false,
+        setParserOptionsProject: false,
       });
     });
 
@@ -93,6 +102,10 @@ describe('detox application generator', () => {
         name: 'my-dir/my-app-e2e',
         project: 'my-dir-my-app',
         linter: Linter.None,
+        js: false,
+        type: 'react-native',
+        skipFormat: false,
+        setParserOptionsProject: false,
       });
     });
 

@@ -19,6 +19,10 @@ describe('Create Files', () => {
       appFileName: 'my-app',
       appClassName: 'MyApp',
       linter: Linter.EsLint,
+      js: false,
+      type: 'react-native',
+      skipFormat: false,
+      setParserOptionsProject: false,
     });
 
     expect(tree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
