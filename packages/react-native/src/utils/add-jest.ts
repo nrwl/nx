@@ -5,7 +5,8 @@ export async function addJest(
   host: Tree,
   unitTestRunner: 'jest' | 'none',
   projectName: string,
-  appProjectRoot: string
+  appProjectRoot: string,
+  js: boolean
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};
@@ -27,7 +28,7 @@ export async function addJest(
   testRunner: 'jest-jasmine2',
   resolver: '@nrwl/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
     '\\.svg': '@nrwl/react-native/plugins/jest/svg-mock'
   },

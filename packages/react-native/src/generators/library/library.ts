@@ -57,7 +57,8 @@ export async function reactNativeLibraryGenerator(
     host,
     options.unitTestRunner,
     options.name,
-    options.projectRoot
+    options.projectRoot,
+    options.js
   );
 
   if (options.publishable || options.buildable) {

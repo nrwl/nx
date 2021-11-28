@@ -41,7 +41,8 @@ export async function reactNativeApplicationGenerator(
     host,
     options.unitTestRunner,
     options.projectName,
-    options.appProjectRoot
+    options.appProjectRoot,
+    options.js
   );
   const detoxTask = await addDetox(host, options);
   const symlinkTask = runSymlink(host.root, options.appProjectRoot);

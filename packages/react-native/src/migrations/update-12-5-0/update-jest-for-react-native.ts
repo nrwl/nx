@@ -56,8 +56,14 @@ function updateJestConfig(tree: Tree) {
 
       try {
         const { root } = readProjectConfiguration(tree, project);
-        const setupTestPath = join(root, 'test-setup.ts');
-        if (tree.exists(setupTestPath)) {
+        let setupTestPath: string;
+        if (tree.exists(join(root, `test-setup.ts`))) {
+          setupTestPath = join(root, `test-setup.ts`);
+        } else if (tree.exists(join(root, `test-setup.js`))) {
+          setupTestPath = join(root, `test-setup.js`);
+        }
+
+        if (setupTestPath) {
           const contents = tree.read(setupTestPath, 'utf-8');
           tree.write(
             setupTestPath,
@@ -68,7 +74,7 @@ function updateJestConfig(tree: Tree) {
         }
       } catch {
         logger.error(
-          stripIndents`Unable to update test-setup.ts for project ${project}.`
+          stripIndents`Unable to update test-setup for project ${project}.`
         );
       }
     }

@@ -45,30 +45,13 @@ export async function addLinting(
       json = reactEslintJson;
       json.ignorePatterns = ['!**/*', 'public', '.cache', 'node_modules'];
 
-      for (const override of json.overrides) {
-        if (!override.files || override.files.length !== 2) {
-          continue;
-        }
-
-        // for files ['*.tsx', '*.ts'], add rule '@typescript-eslint/ban-ts-comment': 'off'
-        if (
-          override.files.includes('*.ts') &&
-          override.files.includes('*.tsx')
-        ) {
-          override.rules = override.rules || {};
-          override.rules['@typescript-eslint/ban-ts-comment'] = 'off';
-          continue;
-        }
-
-        // for files ['*.js', '*.jsx'], add rule '@typescript-eslint/no-var-requires': 'off'
-        if (
-          override.files.includes('*.js') &&
-          override.files.includes('*.jsx')
-        ) {
-          override.rules = override.rules || {};
-          override.rules['@typescript-eslint/no-var-requires'] = 'off';
-          continue;
-        }
+      // Find the override that handles both TS and JS files.
+      const commonOverride = json.overrides?.find((o) =>
+        ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) => o.files.includes(ext))
+      );
+      if (commonOverride) {
+        commonOverride.rules = commonOverride.rules || {};
+        commonOverride.rules['@typescript-eslint/ban-ts-comment'] = 'off';
       }
 
       return json;
