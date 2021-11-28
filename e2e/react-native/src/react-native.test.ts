@@ -57,7 +57,7 @@ describe('react native', () => {
     ).not.toThrow();
   });
 
-  it('should support create application with js', async () => {
+  xit('should support create application with js', async () => {
     const appName = uniq('my-app');
     runCLI(`generate @nrwl/react-native:application ${appName} --js`);
     expect(() =>
