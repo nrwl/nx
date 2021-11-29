@@ -23,8 +23,11 @@ export function setupServeTarget(host: Tree, options: Schema) {
       ? options.remotes.map((r) => `nx serve ${r}`)
       : undefined;
     const commands = remoteServeCommands
-      ? [...remoteServeCommands, `nx serve ${options.appName}`]
-      : [`nx serve ${options.appName}`];
+      ? [
+          ...remoteServeCommands,
+          `nx serve ${options.appName} --liveReload=false`,
+        ]
+      : [`nx serve ${options.appName} --liveReload=false`];
 
     appConfig.targets['serve-mfe'] = {
       executor: '@nrwl/workspace:run-commands',
@@ -43,7 +46,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
       options: {
         ...hostAppConfig.targets['serve-mfe'].options,
         commands: [
-          `nx serve ${options.appName}`,
+          `nx serve ${options.appName} --liveReload=false`,
           ...hostAppConfig.targets['serve-mfe'].options.commands,
         ],
       },

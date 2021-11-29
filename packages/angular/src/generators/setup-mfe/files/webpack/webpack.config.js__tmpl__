@@ -24,6 +24,7 @@ module.exports = {
   output: {
     uniqueName: "<%= name %>",
     publicPath: "auto",
+    scriptType: 'text/javascript'
   },
   optimization: {
     runtimeChunk: false,

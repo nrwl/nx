@@ -126,6 +126,12 @@
       "version": "13.2.0",
       "description": "In Angular version 13, the `teardown` flag in `TestBed` will be enabled by default. This migration automatically opts out existing apps from the new teardown behavior.",
       "factory": "./src/migrations/update-13-2-0/opt-out-testbed-teardown"
+    },
+    "update-mfe-webpack-config": {
+      "cli": "nx",
+      "version": "13.3.0-beta.0",
+      "description": "Since Angular 13, Webpack builds MFE loading scripts with module syntax which is broken. Instead, switch to non-module syntax with standard script tag loading.",
+      "factory": "./src/migrations/update-13-3-0/update-mfe-webpack-config"
     }
   },
   "packageJsonUpdates": {
