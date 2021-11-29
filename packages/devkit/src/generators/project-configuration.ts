@@ -1,16 +1,13 @@
 import {
-  buildProjectConfigurationFromPackageJson,
   buildWorkspaceConfigurationFromGlobs,
   globForProjectFiles,
   ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
-  toProjectName,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
-import { parseJson } from '@nrwl/tao/src/utils/json';
-import { basename } from 'path';
+import { basename, dirname } from 'path';
 
 import {
   getWorkspaceLayout,
@@ -321,7 +318,7 @@ function addProjectToWorkspaceJson(
   mode: 'create' | 'update' | 'delete',
   standalone: boolean = false
 ) {
-  const path = getWorkspacePath(tree);
+  const workspaceConfigPath = getWorkspacePath(tree);
   const workspaceJson = readRawWorkspaceJson(tree);
 
   validateProjectConfigurationOperations(
@@ -333,7 +330,7 @@ function addProjectToWorkspaceJson(
   );
 
   const configFile =
-    (mode === 'create' && standalone) || !path
+    (mode === 'create' && standalone) || !workspaceConfigPath
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
 
@@ -342,11 +339,8 @@ function addProjectToWorkspaceJson(
       tree.delete(configFile);
       delete workspaceJson.projects[projectName];
     } else {
-      // Keep cached workspace up to date
-      if (cachedWorkspaceBuiltFromGlobs) {
-        workspaceJson.projects[projectName] = project;
-      } else if (mode === 'create') {
-        // keep real workspace up to date
+      // keep real workspace up to date
+      if (workspaceConfigPath && mode === 'create') {
         workspaceJson.projects[projectName] = project.root;
       }
       // update the project.json file
@@ -357,14 +351,12 @@ function addProjectToWorkspaceJson(
   } else {
     workspaceJson.projects[projectName] = project;
   }
-  if (path && tree.exists(path)) {
+  if (workspaceConfigPath && tree.exists(workspaceConfigPath)) {
     writeJson(
       tree,
-      path,
+      workspaceConfigPath,
       reformattedWorkspaceJsonOrNull(workspaceJson) ?? workspaceJson
     );
-  } else {
-    cachedWorkspaceBuiltFromGlobs = workspaceJson;
   }
 }
 
@@ -418,46 +410,61 @@ function findCreatedProjects(tree: Tree) {
   });
 }
 
-let cachedWorkspaceBuiltFromGlobs: RawWorkspaceJsonConfiguration;
+/**
+ * Used to ensure that projects created during
+ * the same devkit generator run show up when
+ * there is no workspace.json file, as `glob`
+ * cannot find them.
+ */
+function findDeletedProjects(tree: Tree) {
+  return tree.listChanges().filter((f) => {
+    const fileName = basename(f.path);
+    return (
+      f.type === 'DELETE' &&
+      (fileName === 'project.json' || fileName === 'package.json')
+    );
+  });
+}
+
+let staticFSWorkspace: RawWorkspaceJsonConfiguration;
 function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
     // `workspace.json` exists, use it.
     return readJson<RawWorkspaceJsonConfiguration>(tree, path);
   } else {
-    const createdProjects = findCreatedProjects(tree);
     const nxJson = readNxJson(tree);
+    const createdProjects = buildWorkspaceConfigurationFromGlobs(
+      nxJson,
+      findCreatedProjects(tree).map((x) => x.path),
+      (file) => readJson(tree, file)
+    ).projects;
     // We already have built a cache
-    if (cachedWorkspaceBuiltFromGlobs) {
-      createdProjects.forEach((project) => {
-        const json = parseJson(project.content.toString());
-        const configuration: ProjectConfiguration = project.path.endsWith(
-          'project.json'
-        )
-          ? (json as ProjectConfiguration) // `project.json` is a ProjectConfiguration
-          : buildProjectConfigurationFromPackageJson(
-              // Build it from package.json
-              project.path,
-              json,
-              nxJson
-            );
-        const name = configuration.name || toProjectName(project.path, nxJson);
-        // make sure that newly created projects are in cache
-        cachedWorkspaceBuiltFromGlobs.projects[name] ??= configuration;
-      });
-      return cachedWorkspaceBuiltFromGlobs;
-    } else {
-      // No cache, build from scratch and cache it.
-      cachedWorkspaceBuiltFromGlobs = buildWorkspaceConfigurationFromGlobs(
+    if (!staticFSWorkspace) {
+      staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
         readNxJson(tree),
-        [
-          ...globForProjectFiles(tree.root),
-          ...createdProjects.map((x) => x.path),
-        ],
+        [...globForProjectFiles(tree.root)],
         (file) => readJson(tree, file)
       );
-      return cachedWorkspaceBuiltFromGlobs;
     }
+    const projects = { ...staticFSWorkspace.projects, ...createdProjects };
+    findDeletedProjects(tree).forEach((file) => {
+      const matchingStaticProject = Object.entries(projects).find(
+        ([, config]) => {
+          typeof config === 'string'
+            ? config === dirname(file.path)
+            : config.root === dirname(file.path);
+        }
+      );
+
+      if (matchingStaticProject) {
+        delete projects[matchingStaticProject[0]];
+      }
+    });
+    return {
+      ...staticFSWorkspace,
+      projects,
+    };
   }
 }
 

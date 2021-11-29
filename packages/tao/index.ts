@@ -80,6 +80,7 @@ function findWorkspaceRoot(dir: string): string {
   }
   if (
     existsSync(join(dir, 'angular.json')) ||
+    existsSync(join(dir, 'workspace.json')) ||
     existsSync(join(dir, 'nx.json'))
   ) {
     return dir;

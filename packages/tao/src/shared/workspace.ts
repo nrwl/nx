@@ -25,7 +25,7 @@ export interface WorkspaceJsonConfiguration {
    */
   version: number;
   /**
-   * Projects' configurations
+   * Projects' projects
    */
   projects: {
     [projectName: string]: ProjectConfiguration;
@@ -633,16 +633,14 @@ export function toProjectName(
   nxJson: NxJsonConfiguration
 ): string {
   const directory = dirname(fileName);
-  const { appsDir, libsDir } = nxJson.workspaceLayout || {};
-  const regex = new RegExp(
-    `^(?:${appsDir || 'apps'}|${libsDir || 'libs'})/`,
-    'g'
-  );
-  const subpath = directory.replace(regex, '');
-  return subpath
-    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-    .toLowerCase()
-    .replace(/[ _\/]/g, '-');
+  let { appsDir, libsDir } = nxJson?.workspaceLayout || {};
+  appsDir ??= 'apps';
+  libsDir ??= 'libs';
+  const parts = directory.split(/[\/\\]/g);
+  if ([appsDir, libsDir].includes(parts[0])) {
+    parts.splice(0, 1);
+  }
+  return parts.join('-').toLowerCase();
 }
 
 let projectGlobCache: string[];
@@ -675,12 +673,28 @@ export function globForProjectFiles(root) {
     ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
   } catch {}
 
-  projectGlobCache = globSync('**/@(project.json|package.json)', {
+  const globResults = globSync('**/@(project.json|package.json)', {
     ignore: ALWAYS_IGNORE,
     absolute: false,
     cwd: root,
-    // If part of .nxignore, .gitignore, or the root package.json
-  }).filter((file) => !ig.ignores(file) && file !== 'package.json');
+  });
+  const filtered = new Map();
+  globResults.forEach((file) => {
+    const projectFolder = dirname(file);
+    const projectFile = basename(file);
+    if (
+      ig.ignores(file) || // file is in .gitignore or .nxignore
+      file === 'package.json' || // file is workspace root package json
+      // equivalent project.json file already found
+      (filtered.has(projectFolder) && projectFile === 'package.json')
+    ) {
+      return;
+    }
+    filtered.set(projectFolder, projectFile);
+  });
+  projectGlobCache = Array.from(filtered.entries()).map(([folder, file]) =>
+    join(folder, file)
+  );
   performance.mark('finish-glob-for-projects');
   performance.measure(
     'glob-for-project-files',
@@ -713,16 +727,7 @@ export function buildWorkspaceConfigurationFromGlobs(
   projectFiles: string[] = globForProjectFiles(appRootPath), // making this parameter allows devkit to pick up newly created projects
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
 ): WorkspaceJsonConfiguration {
-  const configurations: Record<string, ProjectConfiguration> = {};
-  // For package.json inferred projects, we need the name
-  // of the inferred project. This is used to overwrite the
-  // inferred project if a project.json file is also found.
-  const projectsFromPackageJsons = new Map<string, string>();
-  // For `project.json` projects, we don't need the name,
-  // but we need to know if one has already been found in
-  // a directory. This is used to skip inferring a new project
-  // from package.json in the same directory.
-  const projectsFromProjectJsons = new Set<string>();
+  const projects: Record<string, ProjectConfiguration> = {};
 
   for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');
@@ -732,41 +737,35 @@ export function buildWorkspaceConfigurationFromGlobs(
     // if a package.json file is in a directory w/o a `project.json` file.
     // this results in targets being inferred by Nx from package scripts,
     // and the root / sourceRoot both being the directory.
-    if (
-      fileName === 'package.json' &&
-      !projectsFromProjectJsons.has(directory)
-    ) {
+    if (fileName === 'package.json') {
       const { name, ...config } = buildProjectConfigurationFromPackageJson(
         file,
         readJson(file),
         nxJson
       );
-      if (configurations[name]) {
-        continue;
+      if (!projects[name]) {
+        projects[name] = config;
+      } else {
+        logger.error(
+          `Skipping project found at ${directory} since project ${name} already exists! To have multiple Nx projects publish to the same npm package, you must use project.json based configuration`
+        );
+        throw new Error();
       }
-      configurations[name] = config;
-
-      projectsFromPackageJsons.set(directory, name);
+      projects[name] = config;
     } else if (fileName === 'project.json') {
       //  Nx specific project configuration (`project.json` files) in the same
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
-      if (projectsFromPackageJsons.has(directory)) {
-        const oldName = projectsFromPackageJsons.get(directory);
-        delete configurations[oldName];
-        projectsFromPackageJsons.delete(directory);
-      }
       const configuration = readJson(file);
       let name = configuration.name;
       if (!configuration.name) {
         name = toProjectName(file, nxJson);
       }
-      if (!configurations[name]) {
-        configurations[name] = configuration;
-        projectsFromProjectJsons.add(directory);
+      if (!projects[name]) {
+        projects[name] = configuration;
       } else {
         logger.warn(
-          `Skipping project found at ${directory} since project ${name} already exists!`
+          `Skipping project found at ${directory} since project ${name} already exists! Specify a unique name for the project to allow Nx to differentiate between the two projects.`
         );
       }
     }
@@ -774,7 +773,7 @@ export function buildWorkspaceConfigurationFromGlobs(
 
   return {
     version: 2,
-    projects: configurations,
+    projects: projects,
   };
 }
 

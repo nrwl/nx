@@ -23,12 +23,12 @@ if (!patched) {
       core._test_addWorkspaceFile('workspace.json', core.WorkspaceFormat.JSON);
       const originalWriteWorkspace = core.writeWorkspace;
       core.writeWorkspace = (...args) => {
-        originalWriteWorkspace.apply(this, args);
         const configFile = workspaceConfigName(appRootPath);
         logger.warn(
           `[NX] An Angular builder called \`writeWorkspace\`, this may have had unintended consequences in ${configFile}`
         );
         logger.warn(`[NX] Double check ${configFile} before proceeding`);
+        originalWriteWorkspace.apply(this, args);
       };
 
       // Patch readJsonWorkspace to inline project configurations
@@ -48,10 +48,7 @@ if (!patched) {
           'workspace.json', // path name, doesn't matter
           {
             // second arg is a host, only method used is readFile
-            readFile: () => {
-              const buf = JSON.stringify(w);
-              return buf;
-            },
+            readFile: () => JSON.stringify(w),
           },
         ]);
       };

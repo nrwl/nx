@@ -29,8 +29,8 @@ describe('@nrwl/workspace:npm-package', () => {
       name: 'my-package',
     });
 
-    const projects = getProjects(tree);
-    expect(projects.get('my-package')).toMatchInlineSnapshot(`
+    const project = readProjectConfiguration(tree, 'my-package');
+    expect(project).toMatchInlineSnapshot(`
       Object {
         "root": "packages/my-package",
       }
