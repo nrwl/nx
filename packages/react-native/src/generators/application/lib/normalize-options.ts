@@ -37,9 +37,8 @@ export function normalizeOptions(
     : [];
 
   const entryFile = join(
-    host.root,
     appProjectRoot,
-    options.js ? 'src/main.js' : '/src/main.tsx'
+    options.js ? '/src/main.js' : '/src/main.tsx'
   );
 
   /**
