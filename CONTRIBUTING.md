@@ -157,6 +157,16 @@ By default, the site displays the `Latest` cut release of the docs. To see your 
 
 <img src="https://raw.githubusercontent.com/nrwl/nx/master/images/selecting-preview-from-version-selection-box.png" width="600" alt="Selecting Preview from Version Selection box">
 
+#### When occurring `JavaScript heap out of memory`
+
+When you occurred `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`, you would need to [increase the max memory size of V8's old memory section](https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes):
+
+```bash
+export NODE_OPTIONS="--max-old-space-size=4096"
+```
+
+After configuring this, try to run `npx nx serve nx-dev` again.
+
 ### PR Preview
 
 When submitting a PR, this repo will automatically generate a preview of the `nx-dev` application based on the contents of your pull request.
@@ -202,7 +212,7 @@ Please follow the following guidelines:
 
 The commit message should follow the following format:
 
-```
+```plain
 type(scope): subject
 BLANK LINE
 body
@@ -246,7 +256,7 @@ Including the issue number that the PR relates to also helps with tracking.
 
 #### Example
 
-```
+```plain
 feat(angular): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
