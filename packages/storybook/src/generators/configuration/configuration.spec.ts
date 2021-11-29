@@ -13,6 +13,8 @@ import { libraryGenerator } from '@nrwl/workspace/generators';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';
 
+import { storybookVersion } from '../../utils/versions';
+
 describe('@nrwl/storybook:configuration', () => {
   let tree: Tree;
 
@@ -24,8 +26,8 @@ describe('@nrwl/storybook:configuration', () => {
     });
     writeJson(tree, 'package.json', {
       devDependencies: {
-        '@storybook/addon-essentials': '~6.2.9',
-        '@storybook/react': '~6.2.9',
+        '@storybook/addon-essentials': storybookVersion,
+        '@storybook/react': storybookVersion,
       },
     });
   });

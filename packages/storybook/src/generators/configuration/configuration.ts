@@ -26,10 +26,9 @@ import {
 } from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
-import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
-import { gte } from 'semver';
+import { gte, lt } from 'semver';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -41,6 +40,16 @@ export async function configurationGenerator(
 
   const workspaceStorybookVersion = getCurrentWorkspaceStorybookVersion(tree);
 
+  if (workspaceStorybookVersion === '5') {
+    logger.warn(
+      `Your Storybook version is ${workspaceStorybookVersion}.
+      Nx no longer supports Storybook versions lower than 6. 
+      Please update your Storybook package versions and try again.
+      You can use the "nx migrate" command.`
+    );
+    return;
+  }
+
   const { projectType } = readProjectConfiguration(tree, schema.name);
 
   const initTask = await initGenerator(tree, {
@@ -48,14 +57,8 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js, workspaceStorybookVersion);
-  createProjectStorybookDir(
-    tree,
-    schema.name,
-    schema.uiFramework,
-    schema.js,
-    workspaceStorybookVersion
-  );
+  createRootStorybookDir(tree, schema.js);
+  createProjectStorybookDir(tree, schema.name, schema.uiFramework, schema.js);
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
@@ -92,25 +95,17 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
   };
 }
 
-function createRootStorybookDir(
-  tree: Tree,
-  js: boolean,
-  workspaceStorybookVersion: string
-) {
+function createRootStorybookDir(tree: Tree, js: boolean) {
   if (tree.exists('.storybook')) {
     logger.warn(
       `.storybook folder already exists at root! Skipping generating files in it.`
     );
     return;
   }
-  logger.debug(
-    `adding .storybook folder to the root directory - 
-     based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
-  );
-  const templatePath = join(
-    __dirname,
-    workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
-  );
+
+  logger.debug(`adding .storybook folder to the root directory`);
+
+  const templatePath = join(__dirname, './root-files');
   generateFiles(tree, templatePath, '', {});
 
   if (js) {
@@ -122,16 +117,8 @@ function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
-  js: boolean,
-  workspaceStorybookVersion: string
+  js: boolean
 ) {
-  /**
-   * Here, same as above
-   * Check storybook version
-   * and use the correct folder
-   * lib-files-5 or lib-files-6
-   */
-
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
 
@@ -144,13 +131,8 @@ function createProjectStorybookDir(
     return;
   }
 
-  logger.debug(
-    `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
-  );
-  const templatePath = join(
-    __dirname,
-    workspaceStorybookVersion === '6' ? './project-files' : './project-files-5'
-  );
+  logger.debug(`adding .storybook folder to ${projectDirectory}`);
+  const templatePath = join(__dirname, './project-files');
 
   generateFiles(tree, templatePath, root, {
     tmpl: '',
@@ -350,6 +332,16 @@ function getCurrentWorkspaceStorybookVersion(tree: Tree): string {
   ) {
     workspaceStorybookVersion = '6';
   }
+
+  if (
+    lt(
+      checkAndCleanWithSemver('@storybook/core', workspaceStorybookVersion),
+      '6.0.0'
+    )
+  ) {
+    workspaceStorybookVersion = '5';
+  }
+
   return workspaceStorybookVersion;
 }
 
