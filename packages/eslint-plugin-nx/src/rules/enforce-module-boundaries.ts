@@ -22,7 +22,6 @@ import {
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
-  isNpmProject,
   ProjectType,
   readCachedProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
@@ -238,6 +237,12 @@ export default createESLintRule<Options, MessageIds>({
 
       // project => npm package
       if (targetProject.type === 'npm') {
+        // if (banTransitiveDependencies && !isDirectDependency(targetProject)) {
+        //   context.report({
+        //     node,
+        //     messageId: 'noTransitiveDependencies',
+        //   });
+        // }
         const constraint = hasBannedImport(
           sourceProject,
           targetProject,
