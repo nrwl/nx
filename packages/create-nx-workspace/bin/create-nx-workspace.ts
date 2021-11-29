@@ -564,7 +564,11 @@ function mapErrorToBodyLines(error: {
     // print entire log message only if it's only a single message
     return [`Error: ${error.logMessage}`];
   }
-  return [`Exit code: ${error.code}`, `Log file: ${error.logFile}`];
+  const lines = [`Exit code: ${error.code}`, `Log file: ${error.logFile}`];
+  if (process.env.NX_VERBOSE_LOGGING) {
+    lines.push(`Error: ${error.logMessage}`);
+  }
+  return lines;
 }
 
 function execAndWait(command: string, cwd: string) {
