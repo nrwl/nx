@@ -320,14 +320,20 @@ function addProjectToWorkspaceJson(
 ) {
   const workspaceConfigPath = getWorkspacePath(tree);
   const workspaceJson = readRawWorkspaceJson(tree);
-
-  validateProjectConfigurationOperations(
-    mode,
-    workspaceJson,
-    projectName,
-    project.root,
-    tree
-  );
+  if (workspaceConfigPath) {
+    validateProjectConfigurationOperationsGivenWorkspaceJson(
+      mode,
+      workspaceJson,
+      projectName
+    );
+  } else {
+    validateProjectConfigurationOperationsWithoutWorkspaceJson(
+      mode,
+      projectName,
+      project.root,
+      tree
+    );
+  }
 
   const configFile =
     (mode === 'create' && standalone) || !workspaceConfigPath
@@ -480,53 +486,56 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
     : null;
 }
 
-function validateProjectConfigurationOperations(
+function validateProjectConfigurationOperationsGivenWorkspaceJson(
   mode: 'create' | 'update' | 'delete',
   workspaceJson:
     | RawWorkspaceJsonConfiguration
     | WorkspaceJsonConfiguration
     | null,
+  projectName: string
+) {
+  if (mode == 'create' && workspaceJson.projects[projectName]) {
+    throw new Error(
+      `Cannot create Project '${projectName}'. It already exists.`
+    );
+  }
+  if (mode == 'update' && !workspaceJson.projects[projectName]) {
+    throw new Error(
+      `Cannot update Project '${projectName}'. It does not exist.`
+    );
+  }
+  if (mode == 'delete' && !workspaceJson.projects[projectName]) {
+    throw new Error(
+      `Cannot delete Project '${projectName}'. It does not exist.`
+    );
+  }
+}
+
+function validateProjectConfigurationOperationsWithoutWorkspaceJson(
+  mode: 'create' | 'update' | 'delete',
   projectName: string,
   projectRoot: string,
   tree: Tree
 ) {
-  if (workspaceJson) {
-    if (mode == 'create' && workspaceJson.projects[projectName]) {
-      throw new Error(
-        `Cannot create Project '${projectName}'. It already exists.`
-      );
-    }
-    if (mode == 'update' && !workspaceJson.projects[projectName]) {
-      throw new Error(
-        `Cannot update Project '${projectName}'. It does not exist.`
-      );
-    }
-    if (mode == 'delete' && !workspaceJson.projects[projectName]) {
-      throw new Error(
-        `Cannot delete Project '${projectName}'. It does not exist.`
-      );
-    }
-  } else {
-    if (
-      mode == 'create' &&
-      tree.exists(joinPathFragments(projectRoot, 'project.json'))
-    ) {
-      throw new Error(
-        `Cannot create a new project at ${projectRoot}. It already exists.`
-      );
-    }
-    if (
-      mode == 'update' &&
-      !tree.exists(joinPathFragments(projectRoot, 'project.json'))
-    ) {
-      throw new Error(
-        `Cannot update Project ${projectName}. It doesn't exist or uses package.json configuration.`
-      );
-    }
-    if (mode == 'delete' && !tree.exists(joinPathFragments(projectRoot))) {
-      throw new Error(
-        `Cannot delete Project ${projectName}. It doesn't exist or uses package.json configuration.`
-      );
-    }
+  if (
+    mode == 'create' &&
+    tree.exists(joinPathFragments(projectRoot, 'project.json'))
+  ) {
+    throw new Error(
+      `Cannot create a new project at ${projectRoot}. It already exists.`
+    );
+  }
+  if (
+    mode == 'update' &&
+    !tree.exists(joinPathFragments(projectRoot, 'project.json'))
+  ) {
+    throw new Error(
+      `Cannot update Project ${projectName} at ${projectRoot}. It doesn't exist or uses package.json configuration.`
+    );
+  }
+  if (mode == 'delete' && !tree.exists(joinPathFragments(projectRoot))) {
+    throw new Error(
+      `Cannot delete Project ${projectName}. It doesn't exist or uses package.json configuration.`
+    );
   }
 }

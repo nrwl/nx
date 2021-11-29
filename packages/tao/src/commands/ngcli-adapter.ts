@@ -240,8 +240,11 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             .read(configFileName)
             .pipe(map((data) => parseJson(Buffer.from(data).toString())));
         } else {
-          this.__nxInMemoryWorkspace =
-            buildWorkspaceConfigurationFromGlobs(nxJson);
+          const staticProjects = globForProjectFiles(this._root);
+          this.__nxInMemoryWorkspace = buildWorkspaceConfigurationFromGlobs(
+            nxJson,
+            staticProjects.filter((x) => basename(x) !== 'package.json')
+          );
           return of(this.__nxInMemoryWorkspace);
         }
       }
@@ -619,7 +622,9 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
 
         const staticProjects = buildWorkspaceConfigurationFromGlobs(
           nxJsonInTree,
-          globForProjectFiles(this.host.root),
+          globForProjectFiles(this.host.root).filter(
+            (x) => basename(x) !== 'package.json'
+          ),
           readJsonWithHost
         );
         const createdProjects = buildWorkspaceConfigurationFromGlobs(

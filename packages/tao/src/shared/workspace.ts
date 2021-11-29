@@ -765,7 +765,7 @@ export function buildWorkspaceConfigurationFromGlobs(
         projects[name] = configuration;
       } else {
         logger.warn(
-          `Skipping project found at ${directory} since project ${name} already exists! Specify a unique name for the project to allow Nx to differentiate between the two projects.`
+          `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects.`
         );
       }
     }
