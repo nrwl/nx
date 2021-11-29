@@ -14,6 +14,7 @@ import {
   onlyLoadChildren,
   MappedProjectGraph,
   hasBannedImport,
+  // isDirectDependency,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -22,7 +23,6 @@ import {
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
-  isNpmProject,
   ProjectType,
   readCachedProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
@@ -40,6 +40,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
+    banTransitiveDependencies: boolean;
   }
 ];
 export type MessageIds =
@@ -52,7 +53,8 @@ export type MessageIds =
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
   | 'tagConstraintViolation'
-  | 'bannedExternalImportsViolation';
+  | 'bannedExternalImportsViolation'
+  | 'noTransitiveDependencies';
 export const RULE_NAME = 'enforce-module-boundaries';
 
 export default createESLintRule<Options, MessageIds>({
@@ -98,6 +100,7 @@ export default createESLintRule<Options, MessageIds>({
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
+      noTransitiveDependencies: `ransitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
     },
   },
   defaultOptions: [
@@ -106,6 +109,7 @@ export default createESLintRule<Options, MessageIds>({
       depConstraints: [],
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
+      banTransitiveDependencies: false,
     },
   ],
   create(
@@ -116,6 +120,7 @@ export default createESLintRule<Options, MessageIds>({
         depConstraints,
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
+        banTransitiveDependencies,
       },
     ]
   ) {
@@ -238,6 +243,12 @@ export default createESLintRule<Options, MessageIds>({
 
       // project => npm package
       if (targetProject.type === 'npm') {
+        // if (banTransitiveDependencies && !isDirectDependency(targetProject)) {
+        //   context.report({
+        //     node,
+        //     messageId: 'noTransitiveDependencies',
+        //   });
+        // }
         const constraint = hasBannedImport(
           sourceProject,
           targetProject,
