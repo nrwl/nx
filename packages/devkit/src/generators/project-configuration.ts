@@ -1,10 +1,13 @@
 import {
+  buildWorkspaceConfigurationFromGlobs,
+  globForProjectFiles,
   ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
+import { basename, dirname } from 'path';
 
 import {
   getWorkspaceLayout,
@@ -102,8 +105,7 @@ export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
  * This does _not_ provide projects configuration, use {@link readProjectConfiguration} instead.
  */
 export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
-  const workspace = readRawWorkspaceJson(tree);
-  delete workspace.projects;
+  const { projects, ...workspace } = readRawWorkspaceJson(tree); // Create a new object, without projects
 
   let nxJson = readNxJson(tree);
   if (nxJson === null) {
@@ -131,9 +133,6 @@ export function updateWorkspaceConfiguration(
   workspaceConfig: WorkspaceConfiguration
 ): void {
   const {
-    // Workspace Json Properties
-    version,
-
     // Nx Json Properties
     cli,
     defaultProject,
@@ -146,9 +145,7 @@ export function updateWorkspaceConfiguration(
     tasksRunnerOptions,
     affected,
   } = workspaceConfig;
-  const workspace: Omit<Required<WorkspaceJsonConfiguration>, 'projects'> = {
-    version,
-  };
+
   const nxJson: Required<NxJsonConfiguration> = {
     implicitDependencies,
     plugins,
@@ -161,17 +158,6 @@ export function updateWorkspaceConfiguration(
     generators,
     defaultProject,
   };
-
-  updateJson<WorkspaceJsonConfiguration>(
-    tree,
-    getWorkspacePath(tree),
-    (json) => {
-      return {
-        ...json,
-        ...(reformattedWorkspaceJsonOrNull(workspace) ?? workspace),
-      };
-    }
-  );
 
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
@@ -191,6 +177,17 @@ export function updateWorkspaceConfiguration(
         return { ...json, ...nxJson };
       }
     });
+  }
+
+  // Only prop in workspace.json is version. If there is no
+  // workspace.json file, this f(x) doesn't update anything
+  // in project config.
+  const workspacePath = getWorkspacePath(tree);
+  if (workspacePath) {
+    updateJson<WorkspaceJsonConfiguration>(tree, workspacePath, (json) => ({
+      ...json,
+      version: workspaceConfig.version,
+    }));
   }
 }
 
@@ -232,8 +229,6 @@ export function readProjectConfiguration(
     );
   }
 
-  const nxJson = readNxJson(tree);
-
   return getProjectConfiguration(projectName, workspace);
 }
 
@@ -256,13 +251,16 @@ export function readNxJson(tree: Tree): NxJsonConfiguration | null {
  * @param project - the project name
  */
 export function isStandaloneProject(tree: Tree, project: string): boolean {
-  const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
-    tree,
-    getWorkspacePath(tree)
-  );
-  const projectConfig = rawWorkspace.projects?.[project];
-
-  return typeof projectConfig === 'string';
+  const path = getWorkspacePath(tree);
+  const rawWorkspace =
+    path && tree.exists(path)
+      ? readJson<RawWorkspaceJsonConfiguration>(tree, path)
+      : null;
+  if (rawWorkspace) {
+    const projectConfig = rawWorkspace.projects?.[project];
+    return typeof projectConfig === 'string';
+  }
+  return true;
 }
 
 function getProjectConfiguration(
@@ -289,7 +287,12 @@ function setProjectConfiguration(
   standalone: boolean = false
 ): void {
   if (mode === 'delete') {
-    addProjectToWorkspaceJson(tree, projectName, undefined, mode);
+    addProjectToWorkspaceJson(
+      tree,
+      projectName,
+      readProjectConfiguration(tree, projectName),
+      mode
+    );
     return;
   }
 
@@ -315,13 +318,25 @@ function addProjectToWorkspaceJson(
   mode: 'create' | 'update' | 'delete',
   standalone: boolean = false
 ) {
-  const path = getWorkspacePath(tree);
-  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(tree, path);
-
-  validateWorkspaceJsonOperations(mode, workspaceJson, projectName);
+  const workspaceConfigPath = getWorkspacePath(tree);
+  const workspaceJson = readRawWorkspaceJson(tree);
+  if (workspaceConfigPath) {
+    validateProjectConfigurationOperationsGivenWorkspaceJson(
+      mode,
+      workspaceJson,
+      projectName
+    );
+  } else {
+    validateProjectConfigurationOperationsWithoutWorkspaceJson(
+      mode,
+      projectName,
+      project.root,
+      tree
+    );
+  }
 
   const configFile =
-    mode === 'create' && standalone
+    (mode === 'create' && standalone) || !workspaceConfigPath
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
 
@@ -330,21 +345,25 @@ function addProjectToWorkspaceJson(
       tree.delete(configFile);
       delete workspaceJson.projects[projectName];
     } else {
+      // keep real workspace up to date
+      if (workspaceConfigPath && mode === 'create') {
+        workspaceJson.projects[projectName] = project.root;
+      }
+      // update the project.json file
       writeJson(tree, configFile, project);
-    }
-    if (mode === 'create') {
-      workspaceJson.projects[projectName] = project.root;
     }
   } else if (mode === 'delete') {
     delete workspaceJson.projects[projectName];
   } else {
     workspaceJson.projects[projectName] = project;
   }
-  writeJson(
-    tree,
-    path,
-    reformattedWorkspaceJsonOrNull(workspaceJson) ?? workspaceJson
-  );
+  if (workspaceConfigPath && tree.exists(workspaceConfigPath)) {
+    writeJson(
+      tree,
+      workspaceConfigPath,
+      reformattedWorkspaceJsonOrNull(workspaceJson) ?? workspaceJson
+    );
+  }
 }
 
 /**
@@ -381,9 +400,78 @@ function inlineProjectConfigurationsWithTree(
   return workspaceJson as WorkspaceJsonConfiguration;
 }
 
+/**
+ * Used to ensure that projects created during
+ * the same devkit generator run show up when
+ * there is no workspace.json file, as `glob`
+ * cannot find them.
+ */
+function findCreatedProjects(tree: Tree) {
+  return tree.listChanges().filter((f) => {
+    const fileName = basename(f.path);
+    return (
+      f.type === 'CREATE' &&
+      (fileName === 'project.json' || fileName === 'package.json')
+    );
+  });
+}
+
+/**
+ * Used to ensure that projects created during
+ * the same devkit generator run show up when
+ * there is no workspace.json file, as `glob`
+ * cannot find them.
+ */
+function findDeletedProjects(tree: Tree) {
+  return tree.listChanges().filter((f) => {
+    const fileName = basename(f.path);
+    return (
+      f.type === 'DELETE' &&
+      (fileName === 'project.json' || fileName === 'package.json')
+    );
+  });
+}
+
+let staticFSWorkspace: RawWorkspaceJsonConfiguration;
 function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
   const path = getWorkspacePath(tree);
-  return readJson<RawWorkspaceJsonConfiguration>(tree, path);
+  if (path && tree.exists(path)) {
+    // `workspace.json` exists, use it.
+    return readJson<RawWorkspaceJsonConfiguration>(tree, path);
+  } else {
+    const nxJson = readNxJson(tree);
+    const createdProjects = buildWorkspaceConfigurationFromGlobs(
+      nxJson,
+      findCreatedProjects(tree).map((x) => x.path),
+      (file) => readJson(tree, file)
+    ).projects;
+    // We already have built a cache
+    if (!staticFSWorkspace) {
+      staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
+        readNxJson(tree),
+        [...globForProjectFiles(tree.root)],
+        (file) => readJson(tree, file)
+      );
+    }
+    const projects = { ...staticFSWorkspace.projects, ...createdProjects };
+    findDeletedProjects(tree).forEach((file) => {
+      const matchingStaticProject = Object.entries(projects).find(
+        ([, config]) => {
+          typeof config === 'string'
+            ? config === dirname(file.path)
+            : config.root === dirname(file.path);
+        }
+      );
+
+      if (matchingStaticProject) {
+        delete projects[matchingStaticProject[0]];
+      }
+    });
+    return {
+      ...staticFSWorkspace,
+      projects,
+    };
+  }
 }
 
 /**
@@ -398,9 +486,12 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
     : null;
 }
 
-function validateWorkspaceJsonOperations(
+function validateProjectConfigurationOperationsGivenWorkspaceJson(
   mode: 'create' | 'update' | 'delete',
-  workspaceJson: RawWorkspaceJsonConfiguration | WorkspaceJsonConfiguration,
+  workspaceJson:
+    | RawWorkspaceJsonConfiguration
+    | WorkspaceJsonConfiguration
+    | null,
   projectName: string
 ) {
   if (mode == 'create' && workspaceJson.projects[projectName]) {
@@ -416,6 +507,35 @@ function validateWorkspaceJsonOperations(
   if (mode == 'delete' && !workspaceJson.projects[projectName]) {
     throw new Error(
       `Cannot delete Project '${projectName}'. It does not exist.`
+    );
+  }
+}
+
+function validateProjectConfigurationOperationsWithoutWorkspaceJson(
+  mode: 'create' | 'update' | 'delete',
+  projectName: string,
+  projectRoot: string,
+  tree: Tree
+) {
+  if (
+    mode == 'create' &&
+    tree.exists(joinPathFragments(projectRoot, 'project.json'))
+  ) {
+    throw new Error(
+      `Cannot create a new project at ${projectRoot}. It already exists.`
+    );
+  }
+  if (
+    mode == 'update' &&
+    !tree.exists(joinPathFragments(projectRoot, 'project.json'))
+  ) {
+    throw new Error(
+      `Cannot update Project ${projectName} at ${projectRoot}. It doesn't exist or uses package.json configuration.`
+    );
+  }
+  if (mode == 'delete' && !tree.exists(joinPathFragments(projectRoot))) {
+    throw new Error(
+      `Cannot delete Project ${projectName}. It doesn't exist or uses package.json configuration.`
     );
   }
 }

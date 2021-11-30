@@ -885,7 +885,7 @@ Example:
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`tree`): `string`
+▸ **getWorkspacePath**(`tree`): `"/angular.json"` \| `"/workspace.json"` \| `null`
 
 #### Parameters
 
@@ -895,7 +895,7 @@ Example:
 
 #### Returns
 
-`string`
+`"/angular.json"` \| `"/workspace.json"` \| `null`
 
 ---
 

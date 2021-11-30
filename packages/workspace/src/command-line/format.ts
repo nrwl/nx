@@ -21,6 +21,7 @@ import {
   writeJsonFile,
 } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { existsSync } from 'fs';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -102,14 +103,17 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
   if (nxArgs.all) {
     return;
   }
-
   const chunk = [];
-  const workspaceJsonPath = workspaceConfigName(appRootPath);
-  [workspaceJsonPath, 'nx.json', 'tsconfig.base.json'].forEach((file) => {
+  const addToChunkIfNeeded = (file: string) => {
     if (chunkList.every((c) => !c.includes(`"${file}"`))) {
       chunk.push(file);
     }
-  });
+  };
+  const workspaceJsonPath = workspaceConfigName(appRootPath);
+  if (existsSync(workspaceJsonPath)) {
+    addToChunkIfNeeded(workspaceJsonPath);
+  }
+  ['nx.json', 'tsconfig.base.json'].forEach(addToChunkIfNeeded);
 
   if (chunk.length > 0) {
     chunkList.push(chunk);

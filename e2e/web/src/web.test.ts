@@ -6,6 +6,8 @@ import {
   killPorts,
   newProject,
   readFile,
+  removeFile,
+  removeProject,
   runCLI,
   runCLIAsync,
   runCypressTests,
@@ -16,6 +18,7 @@ import {
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
+  afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
@@ -165,6 +168,17 @@ describe('Web Components Applications', () => {
       /Reflect\.metadata/
     );
   }, 120000);
+
+  it('should support workspaces w/o workspace config file', async () => {
+    removeFile('workspace.json');
+    const myapp = uniq('myapp');
+    runCLI(`generate @nrwl/web:app ${myapp} --directory=myDir`);
+
+    runCLI(`build my-dir-${myapp}`);
+    expect(() =>
+      checkFilesDoNotExist('workspace.json', 'angular.json')
+    ).not.toThrow();
+  }, 1000000);
 });
 
 describe('CLI - Environment Variables', () => {
