@@ -48,7 +48,6 @@ describe('runTypeCheck', () => {
     const result = await runTypeCheck({
       ts: require('typescript'),
       workspaceRoot,
-      projectRoot,
       tsConfigPath,
       mode: 'noEmit',
     });
@@ -68,7 +67,6 @@ describe('runTypeCheck', () => {
     await runTypeCheck({
       ts: require('typescript'),
       workspaceRoot,
-      projectRoot,
       tsConfigPath,
       mode: 'emitDeclarationOnly',
       outDir,
