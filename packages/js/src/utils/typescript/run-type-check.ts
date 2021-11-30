@@ -1,6 +1,5 @@
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import * as path from 'path';
-import * as ts from 'typescript';
-import { existsSync, readFileSync } from 'fs';
 import * as chalk from 'chalk';
 import { codeFrameColumns } from '../code-frames/code-frames';
 
@@ -17,7 +16,6 @@ type TypeCheckOptions = BaseTypeCheckOptions & Mode;
 interface BaseTypeCheckOptions {
   ts: typeof import('typescript');
   workspaceRoot: string;
-  projectRoot: string;
   tsConfigPath: string;
   cacheDir?: string;
 }
@@ -36,28 +34,22 @@ interface EmitDeclarationOnlyMode {
 export async function runTypeCheck(
   options: TypeCheckOptions
 ): Promise<TypeCheckResult> {
-  const { ts, workspaceRoot, projectRoot, tsConfigPath, cacheDir } = options;
-  const config = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-  if (config.error) {
-    throw new Error(`Invalid config file: ${config.error}`);
+  const { ts, workspaceRoot, tsConfigPath, cacheDir } = options;
+  const config = readTsConfig(tsConfigPath);
+  if (config.errors.length) {
+    throw new Error(`Invalid config file: ${config.errors}`);
   }
 
-  const parseConfigHost: ts.ParseConfigHost = {
-    fileExists: existsSync,
-    readDirectory: ts.sys.readDirectory,
-    readFile: (file) => readFileSync(file, 'utf8'),
-    useCaseSensitiveFileNames: true,
-  };
-  const parsed = ts.parseJsonConfigFileContent(
-    config.config,
-    parseConfigHost,
-    path.resolve(projectRoot),
+  const emitOptions =
     options.mode === 'emitDeclarationOnly'
       ? { emitDeclarationOnly: true, declaration: true, outDir: options.outDir }
-      : { noEmit: true }
-  );
+      : { noEmit: true };
 
-  const compilerOptions = { ...parsed.options, skipLibCheck: true };
+  const compilerOptions = {
+    ...config.options,
+    skipLibCheck: true,
+    ...emitOptions,
+  };
 
   let program:
     | import('typescript').Program
@@ -66,7 +58,7 @@ export async function runTypeCheck(
   if (compilerOptions.incremental && cacheDir) {
     incremental = true;
     program = ts.createIncrementalProgram({
-      rootNames: parsed.fileNames,
+      rootNames: config.fileNames,
       options: {
         ...compilerOptions,
         incremental: true,
@@ -74,7 +66,7 @@ export async function runTypeCheck(
       },
     });
   } else {
-    program = ts.createProgram(parsed.fileNames, compilerOptions);
+    program = ts.createProgram(config.fileNames, compilerOptions);
   }
   const result = program.emit();
 
@@ -97,7 +89,7 @@ export async function runTypeCheck(
   return {
     warnings,
     errors,
-    inputFilesCount: parsed.fileNames.length,
+    inputFilesCount: config.fileNames.length,
     totalFilesCount: program.getSourceFiles().length,
     incremental,
   };
