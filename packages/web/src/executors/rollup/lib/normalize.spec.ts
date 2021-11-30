@@ -1,8 +1,8 @@
-import { normalizePackageOptions } from './normalize';
-import { WebPackageOptions } from '../schema';
+import { normalizeWebRollupOptions } from './normalize';
+import { WebRollupOptions } from '../schema';
 
-describe('normalizePackageOptions', () => {
-  let testOptions: WebPackageOptions;
+describe('normalizeWebRollupOptions', () => {
+  let testOptions: WebRollupOptions;
   let root: string;
   let sourceRoot: string;
 
@@ -20,10 +20,10 @@ describe('normalizePackageOptions', () => {
   });
 
   it('should resolve both node modules and relative path for rollupConfig', () => {
-    let result = normalizePackageOptions(testOptions, root, sourceRoot);
+    let result = normalizeWebRollupOptions(testOptions, root, sourceRoot);
     expect(result.rollupConfig).toEqual(['/root/apps/nodeapp/rollup.config']);
 
-    result = normalizePackageOptions(
+    result = normalizeWebRollupOptions(
       {
         ...testOptions,
         // something that exists in node_modules
@@ -40,7 +40,7 @@ describe('normalizePackageOptions', () => {
   it('should handle rollupConfig being undefined', () => {
     delete testOptions.rollupConfig;
 
-    const result = normalizePackageOptions(testOptions, root, sourceRoot);
+    const result = normalizeWebRollupOptions(testOptions, root, sourceRoot);
     expect(result.rollupConfig).toEqual([]);
   });
 });

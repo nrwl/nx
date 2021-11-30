@@ -80,7 +80,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     const external = ['react/jsx-runtime'];
 
     targets.build = {
-      executor: '@nrwl/web:package',
+      executor: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,

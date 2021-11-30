@@ -2,20 +2,20 @@ import { dirname } from 'path';
 
 import { AssetGlobPattern } from '../../../utils/shared-models';
 import { normalizeAssets, normalizePluginPath } from '../../../utils/normalize';
-import { WebPackageOptions } from '../schema';
+import { WebRollupOptions } from '../schema';
 
-export interface NormalizedWebPackageOptions extends WebPackageOptions {
+export interface NormalizedWebRollupOptions extends WebRollupOptions {
   entryRoot: string;
   projectRoot: string;
   assets: AssetGlobPattern[];
   rollupConfig: string[];
 }
 
-export function normalizePackageOptions(
-  options: WebPackageOptions,
+export function normalizeWebRollupOptions(
+  options: WebRollupOptions,
   root: string,
   sourceRoot: string
-): NormalizedWebPackageOptions {
+): NormalizedWebRollupOptions {
   const entryFile = `${root}/${options.entryFile}`;
   const entryRoot = dirname(entryFile);
   const project = `${root}/${options.project}`;
