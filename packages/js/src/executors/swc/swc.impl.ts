@@ -6,8 +6,6 @@ import {
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
 import { join } from 'path';
-import { merge } from 'rxjs';
-import { last, scan } from 'rxjs/operators';
 import { checkDependencies } from '../../utils/check-dependencies';
 import { compileSwc } from '../../utils/swc/compile-swc';
 import { printDiagnostics } from '../../utils/typescript/print-diagnostics';
@@ -67,7 +65,7 @@ export async function swcExecutor(
   if (!options.skipTypeCheck) {
     const ts = await import('typescript');
     // start two promises, one for type checking, one for transpiling
-    return merge(
+    return Promise.all([
       runTypeCheck({
         ts,
         mode: 'emitDeclarationOnly',
@@ -86,19 +84,10 @@ export async function swcExecutor(
       }),
       compileSwc(tsOptions, async () => {
         await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
-      })
-    )
-      .pipe(
-        scan(
-          (acc, { success }) => {
-            acc.success = success;
-            return acc;
-          },
-          { success: false }
-        ),
-        last()
-      )
-      .toPromise();
+      }),
+    ]).then(([typeCheckResult, transpileResult]) => ({
+      success: typeCheckResult.success && transpileResult.success,
+    }));
   }
 
   return compileSwc(tsOptions, async () => {
