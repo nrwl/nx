@@ -94,25 +94,25 @@ export function Index() {
                     any scale:
                   </h2>
                   <p className="max-w-screen-lg text-lg font-medium mb-10 sm:mb-11 flex flex-wrap">
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-pink-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       integrations with modern frameworks
                     </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-purple-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       computation caching
                     </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       smart rebuilds of affected projects
                     </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-green-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       distributed task execution
                     </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-red-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       powerful code generators
                     </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-yellow-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       editor support
                     </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-indigo-500">
+                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
                       GitHub apps
                     </span>
                     and more.
