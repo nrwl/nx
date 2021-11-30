@@ -18,13 +18,9 @@ export default async function* bundleExecutor(
 ): AsyncGenerator<ReactNativeBundleOutput> {
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  options.bundleOutput = relative(context.root, projectRoot)
-    .split(sep)
-    .map(() => '..')
-    .concat(options.bundleOutput)
-    .join(sep);
+  options.bundleOutput = join(context.root, options.bundleOutput);
 
-  createDirectory(dirname(join(projectRoot, options.bundleOutput)));
+  createDirectory(dirname(options.bundleOutput));
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
@@ -43,7 +39,7 @@ function runCliBuild(workspaceRoot, projectRoot, options) {
     childProcess = fork(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
       ['bundle', ...cliOptions],
-      { cwd: projectRoot }
+      { cwd: join(workspaceRoot, projectRoot) }
     );
 
     // Ensure the child process is killed when the parent exits

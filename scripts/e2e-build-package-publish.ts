@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, remove } from 'fs-extra';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import {
   prettierVersion,
   typescriptVersion,
@@ -11,14 +11,21 @@ process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 async function buildPackagePublishAndCleanPorts() {
-  if (!process.env.SKIP_PUBLISH) {
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP) {
+    if (!process.env.CI) {
+      console.log(`
+  Did you know that you can run the command with:
+    > NX_E2E_SKIP_BUILD_CLEANUP - saves time by reusing the previously built local packages
+    > CI - simulate the CI environment settings\n`);
+    }
     await Promise.all([
       remove('./build'),
       remove('./tmp/nx/proj-backup'),
       remove('./tmp/angular/proj-backup'),
       remove('./tmp/local-registry'),
     ]);
-
+  }
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP || !existsSync('./build')) {
     build(process.env.PUBLISHED_VERSION);
     try {
       await updateVersionsAndPublishPackages();
@@ -26,6 +33,8 @@ async function buildPackagePublishAndCleanPorts() {
       console.log(e);
       process.exit(1);
     }
+  } else {
+    console.log(`\n⏩ Project building skipped. Reusing the existing packages`);
   }
 }
 

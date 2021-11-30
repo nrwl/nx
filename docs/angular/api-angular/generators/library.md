@@ -44,6 +44,14 @@ Type: `boolean`
 
 Generate a buildable library.
 
+### compilationMode
+
+Type: `string`
+
+Possible values: `full`, `partial`
+
+Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.
+
 ### directory
 
 Type: `string`

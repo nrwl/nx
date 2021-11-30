@@ -82,7 +82,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   let cachedFileData = {};
   if (
     cache &&
-    cache.version === '5.0' &&
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,

@@ -247,7 +247,7 @@ export class StylesheetProcessor {
       case '.less': {
         const { css: content } = await (
           await import('less')
-        ).default.render(css, {
+        ).render(css, {
           filename: filePath,
           math: 'always',
           javascriptEnabled: true,

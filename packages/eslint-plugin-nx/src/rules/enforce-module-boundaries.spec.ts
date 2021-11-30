@@ -49,6 +49,15 @@ const tsconfig = {
   include: ['**/*.ts'],
 };
 
+const packageJson = {
+  dependencies: {
+    'npm-package': '2.3.4',
+  },
+  devDependencies: {
+    'npm-awesome-package': '1.2.3',
+  },
+};
+
 const fileSys = {
   './libs/impl/src/index.ts': '',
   './libs/untagged/src/index.ts': '',
@@ -70,6 +79,7 @@ const fileSys = {
   './libs/buildableLib/src/main.ts': '',
   './libs/nonBuildableLib/src/main.ts': '',
   './tsconfig.base.json': JSON.stringify(tsconfig),
+  './package.json': JSON.stringify(packageJson),
 };
 
 describe('Enforce Module Boundaries (eslint)', () => {
@@ -257,7 +267,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           type: 'npm',
           data: {
             packageName: 'npm-package',
-            version: '0.0.0',
+            version: '2.3.4',
           },
         },
         'npm:npm-package2': {
@@ -281,7 +291,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           type: 'npm',
           data: {
             packageName: 'npm-awesome-package',
-            version: '0.0.0',
+            version: '1.2.3',
           },
         },
       },
@@ -353,6 +363,46 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
+    });
+
+    it('should error when importing transitive npm packages', () => {
+      const failures = runRule(
+        {
+          ...depConstraints,
+          banTransitiveDependencies: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package2';
+          import('npm-package2');
+        `,
+        graph
+      );
+
+      const message =
+        'Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when importing direct npm dependencies', () => {
+      const failures = runRule(
+        {
+          ...depConstraints,
+          banTransitiveDependencies: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+          import 'npm-awesome-package';
+          import('npm-awesome-package');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
     });
 
     it('should allow wildcards for defining forbidden npm packages', () => {

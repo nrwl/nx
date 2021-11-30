@@ -108,7 +108,9 @@ function reactWebpack5Check(options: CommonNxStorybookConfig) {
       encoding: 'utf8',
     });
 
-    if (!storybookConfig.includes(`builder: 'webpack5'`)) {
+    if (
+      !storybookConfig.match(/builder: ('webpack5'|"webpack5"|`webpack5`)/g)
+    ) {
       // storybook needs to be upgraded to webpack 5
       logger.warn(`
 It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
@@ -230,6 +232,13 @@ export function resolveCommonStorybookOptionMapper(
     }
     const project = context.workspace.projects[buildProjectName];
 
+    const angularDevkitCompatibleLogger = {
+      ...logger,
+      createChild() {
+        return angularDevkitCompatibleLogger;
+      },
+    };
+
     // construct a builder object for Storybook
     storybookOptions.angularBuilderContext = {
       target: {
@@ -243,11 +252,7 @@ export function resolveCommonStorybookOptionMapper(
       getTargetOptions: () => {
         return targetOptions;
       },
-      logger: {
-        createChild(name) {
-          return logger;
-        },
-      },
+      logger: angularDevkitCompatibleLogger,
     };
   } else {
     // keep the backwards compatibility

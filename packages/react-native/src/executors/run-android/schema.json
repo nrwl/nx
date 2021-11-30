@@ -55,6 +55,11 @@
       "type": "boolean",
       "description": "Starts the packager server",
       "default": true
+    },
+    "resetCache": {
+      "type": "boolean",
+      "description": "Resets metro cache",
+      "default": false
     }
   }
 }

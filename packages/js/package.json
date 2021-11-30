@@ -8,6 +8,8 @@
     "@nrwl/workspace": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
-    "@nrwl/linter": "*"
+    "@nrwl/linter": "*",
+    "chalk": "4.1.0",
+    "js-tokens": "^4.0.0"
   }
 }

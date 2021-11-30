@@ -14,12 +14,6 @@
     "ESLint",
     "CLI"
   ],
-  "files": [
-    "src",
-    "package.json",
-    "README.md",
-    "LICENSE"
-  ],
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
   "author": "Victor Savkin",

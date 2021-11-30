@@ -120,6 +120,12 @@
       "version": "13.2.0-beta.1",
       "description": "Move some imports from @nrwl/angular/testing to jasmine-marbles",
       "factory": "./src/migrations/update-13-2-0/update-testing-imports"
+    },
+    "opt-out-testbed-teardown": {
+      "cli": "nx",
+      "version": "13.2.0",
+      "description": "In Angular version 13, the `teardown` flag in `TestBed` will be enabled by default. This migration automatically opts out existing apps from the new teardown behavior.",
+      "factory": "./src/migrations/update-13-2-0/opt-out-testbed-teardown"
     }
   },
   "packageJsonUpdates": {
