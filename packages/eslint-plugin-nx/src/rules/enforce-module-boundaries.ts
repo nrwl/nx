@@ -134,6 +134,7 @@ export default createESLintRule<Options, MessageIds>({
     if (!(global as any).projectGraph) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
+      (global as any).workspaceLayout = nxJson.workspaceLayout;
 
       /**
        * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),
@@ -151,6 +152,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
+    const workspaceLayout = (global as any).workspaceLayout;
     const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
@@ -202,7 +204,7 @@ export default createESLintRule<Options, MessageIds>({
           sourceFilePath,
           sourceProject
         ) ||
-        isAbsoluteImportIntoAnotherProject(imp)
+        isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
       ) {
         context.report({
           node,

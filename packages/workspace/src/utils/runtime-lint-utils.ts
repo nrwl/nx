@@ -123,13 +123,15 @@ export function findTargetProject(
   return targetProject;
 }
 
-export function isAbsoluteImportIntoAnotherProject(imp: string) {
-  // TODO: vsavkin: check if this needs to be fixed once we generalize lint rules
+export function isAbsoluteImportIntoAnotherProject(
+  imp: string,
+  workspaceLayout = { libsDir: 'libs', appsDir: 'apps' }
+) {
   return (
-    imp.startsWith('libs/') ||
-    imp.startsWith('/libs/') ||
-    imp.startsWith('apps/') ||
-    imp.startsWith('/apps/')
+    imp.startsWith(`${workspaceLayout.libsDir}/`) ||
+    imp.startsWith(`/${workspaceLayout.libsDir}/`) ||
+    imp.startsWith(`${workspaceLayout.appsDir}/`) ||
+    imp.startsWith(`/${workspaceLayout.appsDir}/`)
   );
 }
 
