@@ -55,7 +55,7 @@ describe('react native', () => {
     expect(() =>
       checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`)
     ).not.toThrow();
-  });
+  }, 1000000);
 
   xit('should support create application with js', async () => {
     const appName = uniq('my-app');
