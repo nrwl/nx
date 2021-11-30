@@ -339,7 +339,7 @@ const swcOptionsString = () => `{
     "strict": true,
     "noInterop": true
   },
-  "exclude": ["./src/**/.*.spec.ts$"]
+  "exclude": ["./src/**/.*.spec.ts$", "./**/.*.js$"]
 }`;
 
 function addSwcConfig(tree: Tree, projectDir: string) {

@@ -44,7 +44,7 @@ export async function swcExecutor(
   const normalizedOptions = normalizeOptions(options, context);
   const { shouldContinue, tmpTsConfig, projectRoot } = checkDependencies(
     context,
-    normalizedOptions.tsConfig
+    options.tsConfig
   );
 
   if (!shouldContinue) {
@@ -69,7 +69,6 @@ export async function swcExecutor(
       runTypeCheck({
         ts,
         mode: 'emitDeclarationOnly',
-        projectRoot: tsOptions.projectRoot,
         tsConfigPath: tsOptions.tsConfig,
         outDir: tsOptions.outputPath.replace(`/${projectRoot}`, ''),
         workspaceRoot: appRootPath,

@@ -18,7 +18,7 @@ export async function tscExecutor(
 
   const { projectRoot, tmpTsConfig, shouldContinue } = checkDependencies(
     context,
-    normalizedOptions.tsConfig
+    options.tsConfig
   );
 
   if (!shouldContinue) {

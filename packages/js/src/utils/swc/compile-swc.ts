@@ -9,7 +9,7 @@ export async function compileSwc(
   const normalizedOptions = normalizeTsCompilationOptions(tsCompilationOptions);
 
   console.log(`Compiling with SWC for ${normalizedOptions.projectName}...`);
-  const srcPath = `${normalizedOptions.projectRoot}/src`;
+  const srcPath = normalizedOptions.projectRoot;
   const destPath = normalizedOptions.outputPath.replace(
     `/${normalizedOptions.projectName}`,
     ''
