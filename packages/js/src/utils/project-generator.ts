@@ -94,6 +94,10 @@ function addProject(
         assets: [`${options.projectRoot}/*.md`],
       },
     };
+
+    if (options.compiler === 'swc' && options.skipTypeCheck) {
+      projectConfiguration.targets.build.options.skipTypeCheck = true;
+    }
   }
 
   if (options.config === 'workspace') {
@@ -230,6 +234,10 @@ function normalizeOptions(
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
     options.buildable = false;
+  }
+
+  if (options.compiler === 'swc' && options.skipTypeCheck == null) {
+    options.skipTypeCheck = false;
   }
 
   const name = names(options.name).fileName;

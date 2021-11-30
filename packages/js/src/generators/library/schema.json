@@ -98,6 +98,11 @@
       "enum": ["tsc", "swc"],
       "default": "tsc",
       "description": "The compiler used by the build and test targets"
+    },
+    "skipTypeCheck": {
+      "type": "boolean",
+      "description": "Whether to skip TypeScript type checking for SWC compiler.",
+      "default": false
     }
   },
   "required": ["name"]

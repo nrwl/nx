@@ -25,6 +25,7 @@ export interface GeneratorSchema {
   setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';
   compiler?: Compiler;
+  skipTypeCheck?: boolean;
 }
 
 export interface ExecutorOptions {
