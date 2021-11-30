@@ -459,7 +459,7 @@ async function createSandbox(packageManager: string) {
     installSpinner.fail();
     output.error({
       title: `Nx failed to install dependencies`,
-      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
+      bodyLines: mapErrorToBodyLines(e),
     });
     process.exit(1);
   } finally {
@@ -515,7 +515,7 @@ async function createApp(
     workspaceSetupSpinner.fail();
     output.error({
       title: `Nx failed to create a workspace.`,
-      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
+      bodyLines: mapErrorToBodyLines(e),
     });
     process.exit(1);
   } finally {
@@ -538,7 +538,7 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
 
     output.error({
       title: `Nx failed to setup NxCloud`,
-      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
+      bodyLines: mapErrorToBodyLines(e),
     });
 
     process.exit(1);
@@ -555,13 +555,29 @@ function printNxCloudSuccessMessage(nxCloudOut: string) {
   });
 }
 
+function mapErrorToBodyLines(error: {
+  logMessage: string;
+  code: number;
+  logFile: string;
+}): string[] {
+  if (error.logMessage.split('\n').filter((line) => !!line).length === 1) {
+    // print entire log message only if it's only a single message
+    return [`Error: ${error.logMessage}`];
+  }
+  const lines = [`Exit code: ${error.code}`, `Log file: ${error.logFile}`];
+  if (process.env.NX_VERBOSE_LOGGING) {
+    lines.push(`Error: ${error.logMessage}`);
+  }
+  return lines;
+}
+
 function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
     exec(command, { cwd }, (error, stdout, stderr) => {
       if (error) {
         const logFile = path.join(cwd, 'error.log');
         writeFileSync(logFile, `${stdout}\n${stderr}`);
-        rej({ code: error.code, logFile });
+        rej({ code: error.code, logFile, logMessage: stderr });
       } else {
         res({ code: 0, stdout });
       }
