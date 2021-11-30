@@ -135,7 +135,7 @@ describe('Add next eslint 12.6.0', () => {
             root: 'apps/app1',
             targets: {
               build: {
-                executor: '@nrwl/web:build',
+                executor: '@nrwl/web:webpack',
               },
             },
           },

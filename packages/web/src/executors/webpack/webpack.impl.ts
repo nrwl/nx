@@ -27,7 +27,7 @@ import {
   writeIndexHtml,
 } from '../../utils/webpack/write-index-html';
 
-export interface WebBuildExecutorOptions extends BuildBuilderOptions {
+export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   index: string;
   budgets?: any[];
   baseHref?: string;
@@ -58,7 +58,7 @@ export interface WebBuildExecutorOptions extends BuildBuilderOptions {
 }
 
 function getWebpackConfigs(
-  options: WebBuildExecutorOptions,
+  options: WebWebpackExecutorOptions,
   context: ExecutorContext
 ): Configuration[] {
   const metadata = context.workspace.projects[context.projectName];
@@ -115,7 +115,7 @@ function getWebpackConfigs(
 }
 
 export async function* run(
-  options: WebBuildExecutorOptions,
+  options: WebWebpackExecutorOptions,
   context: ExecutorContext
 ) {
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes

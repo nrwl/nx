@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { RuleSetRule } from 'webpack';
 
-import { WebBuildExecutorOptions } from '../../../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../../../executors/webpack/webpack.impl';
 import { RemoveEmptyScriptsPlugin } from '../plugins/remove-empty-scripts-plugin';
 import { getOutputHashFormat } from '../../hash-format';
 import { normalizeExtraEntryPoints } from '../../normalize';
@@ -18,7 +18,7 @@ const RawCssLoader = require.resolve(
 
 export function getStylesConfig(
   root: string,
-  buildOptions: WebBuildExecutorOptions,
+  buildOptions: WebWebpackExecutorOptions,
   includePaths: string[]
 ) {
   const entryPoints: { [key: string]: string[] } = {};

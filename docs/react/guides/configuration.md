@@ -257,7 +257,7 @@ This is an example of `apps/myapp/project.json`:
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/web:build",
+      "executor": "@nrwl/web:webpack",
       "outputs": ["dist/apps/myapp"],
       "dependsOn": [
         {
@@ -362,7 +362,7 @@ The `configurations` property provides extra sets of values that are merged into
 ```json
 {
   "build": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -397,7 +397,7 @@ building the project. You can specify this using the `dependsOn`.
 ```json
 {
   "build": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -425,7 +425,7 @@ executed and only then `nx build myapp` is executed.
 ```json
 {
   "build-base": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",

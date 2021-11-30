@@ -271,7 +271,7 @@ Object {
 
     const workspaceJson = getProjects(appTree);
     const targetConfig = workspaceJson.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/web:build');
+    expect(targetConfig.build.executor).toEqual('@nrwl/web:webpack');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],

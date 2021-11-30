@@ -15,7 +15,7 @@ The `angular.json` configuration file contains information about the targets and
       "projectType": "application",
       "architect": {
         "build": {
-          "builder": "@nrwl/web:build",
+          "builder": "@nrwl/web:webpack",
           "outputs": ["dist/apps/myapp"],
           "dependsOn": [
             {
@@ -137,7 +137,7 @@ The `outputs` property lists the folders the builder creates files in. The prope
 ```json
 {
   "build": {
-    "builder": "@nrwl/web:build",
+    "builder": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -154,7 +154,7 @@ The `configurations` property provides extra sets of values that will be merged 
 ```json
 {
   "build": {
-    "builder": "@nrwl/web:build",
+    "builder": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -186,7 +186,7 @@ Targets can depend on other targets. A common scenario is having to build depend
 ```json
 {
   "build": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -211,7 +211,7 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 ```json
 {
   "build-base": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
