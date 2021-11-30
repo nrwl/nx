@@ -10,6 +10,7 @@ import { merge } from 'rxjs';
 import { last, scan } from 'rxjs/operators';
 import { checkDependencies } from '../../utils/check-dependencies';
 import { compileSwc } from '../../utils/swc/compile-swc';
+import { printDiagnostics } from '../../utils/typescript/print-diagnostics';
 import { runTypeCheck } from '../../utils/typescript/run-type-check';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { NormalizedSwcExecutorOptions, SwcExecutorOptions } from './schema';
@@ -74,7 +75,15 @@ export async function swcExecutor(
         tsConfigPath: tsOptions.tsConfig,
         outDir: tsOptions.outputPath.replace(`/${projectRoot}`, ''),
         workspaceRoot: appRootPath,
-      }).then(({ errors }) => Promise.resolve({ success: !errors?.length })),
+      }).then((result) => {
+        const hasErrors = result.errors.length > 0;
+
+        if (hasErrors) {
+          printDiagnostics(result);
+        }
+
+        return Promise.resolve({ success: !hasErrors });
+      }),
       compileSwc(tsOptions, async () => {
         await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
       })
