@@ -1,14 +1,14 @@
 {
   "builders": {
-    "build": {
-      "implementation": "./src/executors/build/compat",
-      "schema": "./src/executors/build/schema.json",
-      "description": "Build a application"
+    "webpack": {
+      "implementation": "./src/executors/webpack/compat",
+      "schema": "./src/executors/webpack/schema.json",
+      "description": "Build an application using webpack"
     },
     "rollup": {
       "implementation": "./src/executors/rollup/rollup.impl",
       "schema": "./src/executors/rollup/schema.json",
-      "description": "Package a library"
+      "description": "Package a library using rollup"
     },
     "dev-server": {
       "implementation": "./src/executors/dev-server/compat",
@@ -22,15 +22,15 @@
     }
   },
   "executors": {
-    "build": {
-      "implementation": "./src/executors/build/build.impl",
-      "schema": "./src/executors/build/schema.json",
-      "description": "Build a application"
+    "webpack": {
+      "implementation": "./src/executors/webpack/webpack.impl",
+      "schema": "./src/executors/webpack/schema.json",
+      "description": "Build an application using webpack"
     },
     "rollup": {
       "implementation": "./src/executors/rollup/rollup.impl",
       "schema": "./src/executors/rollup/schema.json",
-      "description": "Package a library"
+      "description": "Package a library using rollup"
     },
     "dev-server": {
       "implementation": "./src/executors/dev-server/dev-server.impl",

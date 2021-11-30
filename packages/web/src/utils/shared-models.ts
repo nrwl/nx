@@ -1,4 +1,4 @@
-import { WebBuildExecutorOptions } from '../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
 import { FileReplacement } from './normalize';
 
 export interface OptimizationOptions {
@@ -109,7 +109,7 @@ export interface StylePreprocessorOptions {
   includePaths?: string[];
 }
 
-export interface WebpackConfigOptions<T = WebBuildExecutorOptions> {
+export interface WebpackConfigOptions<T = WebWebpackExecutorOptions> {
   root: string;
   projectRoot: string;
   sourceRoot?: string;

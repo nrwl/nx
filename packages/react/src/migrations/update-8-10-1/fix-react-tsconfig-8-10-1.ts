@@ -37,7 +37,8 @@ function isReactProject(p) {
     p.architect && p.architect.build ? p.architect.build : null;
   return (
     buildArchitect &&
-    buildArchitect.builder === '@nrwl/web:build' &&
+    (buildArchitect.builder === '@nrwl/web:build' ||
+      buildArchitect.builder === '@nrwl/web:webpack') &&
     (buildArchitect.options.webpackConfig === '@nrwl/react/plugins/babel' ||
       buildArchitect.options.webpackConfig === '@nrwl/react/plugins/webpack')
   );

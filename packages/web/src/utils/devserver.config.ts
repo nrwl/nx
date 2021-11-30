@@ -4,7 +4,7 @@ import * as path from 'path';
 import { basename, resolve } from 'path';
 
 import { getWebConfig } from './web.config';
-import { WebBuildExecutorOptions } from '../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
 import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './shared-models';
@@ -16,7 +16,7 @@ export function getDevServerConfig(
   workspaceRoot: string,
   projectRoot: string,
   sourceRoot: string,
-  buildOptions: WebBuildExecutorOptions,
+  buildOptions: WebWebpackExecutorOptions,
   serveOptions: WebDevServerOptions
 ): Partial<WebpackDevServerConfiguration> {
   const webpackConfig = getWebConfig(
@@ -62,7 +62,7 @@ export function getDevServerConfig(
 function getDevServerPartial(
   root: string,
   options: WebDevServerOptions,
-  buildOptions: WebBuildExecutorOptions
+  buildOptions: WebWebpackExecutorOptions
 ): WebpackDevServerConfiguration {
   const servePath = buildServePath(buildOptions);
 

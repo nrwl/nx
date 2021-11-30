@@ -5,7 +5,7 @@ import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
 import { Configuration } from 'webpack';
 
-import { WebBuildExecutorOptions } from '../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
 import { convertBuildOptions } from './normalize';
 import { getBaseWebpackPartial } from './config';
 import { getBrowserConfig } from './webpack/partials/browser';
@@ -27,7 +27,7 @@ export function getWebConfig(
   workspaceRoot,
   projectRoot,
   sourceRoot,
-  options: WebBuildExecutorOptions,
+  options: WebWebpackExecutorOptions,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
   configuration?: string
@@ -71,12 +71,12 @@ export function getWebConfig(
   ]);
 }
 
-function getBrowserPartial(wco: any, options: WebBuildExecutorOptions) {
+function getBrowserPartial(wco: any, options: WebWebpackExecutorOptions) {
   return getBrowserConfig(wco);
 }
 
 function _getBaseWebpackPartial(
-  options: WebBuildExecutorOptions,
+  options: WebWebpackExecutorOptions,
   esm: boolean,
   isScriptOptimizeOn: boolean,
   emitDecoratorMetadata: boolean,

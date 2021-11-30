@@ -23,7 +23,7 @@ import { cypressProjectGenerator } from '@nrwl/cypress';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 
-import { WebBuildExecutorOptions } from '../../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../../executors/webpack/webpack.impl';
 import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
@@ -50,7 +50,7 @@ function addBuildTarget(
   project: ProjectConfiguration,
   options: NormalizedSchema
 ): ProjectConfiguration {
-  const buildOptions: WebBuildExecutorOptions = {
+  const buildOptions: WebWebpackExecutorOptions = {
     outputPath: joinPathFragments('dist', options.appProjectRoot),
     index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
     baseHref: '/',
@@ -66,7 +66,7 @@ function addBuildTarget(
     ],
     scripts: [],
   };
-  const productionBuildOptions: Partial<WebBuildExecutorOptions> = {
+  const productionBuildOptions: Partial<WebWebpackExecutorOptions> = {
     fileReplacements: [
       {
         replace: joinPathFragments(
@@ -92,7 +92,7 @@ function addBuildTarget(
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/web:build',
+        executor: '@nrwl/web:webpack',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,

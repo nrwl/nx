@@ -394,7 +394,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "angular/api-web/executors/build"
+            "file": "angular/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -1718,7 +1718,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "react/api-web/executors/build"
+            "file": "react/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -3006,7 +3006,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "node/api-web/executors/build"
+            "file": "node/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",

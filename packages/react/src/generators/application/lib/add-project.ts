@@ -36,7 +36,7 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 
 function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/web:build',
+    executor: '@nrwl/web:webpack',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {

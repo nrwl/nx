@@ -1,4 +1,4 @@
-import { WebBuildExecutorOptions } from '../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
 import { normalizePath } from '@nrwl/devkit';
 import { basename, dirname, relative, resolve } from 'path';
 import {
@@ -101,10 +101,10 @@ function normalizeFileReplacements(
 }
 
 export function normalizeWebBuildOptions(
-  options: WebBuildExecutorOptions,
+  options: WebWebpackExecutorOptions,
   root: string,
   sourceRoot: string
-): WebBuildExecutorOptions {
+): WebWebpackExecutorOptions {
   return {
     ...normalizeBuildOptions(options, root, sourceRoot),
     optimization:
@@ -122,7 +122,7 @@ export function normalizeWebBuildOptions(
 }
 
 export function convertBuildOptions(
-  buildOptions: WebBuildExecutorOptions
+  buildOptions: WebWebpackExecutorOptions
 ): any {
   const options = buildOptions as any;
   return <any>{

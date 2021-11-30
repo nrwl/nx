@@ -11,7 +11,7 @@ import { map, tap } from 'rxjs/operators';
 import * as WebpackDevServer from 'webpack-dev-server';
 
 import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { WebBuildExecutorOptions } from '../build/build.impl';
+import { WebWebpackExecutorOptions } from '../webpack/webpack.impl';
 import { getDevServerConfig } from '../../utils/devserver.config';
 import {
   calculateProjectDependencies,
@@ -106,9 +106,9 @@ export default async function* devServerExecutor(
 function getBuildOptions(
   options: WebDevServerOptions,
   context: ExecutorContext
-): WebBuildExecutorOptions {
+): WebWebpackExecutorOptions {
   const target = parseTargetString(options.buildTarget);
-  const overrides: Partial<WebBuildExecutorOptions> = {
+  const overrides: Partial<WebWebpackExecutorOptions> = {
     watch: false,
   };
   if (options.maxWorkers) {

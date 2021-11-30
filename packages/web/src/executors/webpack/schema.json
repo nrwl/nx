@@ -1,6 +1,6 @@
 {
-  "title": "Web Application Build Target",
-  "description": "Web application build target options for Build Facade",
+  "title": "Webpack Executor",
+  "description": "Builds web applications using webpack",
   "cli": "nx",
   "type": "object",
   "properties": {
