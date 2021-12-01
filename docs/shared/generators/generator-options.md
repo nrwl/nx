@@ -57,7 +57,7 @@ If you run the generator without providing a value for the type, it is not inclu
 
 ## Adding dynamic prompts
 
-Dynamic options can prompt the user to select from a list of options. To define a prompt, add an `x-prompt` property to the option object, set the type to list, and define an items array for the choices.
+Dynamic options can prompt the user to select from a list of options. To define a prompt, add a `x-prompt` property to the option object, set the type to list, and define an items array for the choices.
 
 ```json
 {
@@ -71,8 +71,7 @@ Dynamic options can prompt the user to select from a list of options. To define 
       "$default": {
         "$source": "argv",
         "index": 0
-      },
-      "x-prompt": "What is your desired library name?",
+      }
     },
     "type": {
       "type": "string",
@@ -123,7 +122,7 @@ Properties tagged with ⚠️ are required. Others are optional.
 
 #### ⚠️ `properties`
 
-The properties of a generator. It is formed in:
+The properties of a generator. Properties are listed by name:
 
 ```json
 {
@@ -133,12 +132,12 @@ The properties of a generator. It is formed in:
 }
 ```
 
-The available options of the properties configuration can be
-seen at [Properties](#properties) section.
+The available options of the properties' configuration can be
+seen in the [Properties](#properties) section.
 
 #### `required`
 
-The properties that is required. Example:
+The property keys that are required. Example:
 
 ```json
 {
@@ -154,8 +153,8 @@ The properties that is required. Example:
 }
 ```
 
-In this example, the property `name` is required, while
-the property `type` is optional. You can define your schema like:
+In this example, the property `name` is required, while the property `type` is optional.
+You can define your TypeScript schema like this:
 
 ```ts
 interface Schema {
@@ -166,19 +165,87 @@ interface Schema {
 
 #### `description`
 
-The description of your schema for user to understand
-what he can do with the generator.
+The description of your schema for users to understand
+what they can do with the generator.
 
 Example: `A exception class generator.`
 
 #### `definitions`
 
-WIP. Not pretty sure what it is. Its structure is pretty similar
-to `properties`.
+Define an auxiliary schema in order to be reused and combined later on. Examples:
+
+```json
+{
+  "$id": "https://example.com/schemas/customer",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  "type": "object",
+  "properties": {
+    "first_name": { "type": "string" },
+    "last_name": { "type": "string" },
+    "shipping_address": { "$ref": "/schemas/address" },
+    "billing_address": { "$ref": "/schemas/address" }
+  },
+  "required": ["first_name", "last_name", "shipping_address", "billing_address"],
+
+  "$defs": {
+    "address": {
+      "$id": "/schemas/address",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+
+      "type": "object",
+      "properties": {
+        "street_address": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "$ref": "#/definitions/state" }
+      },
+      "required": ["street_address", "city", "state"],
+
+      "definitions": {
+        "state": { "enum": ["CA", "NY", "... etc ..."] }
+      }
+    }
+  }
+}
+```
+
+In this example, we defined the `state` in the `definitions` and
+reference it later by `$ref`.
+
+> Reference 1: [JSON Schema > Definitions & References](https://cswr.github.io/JsonSchema/spec/definitions_references/)
+>
+> Reference 2: [Understanding JSON Schema > Extending Recursive Schemas](https://json-schema.org/understanding-json-schema/structuring.html?highlight=definitions#bundling)
 
 #### `additionalProperties`
 
-WIP. Not pretty sure what it is, either.
+Specify whether the additional properties in the input are allowed. Example:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "number": { "type": "number" },
+    "street_name": { "type": "string" },
+    "street_type": { "enum": ["Street", "Avenue", "Boulevard"] }
+  },
+  "additionalProperties": false
+}
+```
+
+In this example, this schema only accepts the properties that are explicitly defined in the `properties` object such like:
+
+```json
+{ "number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue" }
+```
+
+Any additional properties will be considered invalid.
+
+```json
+{ "number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue", "direction": "NW" }
+```
+
+> The above examples are from [Understanding JSON schema > Additional Properties](https://json-schema.org/understanding-json-schema/reference/object.html#additional-properties).
+> There are more details in that tutorial.
 
 ### Properties
 
@@ -238,7 +305,7 @@ Options available in `string` type:
 
 #### `type`
 
-The type of the input. Can be either of `string`, `number`, `bigint`, `boolean`, `object` or `array`.
+The type of the input. Can be one of `string`, `number`, `bigint`, `boolean`, `object` or `array`.
 
 Example:
 
@@ -251,7 +318,23 @@ Example:
 
 #### `required`
 
-WIP
+The property keys that are required. Example:
+
+```json
+{
+  "properties": {
+    "a": {
+      "type": "boolean",
+    },
+    "b": {
+      "type": "boolean",
+    },
+  },
+  "required": ["a"]
+}
+```
+
+In this example, the property `a` is required, while the property `b` is optional.
 
 #### `enum`
 
@@ -269,11 +352,37 @@ Make sure that the value is in the enumeration. Example:
 
 #### `properties`
 
-WIP
+The sub-properties of a property. Example:
+
+```json
+{
+  "index": {
+    "description": "Configures the generation of the application's HTML index.",
+    "type": "object",
+    "description": "",
+    "properties": {
+      "input": {
+        "type": "string",
+        "minLength": 1,
+        "description": "The path of a file to use for the application's generated HTML index."
+      },
+      "output": {
+        "type": "string",
+        "minLength": 1,
+        "default": "index.html",
+        "description": "The output path of the application's generated HTML index file. The full provided path will be used and will be considered relative to the application's configured output path."
+      }
+    },
+    "required": ["input"]
+  }
+}
+```
+
+In this example, the property `index` is a `object`, which accepts two properties: `input` and `output`.
 
 #### `oneOf`
 
-Only accepts that value that matches either of the condition properties. Example:
+Only accepts a value that matches one of the condition properties. Example:
 
 ```json
 {
@@ -292,7 +401,7 @@ Only accepts that value that matches either of the condition properties. Example
 }
 ```
 
-In this example, `sourceMap` accepts the value whose type is either `boolean` or `string`. Another example:
+In this example, `sourceMap` accepts a value whose type is either `boolean` or `string`. Another example:
 
 ```json
 {
@@ -323,11 +432,11 @@ In this example, `sourceMap` accepts the value whose type is either `boolean` or
 }
 ```
 
-`optimization` accepts either an object that includes `scripts` and `styles` properties, or an boolean that switches the optimization on or off.
+`optimization` accepts either an object that includes `scripts` and `styles` properties, or a boolean that switches the optimization on or off.
 
 #### `anyOf`
 
-Only accepts that value that matches one of the condition properties. Example:
+Only accepts a value that matches one of the condition properties. Example:
 
 ```json
 {
@@ -359,11 +468,11 @@ Only accepts that value that matches one of the condition properties. Example:
 }
 ```
 
-In this example, `format` accepts the string including in the `enum` property, or/and the string whose minimum length is larger than 1.
+In this example, `format` accepts a string listed in the `enum` property, and/or a string whose minimum length is larger than 1.
 
 #### `allOf`
 
-Only accepts that value that matches all of the condition properties.  Example:
+Only accepts a value that matches all the condition properties.  Example:
 
 ```json
 {
@@ -374,11 +483,7 @@ Only accepts that value that matches all of the condition properties.  Example:
 }
 ```
 
-In this example, `a` only accepts the value that can be divided by 5 **and** 3.
-
-#### `items`
-
-WIP. Unsure what it is.
+In this example, `a` only accepts a value that can be divided by 5 **and** 3.
 
 #### `alias`
 
@@ -433,7 +538,7 @@ The description for users of your property. Example:
 
 #### `format`
 
-The format of this property. Available options are: `path`, `html-selector`, and etc. Example:
+The format of this property. Available options are: `path`, `html-selector`, etc. Example:
 
 ```json
 {
@@ -446,11 +551,11 @@ The format of this property. Available options are: `path`, `html-selector`, and
 }
 ```
 
-In this example, the providing value of `prefix` should be formed in the `html-selector` schema.
+In this example, the value provided for `prefix` should be formatted using the `html-selector` schema.
 
 #### `visible`
 
-Indicate that if the property should be visible in the configuration UI. Example:
+Indicate whether the property should be visible in the configuration UI. Example:
 
 ```json
 {
@@ -461,7 +566,7 @@ Indicate that if the property should be visible in the configuration UI. Example
 }
 ```
 
-According to the source code: the `path` won't be visible in the configuration UI, and will default to the relative path (if available and users do not provide that property).
+In this example, the `path` won't be visible in the configuration UI, and will apply a default value.
 
 #### `default`
 
@@ -482,7 +587,7 @@ In this example, `linter` will pick `eslint` when users do not provide the value
 
 #### `$ref`
 
-Reference to somewhere. WIP.
+Reference to a schema. Examples can be seen in the [`definitions`](#definitions) section.
 
 #### `$default`
 
@@ -534,13 +639,11 @@ Example of `$source: projectName`:
 
 #### `additionalProperties`
 
-Unknown. WIP.
+See [the above `additionalProperties` section](#additionalproperties).
 
 #### `x-prompt`
 
-Prompt and help user to input the value of the property. The full example can be seen at [Adding dynamic prompts](#adding-dynamic-prompts).
-
-`x-prompt` can be a `string` or an `object`. The full declaration is:
+Prompt and help user to input the value of the property. It can be a `string` or a `object`. The full declaration is:
 
 ```ts
 // with ? - optional
@@ -550,6 +653,24 @@ Prompt and help user to input the value of the property. The full example can be
   | string
   | { message: string; type: string; items: any[]; multiselect?: boolean };
 ```
+
+The string `x-prompt` example:
+
+```json
+{
+  "name": {
+    "type": "string",
+    "description": "Library name",
+    "$default": {
+      "$source": "argv",
+      "index": 0
+    },
+    "x-prompt": "What is your desired library name?"
+  }
+}
+```
+
+The object example can be seen at [Adding dynamic prompts](#adding-dynamic-prompts).
 
 ##### ⚠️ `x-prompt` > `message`
 
@@ -613,7 +734,7 @@ Allow to multi-select in the prompt.
 
 #### `x-deprecated`
 
-Indicate that if the property is deprecated. Can be a `boolean` or a `string`. The `boolean` example:
+Indicate whether the property is deprecated. Can be a `boolean` or a `string`. The `boolean` example:
 
 ```json
 {
@@ -625,7 +746,7 @@ Indicate that if the property is deprecated. Can be a `boolean` or a `string`. T
 }
 ```
 
-It indicates that the property `setupFile` is deprecated without a reason. The `string` example:
+This indicates that the property `setupFile` is deprecated without a reason. The `string` example:
 
 ```json
 {
@@ -637,7 +758,7 @@ It indicates that the property `setupFile` is deprecated without a reason. The `
 }
 ```
 
-It indicates that users should use the `tsconfig` property rather than specify this property.
+This indicates that users should use the `tsconfig` property rather than specify this property.
 
 #### `number` specific: `multipleOf`
 
@@ -656,7 +777,7 @@ In this example, `a` **only** accepts the value that can be divided by 5.
 
 #### `number` specific: `minimum`
 
-Make sure that the number is greater than or equal the specified number.
+Make sure that the number is greater than or equal to the specified number.
 
 ```json
 {
@@ -667,7 +788,7 @@ Make sure that the number is greater than or equal the specified number.
 }
 ```
 
-In this example, `value` **only** accepts the value that is greater than or equal to 5 (`value >= 5`).
+In this example, `value` **only** accepts a value that is greater than or equal to 5 (`value >= 5`).
 
 You can read more at [Understanding JSON schema](https://json-schema.org/understanding-json-schema/reference/numeric.html#range).
 
@@ -684,13 +805,13 @@ Make sure that the number is greater than the specified number.
 }
 ```
 
-In this example, `value` **only** accepts the value that is greater than 4 (`value > 4`).
+In this example, `value` **only** accepts a value that is greater than 4 (`value > 4`).
 
 You can read more at [Understanding JSON schema](https://json-schema.org/understanding-json-schema/reference/numeric.html#range).
 
 #### `number` specific: `maximum`
 
-Make sure that the number is less than or equal the specified number.
+Make sure that the number is less than or equal to the specified number.
 
 ```json
 {
@@ -701,7 +822,7 @@ Make sure that the number is less than or equal the specified number.
 }
 ```
 
-In this example, `value` **only** accepts the value that is less than or equal to 200 (`value <= 200`).
+In this example, `value` **only** accepts a value that is less than or equal to 200 (`value <= 200`).
 
 You can read more at [Understanding JSON schema](https://json-schema.org/understanding-json-schema/reference/numeric.html#range).
 
@@ -718,13 +839,13 @@ Make sure that the number is less than the specified number.
 }
 ```
 
-In this example, `value` **only** accepts the value that is less than 201 (`value < 201`).
+In this example, `value` **only** accepts a value that is less than 201 (`value < 201`).
 
 You can read more at [Understanding JSON schema](https://json-schema.org/understanding-json-schema/reference/numeric.html#range).
 
 #### `string` specific: `pattern`
 
-Make sure that the string matches the RegExp pattern.
+Make sure that the string matches the Regexp pattern.
 
 ```json
 {
@@ -735,7 +856,7 @@ Make sure that the string matches the RegExp pattern.
 }
 ```
 
-In this example, `value` requires the value to match the `^\\d+$` pattern, which is a regular expression that matches the string that contains only digits.
+In this example, `value` requires the value to match the `^\\d+$` pattern, which is a regular expression that matches a string that contains only digits.
 
 #### `string` specific: `minLength`
 
@@ -770,3 +891,5 @@ In this example, `value` requires the value to be at most 10 characters long.
 ### More information
 
 [The current configurable options (and its parse method) can be found here](https://github.com/nrwl/nx/blob/master/packages/tao/src/shared/params.ts). You would need a basic knowledge of TypeScript to read this.
+
+Most examples are referenced from the codebase of Nx. Thanks to everyone who have ever contributed to Nx!
