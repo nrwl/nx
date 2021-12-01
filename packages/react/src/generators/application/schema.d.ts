@@ -20,6 +20,7 @@ export interface Schema {
   strict?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  compiler?: 'babel' | 'swc';
 }
 
 export interface NormalizedSchema extends Schema {

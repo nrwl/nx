@@ -257,6 +257,7 @@ describe('app', () => {
     expect(architectConfig.build.builder).toEqual('@nrwl/web:webpack');
     expect(architectConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(architectConfig.build.options).toEqual({
+      compiler: 'babel',
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
       baseHref: '/',

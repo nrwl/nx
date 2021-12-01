@@ -90,7 +90,10 @@ const IGNORE_MATCHES = {
     '@angular-devkit/architect',
   ],
   web: [
-    '@swc/core', // we don't want to bloat the install of @nrwl/web by including @swc/core as a dependency.
+    // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
+    '@swc/core',
+    'swc-loader',
+
     'fibers',
     'node-sass',
   ],

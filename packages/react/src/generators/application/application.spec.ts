@@ -277,6 +277,7 @@ Object {
     expect(targetConfig.build.executor).toEqual('@nrwl/web:webpack');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
+      compiler: 'babel',
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
       main: 'apps/my-app/src/main.tsx',
@@ -733,6 +734,21 @@ Object {
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).toBeTruthy();
+    });
+  });
+
+  describe('--compiler', () => {
+    it('should install swc packages if --compiler=swc', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        compiler: 'swc',
+      });
+      const packageJson = readJson(appTree, '/package.json');
+
+      expect(packageJson.devDependencies).toMatchObject({
+        '@swc/core': expect.any(String),
+        'swc-loader': expect.any(String),
+      });
     });
   });
 });

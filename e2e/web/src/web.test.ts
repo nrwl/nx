@@ -73,7 +73,7 @@ describe('Web Components Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive --compiler swc`);
     runCLI(
       `generate @nrwl/react:lib ${libName} --buildable --no-interactive --compiler swc`
     );
