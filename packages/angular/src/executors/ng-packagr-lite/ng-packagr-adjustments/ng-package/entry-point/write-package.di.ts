@@ -3,6 +3,7 @@
  *
  * Changes made:
  * - Provide our own writePackageTransform function.
+ * - USE NX_OPTIONS_TOKEN instead of OPTIONS_TOKEN.
  */
 
 import { InjectionToken } from 'injection-js';
@@ -11,7 +12,7 @@ import {
   provideTransform,
   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
-import { OPTIONS_TOKEN } from 'ng-packagr/lib/ng-package/options.di';
+import { NX_OPTIONS_TOKEN } from '../options.di';
 import { nxWritePackageTransform } from './write-package.transform';
 
 export const NX_WRITE_PACKAGE_TRANSFORM_TOKEN = new InjectionToken<Transform>(
@@ -20,5 +21,5 @@ export const NX_WRITE_PACKAGE_TRANSFORM_TOKEN = new InjectionToken<Transform>(
 export const NX_WRITE_PACKAGE_TRANSFORM: TransformProvider = provideTransform({
   provide: NX_WRITE_PACKAGE_TRANSFORM_TOKEN,
   useFactory: nxWritePackageTransform,
-  deps: [OPTIONS_TOKEN],
+  deps: [NX_OPTIONS_TOKEN],
 });

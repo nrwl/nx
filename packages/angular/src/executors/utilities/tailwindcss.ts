@@ -18,15 +18,21 @@ export const tailwindDirectives = [
   '@screen',
 ];
 
-export function getTailwindSetup(basePath: string): TailwindSetup | undefined {
-  // Try to find TailwindCSS configuration file in the project or workspace root.
-  const tailwindConfigFile = 'tailwind.config.js';
-  let tailwindConfigPath: string | undefined;
-  for (const path of [basePath, appRootPath]) {
-    const fullPath = join(path, tailwindConfigFile);
-    if (existsSync(fullPath)) {
-      tailwindConfigPath = fullPath;
-      break;
+export function getTailwindSetup(
+  basePath: string,
+  tailwindConfig?: string
+): TailwindSetup | undefined {
+  let tailwindConfigPath = tailwindConfig;
+
+  if (!tailwindConfigPath) {
+    // Try to find TailwindCSS configuration file in the project or workspace root.
+    const tailwindConfigFile = 'tailwind.config.js';
+    for (const path of [basePath, appRootPath]) {
+      const fullPath = join(path, tailwindConfigFile);
+      if (existsSync(fullPath)) {
+        tailwindConfigPath = fullPath;
+        break;
+      }
     }
   }
 

@@ -8,6 +8,7 @@ import { resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
+import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
@@ -22,6 +23,10 @@ async function initializeNgPackgrLite(
     // Add default providers to this list.
     ...NX_PACKAGE_PROVIDERS,
     ...NX_ENTRY_POINT_PROVIDERS,
+    nxProvideOptions({
+      tailwindConfig: options.tailwindConfig,
+      watch: options.watch,
+    }),
   ]);
   packager.forProject(resolve(context.root, options.project));
   packager.withBuildTransform(NX_PACKAGE_TRANSFORM.provide);

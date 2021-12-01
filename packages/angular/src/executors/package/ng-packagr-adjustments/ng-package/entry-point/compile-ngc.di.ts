@@ -13,11 +13,11 @@ import {
   provideTransform,
   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
-import { OPTIONS_TOKEN } from 'ng-packagr/lib/ng-package/options.di';
 import {
   NX_STYLESHEET_PROCESSOR,
   NX_STYLESHEET_PROCESSOR_TOKEN,
 } from '../../styles/stylesheet-processor.di';
+import { NX_OPTIONS_TOKEN } from '../options.di';
 import { compileNgcTransformFactory } from './compile-ngc.transform';
 
 export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
@@ -27,7 +27,7 @@ export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
 export const NX_COMPILE_NGC_TRANSFORM: TransformProvider = provideTransform({
   provide: NX_COMPILE_NGC_TOKEN,
   useFactory: compileNgcTransformFactory,
-  deps: [NX_STYLESHEET_PROCESSOR_TOKEN, OPTIONS_TOKEN],
+  deps: [NX_STYLESHEET_PROCESSOR_TOKEN, NX_OPTIONS_TOKEN],
 });
 
 export const NX_COMPILE_NGC_PROVIDERS: Provider[] = [

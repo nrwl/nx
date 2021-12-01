@@ -1,8 +1,9 @@
 /**
  * Adapted from the original ngPackagr source.
  *
- * Excludes the ngcc compilation which is not needed
- * since these libraries will be compiled by the ngtsc.
+ * Changes made:
+ * - Use our own StylesheetProcessor files instead of the ones provide by ng-packagr.
+ * - Excludes the ngcc compilation for faster builds.
  */
 
 import type { Transform } from 'ng-packagr/lib/graph/transform';
@@ -11,12 +12,12 @@ import {
   isEntryPoint,
   isEntryPointInProgress,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
-import type { StylesheetProcessor as StylesheetProcessorClass } from 'ng-packagr/lib/styles/stylesheet-processor';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { compileSourceFiles } from '../../ngc/compile-source-files';
+import { StylesheetProcessor as StylesheetProcessorClass } from '../../styles/stylesheet-processor';
+import { NgPackagrOptions } from '../options.di';
 
 export const nxCompileNgcTransformFactory = (
   StylesheetProcessor: typeof StylesheetProcessorClass,
@@ -42,8 +43,10 @@ export const nxCompileNgcTransformFactory = (
         basePath,
         cssUrl,
         styleIncludePaths,
-        options.cacheEnabled && options.cacheDirectory
-      );
+        options.cacheEnabled && options.cacheDirectory,
+        options.watch,
+        options.tailwindConfig
+      ) as any;
 
       await compileSourceFiles(
         graph,

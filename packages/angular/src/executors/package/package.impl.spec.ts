@@ -1,17 +1,19 @@
 jest.mock('@nrwl/workspace/src/core/project-graph');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('ng-packagr');
+jest.mock('./ng-packagr-adjustments/ng-package/options.di');
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import * as ngPackagr from 'ng-packagr';
 import { BehaviorSubject } from 'rxjs';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
+import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
 } from './ng-packagr-adjustments/ng-package/package.di';
-import packageExecutor from './package.impl';
+import { packageExecutor } from './package.impl';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
 describe('Package executor', () => {
@@ -82,12 +84,24 @@ describe('Package executor', () => {
     (
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
+    const extraOptions: Partial<BuildAngularLibraryExecutorOptions> = {
+      tailwindConfig: 'path/to/tailwind.config.js',
+      watch: false,
+    };
+    const nxProvideOptionsResult = { ...extraOptions, cacheEnabled: true };
+    (nxProvideOptions as jest.Mock).mockImplementation(
+      () => nxProvideOptionsResult
+    );
 
-    const result = await packageExecutor(options, context).next();
+    const result = await packageExecutor(
+      { ...options, ...extraOptions },
+      context
+    ).next();
 
     expect(ngPackagr.NgPackagr).toHaveBeenCalledWith([
       ...NX_PACKAGE_PROVIDERS,
       ...NX_ENTRY_POINT_PROVIDERS,
+      nxProvideOptionsResult,
     ]);
     expect(ngPackagrWithBuildTransformMock).toHaveBeenCalledWith(
       NX_PACKAGE_TRANSFORM.provide

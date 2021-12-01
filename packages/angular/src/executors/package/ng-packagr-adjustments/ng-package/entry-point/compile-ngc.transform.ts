@@ -14,7 +14,6 @@ import {
   isEntryPoint,
   isEntryPointInProgress,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { compileSourceFiles } from 'ng-packagr/lib/ngc/compile-source-files';
 import { NgccProcessor } from 'ng-packagr/lib/ngc/ngcc-processor';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
@@ -23,6 +22,7 @@ import * as ora from 'ora';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { StylesheetProcessor as StylesheetProcessorClass } from '../../styles/stylesheet-processor';
+import { NgPackagrOptions } from '../options.di';
 
 export const compileNgcTransformFactory = (
   StylesheetProcessor: typeof StylesheetProcessorClass,
@@ -71,7 +71,8 @@ export const compileNgcTransformFactory = (
         cssUrl,
         styleIncludePaths,
         options.cacheEnabled && options.cacheDirectory,
-        options.watch
+        options.watch,
+        options.tailwindConfig
       ) as any;
 
       await compileSourceFiles(
