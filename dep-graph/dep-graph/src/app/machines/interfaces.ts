@@ -1,6 +1,7 @@
 import { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
 import { Observable } from 'rxjs';
-import { ActionObject, StateNodeConfig, StateValue } from 'xstate';
+import { ActionObject, ActorRef, StateNodeConfig, StateValue } from 'xstate';
+import { GraphService } from '../graph';
 
 // The hierarchical (recursive) schema for the states
 export interface DepGraphSchema {
@@ -14,7 +15,9 @@ export interface DepGraphSchema {
 }
 
 // The events that the machine handles
-export type DepGraphEvents =
+
+export type DepGraphUIEvents =
+  | { type: 'setSelectedProjectsFromGraph'; selectedProjectNames: string[] }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
   | { type: 'selectAll' }
@@ -45,6 +48,63 @@ export type DepGraphEvents =
       dependencies: Record<string, ProjectGraphDependency[]>;
     };
 
+// The events that the graph actor handles
+
+export type GraphRenderEvents =
+  | {
+      type: 'notifyGraphInitGraph';
+      projects: ProjectGraphNode[];
+      dependencies: Record<string, ProjectGraphDependency[]>;
+      affectedProjects: string[];
+      workspaceLayout: {
+        libsDir: string;
+        appsDir: string;
+      };
+      groupByFolder: boolean;
+    }
+  | {
+      type: 'notifyGraphUpdateGraph';
+      projects: ProjectGraphNode[];
+      dependencies: Record<string, ProjectGraphDependency[]>;
+      affectedProjects: string[];
+      workspaceLayout: {
+        libsDir: string;
+        appsDir: string;
+      };
+      groupByFolder: boolean;
+      selectedProjects: string[];
+    }
+  | {
+      type: 'notifyGraphFocusProject';
+      projectName: string;
+      searchDepth: number;
+    }
+  | {
+      type: 'notifyGraphShowProject';
+      projectName: string;
+    }
+  | {
+      type: 'notifyGraphHideProject';
+      projectName: string;
+    }
+  | {
+      type: 'notifyGraphShowAllProjects';
+    }
+  | {
+      type: 'notifyGraphHideAllProjects';
+    }
+  | {
+      type: 'notifyGraphShowAffectedProjects';
+    }
+  | {
+      type: 'notifyGraphFilterProjectsByText';
+      search: string;
+      includeProjectsByPath: boolean;
+      searchDepth: number;
+    };
+
+export type AllEvents = DepGraphUIEvents | GraphRenderEvents;
+
 // The context (extended state) of the machine
 export interface DepGraphContext {
   projects: ProjectGraphNode[];
@@ -61,16 +121,19 @@ export interface DepGraphContext {
     libsDir: string;
     appsDir: string;
   };
+  graph: ActorRef<GraphRenderEvents>;
 }
 
 export type DepGraphStateNodeConfig = StateNodeConfig<
   DepGraphContext,
   {},
-  DepGraphEvents,
-  ActionObject<DepGraphContext, DepGraphEvents>
+  DepGraphUIEvents,
+  ActionObject<DepGraphContext, DepGraphUIEvents>
 >;
 
-export type DepGraphSend = (event: DepGraphEvents | DepGraphEvents[]) => void;
+export type DepGraphSend = (
+  event: DepGraphUIEvents | DepGraphUIEvents[]
+) => void;
 export type DepGraphStateObservable = Observable<{
   value: StateValue;
   context: DepGraphContext;

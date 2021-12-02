@@ -4,15 +4,16 @@ import { interpret, Interpreter, Typestate } from 'xstate';
 import { depGraphMachine } from './dep-graph.machine';
 import {
   DepGraphContext,
-  DepGraphEvents,
+  DepGraphUIEvents,
   DepGraphSend,
   DepGraphStateObservable,
+  DepGraphSchema,
 } from './interfaces';
 
 let depGraphService: Interpreter<
   DepGraphContext,
-  any,
-  DepGraphEvents,
+  DepGraphSchema,
+  DepGraphUIEvents,
   Typestate<DepGraphContext>
 >;
 

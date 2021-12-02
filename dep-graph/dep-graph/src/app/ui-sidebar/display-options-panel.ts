@@ -15,11 +15,16 @@ export class DisplayOptionsPanel {
     this.render();
 
     state$.subscribe((state) => {
-      if (state.context.affectedProjects.length > 0) {
+      if (
+        state.context.affectedProjects.length > 0 &&
+        this.affectedButtonElement.classList.contains('hidden')
+      ) {
         this.affectedButtonElement.classList.remove('hidden');
-        this.affectedButtonElement.addEventListener('click', () =>
-          this.send({ type: 'selectAffected' })
-        );
+      } else if (
+        state.context.affectedProjects.length === 0 &&
+        !this.affectedButtonElement.classList.contains('hidden')
+      ) {
+        this.affectedButtonElement.classList.add('hidden');
       }
 
       this.searchDepthDisplay.innerText = state.context.searchDepth.toString();
@@ -109,6 +114,10 @@ export class DisplayOptionsPanel {
 
     this.affectedButtonElement = element.querySelector(
       '[data-cy="affectedButton"]'
+    );
+
+    this.affectedButtonElement.addEventListener('click', () =>
+      this.send({ type: 'selectAffected' })
     );
 
     const selectAllButtonElement: HTMLElement = element.querySelector(

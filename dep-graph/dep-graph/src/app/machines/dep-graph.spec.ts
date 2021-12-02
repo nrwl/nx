@@ -1,5 +1,6 @@
 import { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
 import { depGraphMachine } from './dep-graph.machine';
+import { interpret } from 'xstate';
 
 export const mockProjects: ProjectGraphNode[] = [
   {
@@ -74,6 +75,7 @@ export const mockDependencies: Record<string, ProjectGraphDependency[]> = {
     },
   ],
   'ui-lib': [],
+  'auth-lib': [],
 };
 
 describe('dep-graph machine', () => {
@@ -109,8 +111,20 @@ describe('dep-graph machine', () => {
   });
 
   describe('selecting projects', () => {
-    it('should select projects', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
+    it('should select projects', (done) => {
+      let service = interpret(depGraphMachine).onTransition((state) => {
+        if (
+          state.matches('customSelected') &&
+          state.context.selectedProjects.includes('app1') &&
+          state.context.selectedProjects.includes('app2')
+        ) {
+          done();
+        }
+      });
+
+      service.start();
+
+      service.send({
         type: 'initGraph',
         projects: mockProjects,
         dependencies: mockDependencies,
@@ -118,26 +132,33 @@ describe('dep-graph machine', () => {
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
 
-      result = depGraphMachine.transition(result, {
+      service.send({
         type: 'selectProject',
         projectName: 'app1',
       });
 
-      expect(result.value).toEqual('customSelected');
-      expect(result.context.selectedProjects).toEqual(['app1']);
-
-      result = depGraphMachine.transition(result, {
+      service.send({
         type: 'selectProject',
         projectName: 'app2',
       });
-
-      expect(result.context.selectedProjects).toEqual(['app1', 'app2']);
     });
   });
 
   describe('deselecting projects', () => {
-    it('should deselect projects', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
+    it('should deselect projects', (done) => {
+      let service = interpret(depGraphMachine).onTransition((state) => {
+        if (
+          state.matches('customSelected') &&
+          !state.context.selectedProjects.includes('app1') &&
+          state.context.selectedProjects.includes('app2')
+        ) {
+          done();
+        }
+      });
+
+      service.start();
+
+      service.send({
         type: 'initGraph',
         projects: mockProjects,
         dependencies: mockDependencies,
@@ -145,23 +166,20 @@ describe('dep-graph machine', () => {
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
 
-      result = depGraphMachine.transition(result, {
+      service.send({
         type: 'selectProject',
         projectName: 'app1',
       });
 
-      result = depGraphMachine.transition(result, {
+      service.send({
         type: 'selectProject',
         projectName: 'app2',
       });
 
-      result = depGraphMachine.transition(result, {
+      service.send({
         type: 'deselectProject',
         projectName: 'app1',
       });
-
-      expect(result.value).toEqual('customSelected');
-      expect(result.context.selectedProjects).toEqual(['app2']);
     });
 
     it('should go to unselected when last project is deselected', () => {
@@ -217,8 +235,22 @@ describe('dep-graph machine', () => {
       expect(result.context.focusedProject).toEqual('app1');
     });
 
-    it('should select the projects by the focused project', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
+    it('should select the projects by the focused project', (done) => {
+      let service = interpret(depGraphMachine).onTransition((state) => {
+        if (
+          state.matches('focused') &&
+          state.context.selectedProjects.includes('app1') &&
+          state.context.selectedProjects.includes('ui-lib') &&
+          state.context.selectedProjects.includes('feature-lib1') &&
+          state.context.selectedProjects.includes('auth-lib')
+        ) {
+          done();
+        }
+      });
+
+      service.start();
+
+      service.send({
         type: 'initGraph',
         projects: mockProjects,
         dependencies: mockDependencies,
@@ -226,17 +258,7 @@ describe('dep-graph machine', () => {
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
 
-      result = depGraphMachine.transition(result, {
-        type: 'focusProject',
-        projectName: 'app1',
-      });
-
-      expect(result.context.selectedProjects).toEqual([
-        'app1',
-        'ui-lib',
-        'feature-lib1',
-        'auth-lib',
-      ]);
+      service.send({ type: 'focusProject', projectName: 'app1' });
     });
 
     it('should select no projects on unfocus', () => {

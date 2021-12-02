@@ -33,6 +33,16 @@ window.appConfig = {
       label: 'Storybook',
       url: 'assets/graphs/storybook.json',
     },
+    {
+      id: 'focus-testing',
+      label: 'Focus',
+      url: 'assets/graphs/focus-testing.json',
+    },
+    {
+      id: 'affected',
+      label: 'Affected',
+      url: 'assets/graphs/affected.json',
+    },
   ],
   defaultProjectGraph: 'nx',
 };

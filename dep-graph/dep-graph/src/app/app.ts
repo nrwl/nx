@@ -3,17 +3,15 @@ import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/de
 import { fromEvent } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { DebuggerPanel } from './debugger-panel';
-import { GraphComponent } from './graph';
+import { useGraphService } from './graph.service';
 import { useDepGraphService } from './machines/dep-graph.service';
-import { DepGraphSend } from './machines/interfaces';
+import { DepGraphUIEvents, DepGraphSend } from './machines/interfaces';
 import { AppConfig, DEFAULT_CONFIG, ProjectGraphService } from './models';
-import { GraphTooltipService } from './tooltip-service';
 import { SidebarComponent } from './ui-sidebar/sidebar';
 
 export class AppComponent {
   private sidebar = new SidebarComponent();
-  private tooltipService = new GraphTooltipService();
-  private graph = new GraphComponent(this.tooltipService);
+  private graph = useGraphService();
   private debuggerPanel: DebuggerPanel;
 
   private windowResize$ = fromEvent(window, 'resize').pipe(startWith({}));
@@ -24,7 +22,16 @@ export class AppComponent {
     private config: AppConfig = DEFAULT_CONFIG,
     private projectGraphService: ProjectGraphService
   ) {
-    const [_, send] = useDepGraphService();
+    const [state$, send] = useDepGraphService();
+
+    state$.subscribe((state) => {
+      if (state.context.selectedProjects.length !== 0) {
+        document.getElementById('no-projects-chosen').style.display = 'none';
+      } else {
+        document.getElementById('no-projects-chosen').style.display = 'flex';
+      }
+    });
+
     this.send = send;
 
     this.loadProjectGraph(config.defaultProjectGraph);
@@ -47,7 +54,6 @@ export class AppComponent {
       await this.projectGraphService.getProjectGraph(projectInfo.url);
 
     const workspaceLayout = project?.layout;
-
     this.send({
       type: 'initGraph',
       projects: project.projects,
