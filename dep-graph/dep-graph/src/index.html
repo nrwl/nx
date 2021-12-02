@@ -142,7 +142,47 @@
         </svg>
         <h4>Please select projects in the sidebar.</h4>
       </div>
-      <div id="graph-container"></div>
+      <div id="graph-container">
+        <div id="cytoscape-graph"></div>
+        <button
+          type="button"
+          class="
+            fixed
+            z-50
+            bottom-4
+            right-4
+            w-16
+            h-16
+            rounded-full
+            bg-green-nx-base
+            shadow-sm
+            text-white
+            block
+            transition
+            duration-300
+            transform
+            opacity-0
+          "
+          data-cy="downloadImageButton"
+        >
+          <svg
+            height="24"
+            width="24"
+            class="absolute top-1/2 left-1/2 -mt-3 -ml-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            ></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </body>

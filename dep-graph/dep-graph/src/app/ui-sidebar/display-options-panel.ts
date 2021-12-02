@@ -1,3 +1,4 @@
+import { useGraphService } from '../graph.service';
 import { useDepGraphService } from '../machines/dep-graph.service';
 import { DepGraphSend } from '../machines/interfaces';
 import { removeChildrenFromContainer } from '../util';

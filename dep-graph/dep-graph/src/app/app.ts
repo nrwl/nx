@@ -2,10 +2,11 @@
 import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
 import { fromEvent } from 'rxjs';
 import { startWith } from 'rxjs/operators';
+import tippy from 'tippy.js';
 import { DebuggerPanel } from './debugger-panel';
 import { useGraphService } from './graph.service';
 import { useDepGraphService } from './machines/dep-graph.service';
-import { DepGraphUIEvents, DepGraphSend } from './machines/interfaces';
+import { DepGraphSend } from './machines/interfaces';
 import { AppConfig, DEFAULT_CONFIG, ProjectGraphService } from './models';
 import { SidebarComponent } from './ui-sidebar/sidebar';
 
@@ -18,6 +19,8 @@ export class AppComponent {
 
   private send: DepGraphSend;
 
+  private downloadImageButton: HTMLButtonElement;
+
   constructor(
     private config: AppConfig = DEFAULT_CONFIG,
     private projectGraphService: ProjectGraphService
@@ -27,8 +30,14 @@ export class AppComponent {
     state$.subscribe((state) => {
       if (state.context.selectedProjects.length !== 0) {
         document.getElementById('no-projects-chosen').style.display = 'none';
+        if (this.downloadImageButton) {
+          this.downloadImageButton.classList.remove('opacity-0');
+        }
       } else {
         document.getElementById('no-projects-chosen').style.display = 'flex';
+        if (this.downloadImageButton) {
+          this.downloadImageButton.classList.add('opacity-0');
+        }
       }
     });
 
@@ -43,6 +52,33 @@ export class AppComponent {
         5000
       );
     }
+
+    this.downloadImageButton = document.querySelector(
+      '[data-cy="downloadImageButton"]'
+    );
+
+    this.downloadImageButton.addEventListener('click', () => {
+      const graph = useGraphService();
+      const data = graph.getImage();
+
+      var downloadLink = document.createElement('a');
+      downloadLink.href = data;
+      downloadLink.download = 'graph.png';
+      // this is necessary as link.click() does not work on the latest firefox
+      downloadLink.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        })
+      );
+    });
+
+    tippy(this.downloadImageButton, {
+      content: 'Download Graph as PNG',
+      placement: 'right',
+      theme: 'nx',
+    });
   }
 
   private async loadProjectGraph(projectGraphId: string) {
