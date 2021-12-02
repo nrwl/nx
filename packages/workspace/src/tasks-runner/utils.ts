@@ -9,7 +9,9 @@ import {
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { convertNpmScriptsToTargets } from '@nrwl/workspace/src/core/project-graph/build-nodes';
+import { mergeNpmScriptsWithTargets } from '@nrwl/workspace/src/core/project-graph/build-nodes';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -146,8 +148,8 @@ export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   const project =
     workspace.readWorkspaceConfiguration().projects[task.target.project];
 
-  if (!project.targets) {
-    project.targets = convertNpmScriptsToTargets(project.root);
+  if (existsSync(join(project.root, 'package.json'))) {
+    project.targets = mergeNpmScriptsWithTargets(project.root, project.targets);
   }
 
   if (!project.targets[task.target.target]) {

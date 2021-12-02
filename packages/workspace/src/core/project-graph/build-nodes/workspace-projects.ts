@@ -2,25 +2,27 @@ import { defaultFileRead } from '../../file-utils';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
+  TargetConfiguration,
 } from '@nrwl/devkit';
+import {
+  PackageJson,
+  buildTargetFromScript,
+} from '@nrwl/tao/src/shared/package-json';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
-export function convertNpmScriptsToTargets(projectRoot: string) {
+export function mergeNpmScriptsWithTargets(projectRoot: string, targets) {
   try {
     const packageJsonString = defaultFileRead(
       `${projectRoot}/package.json`
     ).toString();
-    const parsedPackagedJson = JSON.parse(packageJsonString);
-    const res = {};
+    const { scripts, nx }: PackageJson = JSON.parse(packageJsonString);
+    const res: Record<string, TargetConfiguration> = {};
     // handle no scripts
-    Object.keys(parsedPackagedJson.scripts || {}).forEach((script) => {
-      res[script] = {
-        executor: '@nrwl/workspace:run-script',
-        options: {
-          script,
-        },
-      };
+    Object.keys(scripts || {}).forEach((script) => {
+      res[script] = buildTargetFromScript(script, nx);
     });
-    return res;
+    return { ...res, ...(targets || {}) };
   } catch (e) {
     return undefined;
   }
@@ -33,8 +35,8 @@ export function buildWorkspaceProjectNodes(
   const toAdd = [];
   Object.keys(ctx.workspace.projects).forEach((key) => {
     const p = ctx.workspace.projects[key];
-    if (!p.targets) {
-      p.targets = convertNpmScriptsToTargets(p.root);
+    if (existsSync(join(p.root, 'package.json'))) {
+      p.targets = mergeNpmScriptsWithTargets(p.root, p.targets);
     }
     const projectType =
       p.projectType === 'application'
