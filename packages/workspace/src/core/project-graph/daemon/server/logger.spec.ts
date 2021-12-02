@@ -48,8 +48,6 @@ describe('serverLogger', () => {
       serverLogger.log('Server started');
       serverLogger.watcherLog('Watching started');
       serverLogger.requestLog('A request has come in');
-      serverLogger.nestedLog('Doing something with the request...');
-      serverLogger.nestedLog('Done with the request');
       serverLogger.watcherLog('Watching stopped');
       serverLogger.log('Server stopped');
       // prettier-ignore
@@ -57,8 +55,6 @@ describe('serverLogger', () => {
         ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z - Server started'],
         ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z - [WATCHER]: Watching started'],
         ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z - [REQUEST]: A request has come in'],
-        ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z -   Doing something with the request...'],
-        ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z -   Done with the request'],
         ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z - [WATCHER]: Watching stopped'],
         ['[NX Daemon Server] - 2021-10-11T17:18:45.980Z - Server stopped'],
       ]);

@@ -32,10 +32,6 @@ class ServerLogger {
     this.log(`[WATCHER]: ${s.join(' ')}`);
   }
 
-  nestedLog(...s: unknown[]) {
-    this.log(`  ${s.join(' ')}`);
-  }
-
   private formatLogMessage(message: string) {
     return `[NX Daemon Server] - ${this.getNow()} - ${message}`;
   }
