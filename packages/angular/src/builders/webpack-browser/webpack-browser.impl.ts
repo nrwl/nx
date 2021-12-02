@@ -4,20 +4,21 @@ import {
   createBuilder,
 } from '@angular-devkit/architect';
 import { executeBrowserBuilder } from '@angular-devkit/build-angular';
+import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 import { JsonObject } from '@angular-devkit/core';
-import { from, Observable, of } from 'rxjs';
+import { joinPathFragments } from '@nrwl/devkit';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { joinPathFragments } from '@nrwl/devkit';
-import { join } from 'path';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
-import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
+import { join } from 'path';
+import { from, Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { merge } from 'webpack-merge';
+import { resolveCustomWebpackConfig } from '../utilities/webpack';
 
 export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
@@ -70,7 +71,10 @@ function buildAppWithCustomWebpackConfiguration(
 ) {
   return executeBrowserBuilder(options, context as any, {
     webpackConfiguration: async (baseWebpackConfig) => {
-      const customWebpackConfiguration = require(pathToWebpackConfig);
+      const customWebpackConfiguration = resolveCustomWebpackConfig(
+        pathToWebpackConfig,
+        options.tsConfig
+      );
       // The extra Webpack configuration file can export a synchronous or asynchronous function,
       // for instance: `module.exports = async config => { ... }`.
       if (typeof customWebpackConfiguration === 'function') {

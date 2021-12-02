@@ -1,16 +1,16 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
-import type { Schema } from './schema';
-
-import { parseTargetString, joinPathFragments } from '@nrwl/devkit';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import {
   DevServerBuilderOptions,
   serveWebpackBrowser,
 } from '@angular-devkit/build-angular/src/builders/dev-server';
+import { JsonObject } from '@angular-devkit/core';
+import { joinPathFragments, parseTargetString } from '@nrwl/devkit';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
+import { resolveCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
+import type { Schema } from './schema';
 
 export function webpackServer(schema: Schema, context: BuilderContext) {
   const options = normalizeOptions(schema);
@@ -46,7 +46,10 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
         context as any,
         {
           webpackConfiguration: async (baseWebpackConfig) => {
-            const customWebpackConfiguration = require(pathToWebpackConfig);
+            const customWebpackConfiguration = resolveCustomWebpackConfig(
+              pathToWebpackConfig,
+              buildTarget.options.tsConfig
+            );
             // The extra Webpack configuration file can export a synchronous or asynchronous function,
             // for instance: `module.exports = async config => { ... }`.
             if (typeof customWebpackConfiguration === 'function') {

@@ -13,7 +13,9 @@
     "jasmine-marbles",
     "rxjs-for-await",
     "webpack-merge",
-    "find-parent-dir"
+    "find-parent-dir",
+    "ts-node",
+    "tsconfig-paths"
   ],
   "keepLifecycleScripts": true
 }
