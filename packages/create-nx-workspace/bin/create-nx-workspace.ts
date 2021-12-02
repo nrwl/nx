@@ -128,12 +128,13 @@ if (parsedArgs.help) {
 (async function main() {
   const packageManager: PackageManager =
     parsedArgs.packageManager || detectInvokedPackageManager();
+
   const { name, cli, preset, appName, style, nxCloud } = await getConfiguration(
     parsedArgs
   );
 
   output.log({
-    title: 'Nx is creating your workspace.',
+    title: `Nx is creating your v${cliVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${packageManager} install" several times. Please wait.`,
