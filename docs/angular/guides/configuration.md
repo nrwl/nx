@@ -239,8 +239,6 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 
 Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
 
-````
-
 ### workspace.json
 
 Your `angular.json` file can be renamed to `workspace.json` and Nx will process it in the same way. The `workspace.json` has one additional top level property `version`. Setting `version` to 1 means the `workspace.json` file syntax is identical to `angular.json` When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
@@ -255,7 +253,7 @@ In version 2 workspaces, project configurations can also be independent files, r
     "mylib": "libs/mylib"
   }
 }
-````
+```
 
 This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file.
 
@@ -462,7 +460,7 @@ The following command generates a new library: `nx g @nrwl/angular:lib mylib`. A
 
 Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always pass `--style=scss` when creating new libraries.
 
-````json
+```json
 {
   "generators": {
     "@nrwl/angular:library": {
@@ -470,6 +468,7 @@ Default generator options are configured in `nx.json` as well. For instance, the
     }
   }
 }
+```
 
 ## .nxignore
 
@@ -513,4 +512,3 @@ nx workspace-lint
 ```
 
 This will identify any projects with no files in the configured project root folder, as well as any file that's not part of any project configured in the workspace.
-````
