@@ -21,13 +21,18 @@ export async function handleServerProcessTermination({
   reason,
   watcherSubscription,
 }: HandleServerProcessTerminationParams) {
-  server.close();
-  if (watcherSubscription) {
-    await watcherSubscription.unsubscribe();
-    serverLogger.watcherLog(`Unsubscribed from changes within: ${appRootPath}`);
+  try {
+    server.close();
+    if (watcherSubscription) {
+      await watcherSubscription.unsubscribe();
+      serverLogger.watcherLog(
+        `Unsubscribed from changes within: ${appRootPath}`
+      );
+    }
+    serverLogger.log(`Server stopped because: "${reason}"`);
+  } finally {
+    process.exit(0);
   }
-  serverLogger.log(`Server stopped because: "${reason}"`);
-  process.exit(0);
 }
 
 let serverInactivityTimerId: NodeJS.Timeout | undefined;

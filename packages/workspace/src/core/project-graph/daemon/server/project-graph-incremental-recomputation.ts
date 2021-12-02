@@ -33,26 +33,30 @@ const collectedDeletedFiles = new Set<string>();
 let waitPeriod = 100;
 let scheduledTimeoutId;
 
-export function getCachedSerializedProjectGraphPromise() {
-  // recomputing it now on demand. we can ignore the scheduled timeout
-  if (scheduledTimeoutId) {
-    clearTimeout(scheduledTimeoutId);
-    scheduledTimeoutId = undefined;
-  }
+export async function getCachedSerializedProjectGraphPromise() {
+  try {
+    // recomputing it now on demand. we can ignore the scheduled timeout
+    if (scheduledTimeoutId) {
+      clearTimeout(scheduledTimeoutId);
+      scheduledTimeoutId = undefined;
+    }
 
-  // reset the wait time
-  waitPeriod = 100;
-  resetInternalStateIfNxDepsMissing();
-  if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
-    if (!cachedSerializedProjectGraphPromise) {
-      processCollectedUpdatedAndDeletedFiles(); // this creates a project graph
+    // reset the wait time
+    waitPeriod = 100;
+    resetInternalStateIfNxDepsMissing();
+    if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
+      if (!cachedSerializedProjectGraphPromise) {
+        processCollectedUpdatedAndDeletedFiles(); // this creates a project graph
+        cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
+      }
+    } else {
+      processCollectedUpdatedAndDeletedFiles();
       cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
     }
-  } else {
-    processCollectedUpdatedAndDeletedFiles();
-    cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
+    return await cachedSerializedProjectGraphPromise;
+  } catch (e) {
+    return { error: e, serializedProjectGraph: null };
   }
-  return cachedSerializedProjectGraphPromise;
 }
 
 export function addUpdatedAndDeletedFiles(
@@ -96,7 +100,7 @@ function processCollectedUpdatedAndDeletedFiles() {
   );
   defaultFileHasher.incrementalUpdate(updatedFiles, deletedFiles);
   const workspaceJson = readWorkspaceJson();
-  serverLogger.nestedLog(
+  serverLogger.requestLog(
     `Updated file-hasher based on watched changes, recomputing project graph...`
   );
   // when workspace.json changes we cannot be sure about the correctness of the project file map
