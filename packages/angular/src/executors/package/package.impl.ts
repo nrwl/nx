@@ -1,12 +1,10 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
-  createTmpTsConfig,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
@@ -15,6 +13,7 @@ import { from } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 import { mapTo, switchMap, tap } from 'rxjs/operators';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
+import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
@@ -29,6 +28,10 @@ async function initializeNgPackagr(
   const packager = new (await import('ng-packagr')).NgPackagr([
     ...NX_PACKAGE_PROVIDERS,
     ...NX_ENTRY_POINT_PROVIDERS,
+    nxProvideOptions({
+      tailwindConfig: options.tailwindConfig,
+      watch: options.watch,
+    }),
   ]);
 
   packager.forProject(resolve(context.root, options.project));

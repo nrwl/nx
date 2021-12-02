@@ -4,6 +4,8 @@ import {
   checkFilesExist,
   getSelectedPackageManager,
   newProject,
+  packageInstall,
+  readFile,
   readJson,
   removeProject,
   runCLI,
@@ -11,6 +13,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
+import { join } from 'path';
 
 describe('Angular Package', () => {
   ['publishable', 'buildable'].forEach((testConfig) => {
@@ -22,7 +25,6 @@ describe('Angular Package', () => {
        *               /
        * parentLib =>
        *               \
-       *                \
        *                 childLib2
        *
        */
@@ -141,13 +143,7 @@ describe('Angular Package', () => {
 
       afterEach(() => removeProject({ onlyOnCI: true }));
 
-      it('should build the library when it does not have any deps', () => {
-        runCLI(`build ${childLib}`);
-
-        checkFilesExist(`dist/libs/${childLib}/package.json`);
-      });
-
-      it('should properly add references to any dependency into the parent package.json', () => {
+      it('should build properly and update the parent package.json with the dependencies', () => {
         runCLI(`build ${childLib}`);
         runCLI(`build ${childLib2}`);
         runCLI(`build ${parentLib}`);
@@ -173,56 +169,281 @@ describe('Angular Package', () => {
 
   describe('Publishable library secondary entry point', () => {
     let project: string;
-    let parentLib: string;
-    let childLib: string;
+    let lib: string;
     let entryPoint: string;
 
     beforeEach(() => {
       project = newProject();
-      parentLib = uniq('parentlib');
-      childLib = uniq('childlib');
+      lib = uniq('lib');
       entryPoint = uniq('entrypoint');
 
       runCLI(
-        `generate @nrwl/angular:lib ${parentLib} --publishable --importPath=@${project}/${parentLib} --no-interactive`
+        `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${project}/${lib} --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:lib ${childLib} --publishable --importPath=@${project}/${childLib} --no-interactive`
-      );
-      runCLI(
-        `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${childLib} --no-interactive`
-      );
-
-      updateFile(
-        `libs/${parentLib}/src/lib/${parentLib}.module.ts`,
-        `
-          import { NgModule } from '@angular/core';
-          import { CommonModule } from '@angular/common';
-          import { ${
-            names(entryPoint).className
-          }Module } from '@${project}/${childLib}/${entryPoint}';
-
-          @NgModule({
-            imports: [CommonModule, ${names(entryPoint).className}Module],
-          })
-          export class Lib1Module {}
-        `
+        `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
       );
     });
 
     it('should build successfully', () => {
-      const buildOutput = runCLI(`build ${parentLib}`);
+      const buildOutput = runCLI(`build ${lib}`);
 
       expect(buildOutput).toContain(
-        `Building entry point '@${project}/${childLib}'`
+        `Building entry point '@${project}/${lib}'`
       );
       expect(buildOutput).toContain(
-        `Building entry point '@${project}/${childLib}/${entryPoint}'`
-      );
-      expect(buildOutput).toContain(
-        `Building entry point '@${project}/${parentLib}'`
+        `Building entry point '@${project}/${lib}/${entryPoint}'`
       );
       expect(buildOutput).toContain('Running target "build" succeeded');
+    });
+  });
+
+  describe('Tailwind support', () => {
+    let projectScope: string;
+    let buildLibExecutorOption: string;
+    let buildLibProjectConfig: string;
+    let buildLibRootConfig: string;
+    let pubLibExecutorOption: string;
+    let pubLibProjectConfig: string;
+    let pubLibRootConfig: string;
+
+    const customTailwindConfigFile = 'custom-tailwind.config.js';
+
+    const spacing = {
+      rootConfig: {
+        sm: '2px',
+        md: '4px',
+        lg: '8px',
+      },
+      projectConfig: {
+        sm: '1px',
+        md: '2px',
+        lg: '4px',
+      },
+      executorOption: {
+        sm: '4px',
+        md: '8px',
+        lg: '16px',
+      },
+    };
+
+    const createWorkspaceTailwindConfigFile = () => {
+      const tailwindConfigFile = 'tailwind.config.js';
+
+      const tailwindConfig = `module.exports = {
+        mode: 'jit',
+        purge: ['./apps/**/*.{html,ts}', './libs/**/*.{html,ts}'],
+        darkMode: false,
+        theme: {
+          spacing: {
+            sm: '${spacing.rootConfig.sm}',
+            md: '${spacing.rootConfig.md}',
+            lg: '${spacing.rootConfig.lg}',
+          },
+        },
+        variants: { extend: {} },
+        plugins: [],
+      };
+      `;
+
+      updateFile(tailwindConfigFile, tailwindConfig);
+    };
+
+    const createTailwindConfigFile = (
+      dir: string,
+      lib: string,
+      libSpacing: typeof spacing['executorOption'],
+      tailwindConfigFile = 'tailwind.config.js'
+    ) => {
+      const tailwindConfigFilePath = join(dir, tailwindConfigFile);
+
+      const tailwindConfig = `const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+
+      module.exports = {
+        mode: 'jit',
+        purge: [
+          './libs/${lib}/src/**/*.{html,ts}',
+          ...createGlobPatternsForDependencies(__dirname),
+        ],
+        darkMode: false,
+        theme: {
+          spacing: {
+            sm: '${libSpacing.sm}',
+            md: '${libSpacing.md}',
+            lg: '${libSpacing.lg}',
+          },
+        },
+        variants: { extend: {} },
+        plugins: [],
+      };
+      `;
+
+      updateFile(tailwindConfigFilePath, tailwindConfig);
+    };
+
+    const addTailwindConfigToProject = (lib: string) => {
+      const angularJson = readJson('angular.json');
+      angularJson.projects[
+        lib
+      ].architect.build.options.tailwindConfig = `libs/${lib}/${customTailwindConfigFile}`;
+      updateFile('angular.json', JSON.stringify(angularJson, null, 2));
+    };
+
+    const createLibComponent = (lib: string) => {
+      updateFile(
+        `libs/${lib}/src/lib/foo.component.ts`,
+        `import { Component } from '@angular/core';
+
+        @Component({
+          selector: '${projectScope}-foo',
+          template: '<button class="custom-btn">Click me!</button>',
+          styles: [\`
+            .custom-btn {
+              @apply m-md p-sm;
+            }
+          \`]
+        })
+        export class FooComponent {}
+      `
+      );
+
+      updateFile(
+        `libs/${lib}/src/lib/${lib}.module.ts`,
+        `import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { FooComponent } from './foo.component';
+        
+        @NgModule({
+          imports: [CommonModule],
+          declarations: [FooComponent],
+          exports: [FooComponent],
+        })
+        export class LibModule {}
+      `
+      );
+
+      updateFile(
+        `libs/${lib}/src/index.ts`,
+        `export * from './lib/foo.component';
+        export * from './lib/${lib}.module';
+        `
+      );
+    };
+
+    beforeEach(() => {
+      const projectName = uniq('proj');
+
+      projectScope = newProject({ name: projectName });
+      buildLibExecutorOption = uniq('build-lib-executor-option');
+      buildLibProjectConfig = uniq('build-lib-project-config');
+      buildLibRootConfig = uniq('build-lib-root-config');
+      pubLibExecutorOption = uniq('pub-lib-executor-option');
+      pubLibProjectConfig = uniq('pub-lib-project-config');
+      pubLibRootConfig = uniq('pub-lib-root-config');
+
+      // Install Tailwind required packages.
+      // TODO: Remove this when Tailwind generator is created and used.
+      packageInstall('tailwindcss postcss autoprefixer', projectName, 'latest');
+
+      // Create Tailwind config in the workspace root.
+      createWorkspaceTailwindConfigFile();
+
+      // Setup buildable libs
+
+      // Buildable lib with tailwind config specified in the project config
+      runCLI(
+        `generate @nrwl/angular:lib ${buildLibExecutorOption} --buildable --no-interactive`
+      );
+      createLibComponent(buildLibExecutorOption);
+      createTailwindConfigFile(
+        `libs/${buildLibExecutorOption}`,
+        buildLibExecutorOption,
+        spacing.executorOption,
+        customTailwindConfigFile
+      );
+      addTailwindConfigToProject(buildLibExecutorOption);
+
+      // Buildable lib with tailwind config located in the project root
+      runCLI(
+        `generate @nrwl/angular:lib ${buildLibProjectConfig} --buildable --no-interactive`
+      );
+      createLibComponent(buildLibProjectConfig);
+      createTailwindConfigFile(
+        `libs/${buildLibProjectConfig}`,
+        buildLibProjectConfig,
+        spacing.projectConfig
+      );
+
+      // Buildable lib with tailwind config located in the workspace root
+      runCLI(
+        `generate @nrwl/angular:lib ${buildLibRootConfig} --buildable --no-interactive`
+      );
+      createLibComponent(buildLibRootConfig);
+
+      // Publishable libs
+
+      // Publishable lib with tailwind config specified in the project config
+      runCLI(
+        `generate @nrwl/angular:lib ${pubLibExecutorOption} --publishable --importPath=@${projectScope}/${pubLibExecutorOption} --no-interactive`
+      );
+      createLibComponent(pubLibExecutorOption);
+      createTailwindConfigFile(
+        `libs/${pubLibExecutorOption}`,
+        pubLibExecutorOption,
+        spacing.executorOption,
+        customTailwindConfigFile
+      );
+      addTailwindConfigToProject(pubLibExecutorOption);
+
+      // Publishable lib with tailwind config located in the project root
+      runCLI(
+        `generate @nrwl/angular:lib ${pubLibProjectConfig} --publishable --importPath=@${projectScope}/${pubLibProjectConfig} --no-interactive`
+      );
+      createLibComponent(pubLibProjectConfig);
+      createTailwindConfigFile(
+        `libs/${pubLibProjectConfig}`,
+        pubLibProjectConfig,
+        spacing.projectConfig
+      );
+
+      // Publishable lib with tailwind config located in the workspace root
+      runCLI(
+        `generate @nrwl/angular:lib ${pubLibRootConfig} --publishable --importPath=@${projectScope}/${pubLibRootConfig} --no-interactive`
+      );
+      createLibComponent(pubLibRootConfig);
+    });
+
+    const assertComponentStyles = (
+      lib: string,
+      libSpacing: typeof spacing['executorOption']
+    ) => {
+      const builtComponentContent = readFile(
+        `dist/libs/${lib}/esm2020/lib/foo.component.mjs`
+      );
+      let expectedStylesRegex = new RegExp(
+        `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`
+      );
+      expect(builtComponentContent).toMatch(expectedStylesRegex);
+    };
+
+    it('should build and output the right styles based on the tailwind config', () => {
+      runCLI(`build ${buildLibExecutorOption}`);
+      assertComponentStyles(buildLibExecutorOption, spacing.executorOption);
+
+      runCLI(`build ${buildLibProjectConfig}`);
+      assertComponentStyles(buildLibProjectConfig, spacing.projectConfig);
+
+      runCLI(`build ${buildLibRootConfig}`);
+      assertComponentStyles(buildLibRootConfig, spacing.rootConfig);
+
+      runCLI(`build ${pubLibExecutorOption}`);
+      assertComponentStyles(pubLibExecutorOption, spacing.executorOption);
+
+      runCLI(`build ${pubLibProjectConfig}`);
+      assertComponentStyles(pubLibProjectConfig, spacing.projectConfig);
+
+      runCLI(`build ${pubLibRootConfig}`);
+      assertComponentStyles(pubLibRootConfig, spacing.rootConfig);
     });
   });
 });
