@@ -7,6 +7,6 @@ const mode = argv._[0];
 console.log(`Setting up dep-graph for ${mode}`);
 
 copyFileSync(
-  `dep-graph/dep-graph/src/assets/environment.${mode}.js`,
-  `dep-graph/dep-graph/src/assets/environment.js`
+  `dep-graph/client/src/assets/environment.${mode}.js`,
+  `dep-graph/client/src/assets/environment.js`
 );
