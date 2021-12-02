@@ -1205,6 +1205,11 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
             "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
@@ -2535,6 +2540,11 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
             "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
@@ -3804,6 +3814,11 @@
             "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
           },
           {
             "name": "Distributed CI",
