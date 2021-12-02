@@ -885,7 +885,7 @@ Example:
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`tree`): `string`
+▸ **getWorkspacePath**(`tree`): `"/angular.json"` \| `"/workspace.json"` \| `null`
 
 #### Parameters
 
@@ -895,7 +895,7 @@ Example:
 
 #### Returns
 
-`string`
+`"/angular.json"` \| `"/workspace.json"` \| `null`
 
 ---
 
@@ -1061,9 +1061,9 @@ By default javascript-style comments are allowed.
 
 #### Type parameters
 
-| Name | Type                    |
-| :--- | :---------------------- |
-| `T`  | extends ` object``any ` |
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
 
 #### Parameters
 
@@ -1113,9 +1113,9 @@ Reads a json file, removes all comments and parses JSON.
 
 #### Type parameters
 
-| Name | Type                    |
-| :--- | :---------------------- |
-| `T`  | extends ` object``any ` |
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
 
 #### Parameters
 
@@ -1139,9 +1139,9 @@ Reads a JSON file and returns the object the JSON content represents.
 
 #### Type parameters
 
-| Name | Type                    |
-| :--- | :---------------------- |
-| `T`  | extends ` object``any ` |
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
 
 #### Parameters
 
@@ -1346,9 +1346,9 @@ By default the JSON string is formatted with a 2 space intendation to be easy re
 
 #### Type parameters
 
-| Name | Type                       |
-| :--- | :------------------------- |
-| `T`  | extends ` object``object ` |
+| Name | Type                        |
+| :--- | :-------------------------- |
+| `T`  | extends `object` = `object` |
 
 #### Parameters
 
@@ -1459,10 +1459,10 @@ Updates a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Type                    |
-| :--- | :---------------------- |
-| `T`  | extends ` object``any ` |
-| `U`  | extends ` object``T `   |
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
+| `U`  | extends `object` = `T`   |
 
 #### Parameters
 
@@ -1569,9 +1569,9 @@ Writes a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Type                       |
-| :--- | :------------------------- |
-| `T`  | extends ` object``object ` |
+| Name | Type                        |
+| :--- | :-------------------------- |
+| `T`  | extends `object` = `object` |
 
 #### Parameters
 
@@ -1596,9 +1596,9 @@ Serializes the given data to JSON and writes it to a file.
 
 #### Type parameters
 
-| Name | Type                       |
-| :--- | :------------------------- |
-| `T`  | extends ` object``object ` |
+| Name | Type                        |
+| :--- | :-------------------------- |
+| `T`  | extends `object` = `object` |
 
 #### Parameters
 
