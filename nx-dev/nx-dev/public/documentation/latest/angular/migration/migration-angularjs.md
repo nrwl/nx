@@ -411,7 +411,7 @@ To use webpack instead of gulp, go back to your `angular.json` file and modify t
 ```json
 ...
 "build": {
-  "executor": "@nrwl/web:build",
+  "executor": "@nrwl/web:webpack",
   "options": {
     "outputPath": "dist/apps/realworld",
     "index": "apps/realworld/src/index.html",

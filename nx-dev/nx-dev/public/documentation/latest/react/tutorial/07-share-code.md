@@ -25,8 +25,9 @@ myorg/
 │       │   │   └── data.ts
 │       │   └── index.ts
 │       ├── jest.conf.js
-│       ├── tsconfig.app.json
+│       ├── project.json
 │       ├── tsconfig.json
+│       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json

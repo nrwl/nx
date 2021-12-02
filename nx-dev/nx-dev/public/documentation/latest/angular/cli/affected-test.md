@@ -18,12 +18,6 @@ Run tests in parallel:
 nx affected:test --parallel=5
 ```
 
-Rerun the test target only for the projects that failed last time:
-
-```bash
-nx affected:test --only-failed
-```
-
 Run the test target for all projects:
 
 ```bash

@@ -58,7 +58,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -352,11 +352,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "angular/api-workspace/executors/tsc"
+            "file": "angular/api-js/executors/tsc"
           }
         ]
       },
@@ -378,7 +394,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "angular/api-web/executors/build"
+            "file": "angular/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -393,7 +409,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "angular/api-web/executors/package"
+            "file": "angular/api-web/executors/rollup"
           }
         ]
       },
@@ -1189,6 +1205,11 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
             "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
@@ -1370,7 +1391,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -1660,11 +1681,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "react/api-workspace/executors/tsc"
+            "file": "react/api-js/executors/tsc"
           }
         ]
       },
@@ -1686,7 +1723,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "react/api-web/executors/build"
+            "file": "react/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -1701,7 +1738,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "react/api-web/executors/package"
+            "file": "react/api-web/executors/rollup"
           }
         ]
       },
@@ -2503,6 +2540,11 @@
             "file": "shared/monorepo-ci-jenkins"
           },
           {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
             "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
@@ -2932,11 +2974,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "node/api-workspace/executors/tsc"
+            "file": "node/api-js/executors/tsc"
           }
         ]
       },
@@ -2958,7 +3016,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "node/api-web/executors/build"
+            "file": "node/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -2973,7 +3031,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "node/api-web/executors/package"
+            "file": "node/api-web/executors/rollup"
           }
         ]
       },
@@ -3756,6 +3814,11 @@
             "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
           },
           {
             "name": "Distributed CI",

@@ -4,7 +4,7 @@
 
 In addition to supporting computation caching, Nx scales your development by doing code change analysis to see what is affected by a particular pull request.
 
-**Commit all the changes in the repo**:
+**Commit all the changes you have made so far**:
 
 ```bash
 git add .
@@ -12,13 +12,17 @@ git commit -am 'init'
 git checkout -b testbranch
 ```
 
-**Open `libs/ui/src/lib/todos/todos.tsx` and change the component:**
+**Open `libs/ui/src/lib/todos/todos.tsx` and change the component by updating the `<li>` content to `{t.title}!!`:**
 
 ```typescript
-import React from 'react';
 import { Todo } from '@myorg/data';
+import './todos.module.css';
 
-export const Todos = (props: { todos: Todo[] }) => {
+export interface TodosProps {
+  todos: Todo[];
+}
+
+export function Todos(props: TodosProps) {
   return (
     <ul>
       {props.todos.map((t) => (
@@ -26,7 +30,7 @@ export const Todos = (props: { todos: Todo[] }) => {
       ))}
     </ul>
   );
-};
+}
 
 export default Todos;
 ```

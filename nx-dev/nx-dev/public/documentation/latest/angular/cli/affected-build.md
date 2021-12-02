@@ -18,12 +18,6 @@ Run build in parallel:
 nx affected:build --parallel=5
 ```
 
-Rerun the build target only for the projects that failed last time:
-
-```bash
-nx affected:build --only-failed
-```
-
 Run the build target for all projects:
 
 ```bash
