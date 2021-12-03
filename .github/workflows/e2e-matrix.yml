@@ -30,7 +30,6 @@ jobs:
             os-name: windows
             os-cache-dir: ./nx-cache
         node_version:
-          - '14'
           - '16'
         package_manager:
           - npm
@@ -48,38 +47,46 @@ jobs:
           - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
           - e2e-react-native,e2e-detox
         exclude:
+          # exclude react-native and detox from ubuntu
           - os: ubuntu-latest
-            node_version: '14'
-            package_manager: pnpm
-          - os: ubuntu-latest
-            node_version: '16'
-            package_manager: npm
-          - os: ubuntu-latest
-            node_version: '16'
-            package_manager: yarn
-          - os: macos-latest
-            node_version: '14'
+            packages: e2e-react-native,e2e-detox
+          # run just npm on macos
           - os: macos-latest
             package_manager: yarn
           - os: macos-latest
             package_manager: pnpm
+          # exclude everything but react-native and detox from macos
           - os: macos-latest
             packages: e2e-workspace-core
           - os: macos-latest
-            packages: e2e-workspace-integrations
+            packages: e2e-angular-core,e2e-angular-extensions
           - os: macos-latest
-            packages: e2e-workspace-create
-          - os: windows-latest
-            node_version: '14'
+            packages: e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          - os: macos-latest
+            packages: e2e-cypress
+          - os: macos-latest
+            packages: e2e-gatsby,e2e-react
+          - os: macos-latest
+            packages: e2e-next
+          - os: macos-latest
+            packages: e2e-node
+          - os: macos-latest
+            packages: e2e-web
+          - os: macos-latest
+            packages: e2e-storybook
+          - os: macos-latest
+            packages: e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
+          # run just npm on windows
           - os: windows-latest
             package_manager: yarn
           - os: windows-latest
             package_manager: pnpm
+          # exclude react-native from windows
           - os: windows-latest
             packages: e2e-react-native,e2e-detox
       fail-fast: false
 
-    name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
+    name: ${{ matrix.os-name }}/${{ matrix.package_manager }}/v${{ matrix.node_version }} - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
