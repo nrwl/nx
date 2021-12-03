@@ -1,4 +1,4 @@
-import { Member, MemberCard } from '@nrwl/nx-dev/ui/member-card';
+import { Member, MemberCard } from '@nrwl/nx-dev/ui-member-card';
 
 export function ConfSpeakers(): JSX.Element {
   const speakers: Array<Member> = [

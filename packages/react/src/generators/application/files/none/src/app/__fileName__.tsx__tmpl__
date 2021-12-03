@@ -12,8 +12,8 @@ export function App() {
   return (
     <>
       <NxWelcome title="<%= projectName %>"/>
-    </>
-  );
+      <div />
+    </>);
 <% if (classComponent) { %>
   }
 }

@@ -8,7 +8,7 @@ import {
   NpxCreateNxWorkspace,
   NxUsersShowcase,
   Testimonials,
-} from '@nrwl/nx-dev/ui/common';
+} from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import {
   AffectedCommand,

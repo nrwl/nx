@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Footer, Header } from '@nrwl/nx-dev/ui/common';
+import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
   ConfSchedule,
   ConfSpeakers,
