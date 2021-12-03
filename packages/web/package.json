@@ -32,6 +32,7 @@
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
+    "@nrwl/js": "*",
     "@nrwl/linter": "*",
     "@nrwl/workspace": "*",
     "@babel/core": "^7.15.0",

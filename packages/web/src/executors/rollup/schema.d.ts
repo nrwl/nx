@@ -1,3 +1,5 @@
+type Compiler = 'babel' | 'swc';
+
 export interface Globals {
   moduleId: string;
   global: string;
@@ -19,4 +21,5 @@ export interface WebRollupOptions {
   umdName?: string;
   deleteOutputPath?: boolean;
   format: string[];
+  compiler?: Compiler;
 }

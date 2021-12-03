@@ -154,6 +154,12 @@
     "standaloneConfig": {
       "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
       "type": "boolean"
+    },
+    "compiler": {
+      "type": "string",
+      "enum": ["babel", "swc"],
+      "default": "babel",
+      "description": "Which compiler to use."
     }
   },
   "required": ["name"]

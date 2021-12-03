@@ -27,7 +27,7 @@ describe('Web Components Applications', () => {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    runCLI(`build ${appName} --outputHashing none`);
+    runCLI(`build ${appName} --outputHashing none --compiler babel`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.esm.js`,
@@ -74,7 +74,9 @@ describe('Web Components Applications', () => {
     const libName = uniq('lib');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/react:lib ${libName} --buildable --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --buildable --no-interactive --compiler swc`
+    );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);

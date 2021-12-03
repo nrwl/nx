@@ -40,6 +40,7 @@ import init from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import componentGenerator from '../component/component';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -119,7 +120,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       react: reactVersion,
       'react-dom': reactDomVersion,
     },
-    {}
+    options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {}
   );
   tasks.push(installTask);
 
@@ -189,6 +190,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        compiler: options.compiler ?? 'babel',
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,

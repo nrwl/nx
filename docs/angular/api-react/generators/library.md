@@ -64,6 +64,16 @@ Type: `boolean`
 
 Generate a buildable library.
 
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+Which compiler to use.
+
 ### component
 
 Default: `true`
