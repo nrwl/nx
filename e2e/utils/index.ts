@@ -438,7 +438,7 @@ export function runCLI(
         maxBuffer: 50 * 1024 * 1024,
       })
     );
-    if (process.env.VERBOSE_OUTPUT) {
+    if (process.env.NX_VERBOSE_LOGGING) {
       logInfo(`result of running: ${command}`, r);
     }
 
@@ -490,7 +490,7 @@ export function runCommand(command: string): string {
       },
       encoding: 'utf-8',
     }).toString();
-    if (process.env.VERBOSE_OUTPUT) {
+    if (process.env.NX_VERBOSE_LOGGING) {
       console.log(r);
     }
     return r;
