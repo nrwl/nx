@@ -22,7 +22,7 @@ import { NxJsonConfiguration } from '../shared/nx';
 import { splitTarget } from '../utils/split-target';
 import { readJsonFile } from '../utils/fileutils';
 import { buildTargetFromScript, PackageJson } from '../shared/package-json';
-import { join as joinPathFragments } from 'path';
+import { join } from 'path';
 import { existsSync } from 'fs';
 
 export interface Target {
@@ -167,12 +167,12 @@ function createImplicitTargetConfig(
   proj: ProjectConfiguration,
   targetName: string
 ): TargetConfiguration | null {
-  const packageJsonPath = joinPathFragments(root, proj.root, 'package.json');
+  const packageJsonPath = join(root, proj.root, 'package.json');
   if (!existsSync(packageJsonPath)) {
     return null;
   }
   const { scripts, nx } = readJsonFile<PackageJson>(packageJsonPath);
-  if (!(targetName in scripts)) {
+  if (!(targetName in (scripts || {}))) {
     return null;
   }
   return buildTargetFromScript(targetName, nx);

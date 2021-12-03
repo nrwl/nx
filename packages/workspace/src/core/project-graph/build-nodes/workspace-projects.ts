@@ -1,32 +1,10 @@
-import { defaultFileRead } from '../../file-utils';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
-  TargetConfiguration,
 } from '@nrwl/devkit';
-import {
-  PackageJson,
-  buildTargetFromScript,
-} from '@nrwl/tao/src/shared/package-json';
 import { join } from 'path';
 import { existsSync } from 'fs';
-
-export function mergeNpmScriptsWithTargets(projectRoot: string, targets) {
-  try {
-    const packageJsonString = defaultFileRead(
-      `${projectRoot}/package.json`
-    ).toString();
-    const { scripts, nx }: PackageJson = JSON.parse(packageJsonString);
-    const res: Record<string, TargetConfiguration> = {};
-    // handle no scripts
-    Object.keys(scripts || {}).forEach((script) => {
-      res[script] = buildTargetFromScript(script, nx);
-    });
-    return { ...res, ...(targets || {}) };
-  } catch (e) {
-    return undefined;
-  }
-}
+import { mergeNpmScriptsWithTargets } from '../../../utilities/project-graph-utils';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,

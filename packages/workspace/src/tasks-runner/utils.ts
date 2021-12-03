@@ -9,7 +9,7 @@ import {
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { mergeNpmScriptsWithTargets } from '@nrwl/workspace/src/core/project-graph/build-nodes';
+import { mergeNpmScriptsWithTargets } from '../utilities/project-graph-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
 

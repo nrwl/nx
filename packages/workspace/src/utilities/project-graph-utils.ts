@@ -1,4 +1,14 @@
-import { normalizePath, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import {
+  normalizePath,
+  ProjectGraph,
+  ProjectGraphNode,
+  readJsonFile,
+  TargetConfiguration,
+} from '@nrwl/devkit';
+import {
+  buildTargetFromScript,
+  PackageJson,
+} from '@nrwl/tao/src/shared/package-json';
 import { relative } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 
@@ -16,6 +26,22 @@ export function projectHasTargetAndConfiguration(
     project.data.targets[target].configurations &&
     project.data.targets[target].configurations[configuration]
   );
+}
+
+export function mergeNpmScriptsWithTargets(projectRoot: string, targets) {
+  try {
+    const { scripts, nx }: PackageJson = readJsonFile(
+      `${projectRoot}/package.json`
+    );
+    const res: Record<string, TargetConfiguration> = {};
+    // handle no scripts
+    Object.keys(scripts || {}).forEach((script) => {
+      res[script] = buildTargetFromScript(script, nx);
+    });
+    return { ...res, ...(targets || {}) };
+  } catch (e) {
+    return undefined;
+  }
 }
 
 export function getSourceDirOfDependentProjects(
