@@ -110,7 +110,11 @@ commands:
 
       - run-yarn-install:
           os: << parameters.os >>
-      - install-pnpm
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - install-pnpm
 
 # -------------------------
 #          JOBS
@@ -150,9 +154,9 @@ jobs:
           no_output_timeout: 60m
 
   # -------------------------
-  #     JOBS: Main
+  #     JOBS: Main Linux
   # -------------------------
-  main:
+  main-linux:
     executor: linux
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
@@ -168,9 +172,6 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run:
-          name: Check Documentation
-          command: yarn documentation
-      - run:
           name: Check Imports
           command: yarn check-imports
       - run:
@@ -183,19 +184,19 @@ jobs:
           name: Check Package dependencies
           command: yarn depcheck
       - run:
-          name: Run Tests
-          command: |
-            npx nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
+          name: Check Documentation
+          command: yarn documentation
+          no_output_timeout: 20m
       - run:
-          name: Run Lint
+          name: Run checks
           command: |
-            npx nx workspace-lint
-            # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
-            echo "Linting is temporarily disabled until ESLint v8 support is published"
-      - run:
-          name: Run Builds
-          command: |
-            npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
+            yarn nx workspace-lint &
+            P1=$!
+            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
+            P2=$!
+            yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
+            P3=$!
+            wait $P1 $P2 $P3
       - run:
           name: Run E2E Tests
           command: |
@@ -270,7 +271,12 @@ workflows:
       # -------------------------
       #     Pull request logic
       # -------------------------
+<<<<<<< HEAD
       - main:
           name: pull-request
+=======
+      - main-linux:
+          name: main-linux-e2e
+>>>>>>> b16fd07c9 (chore(repo): use bash to run tasks in parallel)
       - mainmacos:
           name: pull-request-macos
