@@ -80,18 +80,20 @@ export function formatFiles(
 }
 
 function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
-  const workspaceConfig = workspaceConfigName(appRootPath);
+  const workspaceConfigPath = workspaceConfigName(appRootPath);
 
   try {
-    if (workspaceConfig) {
-      const workspaceJson = parseJson(host.read(workspaceConfig).toString());
+    if (workspaceConfigPath) {
+      const workspaceJson = parseJson(
+        host.read(workspaceConfigPath).toString()
+      );
       const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
       if (reformatted) {
-        host.overwrite(workspaceConfig, serializeJson(reformatted));
+        host.overwrite(workspaceConfigPath, serializeJson(reformatted));
       }
     }
   } catch (e) {
-    console.error(`Failed to format: ${path}`);
+    console.error(`Failed to format workspace config: ${workspaceConfigPath}`);
     console.error(e);
   }
 }
