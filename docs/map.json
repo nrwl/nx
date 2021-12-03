@@ -344,6 +344,11 @@
             "file": "angular/api-workspace/generators/convert-to-nx-project"
           },
           {
+            "name": "create-workspace-json generator",
+            "id": "create-workspace-json-generator",
+            "file": "angular/api-workspace/generators/create-workspace-json"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "angular/api-workspace/executors/run-commands"
@@ -1673,6 +1678,11 @@
             "file": "react/api-workspace/generators/convert-to-nx-project"
           },
           {
+            "name": "create-workspace-json generator",
+            "id": "create-workspace-json-generator",
+            "file": "react/api-workspace/generators/create-workspace-json"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "react/api-workspace/executors/run-commands"
@@ -2964,6 +2974,11 @@
             "name": "convert-to-nx-project generator",
             "id": "convert-to-nx-project-generator",
             "file": "node/api-workspace/generators/convert-to-nx-project"
+          },
+          {
+            "name": "create-workspace-json generator",
+            "id": "create-workspace-json-generator",
+            "file": "node/api-workspace/generators/create-workspace-json"
           },
           {
             "name": "run-commands executor",

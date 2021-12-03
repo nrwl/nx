@@ -1,0 +1,14 @@
+{
+  "cli": "nx",
+  "$id": "WorkspaceJsonGenerator",
+  "title": "Create workspace.json from workspaceless workspace",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": []
+}
