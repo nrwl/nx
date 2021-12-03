@@ -176,6 +176,7 @@ jobs:
       - run:
           name: Check Documentation
           command: yarn documentation
+          no_output_timeout: 20m
   main-lint:
     executor: linux
     environment:
@@ -237,12 +238,14 @@ jobs:
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox,e2e-gatsby --parallel --max-parallel=1
           no_output_timeout: 30m
 
-  main-cleanup:
+  main-linux-cleanup:
     executor: linux
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
     steps:
+      - setup:
+          os: linux
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -278,33 +281,29 @@ workflows:
   build:
     jobs:
       - agent:
-          name: 'agent1'
+          name: 'agent-linux-1'
       - agent:
-          name: 'agent2'
+          name: 'agent-linux-2'
       - agent:
-          name: 'agent3'
+          name: 'agent-linux-3'
       - agent:
-          name: 'agent4'
+          name: 'agent-linux-4'
       - agent:
-          name: 'agent5'
+          name: 'agent-linux-5'
       - agent:
-          name: 'agent6'
+          name: 'agent-linux-6'
       - agent:
-          name: 'agent7'
+          name: 'agent-linux-7'
       - agent:
-          name: 'agent8'
+          name: 'agent-linux-8'
       - agent:
-          name: 'agent9'
+          name: 'agent-macos-1'
           pm: 'npm'
           os: 'macos'
       - agent:
-          name: 'agent10'
+          name: 'agent-macos-2'
           pm: 'npm'
           os: 'macos'
-      # - agent:
-      #     name: 'agent10'
-      #     pm: 'npm'
-      #     os: 'android'
       # -------------------------
       #     Pull request logic
       # -------------------------
@@ -313,14 +312,14 @@ workflows:
       - main-test
       - main-build
       - main-e2e:
-          name: main-ubuntu-e2e
-      - main-cleanup:
-          name: main-agents-cleanup
+          name: main-linux-e2e
           requires:
             - main-checks
             - main-lint
             - main-test
             - main-build
-            - main-ubuntu-e2e
+      - main-linux-cleanup:
+          requires:
+            - main-linux-e2e
       - mainmacos:
           name: main-macos-e2e
