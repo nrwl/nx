@@ -9,7 +9,7 @@ export default async function update(host: Tree) {
   const projects = getProjects(host);
 
   for (const [name, config] of projects.entries()) {
-    if (config?.targets?.build?.executor !== '@nrwl/web:package') return;
+    if (config?.targets?.build?.executor !== '@nrwl/web:package') continue;
 
     config.targets.build.executor = '@nrwl/web:rollup';
 
