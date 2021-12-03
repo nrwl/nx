@@ -29,15 +29,7 @@ import {
 import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect } from '@angular-devkit/architect';
-import {
-  EMPTY,
-  Observable,
-  of,
-  merge,
-  combineLatest,
-  forkJoin,
-  NEVER,
-} from 'rxjs';
+import { EMPTY, Observable, of, merge, forkJoin, NEVER } from 'rxjs';
 import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import { readJsonFile } from '../utils/fileutils';
@@ -600,10 +592,11 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       const match = findWorkspaceConfigFileChange(this.host);
 
       let workspaceJsonOverride: Observable<RawWorkspaceJsonConfiguration>;
-      if (
-        this.host.exists('workspace.json') ||
-        this.host.exists('angular.json')
-      ) {
+      let actualConfigFileName: ConfigFilePath = [
+        '/workspace.json',
+        '/angular.json',
+      ].filter((f) => this.host.exists(f))[0] as ConfigFilePath;
+      if (actualConfigFileName) {
         if (match) {
           workspaceJsonOverride = of(parseJson(match.content.toString()));
         }
@@ -666,7 +659,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
 
       // we try to format it, if it changes, return it, otherwise return the original change
       try {
-        return this.__readWorkspaceConfiguration(match?.path, {
+        return this.__readWorkspaceConfiguration(actualConfigFileName, {
           // we are overriding workspaceJson + nxJson,
           workspace: workspaceJsonOverride,
           nx: nxJsonChange
@@ -764,10 +757,10 @@ function findDeletedProjects(host: Tree): FileChange[] {
 }
 
 function findMatchingFileChange(host: Tree, path: Path) {
-  const targetPath = path.startsWith('/') ? path.substring(1) : path.toString;
+  const targetPath = path.startsWith('/') ? path.substring(1) : path.toString();
   return host
     .listChanges()
-    .find((f) => f.path == targetPath.toString() && f.type !== 'DELETE');
+    .find((f) => f.path === targetPath && f.type !== 'DELETE');
 }
 
 function isWorkspaceConfigPath(p: Path | string) {
