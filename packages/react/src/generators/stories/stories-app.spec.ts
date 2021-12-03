@@ -42,7 +42,7 @@ describe('react:stories for applications', () => {
     });
 
     expect(
-      appTree.exists('apps/test-ui-app/src/app/app.stories.tsx')
+      appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
     ).toBeTruthy();
     expect(
       appTree.exists(
@@ -82,7 +82,7 @@ describe('react:stories for applications', () => {
     // should just create the story and not error, even though there's a js file
     // not containing any react component
     expect(
-      appTree.exists('apps/test-ui-app/src/app/app.stories.tsx')
+      appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
     ).toBeTruthy();
   });
 });

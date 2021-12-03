@@ -7,10 +7,15 @@ import { getDecoratorPropertyValueNode } from '../../../utils/nx-devkit/ast-util
 
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
 
-export function updateComponentTemplate(host: Tree, options: NormalizedSchema) {
+export function updateAppComponentTemplate(
+  host: Tree,
+  options: NormalizedSchema
+) {
   const content = options.routing
-    ? `${nrwlHomeTemplate.html}\n<router-outlet></router-outlet>`
-    : nrwlHomeTemplate.html;
+    ? `${nrwlHomeTemplate.getSelector(
+        options.prefix
+      )}\n<router-outlet></router-outlet>`
+    : nrwlHomeTemplate.getSelector(options.prefix);
 
   if (!options.inlineTemplate) {
     host.write(`${options.appProjectRoot}/src/app/app.component.html`, content);
@@ -38,6 +43,6 @@ export function updateComponentTemplate(host: Tree, options: NormalizedSchema) {
     ),
     componentPath,
     templateNodeValue,
-    `\`\n${nrwlHomeTemplate.html}\n\``
+    `\`\n${nrwlHomeTemplate.getSelector(options.prefix)}\n\``
   );
 }

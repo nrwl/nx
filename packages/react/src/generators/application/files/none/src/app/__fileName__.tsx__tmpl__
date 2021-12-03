@@ -1,9 +1,7 @@
 <% if (classComponent) { %>
 import  { Component } from 'react';
 <% } %>
-
-import { ReactComponent as Logo } from './logo.svg';
-import star from './star.svg';
+import NxWelcome from "./nx-welcome";
 
 <% if (classComponent) { %>
 export class App extends Component {
@@ -12,7 +10,9 @@ export class App extends Component {
 export function App() {
 <% } %>
   return (
-    <h1>Welcome to <%= projectName %>!</h1>
+    <>
+      <NxWelcome title="<%= projectName %>"/>
+    </>
   );
 <% if (classComponent) { %>
   }

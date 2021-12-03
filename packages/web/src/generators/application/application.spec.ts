@@ -221,7 +221,7 @@ describe('app', () => {
       ).toBeTruthy();
       expect(
         tree.read('apps/my-dir/my-app/src/app/app.element.ts', 'utf-8')
-      ).toContain('Thank you for using and showing some ♥ for Nx.');
+      ).toContain('Hello there');
     });
   });
 

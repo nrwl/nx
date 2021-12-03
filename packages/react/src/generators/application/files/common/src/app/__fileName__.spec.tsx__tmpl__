@@ -21,6 +21,6 @@ describe('App', () => {
     <% } else { %>
     const { getByText } = render(<App />);
     <% } %>
-    expect(getByText('Welcome to <%= projectName %>!')).toBeTruthy();
+    expect(getByText(/Welcome <%= projectName %>/gi)).toBeTruthy();
   });
 });

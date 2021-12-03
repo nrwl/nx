@@ -3,7 +3,10 @@ import type { NormalizedSchema } from './normalized-schema';
 
 import * as ts from 'typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { addImportToTestBed } from '../../../utils/nx-devkit/ast-utils';
+import {
+  addImportToTestBed,
+  replaceIntoToTestBed,
+} from '../../../utils/nx-devkit/ast-utils';
 
 export function updateComponentSpec(host: Tree, options: NormalizedSchema) {
   if (options.skipTests !== true) {
@@ -21,10 +24,28 @@ export function updateComponentSpec(host: Tree, options: NormalizedSchema) {
       componentSpecPath,
       componentSpecSource
         .replace('.content span', 'h1')
-        .replace(
-          `${options.name} app is running!`,
-          `Welcome to ${options.name}!`
-        )
+        .replace(`${options.name} app is running!`, `Welcome ${options.name}`)
+    );
+
+    // Adding NxWelcome component to app.component.spec
+    componentSpecSourceFile = insertImport(
+      host,
+      componentSpecSourceFile,
+      componentSpecPath,
+      'NxWelcomeComponent',
+      './nx-welcome.component'
+    );
+
+    componentSpecSourceFile = replaceIntoToTestBed(
+      host,
+      componentSpecSourceFile,
+      componentSpecPath,
+      `declarations: [AppComponent, NxWelcomeComponent]`,
+      `
+      declarations: [
+        AppComponent
+      ],
+    `
     );
 
     if (options.routing) {

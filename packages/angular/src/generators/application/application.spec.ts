@@ -133,7 +133,7 @@ describe('app', () => {
       const myAppPrefix = workspaceJson.projects['my-app'].prefix;
 
       expect(myAppPrefix).toEqual('proj');
-      expect(appE2eSpec).toContain('Welcome to my-app!');
+      expect(appE2eSpec).toContain('Welcome my-app');
     });
 
     it('should set a new prefix and use it', async () => {
@@ -151,7 +151,7 @@ describe('app', () => {
       const myAppPrefix = workspaceJson.projects['my-app-with-prefix'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
-      expect(appE2eSpec).toContain('Welcome to my-app-with-prefix!');
+      expect(appE2eSpec).toContain('Welcome my-app-with-prefix');
     });
 
     // TODO: this should work
@@ -289,7 +289,7 @@ describe('app', () => {
       await generateApp(appTree, 'myApp', { directory: 'myDir' });
       expect(
         appTree.read('apps/my-dir/my-app/src/app/app.component.html', 'utf-8')
-      ).toContain('Thank you for using and showing some ♥ for Nx.');
+      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
@@ -299,7 +299,17 @@ describe('app', () => {
       });
       expect(
         appTree.read('apps/my-dir/my-app/src/app/app.component.ts', 'utf-8')
-      ).toContain('Thank you for using and showing some ♥ for Nx.');
+      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
+    });
+
+    it('should create Nx specific `nx-welcome.component.ts` file', async () => {
+      await generateApp(appTree, 'myApp', { directory: 'myDir' });
+      expect(
+        appTree.read(
+          'apps/my-dir/my-app/src/app/nx-welcome.component.ts',
+          'utf-8'
+        )
+      ).toContain('Hello there');
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {
@@ -313,7 +323,7 @@ describe('app', () => {
       );
 
       expect(testFileContent).toContain(`querySelector('h1')`);
-      expect(testFileContent).toContain('Welcome to my-dir-my-app!');
+      expect(testFileContent).toContain('Welcome my-dir-my-app');
     });
   });
 
@@ -633,7 +643,7 @@ describe('app', () => {
 
         expect(
           appTree.read('apps/my-app-e2e/src/app.e2e-spec.ts', 'utf-8')
-        ).toContain(`'Welcome to my-app!'`);
+        ).toContain(`'Welcome my-app'`);
         expect(
           appTree.read('apps/my-app-e2e/src/app.po.ts', 'utf-8')
         ).toContain(`'proj-root header h1'`);
@@ -650,7 +660,7 @@ describe('app', () => {
             'apps/my-directory/my-app-e2e/src/app.e2e-spec.ts',
             'utf-8'
           )
-        ).toContain(`'Welcome to my-directory-my-app!'`);
+        ).toContain(`'Welcome my-directory-my-app'`);
         expect(
           appTree.read('apps/my-directory/my-app-e2e/src/app.po.ts', 'utf-8')
         ).toContain(`'proj-root header h1'`);

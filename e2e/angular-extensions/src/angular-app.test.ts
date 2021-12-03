@@ -53,9 +53,10 @@ describe('Angular Package', () => {
         }Module} from '@${proj}/${buildableLib}';
 
         import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
 
         @NgModule({
-          declarations: [AppComponent],
+          declarations: [AppComponent, NxWelcomeComponent],
           imports: [BrowserModule, ${names(buildableLib).className}Module],
           providers: [],
           bootstrap: [AppComponent],

@@ -4,14 +4,7 @@ import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
-import {
-  generateFiles,
-  names,
-  offsetFromRoot,
-  toJS,
-  Tree,
-  updateTsConfigsToJs,
-} from '@nrwl/devkit';
+import { generateFiles, names, offsetFromRoot, toJS, Tree } from '@nrwl/devkit';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
