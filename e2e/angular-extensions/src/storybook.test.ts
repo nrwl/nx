@@ -58,6 +58,7 @@ describe('Angular Package', () => {
     });
 
     describe('build storybook', () => {
+      // TODO(js): temporarily disabled
       xit('should execute e2e tests using Cypress running against Storybook', async () => {
         if (isNotWindows()) {
           const myapp = uniq('myapp');
@@ -195,6 +196,7 @@ describe('Angular Package', () => {
         }
       }, 1000000);
 
+      // TODO(js): temporarily disabled
       xit('should build an Angular based storybook', () => {
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
@@ -205,11 +207,9 @@ describe('Angular Package', () => {
         // build Angular lib
         runCLI(`run ${angularStorybookLib}:build-storybook`);
         checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${angularStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
       }, 1000000);
 
+      // TODO(js): temporarily disabled
       xit('should build an Angular based storybook that references another lib', () => {
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
@@ -266,9 +266,6 @@ describe('Angular Package', () => {
         // build Angular lib
         runCLI(`run ${angularStorybookLib}:build-storybook`);
         checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${angularStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
       }, 1000000);
     });
   });
