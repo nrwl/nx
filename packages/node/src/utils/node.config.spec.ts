@@ -46,22 +46,22 @@ describe('getNodePartial', () => {
   });
 
   describe('the optimization option when true', () => {
-    it('should not minify', () => {
+    it('should minify', () => {
       const result = getNodeWebpackConfig({
         ...input,
         optimization: true,
       });
 
-      expect(result.optimization.minimize).toEqual(false);
+      expect(result.optimization.minimize).toEqual(true);
     });
 
-    it('should not concatenate modules', () => {
+    it('should concatenate modules', () => {
       const result = getNodeWebpackConfig({
         ...input,
         optimization: true,
       });
 
-      expect(result.optimization.concatenateModules).toEqual(false);
+      expect(result.optimization.concatenateModules).toEqual(true);
     });
   });
 
