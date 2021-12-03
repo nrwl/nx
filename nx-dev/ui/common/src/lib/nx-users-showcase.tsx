@@ -1,6 +1,9 @@
 export function NxUsersShowcase() {
   return (
     <div className="overflow-hidden py-4 px-4">
+      <div className="mx-auto w-60 top-1 bottom-3 text-center text-xs text-gray-400">
+        Powering leading companies like
+      </div>
       <div id="sponsors-carousel" className="w-full flex column text-gray-400">
         <div className="flex justify-center">
           <svg className="w-full" viewBox="0 0 160 88" fill="currentColor">
