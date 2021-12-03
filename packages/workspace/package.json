@@ -61,7 +61,7 @@
     }
   },
   "dependencies": {
-    "@parcel/watcher": "2.0.0-alpha.11",
+    "@parcel/watcher": "2.0.4",
     "@nrwl/cli": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",

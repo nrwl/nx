@@ -4,7 +4,7 @@
   "projectType": "application",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/web:build",
+      "executor": "@nrwl/web:webpack",
       "options": {
         "maxWorkers": 8,
         "outputPath": "build/apps/dep-graph",

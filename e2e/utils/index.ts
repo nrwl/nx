@@ -234,6 +234,10 @@ export function newProject({
     if (useBackupProject) {
       copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
     }
+
+    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+      console.log(`E2E test is creating a project: ${tmpProjPath()}`);
+    }
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
