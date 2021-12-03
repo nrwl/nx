@@ -51,23 +51,39 @@ export async function createProjectGraphAsync(
   const nxJson = readNxJson();
   const useDaemonProcessOption =
     nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
-  if (useDaemonProcessOption !== true && process.env.NX_DAEMON !== 'true') {
+  const env = process.env.NX_DAEMON;
+
+  // env takes precendence
+  // option=undefined,env=undefined => no daemon
+  // option=true,env=false => no daemon
+  // option=false,env=undefined => no daemon
+  // option=false,env=false => no daemon
+
+  // option=true,env=undefined => daemon
+  // option=true,env=true => daemon
+  // option=false,env=true => daemon
+  if (
+    (useDaemonProcessOption === undefined && env === undefined) ||
+    (useDaemonProcessOption === true && env === 'false') ||
+    (useDaemonProcessOption === false && env === undefined) ||
+    (useDaemonProcessOption === false && env === 'false')
+  ) {
     return projectGraphAdapter(
       '5.0',
       projectGraphVersion,
       await buildProjectGraph()
     );
+  } else {
+    const daemonClient = require('./daemon/client/client');
+    if (!(await daemonClient.isServerAvailable())) {
+      await daemonClient.startInBackground();
+    }
+    return projectGraphAdapter(
+      '5.0',
+      projectGraphVersion,
+      daemonClient.getProjectGraphFromServer()
+    );
   }
-
-  const daemonClient = require('./daemon/client/client');
-  if (!(await daemonClient.isServerAvailable())) {
-    await daemonClient.startInBackground();
-  }
-  return projectGraphAdapter(
-    '5.0',
-    projectGraphVersion,
-    daemonClient.getProjectGraphFromServer()
-  );
 }
 
 /**

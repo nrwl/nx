@@ -80,7 +80,7 @@ const server = createServer(async (socket) => {
     if (watcherError) {
       await respondWithErrorAndExit(
         socket,
-        `File watcher error.`,
+        `File watcher error in the workspace '${appRootPath}'.`,
         watcherError
       );
     }

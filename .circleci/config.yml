@@ -85,10 +85,6 @@ commands:
       os:
         type: string
     steps:
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       - when:
           condition:
@@ -140,7 +136,12 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_RUN_CYPRESS: 'false'
+      NX_VERBOSE_LOGGING: 'false'
     steps:
+      - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: << parameters.os >>
       - run:
@@ -151,16 +152,24 @@ jobs:
   # -------------------------
   #     JOBS: Main
   # -------------------------
-  main-checks:
+  main:
     executor: linux
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
+      NX_VERBOSE_LOGGING: 'false'
     steps:
+      - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"run-group-linux-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
+      - run:
+          name: Check Documentation
+          command: yarn documentation
       - run:
           name: Check Imports
           command: yarn check-imports
@@ -174,78 +183,24 @@ jobs:
           name: Check Package dependencies
           command: yarn depcheck
       - run:
-          name: Check Documentation
-          command: yarn documentation
-          no_output_timeout: 20m
-  main-lint:
-    executor: linux
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-    steps:
-      - setup:
-          os: linux
-      - nx/set-shas:
-          main-branch-name: 'master'
+          name: Run Tests
+          command: |
+            npx nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
       - run:
           name: Run Lint
           command: |
             npx nx workspace-lint
             # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
             echo "Linting is temporarily disabled until ESLint v8 support is published"
-  main-test:
-    executor: linux
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-    steps:
-      - setup:
-          os: linux
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Run Tests
-          command: |
-            npx nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
-  main-build:
-    executor: linux
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-    steps:
-      - setup:
-          os: linux
-      - nx/set-shas:
-          main-branch-name: 'master'
       - run:
           name: Run Builds
           command: |
             npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
-
-  main-e2e:
-    executor: linux
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-    steps:
-      - setup:
-          os: linux
-      - nx/set-shas:
-          main-branch-name: 'master'
       - run:
           name: Run E2E Tests
           command: |
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox,e2e-gatsby --parallel --max-parallel=1
-          no_output_timeout: 30m
-
-  main-linux-cleanup:
-    executor: linux
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-    steps:
-      - setup:
-          os: linux
+          no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -259,6 +214,10 @@ jobs:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
     steps:
+      - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: macos
       - nx/set-shas:
@@ -267,7 +226,7 @@ jobs:
           name: Run E2E Tests
           command: |
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-js,e2e-next,e2e-gatsby,e2e-workspace-create,e2e-workspace-integrations,e2e-workspace-core,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-cli,e2e-nx-plugin,e2e-storybook,e2e-cypress,e2e-node,e2e-linter,e2e-jest --max-parallel=1
-          no_output_timeout: 30m
+          no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -281,45 +240,37 @@ workflows:
   build:
     jobs:
       - agent:
-          name: 'agent-linux-1'
+          name: 'agent1'
       - agent:
-          name: 'agent-linux-2'
+          name: 'agent2'
       - agent:
-          name: 'agent-linux-3'
+          name: 'agent3'
       - agent:
-          name: 'agent-linux-4'
+          name: 'agent4'
       - agent:
-          name: 'agent-linux-5'
+          name: 'agent5'
       - agent:
-          name: 'agent-linux-6'
+          name: 'agent6'
       - agent:
-          name: 'agent-linux-7'
+          name: 'agent7'
       - agent:
-          name: 'agent-linux-8'
+          name: 'agent8'
       - agent:
-          name: 'agent-macos-1'
+          name: 'agent9'
           pm: 'npm'
           os: 'macos'
       - agent:
-          name: 'agent-macos-2'
+          name: 'agent10'
           pm: 'npm'
           os: 'macos'
+      # - agent:
+      #     name: 'agent10'
+      #     pm: 'npm'
+      #     os: 'android'
       # -------------------------
       #     Pull request logic
       # -------------------------
-      - main-checks
-      - main-lint
-      - main-test
-      - main-build
-      - main-e2e:
-          name: main-linux-e2e
-          requires:
-            - main-checks
-            - main-lint
-            - main-test
-            - main-build
-      - main-linux-cleanup:
-          requires:
-            - main-linux-e2e
+      - main:
+          name: pull-request
       - mainmacos:
-          name: main-macos-e2e
+          name: pull-request-macos
