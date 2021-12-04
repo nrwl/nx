@@ -1,23 +1,23 @@
 {
-  "root": "nx-dev/ui/common",
-  "sourceRoot": "nx-dev/ui/common/src",
+  "root": "nx-dev/ui-sponsor-card",
+  "sourceRoot": "nx-dev/ui-sponsor-card/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "lintFilePatterns": ["nx-dev/ui/common/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["nx-dev/ui-sponsor-card/**/*.{ts,tsx,js,jsx}"]
       },
       "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui/common"],
+      "outputs": ["coverage/nx-dev/ui-sponsor-card"],
       "options": {
-        "jestConfig": "nx-dev/ui/common/jest.config.js",
+        "jestConfig": "nx-dev/ui-sponsor-card/jest.config.js",
         "passWithNoTests": true
       }
     }
-  },
-  "tags": ["scope:nx-dev", "type:ui"]
+  }
 }

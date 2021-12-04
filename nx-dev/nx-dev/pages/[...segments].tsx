@@ -9,7 +9,7 @@ import type {
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
-import { Footer, Header } from '@nrwl/nx-dev/ui/common';
+import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { documentsApi, menuApi } from '../lib/api';
 import {
   useActiveFlavor,

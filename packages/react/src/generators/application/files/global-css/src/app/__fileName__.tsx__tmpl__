@@ -11,10 +11,10 @@ export class App extends Component {
 export function App() {
 <% } %>
   return (
-    <>
-      <NxWelcome title="<%= projectName %>"/>
-    </>
-  );
+  <>
+    <NxWelcome title="<%= projectName %>"/>
+    <div />
+  </>);
 <% if (classComponent) { %>
   }
 }

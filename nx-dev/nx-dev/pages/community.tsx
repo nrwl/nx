@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui/common';
+import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui-common';
 import React from 'react';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
 import Head from 'next/head';

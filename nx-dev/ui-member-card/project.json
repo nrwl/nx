@@ -1,21 +1,21 @@
 {
-  "root": "nx-dev/ui/member-card",
-  "sourceRoot": "nx-dev/ui/member-card/src",
+  "root": "nx-dev/ui-member-card",
+  "sourceRoot": "nx-dev/ui-member-card/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "lintFilePatterns": ["nx-dev/ui/member-card/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["nx-dev/ui-member-card/**/*.{ts,tsx,js,jsx}"]
       },
       "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui/member-card"],
+      "outputs": ["coverage/nx-dev/ui-member-card"],
       "options": {
-        "jestConfig": "nx-dev/ui/member-card/jest.config.js",
+        "jestConfig": "nx-dev/ui-member-card/jest.config.js",
         "passWithNoTests": true
       }
     }

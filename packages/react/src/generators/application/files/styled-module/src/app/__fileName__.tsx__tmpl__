@@ -15,11 +15,9 @@ export class App extends Component {
 export function App() {
 <% } %>
   return (
-    <>
       <StyledApp>
         <NxWelcome title="<%= projectName %>"/>
       </StyledApp>
-    </>
   );
 <% if (classComponent) { %>
   }

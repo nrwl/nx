@@ -7,7 +7,7 @@ import {
   MenuSection,
 } from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
-import { Selector } from '@nrwl/nx-dev/ui/common';
+import { Selector } from '@nrwl/nx-dev/ui-common';
 import { useSelectedFlavor } from '@nrwl/nx-dev/feature-flavor-selection';
 import {
   useActiveFlavor,
