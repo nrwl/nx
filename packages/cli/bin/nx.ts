@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { findWorkspaceRoot } from '../lib/find-workspace-root';
 const workspace = findWorkspaceRoot(process.cwd());
-if (workspace.type === 'nx') {
+if (workspace && workspace.type === 'nx') {
   require('v8-compile-cache');
 }
 // polyfill rxjs observable to avoid issues with multiple version fo Observable installed in node_modules
