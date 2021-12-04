@@ -160,15 +160,15 @@ function check(patterns: string[]) {
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {
-  const workspaceConfig = workspaceConfigName(appRootPath);
+  const workspaceConfigPath = workspaceConfigName(appRootPath);
   try {
-    const workspaceJson = readJsonFile(workspaceConfig);
+    const workspaceJson = readJsonFile(workspaceConfigPath);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      writeJsonFile(workspaceConfig, reformatted);
+      writeJsonFile(workspaceConfigPath, reformatted);
     }
   } catch (e) {
-    console.error(`Failed to format: ${path}`);
+    console.error(`Failed to format workspace config: ${workspaceConfigPath}`);
     console.error(e);
   }
 }
