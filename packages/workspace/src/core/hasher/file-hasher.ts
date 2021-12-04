@@ -18,6 +18,7 @@ export class FileHasher {
     this.fileHashes = {};
     this.workspaceFiles = new Set<string>();
     this.usesGitForHashing = false;
+    this.isInitialized = false;
   }
 
   /**
@@ -48,6 +49,7 @@ export class FileHasher {
     updatedFiles: Map<string, string>,
     deletedFiles: string[] = []
   ): void {
+    this.ensureInitialized();
     performance.mark('incremental hashing:start');
 
     updatedFiles.forEach((hash, filename) => {

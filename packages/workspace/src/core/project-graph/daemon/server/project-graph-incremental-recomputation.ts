@@ -46,12 +46,12 @@ export async function getCachedSerializedProjectGraphPromise() {
     resetInternalStateIfNxDepsMissing();
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
-        processCollectedUpdatedAndDeletedFiles(); // this creates a project graph
-        cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
+        cachedSerializedProjectGraphPromise =
+          processFilesAndCreateAndSerializeProjectGraph();
       }
     } else {
-      processCollectedUpdatedAndDeletedFiles();
-      cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
+      cachedSerializedProjectGraphPromise =
+        processFilesAndCreateAndSerializeProjectGraph();
     }
     return await cachedSerializedProjectGraphPromise;
   } catch (e) {
@@ -79,50 +79,76 @@ export function addUpdatedAndDeletedFiles(
       if (waitPeriod < 4000) {
         waitPeriod = waitPeriod * 2;
       }
-      processCollectedUpdatedAndDeletedFiles();
-      cachedSerializedProjectGraphPromise = createAndSerializeProjectGraph();
+      cachedSerializedProjectGraphPromise =
+        processFilesAndCreateAndSerializeProjectGraph();
     }, waitPeriod);
   }
 }
 
 function processCollectedUpdatedAndDeletedFiles() {
-  performance.mark('hash-watched-changes-start');
-  const updatedFiles = getGitHashForFiles(
-    [...collectedUpdatedFiles.values()],
-    appRootPath
-  );
-  const deletedFiles = [...collectedDeletedFiles.values()];
-  performance.mark('hash-watched-changes-end');
-  performance.measure(
-    'hash changed files from watcher',
-    'hash-watched-changes-start',
-    'hash-watched-changes-end'
-  );
-  defaultFileHasher.incrementalUpdate(updatedFiles, deletedFiles);
-  const workspaceJson = readWorkspaceJson();
-  serverLogger.requestLog(
-    `Updated file-hasher based on watched changes, recomputing project graph...`
-  );
-  // when workspace.json changes we cannot be sure about the correctness of the project file map
-  if (
-    collectedUpdatedFiles.has(configName) ||
-    collectedDeletedFiles.has(configName)
-  ) {
-    projectFileMapWithFiles = createProjectFileMap(workspaceJson);
-  } else {
-    projectFileMapWithFiles = projectFileMapWithFiles
-      ? updateProjectFileMap(
-          workspaceJson,
-          projectFileMapWithFiles.projectFileMap,
-          projectFileMapWithFiles.allWorkspaceFiles,
-          updatedFiles,
-          deletedFiles
-        )
-      : createProjectFileMap(workspaceJson);
-  }
+  try {
+    performance.mark('hash-watched-changes-start');
+    const updatedFiles = getGitHashForFiles(
+      [...collectedUpdatedFiles.values()],
+      appRootPath
+    );
+    const deletedFiles = [...collectedDeletedFiles.values()];
+    performance.mark('hash-watched-changes-end');
+    performance.measure(
+      'hash changed files from watcher',
+      'hash-watched-changes-start',
+      'hash-watched-changes-end'
+    );
+    defaultFileHasher.incrementalUpdate(updatedFiles, deletedFiles);
+    const workspaceJson = readWorkspaceJson();
+    serverLogger.requestLog(
+      `Updated file-hasher based on watched changes, recomputing project graph...`
+    );
+    // when workspace.json changes we cannot be sure about the correctness of the project file map
+    if (
+      collectedUpdatedFiles.has(configName) ||
+      collectedDeletedFiles.has(configName)
+    ) {
+      projectFileMapWithFiles = createProjectFileMap(workspaceJson);
+    } else {
+      projectFileMapWithFiles = projectFileMapWithFiles
+        ? updateProjectFileMap(
+            workspaceJson,
+            projectFileMapWithFiles.projectFileMap,
+            projectFileMapWithFiles.allWorkspaceFiles,
+            updatedFiles,
+            deletedFiles
+          )
+        : createProjectFileMap(workspaceJson);
+    }
 
-  collectedUpdatedFiles.clear();
-  collectedDeletedFiles.clear();
+    collectedUpdatedFiles.clear();
+    collectedDeletedFiles.clear();
+  } catch (e) {
+    // this is expected
+    // for instance, workspace.json can be incorrect etc
+    // we are resetting internal state to start from scratch next time a file changes
+    // given the user the opportunity to fix the error
+    // if Nx requests the project graph prior to the error being fixed,
+    // the error will be propagated
+    serverLogger.log(
+      `Error detected when recomputing project file map: ${e.message}`
+    );
+    resetInternalState();
+    return e;
+  }
+}
+
+function processFilesAndCreateAndSerializeProjectGraph() {
+  const err = processCollectedUpdatedAndDeletedFiles();
+  if (err) {
+    return Promise.resolve({
+      error: err,
+      serializedProjectGraph: null,
+    });
+  } else {
+    return createAndSerializeProjectGraph();
+  }
 }
 
 async function createAndSerializeProjectGraph() {
@@ -173,6 +199,7 @@ export function resetInternalState() {
   currentProjectGraphCache = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
+  defaultFileHasher.clear();
   waitPeriod = 100;
 }
 
