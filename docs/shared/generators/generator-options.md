@@ -186,7 +186,12 @@ Define an auxiliary schema in order to be reused and combined later on. Examples
     "shipping_address": { "$ref": "/schemas/address" },
     "billing_address": { "$ref": "/schemas/address" }
   },
-  "required": ["first_name", "last_name", "shipping_address", "billing_address"],
+  "required": [
+    "first_name",
+    "last_name",
+    "shipping_address",
+    "billing_address"
+  ],
 
   "$defs": {
     "address": {
@@ -241,7 +246,12 @@ In this example, this schema only accepts the properties that are explicitly def
 Any additional properties will be considered invalid.
 
 ```json
-{ "number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue", "direction": "NW" }
+{
+  "number": 1600,
+  "street_name": "Pennsylvania",
+  "street_type": "Avenue",
+  "direction": "NW"
+}
 ```
 
 > The above examples are from [Understanding JSON schema > Additional Properties](https://json-schema.org/understanding-json-schema/reference/object.html#additional-properties).
@@ -324,11 +334,11 @@ The property keys that are required. Example:
 {
   "properties": {
     "a": {
-      "type": "boolean",
+      "type": "boolean"
     },
     "b": {
-      "type": "boolean",
-    },
+      "type": "boolean"
+    }
   },
   "required": ["a"]
 }
@@ -472,13 +482,13 @@ In this example, `format` accepts a string listed in the `enum` property, and/or
 
 #### `allOf`
 
-Only accepts a value that matches all the condition properties.  Example:
+Only accepts a value that matches all the condition properties. Example:
 
 ```json
 {
   "a": {
     "type": "number",
-    "allOf": [{ "multipleOf": 5 }, { "multipleOf": 3 }],
+    "allOf": [{ "multipleOf": 5 }, { "multipleOf": 3 }]
   }
 }
 ```
@@ -561,7 +571,7 @@ Indicate whether the property should be visible in the configuration UI. Example
 {
   "path": {
     "format": "path",
-    "visible": false,
+    "visible": false
   }
 }
 ```
@@ -800,7 +810,7 @@ Make sure that the number is greater than the specified number.
 {
   "value": {
     "type": "number",
-    "exclusiveMinimum": 4,
+    "exclusiveMinimum": 4
   }
 }
 ```
@@ -866,7 +876,7 @@ Make sure that the string length is greater than or equal to the specified value
 {
   "value": {
     "type": "string",
-    "minLength": 10,
+    "minLength": 10
   }
 }
 ```
@@ -881,7 +891,7 @@ Make sure that the string length is less than or equal to the specified value.
 {
   "value": {
     "type": "string",
-    "maxLength": 10,
+    "maxLength": 10
   }
 }
 ```
