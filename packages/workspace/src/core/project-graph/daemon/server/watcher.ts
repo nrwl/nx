@@ -96,9 +96,10 @@ export async function subscribeToWorkspaceChanges(
         cachedIgnoreGlobs = getIgnoredGlobs(appRootPath);
       }
 
-      const nonIgnoredEvents = workspaceRelativeEvents.filter(
-        ({ path }) => !cachedIgnoreGlobs.ignores(path)
-      );
+      const nonIgnoredEvents = workspaceRelativeEvents
+        .filter(({ path }) => !!path)
+        .filter(({ path }) => !cachedIgnoreGlobs.ignores(path));
+
       if (!nonIgnoredEvents || !nonIgnoredEvents.length) {
         return;
       }
