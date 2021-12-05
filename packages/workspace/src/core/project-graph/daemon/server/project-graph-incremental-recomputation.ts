@@ -17,6 +17,7 @@ import {
   readCache,
 } from '../../../nx-deps/nx-deps-cache';
 import { fileExists } from '../../../../utilities/fileutils';
+import { HashingImpl } from '../../../hasher/hashing-impl';
 
 const configName = workspaceConfigName(appRootPath);
 let cachedSerializedProjectGraphPromise: Promise<{
@@ -30,6 +31,7 @@ let currentProjectGraphCache: ProjectGraphCache | undefined;
 
 const collectedUpdatedFiles = new Set<string>();
 const collectedDeletedFiles = new Set<string>();
+let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
 
@@ -85,6 +87,10 @@ export function addUpdatedAndDeletedFiles(
   }
 }
 
+function computeWorkspaceConfigHash(workspaceJson: any) {
+  return new HashingImpl().hashArray([JSON.stringify(workspaceJson)]);
+}
+
 function processCollectedUpdatedAndDeletedFiles() {
   try {
     performance.mark('hash-watched-changes-start');
@@ -101,14 +107,13 @@ function processCollectedUpdatedAndDeletedFiles() {
     );
     defaultFileHasher.incrementalUpdate(updatedFiles, deletedFiles);
     const workspaceJson = readWorkspaceJson();
+    const workspaceConfigHash = computeWorkspaceConfigHash(workspaceJson);
     serverLogger.requestLog(
       `Updated file-hasher based on watched changes, recomputing project graph...`
     );
-    // when workspace.json changes we cannot be sure about the correctness of the project file map
-    if (
-      collectedUpdatedFiles.has(configName) ||
-      collectedDeletedFiles.has(configName)
-    ) {
+    // when workspace config changes we cannot incrementally update project file map
+    if (workspaceConfigHash !== storedWorkspaceConfigHash) {
+      storedWorkspaceConfigHash = workspaceConfigHash;
       projectFileMapWithFiles = createProjectFileMap(workspaceJson);
     } else {
       projectFileMapWithFiles = projectFileMapWithFiles

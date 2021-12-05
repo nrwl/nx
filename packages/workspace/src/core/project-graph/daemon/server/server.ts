@@ -25,7 +25,8 @@ import {
   addUpdatedAndDeletedFiles,
   getCachedSerializedProjectGraphPromise,
 } from './project-graph-incremental-recomputation';
-import { statSync } from 'fs';
+import { existsSync, statSync } from 'fs';
+import { HashingImpl } from '../../../hasher/hashing-impl';
 
 function respondToClient(socket: Socket, message: string) {
   return new Promise((res) => {
@@ -185,39 +186,25 @@ process
     })
   );
 
-function requireUncached(module: string): unknown {
-  delete require.cache[require.resolve(module)];
-  return require(module);
-}
+let existingLockHash: string | undefined;
 
-/**
- * We need to ensure that the server shuts down if the Nx installation changes.
- */
-let cachedNxVersion: string | null = resolveCurrentNxVersion();
-
-function resolveCurrentNxVersion(): string | null {
-  const nrwlWorkspacePackageJsonPath = normalizePath(
-    join(appRootPath, 'node_modules/@nrwl/workspace/package.json')
-  );
-  try {
-    const { version } = requireUncached(nrwlWorkspacePackageJsonPath) as {
-      version: string;
-    };
-    return version;
-  } catch (err) {
-    serverLogger.log(
-      `Error: Could not determine the current Nx version by inspecting: ${nrwlWorkspacePackageJsonPath}`
-    );
-    return null;
-  }
-}
-
-function isNxVersionSame(currentNxVersion: string | null): boolean {
-  if (currentNxVersion === null) {
-    // Something has gone wrong with figuring out the Nx version, declare the version as having changed
+function lockFileChanged(): boolean {
+  const hash = new HashingImpl();
+  const lockHashes = [
+    join(appRootPath, 'package-lock.json'),
+    join(appRootPath, 'yarn.lock'),
+    join(appRootPath, 'pnpm-lock.yaml'),
+  ]
+    .filter((file) => existsSync(file))
+    .map((file) => hash.hashFile(file));
+  const newHash = hash.hashArray(lockHashes);
+  if (existingLockHash && newHash != existingLockHash) {
+    existingLockHash = newHash;
+    return true;
+  } else {
+    existingLockHash = newHash;
     return false;
   }
-  return currentNxVersion === cachedNxVersion;
 }
 
 /**
@@ -239,11 +226,11 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
   try {
     resetInactivityTimeout(handleInactivityTimeout);
 
-    if (!isNxVersionSame(resolveCurrentNxVersion())) {
+    if (lockFileChanged()) {
       await handleServerProcessTermination({
         server,
         watcherSubscription,
-        reason: '@nrwl/workspace installation changed',
+        reason: 'Lock file changed',
       });
       return;
     }
@@ -289,6 +276,8 @@ export async function startServer(): Promise<Server> {
   return new Promise((resolve) => {
     server.listen(FULL_OS_SOCKET_PATH, async () => {
       serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
+      // this triggers the storage of the lock file hash
+      lockFileChanged();
 
       if (!watcherSubscription) {
         watcherSubscription = await subscribeToWorkspaceChanges(
