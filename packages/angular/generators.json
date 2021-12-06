@@ -106,9 +106,14 @@
     },
 
     "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/compat",
+      "factory": "./src/generators/setup-mfe/setup-mfe.compat",
       "schema": "./src/generators/setup-mfe/schema.json",
       "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "scam": {
+      "factory": "./src/generators/scam/scam.compat",
+      "schema": "./src/generators/scam/schema.json",
+      "description": "Generate a component with an accompanying Single Angular Module Component (SCAM)."
     },
 
     "web-worker": {
@@ -198,6 +203,11 @@
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
+    },
+    "scam": {
+      "factory": "./src/generators/scam/scam",
+      "schema": "./src/generators/scam/schema.json",
+      "description": "Generate a component with an accompanying Single Angular Module Component (SCAM)."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",
