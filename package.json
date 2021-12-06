@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "12.10.0",
+  "version": "12.10.1",
   "description": "Smart, Extensible Build Framework",
   "homepage": "https://nx.dev",
   "private": true,
