@@ -19,6 +19,7 @@ import { FileChange, Tree } from '../shared/tree';
 import {
   buildWorkspaceConfigurationFromGlobs,
   globForProjectFiles,
+  ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
   toNewFormat,
   toNewFormatOrNull,
@@ -29,8 +30,8 @@ import {
 import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect } from '@angular-devkit/architect';
-import { EMPTY, Observable, of, merge, forkJoin, NEVER } from 'rxjs';
-import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
+import { Observable, of, merge, forkJoin, NEVER, from } from 'rxjs';
+import { catchError, map, switchMap, toArray } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
@@ -509,7 +510,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     // that is not listed inside workspace.json. Each time it encounters a
     // standalone config, observable is updated by concatenating the new
     // config read operation.
-    let observable: Observable<any> = EMPTY;
+    const observables: Observable<{
+      project: string;
+      projectConfig: ProjectConfiguration;
+    }>[] = [];
     Object.entries((config.projects as Record<string, any>) ?? {}).forEach(
       ([project, projectConfig]) => {
         if (typeof projectConfig === 'string') {
@@ -526,18 +530,15 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               },
             }))
           );
-          observable = observable ? merge(observable, next) : next;
+          observables.push(next);
         }
       }
     );
 
-    return observable.pipe(
-      // Collect all values from the project.json read operations
+    return merge(...observables).pipe(
       toArray(),
-
-      // Use these collected values to update the inline configurations
-      map((x: any[]) => {
-        x.forEach(({ project, projectConfig }) => {
+      map((configs) => {
+        configs.forEach(({ project, projectConfig }) => {
           config.projects[project] = projectConfig;
         });
         return config as WorkspaceJsonConfiguration;
