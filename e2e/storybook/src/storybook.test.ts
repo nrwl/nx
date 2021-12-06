@@ -47,6 +47,9 @@ describe('Storybook schematics', () => {
       // build React lib
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
+      expect(
+        readFile(`dist/storybook/${reactStorybookLib}/index.html`)
+      ).toContain(`<title>Storybook</title>`);
     }, 1000000);
 
     it('should lint a React based storybook without errors', () => {
@@ -129,6 +132,9 @@ describe('Storybook schematics', () => {
       // build React lib
       runCLI(`run ${reactStorybookLib}:build-storybook`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
+      expect(
+        readFile(`dist/storybook/${reactStorybookLib}/index.html`)
+      ).toContain(`<title>Storybook</title>`);
     }, 1000000);
   });
 });
