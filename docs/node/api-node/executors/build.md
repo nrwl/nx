@@ -20,7 +20,7 @@ The name of the Typescript configuration file.
 
 ### additionalEntryPoints
 
-Type: `object[]`
+Type: `object[{ "entryPath": string, "entryName": string}]`
 
 #### entryName
 
