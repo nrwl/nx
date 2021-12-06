@@ -58,7 +58,7 @@ describe('Angular Package', () => {
     });
 
     describe('build storybook', () => {
-      xit('should execute e2e tests using Cypress running against Storybook', async () => {
+      it('should execute e2e tests using Cypress running against Storybook', async () => {
         if (isNotWindows()) {
           const myapp = uniq('myapp');
           runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
@@ -195,7 +195,7 @@ describe('Angular Package', () => {
         }
       }, 1000000);
 
-      xit('should build an Angular based storybook', () => {
+      it('should build an Angular based storybook', () => {
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
         runCLI(
@@ -205,12 +205,9 @@ describe('Angular Package', () => {
         // build Angular lib
         runCLI(`run ${angularStorybookLib}:build-storybook`);
         checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${angularStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
       }, 1000000);
 
-      xit('should build an Angular based storybook that references another lib', () => {
+      it('should build an Angular based storybook that references another lib', () => {
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
         runCLI(
@@ -266,9 +263,6 @@ describe('Angular Package', () => {
         // build Angular lib
         runCLI(`run ${angularStorybookLib}:build-storybook`);
         checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${angularStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
       }, 1000000);
     });
   });
