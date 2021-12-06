@@ -105,21 +105,6 @@ async function updatePackageAndCopyAssets(
     projectRoot,
     !options.skipTypeCheck
   );
-  // if (
-  //   dependencies.length > 0 &&
-  //   options.updateBuildableProjectDepsInPackageJson
-  // ) {
-  //   updateBuildableProjectPackageJsonDependencies(
-  //     context.root,
-  //     context.projectName,
-  //     context.
-  //     targetName,
-  //     context.configurationName,
-  //     target,
-  //     dependencies,
-  //     options.buildableProjectDepsInPackageJsonType
-  //   );
-  // }
 }
 
 export default swcExecutor;
