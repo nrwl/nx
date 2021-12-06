@@ -1,3 +1,8 @@
+---
+title: '@nrwl/js:swc executor'
+description: 'Build a project using SWC'
+---
+
 # @nrwl/js:swc
 
 Build a project using SWC
