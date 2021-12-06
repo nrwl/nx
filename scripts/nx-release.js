@@ -214,7 +214,7 @@ if (parsedArgs.local) {
         process.exit(0);
         return;
       }
-      const npmTag = parsedVersion.isPrerelease ? 'next' : 'latest';
+      const npmTag = parsedVersion.isPrerelease ? 'next' : 'previous';
       const npmPublishCommand = `./scripts/publish.sh ${output.version} ${npmTag}`;
       console.log('Executing publishing script for all packages:');
       console.log(`> ${npmPublishCommand}`);
