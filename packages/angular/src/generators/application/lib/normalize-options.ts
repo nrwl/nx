@@ -17,7 +17,9 @@ export function normalizeOptions(
     : names(options.name).fileName;
 
   let e2eProjectName = `${names(options.name).fileName}-e2e`;
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
+  const appProjectName = appDirectory
+    .replace(new RegExp('/', 'g'), '-')
+    .replace(/-\d+/g, '');
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;
   }

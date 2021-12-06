@@ -1,4 +1,9 @@
-import { getWorkspaceLayout, Tree, updateJson } from '@nrwl/devkit';
+import {
+  getWorkspaceLayout,
+  joinPathFragments,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
 function updateRootConfig(host: Tree, options: NormalizedSchema) {
@@ -14,9 +19,11 @@ function updateRootConfig(host: Tree, options: NormalizedSchema) {
     }
 
     c.paths[options.importPath] = [
-      `${getWorkspaceLayout(host).libsDir}/${
-        options.projectDirectory
-      }/src/index.ts`,
+      joinPathFragments(
+        getWorkspaceLayout(host).libsDir,
+        options.projectDirectory,
+        '/src/index.ts'
+      ),
     ];
 
     return json;

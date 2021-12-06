@@ -229,6 +229,8 @@ module.exports = {
 "
 `;
 
+exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
+
 exports[`app nested should update workspace.json 1`] = `
 Object {
   "architect": Object {

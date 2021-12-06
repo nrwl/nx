@@ -6,6 +6,7 @@ import {
   updateProjectConfiguration,
   getWorkspaceLayout,
   offsetFromRoot,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace';
 import * as path from 'path';
@@ -138,7 +139,11 @@ function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
         ? '@nrwl/angular:package'
         : '@nrwl/angular:ng-packagr-lite',
       outputs: [
-        `dist/${getWorkspaceLayout(host).libsDir}/${options.projectDirectory}`,
+        joinPathFragments(
+          'dist',
+          getWorkspaceLayout(host).libsDir,
+          options.projectDirectory
+        ),
       ],
       ...rest,
     };
