@@ -1,8 +1,3 @@
-import { TasksRunner, TaskStatus } from './tasks-runner';
-import { join } from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { ReporterArgs } from './reporter';
-import * as yargs from 'yargs';
 import type {
   NxJsonConfiguration,
   ProjectGraph,
@@ -12,20 +7,29 @@ import type {
 } from '@nrwl/devkit';
 import { logger } from '@nrwl/devkit';
 import { stripIndent } from '@nrwl/tao/src/shared/logger';
-import { Environment } from '../core/shared-interfaces';
-import { NxArgs } from '../command-line/utils';
-import { isRelativePath } from '../utilities/fileutils';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { render } from 'ink';
+import { join } from 'path';
+import { createElement } from 'react';
+import * as yargs from 'yargs';
+import { NxArgs } from '../../command-line/utils';
+import { Environment } from '../../core/shared-interfaces';
+import { isRelativePath } from '../../utilities/fileutils';
+import { output } from '../../utilities/output';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
-} from '../utilities/project-graph-utils';
-import { output } from '../utilities/output';
-import { getDependencyConfigs } from './utils';
-import { CompositeLifeCycle, LifeCycle } from './life-cycle';
-import { RunManyTerminalOutputLifeCycle } from './run-many-terminal-output-life-cycle';
-import { EmptyTerminalOutputLifeCycle } from './empty-terminal-output-life-cycle';
-import { RunOneTerminalOutputLifeCycle } from './run-one-terminal-output-life-cycle';
-import { TaskTimingsLifeCycle } from './task-timings-life-cycle';
+} from '../../utilities/project-graph-utils';
+import { EmptyTerminalOutputLifeCycle } from '../empty-terminal-output-life-cycle';
+import { CompositeLifeCycle, LifeCycle } from '../life-cycle';
+import { ReporterArgs } from '../reporter';
+import { RunManyTerminalOutputLifeCycle } from '../run-many-terminal-output-life-cycle';
+import { RunOneTerminalOutputLifeCycle } from '../run-one-terminal-output-life-cycle';
+import { TaskTimingsLifeCycle } from '../task-timings-life-cycle';
+import { TasksRunner, TaskStatus } from '../tasks-runner';
+import { getDependencyConfigs } from '../utils';
+import { RunCommandComponent } from './components/run-command';
+import { InkRunManyLifeCycle } from './ink-run-many-life-cycle';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -47,6 +51,13 @@ function getTerminalOutputLifeCycle(
   } else if (terminalOutputStrategy === 'hide-cached-output') {
     return new EmptyTerminalOutputLifeCycle();
   } else {
+    if (process.env.NX_TASKS_RUNNER_USE_INK === 'true') {
+      return new InkRunManyLifeCycle(
+        projectsToRun.map((t) => t.name),
+        tasks,
+        nxArgs
+      );
+    }
     return new RunManyTerminalOutputLifeCycle(
       projectsToRun.map((t) => t.name),
       tasks,
@@ -56,7 +67,7 @@ function getTerminalOutputLifeCycle(
   }
 }
 
-export async function runCommand<T extends RunArgs>(
+export async function runCommand(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   { nxJson, workspaceResults }: Environment,
@@ -104,6 +115,16 @@ export async function runCommand<T extends RunArgs>(
   }
   const lifeCycle = new CompositeLifeCycle(lifeCycles);
 
+  let inkWaitUntilExit: () => Promise<void> | undefined;
+  if (process.env.NX_TASKS_RUNNER_USE_INK === 'true') {
+    const { waitUntilExit } = render(
+      createElement(RunCommandComponent, {
+        lifeCycle,
+      })
+    );
+    inkWaitUntilExit = waitUntilExit;
+  }
+
   const promiseOrObservable = tasksRunner(
     tasks,
     { ...runnerOptions, lifeCycle },
@@ -121,6 +142,10 @@ export async function runCommand<T extends RunArgs>(
   } else {
     // simply await the promise
     anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
+  }
+
+  if (inkWaitUntilExit) {
+    await inkWaitUntilExit();
   }
 
   // fix for https://github.com/nrwl/nx/issues/1666
@@ -401,7 +426,7 @@ export function getRunner(
 
   //TODO: vsavkin remove in Nx 12
   if (!nxJson.tasksRunnerOptions) {
-    const t = require('./default-tasks-runner');
+    const t = require('../default-tasks-runner');
     return {
       tasksRunner: t.defaultTasksRunner,
       runnerOptions: nxArgs,
@@ -410,7 +435,7 @@ export function getRunner(
 
   //TODO: vsavkin remove in Nx 12
   if (!runner && !nxJson.tasksRunnerOptions.default) {
-    const t = require('./default-tasks-runner');
+    const t = require('../default-tasks-runner');
     return {
       tasksRunner: t.defaultTasksRunner,
       runnerOptions: nxArgs,
@@ -434,7 +459,7 @@ export function getRunner(
         tasksRunner = tasksRunner.default;
       }
     } else {
-      tasksRunner = require('./default-tasks-runner').defaultTasksRunner;
+      tasksRunner = require('../default-tasks-runner').defaultTasksRunner;
     }
 
     return {
