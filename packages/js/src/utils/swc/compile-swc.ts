@@ -1,3 +1,4 @@
+import { logger } from '@nrwl/devkit';
 import { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { exec, execSync } from 'child_process';
 import { normalizeTsCompilationOptions } from '../normalize-ts-compilation-options';
@@ -8,7 +9,7 @@ export async function compileSwc(
 ): Promise<{ success: boolean }> {
   const normalizedOptions = normalizeTsCompilationOptions(tsCompilationOptions);
 
-  console.log(`Compiling with SWC for ${normalizedOptions.projectName}...`);
+  logger.log(`Compiling with SWC for ${normalizedOptions.projectName}...`);
   const srcPath = normalizedOptions.projectRoot;
   const destPath = normalizedOptions.outputPath.replace(
     `/${normalizedOptions.projectName}`,
@@ -26,7 +27,7 @@ export async function compileSwc(
   }
 
   const swcCmdLog = execSync(swcCmd).toString();
-  console.log(swcCmdLog.replace(/\n/, ''));
+  logger.log(swcCmdLog.replace(/\n/, ''));
   await postCompilationCallback();
   return { success: true };
 }
@@ -57,7 +58,7 @@ async function createSwcWatchProcess(
     process.on('exit', processExitListener);
 
     watchProcess.on('exit', (args) => {
-      console.log('exit', args);
+      logger.log('exit', args);
       res({ success: true });
     });
   });
