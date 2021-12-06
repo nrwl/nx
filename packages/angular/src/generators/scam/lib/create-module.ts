@@ -16,14 +16,24 @@ export function createScam(tree: Tree, schema: Schema) {
   const projectConfig = readProjectConfiguration(tree, project);
 
   const componentNames = names(schema.name);
-  const componentDirectory = joinPathFragments(
-    projectConfig.sourceRoot,
-    projectConfig.projectType === 'application' ? 'app' : 'lib',
-    componentNames.fileName
-  );
+  const typeNames = names(schema.type ?? 'component');
+
+  const componentFileName = `${componentNames.fileName}.${
+    schema.type ?? 'component'
+  }`;
+  const componentDirectory = schema.flat
+    ? joinPathFragments(
+        projectConfig.sourceRoot,
+        projectConfig.projectType === 'application' ? 'app' : 'lib'
+      )
+    : joinPathFragments(
+        projectConfig.sourceRoot,
+        projectConfig.projectType === 'application' ? 'app' : 'lib',
+        componentNames.fileName
+      );
   const componentFilePath = joinPathFragments(
     componentDirectory,
-    `${componentNames.fileName}.component.ts`
+    `${componentFileName}.ts`
   );
 
   if (!tree.exists(componentFilePath)) {
@@ -60,7 +70,7 @@ export function createScam(tree: Tree, schema: Schema) {
     let updatedComponentSource = source.getText();
 
     updatedComponentSource = `${updatedComponentSource}${createAngularComponentModule(
-      `${componentNames.className}Component`
+      `${componentNames.className}${typeNames.className}`
     )}`;
 
     tree.write(componentFilePath, updatedComponentSource);
@@ -73,7 +83,8 @@ export function createScam(tree: Tree, schema: Schema) {
       `${componentNames.fileName}.module.ts`
     ),
     createSeparateAngularComponentModuleFile(
-      `${componentNames.className}Component`
+      `${componentNames.className}${typeNames.className}`,
+      componentFileName
     )
   );
 }
@@ -88,8 +99,12 @@ function createAngularComponentModule(name: string) {
 export class ${name}Module {}`;
 }
 
-function createSeparateAngularComponentModuleFile(name: string) {
+function createSeparateAngularComponentModuleFile(
+  name: string,
+  componentFileName: string
+) {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ${name} } from './${componentFileName}.ts';
 ${createAngularComponentModule(name)}`;
 }

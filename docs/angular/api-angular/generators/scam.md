@@ -1,6 +1,6 @@
 # @nrwl/angular:scam
 
-Generate a component with an accompanying SCAM.
+Generate a component with an accompanying Single Angular Module Component (SCAM).
 
 ## Usage
 
@@ -52,6 +52,14 @@ Type: `boolean`
 
 Specifies if the style will contain `:host { display: block; }`.
 
+### flat
+
+Default: `false`
+
+Type: `boolean`
+
+Create the new files at the top level of the current project.
+
 ### inlineScam
 
 Default: `true`
@@ -86,11 +94,33 @@ Type: `string`
 
 The path at which to create the component file, relative to the current workspace. Default is a folder with the same name as the component in the project root.
 
+### prefix
+
+Alias(es): p
+
+Type: `string`
+
+The prefix to apply to the generated component selector.
+
 ### project
 
 Type: `string`
 
 The name of the project.
+
+### selector
+
+Type: `string`
+
+The HTML selector to use for this component.
+
+### skipSelector
+
+Default: `false`
+
+Type: `boolean`
+
+Specifies if the component should have a selector or not.
 
 ### skipTests
 
@@ -109,6 +139,14 @@ Type: `string`
 Possible values: `css`, `scss`, `sass`, `less`, `none`
 
 The file extension or preprocessor to use for style files, or 'none' to skip generating the style file.
+
+### type
+
+Default: `Component`
+
+Type: `string`
+
+Adds a developer-defined type to the filename, in the format "name.type.ts".
 
 ### viewEncapsulation
 

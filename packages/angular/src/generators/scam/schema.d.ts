@@ -10,4 +10,9 @@ export interface Schema {
   style?: 'css' | 'scss' | 'sass' | 'less' | 'none';
   skipTests?: boolean;
   inlineScam?: boolean;
+  type?: string;
+  flat?: boolean;
+  prefix?: string;
+  selector?: string;
+  skipSelector?: boolean;
 }
