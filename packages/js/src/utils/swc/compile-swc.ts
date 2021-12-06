@@ -57,8 +57,7 @@ async function createSwcWatchProcess(
     process.on('SIGTERM', processExitListener);
     process.on('exit', processExitListener);
 
-    watchProcess.on('exit', (args) => {
-      logger.log('exit', args);
+    watchProcess.on('exit', () => {
       res({ success: true });
     });
   });
