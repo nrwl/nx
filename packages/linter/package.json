@@ -30,6 +30,7 @@
   "builders": "./executors.json",
   "schematics": "./generators.json",
   "dependencies": {
+    "@phenomnomnominal/tsquery": "4.1.1",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "eslint": "8.2.0",
