@@ -92,7 +92,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   Object.entries(args).forEach(([key, value]) => {
     const dasherized = names(key).fileName;
     if (nxSpecific.includes(dasherized) || dasherized.startsWith('nx-')) {
-      nxArgs[key] = value;
+      if (value !== undefined) nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
     }
@@ -202,8 +202,6 @@ export function splitArgsIntoNxArgsAndOverrides(
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);
-  } else {
-    nxArgs['parallel'] = undefined;
   }
 
   return { nxArgs, overrides };
