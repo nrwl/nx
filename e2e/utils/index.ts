@@ -277,13 +277,14 @@ export async function killPorts(port?: number): Promise<boolean> {
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export async function removeProject({ onlyOnCI = false } = {}) {
-  if (onlyOnCI && !isCI) {
-    return;
+export async function cleanupProject() {
+  if (isCI) {
+    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
+    runCLI('reset');
+    try {
+      removeSync(tmpProjPath());
+    } catch (e) {}
   }
-  try {
-    removeSync(tmpProjPath());
-  } catch (e) {}
 }
 
 export function runCypressTests() {

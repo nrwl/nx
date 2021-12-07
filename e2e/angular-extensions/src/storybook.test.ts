@@ -6,7 +6,7 @@ import {
   killPorts,
   newProject,
   readFile,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCypressTests,
   tmpProjPath,
@@ -19,7 +19,7 @@ describe('Angular Package', () => {
     let proj: string;
 
     beforeEach(() => (proj = newProject()));
-    afterAll(() => removeProject({ onlyOnCI: true }));
+    afterAll(() => cleanupProject());
 
     it('should not overwrite global storybook config files', () => {
       const angularStorybookLib = uniq('test-ui-lib-angular');

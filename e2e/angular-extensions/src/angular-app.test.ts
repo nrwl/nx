@@ -7,7 +7,7 @@ import {
   promisifiedTreeKill,
   readFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCommandUntil,
   uniq,
@@ -72,7 +72,7 @@ describe('Angular Package', () => {
       updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
     });
 
-    afterEach(() => removeProject({ onlyOnCI: true }));
+    afterEach(() => cleanupProject());
 
     it('should build the dependent buildable lib as well as the app', () => {
       const libOutput = runCLI(
@@ -107,17 +107,17 @@ describe('Angular MFE App Serve', () => {
 
     // generate host app
     runCLI(
-      `generate @nrwl/angular:app ${hostApp} -- --mfe --mfeType=host --port=4205 --routing --style=css --no-interactive`
+      `generate @nrwl/angular:app ${hostApp} -- --mfe --mfeType=host --port=${port1} --routing --style=css --no-interactive`
     );
 
     // generate remote apps
     runCLI(
-      `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=4206 --routing --style=css --no-interactive`
+      `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=${port2} --routing --style=css --no-interactive`
     );
   });
 
   afterEach(() => {
-    removeProject({ onlyOnCI: true });
+    cleanupProject();
   });
 
   it('should serve the host and remote apps successfully', async () => {
@@ -127,8 +127,8 @@ describe('Angular MFE App Serve', () => {
     try {
       process = await runCommandUntil(`serve-mfe ${hostApp}`, (output) => {
         return (
-          output.includes(`listening on localhost:4206`) &&
-          output.includes(`listening on localhost:4205`)
+          output.includes(`listening on localhost:${port2}`) &&
+          output.includes(`listening on localhost:${port1}`)
         );
       });
     } catch (err) {
@@ -140,8 +140,8 @@ describe('Angular MFE App Serve', () => {
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }
-      await killPorts(4205);
-      await killPorts(4206);
+      await killPorts(port1);
+      await killPorts(port2);
     } catch (err) {
       expect(err).toBeFalsy();
     }
@@ -163,7 +163,7 @@ describe('Angular App Build and Serve Ops', () => {
     );
   });
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should build the app successfully', () => {
     // ACT

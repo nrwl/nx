@@ -1,6 +1,6 @@
 import {
   newProject,
-  removeProject,
+  cleanupProject,
   updateFile,
   readJson,
   runCLI,
@@ -8,7 +8,7 @@ import {
 
 describe('Nx Plugins', () => {
   beforeAll(() => newProject());
-  afterAll(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => cleanupProject());
 
   it('should use plugins defined in nx.json', () => {
     const nxJson = readJson('nx.json');

@@ -5,7 +5,7 @@ import {
   getSize,
   killPorts,
   newProject,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   tmpProjPath,
@@ -23,7 +23,7 @@ describe('Angular Package', () => {
     let proj: string;
 
     beforeEach(() => (proj = newProject()));
-    afterEach(() => removeProject({ onlyOnCI: true }));
+    afterEach(() => cleanupProject());
 
     it('should work', async () => {
       const myapp = uniq('myapp');

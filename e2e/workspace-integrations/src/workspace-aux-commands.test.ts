@@ -7,7 +7,7 @@ import {
   newProject,
   readFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -372,7 +372,7 @@ describe('Move Angular Project', () => {
     runCLI(`generate @nrwl/angular:app ${app1}`);
   });
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   /**
    * Tries moving an app from ${app1} -> subfolder/${app2}
