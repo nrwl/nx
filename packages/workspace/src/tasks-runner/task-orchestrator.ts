@@ -244,7 +244,7 @@ export class TaskOrchestrator {
   private async runTaskInForkedProcess(task: Task) {
     try {
       // obtain metadata
-      const outputPath = this.cache.temporaryOutputPath(task);
+      const temporaryOutputPath = this.cache.temporaryOutputPath(task);
       const forwardOutput = this.shouldForwardOutput(task);
       const pipeOutput = this.pipeOutputCapture(task);
 
@@ -253,13 +253,14 @@ export class TaskOrchestrator {
         ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
             task,
             {
+              temporaryOutputPath,
               forwardOutput,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
             task,
             {
-              temporaryOutputPath: outputPath,
+              temporaryOutputPath,
               forwardOutput,
             }
           );
