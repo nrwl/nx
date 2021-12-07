@@ -3,7 +3,7 @@ import {
   getSelectedPackageManager,
   newProject,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -12,7 +12,7 @@ import {
 describe('Angular Package', () => {
   describe('ngrx', () => {
     beforeAll(() => newProject());
-    afterAll(() => removeProject({ onlyOnCI: true }));
+    afterAll(() => cleanupProject());
 
     it('should work', async () => {
       const myapp = uniq('myapp');

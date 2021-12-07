@@ -7,7 +7,7 @@ import {
   newProject,
   readFile,
   removeFile,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   runCypressTests,
@@ -18,7 +18,7 @@ import {
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');

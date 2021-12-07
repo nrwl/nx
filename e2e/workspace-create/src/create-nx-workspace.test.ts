@@ -7,7 +7,7 @@ import {
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -18,7 +18,7 @@ describe('create-nx-workspace', () => {
   let packageManager;
 
   beforeEach(() => (packageManager = getSelectedPackageManager() || 'npm'));
-  afterAll(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => cleanupProject());
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');

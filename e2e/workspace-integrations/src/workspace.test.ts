@@ -7,7 +7,7 @@ import {
   readFile,
   readJson,
   readProjectConfig,
-  removeProject,
+  cleanupProject,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -24,9 +24,7 @@ describe('run-one', () => {
 
   beforeAll(() => (proj = newProject()));
   afterAll(() => {
-    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('reset');
-    removeProject({ onlyOnCI: true });
+    cleanupProject();
   });
 
   it('should build a specific project', () => {
@@ -186,9 +184,7 @@ describe('run-many', () => {
 
   beforeEach(() => (proj = newProject()));
   afterEach(() => {
-    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('reset');
-    removeProject({ onlyOnCI: true });
+    cleanupProject();
   });
 
   it('should build specific and all projects', () => {
@@ -277,7 +273,7 @@ describe('affected:*', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should print, build, and test affected apps', async () => {
     const myapp = uniq('myapp');
@@ -438,7 +434,7 @@ describe('affected (with git)', () => {
       `git add . && git commit -am "initial commit" && git checkout -b main`
     );
   });
-  afterAll(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => cleanupProject());
 
   function generateAll() {
     runCLI(`generate @nrwl/angular:app ${myapp}`);
@@ -512,7 +508,7 @@ describe('print-affected', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should print information about affected projects', async () => {
     const myapp = uniq('myapp-a');
@@ -661,7 +657,7 @@ describe('print-affected', () => {
 describe('cache', () => {
   beforeEach(() => newProject());
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');

@@ -3,7 +3,7 @@ process.env.SELECTED_CLI = 'angular';
 import {
   checkFilesExist,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCommand,
   runNgAdd,
@@ -18,7 +18,7 @@ xdescribe('Angular Package', () => {
     let proj;
 
     afterEach(() => {
-      removeProject({ onlyOnCI: true });
+      cleanupProject();
     });
 
     it('should generate a workspace', () => {

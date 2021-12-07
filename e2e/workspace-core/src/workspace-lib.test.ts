@@ -2,7 +2,7 @@ import {
   checkFilesExist,
   newProject,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -15,7 +15,7 @@ beforeAll(() => {
   proj = newProject();
 });
 
-afterAll(() => removeProject({ onlyOnCI: true }));
+afterAll(() => cleanupProject());
 
 describe('@nrwl/workspace:library', () => {
   it('should be able to be created', () => {

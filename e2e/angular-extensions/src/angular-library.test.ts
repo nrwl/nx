@@ -7,7 +7,7 @@ import {
   packageInstall,
   readFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   uniq,
   updateFile,
@@ -141,7 +141,7 @@ describe('Angular Package', () => {
         createDep(parentLib, [childLib, childLib2]);
       });
 
-      afterEach(() => removeProject({ onlyOnCI: true }));
+      afterEach(() => cleanupProject());
 
       it('should build properly and update the parent package.json with the dependencies', () => {
         runCLI(`build ${childLib}`);
@@ -312,7 +312,7 @@ describe('Angular Package', () => {
         `import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
         import { FooComponent } from './foo.component';
-        
+
         @NgModule({
           imports: [CommonModule],
           declarations: [FooComponent],
