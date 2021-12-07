@@ -211,7 +211,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       setupFile: 'none',
       skipSerializers: true,
       supportTsx: options.js,
-      babelJest: options.babelJest,
+      transformer: options.babelJest ? 'babel-jest' : 'ts-jest',
       testEnvironment: 'node',
       skipFormat: true,
     });

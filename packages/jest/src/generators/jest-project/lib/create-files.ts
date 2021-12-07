@@ -13,16 +13,13 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
   const filesFolder =
     options.setupFile === 'angular' ? '../files-angular' : '../files';
 
-  const transformer = options.swcJest
-    ? '@swc/jest'
-    : options.babelJest
-    ? 'babel-jest'
-    : 'ts-jest';
+  const supportTsJestConfig =
+    options.transformer === 'ts-jest' || options.transformer === 'babel-jest';
 
   generateFiles(tree, join(__dirname, filesFolder), projectConfig.root, {
     tmpl: '',
     ...options,
-    transformer,
+    supportTsJestConfig,
     projectRoot: projectConfig.root,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
   });

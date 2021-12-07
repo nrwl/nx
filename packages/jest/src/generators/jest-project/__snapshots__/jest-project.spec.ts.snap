@@ -1,31 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
-"module.exports = {
-  displayName: 'lib1',
-  preset: '../../jest.preset.js',
-  transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
-  },
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib1'
-};
-"
-`;
-
-exports[`jestProject --babelJest should generate proper jest.transform when babelJest is true 1`] = `
-"module.exports = {
-  displayName: 'lib1',
-  preset: '../../jest.preset.js',
-  transform: {
-    '^.+\\\\\\\\.[tj]s$': 'babel-jest'
-  },
-    moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/lib1'
-};
-"
-`;
-
 exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular 1`] = `
 "module.exports = {
   displayName: 'lib1',
@@ -47,6 +21,51 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
     'jest-preset-angular/build/serializers/ng-snapshot',
     'jest-preset-angular/build/serializers/html-comment',
   ]
+};
+"
+`;
+
+exports[`jestProject --transformer=@swc/jest should generate proper jest.transform when transformer is @swc/jest 1`] = `
+"module.exports = {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  coverageDirectory: '../../coverage/libs/lib1'
+};
+"
+`;
+
+exports[`jestProject --transformer=babel-jest should generate proper jest.transform when transformer is babel-jest 1`] = `
+"module.exports = {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  transform: {
+    '^.+\\\\\\\\.[tj]s$': 'babel-jest'
+  },
+    moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../../coverage/libs/lib1'
+};
+"
+`;
+
+exports[`jestProject --transformer=babel-jest should generate proper jest.transform when transformer is babel-jest and supportTsx is true 1`] = `
+"module.exports = {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  transform: {
+    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
+  },
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib1'
 };
 "
 `;

@@ -40,17 +40,11 @@
       "description": "The test environment for jest",
       "default": "jsdom"
     },
-    "babelJest": {
-      "type": "boolean",
-      "alias": "babel-jest",
-      "description": "Use babel-jest instead of ts-jest",
-      "default": false
-    },
-    "swcJest": {
-      "type": "boolean",
-      "alias": "swc-jest",
-      "description": "Use @swc/jest instead of ts-jest",
-      "default": false
+    "transformer": {
+      "type": "string",
+      "enum": ["babel-jest", "ts-jest", "@swc/jest"],
+      "description": "Use transformer",
+      "default": "ts-jest"
     },
     "skipFormat": {
       "description": "Skip formatting files",

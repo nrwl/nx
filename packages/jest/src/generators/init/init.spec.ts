@@ -39,7 +39,7 @@ describe('jest', () => {
 
   describe('--babelJest', () => {
     it('should add babel dependencies', async () => {
-      jestInitGenerator(tree, { babelJest: true });
+      jestInitGenerator(tree, { transformer: 'babel-jest' });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
     });

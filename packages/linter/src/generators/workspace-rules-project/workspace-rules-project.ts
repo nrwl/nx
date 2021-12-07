@@ -57,7 +57,6 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
     supportTsx: false,
     skipSerializers: true,
     setupFile: 'none',
-    babelJest: false,
   });
 
   // Add extra config to the jest.config.js file to allow ESLint 8 exports mapping to work with jest

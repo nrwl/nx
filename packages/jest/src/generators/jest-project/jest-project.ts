@@ -7,11 +7,10 @@ import { updateJestConfig } from './lib/update-jestconfig';
 import { JestProjectSchema } from './schema';
 import { formatFiles, Tree, convertNxGenerator } from '@nrwl/devkit';
 
-const schemaDefaults = {
+const schemaDefaults: Partial<JestProjectSchema> = {
   setupFile: 'none',
-  babelJest: false,
   supportTsx: false,
-  swcJest: false,
+  transformer: 'ts-jest',
   skipSetupFile: false,
   skipSerializers: false,
 } as const;
@@ -29,7 +28,7 @@ function normalizeOptions(options: JestProjectSchema) {
   }
 
   // if we support TSX or babelJest we don't support angular(html templates)
-  if (options.supportTsx || options.babelJest || options.swcJest) {
+  if (options.supportTsx || options.transformer === 'babel-jest') {
     options.skipSerializers = true;
   }
 
@@ -51,6 +50,9 @@ export async function jestProjectGenerator(
   schema: JestProjectSchema
 ) {
   const options = normalizeOptions(schema);
+  if (options.transformer === '@swc/jest') {
+    console.log({ options });
+  }
   const installTask = init(tree, options);
   checkForTestTarget(tree, options);
   createFiles(tree, options);

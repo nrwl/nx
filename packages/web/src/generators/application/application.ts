@@ -217,7 +217,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',
-      babelJest: options.babelJest,
+      transformer: options.babelJest ? 'babel-jest' : 'ts-jest',
     });
     tasks.push(jestTask);
   }

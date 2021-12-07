@@ -1,7 +1,6 @@
 export interface JestProjectSchema {
   project: string;
   supportTsx?: boolean;
-  swcJest?: boolean;
   /**
    * @deprecated
    */
@@ -9,6 +8,6 @@ export interface JestProjectSchema {
   setupFile?: 'angular' | 'web-components' | 'none';
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | '';
-  babelJest?: boolean;
+  transformer?: 'babel-jest' | 'ts-jest' | '@swc/jest';
   skipFormat?: boolean;
 }
