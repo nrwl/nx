@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { readFileSync } from 'fs';
-import { removeSync } from 'fs-extra';
+import { readJsonSync, removeSync } from 'fs-extra';
 import { join } from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { Framework, Frameworks } from './frameworks';
@@ -9,7 +9,10 @@ import {
   generateMarkdownFile,
   sortAlphabeticallyFunction,
 } from './utils';
+import { register as registerTsConfigPaths } from 'tsconfig-paths';
+
 import { examples } from '../../packages/workspace/src/command-line/examples';
+
 const importFresh = require('import-fresh');
 
 const sharedCommands = [
@@ -43,9 +46,16 @@ export async function generateCLIDocumentation() {
    */
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
+  const config = readJsonSync(
+    join(__dirname, '../../tsconfig.base.json')
+  ).compilerOptions;
+  registerTsConfigPaths(config);
+
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 
-  const { commandsObject } = importFresh('../../packages/workspace');
+  const { commandsObject } = importFresh(
+    '../../packages/workspace/src/command-line/nx-commands'
+  );
 
   await Promise.all(
     Frameworks.map(async (framework: Framework) => {
