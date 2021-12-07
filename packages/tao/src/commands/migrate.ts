@@ -13,7 +13,6 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
-import { appRootPath } from '../utils/app-root';
 import { NxJsonConfiguration } from '../shared/nx';
 
 type Dependencies = 'dependencies' | 'devDependencies';
@@ -243,21 +242,16 @@ export class Migrator {
           '@nrwl/web',
           '@nrwl/react-native',
           '@nrwl/detox',
-        ]
-          .filter((pkg) => {
-            const { dependencies, devDependencies } = this.packageJson;
-            return !!dependencies?.[pkg] || !!devDependencies?.[pkg];
-          })
-          .reduce(
-            (m, c) => ({
-              ...m,
-              [c]: {
-                version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
-                alwaysAddToPackageJson: false,
-              },
-            }),
-            {}
-          ),
+        ].reduce(
+          (m, c) => ({
+            ...m,
+            [c]: {
+              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+              alwaysAddToPackageJson: false,
+            },
+          }),
+          {}
+        ),
       };
     }
     if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
@@ -276,11 +270,18 @@ export class Migrator {
         if (!packages) return {};
 
         return Object.keys(packages)
-          .filter(
-            (p) =>
-              !packages[p].ifPackageInstalled ||
-              this.versions(packages[p].ifPackageInstalled)
-          )
+          .filter((pkg) => {
+            const { dependencies, devDependencies } = this.packageJson;
+
+            return (
+              (!packages[pkg].ifPackageInstalled ||
+                this.versions(packages[pkg].ifPackageInstalled)) &&
+              (packages[pkg].alwaysAddToPackageJson ||
+                packages[pkg].addToPackageJson ||
+                !!dependencies?.[pkg] ||
+                !!devDependencies?.[pkg])
+            );
+          })
           .reduce(
             (m, c) => ({
               ...m,
