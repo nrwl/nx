@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork } from 'child_process';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
@@ -89,7 +89,10 @@ export class ForkedProcessTaskRunner {
 
   public forkProcessPipeOutputCapture(
     task: Task,
-    { forwardOutput }: { forwardOutput: boolean }
+    {
+      forwardOutput,
+      temporaryOutputPath,
+    }: { forwardOutput: boolean; temporaryOutputPath: string }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -140,6 +143,7 @@ export class ForkedProcessTaskRunner {
               terminalOutput
             );
           }
+          this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
           res({ code, terminalOutput });
         });
       } catch (e) {
@@ -204,6 +208,12 @@ export class ForkedProcessTaskRunner {
     } catch (e) {
       return null;
     }
+  }
+
+  private writeTerminalOutput(outputPath: string, content: string) {
+    try {
+      writeFileSync(outputPath, content);
+    } catch (e) {}
   }
 
   // region Environment Variables
