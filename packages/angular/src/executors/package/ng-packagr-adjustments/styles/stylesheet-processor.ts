@@ -9,7 +9,6 @@
  */
 
 import * as browserslist from 'browserslist';
-import { sync } from 'find-parent-dir';
 import { existsSync } from 'fs';
 import { EsbuildExecutor } from 'ng-packagr/lib/esbuild/esbuild-executor';
 import {
@@ -18,7 +17,7 @@ import {
   saveCacheEntry,
 } from 'ng-packagr/lib/utils/cache';
 import * as log from 'ng-packagr/lib/utils/log';
-import { dirname, extname, resolve } from 'path';
+import { dirname, extname, join, resolve } from 'path';
 import * as postcssPresetEnv from 'postcss-preset-env';
 import * as postcssUrl from 'postcss-url';
 import {
@@ -53,12 +52,13 @@ export class StylesheetProcessor {
   private targets: string[];
   private postCssProcessor: ReturnType<typeof postcss>;
   private esbuild = new EsbuildExecutor();
+  private styleIncludePaths: string[];
   private tailwindSetup: TailwindSetup | undefined;
 
   constructor(
     private readonly basePath: string,
     private readonly cssUrl?: CssUrl,
-    private readonly styleIncludePaths?: string[],
+    private readonly includePaths?: string[],
     private readonly cacheDirectory?: string | false,
     private readonly watch?: boolean,
     private readonly tailwindConfig?: string
@@ -76,6 +76,20 @@ export class StylesheetProcessor {
       'last 2 iOS major versions',
       'Firefox ESR',
     ];
+
+    this.styleIncludePaths = [...this.includePaths];
+    let prevDir = null;
+    let currentDir = this.basePath;
+
+    while (currentDir !== prevDir) {
+      const p = join(currentDir, 'node_modules');
+      if (existsSync(p)) {
+        this.styleIncludePaths.push(p);
+      }
+
+      prevDir = currentDir;
+      currentDir = dirname(prevDir);
+    }
 
     this.browserslistData = browserslist(undefined, { path: this.basePath });
     this.targets = transformSupportedBrowsersToTargets(this.browserslistData);
@@ -336,27 +350,8 @@ function customSassImporter(
     return undefined;
   }
 
-  const result = resolveImport(url.substring(1), prev);
-  if (!result) {
-    return undefined;
-  }
-
   return {
-    file: result,
+    file: url.substring(1),
     prev,
   };
-}
-
-function resolveImport(target: string, basePath: string): string | undefined {
-  const root = sync(basePath, 'node_modules');
-  if (!root) {
-    return undefined;
-  }
-
-  const filePath = resolve(root, 'node_modules', target);
-  if (existsSync(filePath) || existsSync(dirname(filePath))) {
-    return filePath;
-  }
-
-  return resolveImport(target, dirname(root));
 }

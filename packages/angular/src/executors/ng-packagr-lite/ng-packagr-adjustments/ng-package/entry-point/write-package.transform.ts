@@ -24,8 +24,6 @@ import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import * as path from 'path';
 
-type CompilationMode = 'partial' | 'full' | undefined;
-
 export const nxWritePackageTransform = (options: NgPackagrOptions) =>
   transformFromPromise(async (graph) => {
     const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
@@ -99,8 +97,6 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       const relativeUnixFromDestPath = (filePath: string) =>
         ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
 
-      const { compilationMode } = entryPoint.data.tsConfig.options;
-
       await writePackageJson(
         ngEntryPoint,
         ngPackage,
@@ -112,8 +108,7 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
           // webpack v4+ specific flag to enable advanced optimizations and code splitting
           sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
         },
-        !!options.watch,
-        compilationMode as CompilationMode
+        !!options.watch
       );
     } catch (error) {
       throw error;
@@ -142,8 +137,7 @@ async function writePackageJson(
   entryPoint: NgEntryPoint,
   pkg: NgPackage,
   additionalProperties: { [key: string]: string | boolean | string[] },
-  isWatchMode: boolean,
-  compilationMode: CompilationMode
+  isWatchMode: boolean
 ): Promise<void> {
   // set additional properties
   const packageJson = { ...entryPoint.packageJson, ...additionalProperties };
