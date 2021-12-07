@@ -172,25 +172,26 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run:
-          name: Check Imports
-          command: yarn check-imports
-      - run:
-          name: Check Formatting
-          command: yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run:
-          name: Check Commit
-          command: yarn check-commit
-      - run:
-          name: Check Package dependencies
-          command: yarn depcheck
+          name: Check repository
+          command: |
+            yarn check-imports &
+            P1=$!
+            yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &
+            P2=$!
+            yarn check-commit &
+            P3=$!
+            yarn depcheck &
+            P4=$!
+            wait $P1 $P2 $P3 $P4
       - run:
           name: Check Documentation
           command: yarn documentation
           no_output_timeout: 20m
       - run:
-          name: Run checks
+          name: Run Lint/Test/Build
           command: |
-            yarn nx workspace-lint &
+            # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
+            (yarn nx workspace-lint; echo "Linting is temporarily disabled until ESLint v8 support is published") &
             P1=$!
             yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
             P2=$!
@@ -271,12 +272,6 @@ workflows:
       # -------------------------
       #     Pull request logic
       # -------------------------
-<<<<<<< HEAD
-      - main:
-          name: pull-request
-=======
-      - main-linux:
-          name: main-linux-e2e
->>>>>>> b16fd07c9 (chore(repo): use bash to run tasks in parallel)
+      - main-linux
       - mainmacos:
-          name: pull-request-macos
+          name: main-macos-e2e
