@@ -1,4 +1,5 @@
 import { AnimateSharedLayout, motion, useAnimation } from 'framer-motion';
+import { useState } from 'react';
 
 const typing = (line: string, delay: number = 0): any[] =>
   Array.from(line).map((char, index) => (
@@ -16,7 +17,11 @@ const typing = (line: string, delay: number = 0): any[] =>
     </motion.span>
   ));
 
-export function NpxCreateNxWorkspace() {
+export function NpxCreateNxWorkspaceAnimation({
+  restartFunction,
+}: {
+  restartFunction: () => void;
+}) {
   const npxCreateNxWorkspace = useAnimation();
   const wrapper = useAnimation();
   const firstLoading = useAnimation();
@@ -43,6 +48,7 @@ export function NpxCreateNxWorkspace() {
   const creatingNxWorkspace2 = useAnimation();
   const secondLoading = useAnimation();
   const workpaceReady = useAnimation();
+  const restartButton = useAnimation();
 
   const sequence = async () => {
     await npxCreateNxWorkspace.start({
@@ -88,8 +94,12 @@ export function NpxCreateNxWorkspace() {
       opacity: 1,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
-    return await wrapper.start({
+    await wrapper.start({
       y: -100,
+      transition: { ease: 'easeOut', duration: 0.24 },
+    });
+    return await restartButton.start({
+      y: 0,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
   };
@@ -228,11 +238,13 @@ export function NpxCreateNxWorkspace() {
   };
 
   sequence();
+
   return (
     <>
       <div
+        key={'npx-create-nx-workspace-animation'}
         className="pt-4 shadow-lg text-gray-200 text-xs font-mono subpixel-antialiased
-              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal max-w-full overflow-hidden h-96"
+              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal max-w-full overflow-hidden h-96 relative"
       >
         <div className="px-5 top mb-2 flex">
           <div className="h-3 w-3 bg-red-500 rounded-full" />
@@ -560,7 +572,71 @@ export function NpxCreateNxWorkspace() {
             </div>
           </motion.div>
         </div>
+        <motion.div
+          className="absolute top-2 right-4"
+          initial={{ y: -100 }}
+          animate={restartButton}
+        >
+          <button
+            onClick={() => restartFunction() && sequence()}
+            className="w-full sm:w-auto flex-none bg-gray-800 text-green-nx-base hover:bg-gray-700 text-xs font-normal py-1 px-3 border border-gray-700 rounded-md transition"
+          >
+            <svg
+              className="inline-flex w-5 h-5 r-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>{' '}
+            Play again
+          </button>
+        </motion.div>
       </div>
+    </>
+  );
+}
+
+export function NpxCreateNxWorkspace() {
+  const [isDisplayed, setIsDisplayed] = useState(true);
+
+  const restart = () => {
+    setIsDisplayed(false);
+    setTimeout(() => {
+      setIsDisplayed(true);
+    });
+  };
+
+  return (
+    <>
+      {isDisplayed ? (
+        <NpxCreateNxWorkspaceAnimation restartFunction={restart} />
+      ) : (
+        <div
+          key={'npx-create-nx-workspace-animation'}
+          className="pt-4 shadow-lg text-gray-200 text-xs font-mono subpixel-antialiased
+              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal w-full overflow-hidden h-96 relative"
+        >
+          <div className="px-5 top mb-2 flex">
+            <div className="h-3 w-3 bg-red-500 rounded-full" />
+            <div className="ml-2 h-3 w-3 bg-yellow-300 rounded-full" />
+            <div className="ml-2 h-3 w-3 bg-green-500 rounded-full" />
+          </div>
+          <div className="px-5 overflow-y-hidden" />
+        </div>
+      )}
     </>
   );
 }
