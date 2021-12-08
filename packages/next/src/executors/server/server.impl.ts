@@ -38,11 +38,13 @@ export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
-  process.env.NODE_ENV = process.env.NODE_ENV
+  // Cast to any to overwrite NODE_ENV
+  (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
     : options.dev
     ? 'development'
     : 'production';
+
   let dependencies: DependentBuildableProjectNode[] = [];
   const buildTarget = parseTargetString(options.buildTarget);
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;

@@ -21,7 +21,7 @@ function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
       let sassGlobalRule;
 
       const cssRule = config.module.rules.find((rule) =>
-        rule.oneOf?.find((r) => r?.options?.__next_css_remove)
+        rule.oneOf?.find((r) => r?.[Symbol.for('__next_css_remove')])
       );
 
       const addStylusRuleToTest = (test) => {
