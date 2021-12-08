@@ -1,25 +1,23 @@
-import * as chalk from 'chalk';
 import { getPackageManagerCommand, readJsonFile } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import * as chalk from 'chalk';
+import { dirname, join } from 'path';
 import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 
 function tryGetCollection<T extends object>(
-  workspaceRoot: string,
-  pluginName: string,
-  jsonFile: string,
+  packageJsonPath: string,
+  collectionFile: string | undefined,
   propName: string
 ): T | null {
-  if (!jsonFile) {
+  if (!collectionFile) {
     return null;
   }
 
   try {
-    const jsonFilePath = require.resolve(`${pluginName}/${jsonFile}`, {
-      paths: [workspaceRoot],
-    });
-    return readJsonFile<T>(jsonFilePath)[propName];
+    const collectionFilePath = join(dirname(packageJsonPath), collectionFile);
+    return readJsonFile<T>(collectionFilePath)[propName];
   } catch {
     return null;
   }
@@ -38,30 +36,14 @@ export function getPluginCapabilities(
       name: pluginName,
       generators:
         tryGetCollection(
-          workspaceRoot,
-          pluginName,
+          packageJsonPath,
           packageJson.generators,
           'generators'
         ) ||
-        tryGetCollection(
-          workspaceRoot,
-          pluginName,
-          packageJson.schematics,
-          'schematics'
-        ),
+        tryGetCollection(packageJsonPath, packageJson.schematics, 'schematics'),
       executors:
-        tryGetCollection(
-          workspaceRoot,
-          pluginName,
-          packageJson.executors,
-          'executors'
-        ) ||
-        tryGetCollection(
-          workspaceRoot,
-          pluginName,
-          packageJson.builders,
-          'builders'
-        ),
+        tryGetCollection(packageJsonPath, packageJson.executors, 'executors') ||
+        tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
     };
   } catch {
     return null;
