@@ -268,21 +268,30 @@ export async function startServer(): Promise<Server> {
   if (!isWindows) {
     killSocketOrPath();
   }
-  return new Promise((resolve) => {
-    server.listen(FULL_OS_SOCKET_PATH, async () => {
-      serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
-      // this triggers the storage of the lock file hash
-      lockFileChanged();
+  return new Promise((resolve, reject) => {
+    try {
+      server.listen(FULL_OS_SOCKET_PATH, async () => {
+        try {
+          serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
+          // this triggers the storage of the lock file hash
+          lockFileChanged();
 
-      if (!watcherSubscription) {
-        watcherSubscription = await subscribeToWorkspaceChanges(
-          handleWorkspaceChanges
-        );
-        serverLogger.watcherLog(`Subscribed to changes within: ${appRootPath}`);
-      }
-
-      return resolve(server);
-    });
+          if (!watcherSubscription) {
+            watcherSubscription = await subscribeToWorkspaceChanges(
+              handleWorkspaceChanges
+            );
+            serverLogger.watcherLog(
+              `Subscribed to changes within: ${appRootPath}`
+            );
+          }
+          return resolve(server);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
