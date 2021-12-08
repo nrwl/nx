@@ -957,6 +957,10 @@
     "13.2.0": {
       "version": "13.2.0-beta.1",
       "packages": {
+        "jasmine-marbles": {
+          "version": "~0.9.1",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/cli": {
           "version": "~13.0.0",
           "alwaysAddToPackageJson": false

@@ -39,7 +39,7 @@ export default async function (tree: Tree) {
       tree,
       {},
       {
-        'jasmine-marbles': '~0.8.3',
+        'jasmine-marbles': '~0.9.1',
       }
     );
   }
