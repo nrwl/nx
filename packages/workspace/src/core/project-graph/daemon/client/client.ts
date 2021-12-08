@@ -1,6 +1,6 @@
 import { logger, ProjectGraph } from '@nrwl/devkit';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
-import { existsSync, openSync } from 'fs';
+import { existsSync, openSync, readFileSync } from 'fs';
 import { connect } from 'net';
 import { performance } from 'perf_hooks';
 import {
@@ -13,6 +13,7 @@ import {
   killSocketOrPath,
 } from '../socket-utils';
 import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
+import { output } from '../../../../utilities/output';
 
 export async function startInBackground(): Promise<ChildProcess['pid']> {
   await safelyCleanUpExistingProcess();
@@ -37,17 +38,45 @@ export async function startInBackground(): Promise<ChildProcess['pid']> {
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
      */
+    let attempts = 0;
     return new Promise((resolve) => {
       const id = setInterval(async () => {
         if (await isServerAvailable()) {
           clearInterval(id);
           resolve(backgroundProcess.pid);
+        } else if (attempts > 200) {
+          // daemon fails to start, the process probably exited
+          // we print the logs and exit the client
+          throw daemonProcessException(
+            'Failed to start the Nx Daemon process.'
+          );
+        } else {
+          attempts++;
         }
-      }, 500);
+      }, 10);
     });
   } catch (err) {
-    logger.error(err);
-    process.exit(1);
+    throw err;
+  }
+}
+
+function daemonProcessException(message: string) {
+  try {
+    let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
+    if (log.length > 20) {
+      log = log.slice(log.length - 20);
+    }
+    return new Error(
+      [
+        message,
+        'Messages from the log:',
+        ...log,
+        '\n',
+        `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
+      ].join('\n')
+    );
+  } catch (e) {
+    return new Error(message);
   }
 }
 
@@ -71,7 +100,7 @@ export function stop(): void {
 
 /**
  * As noted in the comments above the createServer() call, in order to reliably (meaning it works
- * cross-platform) check whether or not the server is availabe to request a project graph from we
+ * cross-platform) check whether the server is available to request a project graph from we
  * need to actually attempt connecting to it.
  *
  * Because of the behavior of named pipes on Windows, we cannot simply treat them as a file and
@@ -109,18 +138,22 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
     const socket = connect(FULL_OS_SOCKET_PATH);
 
     socket.on('error', (err) => {
-      let errorMessage: string | undefined;
+      let error: any;
       if (err.message.startsWith('connect ENOENT')) {
-        errorMessage = 'Error: The Daemon Server is not running';
+        error = daemonProcessException('The Daemon Server is not running');
       }
       if (err.message.startsWith('connect ECONNREFUSED')) {
-        // If somehow the file descriptor had not been released during a previous shut down.
-        if (existsSync(FULL_OS_SOCKET_PATH)) {
-          errorMessage = `Error: A server instance had not been fully shut down. Please try running the command again.`;
-          killSocketOrPath();
-        }
+        error = daemonProcessException(
+          `A server instance had not been fully shut down. Please try running the command again.`
+        );
+        killSocketOrPath();
       }
-      return reject(new Error(errorMessage) || err);
+      if (err.message.startsWith('read ECONNRESET')) {
+        error = daemonProcessException(
+          `Unable to connect to the daemon process.`
+        );
+      }
+      return reject(error || err);
     });
 
     /**
