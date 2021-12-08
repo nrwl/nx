@@ -1,4 +1,5 @@
 import type { Task } from '@nrwl/devkit';
+import { TaskCacheStatus } from '../../utilities/output';
 import { LifeCycle, TaskResult } from '../life-cycle';
 
 export interface InkRunManyLifeCycleOnStartCommandParams {
@@ -12,10 +13,16 @@ export class InkRunManyLifeCycle implements LifeCycle {
     onStartCommand: (params: InkRunManyLifeCycleOnStartCommandParams) => void;
     onStartTasks: (tasks: Task[]) => void;
     onEndTasks: (taskResults: TaskResult[]) => void;
+    onPrintTaskTerminalOutput: (
+      task: Task,
+      cacheStatus: TaskCacheStatus,
+      output: string
+    ) => void;
   } = {
     onStartCommand: () => {},
     onStartTasks: () => {},
     onEndTasks: () => {},
+    onPrintTaskTerminalOutput: () => {},
   };
 
   constructor(
@@ -41,5 +48,13 @@ export class InkRunManyLifeCycle implements LifeCycle {
 
   endTasks(taskResults: TaskResult[]) {
     this.callbacks.onEndTasks(taskResults);
+  }
+
+  printTaskTerminalOutput(
+    task: Task,
+    cacheStatus: TaskCacheStatus,
+    output: string
+  ) {
+    this.callbacks.onPrintTaskTerminalOutput(task, cacheStatus, output);
   }
 }

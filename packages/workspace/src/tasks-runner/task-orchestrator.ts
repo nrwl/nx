@@ -315,11 +315,6 @@ export class TaskOrchestrator {
           task: result.task,
           status: result.status,
           code,
-          terminalOutput:
-            process.env.NX_TASKS_RUNNER_USE_INK === 'true' &&
-            result.status === 'failure'
-              ? result.terminalOutput
-              : undefined,
         };
       })
     );

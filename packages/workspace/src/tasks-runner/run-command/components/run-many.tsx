@@ -15,9 +15,13 @@ export interface TaskListItem {
 
 interface RunManyProps {
   tasksState: TasksState;
+  clearTaskOutputCacheForTaskId: (taskId: string) => void;
 }
 
-export function RunMany({ tasksState }: RunManyProps) {
+export function RunMany({
+  tasksState,
+  clearTaskOutputCacheForTaskId,
+}: RunManyProps) {
   const [taskList, setTaskList] = useState<TaskListItem[]>(
     tasksState.projectNames.map((projectName) => ({
       projectName,
@@ -41,24 +45,35 @@ export function RunMany({ tasksState }: RunManyProps) {
         }
         switch (taskResult.status) {
           case 'cache':
+            // Free up the task output from memory given we don't need it when a task didn't fail
+            clearTaskOutputCacheForTaskId(taskResult.task.id);
             return {
               ...task,
               status: 'success',
               additionalStatusText: 'from cache',
             };
-          case 'success':
+          case 'success': {
+            // Free up the task output from memory given we don't need it when a task didn't fail
+            clearTaskOutputCacheForTaskId(taskResult.task.id);
             return {
               ...task,
               status: 'success',
               additionalStatusText: '',
             };
-          case 'failure':
-            return {
+          }
+          case 'failure': {
+            const taskTerminalOutput =
+              tasksState.tasksToTerminalOutputs[taskResult.task.id];
+            const updated: TaskListItem = {
               ...task,
               status: 'failure',
               additionalStatusText: '',
-              output: taskResult.terminalOutput,
+              output: taskTerminalOutput,
             };
+            // Free up the additional copy of the task output from memory
+            clearTaskOutputCacheForTaskId(taskResult.task.id);
+            return updated;
+          }
           default:
             return task;
         }

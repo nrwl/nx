@@ -99,16 +99,16 @@ export async function runCommand(
     defaultDependencyConfigs
   );
 
-  const lifeCycles = [
-    getTerminalOutputLifeCycle(
-      initiatingProject,
-      terminalOutputStrategy,
-      projectsToRun,
-      tasks,
-      nxArgs,
-      overrides
-    ),
-  ] as LifeCycle[];
+  const terminalOutputLifeCycle = getTerminalOutputLifeCycle(
+    initiatingProject,
+    terminalOutputStrategy,
+    projectsToRun,
+    tasks,
+    nxArgs,
+    overrides
+  );
+
+  const lifeCycles = [terminalOutputLifeCycle] as LifeCycle[];
 
   if (process.env.NX_PERF_LOGGING) {
     lifeCycles.push(new TaskTimingsLifeCycle());
@@ -119,7 +119,7 @@ export async function runCommand(
   if (process.env.NX_TASKS_RUNNER_USE_INK === 'true') {
     const { waitUntilExit } = render(
       createElement(RunCommandComponent, {
-        lifeCycle,
+        lifeCycle: terminalOutputLifeCycle,
       })
     );
     inkWaitUntilExit = waitUntilExit;
