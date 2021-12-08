@@ -193,16 +193,11 @@ jobs:
             # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
             (yarn nx workspace-lint; echo "Linting is temporarily disabled until ESLint v8 support is published") &
             P1=$!
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
-            P2=$!
             yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
             P3=$!
+            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
+            P2=$!
             wait $P1 $P2 $P3
-      - run:
-          name: Run E2E Tests
-          command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox,e2e-gatsby --parallel --max-parallel=1
-          no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -257,14 +252,6 @@ workflows:
           name: 'agent7'
       - agent:
           name: 'agent8'
-      - agent:
-          name: 'agent9'
-          pm: 'npm'
-          os: 'macos'
-      - agent:
-          name: 'agent10'
-          pm: 'npm'
-          os: 'macos'
       # - agent:
       #     name: 'agent10'
       #     pm: 'npm'
@@ -273,5 +260,3 @@ workflows:
       #     Pull request logic
       # -------------------------
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e
