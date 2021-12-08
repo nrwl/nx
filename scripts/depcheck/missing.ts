@@ -103,6 +103,11 @@ const IGNORE_MATCHES = {
     'karma-jasmine-html-reporter',
     'webpack',
     'webpack-dev-server',
+    ,
+    '@nrwl/cli',
+    '@nrwl/jest',
+    '@nrwl/linter',
+    '@nrwl/devkit',
   ],
   nest: ['semver'],
 };
