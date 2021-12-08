@@ -2,6 +2,15 @@ import type { Task } from '@nrwl/devkit';
 import { TaskStatus } from './tasks-runner';
 import { TaskCacheStatus } from '../utilities/output';
 
+export type ExtendedTaskStatus = TaskStatus | 'pending' | 'loading';
+
+export interface TaskResult {
+  task: Task;
+  status: ExtendedTaskStatus;
+  code: number;
+  terminalOutput?: string;
+}
+
 export interface LifeCycle {
   startCommand?(): void;
 
@@ -25,9 +34,7 @@ export interface LifeCycle {
 
   startTasks?(task: Task[]): void;
 
-  endTasks?(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>
-  ): void;
+  endTasks?(taskResults: TaskResult[]): void;
 
   printTaskTerminalOutput?(
     task: Task,
@@ -37,7 +44,7 @@ export interface LifeCycle {
 }
 
 export class CompositeLifeCycle implements LifeCycle {
-  constructor(private readonly lifeCycles: LifeCycle[]) {}
+  constructor(public readonly lifeCycles: LifeCycle[]) {}
 
   startCommand(): void {
     for (let l of this.lifeCycles) {
@@ -89,9 +96,7 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let l of this.lifeCycles) {
       if (l.endTasks) {
         l.endTasks(taskResults);
