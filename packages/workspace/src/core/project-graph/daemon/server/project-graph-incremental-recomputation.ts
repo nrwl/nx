@@ -19,7 +19,6 @@ import {
 import { fileExists } from '../../../../utilities/fileutils';
 import { HashingImpl } from '../../../hasher/hashing-impl';
 
-const configName = workspaceConfigName(appRootPath);
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
   serializedProjectGraph: string | null;
@@ -156,6 +155,18 @@ function processFilesAndCreateAndSerializeProjectGraph() {
   }
 }
 
+function copyFileData(d: FileData[]) {
+  return d.map((t) => ({ ...t }));
+}
+
+function copyFileMap(m: ProjectFileMap) {
+  const c = {};
+  for (let p of Object.keys(m)) {
+    c[p] = copyFileData(m[p]);
+  }
+  return c;
+}
+
 async function createAndSerializeProjectGraph() {
   try {
     performance.mark('create-project-graph-start');
@@ -163,8 +174,8 @@ async function createAndSerializeProjectGraph() {
     const { projectGraph, projectGraphCache } =
       await buildProjectGraphUsingProjectFileMap(
         workspaceJson,
-        projectFileMapWithFiles.projectFileMap,
-        projectFileMapWithFiles.allWorkspaceFiles,
+        copyFileMap(projectFileMapWithFiles.projectFileMap),
+        copyFileData(projectFileMapWithFiles.allWorkspaceFiles),
         currentProjectGraphCache || readCache(),
         true
       );
@@ -190,9 +201,12 @@ async function createAndSerializeProjectGraph() {
       error: null,
       serializedProjectGraph,
     };
-  } catch (err) {
+  } catch (e) {
+    serverLogger.log(
+      `Error detected when creating a project graph: ${e.message}`
+    );
     return {
-      error: err,
+      error: e,
       serializedProjectGraph: null,
     };
   }

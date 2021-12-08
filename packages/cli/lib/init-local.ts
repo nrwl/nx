@@ -19,13 +19,12 @@ export function initLocal(workspace: Workspace) {
   //nx-ignore-next-line
   require('@nrwl/workspace/src/utilities/perf-logging');
 
-  //nx-ignore-next-line
   const supportedNxCommands =
+    //nx-ignore-next-line
     require('@nrwl/workspace/src/command-line/supported-nx-commands').supportedNxCommands;
 
   const runOpts = runOneOptions(workspace);
   const running = runOpts !== false;
-
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
     //nx-ignore-next-line

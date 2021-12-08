@@ -4,6 +4,7 @@ import type {
   NxJsonConfiguration,
 } from '@nrwl/devkit';
 import { output } from '../utilities/output';
+import { stripIndents } from '@nrwl/devkit';
 
 export function assertWorkspaceValidity(
   workspaceJson,
@@ -26,16 +27,12 @@ export function assertWorkspaceValidity(
           // do nothing since '*' is calculated and always valid.
         } else if (typeof value === 'string') {
           // This is invalid because the only valid string is '*'
-
-          output.error({
-            title: 'Configuration Error',
-            bodyLines: [
-              `nx.json is not configured properly. "${path.join(
-                ' > '
-              )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".`,
-            ],
-          });
-          process.exit(1);
+          throw new Error(stripIndents`
+         Configuration Error 
+         nx.json is not configured properly. "${path.join(
+           ' > '
+         )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".
+          `);
         } else if (Array.isArray(value)) {
           acc.push([entry[0], value]);
         } else {
@@ -44,6 +41,7 @@ export function assertWorkspaceValidity(
           });
         }
       }
+
       recur(entry[1], acc, [entry[0]]);
       return acc;
     }, [])
@@ -80,12 +78,7 @@ export function assertWorkspaceValidity(
     message += str;
   });
 
-  output.error({
-    title: 'Configuration Error',
-    bodyLines: [message],
-  });
-
-  process.exit(1);
+  throw new Error(`Configuration Error\n${message}`);
 }
 
 function detectAndSetInvalidProjectValues(
@@ -100,14 +93,4 @@ function detectAndSetInvalidProjectValues(
   if (invalidProjects.length > 0) {
     map.set(sourceName, invalidProjects);
   }
-}
-
-function minus(a: string[], b: string[]): string[] {
-  const res = [];
-  a.forEach((aa) => {
-    if (!b.find((bb) => bb === aa)) {
-      res.push(aa);
-    }
-  });
-  return res;
 }

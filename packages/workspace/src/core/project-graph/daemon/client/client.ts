@@ -120,7 +120,6 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
           killSocketOrPath();
         }
       }
-      logger.error(`NX Daemon Client - ${errorMessage || err}`);
       return reject(new Error(errorMessage) || err);
     });
 
@@ -151,7 +150,6 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
           );
 
           if (projectGraphResult.error) {
-            logger.error(`NX Daemon Client - The server returned an Error`);
             return reject(projectGraphResult.error);
           }
 
@@ -161,11 +159,10 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
             'json-parse-end'
           );
           return resolve(projectGraphResult.projectGraph);
-        } catch {
-          logger.error(
-            'NX Daemon Client - Error: Could not deserialize the ProjectGraph'
+        } catch (e) {
+          return reject(
+            new Error(`Could not deserialize the ProjectGraph.\n${e.message}`)
           );
-          return reject(new Error('Could not deserialize the ProjectGraph'));
         }
       });
     });

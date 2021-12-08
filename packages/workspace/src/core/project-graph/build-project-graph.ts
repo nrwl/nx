@@ -78,8 +78,8 @@ export async function buildProjectGraphUsingProjectFileMap(
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
-  let filesToProcess = projectFileMap;
-  let cachedFileData = {};
+  let filesToProcess;
+  let cachedFileData;
   if (
     cache &&
     !shouldRecomputeWholeGraph(
@@ -93,6 +93,9 @@ export async function buildProjectGraphUsingProjectFileMap(
     const fromCache = extractCachedFileData(projectFileMap, cache);
     filesToProcess = fromCache.filesToProcess;
     cachedFileData = fromCache.cachedFileData;
+  } else {
+    filesToProcess = projectFileMap;
+    cachedFileData = {};
   }
   const context = createContext(
     workspaceJson,
@@ -140,8 +143,8 @@ async function buildProjectGraphUsingContext(
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of builder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
-      if (cached) {
-        f.deps = cached.deps;
+      if (cached && cached.deps) {
+        f.deps = [...cached.deps];
       }
     }
   }

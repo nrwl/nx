@@ -50,18 +50,13 @@ async function respondWithErrorAndExit(
 ) {
   // print some extra stuff in the error message
   serverLogger.requestLog(
-    `Responding to the client with an error`,
+    `Responding to the client with an error.`,
     description,
     error.message
   );
   console.error(error);
 
-  error.message = stripIndents`
-    ${error.message}
-    ${description}
-    Because of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.
-    If the error persists, please run "nx reset".
-  `;
+  error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
 
   await respondToClient(socket, serializeResult(error, null));
   process.exit(1);
@@ -92,7 +87,7 @@ const server = createServer(async (socket) => {
     if (payload !== 'REQUEST_PROJECT_GRAPH_PAYLOAD') {
       await respondWithErrorAndExit(
         socket,
-        null,
+        `Invalid payload from the client`,
         new Error(`Unsupported payload sent to daemon server: ${payload}`)
       );
     }
