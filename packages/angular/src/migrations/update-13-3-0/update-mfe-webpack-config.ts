@@ -1,5 +1,10 @@
-import { Tree } from '@nrwl/devkit';
-import { logger, formatFiles } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
+import {
+  logger,
+  formatFiles,
+  updateProjectConfiguration,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { Identifier, Node, StringLiteral } from 'typescript';
@@ -8,6 +13,7 @@ export default async function (tree: Tree) {
   const NRWL_WEBPACK_BROWSER_BUILDER = '@nrwl/angular:webpack-browser';
   const CUSTOM_WEBPACK_OPTION = 'customWebpackConfig';
 
+  const projects = [];
   forEachExecutorOptions(
     tree,
     NRWL_WEBPACK_BROWSER_BUILDER,
@@ -21,9 +27,22 @@ export default async function (tree: Tree) {
         return;
       }
       const webpackConfig = tree.read(webpackPath, 'utf-8');
-      if (!webpackConfig.includes('ModuleFederationPlugin')) {
+      const ast = tsquery.ast(webpackConfig);
+      const moduleFederationWebpackConfig = tsquery(
+        ast,
+        'Identifier[name=ModuleFederationPlugin]',
+        {
+          visitAllChildren: true,
+        }
+      );
+      if (
+        !moduleFederationWebpackConfig ||
+        moduleFederationWebpackConfig.length === 0
+      ) {
         return;
       }
+
+      projects.push(projectName);
 
       let updatedWebpackFile = addExperimentsObject(webpackConfig);
       updatedWebpackFile = addLibraryModuleType(updatedWebpackFile);
@@ -31,6 +50,7 @@ export default async function (tree: Tree) {
       tree.write(webpackPath, updatedWebpackFile);
     }
   );
+  addPublicHost(tree, projects);
 
   await formatFiles(tree);
 }
@@ -39,12 +59,21 @@ export function addExperimentsObject(webpackConfig: string) {
   const WEBPACK_EXPERIMENTS_QUERY =
     'PropertyAssignment > Identifier[name=experiments] ~ ObjectLiteralExpression';
   const ast = tsquery.ast(webpackConfig);
-  const webpackExperimentsNode = tsquery(ast, WEBPACK_EXPERIMENTS_QUERY);
+  const webpackExperimentsNode = tsquery(ast, WEBPACK_EXPERIMENTS_QUERY, {
+    visitAllChildren: true,
+  });
 
   if (webpackExperimentsNode && webpackExperimentsNode.length > 0) {
     if (webpackExperimentsNode[0].getText().includes('outputModule')) {
       return webpackConfig;
     }
+
+    return `${webpackConfig.slice(
+      0,
+      webpackExperimentsNode[0].getStart() + 1
+    )}\noutputModule: true,${webpackConfig.slice(
+      webpackExperimentsNode[0].getStart() + 1
+    )}`;
   }
 
   const WEBPACK_EXPORT = 'module.exports = {';
@@ -124,4 +153,26 @@ export function removeRemoteName(webpackConfig: string) {
     0,
     remotesObjectNode.getStart()
   )}${updatedRemotesObject}${webpackConfig.slice(remotesObjectNode.getEnd())}`;
+}
+
+export function addPublicHost(tree: Tree, projects: string[]) {
+  for (const projectName of projects) {
+    const project = readProjectConfiguration(tree, projectName);
+    const updatedProject = {
+      ...project,
+      targets: {
+        ...project.targets,
+        serve: {
+          ...project.targets.serve,
+          options: {
+            ...project.targets.serve.options,
+            publicHost: `http://localhost:${
+              project.targets.serve.options?.port ?? 4200
+            }`,
+          },
+        },
+      },
+    };
+    updateProjectConfiguration(tree, projectName, updatedProject);
+  }
 }
