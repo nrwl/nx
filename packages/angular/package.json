@@ -17,10 +17,6 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./bundles/nrwl-angular.umd.js",
-  "types": "./nrwl-angular.d.ts",
-  "module": "esm5/nrwl-angular.js",
-  "es2015": "esm2015/nrwl-angular.js",
   "exports": {
     "./generators": "./generators.js",
     "./tailwind": "./tailwind.js",
