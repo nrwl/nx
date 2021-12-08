@@ -15,7 +15,7 @@ import {
 describe('Cli', () => {
   beforeEach(() => newProject());
 
-  it('should execute long running tasks', () => {
+  it('vvvshould execute long running tasks', () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
     updateProjectConfig(myapp, (c) => {

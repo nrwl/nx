@@ -2,6 +2,7 @@ import { ProjectGraph, stripIndents } from '@nrwl/devkit';
 import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
 import { readNxJson, workspaceFileName } from '../file-utils';
+import { output } from '../../utilities/output';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -62,27 +63,36 @@ export async function createProjectGraphAsync(
   // option=true,env=undefined => daemon
   // option=true,env=true => daemon
   // option=false,env=true => daemon
-  if (
-    (useDaemonProcessOption === undefined && env === undefined) ||
-    (useDaemonProcessOption === true && env === 'false') ||
-    (useDaemonProcessOption === false && env === undefined) ||
-    (useDaemonProcessOption === false && env === 'false')
-  ) {
-    return projectGraphAdapter(
-      '5.0',
-      projectGraphVersion,
-      await buildProjectGraph()
-    );
-  } else {
-    const daemonClient = require('./daemon/client/client');
-    if (!(await daemonClient.isServerAvailable())) {
-      await daemonClient.startInBackground();
+  try {
+    if (
+      (useDaemonProcessOption === undefined && env === undefined) ||
+      (useDaemonProcessOption === true && env === 'false') ||
+      (useDaemonProcessOption === false && env === undefined) ||
+      (useDaemonProcessOption === false && env === 'false')
+    ) {
+      return projectGraphAdapter(
+        '5.0',
+        projectGraphVersion,
+        await buildProjectGraph()
+      );
+    } else {
+      const daemonClient = require('./daemon/client/client');
+      if (!(await daemonClient.isServerAvailable())) {
+        await daemonClient.startInBackground();
+      }
+      return projectGraphAdapter(
+        '5.0',
+        projectGraphVersion,
+        await daemonClient.getProjectGraphFromServer()
+      );
     }
-    return projectGraphAdapter(
-      '5.0',
-      projectGraphVersion,
-      daemonClient.getProjectGraphFromServer()
-    );
+  } catch (e) {
+    const lines = e.message.split('\n');
+    output.error({
+      title: lines[0],
+      bodyLines: lines.slice(1),
+    });
+    process.exit(1);
   }
 }
 
