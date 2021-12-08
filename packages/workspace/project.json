@@ -67,6 +67,18 @@
           },
           {
             "command": "node ./scripts/copy-readme.js workspace"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/cli"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/devkit"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/jest"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/linter"
           }
         ],
         "parallel": false
