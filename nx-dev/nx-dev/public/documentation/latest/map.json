@@ -469,6 +469,11 @@
             "file": "angular/api-angular/generators/ngrx"
           },
           {
+            "name": "scam generator",
+            "id": "scam",
+            "file": "angular/api-angular/generators/scam"
+          },
+          {
             "name": "setup-mfe generator",
             "id": "setup-mfe",
             "file": "angular/api-angular/generators/setup-mfe"
@@ -1798,6 +1803,11 @@
             "file": "react/api-angular/generators/ngrx"
           },
           {
+            "name": "scam generator",
+            "id": "scam",
+            "file": "react/api-angular/generators/scam"
+          },
+          {
             "name": "setup-mfe generator",
             "id": "setup-mfe",
             "file": "react/api-angular/generators/setup-mfe"
@@ -3089,6 +3099,11 @@
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "node/api-angular/generators/ngrx"
+          },
+          {
+            "name": "scam generator",
+            "id": "scam",
+            "file": "node/api-angular/generators/scam"
           },
           {
             "name": "setup-mfe generator",
