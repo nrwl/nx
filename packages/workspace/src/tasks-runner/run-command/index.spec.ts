@@ -748,6 +748,68 @@ describe('createTasksForProjectToRun', () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     }
   });
+
+  it('should forward overrides to tasks with the same target name', () => {
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'prebuild',
+        projects: 'self',
+      },
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: { myFlag: 'flag value' },
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toEqual([
+      {
+        id: 'app1:prebuild',
+        overrides: {},
+        projectRoot: 'app1-root',
+        target: {
+          configuration: undefined,
+          project: 'app1',
+          target: 'prebuild',
+        },
+      },
+      {
+        id: 'lib1:build',
+        overrides: { myFlag: 'flag value' },
+        projectRoot: 'lib1-root',
+        target: {
+          configuration: undefined,
+          project: 'lib1',
+          target: 'build',
+        },
+      },
+      {
+        id: 'app1:build',
+        overrides: { myFlag: 'flag value' },
+        projectRoot: 'app1-root',
+        target: {
+          configuration: undefined,
+          project: 'app1',
+          target: 'build',
+        },
+      },
+    ]);
+  });
 });
 
 describe('getRunner', () => {
