@@ -24,6 +24,7 @@ describe('rollupExecutor', () => {
       targetName: 'build',
     };
     testOptions = {
+      compiler: 'babel',
       entryFile: 'libs/ui/src/index.ts',
       outputPath: 'dist/ui',
       project: 'libs/ui/package.json',

@@ -34,6 +34,7 @@
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
+    "@nrwl/js": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
     "@nrwl/web": "*",

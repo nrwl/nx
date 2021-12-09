@@ -108,6 +108,12 @@
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
+    },
+    "compiler": {
+      "type": "string",
+      "enum": ["babel", "swc"],
+      "default": "babel",
+      "description": "Which compiler to use."
     }
   },
   "required": ["tsConfig", "project", "entryFile", "outputPath"],

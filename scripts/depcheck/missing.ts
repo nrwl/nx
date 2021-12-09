@@ -89,7 +89,11 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
   ],
-  web: ['fibers', 'node-sass'],
+  web: [
+    '@swc/core', // we don't want to bloat the install of @nrwl/web by including @swc/core as a dependency.
+    'fibers',
+    'node-sass',
+  ],
   workspace: [
     'tslint',
     '@angular-devkit/architect',

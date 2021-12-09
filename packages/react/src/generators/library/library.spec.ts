@@ -637,6 +637,20 @@ describe('lib', () => {
     });
   });
 
+  describe('--compiler', () => {
+    it('should install swc dependencies if needed', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        compiler: 'swc',
+      });
+      const packageJson = readJson(appTree, 'package.json');
+
+      expect(packageJson.devDependencies['@swc/core']).toEqual(
+        expect.any(String)
+      );
+    });
+  });
+
   it.each`
     style
     ${'styled-components'}
