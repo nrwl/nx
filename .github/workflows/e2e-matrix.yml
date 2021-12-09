@@ -46,6 +46,7 @@ jobs:
           - e2e-storybook
           - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
           - e2e-react-native,e2e-detox
+          - e2e-add-nx-to-monorepo
         exclude:
           # exclude react-native and detox from ubuntu
           - os: ubuntu-latest

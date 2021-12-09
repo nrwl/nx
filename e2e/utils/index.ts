@@ -91,6 +91,17 @@ export function readProjectConfig(projectName: string): ProjectConfiguration {
   return readJson(path);
 }
 
+export function createNonNxProjectDirectory(name = uniq('proj')) {
+  projName = name;
+  ensureDirSync(tmpProjPath());
+  createFile(
+    'package.json',
+    JSON.stringify({
+      name,
+    })
+  );
+}
+
 export function runCreateWorkspace(
   name: string,
   {
