@@ -208,6 +208,10 @@ The following 10-min video walks you through the steps of adding Nx to a Lerna r
 offers. Although the video uses Lerna, everything said applies to Yarn Workspaces or PNPM. Basically, any time you
 hear "Lerna" you can substitute it for Yarn or PNPM.
 
+When running `npx add-nx-to-monorepo`, a `workspace.json` file is not required (nor created by default). Instead, Nx is able
+to infer the projects in your repository by looking for existing `package.json` files. These can be mixed with `project.json`
+files and traditional configuration settings described in the [configuration guide]({{framework}}/configuration).
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Clarifying Misconceptions
