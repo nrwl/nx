@@ -1,5 +1,6 @@
 import {
   buildWorkspaceConfigurationFromGlobs,
+  deduplicateProjectFiles,
   globForProjectFiles,
   ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
@@ -407,13 +408,17 @@ function inlineProjectConfigurationsWithTree(
  * cannot find them.
  */
 function findCreatedProjects(tree: Tree) {
-  return tree.listChanges().filter((f) => {
-    const fileName = basename(f.path);
-    return (
-      f.type === 'CREATE' &&
-      (fileName === 'project.json' || fileName === 'package.json')
-    );
-  });
+  const files = tree
+    .listChanges()
+    .filter((f) => {
+      const fileName = basename(f.path);
+      return (
+        f.type === 'CREATE' &&
+        (fileName === 'project.json' || fileName === 'package.json')
+      );
+    })
+    .map((x) => x.path);
+  return deduplicateProjectFiles(files);
 }
 
 /**
@@ -442,7 +447,7 @@ function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
     const nxJson = readNxJson(tree);
     const createdProjects = buildWorkspaceConfigurationFromGlobs(
       nxJson,
-      findCreatedProjects(tree).map((x) => x.path),
+      findCreatedProjects(tree),
       (file) => readJson(tree, file)
     ).projects;
     // We already have built a cache

@@ -6,7 +6,7 @@ import type { NxJsonConfiguration } from './nx';
 import { TaskGraph } from './tasks';
 import { logger } from './logger';
 import { sync as globSync } from 'fast-glob';
-import ignore from 'ignore';
+import ignore, { Ignore } from 'ignore';
 import { basename, dirname, join, toNamespacedPath } from 'path';
 import { performance } from 'perf_hooks';
 
@@ -678,12 +678,23 @@ export function globForProjectFiles(root) {
     absolute: false,
     cwd: root,
   });
+  projectGlobCache = deduplicateProjectFiles(globResults, ig);
+  performance.mark('finish-glob-for-projects');
+  performance.measure(
+    'glob-for-project-files',
+    'start-glob-for-projects',
+    'finish-glob-for-projects'
+  );
+  return projectGlobCache;
+}
+
+export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
   const filtered = new Map();
-  globResults.forEach((file) => {
+  files.forEach((file) => {
     const projectFolder = dirname(file);
     const projectFile = basename(file);
     if (
-      ig.ignores(file) || // file is in .gitignore or .nxignore
+      ig?.ignores(file) || // file is in .gitignore or .nxignore
       file === 'package.json' || // file is workspace root package json
       // equivalent project.json file already found
       (filtered.has(projectFolder) && projectFile === 'package.json')
@@ -692,16 +703,9 @@ export function globForProjectFiles(root) {
     }
     filtered.set(projectFolder, projectFile);
   });
-  projectGlobCache = Array.from(filtered.entries()).map(([folder, file]) =>
+  return Array.from(filtered.entries()).map(([folder, file]) =>
     join(folder, file)
   );
-  performance.mark('finish-glob-for-projects');
-  performance.measure(
-    'glob-for-project-files',
-    'start-glob-for-projects',
-    'finish-glob-for-projects'
-  );
-  return projectGlobCache;
 }
 
 export function buildProjectConfigurationFromPackageJson(
