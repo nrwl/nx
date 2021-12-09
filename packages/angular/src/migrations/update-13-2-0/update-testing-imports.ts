@@ -6,6 +6,7 @@ import {
   StringChange,
   Tree,
   visitNotIgnoredFiles,
+  readJson,
 } from '@nrwl/devkit';
 import {
   createSourceFile,
@@ -16,6 +17,9 @@ import {
   ScriptTarget,
 } from 'typescript';
 import { extname } from 'path';
+import { checkAndCleanWithSemver } from '@nrwl/workspace';
+import { gte } from 'semver';
+import { rxjsVersion as defaultRxjsVersion } from '../../utils/versions';
 
 export default async function (tree: Tree) {
   const identifiers = ['hot', 'cold', 'getTestScheduler', 'time'];
@@ -35,11 +39,24 @@ export default async function (tree: Tree) {
   });
 
   if (shouldAddJasmineMarbles) {
+    let rxjsVersion: string;
+    try {
+      rxjsVersion = checkAndCleanWithSemver(
+        'rxjs',
+        readJson(tree, 'package.json').dependencies['rxjs']
+      );
+    } catch {
+      rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
+    }
+    const jasmineMarblesVersion = gte(rxjsVersion, '7.0.0')
+      ? '~0.9.1'
+      : '~0.8.3';
+
     addDependenciesToPackageJson(
       tree,
       {},
       {
-        'jasmine-marbles': '~0.9.1',
+        'jasmine-marbles': jasmineMarblesVersion,
       }
     );
   }
