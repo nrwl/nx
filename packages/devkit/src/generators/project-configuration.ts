@@ -461,11 +461,10 @@ function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
     const projects = { ...staticFSWorkspace.projects, ...createdProjects };
     findDeletedProjects(tree).forEach((file) => {
       const matchingStaticProject = Object.entries(projects).find(
-        ([, config]) => {
+        ([, config]) =>
           typeof config === 'string'
             ? config === dirname(file.path)
-            : config.root === dirname(file.path);
-        }
+            : config.root === dirname(file.path)
       );
 
       if (matchingStaticProject) {
