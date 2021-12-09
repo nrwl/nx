@@ -6,7 +6,7 @@ Many Nx plugins modify these files when generating new code, but you can also mo
 
 ## Project Configuration
 
-### workspace.json / angular.json
+### workspace json / angular json
 
 `workspace.json` is used in all Nx monorepos, regardless of framework. In repositories created from an existing angular project, the file
 may be called `angular.json` instead. To transition, optionally rename the file.
@@ -25,7 +25,7 @@ The `workspace.json` file contains a list of project configurations, as well as 
 ```
 
 - `"version": 2` tells Nx that we are using Nx's format for the `workspace.json` file.
-- `projects` is a map of project name to either the project location, or its configuration. (see `project.json`)[(#project-json)]
+- `projects` is a map of project name to either the project location, or its configuration. (see [`project.json`](#project-json))
 
 > This file is optional as of Nx v13.3.
 > To convert an existing repository to use standalone configurations, run `nx g convert-to-nx-project --all`
@@ -39,7 +39,7 @@ The `workspace.json` file contains a list of project configurations, as well as 
 
 > To upgrade to version 2, change the version number to 2 and run `nx format`.
 
-### project.json
+### project json
 
 The `project.json` file contains configuration specific to it's project. Lets look at the following example:
 
@@ -222,7 +222,7 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 
 Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
 
-### package.json
+### package-json
 
 Nx also infers additional project targets from scripts defined in it's `package.json` file, if it exists. For example, you may have a package.json in the root of your lib like this:
 
@@ -263,7 +263,7 @@ All of the options except `executor` are availble here.
 
 ## Workspace Configuration
 
-### nx.json
+### nx json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
 
@@ -303,8 +303,6 @@ The `nx.json` file contains extra configuration options mostly related to the pr
   }
 }
 ```
-
-> Projects utilizing `project.json` files will not be present in `nx.json`.
 
 **NPM Scope**
 
@@ -398,7 +396,7 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-You can also add dependencies between projects in `workspace.json`. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
+You can also add dependencies between projects in [project configuration](#project-json). For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
 
 ```jsonc
 {
@@ -465,7 +463,7 @@ Default generator options are configured in `nx.json` as well. For instance, the
 }
 ```
 
-## .nxignore
+## nxignore
 
 You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should be completely ignored by Nx.
 
@@ -514,14 +512,14 @@ This will identify any projects with no files in the configured project root fol
 
 ## Recent Changes
 
-### v13.3.0
+### v13-3-0
 
 - `workspace.json` is now optional
   - projects can be inferred completely from `package.json` if `workspace.json` not present
 - Targets are now merged from `package.json` instead of only being used if the project has no targets defined.
 - Targets inferred from `package.json` can now have an extended configuration. See [above](#package-json)
 
-### v13.0.0
+### v13-0-0
 
 Some settings were moved between `workspace.json`/`project.json` and `nx.json`.
 
@@ -529,7 +527,7 @@ Some settings were moved between `workspace.json`/`project.json` and `nx.json`.
 - `cli` and `defaultProject` moved to `nx.json` from `workspace.json`
 - Non-project specific generator defaults in `workspace.json` via the `generators`/`schematics` property moved to `nx.json`
 
-### v12.4.0
+### v12-4-0
 
 Standalone configuration and `project.json` introduced. See [above](#project-json)
 
