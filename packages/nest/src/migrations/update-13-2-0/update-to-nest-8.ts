@@ -78,6 +78,10 @@ function updateVersion(tree: Tree) {
       '@nestjs/testing': nestJsVersion8,
     };
 
+    if (json.devDependencies['jasmine-marbles']) {
+      json.devDependencies['jasmine-marbles'] = '~0.9.1';
+    }
+
     json.dependencies = sortObjectByKeys(json.dependencies);
     json.devDependencies = sortObjectByKeys(json.devDependencies);
 
