@@ -55,3 +55,5 @@ function convertCompletedTasksToOutputFormat(completedTasks: {
     };
   });
 }
+
+export default tasksRunnerV2;
