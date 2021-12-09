@@ -174,15 +174,20 @@ jobs:
       - run:
           name: Check repository
           command: |
+            pids=()
+
             yarn check-imports &
-            P1=$!
+            pids+=($!)
             yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            P2=$!
+            pids+=($!)
             yarn check-commit &
-            P3=$!
+            pids+=($!)
             yarn depcheck &
-            P4=$!
-            wait $P1 $P2 $P3 $P4
+            pids+=($!)
+
+            for pid in "${pids[@]}"; do
+              wait "$pid"
+            done
       - run:
           name: Check Documentation
           command: yarn documentation
@@ -190,14 +195,18 @@ jobs:
       - run:
           name: Run Lint/Test/Build
           command: |
+            pids=()
+
             # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
             (yarn nx workspace-lint; echo "Linting is temporarily disabled until ESLint v8 support is published") &
-            P1=$!
+            pids+=($!)
             yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
-            P2=$!
+            pids+=($!)
             yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
-            P3=$!
-            wait $P1 $P2 $P3
+            pids+=($!)
+            for pid in "${pids[@]}"; do
+              wait "$pid"
+            done
       - run:
           name: Run E2E Tests
           command: |
