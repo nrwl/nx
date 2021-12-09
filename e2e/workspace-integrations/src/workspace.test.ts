@@ -34,6 +34,25 @@ describe('run-one', () => {
     runCLI(`build ${myapp}`);
   }, 10000);
 
+  it('should run targets from package json', () => {
+    const myapp = uniq('app');
+    const target = uniq('script');
+    const expectedOutput = uniq('myEchoedString');
+
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+    updateFile(
+      `apps/${myapp}/package.json`,
+      JSON.stringify({
+        name: myapp,
+        scripts: {
+          [target]: `echo ${expectedOutput}`,
+        },
+      })
+    );
+
+    expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
+  }, 10000);
+
   it('should build a specific project with the daemon enabled', () => {
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
