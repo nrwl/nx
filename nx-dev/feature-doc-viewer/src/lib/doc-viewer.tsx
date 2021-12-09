@@ -30,10 +30,11 @@ export function DocViewer({
   flavorList,
   navIsOpen,
 }: DocumentationFeatureDocViewerProps) {
+  console.log(document.data);
   return (
     <>
       <Head>
-        <title>{document.data.title} - Nx</title>
+        <title>{document.data.title} | Nx</title>
         <meta name="twitter:title" content={document.data.title ?? `Nx`} />
         <meta
           name="twitter:description"
@@ -61,12 +62,7 @@ export function DocViewer({
       </Head>
       <div className="w-full max-w-screen-lg mx-auto">
         <div className="lg:flex">
-          <Sidebar
-            menu={menu}
-            version={version}
-            flavor={flavor}
-            navIsOpen={navIsOpen}
-          />
+          <Sidebar menu={menu} navIsOpen={navIsOpen} />
           <div
             id="content-wrapper"
             className={cx(
