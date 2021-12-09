@@ -46,6 +46,16 @@ Possible values: `dependencies`, `peerDependencies`
 
 When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
 
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+Which compiler to use.
+
 ### deleteOutputPath
 
 Default: `true`
