@@ -30,7 +30,6 @@ export function DocViewer({
   flavorList,
   navIsOpen,
 }: DocumentationFeatureDocViewerProps) {
-  console.log(document.data);
   return (
     <>
       <Head>
