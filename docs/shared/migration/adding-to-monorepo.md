@@ -14,7 +14,7 @@ See it in action (3-minute video):
 `npx add-nx-to-monorepo` does the following:
 
 1. Add Nx to your package.json.
-2. Create `workspace.json` and `nx.json` listing all the projects in the workspace.
+2. Create `nx.json`, containing all of the necessary configuration for Nx (see [Configuration](/{{framework}}/core-concepts/configuration#nx-json)).
 3. Set up a `tsconfig` file mapping all projects in there.
 4. Set up Nx Cloud (if you chose "yes").
 
@@ -76,18 +76,6 @@ If you want to explore what it feels like to develop with Nx, check out:
 ## Troubleshooting
 
 The `add-nx-to-monorepo` command does its best to figure out what projects you have in the repo, but you can always update the list yourself.
-
-For instance, you can add/remove/update projects in `workspace.json`.
-
-```json
-{
-  "version": 2,
-  "projects": {
-    "one": { "root": "packages/one", "type": "library" },
-    "two": { "root": "packages/two", "type": "library" }
-  }
-}
-```
 
 Nx adds a root tsconfig to your repo with something like this:
 
