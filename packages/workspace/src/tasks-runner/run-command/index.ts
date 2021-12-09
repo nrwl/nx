@@ -212,6 +212,7 @@ export function createTasksForProjectToRun(
       },
       defaultDependencyConfigs,
       projectGraph,
+      params.target,
       tasksMap,
       [],
       seenSet
@@ -230,6 +231,7 @@ function addTasksForProjectTarget(
   }: TaskParams,
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {},
   projectGraph: ProjectGraph,
+  originalTargetName: string,
   tasksMap: Map<string, Task>,
   path: string[],
   seenSet: Set<string>
@@ -238,7 +240,7 @@ function addTasksForProjectTarget(
     project,
     target,
     configuration,
-    overrides,
+    overrides: target === originalTargetName ? overrides : {},
     errorIfCannotFindConfiguration,
   });
 
@@ -255,10 +257,12 @@ function addTasksForProjectTarget(
         {
           target,
           configuration,
+          overrides,
         },
         dependencyConfig,
         defaultDependencyConfigs,
         projectGraph,
+        originalTargetName,
         tasksMap,
         path,
         seenSet
@@ -314,10 +318,15 @@ export function createTask({
 
 function addTasksForProjectDependencyConfig(
   project: ProjectGraphNode,
-  { target, configuration }: Pick<TaskParams, 'target' | 'configuration'>,
+  {
+    target,
+    configuration,
+    overrides,
+  }: Pick<TaskParams, 'target' | 'configuration' | 'overrides'>,
   dependencyConfig: TargetDependencyConfig,
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph,
+  originalTargetName: string,
   tasksMap: Map<string, Task>,
   path: string[],
   seenSet: Set<string>
@@ -354,11 +363,12 @@ function addTasksForProjectDependencyConfig(
               project: depProject,
               target: dependencyConfig.target,
               configuration,
-              overrides: {},
+              overrides,
               errorIfCannotFindConfiguration: false,
             },
             defaultDependencyConfigs,
             projectGraph,
+            originalTargetName,
             tasksMap,
             [...path, targetIdentifier],
             seenSet
@@ -370,10 +380,11 @@ function addTasksForProjectDependencyConfig(
 
           addTasksForProjectDependencyConfig(
             depProject,
-            { target, configuration },
+            { target, configuration, overrides },
             dependencyConfig,
             defaultDependencyConfigs,
             projectGraph,
+            originalTargetName,
             tasksMap,
             path,
             seenSet
@@ -387,11 +398,12 @@ function addTasksForProjectDependencyConfig(
         project,
         target: dependencyConfig.target,
         configuration,
-        overrides: {},
+        overrides,
         errorIfCannotFindConfiguration: true,
       },
       defaultDependencyConfigs,
       projectGraph,
+      originalTargetName,
       tasksMap,
       [...path, targetIdentifier],
       seenSet
