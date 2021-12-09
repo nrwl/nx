@@ -5,6 +5,6 @@ export default async function run(
   _context: ExecutorContext
 ): Promise<any> {
   throw new Error(
-    `"@nrwl/linter:lint" was deprecated in v10 and is no longer supported. Update your angular.json to use "@nrwl/linter:eslint" builder instead.`
+    `"@nrwl/linter:lint" was deprecated in v10 and is no longer supported. Update your project configuration to use "@nrwl/linter:eslint" builder instead.`
   );
 }
