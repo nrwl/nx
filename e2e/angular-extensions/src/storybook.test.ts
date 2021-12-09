@@ -58,8 +58,7 @@ describe('Angular Package', () => {
     });
 
     describe('build storybook', () => {
-      // TODO(js): temporarily disabled
-      xit('should execute e2e tests using Cypress running against Storybook', async () => {
+      it('should execute e2e tests using Cypress running against Storybook', async () => {
         if (isNotWindows()) {
           const myapp = uniq('myapp');
           runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
@@ -196,8 +195,7 @@ describe('Angular Package', () => {
         }
       }, 1000000);
 
-      // TODO(js): temporarily disabled
-      xit('should build an Angular based storybook', () => {
+      it('should build an Angular based storybook', () => {
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
         runCLI(
@@ -209,8 +207,7 @@ describe('Angular Package', () => {
         checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
       }, 1000000);
 
-      // TODO(js): temporarily disabled
-      xit('should build an Angular based storybook that references another lib', () => {
+      it('should build an Angular based storybook that references another lib', () => {
         const angularStorybookLib = uniq('test-ui-lib');
         createTestUILib(angularStorybookLib);
         runCLI(
