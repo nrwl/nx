@@ -9,9 +9,11 @@ import { normalizePath } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
 import { readFileSync } from 'fs';
-import ignore from 'ignore';
 import { join, relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
+import { serverLogger } from '@nrwl/workspace/src/core/project-graph/daemon/server/logger';
+import { handleServerProcessTermination } from '@nrwl/workspace/src/core/project-graph/daemon/server/shutdown-utils';
+import { Server } from 'net';
 
 /**
  * This configures the files and directories which we always want to ignore as part of file watching
@@ -27,24 +29,28 @@ import { FULL_OS_SOCKET_PATH } from '../socket-utils';
  */
 const ALWAYS_IGNORE = [
   join(appRootPath, 'node_modules'),
-  join(appRootPath, 'dist'),
   join(appRootPath, '.git'),
   FULL_OS_SOCKET_PATH,
 ];
 
-/**
- * TODO: This utility has been implemented multiple times across the Nx codebase,
- * discuss whether it should be moved to a shared location.
- */
-function getIgnoredGlobs(root: string) {
-  const ig = ignore();
+function getIgnoredGlobs() {
+  return [
+    ...ALWAYS_IGNORE,
+    ...getIgnoredGlobsFromFile(join(appRootPath, '.nxignore')),
+    ...getIgnoredGlobsFromFile(join(appRootPath, '.gitignore')),
+  ];
+}
+
+function getIgnoredGlobsFromFile(file: string): string[] {
   try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
+    return readFileSync(file, 'utf-8')
+      .split('\n')
+      .map((i) => i.trim())
+      .filter((i) => !!i && !i.startsWith('#'))
+      .map((i) => (i.startsWith('/') ? join(appRootPath, i) : i));
+  } catch (e) {
+    return [];
+  }
 }
 
 export type WatcherSubscription = AsyncSubscription;
@@ -54,6 +60,7 @@ export type SubscribeToWorkspaceChangesCallback = (
 ) => Promise<void>;
 
 export async function subscribeToWorkspaceChanges(
+  server: Server,
   cb: SubscribeToWorkspaceChangesCallback
 ): Promise<AsyncSubscription> {
   /**
@@ -62,8 +69,6 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
-
-  let cachedIgnoreGlobs = getIgnoredGlobs(appRootPath);
 
   const subscription = await watcher.subscribe(
     appRootPath,
@@ -93,21 +98,17 @@ export async function subscribeToWorkspaceChanges(
 
       // If the ignore files themselves have changed we need to dynamically update our cached ignoreGlobs
       if (hasIgnoreFileUpdate) {
-        cachedIgnoreGlobs = getIgnoredGlobs(appRootPath);
+        handleServerProcessTermination({
+          server,
+          reason: 'Stopping the daemon the set of ignored files changed.',
+          watcherSubscription: subscription,
+        });
       }
 
-      const nonIgnoredEvents = workspaceRelativeEvents
-        .filter(({ path }) => !!path)
-        .filter(({ path }) => !cachedIgnoreGlobs.ignores(path));
-
-      if (!nonIgnoredEvents || !nonIgnoredEvents.length) {
-        return;
-      }
-
-      cb(null, nonIgnoredEvents);
+      cb(null, workspaceRelativeEvents);
     },
     {
-      ignore: ALWAYS_IGNORE,
+      ignore: getIgnoredGlobs(),
     }
   );
 

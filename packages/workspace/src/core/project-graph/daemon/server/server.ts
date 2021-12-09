@@ -278,6 +278,7 @@ export async function startServer(): Promise<Server> {
 
           if (!watcherSubscription) {
             watcherSubscription = await subscribeToWorkspaceChanges(
+              server,
               handleWorkspaceChanges
             );
             serverLogger.watcherLog(
