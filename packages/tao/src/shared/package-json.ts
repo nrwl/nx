@@ -6,7 +6,7 @@ export type PackageJsonTargetConfiguration = Omit<
 >;
 
 export interface NxProjectPackageJsonConfiguration {
-  targets: Record<string, PackageJsonTargetConfiguration>;
+  targets?: Record<string, PackageJsonTargetConfiguration>;
 }
 
 export interface PackageJson {
@@ -15,21 +15,21 @@ export interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
-  nx: NxProjectPackageJsonConfiguration;
+  nx?: NxProjectPackageJsonConfiguration;
 }
 
 export function buildTargetFromScript(
   script: string,
   nx: NxProjectPackageJsonConfiguration
 ) {
-  const nxTargetConfiguration = nx?.targets[script] || {};
+  const nxTargetConfiguration = nx?.targets?.[script] || {};
 
   return {
+    ...nxTargetConfiguration,
     executor: '@nrwl/workspace:run-script',
     options: {
       ...(nxTargetConfiguration.options || {}),
       script,
     },
-    ...nxTargetConfiguration,
   };
 }
