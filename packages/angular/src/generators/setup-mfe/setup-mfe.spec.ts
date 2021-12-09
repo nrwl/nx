@@ -151,7 +151,7 @@ describe('Init MFE', () => {
     const webpackContents = host.read(`apps/app1/webpack.config.js`, 'utf-8');
 
     expect(webpackContents).toContain(
-      '"remote1": "remote1@http://localhost:4200/remoteEntry.js"'
+      '"remote1": "http://localhost:4200/remoteEntry.js"'
     );
   });
   it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {

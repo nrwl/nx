@@ -32,6 +32,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -40,8 +43,8 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		\\"remote1\\": 'remote1@http://localhost:4201/remoteEntry.js',
-    		\\"remote2\\": 'remote2@http://localhost:4202/remoteEntry.js',
+    		\\"remote1\\": 'http://localhost:4201/remoteEntry.js',
+    		\\"remote2\\": 'http://localhost:4202/remoteEntry.js',
       
       },
       shared: {
@@ -50,6 +53,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),
@@ -90,6 +96,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -98,7 +107,7 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		\\"remote1\\": 'remote1@http://localhost:4200/remoteEntry.js',
+    		\\"remote1\\": 'http://localhost:4200/remoteEntry.js',
       
       },
       shared: {
@@ -107,6 +116,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),
@@ -147,6 +159,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -163,6 +178,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),
@@ -203,6 +221,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -221,6 +242,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),

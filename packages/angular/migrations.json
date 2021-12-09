@@ -126,6 +126,12 @@
       "version": "13.2.0",
       "description": "In Angular version 13, the `teardown` flag in `TestBed` will be enabled by default. This migration automatically opts out existing apps from the new teardown behavior.",
       "factory": "./src/migrations/update-13-2-0/opt-out-testbed-teardown"
+    },
+    "update-mfe-config-to-module-syntax": {
+      "cli": "nx",
+      "version": "13.3.0-beta.0",
+      "description": "In Angular version 13, the ESM became a first class citizen. This means the webpack config generated must be modified to support modules.",
+      "factory": "./src/migrations/update-13-3-0/update-mfe-webpack-config"
     }
   },
   "packageJsonUpdates": {

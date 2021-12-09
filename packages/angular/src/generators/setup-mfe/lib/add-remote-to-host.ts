@@ -31,7 +31,7 @@ export function addRemoteToHost(host: Tree, options: Schema) {
     const endOfPropertiesPos = mfRemotesNode.properties.end;
 
     const updatedConfig = `${hostWebpackConfig.slice(0, endOfPropertiesPos)}
-    \t\t"${options.appName}": '${options.appName}@http://localhost:${
+    \t\t"${options.appName}": 'http://localhost:${
       options.port ?? 4200
     }/remoteEntry.js',${hostWebpackConfig.slice(endOfPropertiesPos)}`;
 
