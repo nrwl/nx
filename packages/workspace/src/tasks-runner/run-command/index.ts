@@ -212,7 +212,7 @@ export function createTasksForProjectToRun(
       },
       defaultDependencyConfigs,
       projectGraph,
-      params.target,
+      project.data.targets?.[params.target]?.executor,
       tasksMap,
       [],
       seenSet
@@ -231,7 +231,7 @@ function addTasksForProjectTarget(
   }: TaskParams,
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {},
   projectGraph: ProjectGraph,
-  originalTargetName: string,
+  originalTargetExecutor: string,
   tasksMap: Map<string, Task>,
   path: string[],
   seenSet: Set<string>
@@ -240,7 +240,10 @@ function addTasksForProjectTarget(
     project,
     target,
     configuration,
-    overrides: target === originalTargetName ? overrides : {},
+    overrides:
+      project.data.targets?.[target]?.executor === originalTargetExecutor
+        ? overrides
+        : {},
     errorIfCannotFindConfiguration,
   });
 
@@ -262,7 +265,7 @@ function addTasksForProjectTarget(
         dependencyConfig,
         defaultDependencyConfigs,
         projectGraph,
-        originalTargetName,
+        originalTargetExecutor,
         tasksMap,
         path,
         seenSet
@@ -326,7 +329,7 @@ function addTasksForProjectDependencyConfig(
   dependencyConfig: TargetDependencyConfig,
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph,
-  originalTargetName: string,
+  originalTargetExecutor: string,
   tasksMap: Map<string, Task>,
   path: string[],
   seenSet: Set<string>
@@ -368,7 +371,7 @@ function addTasksForProjectDependencyConfig(
             },
             defaultDependencyConfigs,
             projectGraph,
-            originalTargetName,
+            originalTargetExecutor,
             tasksMap,
             [...path, targetIdentifier],
             seenSet
@@ -384,7 +387,7 @@ function addTasksForProjectDependencyConfig(
             dependencyConfig,
             defaultDependencyConfigs,
             projectGraph,
-            originalTargetName,
+            originalTargetExecutor,
             tasksMap,
             path,
             seenSet
@@ -403,7 +406,7 @@ function addTasksForProjectDependencyConfig(
       },
       defaultDependencyConfigs,
       projectGraph,
-      originalTargetName,
+      originalTargetExecutor,
       tasksMap,
       [...path, targetIdentifier],
       seenSet
