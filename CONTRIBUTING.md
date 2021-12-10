@@ -222,21 +222,27 @@ The type must be one of the following:
 
 The scope must be one of the following:
 
-- core - anything Nx core specific
-- js - anything related to @nrwl/js package or general js/ts support
-- nxdev - anything related to docs infrastructure
-- nextjs - anything Next specific
-- nest - anything Nest specific
-- node - anything Node specific
-- linter - anything Linter specific
-- react - anything React specific
-- web - anything Web specific
-- storybook - anything Storybook specific
-- testing - anything testing specific (e.g., jest or cypress)
-- repo - anything related to managing the repo itself
 - angular - anything Angular specific
-- misc - misc stuff
+- core - anything Nx core specific
+- dep-graph - anything dep-graph app specific
+- detox - anything Detox specific
 - devkit - devkit-related changes
+- gatsby - anything Gatsby specific
+- express - anything Express specific
+- js - anything related to @nrwl/js package or general js/ts support
+- linter - anything Linter specific
+- nest - anything Nest specific
+- nextjs - anything Next specific
+- nxdev - anything related to docs infrastructure
+- nx-plugin - anything Nx Plugin specific
+- node - anything Node specific
+- react - anything React specific
+- react-native - anything React Native specific
+- repo - anything related to managing the Nx repo itself
+- storybook - anything Storybook specific
+- testing - anything testing specific (e.g., Jest or Cypress)
+- web - anything Web specific
+- misc - misc stuff
 
 ##### Subject and Body
 
