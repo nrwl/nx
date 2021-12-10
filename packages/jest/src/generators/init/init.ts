@@ -70,9 +70,6 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     'ts-jest': tsJestVersion,
   };
 
-  // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
-  // } else if (options.compiler === 'swc') {
-  //   devDeps['@swc/jest'] = swcJestVersion;
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
     // in some cases @nrwl/web will not already be present i.e. node only projects
