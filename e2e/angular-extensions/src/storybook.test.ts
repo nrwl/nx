@@ -21,7 +21,7 @@ describe('Angular Package', () => {
     beforeEach(() => (proj = newProject()));
     afterAll(() => cleanupProject());
 
-    it('should not overwrite global storybook config files', () => {
+    xit('should not overwrite global storybook config files', () => {
       const angularStorybookLib = uniq('test-ui-lib-angular');
       runCLI(
         `generate @nrwl/angular:lib ${angularStorybookLib} --no-interactive`

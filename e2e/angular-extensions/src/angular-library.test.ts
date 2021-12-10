@@ -15,7 +15,7 @@ import {
 import { names } from '@nrwl/devkit';
 import { join } from 'path';
 
-describe('Angular Package', () => {
+xdescribe('Angular Package', () => {
   ['publishable', 'buildable'].forEach((testConfig) => {
     describe(`library builder - ${testConfig}`, () => {
       /**
