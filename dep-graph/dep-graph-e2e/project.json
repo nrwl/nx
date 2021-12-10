@@ -22,11 +22,10 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:lint",
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "linter": "eslint",
-        "tsConfig": ["dep-graph/dep-graph-e2e/tsconfig.e2e.json"],
-        "exclude": ["**/node_modules/**", "!dep-graph/dep-graph-e2e/**/*"]
+        "lintFilePatterns": ["dep-graph/dep-graph-e2e/**/*.ts"]
       }
     }
   },
