@@ -34,6 +34,13 @@
         "parallel": true
       }
     },
+    "sync-documentation": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["nx-dev/nx-dev/public/documentation"],
+      "options": {
+        "command": "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts"
+      }
+    },
     "build-base": {
       "executor": "@nrwl/next:build",
       "outputs": ["{options.outputPath}"],
