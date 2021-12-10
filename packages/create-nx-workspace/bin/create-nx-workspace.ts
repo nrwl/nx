@@ -16,6 +16,7 @@ import {
   getPackageManagerVersion,
   PackageManager,
 } from './package-manager';
+import { validateNpmPackage } from './validate-npm-package';
 
 export enum Preset {
   Empty = 'empty',
@@ -206,10 +207,17 @@ function showHelp() {
 
 async function getConfiguration(parsedArgs) {
   try {
+    let style, appName;
+
     const name = await determineWorkspaceName(parsedArgs);
-    const preset = await determinePreset(parsedArgs);
-    const appName = await determineAppName(preset, parsedArgs);
-    const style = await determineStyle(preset, parsedArgs);
+    let preset = await determineThirdPartyPackage(parsedArgs);
+
+    if (!preset) {
+      preset = await determinePreset(parsedArgs);
+      appName = await determineAppName(preset, parsedArgs);
+      style = await determineStyle(preset, parsedArgs);
+    }
+
     const cli = await determineCli(preset, parsedArgs);
     const nxCloud = await askAboutNxCloud(parsedArgs);
 
@@ -254,6 +262,28 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
       }
       return a.WorkspaceName;
     });
+}
+
+async function determineThirdPartyPackage({ preset }) {
+  if (preset && Object.values(Preset).indexOf(preset) === -1) {
+    const validateResult = validateNpmPackage(preset);
+    if (validateResult.validForNewPackages) {
+      return Promise.resolve(preset);
+    } else {
+      //! Error here
+      output.error({
+        title: 'Invalid preset npm package',
+        bodyLines: [
+          `There was an error with the preset npm package you provided:`,
+          '',
+          ...validateResult.errors,
+        ],
+      });
+      process.exit(1);
+    }
+  } else {
+    return Promise.resolve(null);
+  }
 }
 
 function determinePreset(parsedArgs: any): Promise<Preset> {
@@ -487,6 +517,7 @@ async function createApp(
   const args = unparse(restArgs).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
+
   const command = `new ${name} ${args} --collection=@nrwl/workspace`;
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
