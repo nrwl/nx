@@ -90,7 +90,7 @@ export function createCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   projectGraph: ProjectGraph<any>,
-  tsConfig: { compilerOptions: { paths?: { [p: string]: any } } }
+  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
   const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
     name: p,
@@ -99,7 +99,8 @@ export function createCache(
   const newValue: ProjectGraphCache = {
     version: projectGraph.version || '5.0',
     deps: packageJsonDeps,
-    pathMappings: tsConfig.compilerOptions.paths || {},
+    // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
+    pathMappings: tsConfig.compilerOptions?.paths || {},
     nxJsonPlugins,
     nodes: projectGraph.nodes,
     externalNodes: projectGraph.externalNodes,
