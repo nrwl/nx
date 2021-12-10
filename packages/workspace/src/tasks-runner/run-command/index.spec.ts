@@ -749,7 +749,7 @@ describe('createTasksForProjectToRun', () => {
     }
   });
 
-  it('should forward overrides to tasks with the same target name', () => {
+  it('should forward overrides to tasks with the same target executor', () => {
     projectGraph.nodes.app1.data.targets.build.dependsOn = [
       {
         target: 'prebuild',
@@ -760,11 +760,31 @@ describe('createTasksForProjectToRun', () => {
         projects: 'dependencies',
       },
     ];
-    projectGraph.dependencies.app1.push({
-      type: DependencyType.static,
-      source: 'app1',
-      target: 'lib1',
-    });
+    projectGraph.nodes.app1.data.targets.build.executor = 'executor1';
+    projectGraph.nodes.lib1.data.targets.build.executor = 'executor1';
+    projectGraph.nodes.app1.data.targets.prebuild.executor = 'executor2';
+    projectGraph.nodes.lib2 = {
+      data: {
+        root: 'lib2-root',
+        files: [],
+        targets: { build: { executor: 'executor2' } },
+      },
+      name: 'lib2',
+      type: 'lib',
+    };
+    projectGraph.dependencies.lib2 = [];
+    projectGraph.dependencies.app1.push(
+      {
+        type: DependencyType.static,
+        source: 'app1',
+        target: 'lib1',
+      },
+      {
+        type: DependencyType.static,
+        source: 'app1',
+        target: 'lib2',
+      }
+    );
 
     const tasks = createTasksForProjectToRun(
       [projectGraph.nodes.app1],
@@ -795,6 +815,16 @@ describe('createTasksForProjectToRun', () => {
         target: {
           configuration: undefined,
           project: 'lib1',
+          target: 'build',
+        },
+      },
+      {
+        id: 'lib2:build',
+        overrides: {},
+        projectRoot: 'lib2-root',
+        target: {
+          configuration: undefined,
+          project: 'lib2',
           target: 'build',
         },
       },
