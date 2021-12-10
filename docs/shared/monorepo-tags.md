@@ -247,7 +247,7 @@ We can now restrict projects within the same group to depend on each other based
 
   // nx-enforce-module-boundaries should already exist at the top-level of your config
   "nx-enforce-module-boundaries": [
-    true,
+    "error",
     {
       "allow": [],
       // update depConstraints based on your tags
@@ -304,7 +304,7 @@ A common example of this is for backend projects that use NestJS and frontend pr
 
   // nx-enforce-module-boundaries should already exist at the top-level of your config
   "nx-enforce-module-boundaries": [
-    true,
+    "error",
     {
       "allow": [],
       // update depConstraints based on your tags
@@ -334,7 +334,7 @@ Another common example is ensuring that util libraries stay framework-free by ba
   // ... more ESLint config here
   // nx-enforce-module-boundaries should already exist at the top-level of your config
   "nx-enforce-module-boundaries": [
-    true,
+    "error",
     {
       "allow": [],
       // update depConstraints based on your tags
