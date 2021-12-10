@@ -80,7 +80,7 @@ describe('workspace', () => {
         return domainLibConfig;
       }
       if (path.endsWith('libs/domain/lib4/package.json')) {
-        return { name: 'domain-lib4' };
+        return {};
       }
       throw `${path} not in mock!`;
     });
