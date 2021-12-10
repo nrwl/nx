@@ -10,12 +10,22 @@ export interface NxProjectPackageJsonConfiguration {
 }
 
 export interface PackageJson {
+  // Generic Package.Json Configuration
   name: string;
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+
+  // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;
+
+  // Nx Plugin Configuration
+  generators?: string;
+  schematics?: string;
+  builders?: string;
+  executors?: string;
+  'nx-migrations'?: string;
 }
 
 export function buildTargetFromScript(

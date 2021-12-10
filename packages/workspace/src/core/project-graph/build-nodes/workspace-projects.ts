@@ -6,6 +6,10 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { mergeNpmScriptsWithTargets } from '../../../utilities/project-graph-utils';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import {
+  loadNxPlugins,
+  mergePluginTargetsWithNxTargets,
+} from '@nrwl/tao/src/shared/nx-plugin';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -18,6 +22,11 @@ export function buildWorkspaceProjectNodes(
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
     }
+    p.targets = mergePluginTargetsWithNxTargets(
+      p.root,
+      p.targets,
+      loadNxPlugins(ctx.workspace.plugins)
+    );
     const projectType =
       p.projectType === 'application'
         ? key.endsWith('-e2e')

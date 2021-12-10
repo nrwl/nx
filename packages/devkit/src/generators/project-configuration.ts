@@ -453,8 +453,8 @@ function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
     // We already have built a cache
     if (!staticFSWorkspace) {
       staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
-        readNxJson(tree),
-        [...globForProjectFiles(tree.root)],
+        nxJson,
+        [...globForProjectFiles(tree.root, nxJson)],
         (file) => readJson(tree, file)
       );
     }

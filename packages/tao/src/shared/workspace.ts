@@ -9,6 +9,7 @@ import { sync as globSync } from 'fast-glob';
 import ignore, { Ignore } from 'ignore';
 import { basename, dirname, join, toNamespacedPath } from 'path';
 import { performance } from 'perf_hooks';
+import { loadNxPlugins } from './nx-plugin';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -650,8 +651,24 @@ export function toProjectName(
 }
 
 let projectGlobCache: string[];
-export function globForProjectFiles(root) {
-  if (projectGlobCache) return projectGlobCache;
+let projectGlobCacheKey: string;
+export function globForProjectFiles(root, nxJson?: NxJsonConfiguration) {
+  // Deal w/ Caching
+  const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
+  if (projectGlobCache && cacheKey === projectGlobCacheKey)
+    return projectGlobCache;
+  projectGlobCacheKey = cacheKey;
+
+  // Load plugins
+  const plugins = loadNxPlugins(nxJson?.plugins).filter(
+    (x) => !!x.projectFilePatterns
+  );
+  let combinedProjectGlobPattern = `**/+(project.json|package.json${
+    plugins.length
+      ? '|' + plugins.map((x) => x.projectFilePatterns.join('|')).join('|')
+      : ''
+  })`;
+
   performance.mark('start-glob-for-projects');
   /**
    * This configures the files and directories which we always want to ignore as part of file watching
@@ -679,7 +696,7 @@ export function globForProjectFiles(root) {
     ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
   } catch {}
 
-  const globResults = globSync('**/@(project.json|package.json)', {
+  const globResults = globSync(combinedProjectGlobPattern, {
     ignore: ALWAYS_IGNORE,
     absolute: false,
     cwd: root,
@@ -702,8 +719,8 @@ export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
     if (
       ig?.ignores(file) || // file is in .gitignore or .nxignore
       file === 'package.json' || // file is workspace root package json
-      // equivalent project.json file already found
-      (filtered.has(projectFolder) && projectFile === 'package.json')
+      // project.json or equivallent inferred project file has been found
+      (filtered.has(projectFolder) && projectFile !== 'project.json')
     ) {
       return;
     }
@@ -733,38 +750,30 @@ function buildProjectConfigurationFromPackageJson(
   };
 }
 
+export function inferProjectFromNonStandardFile(
+  file: string,
+  nxJson: NxJsonConfiguration
+): ProjectConfiguration & { name: string } {
+  const directory = dirname(file).split('\\').join('/');
+
+  return {
+    name: toProjectName(file, nxJson),
+    root: directory,
+  };
+}
+
 export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
-  projectFiles: string[] = globForProjectFiles(appRootPath), // making this parameter allows devkit to pick up newly created projects
+  projectFiles: string[] = globForProjectFiles(appRootPath, nxJson), // making this parameter allows devkit to pick up newly created projects
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
 ): WorkspaceJsonConfiguration {
   const projects: Record<string, ProjectConfiguration> = {};
 
   for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');
-    const fileName = basename(file) as 'project.json' | 'package.json';
+    const fileName = basename(file);
 
-    // We can infer projects from package.json files,
-    // if a package.json file is in a directory w/o a `project.json` file.
-    // this results in targets being inferred by Nx from package scripts,
-    // and the root / sourceRoot both being the directory.
-    if (fileName === 'package.json') {
-      const packageJson = readJson(file);
-      if (packageJson && packageJson.nx && packageJson.nx.ignore) continue;
-
-      const { name, ...config } = buildProjectConfigurationFromPackageJson(
-        file,
-        packageJson,
-        nxJson
-      );
-      if (!projects[name]) {
-        projects[name] = config;
-      } else {
-        logger.warn(
-          `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects. See here https://nx.dev/core-concepts/configuration#ignoring-a-project on how to tell Nx to ignore this package.json.`
-        );
-      }
-    } else if (fileName === 'project.json') {
+    if (fileName === 'project.json') {
       //  Nx specific project configuration (`project.json` files) in the same
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
@@ -779,6 +788,40 @@ export function buildWorkspaceConfigurationFromGlobs(
         logger.warn(
           `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects.`
         );
+      }
+    } else {
+      // We can infer projects from package.json files,
+      // if a package.json file is in a directory w/o a `project.json` file.
+      // this results in targets being inferred by Nx from package scripts,
+      // and the root / sourceRoot both being the directory.
+      if (fileName === 'package.json') {
+        const { name, ...config } = buildProjectConfigurationFromPackageJson(
+          file,
+          readJson(file),
+          nxJson
+        );
+        if (!projects[name]) {
+          projects[name] = config;
+        } else {
+          logger.warn(
+            `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects. See here https://nx.dev/core-concepts/configuration#ignoring-a-project on how to tell Nx to ignore this package.json.`
+          );
+        }
+      } else {
+        // This project was created from an nx plugin.
+        // The only thing we know about the file is its location
+        const { name, ...config } = inferProjectFromNonStandardFile(
+          file,
+          nxJson
+        );
+        if (!projects[name]) {
+          projects[name] = config;
+        } else {
+          logger.error(
+            `Skipping project inferred from ${file} since project ${name} already exists.`
+          );
+          throw new Error();
+        }
       }
     }
   }

@@ -12,6 +12,10 @@ import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { mergeNpmScriptsWithTargets } from '../utilities/project-graph-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import {
+  loadNxPlugins,
+  mergePluginTargetsWithNxTargets,
+} from '@nrwl/tao/src/shared/nx-plugin';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -145,12 +149,17 @@ function interpolateOutputs(template: string, data: any): string {
 }
 
 export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
-  const project =
-    workspace.readWorkspaceConfiguration().projects[task.target.project];
+  const workspaceConfiguration = workspace.readWorkspaceConfiguration();
+  const project = workspaceConfiguration.projects[task.target.project];
 
   if (existsSync(join(project.root, 'package.json'))) {
     project.targets = mergeNpmScriptsWithTargets(project.root, project.targets);
   }
+  project.targets = mergePluginTargetsWithNxTargets(
+    project.root,
+    project.targets,
+    loadNxPlugins(workspaceConfiguration.plugins)
+  );
 
   if (!project.targets[task.target.target]) {
     throw new Error(

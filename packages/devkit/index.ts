@@ -31,6 +31,11 @@ export type {
   Workspace,
 } from '@nrwl/tao/src/shared/workspace';
 
+export type {
+  NxPlugin,
+  ProjectTargetConfigurator,
+} from '@nrwl/tao/src/shared/nx-plugin';
+
 /**
  * @category Workspace
  */
@@ -143,7 +148,6 @@ export type {
   ProjectGraphNode,
   ProjectGraphProjectNode,
   ProjectGraphExternalNode,
-  NxPlugin,
   ProjectGraphProcessorContext,
 } from './src/project-graph/interfaces';
 

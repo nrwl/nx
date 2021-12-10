@@ -27,10 +27,13 @@ It only uses language primitives and immutable objects
 
 - [Target](../../angular/nx-devkit/index#target)
 
+### Other Interfaces
+
+- [NxPlugin](../../angular/nx-devkit/index#nxplugin)
+
 ### Project Graph Interfaces
 
 - [FileData](../../angular/nx-devkit/index#filedata)
-- [NxPlugin](../../angular/nx-devkit/index#nxplugin)
 - [ProjectFileMap](../../angular/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../angular/nx-devkit/index#projectgraph)
 - [ProjectGraphDependency](../../angular/nx-devkit/index#projectgraphdependency)
@@ -68,6 +71,10 @@ It only uses language primitives and immutable objects
 ### Generators Type aliases
 
 - [WorkspaceConfiguration](../../angular/nx-devkit/index#workspaceconfiguration)
+
+### Other Type aliases
+
+- [ProjectTargetConfigurator](../../angular/nx-devkit/index#projecttargetconfigurator)
 
 ### Package Manager Type aliases
 
@@ -167,17 +174,21 @@ It only uses language primitives and immutable objects
 
 ---
 
+## Other Interfaces
+
+### NxPlugin
+
+• **NxPlugin**: `Object`
+
+A plugin for Nx
+
+---
+
 ## Project Graph Interfaces
 
 ### FileData
 
 • **FileData**: `Object`
-
----
-
-### NxPlugin
-
-• **NxPlugin**: `Object`
 
 ---
 
@@ -358,6 +369,28 @@ It only uses language primitives and immutable objects
 ### WorkspaceConfiguration
 
 Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../angular/nx-devkit/index#nxjsonconfiguration)\>
+
+---
+
+## Other Type aliases
+
+### ProjectTargetConfigurator
+
+Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../angular/nx-devkit/index#targetconfiguration)\>
+
+#### Type declaration
+
+▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../angular/nx-devkit/index#targetconfiguration)\>
+
+##### Parameters
+
+| Name   | Type     |
+| :----- | :------- |
+| `file` | `string` |
+
+##### Returns
+
+`Record`<`string`, [`TargetConfiguration`](../../angular/nx-devkit/index#targetconfiguration)\>
 
 ---
 
