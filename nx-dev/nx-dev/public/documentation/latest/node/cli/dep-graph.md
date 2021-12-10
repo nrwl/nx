@@ -1,3 +1,8 @@
+---
+title: 'dep-graph - CLI command'
+description: 'Graph dependencies within workspace'
+---
+
 # dep-graph
 
 Graph dependencies within workspace

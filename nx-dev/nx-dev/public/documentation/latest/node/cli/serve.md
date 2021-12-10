@@ -1,3 +1,8 @@
+---
+title: 'serve - CLI command'
+description: 'Builds and serves an application, rebuilding on file changes.'
+---
+
 # serve
 
 Builds and serves an application, rebuilding on file changes.

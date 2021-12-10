@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:setup-mfe generator'
+description: 'Generate a Module Federation configuration for a given Angular application.'
+---
+
 # @nrwl/angular:setup-mfe
 
 Generate a Module Federation configuration for a given Angular application.

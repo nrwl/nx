@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:webpack-server executor'
+description: 'Serves a browser application with support for a custom webpack configuration.'
+---
+
 # @nrwl/angular:webpack-server
 
 Serves a browser application with support for a custom webpack configuration.

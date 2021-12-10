@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:application generator'
+description: 'Create a node application'
+---
+
 # @nrwl/node:application
 
 Create a node application

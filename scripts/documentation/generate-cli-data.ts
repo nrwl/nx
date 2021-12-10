@@ -111,6 +111,10 @@ export async function generateCLIDocumentation() {
 
       function generateMarkdown(command: ParsedCommand) {
         let template = dedent`
+---
+title: "${command.name} - CLI command"
+description: "${command.description}"
+---
 # ${command.name}
 
 ${command.description}

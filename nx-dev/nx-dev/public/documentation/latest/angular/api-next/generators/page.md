@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:page generator'
+description: 'Create a Next.js page component'
+---
+
 # @nrwl/next:page
 
 Create a Next.js page component

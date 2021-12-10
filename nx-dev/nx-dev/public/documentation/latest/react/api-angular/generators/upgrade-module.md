@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:upgrade-module generator'
+description: 'Sets up an Upgrade Module.'
+---
+
 # @nrwl/angular:upgrade-module
 
 Sets up an Upgrade Module.

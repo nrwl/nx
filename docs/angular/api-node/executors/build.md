@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:build executor'
+description: 'Build a Node application'
+---
+
 # @nrwl/node:build
 
 Build a Node application

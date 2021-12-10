@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:bundle executor'
+description: 'Builds the JS bundle.'
+---
+
 # @nrwl/react-native:bundle
 
 Builds the JS bundle.

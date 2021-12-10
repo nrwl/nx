@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:file-server executor'
+description: 'Serve a web application from a folder'
+---
+
 # @nrwl/web:file-server
 
 Serve a web application from a folder

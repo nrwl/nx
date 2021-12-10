@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:application generator'
+description: 'Create a NestJS application.'
+---
+
 # @nrwl/nest:application
 
 Create a NestJS application.

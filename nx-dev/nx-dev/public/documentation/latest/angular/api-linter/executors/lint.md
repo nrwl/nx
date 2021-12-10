@@ -1,3 +1,8 @@
+---
+title: '@nrwl/linter:lint executor'
+description: '**[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0'
+---
+
 # @nrwl/linter:lint
 
 **[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0

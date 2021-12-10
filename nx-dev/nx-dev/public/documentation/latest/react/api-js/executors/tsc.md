@@ -1,3 +1,8 @@
+---
+title: '@nrwl/js:tsc executor'
+description: 'Build a project using TypeScript.'
+---
+
 # @nrwl/js:tsc
 
 Build a project using TypeScript.

@@ -59,6 +59,7 @@ export class DocumentsApi {
     // Set default title if not provided in front-matter section.
     if (!file.data.title) {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
+      file.data.description = file.excerpt ?? path[path.length - 1];
     }
 
     return {

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:convert-tslint-to-eslint generator'
+description: 'Converts a project from TSLint to ESLint.'
+---
+
 # @nrwl/angular:convert-tslint-to-eslint
 
 Converts a project from TSLint to ESLint.

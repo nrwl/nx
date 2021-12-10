@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:move generator'
+description: 'Move an application or library to another folder'
+---
+
 # @nrwl/workspace:move
 
 Move an application or library to another folder

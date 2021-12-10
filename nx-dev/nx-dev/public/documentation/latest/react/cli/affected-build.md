@@ -1,3 +1,8 @@
+---
+title: 'affected:build - CLI command'
+description: 'Build applications and publishable libraries affected by changes'
+---
+
 # affected:build
 
 Build applications and publishable libraries affected by changes

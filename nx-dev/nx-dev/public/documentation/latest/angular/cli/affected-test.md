@@ -1,3 +1,8 @@
+---
+title: 'affected:test - CLI command'
+description: 'Test projects affected by changes'
+---
+
 # affected:test
 
 Test projects affected by changes

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:webpack-browser executor'
+description: 'Builds a browser application with support for incremental builds and custom webpack configuration.'
+---
+
 # @nrwl/angular:webpack-browser
 
 Builds a browser application with support for incremental builds and custom webpack configuration.

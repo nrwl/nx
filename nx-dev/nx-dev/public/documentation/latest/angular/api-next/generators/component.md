@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:component generator'
+description: 'Create a React component'
+---
+
 # @nrwl/next:component
 
 Create a React component

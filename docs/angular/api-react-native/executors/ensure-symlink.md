@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:ensure-symlink executor'
+description: "Ensure workspace node_modules is symlink under app's node_modules folder."
+---
+
 # @nrwl/react-native:ensure-symlink
 
 Ensure workspace node_modules is symlink under app's node_modules folder.

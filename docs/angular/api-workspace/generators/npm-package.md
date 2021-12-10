@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:npm-package generator'
+description: 'Create a minimal npm package'
+---
+
 # @nrwl/workspace:npm-package
 
 Create a minimal npm package

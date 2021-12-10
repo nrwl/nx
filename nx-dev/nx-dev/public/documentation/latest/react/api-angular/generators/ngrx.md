@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:ngrx generator'
+description: 'Adds NgRx support to an application or library.'
+---
+
 # @nrwl/angular:ngrx
 
 Adds NgRx support to an application or library.

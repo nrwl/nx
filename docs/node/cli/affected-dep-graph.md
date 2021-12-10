@@ -1,3 +1,8 @@
+---
+title: 'affected:dep-graph - CLI command'
+description: 'Graph dependencies affected by changes'
+---
+
 # affected:dep-graph
 
 Graph dependencies affected by changes

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:redux generator'
+description: 'Create a redux slice for a project'
+---
+
 # @nrwl/react:redux
 
 Create a redux slice for a project

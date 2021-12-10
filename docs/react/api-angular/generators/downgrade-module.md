@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:downgrade-module generator'
+description: 'Sets up a Downgrade Module.'
+---
+
 # @nrwl/angular:downgrade-module
 
 Sets up a Downgrade Module.

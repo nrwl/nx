@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:middleware generator'
+description: 'Run the `middleware` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:middleware
 
 Run the `middleware` NestJS generator with Nx project support.
