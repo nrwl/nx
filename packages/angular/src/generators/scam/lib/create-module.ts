@@ -6,6 +6,7 @@ import {
   joinPathFragments,
   names,
   readWorkspaceConfiguration,
+  normalizePath,
 } from '@nrwl/devkit';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { createSourceFile, ScriptTarget } from 'typescript';
@@ -21,7 +22,8 @@ export function createScam(tree: Tree, schema: Schema) {
   const componentFileName = `${componentNames.fileName}.${
     schema.type ?? 'component'
   }`;
-  const componentDirectory = schema.flat
+
+  let componentDirectory = schema.flat
     ? joinPathFragments(
         projectConfig.sourceRoot,
         projectConfig.projectType === 'application' ? 'app' : 'lib'
@@ -31,6 +33,13 @@ export function createScam(tree: Tree, schema: Schema) {
         projectConfig.projectType === 'application' ? 'app' : 'lib',
         componentNames.fileName
       );
+
+  if (schema.path) {
+    componentDirectory = schema.flat
+      ? normalizePath(schema.path)
+      : joinPathFragments(schema.path, componentNames.fileName);
+  }
+
   const componentFilePath = joinPathFragments(
     componentDirectory,
     `${componentFileName}.ts`
