@@ -13,7 +13,7 @@ describe('Storybook schematics', () => {
   let reactStorybookLib: string;
   let proj: string;
 
-  beforeEach(() => {
+  beforeAll(() => {
     proj = newProject();
     reactStorybookLib = uniq('test-ui-lib-react');
 
@@ -105,7 +105,7 @@ describe('Storybook schematics', () => {
       );
 
       // build React lib
-      runCLI(`run ${reactStorybookLib}:build-storybook`);
+      runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
     }, 1000000);
   });
