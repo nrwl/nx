@@ -24,8 +24,10 @@ describe('component', () => {
       style: 'css',
     });
 
-    expect(tree.exists('apps/my-app/pages/hello.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/pages/hello.module.css')).toBeTruthy();
+    expect(tree.exists('apps/my-app/pages/hello/hello.tsx')).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/pages/hello/hello.module.css')
+    ).toBeTruthy();
   });
 
   it('should support dynamic routes and directories', async () => {
@@ -36,13 +38,15 @@ describe('component', () => {
       style: 'css',
     });
 
-    expect(tree.exists('apps/my-app/pages/posts/[dynamic].tsx')).toBeTruthy();
     expect(
-      tree.exists('apps/my-app/pages/posts/[dynamic].module.css')
+      tree.exists('apps/my-app/pages/posts/[dynamic]/[dynamic].tsx')
+    ).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/pages/posts/[dynamic]/[dynamic].module.css')
     ).toBeTruthy();
 
     const content = tree
-      .read('apps/my-app/pages/posts/[dynamic].tsx')
+      .read('apps/my-app/pages/posts/[dynamic]/[dynamic].tsx')
       .toString();
     expect(content).toMatch(/DynamicProps/);
   });

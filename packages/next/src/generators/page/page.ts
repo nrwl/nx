@@ -19,7 +19,7 @@ export async function pageGenerator(host: Tree, options: Schema) {
     classComponent: false,
     routing: false,
     skipTests: !options.withTests,
-    flat: true,
+    flat: !!options.flat,
   });
 
   const styledTask = addStyleDependencies(host, options.style);
