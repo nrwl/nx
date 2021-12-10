@@ -1,6 +1,6 @@
 # @nrwl/angular:scam
 
-Generate a component with an accompanying Single Angular Module Component (SCAM).
+Generate a component with an accompanying Single Component Angular Module (SCAM).
 
 ## Usage
 

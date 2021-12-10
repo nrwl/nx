@@ -329,4 +329,130 @@ describe('Create module in the tree', () => {
       export class ExampleRandomModule {}"
     `);
   });
+
+  it('should place the component and scam in the correct folder when --path is used', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'example',
+      project: 'app1',
+      skipImport: true,
+      export: false,
+      flat: false,
+      path: 'apps/app1/src/app/random',
+    });
+
+    // ACT
+    createScam(tree, {
+      name: 'example',
+      project: 'app1',
+      flat: false,
+      path: 'apps/app1/src/app/random',
+      inlineScam: true,
+    });
+
+    // ASSERT
+    const componentModuleSource = tree.read(
+      'apps/app1/src/app/random/example/example.component.ts',
+      'utf-8'
+    );
+    expect(componentModuleSource).toMatchInlineSnapshot(`
+      "import { Component, OnInit, NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Component({
+        selector: 'example',
+        templateUrl: './example.component.html',
+        styleUrls: ['./example.component.css']
+      })
+      export class ExampleComponent implements OnInit {
+
+        constructor() { }
+
+        ngOnInit(): void {
+        }
+
+      }
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleComponent],
+        exports: [ExampleComponent],
+      })
+      export class ExampleComponentModule {}"
+    `);
+  });
+
+  it('should place the component and scam in the correct folder when --path and --flat is used', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'example',
+      project: 'app1',
+      skipImport: true,
+      export: false,
+      flat: true,
+      path: 'apps/app1/src/app/random',
+    });
+
+    // ACT
+    createScam(tree, {
+      name: 'example',
+      project: 'app1',
+      flat: true,
+      path: 'apps/app1/src/app/random',
+      inlineScam: true,
+    });
+
+    // ASSERT
+    const componentModuleSource = tree.read(
+      'apps/app1/src/app/random/example.component.ts',
+      'utf-8'
+    );
+    expect(componentModuleSource).toMatchInlineSnapshot(`
+      "import { Component, OnInit, NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Component({
+        selector: 'example',
+        templateUrl: './example.component.html',
+        styleUrls: ['./example.component.css']
+      })
+      export class ExampleComponent implements OnInit {
+
+        constructor() { }
+
+        ngOnInit(): void {
+        }
+
+      }
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleComponent],
+        exports: [ExampleComponent],
+      })
+      export class ExampleComponentModule {}"
+    `);
+  });
 });

@@ -1,11 +1,20 @@
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { formatFiles } from '@nrwl/devkit';
+import {
+  formatFiles,
+  readWorkspaceConfiguration,
+  readProjectConfiguration,
+  normalizePath,
+} from '@nrwl/devkit';
 import { createScam } from './lib/create-module';
+import { normalize } from 'path';
 
 export async function scamGenerator(tree: Tree, schema: Schema) {
   const { inlineScam, ...options } = schema;
+
+  checkPathUnderProjectRoot(tree, options);
+
   const angularComponentSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'component'
@@ -19,6 +28,27 @@ export async function scamGenerator(tree: Tree, schema: Schema) {
   createScam(tree, schema);
 
   await formatFiles(tree);
+}
+
+function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
+  if (!options.path) {
+    return;
+  }
+
+  const project =
+    options.project ?? readWorkspaceConfiguration(tree).defaultProject;
+  const { root } = readProjectConfiguration(tree, project);
+
+  let pathToComponent = normalizePath(options.path);
+  pathToComponent = pathToComponent.startsWith('/')
+    ? pathToComponent.slice(1)
+    : pathToComponent;
+
+  if (!pathToComponent.startsWith(normalize(root))) {
+    throw new Error(
+      `The path provided for the SCAM (${options.path}) does not exist under the project root (${root}).`
+    );
+  }
 }
 
 export default scamGenerator;
