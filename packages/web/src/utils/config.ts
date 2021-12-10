@@ -72,7 +72,7 @@ export function getBaseWebpackPartial(
             fullySpecified: false,
           },
         },
-        {
+        options.compiler === 'babel' && {
           test: /\.([jt])sx?$/,
           loader: join(__dirname, 'web-babel-loader'),
           exclude: /node_modules/,
@@ -87,7 +87,27 @@ export function getBaseWebpackPartial(
             cacheCompression: false,
           },
         },
-      ],
+        options.compiler === 'swc' && {
+          test: /\.([jt])sx?$/,
+          loader: require.resolve('swc-loader'),
+          exclude: /node_modules/,
+          options: {
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                decorators: true,
+                tsx: true,
+              },
+              transform: {
+                react: {
+                  runtime: 'automatic',
+                },
+              },
+              loose: true,
+            },
+          },
+        },
+      ].filter(Boolean),
     },
     resolve: {
       extensions,
@@ -123,7 +143,7 @@ export function getBaseWebpackPartial(
     },
   };
 
-  if (isScriptOptimizeOn) {
+  if (options.compiler !== 'swc' && isScriptOptimizeOn) {
     webpackConfig.optimization = {
       sideEffects: false,
       minimizer: [

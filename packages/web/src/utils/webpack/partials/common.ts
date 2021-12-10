@@ -8,13 +8,11 @@ import { ExtraEntryPoint, WebpackConfigOptions } from '../../shared-models';
 import { BuildBrowserFeatures } from '../build-browser-features';
 import { getOutputHashFormat } from '../../hash-format';
 import { normalizeExtraEntryPoints } from '../../normalize';
-import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import { findAllNodeModules, findUp } from '../../fs';
+import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 const ProgressPlugin = require('webpack/lib/ProgressPlugin');
-const TerserPlugin = require('terser-webpack-plugin');
 
-// tslint:disable-next-line:no-big-function
 export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
   const { ContextReplacementPlugin } = webpack;
 
@@ -205,52 +203,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       new CssMinimizerPlugin({
         test: /\.(?:css|scss|sass|less|styl)$/,
       })
-    );
-  }
-
-  if (scriptsOptimization) {
-    // TODO: Investigate why this fails for some packages: wco.supportES2015 ? 6 : 5;
-    const terserEcma = 5;
-
-    const terserOptions = {
-      warnings: !!buildOptions.verbose,
-      safari10: true,
-      output: {
-        ecma: terserEcma,
-        comments: false,
-        webkit: true,
-      },
-      // On server, we don't want to compress anything. We still set the ngDevMode = false for it
-      // to remove dev code, and ngI18nClosureMode to remove Closure compiler i18n code
-      compress: {
-        ecma: terserEcma,
-        // TODO(jack): Investigate options to enable further optimizations
-        // pure_getters: true,
-        // PURE comments work best with 3 passes.
-        // See https://github.com/webpack/webpack/issues/2899#issuecomment-317425926.
-        // passes: 3,
-      },
-      mangle: true,
-    };
-
-    const es5TerserOptions = {
-      ...terserOptions,
-      compress: {
-        ...terserOptions.compress,
-        ecma: 5,
-      },
-      output: {
-        ...terserOptions.output,
-        ecma: 5,
-      },
-    };
-
-    extraMinimizers.push(
-      new TerserPlugin({ terserOptions }),
-
-      // Script bundles are fully optimized here in one step since they are never downleveled.
-      // They are shared between ES2015 & ES5 outputs so must support ES5.
-      new TerserPlugin({ terserOptions: es5TerserOptions })
     );
   }
 

@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   formatFiles,
@@ -25,6 +26,8 @@ import { jestProjectGenerator } from '@nrwl/jest';
 
 import { WebWebpackExecutorOptions } from '../../executors/webpack/webpack.impl';
 import { Schema } from './schema';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+import { swcLoaderVersion } from '../../utils/versions';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -52,6 +55,7 @@ function addBuildTarget(
 ): ProjectConfiguration {
   const buildOptions: WebWebpackExecutorOptions = {
     outputPath: joinPathFragments('dist', options.appProjectRoot),
+    compiler: options.compiler ?? 'babel',
     index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
     baseHref: '/',
     main: joinPathFragments(options.appProjectRoot, 'src/main.ts'),
@@ -220,6 +224,15 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       babelJest: options.babelJest,
     });
     tasks.push(jestTask);
+  }
+
+  if (options.compiler === 'swc') {
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      {},
+      { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
+    );
+    tasks.push(installTask);
   }
 
   setDefaults(host, options);

@@ -10,6 +10,7 @@ describe('normalizeBuildOptions', () => {
 
   beforeEach(() => {
     testOptions = {
+      compiler: 'babel',
       main: 'apps/nodeapp/src/main.ts',
       tsConfig: 'apps/nodeapp/tsconfig.app.json',
       outputPath: 'dist/apps/nodeapp',

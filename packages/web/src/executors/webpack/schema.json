@@ -16,6 +16,12 @@
       "type": "string",
       "description": "The name of the Typescript configuration file."
     },
+    "compiler": {
+      "type": "string",
+      "description": "The compiler to use",
+      "enum": ["babel", "swc"],
+      "default": "babel"
+    },
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files."

@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
 import { bufferCount, mergeScan, switchMap, tap } from 'rxjs/operators';
@@ -131,6 +131,18 @@ export async function* run(
   process.env.NODE_ENV ||= 'production';
 
   const metadata = context.workspace.projects[context.projectName];
+
+  if (options.compiler === 'swc') {
+    try {
+      require.resolve('swc-loader');
+      require.resolve('@swc/core');
+    } catch {
+      logger.error(
+        `Missing SWC dependencies: @swc/core, swc-loader. Make sure you install them first.`
+      );
+      return { success: false };
+    }
+  }
 
   if (!options.buildLibsFromSource && context.targetName) {
     const { dependencies } = calculateProjectDependencies(

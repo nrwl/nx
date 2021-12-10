@@ -40,6 +40,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
+      compiler: options.compiler ?? 'babel',
       outputPath: joinPathFragments('dist', options.appProjectRoot),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',

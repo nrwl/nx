@@ -43,6 +43,12 @@
         ]
       }
     },
+    "compiler": {
+      "type": "string",
+      "description": "The compiler to use",
+      "enum": ["babel", "swc"],
+      "default": "babel"
+    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
