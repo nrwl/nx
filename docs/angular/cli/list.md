@@ -1,3 +1,8 @@
+---
+title: 'list - CLI command'
+description: 'Lists installed plugins, capabilities of installed plugins and other available plugins.'
+---
+
 # list
 
 Lists installed plugins, capabilities of installed plugins and other available plugins.

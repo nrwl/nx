@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nx-plugin:e2e executor'
+description: 'Creates and runs the e2e tests for an Nx Plugin.'
+---
+
 # @nrwl/nx-plugin:e2e
 
 Creates and runs the e2e tests for an Nx Plugin.

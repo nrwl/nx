@@ -75,30 +75,34 @@ function generateSchematicList(
 
 function generateTemplate(
   framework: Framework,
-  builder
+  executor
 ): { name: string; template: string } {
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   const cliCommand = 'nx';
 
   let template = dedent`
-    # ${builder.collectionName}:${builder.name}
-    ${builder.description}
+---
+title: "${executor.collectionName}:${executor.name} executor"
+description: "${executor.description}"
+---
+# ${executor.collectionName}:${executor.name}
+${executor.description}
 
-    Options can be configured in \`${filename}\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
-    \n`;
+Options can be configured in \`${filename}\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
+\n`;
 
-  if (builder.examplesFileFullPath) {
+  if (executor.examplesFileFullPath) {
     template += `## Examples\n`;
-    let examples = readFileSync(builder.examplesFileFullPath)
+    let examples = readFileSync(executor.examplesFileFullPath)
       .toString()
       .replace(/<%= cli %>/gm, cliCommand);
     template += dedent`${examples}\n`;
   }
 
-  if (Array.isArray(builder.options) && !!builder.options.length) {
+  if (Array.isArray(executor.options) && !!executor.options.length) {
     template += '## Options';
 
-    builder.options
+    executor.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
       .sort((a, b) => sortByBooleanFunction(a.required, b.required))
       .forEach((option) => {
@@ -157,7 +161,7 @@ function generateTemplate(
       });
   }
 
-  return { name: builder.name, template };
+  return { name: executor.name, template };
 }
 
 export async function generateExecutorsDocumentation() {

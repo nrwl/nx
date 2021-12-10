@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:karma generator'
+description: 'Adds Karma configuration to a workspace.'
+---
+
 # @nrwl/angular:karma
 
 Adds Karma configuration to a workspace.

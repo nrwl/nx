@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:dev-server executor'
+description: 'Serve a web application'
+---
+
 # @nrwl/web:dev-server
 
 Serve a web application

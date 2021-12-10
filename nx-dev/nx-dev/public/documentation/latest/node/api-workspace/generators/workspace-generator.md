@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:workspace-generator generator'
+description: 'Generates a workspace generator'
+---
+
 # @nrwl/workspace:workspace-generator
 
 Generates a workspace generator

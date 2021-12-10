@@ -1,3 +1,8 @@
+---
+title: '@nrwl/gatsby:component generator'
+description: 'Create a component'
+---
+
 # @nrwl/gatsby:component
 
 Create a component

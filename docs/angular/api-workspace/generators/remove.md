@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:remove generator'
+description: 'Remove an application or library'
+---
+
 # @nrwl/workspace:remove
 
 Remove an application or library

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:storybook-migrate-defaults-5-to-6 generator'
+description: 'Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.'
+---
+
 # @nrwl/angular:storybook-migrate-defaults-5-to-6
 
 Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.

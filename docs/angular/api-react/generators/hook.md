@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:hook generator'
+description: 'Create a hook'
+---
+
 # @nrwl/react:hook
 
 Create a hook

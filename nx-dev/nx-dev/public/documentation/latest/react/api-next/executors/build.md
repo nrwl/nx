@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:build executor'
+description: 'Build a Next.js app'
+---
+
 # @nrwl/next:build
 
 Build a Next.js app

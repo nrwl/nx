@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:sync-deps executor'
+description: 'Syncs dependencies to package.json (required for autolinking).'
+---
+
 # @nrwl/react-native:sync-deps
 
 Syncs dependencies to package.json (required for autolinking).

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:component-story generator'
+description: 'Generate storybook story for a react component'
+---
+
 # @nrwl/react:component-story
 
 Generate storybook story for a react component

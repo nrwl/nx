@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:interface generator'
+description: 'Run the `interface` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:interface
 
 Run the `interface` NestJS generator with Nx project support.

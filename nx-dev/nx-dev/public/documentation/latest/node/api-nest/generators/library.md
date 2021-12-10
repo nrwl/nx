@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:library generator'
+description: 'Create a new NestJS library.'
+---
+
 # @nrwl/nest:library
 
 Create a new NestJS library.

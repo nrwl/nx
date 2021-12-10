@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:module generator'
+description: 'Run the `module` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:module
 
 Run the `module` NestJS generator with Nx project support.

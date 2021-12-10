@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:karma-project generator'
+description: 'Adds Karma configuration to a project.'
+---
+
 # @nrwl/angular:karma-project
 
 Adds Karma configuration to a project.

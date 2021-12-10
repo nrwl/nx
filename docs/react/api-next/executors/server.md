@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:server executor'
+description: 'Serve a Next.js app'
+---
+
 # @nrwl/next:server
 
 Serve a Next.js app

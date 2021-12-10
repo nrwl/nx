@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:export executor'
+description: 'Export a Next.js app. The exported application is located at dist/$outputPath/exported.'
+---
+
 # @nrwl/next:export
 
 Export a Next.js app. The exported application is located at dist/$outputPath/exported.

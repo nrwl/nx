@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:stories generator'
+description: 'Creates stories/specs for all components declared in a project.'
+---
+
 # @nrwl/angular:stories
 
 Creates stories/specs for all components declared in a project.

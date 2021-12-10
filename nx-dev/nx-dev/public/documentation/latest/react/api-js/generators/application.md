@@ -1,3 +1,8 @@
+---
+title: '@nrwl/js:application generator'
+description: 'Create a application'
+---
+
 # @nrwl/js:application
 
 Create a application

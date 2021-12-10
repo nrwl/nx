@@ -1,3 +1,8 @@
+---
+title: '@nrwl/gatsby:page generator'
+description: 'Create a page'
+---
+
 # @nrwl/gatsby:page
 
 Create a page

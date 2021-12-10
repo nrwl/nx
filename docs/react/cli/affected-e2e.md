@@ -1,3 +1,8 @@
+---
+title: 'affected:e2e - CLI command'
+description: 'Run e2e tests for the applications affected by changes'
+---
+
 # affected:e2e
 
 Run e2e tests for the applications affected by changes

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:pipe generator'
+description: 'Run the `pipe` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:pipe
 
 Run the `pipe` NestJS generator with Nx project support.

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/gatsby:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/gatsby:application
 
 Create an application

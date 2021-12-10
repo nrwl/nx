@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:web-worker generator'
+description: 'Creates a Web Worker.'
+---
+
 # @nrwl/angular:web-worker
 
 Creates a Web Worker.

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:application generator'
+description: 'Create a Next.js application'
+---
+
 # @nrwl/next:application
 
 Create a Next.js application

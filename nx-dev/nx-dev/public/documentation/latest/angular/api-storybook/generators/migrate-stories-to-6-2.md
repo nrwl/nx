@@ -1,3 +1,8 @@
+---
+title: '@nrwl/storybook:migrate-stories-to-6-2 generator'
+description: 'Migrate stories syntax to 6.2'
+---
+
 # @nrwl/storybook:migrate-stories-to-6-2
 
 Migrate stories syntax to 6.2

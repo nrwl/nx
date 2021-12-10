@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:resolver generator'
+description: 'Run the `resolver` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:resolver
 
 Run the `resolver` NestJS generator with Nx project support.

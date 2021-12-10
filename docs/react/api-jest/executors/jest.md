@@ -1,3 +1,8 @@
+---
+title: '@nrwl/jest:jest executor'
+description: 'Run Jest unit tests'
+---
+
 # @nrwl/jest:jest
 
 Run Jest unit tests
