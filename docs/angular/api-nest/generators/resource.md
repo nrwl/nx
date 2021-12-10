@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:resource generator'
+description: 'Run the `resource` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:resource
 
 Run the `resource` NestJS generator with Nx project support.

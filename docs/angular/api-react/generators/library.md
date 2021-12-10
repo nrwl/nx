@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/react:library
 
 Create a library

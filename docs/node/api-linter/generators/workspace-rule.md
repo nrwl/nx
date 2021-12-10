@@ -1,3 +1,8 @@
+---
+title: '@nrwl/linter:workspace-rule generator'
+description: 'Create a new workspace ESLint rule'
+---
+
 # @nrwl/linter:workspace-rule
 
 Create a new workspace ESLint rule

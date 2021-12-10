@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:webpack executor'
+description: 'Build an application using webpack'
+---
+
 # @nrwl/web:webpack
 
 Build an application using webpack

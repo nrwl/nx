@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:rollup executor'
+description: 'Package a library using rollup'
+---
+
 # @nrwl/web:rollup
 
 Package a library using rollup

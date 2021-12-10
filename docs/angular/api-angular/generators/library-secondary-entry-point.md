@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:library-secondary-entry-point generator'
+description: 'Creates a secondary entry point for an Angular publishable library.'
+---
+
 # @nrwl/angular:library-secondary-entry-point
 
 Creates a secondary entry point for an Angular publishable library.

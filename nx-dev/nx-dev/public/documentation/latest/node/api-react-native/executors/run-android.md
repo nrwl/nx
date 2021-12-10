@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:run-android executor'
+description: 'Runs Android application.'
+---
+
 # @nrwl/react-native:run-android
 
 Runs Android application.

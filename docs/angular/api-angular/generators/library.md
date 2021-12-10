@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:library generator'
+description: 'Creates an Angular library.'
+---
+
 # @nrwl/angular:library
 
 Creates an Angular library.

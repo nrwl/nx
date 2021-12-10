@@ -1,3 +1,8 @@
+---
+title: '@nrwl/cypress:cypress executor'
+description: 'Run Cypress e2e tests'
+---
+
 # @nrwl/cypress:cypress
 
 Run Cypress e2e tests

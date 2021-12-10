@@ -1,3 +1,8 @@
+---
+title: 'e2e - CLI command'
+description: 'Builds and serves an app, then runs end-to-end tests using the configured E2E test runner.'
+---
+
 # e2e
 
 Builds and serves an app, then runs end-to-end tests using the configured E2E test runner.

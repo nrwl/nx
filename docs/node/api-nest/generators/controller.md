@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:controller generator'
+description: 'Run the `controller` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:controller
 
 Run the `controller` NestJS generator with Nx project support.

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/detox:application generator'
+description: 'Create a detox application'
+---
+
 # @nrwl/detox:application
 
 Create a detox application

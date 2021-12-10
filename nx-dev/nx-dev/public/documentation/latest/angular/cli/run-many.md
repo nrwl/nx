@@ -1,3 +1,8 @@
+---
+title: 'run-many - CLI command'
+description: 'Run target for multiple listed projects'
+---
+
 # run-many
 
 Run target for multiple listed projects

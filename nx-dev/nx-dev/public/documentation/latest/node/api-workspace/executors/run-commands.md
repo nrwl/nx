@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:run-commands executor'
+description: 'Run any custom commands with Nx'
+---
+
 # @nrwl/workspace:run-commands
 
 Run any custom commands with Nx

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:ng-packagr-lite executor'
+description: 'Builds a library with support for incremental builds.'
+---
+
 # @nrwl/angular:ng-packagr-lite
 
 Builds a library with support for incremental builds.

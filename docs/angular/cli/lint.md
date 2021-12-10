@@ -1,3 +1,8 @@
+---
+title: 'lint - CLI command'
+description: 'Runs linting tools on application code in a given project folder using the configured linter.'
+---
+
 # lint
 
 Runs linting tools on application code in a given project folder using the configured linter.

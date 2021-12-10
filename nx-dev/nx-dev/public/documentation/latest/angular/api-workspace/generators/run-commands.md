@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:run-commands generator'
+description: 'Generates a target to run any command in the terminal'
+---
+
 # @nrwl/workspace:run-commands
 
 Generates a target to run any command in the terminal

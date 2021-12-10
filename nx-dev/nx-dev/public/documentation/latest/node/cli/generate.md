@@ -1,3 +1,8 @@
+---
+title: 'generate - CLI command'
+description: 'Runs a generator that creates and/or modifies files based on a generator from a collection.'
+---
+
 # generate
 
 Runs a generator that creates and/or modifies files based on a generator from a collection.

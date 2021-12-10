@@ -1,3 +1,8 @@
+---
+title: 'affected:libs - CLI command'
+description: 'Print libraries affected by changes'
+---
+
 # affected:libs
 
 Print libraries affected by changes

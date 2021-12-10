@@ -1,3 +1,8 @@
+---
+title: 'affected:lint - CLI command'
+description: 'Lint projects affected by changes'
+---
+
 # affected:lint
 
 Lint projects affected by changes

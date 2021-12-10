@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:storybook-migrate-stories-to-6-2 generator'
+description: 'Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.'
+---
+
 # @nrwl/angular:storybook-migrate-stories-to-6-2
 
 Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.

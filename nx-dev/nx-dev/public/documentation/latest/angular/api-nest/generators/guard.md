@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:guard generator'
+description: 'Run the `guard` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:guard
 
 Run the `guard` NestJS generator with Nx project support.

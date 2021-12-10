@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:package executor'
+description: 'Package a Node library'
+---
+
 # @nrwl/node:package
 
 Package a Node library

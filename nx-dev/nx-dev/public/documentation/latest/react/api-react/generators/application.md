@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/react:application
 
 Create an application

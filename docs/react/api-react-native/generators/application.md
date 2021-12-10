@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/react-native:application
 
 Create an application

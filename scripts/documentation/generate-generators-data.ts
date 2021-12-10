@@ -70,16 +70,21 @@ function generateTemplate(
   const cliCommand = 'nx';
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   let template = dedent`
-    # ${schematic.collectionName}:${schematic.name} ${
+---
+title: "${schematic.collectionName}:${schematic.name} generator"
+description: "${schematic.description}"
+---
+# ${schematic.collectionName}:${schematic.name} ${
     schematic.hidden ? '[hidden]' : ''
   }
-    ${schematic.description}
+
+${schematic.description}
   
-    ## Usage
-    \`\`\`bash
-    ${cliCommand} generate ${schematic.name} ...
-    \`\`\`
-    `;
+## Usage
+\`\`\`bash
+${cliCommand} generate ${schematic.name} ...
+\`\`\`
+`;
 
   if (schematic.alias) {
     template += dedent`

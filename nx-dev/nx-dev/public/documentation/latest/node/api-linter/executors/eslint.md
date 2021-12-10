@@ -1,3 +1,8 @@
+---
+title: '@nrwl/linter:eslint executor'
+description: 'Run ESLint on a project'
+---
+
 # @nrwl/linter:eslint
 
 Run ESLint on a project

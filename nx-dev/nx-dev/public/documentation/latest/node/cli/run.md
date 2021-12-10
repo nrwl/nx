@@ -1,3 +1,8 @@
+---
+title: 'run - CLI command'
+description: 'Runs an Architect target with an optional custom builder configuration defined in your project.'
+---
+
 # run
 
 Runs an Architect target with an optional custom builder configuration defined in your project.

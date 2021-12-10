@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/node:library
 
 Create a library

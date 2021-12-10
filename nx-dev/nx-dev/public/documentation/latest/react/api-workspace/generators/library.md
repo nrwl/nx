@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/workspace:library
 
 Create a library

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nx-plugin:executor generator'
+description: 'Create a executor for an Nx Plugin'
+---
+
 # @nrwl/nx-plugin:executor
 
 Create a executor for an Nx Plugin

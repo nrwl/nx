@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:scam generator'
+description: 'Generate a component with an accompanying Single Component Angular Module (SCAM).'
+---
+
 # @nrwl/angular:scam
 
 Generate a component with an accompanying Single Component Angular Module (SCAM).

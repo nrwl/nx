@@ -1,3 +1,8 @@
+---
+title: '@nrwl/gatsby:server executor'
+description: 'Starts server for app'
+---
+
 # @nrwl/gatsby:server
 
 Starts server for app
