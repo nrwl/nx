@@ -1,9 +1,11 @@
 import { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import {
+  createCache as _createCache,
   extractCachedFileData,
   ProjectGraphCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
+import { createCache } from './nx-deps-cache';
 
 describe('nx deps utils', () => {
   describe('shouldRecomputeWholeGraph', () => {
@@ -274,6 +276,17 @@ describe('nx deps utils', () => {
           },
         },
       });
+    });
+  });
+
+  describe('createCache', () => {
+    it('should work with empty tsConfig', () => {
+      _createCache(
+        createNxJson({}),
+        createPackageJsonDeps({}),
+        createCache({}),
+        {}
+      );
     });
   });
 
