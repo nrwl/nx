@@ -1,6 +1,6 @@
-import React from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
+import { NextSeo } from 'next-seo';
+import { useRouter } from 'next/router';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
   ConfSchedule,
@@ -11,48 +11,32 @@ import {
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 export function ConfPage() {
+  const router = useRouter();
   const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Head>
-        <title>The first ever Nx Conf - September 16th-17th, 2021</title>
-        <meta
-          name="description"
-          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
-        />
-        <meta
-          name="twitter:title"
-          content="The first ever Nx Conf - September 16th-17th, 2021"
-        />
-        <meta
-          name="twitter:description"
-          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-conf-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx Conf - Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/conf" />
-        <meta
-          property="og:description"
-          content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
-        />
-        <meta
-          property="og:title"
-          content="The first ever Nx Conf - September 16th-17th, 2021"
-        />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-conf-media.jpg"
-        />
-        <meta property="og:image:width" content="1000" />
-        <meta property="og:image:height" content="500" />
-      </Head>
+      <NextSeo
+        title="The first ever Nx Conf - September 16th-17th, 2021"
+        description="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'The first ever Nx Conf - September 16th-17th, 2021',
+          description:
+            'Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Watch us as we share our ideas and expertise about making development faster, more scalable, and more collaborative.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-conf-media.jpg',
+              width: 1000,
+              height: 500,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={true}
         showSearch={false}

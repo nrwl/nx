@@ -2,11 +2,11 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import Head from 'next/head';
 import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
 import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
+import { NextSeo } from 'next-seo';
 
 export function AngularPage() {
   const router = useRouter();
@@ -14,41 +14,27 @@ export function AngularPage() {
   const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Head>
-        <title>Nx and Modern Angular</title>
-        <meta
-          name="description"
-          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
-          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
-        />
-        <meta name="twitter:title" content="Nx and Modern Angular" />
-        <meta
-          name="twitter:description"
-          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
-          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/angular" />
-        <meta
-          property="og:description"
-          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
-          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
-        />
-        <meta property="og:title" content="Nx and Modern Angular" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx and Modern Angular"
+        description="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, full monorepo support and more."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and Modern Angular',
+          description:
+            'Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, full monorepo support and more.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}
