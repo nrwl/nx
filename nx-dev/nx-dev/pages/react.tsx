@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
@@ -14,38 +14,27 @@ export function ReactPage() {
   const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Head>
-        <title>Nx and React</title>
-        <meta
-          name="description"
-          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
-        />
-        <meta name="twitter:title" content="Nx and React" />
-        <meta
-          name="twitter:description"
-          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/react" />
-        <meta
-          property="og:description"
-          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
-        />
-        <meta property="og:title" content="Nx and React" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx and React"
+        description="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and fully support for monorepo."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and React',
+          description:
+            'Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and fully support for monorepo.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}

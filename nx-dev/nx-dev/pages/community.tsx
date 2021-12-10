@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { NextSeo } from 'next-seo';
+import { useRouter } from 'next/router';
 import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui-common';
-import React from 'react';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
-import Head from 'next/head';
 
 declare const fetch: any;
 
@@ -28,40 +28,32 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
 }
 
 export function Community(props: CommunityProps) {
+  const router = useRouter();
   const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
 
   return (
     <>
-      <Head>
-        <title>Nx Community and Plugin Listing</title>
-        <meta name="description" content="Nx Community and Plugin Listing" />
-        <meta name="twitter:title" content="Nx Community and Plugin Listing" />
-        <meta
-          name="twitter:description"
-          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/community" />
-        <meta
-          property="og:description"
-          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
-        />
-        <meta property="og:title" content="Nx Community and Plugin Listing" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx Community and Plugin Listing"
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and Modern Angular',
+          description:
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}

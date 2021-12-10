@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Router, { useRouter } from 'next/router';
 import cx from 'classnames';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import type {
   DocumentData,
   FlavorMetadata,
@@ -93,14 +93,11 @@ export function DocumentationPage({ document, menu }: DocumentationPageProps) {
 
   return (
     <>
-      <Head>
-        <link
-          rel="canonical"
-          href={`/${activeVersion.alias}/${activeFlavor.alias}`.concat(
-            cleanPath(router.asPath)
-          )}
-        />
-      </Head>
+      <NextSeo
+        canonical={`/${activeVersion.alias}/${activeFlavor.alias}`.concat(
+          cleanPath(router.asPath)
+        )}
+      />
       <Header
         showSearch={true}
         version={{ name: activeVersion.name, value: activeVersion.alias }}

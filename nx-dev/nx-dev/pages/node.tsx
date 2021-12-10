@@ -2,10 +2,10 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
+import { NextSeo } from 'next-seo';
 import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
-import Head from 'next/head';
 import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 
 export function Node() {
@@ -58,38 +58,27 @@ export function Node() {
 
   return (
     <>
-      <Head>
-        <title>Nx and Node</title>
-        <meta
-          name="description"
-          content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
-        />
-        <meta name="twitter:title" content="Nx and Node" />
-        <meta
-          name="twitter:description"
-          content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/node" />
-        <meta
-          property="og:description"
-          content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
-        />
-        <meta property="og:title" content="Nx and Node" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx and Node"
+        description="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications and with full monorepo support."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and Node',
+          description:
+            'Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications and with full monorepo support.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}

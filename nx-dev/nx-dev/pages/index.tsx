@@ -1,7 +1,7 @@
 import React from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { NextSeo } from 'next-seo';
 import {
   Footer,
   Header,
@@ -31,46 +31,30 @@ import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 
 export function Index() {
   const router = useRouter();
+
   return (
     <>
-      <Head>
-        <title>Nx: Smart, Extensible Build Framework</title>
-        <meta
-          name="description"
-          content="Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more."
-        />
-        <meta
-          name="twitter:title"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta
-          name="twitter:description"
-          content="Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev" />
-        <meta
-          property="og:description"
-          content="Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more."
-        />
-        <meta
-          property="og:title"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx: Smart, Extensible Build Framework"
+        description="Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, full monorepo support and more."
+        openGraph={{
+          url: 'https://nx.dev',
+          title: 'Nx: Smart, Extensible Build Framework',
+          description:
+            'Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, full monorepo support and more.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header showSearch={false} useDarkBackground={false} />
       <main>
         <div className="w-full">
