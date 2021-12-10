@@ -113,7 +113,7 @@
     "scam": {
       "factory": "./src/generators/scam/scam.compat",
       "schema": "./src/generators/scam/schema.json",
-      "description": "Generate a component with an accompanying Single Angular Module Component (SCAM)."
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
     },
 
     "web-worker": {
@@ -207,7 +207,7 @@
     "scam": {
       "factory": "./src/generators/scam/scam",
       "schema": "./src/generators/scam/schema.json",
-      "description": "Generate a component with an accompanying Single Angular Module Component (SCAM)."
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",
