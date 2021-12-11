@@ -25,6 +25,8 @@ export function enableStrictTypeChecking(
         ...(json.compilerOptions ?? {}),
         forceConsistentCasingInFileNames: true,
         strict: true,
+        noImplicitOverride: true,
+        noPropertyAccessFromIndexSignature: true,
         noImplicitReturns: true,
         noFallthroughCasesInSwitch: true,
       };
