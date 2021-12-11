@@ -24,9 +24,10 @@ export async function libraryGenerator(host: Tree, options: Schema) {
     if (options.style === '@emotion/styled') {
       json.presets = [
         [
-          'next/babel',
+          '@nrwl/next/babel',
           {
             'preset-react': {
+              runtime: 'automatic',
               importSource: '@emotion/react',
             },
           },
@@ -35,12 +36,12 @@ export async function libraryGenerator(host: Tree, options: Schema) {
     } else if (options.style === 'styled-jsx') {
       // next.js doesn't require the `styled-jsx/babel' plugin as it is already
       // built-into the `next/babel` preset
-      json.presets = ['next/babel'];
+      json.presets = ['@nrwl/next/babel'];
       json.plugins = (json.plugins || []).filter(
         (x) => x !== 'styled-jsx/babel'
       );
     } else {
-      json.presets = ['next/babel'];
+      json.presets = ['@nrwl/next/babel'];
     }
     return json;
   });
