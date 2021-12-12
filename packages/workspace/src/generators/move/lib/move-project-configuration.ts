@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   isStandaloneProject,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   removeProjectConfiguration,
   Tree,
@@ -11,7 +10,7 @@ import { NormalizedSchema } from '../schema';
 export function moveProjectConfiguration(
   tree: Tree,
   schema: NormalizedSchema,
-  projectConfig: ProjectConfiguration & NxJsonProjectConfiguration
+  projectConfig: ProjectConfiguration
 ) {
   const isStandalone = isStandaloneProject(tree, schema.projectName);
   const projectString = JSON.stringify(projectConfig);

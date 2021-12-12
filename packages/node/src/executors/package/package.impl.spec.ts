@@ -71,6 +71,7 @@ describe('NodePackageBuilder', () => {
             targets: {},
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

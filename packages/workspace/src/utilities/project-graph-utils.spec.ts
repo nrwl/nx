@@ -1,8 +1,21 @@
+import { PackageJson } from '@nrwl/tao/src/shared/package-json';
 import { ProjectGraph } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
+  mergeNpmScriptsWithTargets,
 } from './project-graph-utils';
+
+jest.mock('@nrwl/devkit', () => ({
+  ...(jest.requireActual('@nrwl/devkit') as any),
+  readJsonFile: (path) => {
+    if (!(path in jsonFileOverrides))
+      throw new Error('Tried to read non-mocked json file: ' + path);
+    return jsonFileOverrides[path];
+  },
+}));
+
+let jsonFileOverrides: Record<string, any> = {};
 
 describe('project graph utils', () => {
   describe('getSourceDirOfDependentProjects', () => {
@@ -88,6 +101,101 @@ describe('project graph utils', () => {
       expect(() => {
         getProjectNameFromDirPath('apps/demo-app-unknown');
       }).toThrowError();
+    });
+  });
+
+  describe('mergeNpmScriptsWithTargets', () => {
+    const packageJson: PackageJson = {
+      name: 'my-app',
+      scripts: {
+        build: 'echo 1',
+      },
+    };
+
+    const packageJsonBuildTarget = {
+      executor: '@nrwl/workspace:run-script',
+      options: {
+        script: 'build',
+      },
+    };
+
+    beforeAll(() => {
+      jsonFileOverrides['apps/my-app/package.json'] = packageJson;
+    });
+
+    afterAll(() => {
+      jsonFileOverrides = {};
+    });
+
+    it('should prefer project.json targets', () => {
+      const projectJsonTargets = {
+        build: {
+          executor: '@nrwl/workspace:run-commands',
+          options: {
+            command: 'echo 2',
+          },
+        },
+      };
+
+      const result = mergeNpmScriptsWithTargets(
+        'apps/my-app',
+        projectJsonTargets
+      );
+      expect(result).toEqual(projectJsonTargets);
+    });
+
+    it('should provide targets from project.json and package.json', () => {
+      const projectJsonTargets = {
+        clean: {
+          executor: '@nrwl/workspace:run-commands',
+          options: {
+            command: 'echo 2',
+          },
+        },
+      };
+
+      const result = mergeNpmScriptsWithTargets(
+        'apps/my-app',
+        projectJsonTargets
+      );
+      expect(result).toEqual({
+        ...projectJsonTargets,
+        build: packageJsonBuildTarget,
+      });
+    });
+
+    it('should contain extended options from nx property in package.json', () => {
+      jsonFileOverrides['apps/my-other-app/package.json'] = {
+        name: 'my-other-app',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              outputs: ['custom'],
+            },
+          },
+        },
+      };
+
+      const result = mergeNpmScriptsWithTargets('apps/my-other-app', null);
+      expect(result).toEqual({
+        build: { ...packageJsonBuildTarget, outputs: ['custom'] },
+      });
+    });
+
+    it('should work when project.json targets is null', () => {
+      const result = mergeNpmScriptsWithTargets('apps/my-app', null);
+
+      expect(result).toEqual({
+        build: {
+          executor: '@nrwl/workspace:run-script',
+          options: {
+            script: 'build',
+          },
+        },
+      });
     });
   });
 });

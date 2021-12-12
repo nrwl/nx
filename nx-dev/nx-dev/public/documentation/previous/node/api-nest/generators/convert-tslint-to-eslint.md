@@ -1,6 +1,6 @@
-# convert-tslint-to-eslint
+# @nrwl/nest:convert-tslint-to-eslint
 
-Convert a project from TSLint to ESLint
+Convert a project from TSLint to ESLint.
 
 ## Usage
 
@@ -32,11 +32,19 @@ nx g convert-tslint-to-eslint myapp
 
 ## Options
 
-### project
+### project (_**required**_)
 
 Type: `string`
 
 The name of the NestJS project to convert.
+
+### ignoreExistingTslintConfig
+
+Default: `false`
+
+Type: `boolean`
+
+If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config.
 
 ### removeTSLintIfNoMoreTSLintTargets
 
@@ -44,4 +52,12 @@ Default: `true`
 
 Type: `boolean`
 
-If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration
+If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

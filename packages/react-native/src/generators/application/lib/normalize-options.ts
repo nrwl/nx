@@ -11,6 +11,7 @@ export interface NormalizedSchema extends Schema {
   androidProjectRoot: string;
   parsedTags: string[];
   entryFile: string;
+  entryFileAbsolutePath: string;
 }
 
 export function normalizeOptions(
@@ -36,7 +37,12 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const entryFile = join(host.root, appProjectRoot, '/src/main.tsx');
+  const entryFile = join(
+    appProjectRoot,
+    options.js ? '/src/main.js' : '/src/main.tsx'
+  );
+
+  const entryFileAbsolutePath = join(host.root, entryFile);
 
   /**
    * if options.name is "my-app"
@@ -58,5 +64,6 @@ export function normalizeOptions(
     androidProjectRoot,
     parsedTags,
     entryFile,
+    entryFileAbsolutePath,
   };
 }

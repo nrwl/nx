@@ -1,4 +1,4 @@
-# application
+# @nrwl/react:application
 
 Create an application
 
@@ -60,7 +60,7 @@ Use class components instead of functional component.
 
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
@@ -126,6 +126,14 @@ Type: `boolean`
 
 Generate application with routes.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
@@ -141,6 +149,22 @@ Default: `false`
 Type: `boolean`
 
 Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
+### strict
+
+Default: `true`
+
+Type: `boolean`
+
+Creates an application with stricter type checking and build optimization options.
 
 ### style
 

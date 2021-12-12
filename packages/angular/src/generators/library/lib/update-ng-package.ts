@@ -1,5 +1,6 @@
 import {
   getWorkspaceLayout,
+  joinPathFragments,
   offsetFromRoot,
   Tree,
   updateJson,
@@ -11,9 +12,12 @@ export function updateNgPackage(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const dest = `${offsetFromRoot(options.projectRoot)}dist/${
-    getWorkspaceLayout(host).libsDir
-  }/${options.projectDirectory}`;
+  const dest = joinPathFragments(
+    offsetFromRoot(options.projectRoot),
+    'dist',
+    getWorkspaceLayout(host).libsDir,
+    options.projectDirectory
+  );
 
   updateJson(host, `${options.projectRoot}/ng-package.json`, (json) => {
     let $schema = json.$schema;

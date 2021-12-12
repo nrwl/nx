@@ -22,7 +22,7 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 - [Distributed task execution & computation caching](/{{framework}}/core-concepts/mental-model)
 - [Code sharing and ownership management](/{{framework}}/structure/monorepo-tags)
 
-**Nx Integrated Development Experience**
+**Integrated Development Experience**
 
 - [High-quality editor plugins](/{{framework}}/getting-started/console) & [GitHub apps](https://github.com/apps/nx-cloud)
 - [Powerful code generators](/{{framework}}/generators/using-schematics)
@@ -37,6 +37,7 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 ## Learn Nx Fundamentals
 
 - [Interactive Nx Tutorial (with videos)](/{{framework}}/tutorial/01-create-application)
+- [Using Nx Core Without Plugins](/{{framework}}/getting-started/nx-core)
 - [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
 - [Nx CLI](/{{framework}}/getting-started/nx-cli)
 - [Configuration Files](/{{framework}}/core-concepts/configuration)

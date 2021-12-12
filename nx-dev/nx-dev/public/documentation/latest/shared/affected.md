@@ -68,10 +68,10 @@ nx affected:dep-graph --files=libs/admin-feature-permissions/src/index.ts
 In practice, it's easier to use git to determine what files have changed.
 
 ```bash
-nx affected:dep-graph --base=master --head=HEAD
+nx affected:dep-graph --base=main --head=HEAD
 ```
 
-The `--base` defaults to `master` and `--head` defaults to `HEAD`, so when running it locally you can usually omit it:
+The `--base` defaults to `main` and `--head` defaults to `HEAD`, so when running it locally you can usually omit it:
 
 ```bash
 nx affected:dep-graph
@@ -98,11 +98,11 @@ nx affected --target=ANYTARGET # run ANYTARGET for all affected apps and libs
 
 ## CI
 
-The SHAs you pass must be defined in the git repository. The `master` and `HEAD` SHAs are what you normally use while developing. Most likely you will want to provision other SHAs in your CI environment.
+The SHAs you pass must be defined in the git repository. The `main` and `HEAD` SHAs are what you normally use while developing. Most likely you will want to provision other SHAs in your CI environment.
 
 ```bash
-nx affected:build --base=origin/master --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
-nx affected:build --base=origin/master~1 --head=origin/master # rerun what is affected by the last commit in master
+nx affected:build --base= origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
+nx affected:build --base= origin/main~1 --head= origin/main # rerun what is affected by the last commit in main
 ```
 
 ## When Nx can't Understand Your Repository

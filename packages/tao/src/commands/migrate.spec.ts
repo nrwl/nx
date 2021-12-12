@@ -40,7 +40,7 @@ describe('Migration', () => {
 
     it('should collect the information recursively from upserts', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: { dependencies: { child: '1.0.0' } },
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -84,7 +84,7 @@ describe('Migration', () => {
 
     it('should support the deprecated "alwaysAddToPackageJson" option', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: { dependencies: { child1: '1.0.0' } },
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'mypackage') {
@@ -124,7 +124,7 @@ describe('Migration', () => {
 
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: { dependencies: { child: '1.0.0' } },
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -172,7 +172,13 @@ describe('Migration', () => {
 
     it('should set the version of a dependency to the newest', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: {
+          dependencies: {
+            child1: '1.0.0',
+            child2: '1.0.0',
+            grandchild: '1.0.0',
+          },
+        },
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -236,7 +242,7 @@ describe('Migration', () => {
 
     it('should skip the versions <= currently installed', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: { dependencies: { child: '1.0.0', grandchild: '2.0.0' } },
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -284,7 +290,7 @@ describe('Migration', () => {
 
     it('should conditionally process packages if they are installed', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: { dependencies: { child1: '1.0.0', child2: '1.0.0' } },
         versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -422,12 +428,47 @@ describe('Migration', () => {
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
     });
+
+    it('should only fetch packages that are top-level deps', async () => {
+      const migrator = new Migrator({
+        packageJson: { devDependencies: { parent: '1.0.0', child1: '1.0.0' } },
+        versions: () => '1.0.0',
+        fetch: (p, _v) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child1: { version: '2.0.0' },
+                    child2: { version: '2.0.0' }, // should not be fetched, it's not a top-level dep
+                  },
+                },
+              },
+              schematics: {},
+            });
+          } else if (p === 'child1') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {},
+            });
+          } else if (p === 'child2') {
+            throw new Error('Boom');
+          }
+        },
+        from: {},
+        to: {},
+      });
+
+      await migrator.updatePackageJson('parent', '2.0.0');
+    });
   });
 
   describe('migrations', () => {
     it('should create a list of migrations to run', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: { dependencies: { child: '1.0.0', newChild: '1.0.0' } },
         versions: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
@@ -501,6 +542,87 @@ describe('Migration', () => {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
           newChild: { version: '3.0.0', addToPackageJson: false },
+        },
+      });
+    });
+
+    it('should not generate migrations for non top-level packages', async () => {
+      const migrator = new Migrator({
+        packageJson: { dependencies: { child: '1.0.0' } },
+        versions: (p) => {
+          if (p === 'parent') return '1.0.0';
+          if (p === 'child') return '1.0.0';
+          if (p === 'newChild') return '1.0.0'; // installed as a transitive dep, not a top-level dep
+          return null;
+        },
+        fetch: (p, _v) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child: { version: '2.0.0' },
+                    newChild: {
+                      version: '3.0.0',
+                    },
+                  },
+                },
+              },
+              generators: {
+                version2: {
+                  version: '2.0.0',
+                  description: 'parent-desc',
+                },
+              },
+            });
+          } else if (p === 'child') {
+            return Promise.resolve({
+              version: '2.0.0',
+              generators: {
+                version2: {
+                  version: '2.0.0',
+                  description: 'child-desc',
+                },
+              },
+            });
+          } else if (p === 'newChild') {
+            return Promise.resolve({
+              version: '3.0.0',
+              generators: {
+                version2: {
+                  version: '3.0.0',
+                  description: 'new-child-desc',
+                },
+              },
+            });
+          } else {
+            return Promise.resolve(null);
+          }
+        },
+        from: {},
+        to: {},
+      });
+
+      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+        migrations: [
+          {
+            version: '2.0.0',
+            name: 'version2',
+            package: 'parent',
+            description: 'parent-desc',
+          },
+          {
+            package: 'child',
+            version: '2.0.0',
+            name: 'version2',
+            description: 'child-desc',
+          },
+        ],
+        packageJson: {
+          parent: { version: '2.0.0', addToPackageJson: false },
+          child: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });

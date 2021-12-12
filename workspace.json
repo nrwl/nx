@@ -1,15 +1,5 @@
 {
   "version": 2,
-  "cli": {
-    "defaultCollection": "@nrwl/react"
-  },
-  "generators": {
-    "@nrwl/react": {
-      "application": {
-        "babel": true
-      }
-    }
-  },
   "projects": {
     "angular": "packages/angular",
     "cli": "packages/cli",
@@ -21,6 +11,7 @@
     "detox": "packages/detox",
     "devkit": "packages/devkit",
     "docs": "docs",
+    "e2e-add-nx-to-monorepo": "e2e/add-nx-to-monorepo",
     "e2e-angular-core": "e2e/angular-core",
     "e2e-angular-extensions": "e2e/angular-extensions",
     "e2e-cli": "e2e/cli",
@@ -28,6 +19,7 @@
     "e2e-detox": "e2e/detox",
     "e2e-gatsby": "e2e/gatsby",
     "e2e-jest": "e2e/jest",
+    "e2e-js": "e2e/js",
     "e2e-linter": "e2e/linter",
     "e2e-next": "e2e/next",
     "e2e-node": "e2e/node",
@@ -44,6 +36,7 @@
     "express": "packages/express",
     "gatsby": "packages/gatsby",
     "jest": "packages/jest",
+    "js": "packages/js",
     "linter": "packages/linter",
     "nest": "packages/nest",
     "next": "packages/next",
@@ -55,11 +48,15 @@
     "nx-dev-feature-analytics": "nx-dev/feature-analytics",
     "nx-dev-feature-conf": "nx-dev/feature-conf",
     "nx-dev-feature-doc-viewer": "nx-dev/feature-doc-viewer",
+    "nx-dev-feature-flavor-selection": "nx-dev/feature-flavor-selection",
     "nx-dev-feature-search": "nx-dev/feature-search",
     "nx-dev-feature-storage": "nx-dev/feature-storage",
-    "nx-dev-ui-common": "nx-dev/ui/common",
-    "nx-dev-ui-member-card": "nx-dev/ui/member-card",
-    "nx-dev-ui-sponsor-card": "nx-dev/ui/sponsor-card",
+    "nx-dev-feature-versions-and-flavors": "nx-dev/feature-versions-and-flavors",
+    "nx-dev-ui-commands": "nx-dev/ui-commands",
+    "nx-dev-ui-common": "nx-dev/ui-common",
+    "nx-dev-ui-home": "nx-dev/ui-home",
+    "nx-dev-ui-member-card": "nx-dev/ui-member-card",
+    "nx-dev-ui-sponsor-card": "nx-dev/ui-sponsor-card",
     "nx-plugin": "packages/nx-plugin",
     "react": "packages/react",
     "react-native": "packages/react-native",

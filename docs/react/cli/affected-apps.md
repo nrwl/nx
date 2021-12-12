@@ -1,3 +1,8 @@
+---
+title: 'affected:apps - CLI command'
+description: 'Print applications affected by changes'
+---
+
 # affected:apps
 
 Print applications affected by changes

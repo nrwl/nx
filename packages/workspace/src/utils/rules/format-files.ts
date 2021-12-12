@@ -10,7 +10,10 @@ import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
+import {
+  reformattedWorkspaceJsonOrNull,
+  workspaceConfigName,
+} from '@nrwl/tao/src/shared/workspace';
 import { parseJson, serializeJson } from '@nrwl/devkit';
 
 export function formatFiles(
@@ -27,7 +30,7 @@ export function formatFiles(
   }
 
   return (host: Tree, context: SchematicContext) => {
-    updateWorkspaceJsonToMatchFormatVersion(host, directory);
+    updateWorkspaceJsonToMatchFormatVersion(host);
 
     if (!prettier) {
       return host;
@@ -76,25 +79,21 @@ export function formatFiles(
   };
 }
 
-function updateWorkspaceJsonToMatchFormatVersion(
-  host: Tree,
-  directory: string
-) {
-  const possibleFiles = [
-    `${directory}/workspace.json`,
-    `${directory}/angular.json`,
-  ];
-  const path = possibleFiles.filter((path) => host.exists(path))[0];
+function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
+  const workspaceConfigPath = workspaceConfigName(appRootPath);
+
   try {
-    if (path) {
-      const workspaceJson = parseJson(host.read(path).toString());
+    if (workspaceConfigPath) {
+      const workspaceJson = parseJson(
+        host.read(workspaceConfigPath).toString()
+      );
       const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
       if (reformatted) {
-        host.overwrite(path, serializeJson(reformatted));
+        host.overwrite(workspaceConfigPath, serializeJson(reformatted));
       }
     }
   } catch (e) {
-    console.error(`Failed to format: ${path}`);
+    console.error(`Failed to format workspace config: ${workspaceConfigPath}`);
     console.error(e);
   }
 }

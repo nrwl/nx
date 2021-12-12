@@ -1,6 +1,7 @@
 import type { Arguments } from 'yargs-parser';
 import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
 import { logger } from './logger';
+import { NxJsonConfiguration } from './nx';
 
 type PropertyDescription = {
   type?: string;
@@ -518,7 +519,7 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  wc: WorkspaceJsonConfiguration | null,
+  wc: (WorkspaceJsonConfiguration & NxJsonConfiguration) | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
@@ -610,12 +611,12 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  wc: WorkspaceJsonConfiguration,
+  wc: (WorkspaceJsonConfiguration & NxJsonConfiguration) | null,
   collectionName: string,
   generatorName: string
 ) {
   let defaults = {};
-  if (wc.generators) {
+  if (wc?.generators) {
     if (
       wc.generators[collectionName] &&
       wc.generators[collectionName][generatorName]
@@ -634,6 +635,7 @@ function getGeneratorDefaults(
   }
   if (
     projectName &&
+    wc &&
     wc.projects[projectName] &&
     wc.projects[projectName].generators
   ) {

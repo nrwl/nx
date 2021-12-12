@@ -1,6 +1,10 @@
 # Intro to Nx
 
-Nx is a suite of powerful, extensible dev tools that help you develop, test, build, and scale [Angular](/{{framework}}/angular/overview) applications with fully integrated support for modern libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview), [ESLint](/{{framework}}/linter/eslint), and more.
+Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
+
+Nx helps you develop [Angular](/{{framework}}/angular/overview) applications with fully integrated support for
+modern tools and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview),
+[ESLint](/{{framework}}/linter/eslint), [Storybook](/{{framework}}/storybook/overview), [NgRx](/angular/guides/misc-ngrx) and more.
 
 ## 10-Minute Nx Overview
 
@@ -16,21 +20,29 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 
 ## Features
 
-- Test (or builds or lints) only the projects [affected](/{{framework}}/cli/affected) by a code change.
-- [Cache](/{{framework}}/core-concepts/computation-caching) command output locally so that future runs on the same code happen in seconds. The paid [Nx Cloud](https://nx.app) offering allows this cache to be shared across every developer in your organization.
-- Provide a consistent syntax for [executing commands](/{{framework}}/executors/using-builders). `nx build my-app` works no matter what framework `my-app` uses.
-- Automate code modification tasks with [generators](/{{framework}}/cli/affected).
-- Access a thriving ecosystem of [plugins](/{{framework}}/generators/using-schematics) from Nrwl and the [community](/nx-community).
+**Best-in-Class Support for Monorepos**
+
+- [Smart rebuilds of affected projects](/{{framework}}/core-concepts/mental-model)
+- [Distributed task execution & computation caching](/{{framework}}/core-concepts/mental-model)
+- [Code sharing and ownership management](/{{framework}}/structure/monorepo-tags)
+
+**Nx Integrated Development Experience**
+
+- [High-quality editor plugins](/{{framework}}/getting-started/console) & [GitHub apps](https://github.com/apps/nx-cloud)
+- [Powerful code generators](/{{framework}}/generators/using-schematics)
+- [Workspace visualizations](/{{framework}}/structure/dependency-graph)
+
+**Supports Your Ecosystem**
+
+- [Rich plugin ecosystem](/{{framework}}/core-concepts/nx-devkit) from Nrwl and the [community](/community)
+- Consistent dev experience for any framework
+- [Automatic upgrade to the latest versions of all frameworks and tools](/{{framework}}/core-concepts/updating-nx)
 
 ## Learn Nx Fundamentals
 
 - [Interactive Nx Tutorial (with videos)](/{{framework}}/tutorial/01-create-application)
 - [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
 - [45-Minute Walkthrough on YouTube](https://www.youtube.com/watch?v=h5FIGDn5YM0)
-
-## Dive Deep
-
 - [Nx CLI](/{{framework}}/getting-started/nx-cli)
 - [Configuration Files](/{{framework}}/core-concepts/configuration)
-- [Computation Caching](/{{framework}}/core-concepts/computation-caching)
-- [Rebuilding What is Affected](/{{framework}}/core-concepts/affected)
+- [Mental Model](/{{framework}}/core-concepts/mental-model)

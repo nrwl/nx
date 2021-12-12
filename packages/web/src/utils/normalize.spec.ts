@@ -1,5 +1,5 @@
 import { normalizeBuildOptions } from './normalize';
-import { BuildBuilderOptions } from './types';
+import { BuildBuilderOptions } from './shared-models';
 
 import * as fs from 'fs';
 
@@ -10,6 +10,7 @@ describe('normalizeBuildOptions', () => {
 
   beforeEach(() => {
     testOptions = {
+      compiler: 'babel',
       main: 'apps/nodeapp/src/main.ts',
       tsConfig: 'apps/nodeapp/tsconfig.app.json',
       outputPath: 'dist/apps/nodeapp',

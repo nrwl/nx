@@ -7,5 +7,6 @@
   "node",
   "storybook",
   "web",
-  "workspace"
+  "workspace",
+  "js"
 ]

@@ -1,4 +1,14 @@
-import { normalizePath, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import {
+  normalizePath,
+  ProjectGraph,
+  ProjectGraphNode,
+  readJsonFile,
+  TargetConfiguration,
+} from '@nrwl/devkit';
+import {
+  buildTargetFromScript,
+  PackageJson,
+} from '@nrwl/tao/src/shared/package-json';
 import { relative } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 
@@ -18,9 +28,25 @@ export function projectHasTargetAndConfiguration(
   );
 }
 
+export function mergeNpmScriptsWithTargets(projectRoot: string, targets) {
+  try {
+    const { scripts, nx }: PackageJson = readJsonFile(
+      `${projectRoot}/package.json`
+    );
+    const res: Record<string, TargetConfiguration> = {};
+    // handle no scripts
+    Object.keys(scripts || {}).forEach((script) => {
+      res[script] = buildTargetFromScript(script, nx);
+    });
+    return { ...res, ...(targets || {}) };
+  } catch (e) {
+    return undefined;
+  }
+}
+
 export function getSourceDirOfDependentProjects(
   projectName: string,
-  projectGraph = readCachedProjectGraph('4.0')
+  projectGraph = readCachedProjectGraph()
 ): string[] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
@@ -41,7 +67,7 @@ export function getSourceDirOfDependentProjects(
  */
 export function getProjectNameFromDirPath(
   projRelativeDirPath: string,
-  projectGraph = readCachedProjectGraph('4.0')
+  projectGraph = readCachedProjectGraph()
 ) {
   let parentNodeName = null;
   for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
@@ -75,7 +101,7 @@ export function getProjectNameFromDirPath(
  */
 function findAllProjectNodeDependencies(
   parentNodeName: string,
-  projectGraph = readCachedProjectGraph('4.0')
+  projectGraph = readCachedProjectGraph()
 ): string[] {
   const dependencyNodeNames = new Set<string>();
 

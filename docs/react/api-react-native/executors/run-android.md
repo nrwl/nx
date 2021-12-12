@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:run-android executor'
+description: 'Runs Android application.'
+---
+
 # @nrwl/react-native:run-android
 
 Runs Android application.
@@ -55,6 +60,14 @@ Default: `8081`
 Type: `number`
 
 The port where the packager server is listening on.
+
+### resetCache
+
+Default: `false`
+
+Type: `boolean`
+
+Resets metro cache
 
 ### sync
 

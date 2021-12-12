@@ -1,3 +1,8 @@
+---
+title: '@nrwl/detox:test executor'
+description: 'Initiating your detox test suite.'
+---
+
 # @nrwl/detox:test
 
 Initiating your detox test suite.

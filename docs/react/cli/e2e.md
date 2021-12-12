@@ -1,3 +1,8 @@
+---
+title: 'e2e - CLI command'
+description: 'Builds and serves an app, then runs end-to-end tests using the configured E2E test runner.'
+---
+
 # e2e
 
 Builds and serves an app, then runs end-to-end tests using the configured E2E test runner.
@@ -44,7 +49,7 @@ The options below are common to the E2E commands used within an Nx workspace. Cy
 
 ### baseUrl
 
-Use this to pass directly the address of your distant server address with the port running your application.
+Use this to pass directly the address of your distant server address with the port running your application. Setting this will ignore any local server targets. To skip running local targets, reset the `devServerTarget` to empty string.
 
 ### configuration (-c)
 

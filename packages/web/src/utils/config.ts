@@ -1,20 +1,22 @@
 import { join } from 'path';
+import * as webpack from 'webpack';
+import { Configuration, WebpackPluginInstance } from 'webpack';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-
-import { AssetGlobPattern, BuildBuilderOptions } from './types';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import * as TerserWebpackPlugin from 'terser-webpack-plugin';
+import { AssetGlobPattern, BuildBuilderOptions } from './shared-models';
 import { getOutputHashFormat } from './hash-format';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
+
+// Inlining tsconfig-paths-webpack-plugin with a patch
+// See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
+// TODO(jack): Remove once the patch lands in original package
+import { TsconfigPathsPlugin } from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
   /could not find any license/i,
 ];
-
-// TODO(jack): Remove this in Nx 13 and go back to proper types
-type Configuration = any;
-type WebpackPluginInstance = any;
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
@@ -23,10 +25,6 @@ export function getBaseWebpackPartial(
   emitDecoratorMetadata?: boolean,
   configuration?: string
 ): Configuration {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { webpack } = require('../webpack/entry');
-  const { ProgressPlugin } = webpack;
-
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const mainFields = [...(esm ? ['es2015'] : []), 'module', 'main'];
   const hashFormat = getOutputHashFormat(options.outputHashing);
@@ -45,16 +43,36 @@ export function getBaseWebpackPartial(
     entry: {
       main: [options.main],
     },
-    devtool: options.sourceMap ? 'source-map' : false,
+    devtool:
+      options.sourceMap === 'hidden'
+        ? 'hidden-source-map'
+        : options.sourceMap
+        ? 'source-map'
+        : false,
     mode,
     output: {
       path: options.outputPath,
       filename,
       chunkFilename,
+      hashFunction: 'xxhash64',
+      // Disabled for performance
+      pathinfo: false,
     },
     module: {
+      // Enabled for performance
+      unsafeCache: true,
       rules: [
         {
+          // There's an issue resolving paths without fully specified extensions
+          // See: https://github.com/graphql/graphql-js/issues/2721
+          // TODO(jack): Add a flag to turn this option on like Next.js does via experimental flag.
+          // See: https://github.com/vercel/next.js/pull/29880
+          test: /\.m?jsx?$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+        options.compiler === 'babel' && {
           test: /\.([jt])sx?$/,
           loader: join(__dirname, 'web-babel-loader'),
           exclude: /node_modules/,
@@ -69,7 +87,27 @@ export function getBaseWebpackPartial(
             cacheCompression: false,
           },
         },
-      ],
+        options.compiler === 'swc' && {
+          test: /\.([jt])sx?$/,
+          loader: require.resolve('swc-loader'),
+          exclude: /node_modules/,
+          options: {
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                decorators: true,
+                tsx: true,
+              },
+              transform: {
+                react: {
+                  runtime: 'automatic',
+                },
+              },
+              loose: true,
+            },
+          },
+        },
+      ].filter(Boolean),
     },
     resolve: {
       extensions,
@@ -94,11 +132,34 @@ export function getBaseWebpackPartial(
       poll: options.poll,
     },
     stats: getStatsConfig(options),
+    ignoreWarnings: [
+      (x) =>
+        IGNORED_WEBPACK_WARNINGS.some((r) =>
+          typeof x === 'string' ? r.test(x) : r.test(x.message)
+        ),
+    ],
+    experiments: {
+      cacheUnaffected: true,
+    },
   };
 
-  if (isScriptOptimizeOn) {
+  if (options.compiler !== 'swc' && isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      minimizer: [createTerserPlugin(esm, !!options.sourceMap)],
+      sideEffects: false,
+      minimizer: [
+        new TerserWebpackPlugin({
+          parallel: true,
+          terserOptions: {
+            ecma: esm ? 2016 : 5,
+            safari10: true,
+            output: {
+              ascii_only: true,
+              comments: false,
+              webkit: true,
+            },
+          },
+        }),
+      ],
       runtimeChunk: true,
     };
   }
@@ -118,7 +179,7 @@ export function getBaseWebpackPartial(
   }
 
   if (options.progress) {
-    extraPlugins.push(new ProgressPlugin());
+    extraPlugins.push(new webpack.ProgressPlugin());
   }
 
   // TODO  LicenseWebpackPlugin needs a PR for proper typing
@@ -138,14 +199,6 @@ export function getBaseWebpackPartial(
     extraPlugins.push(createCopyPlugin(options.assets));
   }
 
-  if (options.showCircularDependencies) {
-    extraPlugins.push(
-      new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/,
-      })
-    );
-  }
-
   webpackConfig.plugins = [...webpackConfig.plugins, ...extraPlugins];
 
   return webpackConfig;
@@ -161,30 +214,7 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-// TODO  Sourcemap and cache options have been removed from plugin.
-//  Investigate what this mgiht change in the build process
-export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { TerserWebpackPlugin } = require('../webpack/entry');
-  return new TerserWebpackPlugin({
-    parallel: true,
-    terserOptions: {
-      ecma: esm ? 8 : 5,
-      safari10: true,
-      output: {
-        ascii_only: true,
-        comments: false,
-        webkit: true,
-      },
-    },
-  });
-}
-
-// TODO(jack): Update the typing with new version of webpack -- was returning Stats.ToStringOptions in webpack 4
-// The StatsOptions type needs to be exported from webpack
-// PR: https://github.com/webpack/webpack/pull/12875
-function getStatsConfig(options: BuildBuilderOptions): any {
-  const { isWebpack5 } = require('../webpack/entry');
+function getStatsConfig(options: BuildBuilderOptions) {
   return {
     hash: true,
     timings: false,
@@ -204,7 +234,6 @@ function getStatsConfig(options: BuildBuilderOptions): any {
     errorDetails: !!options.verbose,
     moduleTrace: !!options.verbose,
     usedExports: !!options.verbose,
-    warningsFilter: IGNORED_WEBPACK_WARNINGS,
   };
 }
 
@@ -240,9 +269,6 @@ function getClientEnvironment(mode) {
 }
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { CopyWebpackPlugin } = require('../webpack/entry');
-
   return new CopyWebpackPlugin({
     patterns: assets.map((asset) => {
       return {

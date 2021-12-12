@@ -10,7 +10,8 @@ nx g @nrwl/workspace:lib admin-feature-permissions
 nx g @nrwl/workspace:lib components-shared
 
 nx build client
-nx build client-feature-main # works if the lib is marked as publishable
+# works if the lib is marked as buildable or publishable
+nx build client-feature-main
 
 nx test client
 nx test admin
@@ -76,7 +77,7 @@ The `--base` defaults to `master` and `--head` defaults to `HEAD`, so when runni
 nx affected:dep-graph
 ```
 
-Nx will find the most common ancestor of the base and head SHAs and will use it to determine what has changed between it and head.
+Nx finds the most common ancestor of the base and head SHAs and uses it to determine what has changed between it and head.
 
 ## Building/Testing/Printing Affected Projects
 
@@ -113,7 +114,7 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
   "npmScope": "myorg",
   "implicitDependencies": {
     "package.json": "*",
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {
@@ -149,17 +150,34 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
 }
 ```
 
-The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested. You can replace `*` with an explicit list of projects.
+The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` affects all the projects in the workspace, so all of them have to be rebuilt and retested. You can replace `*` with an explicit list of projects.
 
 ```json
 {
   "implicitDependencies": {
     "package.json": ["admin", "client"],
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   }
 }
 ```
+
+The `package.json` can also be configured more granularly to look at properties inside the `package.json`, such as `dependencies` or `devDependencies` for affected projects.
+
+```json
+{
+  "implicitDependencies": {
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    },
+    "tsconfig.base.json": "*",
+    "nx.json": "*"
+  }
+}
+```
+
+This would not invalidate the cache for changes to areas such as `scripts`, or other properties defined in the `package.json`.
 
 You can also specify dependencies between projects. For instance, if `admin-e2e` tests both the `admin` and `client` applications, you can express this as follows:
 
@@ -183,12 +201,12 @@ Nx provides two methods to exclude additional glob patterns (files and folders) 
 
 Affected and caching are used to solve the same problem: minimize the computation. But they do it differently, and the combination provides better results than one or the other.
 
-The affected command looks at the before and after states of the workspaces and figures out what can be broken by a change. Because it knows the two states, it can deduce the nature of the change. For instance, this repository uses React and Angular. If a PR updates the version of React in the root package.json, Nx will know that only half of the projects in the workspace can be affected. It knows what was changed--the version of React was bumped up.
+The affected command looks at the before and after states of the workspaces and figures out what can be broken by a change. Because it knows the two states, it can deduce the nature of the change. For instance, this repository uses React and Angular. If a PR updates the version of React in the root package.json, Nx knows that only half of the projects in the workspace can be affected. It knows what was changed--the version of React was bumped up.
 
-Caching simply looks at the current state of the workspace and the environment (e.g., version of Node) and checks if somebody already ran the command against this state. Caching knows that something changed, but because there is no before and after states, it doesn't know the nature of the change. In other words, caching is a lot more conservative.
+Caching simply looks at the current state of the workspace and the environment (such as the version of Node) and checks if somebody already ran the command against this state. Caching knows that something changed, but because there is no before and after states, it doesn't know the nature of the change. In other words, caching is a lot more conservative.
 
-If we only use affected, the list of projects that will be retested is small, but if we test the PR twice, we will run all the tests twice.
+If you only use affected, the list of projects that are be retested is small, but if you test the PR twice, all the tests are run twice.
 
-If we only use caching, the list of projects that will be retested is larger, but if we test the PR twice, we will only run tests the first time.
+If you only use caching, the list of projects that are be retested is larger, but if you test the PR twice, the tests are only run the first time.
 
-Using both allows us to get the best of both worlds. The list of affected projects is as small as it can be, and we never run anything twice.
+Using both allows you to get the best of both worlds. The list of affected projects is as small as it can be, and you never run anything twice.

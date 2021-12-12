@@ -1,11 +1,10 @@
-# dev-server
+# @nrwl/web:dev-server
 
 Serve a web application
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/node/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
 
 ### allowedHosts
 
@@ -26,6 +25,14 @@ Base url for the application being built.
 Type: `string`
 
 Target which builds the application
+
+### hmr
+
+Default: `false`
+
+Type: `boolean`
+
+Enable hot module replacement.
 
 ### host
 

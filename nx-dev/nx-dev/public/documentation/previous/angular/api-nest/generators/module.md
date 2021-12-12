@@ -1,6 +1,6 @@
-# module
+# @nrwl/nest:module
 
-Run the 'module' NestJs generator with Nx project support
+Run the `module` NestJS generator with Nx project support.
 
 ## Usage
 
@@ -24,13 +24,27 @@ nx g module ... --dry-run
 
 ## Options
 
-### directory
-
-Alias(es): d,path
+### name (_**required**_)
 
 Type: `string`
 
-Directory where the generated files are placed
+The name of the module.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The Nest project to target.
+
+### directory
+
+Alias(es): dir,path
+
+Type: `string`
+
+Directory where the generated files are placed.
 
 ### flat
 
@@ -40,26 +54,32 @@ Type: `boolean`
 
 Flag to indicate if a directory is created.
 
-### name
+### language
 
 Type: `string`
 
-The name of generated generator
+Possible values: `js`, `ts`
 
-### project
+Nest module language.
 
-Alias(es): p
-
-Type: `string`
-
-The nest project to target
-
-### unitTestRunner
-
-Default: `jest`
+### module
 
 Type: `string`
 
-Possible values: `jest`, `none`
+The path to import the module.
 
-Test runner to use for unit tests
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.
+
+### skipImport
+
+Default: `false`
+
+Type: `boolean`
+
+Flag to skip the module import.

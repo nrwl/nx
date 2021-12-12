@@ -2,6 +2,7 @@ import {
   AssetGlob,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
+import { TsPluginEntry } from '../../../utils/types';
 
 export interface NodePackageBuilderOptions {
   main: string;
@@ -16,6 +17,7 @@ export interface NodePackageBuilderOptions {
   srcRootForCompilationRoot?: string;
   deleteOutputPath: boolean;
   cli?: boolean;
+  tsPlugins?: TsPluginEntry[];
 }
 
 export interface NormalizedBuilderOptions extends NodePackageBuilderOptions {

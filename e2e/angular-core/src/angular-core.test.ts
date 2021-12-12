@@ -5,13 +5,15 @@ import {
   getSize,
   killPorts,
   newProject,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
   runCypressTests,
+  removeFile,
+  checkFilesDoNotExist,
 } from '@nrwl/e2e/utils';
 
 import { names } from '@nrwl/devkit';
@@ -21,7 +23,7 @@ describe('Angular Package', () => {
     let proj: string;
 
     beforeEach(() => (proj = newProject()));
-    afterEach(() => removeProject({ onlyOnCI: true }));
+    afterEach(() => cleanupProject());
 
     it('should work', async () => {
       const myapp = uniq('myapp');
@@ -42,10 +44,11 @@ describe('Angular Package', () => {
           names(mylib).className
         }Module } from '@${proj}/my-dir/${mylib}';
         import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
 
         @NgModule({
           imports: [BrowserModule, MyDir${names(mylib).className}Module],
-          declarations: [AppComponent],
+          declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
         })
         export class AppModule {}
@@ -72,9 +75,7 @@ describe('Angular Package', () => {
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
       if (runCypressTests()) {
-        const e2eResults = runCLI(
-          `e2e my-dir-${myapp}-e2e --headless --no-watch`
-        );
+        const e2eResults = runCLI(`e2e my-dir-${myapp}-e2e --no-watch`);
         expect(e2eResults).toContain('All specs passed!');
         expect(await killPorts()).toBeTruthy();
       }
@@ -101,6 +102,20 @@ describe('Angular Package', () => {
 
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
+    }, 1000000);
+
+    it('should support workspaces w/o workspace config file', async () => {
+      removeFile('workspace.json');
+      const myapp = uniq('myapp');
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`
+      );
+
+      runCLI(`build my-dir-${myapp} --aot`);
+      expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
+      expect(() =>
+        checkFilesDoNotExist('workspace.json', 'angular.json')
+      ).not.toThrow();
     }, 1000000);
   });
 });

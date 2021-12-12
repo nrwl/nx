@@ -11,4 +11,5 @@ export interface ReactNativeRunAndroidOptions {
   port: number;
   terminal?: string;
   packager: boolean;
+  resetCache?: boolean;
 }

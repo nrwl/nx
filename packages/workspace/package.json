@@ -55,21 +55,26 @@
   "peerDependencies": {
     "prettier": "^2.3.0"
   },
+  "peerDependenciesMeta": {
+    "prettier": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@parcel/watcher": "2.0.0-alpha.11",
-    "@nrwl/cli": "*",
-    "@nrwl/devkit": "*",
-    "@nrwl/jest": "*",
-    "@nrwl/linter": "*",
+    "@parcel/watcher": "2.0.4",
     "chokidar": "^3.5.1",
     "cosmiconfig": "^4.0.0",
     "fs-extra": "^9.1.0",
     "dotenv": "~10.0.0",
+    "figures": "3.2.0",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
+    "ink": "^3.2.0",
+    "ink-spinner": "^4.0.3",
     "npm-run-all": "^4.1.5",
     "npm-run-path": "^4.0.1",
     "open": "^7.4.2",
+    "react": "17.0.2",
     "rxjs": "^6.5.4",
     "semver": "7.3.4",
     "strip-ansi": "6.0.0",
@@ -80,6 +85,9 @@
     "flat": "^5.0.2",
     "minimatch": "3.0.4",
     "enquirer": "~2.3.6",
-    "tslib": "^2.0.0"
+    "tslib": "^2.3.0"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }

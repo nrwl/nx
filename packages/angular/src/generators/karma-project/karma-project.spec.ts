@@ -16,7 +16,6 @@ describe('karmaProject', () => {
     await libraryGenerator(tree, {
       name: 'lib1',
       buildable: false,
-      enableIvy: false,
       linter: Linter.EsLint,
       publishable: false,
       simpleModuleName: false,
@@ -99,7 +98,7 @@ describe('karmaProject', () => {
           types: ['jasmine', 'node'],
         },
         files: ['src/test.ts'],
-        include: ['**/*.spec.ts', '**/*.d.ts'],
+        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
       });
     });
 
@@ -141,7 +140,7 @@ describe('karmaProject', () => {
           types: ['jasmine', 'node'],
         },
         files: ['src/test.ts', 'src/polyfills.ts'],
-        include: ['**/*.spec.ts', '**/*.d.ts'],
+        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
       });
     });
 

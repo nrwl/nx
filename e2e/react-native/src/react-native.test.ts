@@ -1,6 +1,6 @@
 import {
   checkFilesExist,
-  getSelectedPackageManager,
+  expectTestsPass,
   newProject,
   readJson,
   runCLI,
@@ -16,9 +16,6 @@ describe('react native', () => {
   beforeEach(() => (proj = newProject()));
 
   it('should test, create ios and android JS bundles', async () => {
-    // currently react native does not support pnpm: https://github.com/pnpm/pnpm/issues/3321
-    if (getSelectedPackageManager() === 'pnpm') return;
-
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
@@ -34,15 +31,47 @@ describe('react native', () => {
       return updated;
     });
 
-    const appTestResults = await runCLIAsync(`test ${appName}`);
-    expect(appTestResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
+    expectTestsPass(await runCLIAsync(`test ${libName}`));
 
-    const libTestResults = await runCLIAsync(`test ${libName}`);
-    expect(libTestResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
+    const appLintResults = await runCLIAsync(`lint ${appName}`);
+    expect(appLintResults.combinedOutput).toContain('All files pass linting.');
+
+    const libLintResults = await runCLIAsync(`lint ${libName}`);
+    expect(libLintResults.combinedOutput).toContain('All files pass linting.');
+
+    const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
+    expect(iosBundleResult.combinedOutput).toContain(
+      'Done writing bundle output'
     );
+    expect(() =>
+      checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`)
+    ).not.toThrow();
+
+    const androidBundleResult = await runCLIAsync(`bundle-android ${appName}`);
+    expect(androidBundleResult.combinedOutput).toContain(
+      'Done writing bundle output'
+    );
+    expect(() =>
+      checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`)
+    ).not.toThrow();
+  }, 1000000);
+
+  xit('should support create application with js', async () => {
+    const appName = uniq('my-app');
+    runCLI(`generate @nrwl/react-native:application ${appName} --js`);
+    expect(() =>
+      checkFilesExist(
+        `apps/${appName}/src/main.js`,
+        `apps/${appName}/src/app/App.js`,
+        `apps/${appName}/src/app/App.spec.js`
+      )
+    ).not.toThrow();
+
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
+
+    const appLintResults = await runCLIAsync(`lint ${appName}`);
+    expect(appLintResults.combinedOutput).toContain('All files pass linting.');
 
     const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
     expect(iosBundleResult.combinedOutput).toContain(
@@ -62,9 +91,6 @@ describe('react native', () => {
   });
 
   it('sync npm dependencies for autolink', async () => {
-    // currently react native does not support pnpm: https://github.com/pnpm/pnpm/issues/3321
-    if (getSelectedPackageManager() === 'pnpm') return;
-
     const appName = uniq('my-app');
     runCLI(`generate @nrwl/react-native:application ${appName}`);
     // Add npm package with native modules

@@ -1,4 +1,10 @@
-import { getProjects, readJson, Tree, updateJson } from '@nrwl/devkit';
+import {
+  getProjects,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from './library';
 import { Linter } from '@nrwl/linter';
@@ -39,14 +45,14 @@ describe('lib', () => {
       });
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, tags: 'one,two' });
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-lib': {
+      const project = readProjectConfiguration(appTree, 'my-lib');
+      expect(project).toEqual(
+        expect.objectContaining({
           tags: ['one', 'two'],
-        },
-      });
+        })
+      );
     });
 
     it('should add react and react-dom packages to package.json if not already present', async () => {
@@ -116,6 +122,21 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
+    it('should ignore test files in tsconfig.lib.json', async () => {
+      await libraryGenerator(appTree, defaultSchema);
+      const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
+      expect(tsconfigJson.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.tsx',
+        '**/*.test.tsx',
+        '**/*.spec.js',
+        '**/*.test.js',
+        '**/*.spec.jsx',
+        '**/*.test.jsx',
+      ]);
+    });
+
     it('should generate files', async () => {
       await libraryGenerator(appTree, defaultSchema);
       expect(appTree.exists('libs/my-lib/package.json')).toBeFalsy();
@@ -170,18 +191,18 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
-    it('should update nx.json', async () => {
+    it('should update tags and implicitDependencies', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         directory: 'myDir',
         tags: 'one',
       });
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-dir-my-lib': {
+      const myLib = readProjectConfiguration(appTree, 'my-dir-my-lib');
+      expect(myLib).toEqual(
+        expect.objectContaining({
           tags: ['one'],
-        },
-      });
+        })
+      );
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
@@ -190,15 +211,12 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const nxJson2 = readJson(appTree, '/nx.json');
-      expect(nxJson2.projects).toEqual({
-        'my-dir-my-lib': {
-          tags: ['one'],
-        },
-        'my-dir-my-lib2': {
+      const myLib2 = readProjectConfiguration(appTree, 'my-dir-my-lib2');
+      expect(myLib2).toEqual(
+        expect.objectContaining({
           tags: ['one', 'two'],
-        },
-      });
+        })
+      );
     });
 
     it('should generate files', async () => {
@@ -425,7 +443,7 @@ describe('lib', () => {
       const workspaceJson = getProjects(appTree);
 
       expect(workspaceJson.get('my-lib').targets.build).toMatchObject({
-        executor: '@nrwl/web:package',
+        executor: '@nrwl/web:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime'],
@@ -485,6 +503,7 @@ describe('lib', () => {
 
       const workspaceJson = readJson(appTree, '/workspace.json');
       const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
+      const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.json');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
@@ -492,6 +511,9 @@ describe('lib', () => {
         },
       });
       expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
+      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
+        '@emotion/react'
+      );
     });
 
     it('should support styled-jsx', async () => {
@@ -612,6 +634,20 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).not.toBeDefined();
+    });
+  });
+
+  describe('--compiler', () => {
+    it('should install swc dependencies if needed', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        compiler: 'swc',
+      });
+      const packageJson = readJson(appTree, 'package.json');
+
+      expect(packageJson.devDependencies['@swc/core']).toEqual(
+        expect.any(String)
+      );
     });
   });
 

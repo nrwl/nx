@@ -84,28 +84,31 @@ export class TaskGraphCreator {
     seen: Set<string>
   ) {
     seen.add(project);
-    const projectDependencies = this.projectGraph.dependencies[project].map(
-      (dependency) => dependency.target
-    );
-    for (const projectDependency of projectDependencies) {
-      if (seen.has(projectDependency)) {
-        continue;
-      }
-      const dependency = this.findTask(
-        { project: projectDependency, target },
-        tasks
+    const dependencies = this.projectGraph.dependencies[project];
+    if (dependencies) {
+      const projectDependencies = dependencies.map(
+        (dependency) => dependency.target
       );
-      if (dependency) {
-        graph.dependencies[taskId].push(dependency.id);
-      } else {
-        this.addDependencies(
-          projectDependency,
-          target,
-          tasks,
-          graph,
-          taskId,
-          seen
+      for (const projectDependency of projectDependencies) {
+        if (seen.has(projectDependency)) {
+          continue;
+        }
+        const dependency = this.findTask(
+          { project: projectDependency, target },
+          tasks
         );
+        if (dependency) {
+          graph.dependencies[taskId].push(dependency.id);
+        } else {
+          this.addDependencies(
+            projectDependency,
+            target,
+            tasks,
+            graph,
+            taskId,
+            seen
+          );
+        }
       }
     }
   }

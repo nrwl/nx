@@ -1,4 +1,4 @@
-import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
+import { getWorkspaceLayout, joinPathFragments, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';
@@ -12,13 +12,16 @@ export function normalizeOptions(
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
-    enableIvy: false,
     linter: Linter.EsLint,
     name: '', // JSON validation will ensure this is set
     publishable: false,
     simpleModuleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
+    // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
+    compilationMode: schema.publishable
+      ? 'partial'
+      : schema.compilationMode ?? 'full',
     ...schema,
   };
 
@@ -29,9 +32,11 @@ export function normalizeOptions(
 
   const { libsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = projectDirectory
+    .replace(new RegExp('/', 'g'), '-')
+    .replace(/-\d+/g, '');
   const fileName = options.simpleModuleName ? name : projectName;
-  const projectRoot = `${libsDir}/${projectDirectory}`;
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
@@ -40,7 +45,7 @@ export function normalizeOptions(
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
   const defaultPrefix = npmScope;
 
-  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
+  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
   const importPath =
     options.importPath || `@${defaultPrefix}/${projectDirectory}`;

@@ -2,7 +2,7 @@ import {
   checkFilesExist,
   newProject,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -15,7 +15,7 @@ beforeAll(() => {
   proj = newProject();
 });
 
-afterAll(() => removeProject({ onlyOnCI: true }));
+afterAll(() => cleanupProject());
 
 describe('@nrwl/workspace:library', () => {
   it('should be able to be created', () => {
@@ -41,24 +41,13 @@ describe('@nrwl/workspace:library', () => {
       expect(result).toContain(`Linting "${libName}"...`);
       expect(result).toContain('All files pass linting.');
     });
-
-    it('should support tslint', () => {
-      const libName = uniq('mylib');
-
-      runCLI(`generate @nrwl/workspace:lib ${libName} --linter tslint`);
-
-      const result = runCLI(`lint ${libName}`);
-
-      expect(result).toContain(`Linting "${libName}"...`);
-      expect(result).toContain('All files pass linting.');
-    });
   });
 
   describe('unit testing', () => {
     it('should support jest', async () => {
       const libName = uniq('mylib');
 
-      runCLI(`generate @nrwl/workspace:lib ${libName} --linter tslint`);
+      runCLI(`generate @nrwl/workspace:lib ${libName}`);
 
       const { stderr: result } = await runCLIAsync(`test ${libName}`);
 

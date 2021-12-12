@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/react:application
 
 Create an application
@@ -152,8 +157,6 @@ Skip updating workspace.json with default options based on values provided to th
 
 ### standaloneConfig
 
-Default: `false`
-
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
@@ -164,7 +167,7 @@ Default: `true`
 
 Type: `boolean`
 
-Creates an application with stricter type checking and build optimization options.
+Creates an application with strict mode and strict type checking
 
 ### style
 

@@ -11,13 +11,14 @@ import {
   promisifiedTreeKill,
   readFile,
   readJson,
+  removeFile,
   runCLI,
   runCLIAsync,
   runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
 
@@ -57,6 +58,19 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
+  it('should be able to generate the correct outputFileName in options', async () => {
+    const nodeapp = uniq('nodeapp');
+    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+
+    updateProjectConfig(nodeapp, (config) => {
+      config.targets.build.options.outputFileName = 'index.js';
+      return config;
+    });
+
+    await runCLIAsync(`build ${nodeapp}`);
+    checkFilesExist(`dist/apps/${nodeapp}/index.js`);
+  }, 300000);
+
   // TODO: This test fails in CI, but succeeds locally. It should be re-enabled once the reasoning is understood.
   xit('should be able to generate an empty application with standalone configuration', async () => {
     const nodeapp = uniq('nodeapp');
@@ -83,20 +97,14 @@ describe('Node Applications', () => {
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    updateFile('workspace.json', (workspaceJson) => {
-      const workspace = JSON.parse(workspaceJson);
-
-      workspace.projects[nodeapp].targets.build.options.additionalEntryPoints =
-        [
-          {
-            entryName: 'additional-main',
-            entryPath: `apps/${nodeapp}/src/additional-main.ts`,
-          },
-        ];
-
-      const newWorkspace = JSON.stringify(workspace, undefined, 2);
-
-      return newWorkspace;
+    updateProjectConfig(nodeapp, (config) => {
+      config.targets.build.options.additionalEntryPoints = [
+        {
+          entryName: 'additional-main',
+          entryPath: `apps/${nodeapp}/src/additional-main.ts`,
+        },
+      ];
+      return config;
     });
 
     updateFile(
@@ -267,11 +275,11 @@ describe('Build Node apps', () => {
     expect(packageJson).toEqual(
       expect.objectContaining({
         dependencies: {
-          '@nestjs/common': '^7.0.0',
-          '@nestjs/core': '^7.0.0',
-          '@nestjs/platform-express': '^7.0.0',
+          '@nestjs/common': '^8.0.0',
+          '@nestjs/core': '^8.0.0',
+          '@nestjs/platform-express': '^8.0.0',
           'reflect-metadata': '^0.1.13',
-          rxjs: '~6.6.3',
+          rxjs: '^7.0.0',
         },
         main: 'main.js',
         name: expect.any(String),
@@ -289,11 +297,9 @@ describe('Build Node apps', () => {
       // TODO: update to v5 when Nest8 is supported
       packageInstall('@nestjs/swagger', undefined, '4.8.2');
 
-      updateWorkspaceConfig((workspace) => {
-        workspace.projects[nestapp].targets.build.options.tsPlugins = [
-          '@nestjs/swagger/plugin',
-        ];
-        return workspace;
+      updateProjectConfig(nestapp, (config) => {
+        config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
+        return config;
       });
 
       updateFile(
@@ -309,9 +315,17 @@ export class FooDto {
         `
 import { Controller, Get } from '@nestjs/common';
 import { FooDto } from './foo.dto';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getData() {
+    return this.appService.getData();
+  }
+
   @Get('foo')
   getFoo(): Promise<FooDto> {
     return Promise.resolve({
@@ -374,7 +388,7 @@ describe('Node Libraries', () => {
         declaration: true,
         types: ['node'],
       },
-      exclude: ['**/*.spec.ts'],
+      exclude: ['**/*.spec.ts', '**/*.test.ts'],
       include: ['**/*.ts'],
     });
     await runCLIAsync(`build ${nodeLib}`);
@@ -392,11 +406,9 @@ describe('Node Libraries', () => {
     });
 
     // Copying package.json from assets
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[nodeLib].targets.build.options.assets.push(
-        `libs/${nodeLib}/package.json`
-      );
-      return workspace;
+    updateProjectConfig(nodeLib, (config) => {
+      config.targets.build.options.assets.push(`libs/${nodeLib}/package.json`);
+      return config;
     });
     createFile(`dist/libs/${nodeLib}/_should_remove.txt`); // Output directory should be removed
     await runCLIAsync(`build ${nodeLib}`);
@@ -416,9 +428,9 @@ describe('Node Libraries', () => {
       `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
     );
 
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[nodeLib].targets.build.options.cli = true;
-      return workspace;
+    updateProjectConfig(nodeLib, (config) => {
+      config.targets.build.options.cli = true;
+      return config;
     });
 
     await runCLIAsync(`build ${nodeLib}`);
@@ -482,18 +494,18 @@ describe('Node Libraries', () => {
       `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
     );
 
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[nodelib].targets.build.options.assets.push({
+    updateProjectConfig(nodelib, (config) => {
+      config.targets.build.options.assets.push({
         input: `./dist/libs/${nglib}`,
         glob: '**/*',
         output: '.',
       });
-      return workspace;
+      return config;
     });
 
     runCLI(`build ${nglib}`);
     runCLI(`build ${nodelib}`);
-    checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
+    checkFilesExist(`./dist/libs/${nodelib}/esm2020/index.mjs`);
   }, 300000);
 
   it('should fail when trying to compile typescript files that are invalid', () => {
@@ -585,6 +597,66 @@ describe('nest libraries', function () {
       'Test Suites: 2 passed, 2 total'
     );
   }, 200000);
+
+  it('should have plugin output if specified in `tsPlugins`', async () => {
+    newProject();
+    const nestlib = uniq('nestlib');
+    runCLI(`generate @nrwl/nest:lib ${nestlib} --buildable`);
+
+    // TODO: update to v5 when Nest8 is supported
+    packageInstall('@nestjs/swagger', undefined, '4.8.2');
+
+    updateProjectConfig(nestlib, (config) => {
+      config.targets.build.options.tsPlugins = [
+        {
+          name: '@nestjs/swagger/plugin',
+          options: {
+            dtoFileNameSuffix: ['.model.ts'],
+          },
+        },
+      ];
+      return config;
+    });
+
+    updateFile(
+      `libs/${nestlib}/src/lib/foo.model.ts`,
+      `
+export class FooModel {
+  foo: string;
+  bar: number;
+}`
+    );
+
+    await runCLIAsync(`build ${nestlib}`);
+
+    const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
+    expect(stripIndents`${fooModelJs}`).toContain(
+      stripIndents`
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FooModel = void 0;
+const openapi = require("@nestjs/swagger");
+class FooModel {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+    }
+}
+exports.FooModel = FooModel;
+//# sourceMappingURL=foo.model.js.map
+        `
+    );
+  }, 300000);
+
+  it('should support workspaces w/o workspace config file', async () => {
+    removeFile('workspace.json');
+    const app2 = uniq('app2');
+    runCLI(`generate @nrwl/node:app ${app2} --directory=myDir`);
+
+    runCLI(`build my-dir-${app2}`);
+    expect(() =>
+      checkFilesDoNotExist('workspace.json', 'angular.json')
+    ).not.toThrow();
+  }, 1000000);
 });
 
 describe('with dependencies', () => {

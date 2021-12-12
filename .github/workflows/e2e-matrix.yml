@@ -18,7 +18,7 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          - windows-latest
+          # - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
@@ -26,11 +26,10 @@ jobs:
           - os: macos-latest
             os-name: osx
             os-cache-dir: /tmp/nx-cache
-          - os: windows-latest
-            os-name: windows
-            os-cache-dir: ./nx-cache
+          # - os: windows-latest
+          #   os-name: windows
+          #   os-cache-dir: ./nx-cache
         node_version:
-          - '14'
           - '16'
         package_manager:
           - npm
@@ -47,49 +46,67 @@ jobs:
           - e2e-storybook
           - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
           - e2e-react-native,e2e-detox
+          - e2e-add-nx-to-monorepo
         exclude:
+          # exclude react-native and detox from ubuntu
           - os: ubuntu-latest
-            node_version: '14'
-            package_manager: pnpm
-          - os: ubuntu-latest
-            node_version: '16'
-            package_manager: npm
-          - os: ubuntu-latest
-            node_version: '16'
-            package_manager: yarn
-          - os: macos-latest
-            node_version: '14'
+            packages: e2e-react-native,e2e-detox
+          # run just npm on macos
           - os: macos-latest
             package_manager: yarn
           - os: macos-latest
             package_manager: pnpm
+          # exclude everything but react-native and detox from macos
           - os: macos-latest
             packages: e2e-workspace-core
           - os: macos-latest
-            packages: e2e-workspace-integrations
+            packages: e2e-angular-core,e2e-angular-extensions
           - os: macos-latest
-            packages: e2e-workspace-create
-          - os: windows-latest
-            node_version: '14'
-          - os: windows-latest
-            package_manager: yarn
-          - os: windows-latest
-            package_manager: pnpm
-          - os: windows-latest
-            packages: e2e-react-native,e2e-detox
+            packages: e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          - os: macos-latest
+            packages: e2e-cypress
+          - os: macos-latest
+            packages: e2e-gatsby,e2e-react
+          - os: macos-latest
+            packages: e2e-next
+          - os: macos-latest
+            packages: e2e-node
+          - os: macos-latest
+            packages: e2e-web
+          - os: macos-latest
+            packages: e2e-storybook
+          - os: macos-latest
+            packages: e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
+          - os: macos-latest
+            packages: e2e-add-nx-to-monorepo
+          # # run just npm on windows
+          # - os: windows-latest
+          #   package_manager: yarn
+          # - os: windows-latest
+          #   package_manager: pnpm
+          # # exclude react-native from windows
+          # - os: windows-latest
+          #   packages: e2e-react-native,e2e-detox
       fail-fast: false
 
-    name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
+    name: ${{ matrix.os-name }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
+    - name: Install PNPM
+      if: ${{ matrix.package_manager == 'pnpm' }}
+      uses: pnpm/action-setup@v2.0.1
+      with:
+        version: 6.9.1
+
     - name: Use Node.js ${{ matrix.node_version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v2.4.0
       with:
         node-version: ${{ matrix.node_version }}
+        registry-url: http://localhost:4872
 
     - name: Yarn cache directory path
       id: yarn-cache-dir-path
@@ -104,7 +121,7 @@ jobs:
           ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
 
     - name: Install packages
-      run: yarn install --prefer-offline --non-interactive
+      run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
     - name: Cleanup
       if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -118,24 +135,32 @@ jobs:
         sudo apt-get install lsof
         echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
-    - name: Install PNPM
-      if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v2.0.1
+    - name: Homebrew cache directory path
+      if: ${{ matrix.os == 'macos-latest' }}
+      id: homebrew-cache-dir-path
+      run: echo "::set-output name=dir::$(brew --cache)"
+
+    - name: Cache Homebrew
+      if: ${{ matrix.os == 'macos-latest' }}
+      uses: actions/cache@v2
       with:
-        version: 6.9.1
+        path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
+        key: brew-${{ matrix.node-version }}
+        restore-keys: |
+          brew-
 
     - name: Install applesimutils, reset ios simulators
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-        brew install applesimutils
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
         xcrun simctl shutdown all && xcrun simctl erase all
 
     - name: Run e2e tests
-      run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
+      run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}" --parallel=1
       env:
-        GIT_AUTHOR_NAME: test@test.com
-        GIT_AUTHOR_EMAIL: Test
+        GIT_AUTHOR_EMAIL: test@test.com
+        GIT_AUTHOR_NAME: Test
         GIT_COMMITTER_EMAIL: test@test.com
         GIT_COMMITTER_NAME: Test
         NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
@@ -144,7 +169,8 @@ jobs:
         SELECTED_PM: ${{ matrix.package_manager }}
         npm_config_registry: http://localhost:4872
         YARN_REGISTRY: http://localhost:4872
-        VERBOSE_OUTPUT: ${{ 'true' }}
+        NX_VERBOSE_LOGGING: ${{ 'true' }}
+        NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
         NX_CACHE_DIRECTORY: ${{ matrix.os-cache-dir }}
 
     - name: Setup tmate session

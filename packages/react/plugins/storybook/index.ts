@@ -7,9 +7,10 @@ import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-u
 import { logger } from '@storybook/node-logger';
 import { join } from 'path';
 import { gte } from 'semver';
-import { Configuration } from 'webpack';
+import { Configuration, WebpackPluginInstance } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
+
 const reactWebpackConfig = require('../webpack');
 
 export const babelDefault = (): Record<
@@ -72,7 +73,7 @@ export const webpack = async (
   const extractCss = storybookWebpackConfig.mode === 'production';
 
   // ESM build for modern browsers.
-  const baseWebpackConfig = mergeWebpack([
+  const baseWebpackConfig = mergeWebpack.merge([
     getBaseWebpackPartial(builderOptions, esm, isScriptOptimizeOn),
     getStylesPartial(
       options.workspaceRoot,
@@ -104,7 +105,7 @@ export const webpack = async (
     const babelrc = readJsonFile(
       joinPathFragments(options.configDir, '../', '.babelrc')
     );
-    if (babelrc.plugins.includes('@emotion/babel-plugin')) {
+    if (babelrc?.plugins?.includes('@emotion/babel-plugin')) {
       resolvedEmotionAliases = {
         resolve: {
           alias: {
@@ -128,7 +129,7 @@ export const webpack = async (
       };
     }
   }
-  return mergeWebpack(
+  return mergeWebpack.merge(
     {
       ...storybookWebpackConfig,
       module: {
@@ -141,7 +142,8 @@ export const webpack = async (
       resolve: {
         ...storybookWebpackConfig.resolve,
         plugins: mergePlugins(
-          ...(storybookWebpackConfig.resolve.plugins ?? []),
+          ...((storybookWebpackConfig.resolve.plugins ??
+            []) as unknown as WebpackPluginInstance[]),
           ...(finalConfig.resolve.plugins ?? [])
         ),
       },

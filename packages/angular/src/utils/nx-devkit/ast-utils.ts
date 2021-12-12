@@ -7,6 +7,7 @@ import {
   insertChange,
   removeChange,
   getImport,
+  replaceChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
 
 function _angularImportsFromNode(
@@ -339,6 +340,80 @@ export function addImportToTestBed(
       specPath,
       startPosition,
       `imports: [${symbolName}], `
+    );
+  }
+  return source;
+}
+
+export function addDeclarationsToTestBed(
+  host: Tree,
+  source: ts.SourceFile,
+  specPath: string,
+  symbolName: string[]
+): ts.SourceFile {
+  const allCalls: ts.CallExpression[] = <any>(
+    findNodes(source, ts.SyntaxKind.CallExpression)
+  );
+
+  const configureTestingModuleObjectLiterals = allCalls
+    .filter((c) => c.expression.kind === ts.SyntaxKind.PropertyAccessExpression)
+    .filter(
+      (c: any) => c.expression.name.getText(source) === 'configureTestingModule'
+    )
+    .map((c) =>
+      c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
+        ? c.arguments[0]
+        : null
+    );
+
+  if (configureTestingModuleObjectLiterals.length > 0) {
+    const startPosition = configureTestingModuleObjectLiterals[0]
+      .getFirstToken(source)
+      .getEnd();
+    return insertChange(
+      host,
+      source,
+      specPath,
+      startPosition,
+      `declarations: [${symbolName.join(',')}], `
+    );
+  }
+  return source;
+}
+
+export function replaceIntoToTestBed(
+  host: Tree,
+  source: ts.SourceFile,
+  specPath: string,
+  newSymbol: string,
+  previousSymbol: string
+): ts.SourceFile {
+  const allCalls: ts.CallExpression[] = <any>(
+    findNodes(source, ts.SyntaxKind.CallExpression)
+  );
+
+  const configureTestingModuleObjectLiterals = allCalls
+    .filter((c) => c.expression.kind === ts.SyntaxKind.PropertyAccessExpression)
+    .filter(
+      (c: any) => c.expression.name.getText(source) === 'configureTestingModule'
+    )
+    .map((c) =>
+      c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
+        ? c.arguments[0]
+        : null
+    );
+
+  if (configureTestingModuleObjectLiterals.length > 0) {
+    const startPosition = configureTestingModuleObjectLiterals[0]
+      .getFirstToken(source)
+      .getEnd();
+    return replaceChange(
+      host,
+      source,
+      specPath,
+      startPosition,
+      newSymbol,
+      previousSymbol
     );
   }
   return source;

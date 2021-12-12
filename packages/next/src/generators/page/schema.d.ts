@@ -8,4 +8,5 @@ export interface Schema {
   fileName?: string;
   withTests?: boolean;
   js?: boolean;
+  flat?: boolean;
 }

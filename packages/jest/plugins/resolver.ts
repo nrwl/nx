@@ -1,4 +1,5 @@
 import { dirname, extname } from 'path';
+import { resolve as resolveExports } from 'resolve.exports';
 import type defaultResolver from 'jest-resolve/build/defaultResolver';
 
 interface ResolveOptions {
@@ -48,9 +49,27 @@ module.exports = function (path: string, options: ResolveOptions) {
   ) {
     return require.resolve('identity-obj-proxy');
   }
-  // Try to use the defaultResolver
   try {
-    return options.defaultResolver(path, options);
+    try {
+      // Try to use the defaultResolver with default options
+      return options.defaultResolver(path, options);
+    } catch {
+      // Try to use the defaultResolver with a packageFilter
+      return options.defaultResolver(path, {
+        ...options,
+        packageFilter: (pkg) => ({
+          ...pkg,
+          main: pkg.main || pkg.es2015 || pkg.module,
+        }),
+        pathFilter: (pkg) => {
+          if (!pkg.exports) {
+            return path;
+          }
+
+          return resolveExports(pkg, path) || path;
+        },
+      });
+    }
   } catch (e) {
     if (
       path === 'jest-sequencer-@jest/test-sequencer' ||

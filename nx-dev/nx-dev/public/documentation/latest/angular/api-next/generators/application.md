@@ -1,3 +1,8 @@
+---
+title: '@nrwl/next:application generator'
+description: 'Create a Next.js application'
+---
+
 # @nrwl/next:application
 
 Create a Next.js application
@@ -110,8 +115,6 @@ Skip updating workspace.json with default options based on values provided to th
 
 ### standaloneConfig
 
-Default: `false`
-
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
@@ -127,6 +130,14 @@ Type: `string`
 Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `styled-jsx`
 
 The file extension to be used for style files.
+
+### swc
+
+Default: `true`
+
+Type: `boolean`
+
+Enable the Rust-based compiler SWC to compile JS/TS files.
 
 ### tags
 

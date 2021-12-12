@@ -78,7 +78,7 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
-    entryFile: "<%= appProjectRoot %>/src/main.tsx",
+    entryFile: "<%= entryFile %>",
     enableHermes: false,  // clean and rebuild if changing
 ]
 

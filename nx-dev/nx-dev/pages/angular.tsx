@@ -2,67 +2,49 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import Head from 'next/head';
-import {
-  Footer,
-  Header,
-  InlineCommand,
-  NxUsersShowcase,
-} from '@nrwl/nx-dev/ui/common';
+import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
+import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
+import { NextSeo } from 'next-seo';
 
 export function AngularPage() {
   const router = useRouter();
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Head>
-        <title>Nx and Modern Angular</title>
-        <meta
-          name="description"
-          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
-          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
-        />
-        <meta name="twitter:title" content="Nx and Modern Angular" />
-        <meta
-          name="twitter:description"
-          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
-          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/angular" />
-        <meta
-          property="og:description"
-          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
-          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
-        />
-        <meta property="og:title" content="Nx and Modern Angular" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx and Modern Angular"
+        description="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, full monorepo support and more."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and Modern Angular',
+          description:
+            'Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, full monorepo support and more.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'angular',
-          value: storedFlavor || 'angular',
+          name: selectedFlavor || 'Angular',
+          value: selectedFlavor || 'a',
         }}
         version={{
           name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
+          value: storedVersion || 'l',
         }}
       />
       <main>
@@ -111,9 +93,9 @@ export function AngularPage() {
                       get started by creating a modern Angular workspace with Nx
                     </a>
                     , or{' '}
-                    <Link href="/l/a/migration/overview">
+                    <Link href="/l/a/migration/migration-angular">
                       <a className="underline pointer">
-                        add it to an existing Angular workspace
+                        migrate an existing Angular workspace
                       </a>
                     </Link>{' '}
                     .
@@ -213,7 +195,7 @@ export function AngularPage() {
                 </div>
                 <p className="italic sm:text-lg my-6">
                   If you want to{' '}
-                  <Link href="/l/a/migration/overview">
+                  <Link href="/l/a/migration/migration-angular">
                     <a className="underline pointer">
                       add Nx to an existing Angular project, check out this
                       guide
@@ -391,26 +373,25 @@ export function AngularPage() {
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Nx Integrated Development Experience
+                    Integrated Development Experience
                   </h3>
                   <p className="sm:text-lg mb-6">
-                    Nx provides a modern dev experience that is more integrated.
-                    Nx adds a high-quality VS Code plugin which helps you use
-                    the build tool effectively, generate components in folders,
-                    and much more.
+                    Nx provides a modern integrated dev experience. Nx adds a
+                    high-quality VS Code plugin which helps you use the build
+                    tool effectively, generate components in folders, and much
+                    more.
                   </p>
                   <p className="sm:text-lg mb-6">
-                    Nx also supports optional free cloud support with Nx Cloud
-                    as well as GitHub integration. Share links with your
-                    teammates where everyone working on a project can examine
-                    detailed build logs and get insights about how to improve
-                    your project and build.
+                    Nx also has optional free cloud support as well as GitHub
+                    integration. Share links with your teammates where everyone
+                    working on a project can examine detailed build logs and get
+                    insights about how to improve your project and build.
                   </p>
                 </div>
                 <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <Image
                     src="/images/vscode-nxcloud-pr.png"
-                    alt="Nx Integrated Development Experience illustration"
+                    alt="Integrated Development Experience illustration"
                     width={870}
                     height={830}
                   />
@@ -488,7 +469,7 @@ export function AngularPage() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Tune into regular Nx Office Hours livestreams
+                      Tune into regular Nx Show livestreams
                     </a>
                   </li>
                   <li className="mt-4">

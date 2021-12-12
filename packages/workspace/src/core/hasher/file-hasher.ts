@@ -18,6 +18,7 @@ export class FileHasher {
     this.fileHashes = {};
     this.workspaceFiles = new Set<string>();
     this.usesGitForHashing = false;
+    this.isInitialized = false;
   }
 
   /**
@@ -44,18 +45,14 @@ export class FileHasher {
     return getFileHashesResult.untrackedUncommittedFiles;
   }
 
-  /**
-   * This method is used in cases where we do not want to fully tear down the
-   * known state of file hashes, and instead only want to hash an updated Map
-   * of files which are provided to the method.
-   *
-   * For example, the daemon server performs file-watching and knows at a granular
-   * level what needs to be rehashed in order to accurately update the overall state.
-   */
-  incrementalUpdate(updatedHashes: Map<string, string>): void {
+  incrementalUpdate(
+    updatedFiles: Map<string, string>,
+    deletedFiles: string[] = []
+  ): void {
+    this.ensureInitialized();
     performance.mark('incremental hashing:start');
 
-    updatedHashes.forEach((hash, filename) => {
+    updatedFiles.forEach((hash, filename) => {
       this.fileHashes[filename] = hash;
       /**
        * we have to store it separately because fileHashes can be modified
@@ -64,25 +61,17 @@ export class FileHasher {
       this.workspaceFiles.add(filename);
     });
 
+    for (const deletedFile of deletedFiles) {
+      delete this.fileHashes[deletedFile];
+      this.workspaceFiles.delete(deletedFile);
+    }
+
     performance.mark('incremental hashing:end');
     performance.measure(
       'incremental hashing',
       'incremental hashing:start',
       'incremental hashing:end'
     );
-  }
-
-  /**
-   * In the case of the daemon server, because it performs file-watching, it
-   * knows when one or more files have been deleted from the workspace and can
-   * therefore precisely update the source of truth for file hashes and workspace
-   * files.
-   */
-  removeFiles(deletedFiles: string[]): void {
-    for (const deletedFile of deletedFiles) {
-      delete this.fileHashes[deletedFile];
-      this.workspaceFiles.delete(deletedFile);
-    }
   }
 
   hashFile(path: string): string {

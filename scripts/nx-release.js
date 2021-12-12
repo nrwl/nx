@@ -42,10 +42,12 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-console.log('> git fetch --all');
-childProcess.execSync('git fetch --all', {
-  stdio: [0, 1, 2],
-});
+if (!parsedArgs.local) {
+  console.log('> git fetch --all');
+  childProcess.execSync('git fetch --all', {
+    stdio: [0, 1, 2],
+  });
+}
 
 function updatePackageJsonFiles(parsedVersion, isLocal) {
   let pkgFiles = [
@@ -73,6 +75,7 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/nx/package.json',
     'build/npm/react-native/package.json',
     'build/npm/detox/package.json',
+    'build/npm/js/package.json',
   ];
   if (isLocal) {
     pkgFiles = pkgFiles.filter((f) => f !== 'package.json');

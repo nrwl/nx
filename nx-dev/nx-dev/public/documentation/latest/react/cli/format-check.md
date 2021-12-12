@@ -1,3 +1,8 @@
+---
+title: 'format:check - CLI command'
+description: 'Check for un-formatted files'
+---
+
 # format:check
 
 Check for un-formatted files
@@ -18,7 +23,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

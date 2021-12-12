@@ -1,19 +1,20 @@
 import { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
-import * as fs from 'fs';
 
 let runCLI = jest.fn();
+let readConfig = jest.fn(() =>
+  Promise.resolve({
+    projectConfig: {
+      displayName: 'something',
+    },
+  })
+);
+
 jest.mock('jest', () => ({
   runCLI,
 }));
 
-// Mocking these 2 functions is required for jest-config
-// Otherwise, jest throws with "Can't find a root directory while resolving a config file path"
-jest.mock('fs', () => ({
-  ...(jest.requireActual('fs') as typeof fs),
-  existsSync: () => true,
-  lstatSync: () => ({
-    isDirectory: () => false,
-  }),
+jest.mock('jest-config', () => ({
+  readConfig,
 }));
 
 import { jestExecutor } from './jest.impl';
@@ -49,6 +50,7 @@ describe('Jest Executor', () => {
             },
           },
         },
+        npmScope: 'test',
       },
       target: {
         executor: '@nrwl/jest:jest',
@@ -59,6 +61,10 @@ describe('Jest Executor', () => {
   });
 
   afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
     jest.resetAllMocks();
   });
 
@@ -175,6 +181,7 @@ describe('Jest Executor', () => {
           showConfig: true,
           silent: true,
           testNamePattern: 'test',
+          testPathIgnorePatterns: ['/test/path/|/tests/e2e/'],
           testPathPattern: ['/test/path'],
           colors: false,
           reporters: ['/test/path'],
@@ -206,6 +213,7 @@ describe('Jest Executor', () => {
           showConfig: true,
           silent: true,
           testNamePattern: 'test',
+          testPathIgnorePatterns: ['/test/path/|/tests/e2e/'],
           testPathPattern: ['/test/path'],
           colors: false,
           verbose: false,

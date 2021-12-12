@@ -1,6 +1,6 @@
 # run-many
 
-Run task for multiple projects
+Run target for multiple listed projects
 
 ## Usage
 
@@ -8,32 +8,26 @@ Run task for multiple projects
 nx run-many
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
-Test all projects.:
+Test all projects:
 
 ```bash
 nx run-many --target=test --all
 ```
 
-Test proj1 and proj2.:
+Test proj1 and proj2:
 
 ```bash
 nx run-many --target=test --projects=proj1,proj2
 ```
 
-Test proj1 and proj2 in parallel.:
+Test proj1 and proj2 in parallel:
 
 ```bash
 nx run-many --target=test --projects=proj1,proj2 --parallel --maxParallel=2
-```
-
-Build proj1 and proj2 and all their dependencies.:
-
-```bash
-nx run-many --target=test --projects=proj1,proj2 --with-deps
 ```
 
 ## Options
@@ -46,13 +40,21 @@ Run the target on all projects in the workspace
 
 This is the configuration to use when performing tasks on projects
 
+### exclude
+
+Default: ``
+
+Exclude certain projects from being processed
+
 ### help
 
 Show help
 
 ### maxParallel
 
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)
+Default: `3`
+
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
 
 ### only-failed
 
@@ -62,7 +64,9 @@ Only run the target on projects which previously failed
 
 ### parallel
 
-Parallelize the command (default: false)
+Default: `false`
+
+Parallelize the command
 
 ### projects
 
@@ -90,8 +94,10 @@ Print additional error stack trace on failure
 
 Show version number
 
-### with-deps
+### ~~with-deps~~
 
 Default: `false`
+
+**Deprecated:** Configure target dependencies instead. It will be removed in v14.
 
 Include dependencies of specified projects when computing what to run

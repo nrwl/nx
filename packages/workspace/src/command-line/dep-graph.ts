@@ -7,22 +7,19 @@ import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
-import { basename, dirname, join, parse } from 'path';
+import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
+import { ProjectGraphProjectNode } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
 import { defaultFileHasher } from '../core/hasher/file-hasher';
 import {
   createProjectGraphAsync,
-  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  pruneExternalNodes,
 } from '../core/project-graph';
-import {
-  cacheDirectory,
-  readCacheDirectoryProperty,
-} from '../utilities/cache-directory';
 import { writeJsonFile } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 
@@ -31,9 +28,6 @@ export interface DepGraphClientResponse {
   projects: ProjectGraphNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   layout: { appsDir: string; libsDir: string };
-  changes: {
-    added: string[];
-  };
   affected: string[];
   focus: string;
   groupByFolder: boolean;
@@ -58,74 +52,46 @@ const mimeType = {
   '.ttf': 'aplication/font-sfnt',
 };
 
-const nxDepsDir = cacheDirectory(
-  appRootPath,
-  readCacheDirectoryProperty(appRootPath)
-);
-
-async function projectsToHtml(
-  projects: ProjectGraphNode[],
-  graph: ProjectGraph,
-  affected: string[],
+function buildEnvironmentJs(
+  exclude: string[],
   focus: string,
   groupByFolder: boolean,
-  exclude: string[],
-  layout: { appsDir: string; libsDir: string },
-  localMode: 'serve' | 'build',
-  watchMode: boolean = false
+  watchMode: boolean,
+  localMode: 'build' | 'serve',
+  depGraphClientResponse?: DepGraphClientResponse
 ) {
-  let f = readFileSync(
-    join(__dirname, '../core/dep-graph/index.html'),
-    'utf-8'
-  );
-
-  f = f
-    .replace(
-      `window.projects = []`,
-      `window.projects = ${JSON.stringify(projects)}`
-    )
-    .replace(`window.graph = {}`, `window.graph = ${JSON.stringify(graph)}`)
-    .replace(
-      `window.affected = []`,
-      `window.affected = ${JSON.stringify(affected)}`
-    )
-    .replace(
-      `window.groupByFolder = false`,
-      `window.groupByFolder = ${!!groupByFolder}`
-    )
-    .replace(
-      `window.exclude = []`,
-      `window.exclude = ${JSON.stringify(exclude)}`
-    )
-    .replace(
-      `window.workspaceLayout = null`,
-      `window.workspaceLayout = ${JSON.stringify(layout)}`
-    );
-
-  if (focus) {
-    f = f.replace(
-      `window.focusedProject = null`,
-      `window.focusedProject = '${focus}'`
-    );
-  }
-
-  if (watchMode) {
-    f = f.replace(`window.watch = false`, `window.watch = true`);
-  }
+  let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
+  window.groupByFolder = ${!!groupByFolder};
+  window.watch = ${!!watchMode};
+  window.environment = 'release';
+  window.localMode = '${localMode}';
+  
+  window.appConfig = {
+    showDebugger: false,
+    projectGraphs: [
+      {
+        id: 'local',
+        label: 'local',
+        url: 'projectGraph.json',
+      }
+    ],
+    defaultProjectGraph: 'local',
+  };
+  `;
 
   if (localMode === 'build') {
-    currentDepGraphClientResponse = await createDepGraphClientResponse();
-    f = f.replace(
-      `window.projectGraphResponse = null`,
-      `window.projectGraphResponse = ${JSON.stringify(
-        currentDepGraphClientResponse
-      )}`
-    );
-
-    f = f.replace(`window.localMode = 'serve'`, `window.localMode = 'build'`);
+    environmentJs += `window.projectGraphResponse = ${JSON.stringify(
+      depGraphClientResponse
+    )};`;
+  } else {
+    environmentJs += `window.projectGraphResponse = null;`;
   }
 
-  return f;
+  if (!!focus) {
+    environmentJs += `window.focusedProject = '${focus}';`;
+  }
+
+  return environmentJs;
 }
 
 function projectExists(projects: ProjectGraphNode[], projectToFind: string) {
@@ -205,7 +171,7 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  let graph = onlyWorkspaceProjects(await createProjectGraphAsync('4.0'));
+  let graph = pruneExternalNodes(await createProjectGraphAsync());
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];
@@ -241,40 +207,23 @@ export async function generateGraph(
     }
   }
 
-  let html: string;
+  let html = readFileSync(
+    join(__dirname, '../core/dep-graph/index.html'),
+    'utf-8'
+  );
 
-  if (!args.file || args.file.endsWith('html')) {
-    html = await projectsToHtml(
-      projects,
-      graph,
-      affectedProjects,
-      args.focus || null,
-      args.groupByFolder || false,
-      args.exclude || [],
-      layout,
-      !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
-      args.watch
-    );
-  } else {
-    graph = filterGraph(graph, args.focus || null, args.exclude || []);
-  }
+  graph = filterGraph(graph, args.focus || null, args.exclude || []);
 
   if (args.file) {
-    let folder = appRootPath;
-    let filename = args.file;
-    let ext = args.file.replace(/^.*\.(.*)$/, '$1');
+    const workspaceFolder = appRootPath;
+    const ext = extname(args.file);
+    const fullFilePath = isAbsolute(args.file)
+      ? args.file
+      : join(workspaceFolder, args.file);
+    const fileFolderPath = dirname(fullFilePath);
 
-    if (ext === 'html') {
-      if (filename.includes('/')) {
-        const [_match, _folder, _file] = /^(.*)\/([^/]*\.(.*))$/.exec(
-          args.file
-        );
-        folder = `${appRootPath}/${_folder}`;
-        filename = _file;
-      }
-      filename = `${folder}/${filename}`;
-
-      const assetsFolder = `${folder}/static`;
+    if (ext === '.html') {
+      const assetsFolder = join(fileFolderPath, 'static');
       const assets: string[] = [];
       copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
         filter: (_src, dest) => {
@@ -286,33 +235,40 @@ export async function generateGraph(
         },
       });
 
-      currentDepGraphClientResponse = await createDepGraphClientResponse();
+      const depGraphClientResponse = await createDepGraphClientResponse();
 
+      const environmentJs = buildEnvironmentJs(
+        args.exclude || [],
+        args.focus || null,
+        args.groupByFolder || false,
+        args.watch,
+        !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
+        depGraphClientResponse
+      );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
-      html = html.replace('<base href="/">', '');
+      html = html.replace('<base href="/" />', '');
       html = html.replace(/type="module"/g, '');
 
-      writeFileSync(filename, html);
+      writeFileSync(fullFilePath, html);
+      writeFileSync(join(assetsFolder, 'environment.js'), environmentJs);
 
       output.success({
-        title: `HTML output created in ${folder}`,
-        bodyLines: [filename, ...assets],
+        title: `HTML output created in ${fileFolderPath}`,
+        bodyLines: [fileFolderPath, ...assets],
       });
-    } else if (ext === 'json') {
-      filename = `${folder}/${filename}`;
+    } else if (ext === '.json') {
+      ensureDirSync(dirname(fullFilePath));
 
-      ensureDirSync(dirname(filename));
-
-      writeJsonFile(filename, {
+      writeJsonFile(fullFilePath, {
         graph,
         affectedProjects,
         criticalPath: affectedProjects,
       });
 
       output.success({
-        title: `JSON output created in ${folder}`,
-        bodyLines: [filename],
+        title: `JSON output created in ${fileFolderPath}`,
+        bodyLines: [fullFilePath],
       });
     } else {
       output.error({
@@ -322,8 +278,17 @@ export async function generateGraph(
       process.exit(1);
     }
   } else {
+    const environmentJs = buildEnvironmentJs(
+      args.exclude || [],
+      args.focus || null,
+      args.groupByFolder || false,
+      args.watch,
+      !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
+    );
+
     await startServer(
       html,
+      environmentJs,
       args.host || '127.0.0.1',
       args.port || 4211,
       args.watch,
@@ -338,6 +303,7 @@ export async function generateGraph(
 
 async function startServer(
   html: string,
+  environmentJs: string,
   host: string,
   port = 4211,
   watchForchanges = false,
@@ -379,6 +345,12 @@ async function startServer(
       return;
     }
 
+    if (sanitizePath === 'environment.js') {
+      res.writeHead(200, { 'Content-Type': 'application/javascript' });
+      res.end(environmentJs);
+      return;
+    }
+
     let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
 
     if (!existsSync(pathname)) {
@@ -390,7 +362,6 @@ async function startServer(
 
     // if is a directory, then look for index.html
     if (statSync(pathname).isDirectory()) {
-      // pathname += '/index.html';
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
       return;
@@ -426,9 +397,6 @@ let currentDepGraphClientResponse: DepGraphClientResponse = {
   layout: {
     appsDir: '',
     libsDir: '',
-  },
-  changes: {
-    added: [],
   },
   affected: [],
   focus: null,
@@ -504,21 +472,22 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
   defaultFileHasher.clear();
   defaultFileHasher.init();
 
-  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
+  let graph = pruneExternalNodes(await createProjectGraphAsync());
   performance.mark('dep graph watch calculation:end');
   performance.mark('dep graph response generation:start');
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphNode[] = Object.values(graph.nodes).map(
-    (project) => ({
-      name: project.name,
-      type: project.type,
-      data: {
-        tags: project.data.tags,
-        root: project.data.root,
-        files: [],
-      },
-    })
+  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes).map(
+    (project) =>
+      ({
+        name: project.name,
+        type: project.type,
+        data: {
+          tags: project.data.tags,
+          root: project.data.root,
+          files: [],
+        },
+      } as ProjectGraphProjectNode)
   );
 
   const dependencies = graph.dependencies;
@@ -528,21 +497,6 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
 
   const hash = hasher.digest('hex');
 
-  let added = [];
-
-  if (
-    currentDepGraphClientResponse.hash !== null &&
-    hash !== currentDepGraphClientResponse.hash
-  ) {
-    added = projects
-      .filter((project) => {
-        const result = currentDepGraphClientResponse.projects.find(
-          (previousProject) => previousProject.name === project.name
-        );
-        return !result;
-      })
-      .map((project) => project.name);
-  }
   performance.mark('dep graph response generation:end');
 
   performance.measure(
@@ -563,8 +517,5 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
     layout,
     projects,
     dependencies,
-    changes: {
-      added: [...currentDepGraphClientResponse.changes.added, ...added],
-    },
   };
 }

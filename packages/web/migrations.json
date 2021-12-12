@@ -38,41 +38,19 @@
       "version": "13.0.0-beta.1",
       "description": "Removes deprecated node-sass package (sass is already a dependency of @nrwl/web).",
       "factory": "./src/migrations/update-13-0-0/remove-node-sass-13-0-0"
+    },
+    "remove-webpack-5-packages": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Remove packages installed by Nx 12's `@nrwl/web:webpack5` generator.",
+      "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
+    },
+    "rename-package-to-rollup": {
+      "cli": "nx",
+      "version": "13.3.0-beta.1",
+      "description": "Rename the 'package' executor to 'rollup'",
+      "factory": "./src/migrations/update-13-3-0/rename-package-to-rollup"
     }
   },
-  "packageJsonUpdates": {
-    "12.6.3": {
-      "version": "12.6.3-beta.1",
-      "packages": {
-        "mini-css-extract-plugin": {
-          "version": "^2.1.0",
-          "alwaysAddToPackageJson": false
-        },
-        "source-map-loader": {
-          "version": "^3.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "terser-webpack-plugin": {
-          "version": "^5.1.1",
-          "alwaysAddToPackageJson": false
-        },
-        "webpack-dev-server": {
-          "version": "4.0.0-rc.0",
-          "alwajysAddToPackageJson": false
-        },
-        "webpack-sources": {
-          "version": "^3.0.2",
-          "alwaysAddToPjackageJson": false
-        },
-        "react-refresh": {
-          "version": "^0.10.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@pmmmwh/react-refresh-webpack-plugin": {
-          "version": "0.5.0-rc.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
-  }
+  "packageJsonUpdates": {}
 }

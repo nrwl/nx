@@ -4,6 +4,7 @@ export interface Schema {
   name: string;
   prefix?: string;
   style?: string;
+  compiler?: 'babel' | 'swc';
   skipFormat?: boolean;
   directory?: string;
   tags?: string;

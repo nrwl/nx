@@ -6,6 +6,8 @@ In this tutorial you use Nx to build a full-stack application out of common libr
 
 > Next.js: Nx also has first-class Next.js support. Read more about it [here](/{{framework}}/next/overview)
 
+> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/{{framework}}/getting-started/nx-core).
+
 ## Create a new workspace
 
 Start by creating a new workspace.
@@ -23,9 +25,9 @@ Application name                    todos
 Default stylesheet format           CSS
 ```
 
-> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
+Enter the indicated answers.
 
-When asked about 'preset', select `react`, and `todos` for the app name.
+> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
 ```treeview
 myorg/
@@ -44,6 +46,7 @@ myorg/
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
 │   │   ├── jest.config.js
+│   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.spec.json
@@ -61,7 +64,7 @@ myorg/
 │       │       └── index.ts
 │       ├── .eslintrc.json
 │       ├── cypress.json
-│       ├── tsconfig.e2e.json
+│       ├── project.json
 │       └── tsconfig.json
 ├── libs/
 ├── tools/

@@ -1,3 +1,8 @@
+---
+title: 'affected:libs - CLI command'
+description: 'Print libraries affected by changes'
+---
+
 # affected:libs
 
 Print libraries affected by changes
@@ -18,16 +23,16 @@ Print the names of all the libs affected by changing the index.ts file:
 nx affected:libs --files=libs/mylib/src/index.ts
 ```
 
-Print the names of all the libs affected by the changes between master and HEAD (e.g., PR):
+Print the names of all the libs affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:libs --base=master --head=HEAD
+nx affected:libs --base=main --head=HEAD
 ```
 
-Print the names of all the libs affected by the last commit on master:
+Print the names of all the libs affected by the last commit on main:
 
 ```bash
-nx affected:libs --base=master~1 --head=master
+nx affected:libs --base=main~1 --head=main
 ```
 
 ## Options
@@ -38,7 +43,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

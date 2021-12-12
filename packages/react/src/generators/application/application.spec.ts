@@ -39,11 +39,11 @@ describe('app', () => {
       expect(workspaceJson.defaultProject).toEqual('my-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(appTree, { ...schema, tags: 'one,two' });
 
-      const nxJson = readJson(appTree, './nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(appTree));
+      expect(projects).toMatchObject({
         'my-app': {
           tags: ['one', 'two'],
         },
@@ -88,6 +88,16 @@ describe('app', () => {
       const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
+      expect(tsconfigApp.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.tsx',
+        '**/*.test.tsx',
+        '**/*.spec.js',
+        '**/*.test.js',
+        '**/*.spec.jsx',
+        '**/*.test.jsx',
+      ]);
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
       expect(eslintJson.extends).toEqual([
@@ -132,15 +142,15 @@ Object {
       );
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit deps', async () => {
       await applicationGenerator(appTree, {
         ...schema,
         directory: 'myDir',
         tags: 'one,two',
       });
 
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(appTree));
+      expect(projects).toMatchObject({
         'my-dir-my-app': {
           tags: ['one', 'two'],
         },
@@ -177,6 +187,20 @@ Object {
           expectedValue: '../../../dist/out-tsc',
         },
         {
+          path: 'apps/my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: [
+            '**/*.spec.ts',
+            '**/*.test.ts',
+            '**/*.spec.tsx',
+            '**/*.test.tsx',
+            '**/*.spec.js',
+            '**/*.test.js',
+            '**/*.spec.jsx',
+            '**/*.test.jsx',
+          ],
+        },
+        {
           path: 'apps/my-dir/my-app-e2e/tsconfig.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc',
@@ -195,7 +219,10 @@ Object {
 
     expect(
       appTree.read('apps/my-dir/my-app/src/app/app.tsx').toString()
-    ).toContain('Welcome to my-dir-my-app');
+    ).toContain(`<NxWelcome title="my-dir-my-app"/>`);
+    expect(
+      appTree.read('apps/my-dir/my-app/src/app/nx-welcome.tsx').toString()
+    ).toContain('Hello there');
   });
 
   it.each`
@@ -247,9 +274,10 @@ Object {
 
     const workspaceJson = getProjects(appTree);
     const targetConfig = workspaceJson.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/web:build');
+    expect(targetConfig.build.executor).toEqual('@nrwl/web:webpack');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
+      compiler: 'babel',
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
       main: 'apps/my-app/src/main.tsx',
@@ -263,14 +291,6 @@ Object {
     });
     expect(targetConfig.build.configurations.production).toEqual({
       optimization: true,
-      budgets: [
-        {
-          maximumError: '5mb',
-          maximumWarning: '2mb',
-          type: 'initial',
-        },
-      ],
-      extractCss: true,
       extractLicenses: true,
       fileReplacements: [
         {
@@ -544,6 +564,18 @@ Object {
       expect(content).toContain('<StyledApp>');
     });
 
+    it('should add jsxImportSource to tsconfig.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: '@emotion/styled',
+      });
+
+      const tsconfigJson = readJson(appTree, 'apps/my-app/tsconfig.json');
+      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
+        '@emotion/react'
+      );
+    });
+
     it('should exclude styles from workspace.json', async () => {
       await applicationGenerator(appTree, {
         ...schema,
@@ -703,22 +735,20 @@ Object {
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
       ).toBeTruthy();
     });
+  });
 
-    it('should update budgets in workspace.json', async () => {
+  describe('--compiler', () => {
+    it('should install swc packages if --compiler=swc', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        strict: true,
+        compiler: 'swc',
       });
-      const workspaceJson = getProjects(appTree);
-      const targetConfig = workspaceJson.get('my-app').targets;
+      const packageJson = readJson(appTree, '/package.json');
 
-      expect(targetConfig.build.configurations.production.budgets).toEqual([
-        {
-          type: 'initial',
-          maximumWarning: '500kb',
-          maximumError: '1mb',
-        },
-      ]);
+      expect(packageJson.devDependencies).toMatchObject({
+        '@swc/core': expect.any(String),
+        'swc-loader': expect.any(String),
+      });
     });
   });
 });

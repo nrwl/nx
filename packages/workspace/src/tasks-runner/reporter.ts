@@ -6,6 +6,10 @@ export interface ReporterArgs {
   onlyFailed?: boolean;
 }
 
+/**
+ * @deprecated the reporter API is no longer supported.
+ * The class will be removed after Nx 14 is released.
+ */
 export abstract class Reporter {
   abstract beforeRun(
     projectNames: string[],

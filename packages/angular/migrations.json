@@ -90,6 +90,48 @@
       "version": "12.9.0",
       "description": "Fixes invalid importPaths for buildable and publishable libs.",
       "factory": "./src/migrations/update-12-9-0/update-invalid-import-paths"
+    },
+    "add-postcss-packages": {
+      "cli": "nx",
+      "version": "13.0.0-beta.10",
+      "description": "Adds postcss packages needed for Tailwind support if ng-packagr is already installed.",
+      "factory": "./src/migrations/update-13-0-0/add-postcss-packages"
+    },
+    "update-angular-config": {
+      "cli": "nx",
+      "version": "13.2.0-beta.1",
+      "description": "Remove deprecated options from webpack-server and webpack-browser.",
+      "factory": "./src/migrations/update-13-2-0/update-angular-config"
+    },
+    "update-libraries": {
+      "cli": "nx",
+      "version": "13.2.0-beta.1",
+      "description": "Remove enableIvy and add compilationMode to library tsconfig and remove deprecated ng-packagr options.",
+      "factory": "./src/migrations/update-13-2-0/update-libraries"
+    },
+    "update-angular-jest-config": {
+      "cli": "nx",
+      "version": "13.2.0-beta.1",
+      "description": "Update jest config to support jest-preset-angular",
+      "factory": "./src/migrations/update-13-2-0/update-angular-jest-config"
+    },
+    "update-testing-imports": {
+      "cli": "nx",
+      "version": "13.2.0-beta.1",
+      "description": "Move some imports from @nrwl/angular/testing to jasmine-marbles",
+      "factory": "./src/migrations/update-13-2-0/update-testing-imports"
+    },
+    "opt-out-testbed-teardown": {
+      "cli": "nx",
+      "version": "13.2.0",
+      "description": "In Angular version 13, the `teardown` flag in `TestBed` will be enabled by default. This migration automatically opts out existing apps from the new teardown behavior.",
+      "factory": "./src/migrations/update-13-2-0/opt-out-testbed-teardown"
+    },
+    "update-mfe-config-to-module-syntax": {
+      "cli": "nx",
+      "version": "13.3.0-beta.0",
+      "description": "In Angular version 13, the ESM became a first class citizen. This means the webpack config generated must be modified to support modules.",
+      "factory": "./src/migrations/update-13-3-0/update-mfe-webpack-config"
     }
   },
   "packageJsonUpdates": {
@@ -877,6 +919,226 @@
         },
         "jest-preset-angular": {
           "version": "10.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
+      "packages": {
+        "ng-packagr": {
+          "version": "~12.2.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.2.0": {
+      "version": "13.2.0-beta.1",
+      "packages": {
+        "@angular/cli": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "^0.1300.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/common": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/elements": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-server": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/material": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.11.4",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~4.4.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "~12.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~12.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~12.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/manager-webpack5": {
+          "version": "6.4.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "6.4.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/angular": {
+          "version": "6.4.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "6.4.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "6.4.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~13.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.2.1": {
+      "version": "13.2.1-beta.0",
+      "packages": {
+        "@angular/localize": {
+          "version": "^13.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.3.0": {
+      "version": "13.3.0-beta.0",
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~13.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~13.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~13.0.1",
           "alwaysAddToPackageJson": false
         }
       }

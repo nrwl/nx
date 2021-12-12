@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:run-script executor'
+description: 'Run an npm script using Nx'
+---
+
 # @nrwl/workspace:run-script
 
 Run an npm script using Nx

@@ -13,6 +13,8 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
   MappedProjectGraph,
+  hasBannedImport,
+  isDirectDependency,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -21,7 +23,6 @@ import {
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
-  isNpmProject,
   ProjectType,
   readCachedProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
@@ -39,6 +40,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
+    banTransitiveDependencies: boolean;
   }
 ];
 export type MessageIds =
@@ -50,7 +52,9 @@ export type MessageIds =
   | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
-  | 'tagConstraintViolation';
+  | 'tagConstraintViolation'
+  | 'bannedExternalImportsViolation'
+  | 'noTransitiveDependencies';
 export const RULE_NAME = 'enforce-module-boundaries';
 
 export default createESLintRule<Options, MessageIds>({
@@ -59,7 +63,6 @@ export default createESLintRule<Options, MessageIds>({
     type: 'suggestion',
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
-      category: 'Best Practices',
       recommended: 'error',
     },
     fixable: 'code',
@@ -69,6 +72,7 @@ export default createESLintRule<Options, MessageIds>({
         properties: {
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
+          banTransitiveDependencies: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -76,6 +80,7 @@ export default createESLintRule<Options, MessageIds>({
               properties: {
                 sourceTag: { type: 'string' },
                 onlyDependOnLibsWithTags: [{ type: 'string' }],
+                bannedExternalImports: [{ type: 'string' }],
               },
               additionalProperties: false,
             },
@@ -95,6 +100,8 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
+      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
+      noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
     },
   },
   defaultOptions: [
@@ -103,6 +110,7 @@ export default createESLintRule<Options, MessageIds>({
       depConstraints: [],
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
+      banTransitiveDependencies: false,
     },
   ],
   create(
@@ -113,6 +121,7 @@ export default createESLintRule<Options, MessageIds>({
         depConstraints,
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
+        banTransitiveDependencies,
       },
     ]
   ) {
@@ -125,6 +134,7 @@ export default createESLintRule<Options, MessageIds>({
     if (!(global as any).projectGraph) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
+      (global as any).workspaceLayout = nxJson.workspaceLayout;
 
       /**
        * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),
@@ -132,7 +142,7 @@ export default createESLintRule<Options, MessageIds>({
        */
       try {
         (global as any).projectGraph = mapProjectGraphFiles(
-          readCachedProjectGraph('4.0')
+          readCachedProjectGraph()
         );
       } catch {}
     }
@@ -142,11 +152,13 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
+    const workspaceLayout = (global as any).workspaceLayout;
     const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
-        projectGraph.nodes
+        projectGraph.nodes,
+        projectGraph.externalNodes
       );
     }
     const targetProjectLocator = (global as any)
@@ -192,7 +204,7 @@ export default createESLintRule<Options, MessageIds>({
           sourceFilePath,
           sourceProject
         ) ||
-        isAbsoluteImportIntoAnotherProject(imp)
+        isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
       ) {
         context.report({
           node,
@@ -233,9 +245,31 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // project => npm package
-      if (isNpmProject(targetProject)) {
+      if (targetProject.type === 'npm') {
+        if (banTransitiveDependencies && !isDirectDependency(targetProject)) {
+          context.report({
+            node,
+            messageId: 'noTransitiveDependencies',
+          });
+        }
+        const constraint = hasBannedImport(
+          sourceProject,
+          targetProject,
+          depConstraints
+        );
+        if (constraint) {
+          context.report({
+            node,
+            messageId: 'bannedExternalImportsViolation',
+            data: {
+              sourceTag: constraint.sourceTag,
+              package: targetProject.data.packageName,
+            },
+          });
+        }
         return;
       }
+
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(

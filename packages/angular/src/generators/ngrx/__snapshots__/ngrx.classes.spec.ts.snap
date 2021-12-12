@@ -240,7 +240,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action, StoreModule } from '@ngrx/store';
 import { NxModule } from '@nrwl/angular';
-import { hot } from '@nrwl/angular/testing';
+import { hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 
 import { SuperUsersEffects } from './super-users.effects';
@@ -285,7 +285,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action, StoreModule } from '@ngrx/store';
 import { NxModule, DataPersistence } from '@nrwl/angular';
-import { hot } from '@nrwl/angular/testing';
+import { hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 
 import { SuperUsersEffects } from './super-users.effects';

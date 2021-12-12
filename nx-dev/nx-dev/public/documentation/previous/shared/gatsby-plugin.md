@@ -10,11 +10,11 @@ The Nx Plugin for Gatsby contains executors and generators for managing Gatsby a
 
 Installing the Gatsby plugin to a workspace can be done with the following:
 
-```shell script
+```bash
 yarn add -D @nrwl/gatsby
 ```
 
-```shell script
+```bash
 npm install -D @nrwl/gatsby
 ```
 
@@ -22,7 +22,7 @@ npm install -D @nrwl/gatsby
 
 Generating new applications can be done with the following:
 
-```shell script
+```bash
 nx generate @nrwl/gatsby:application <name>
 ```
 
@@ -56,7 +56,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── .eslintrc.json
 ```
 

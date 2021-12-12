@@ -10,11 +10,12 @@ You can use the [`cra-to-nx`](https://www.npmjs.com/package/cra-to-nx) tool, tha
 
 Just `cd` into your Create-React-App (CRA) project and run the following command:
 
-```
+```bash
 npx cra-to-nx
 ```
 
-Then just sit back and wait. After a while you will be able to take advantage of the [full magic of Nx](https://nx.dev/latest/react/getting-started/intro). You can start from [the commands mentioned in this article](https://nx.dev/latest/react/migration/migration-cra#try-nx).
+Then just sit back and wait. After a while, take advantage of the [full magic of Nx](https://nx.dev/latest/react/getting-started/intro).
+Start from [the commands mentioned in this article](https://nx.dev/latest/react/migration/migration-cra#try-nx).
 
 **Note:** The command will fail if you try execute it and you have uncommitted changes in your repository. Commit any local changes, and then try to run the command.
 
@@ -103,7 +104,7 @@ Open your `workspace.json` file and add the following things:
 
 1. In `projects.webapp.targets.build.options` add a new entry called `outputPath` with the value `dist/apps/webapp`:
 
-```
+```json
 // workspace.json
 {
   ...
@@ -122,7 +123,7 @@ Open your `workspace.json` file and add the following things:
 
 2. In the `projects.webapp.targets.build.outputs` array add the value `"{options.outputPath}"`:
 
-```
+```json
 // workspace.json
 {
   ...
@@ -195,7 +196,7 @@ module.exports = {
 
 ### 7. Extend the app's tsconfig.json from the base
 
-Modify `apps/webapp/tsconfig.json` to extend the root `tsconfig.json`. This is primarily to pickup the typescript aliases from the root tsconfig file.
+Modify `apps/webapp/tsconfig.json` to extend the root `tsconfig.base.json`. This is primarily to pickup the typescript aliases from the root tsconfig file.
 
 ```json
 {
@@ -278,7 +279,7 @@ import { UiButton } from '@acme/ui-button';
 //...
 ```
 
-The `@acme/ui-button` path alias is defined in the root `tsconfig.json` file.
+The `@acme/ui-button` path alias is defined in the root `tsconfig.base.json` file.
 
 [View the code changes](https://github.com/nrwl/migrate-cra-to-nx/commit/cfb1d6170c72cfd9355d16fefc045527683fc604)
 

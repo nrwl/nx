@@ -9,47 +9,14 @@ import {
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { convertNpmScriptsToTargets } from '@nrwl/workspace/src/core/project-graph/build-nodes';
-
-const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
+import { mergeNpmScriptsWithTargets } from '../utilities/project-graph-utils';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 export function getCommandAsString(task: Task) {
-  return getCommand(task).join(' ').trim();
-}
-
-export function getCommand(task: Task) {
-  const args = Object.entries(task.overrides || {}).map(
-    ([prop, value]) => `--${prop}=${value}`
-  );
-
   const execCommand = getPackageManagerCommand().exec;
-
-  if (commonCommands.includes(task.target.target)) {
-    const config = task.target.configuration
-      ? [`--configuration`, task.target.configuration]
-      : [];
-
-    return [
-      execCommand,
-      'nx',
-      task.target.target,
-      task.target.project,
-      ...config,
-      ...args,
-    ];
-  } else {
-    const config = task.target.configuration
-      ? `:${task.target.configuration} `
-      : '';
-
-    return [
-      execCommand,
-      'nx',
-      'run',
-      `${task.target.project}:${task.target.target}${config}`,
-      ...args,
-    ];
-  }
+  const args = getCommandArgsForTask(task);
+  return [execCommand, 'nx', ...args].join(' ').trim();
 }
 
 export function getDependencyConfigs(
@@ -181,8 +148,8 @@ export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   const project =
     workspace.readWorkspaceConfiguration().projects[task.target.project];
 
-  if (!project.targets) {
-    project.targets = convertNpmScriptsToTargets(project.root);
+  if (existsSync(join(project.root, 'package.json'))) {
+    project.targets = mergeNpmScriptsWithTargets(project.root, project.targets);
   }
 
   if (!project.targets[task.target.target]) {
@@ -262,13 +229,13 @@ export function getCliPath(workspaceRoot: string) {
 export function getCommandArgsForTask(task: Task) {
   const args: string[] = unparse(task.overrides || {});
 
+  const target = task.target.target.includes(':')
+    ? `"${task.target.target}"`
+    : task.target.target;
+
   const config = task.target.configuration
     ? `:${task.target.configuration}`
     : '';
 
-  return [
-    'run',
-    `${task.target.project}:${task.target.target}${config}`,
-    ...args,
-  ];
+  return ['run', `${task.target.project}:${target}${config}`, ...args];
 }

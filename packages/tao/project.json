@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/tao"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/tao",
         "tsConfig": "packages/tao/tsconfig.lib.json",
-        "packageJson": "packages/tao/package.json",
         "main": "packages/tao/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/tao",
@@ -63,7 +61,7 @@
             "command": "node ./scripts/copy-readme.js tao"
           },
           {
-            "command": "node ./scripts/add-dependency-to-build.js tao nx@*"
+            "command": "node ./scripts/add-dependency-to-build.js tao nx"
           }
         ],
         "parallel": false

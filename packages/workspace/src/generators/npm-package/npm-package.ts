@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
+  getWorkspacePath,
   names,
   readWorkspaceConfiguration,
   Tree,
@@ -41,13 +42,18 @@ export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
   options = normalizeOptions(options);
 
   const { libsDir, npmScope } = getWorkspaceLayout(tree);
+  const workspaceFile = getWorkspacePath(tree);
   const projectRoot = join(libsDir, options.name);
 
-  addProjectConfiguration(tree, options.name, {
-    root: projectRoot,
-  });
+  if (!!workspaceFile) {
+    addProjectConfiguration(tree, options.name, {
+      root: projectRoot,
+    });
+  }
 
-  const isEmpty = tree.children(projectRoot).length === 0;
+  const fileCount = tree.children(projectRoot).length;
+  const projectJsonExists = tree.exists(join(projectRoot, 'project.json'));
+  const isEmpty = fileCount === 0 || (fileCount === 1 && projectJsonExists);
 
   if (isEmpty) {
     addFiles(projectRoot, tree, npmScope, options);

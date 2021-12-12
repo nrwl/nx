@@ -4,31 +4,16 @@ import type {
   NxJsonConfiguration,
 } from '@nrwl/devkit';
 import { output } from '../utilities/output';
+import { stripIndents } from '@nrwl/devkit';
 
 export function assertWorkspaceValidity(
   workspaceJson,
   nxJson: NxJsonConfiguration
 ) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
-  const nxJsonProjects = Object.keys(nxJson.projects);
-
-  if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
-    output.error({
-      title: 'Configuration Error',
-      bodyLines: [
-        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in ${workspaceFileName()}: ${minus(
-          nxJsonProjects,
-          workspaceJsonProjects
-        ).join(', ')}`,
-      ],
-    });
-
-    process.exit(1);
-  }
 
   const projects = {
     ...workspaceJson.projects,
-    ...nxJson.projects,
   };
 
   const invalidImplicitDependencies = new Map<string, string[]>();
@@ -42,16 +27,12 @@ export function assertWorkspaceValidity(
           // do nothing since '*' is calculated and always valid.
         } else if (typeof value === 'string') {
           // This is invalid because the only valid string is '*'
-
-          output.error({
-            title: 'Configuration Error',
-            bodyLines: [
-              `nx.json is not configured properly. "${path.join(
-                ' > '
-              )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".`,
-            ],
-          });
-          process.exit(1);
+          throw new Error(stripIndents`
+         Configuration Error 
+         nx.json is not configured properly. "${path.join(
+           ' > '
+         )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".
+          `);
         } else if (Array.isArray(value)) {
           acc.push([entry[0], value]);
         } else {
@@ -60,6 +41,7 @@ export function assertWorkspaceValidity(
           });
         }
       }
+
       recur(entry[1], acc, [entry[0]]);
       return acc;
     }, [])
@@ -68,16 +50,16 @@ export function assertWorkspaceValidity(
       return map;
     }, invalidImplicitDependencies);
 
-  nxJsonProjects
-    .filter((nxJsonProjectName) => {
-      const project = nxJson.projects[nxJsonProjectName];
+  workspaceJsonProjects
+    .filter((projectName) => {
+      const project = projects[projectName];
       return !!project.implicitDependencies;
     })
-    .reduce((map, nxJsonProjectName) => {
-      const project = nxJson.projects[nxJsonProjectName];
+    .reduce((map, projectName) => {
+      const project = projects[projectName];
       detectAndSetInvalidProjectValues(
         map,
-        nxJsonProjectName,
+        projectName,
         project.implicitDependencies,
         projects
       );
@@ -88,7 +70,7 @@ export function assertWorkspaceValidity(
     return;
   }
 
-  let message = `The following implicitDependencies specified in nx.json are invalid:
+  let message = `The following implicitDependencies specified in project configurations are invalid:
   `;
   invalidImplicitDependencies.forEach((projectNames, key) => {
     const str = `  ${key}
@@ -96,12 +78,7 @@ export function assertWorkspaceValidity(
     message += str;
   });
 
-  output.error({
-    title: 'Configuration Error',
-    bodyLines: [message],
-  });
-
-  process.exit(1);
+  throw new Error(`Configuration Error\n${message}`);
 }
 
 function detectAndSetInvalidProjectValues(
@@ -116,14 +93,4 @@ function detectAndSetInvalidProjectValues(
   if (invalidProjects.length > 0) {
     map.set(sourceName, invalidProjects);
   }
-}
-
-function minus(a: string[], b: string[]): string[] {
-  const res = [];
-  a.forEach((aa) => {
-    if (!b.find((bb) => bb === aa)) {
-      res.push(aa);
-    }
-  });
-  return res;
 }

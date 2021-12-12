@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/web:application
 
 Create an application
@@ -85,8 +90,6 @@ Type: `boolean`
 Skip formatting files
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

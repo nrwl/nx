@@ -1,9 +1,11 @@
 import type {
   FileData,
   NxJsonConfiguration,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  ProjectGraphExternalNode,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { join } from 'path';
@@ -16,7 +18,6 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utilities/fileutils';
-import type { ProjectFileMap } from '../file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,
@@ -29,6 +30,7 @@ export interface ProjectGraphCache {
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
   nodes: Record<string, ProjectGraphNode>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
 
   // this is only used by scripts that read dependency from the file
   // in the sync fashion.
@@ -39,7 +41,7 @@ export const nxDepsDir = cacheDirectory(
   appRootPath,
   readCacheDirectoryProperty(appRootPath)
 );
-const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
+export const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
 
 export function ensureCacheDirectory(): void {
   try {
@@ -63,7 +65,7 @@ export function ensureCacheDirectory(): void {
   }
 }
 
-export function readCache(): false | ProjectGraphCache {
+export function readCache(): null | ProjectGraphCache {
   performance.mark('read cache:start');
   ensureCacheDirectory();
 
@@ -81,29 +83,35 @@ export function readCache(): false | ProjectGraphCache {
 
   performance.mark('read cache:end');
   performance.measure('read cache', 'read cache:start', 'read cache:end');
-  return data ?? false;
+  return data ?? null;
 }
 
-export function writeCache(
+export function createCache(
+  nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
-  nxJson: NxJsonConfiguration,
-  tsConfig: { compilerOptions: { paths?: { [k: string]: any } } },
-  projectGraph: ProjectGraph
-): void {
-  performance.mark('write cache:start');
+  projectGraph: ProjectGraph<any>,
+  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
+) {
   const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
     name: p,
     version: packageJsonDeps[p],
   }));
   const newValue: ProjectGraphCache = {
-    version: projectGraph.version || '4.0',
+    version: projectGraph.version || '5.0',
     deps: packageJsonDeps,
-    pathMappings: tsConfig.compilerOptions.paths || {},
+    // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
+    pathMappings: tsConfig.compilerOptions?.paths || {},
     nxJsonPlugins,
     nodes: projectGraph.nodes,
+    externalNodes: projectGraph.externalNodes,
     dependencies: projectGraph.dependencies,
   };
-  writeJsonFile(nxDepsPath, newValue);
+  return newValue;
+}
+
+export function writeCache(cache: ProjectGraphCache): void {
+  performance.mark('write cache:start');
+  writeJsonFile(nxDepsPath, cache);
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }
@@ -115,6 +123,9 @@ export function shouldRecomputeWholeGraph(
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
+  if (cache.version !== '5.0') {
+    return true;
+  }
   if (cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']) {
     return true;
   }
@@ -173,10 +184,10 @@ export function extractCachedFileData(
   cachedFileData: { [project: string]: { [file: string]: FileData } };
 } {
   const filesToProcess: ProjectFileMap = {};
+  const cachedFileData: Record<string, Record<string, FileData>> = {};
   const currentProjects = Object.keys(fileMap).filter(
     (name) => fileMap[name].length > 0
   );
-  const cachedFileData = {};
   currentProjects.forEach((p) => {
     processProjectNode(p, c.nodes[p], cachedFileData, filesToProcess, fileMap);
   });

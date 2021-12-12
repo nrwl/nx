@@ -1,4 +1,4 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import type { FileData, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { isWorkspaceProject } from '../core/project-graph/operators';
 
 interface Reach {
@@ -15,9 +15,7 @@ const reach: Reach = {
 
 function buildMatrix(graph: ProjectGraph) {
   const dependencies = graph.dependencies;
-  const nodes = Object.keys(graph.nodes).filter((s) =>
-    isWorkspaceProject(graph.nodes[s])
-  );
+  const nodes = Object.keys(graph.nodes);
   const adjList = {};
   const matrix = {};
 
@@ -35,7 +33,7 @@ function buildMatrix(graph: ProjectGraph) {
 
   for (let proj in dependencies) {
     for (let dep of dependencies[proj]) {
-      if (isWorkspaceProject(graph.nodes[dep.target])) {
+      if (graph.nodes[dep.target]) {
         adjList[proj].push(dep.target);
       }
     }
@@ -122,10 +120,12 @@ export function findFilesInCircularPath(
 
   for (let i = 0; i < circularPath.length - 1; i++) {
     const next = circularPath[i + 1].name;
-    const files = circularPath[i].data.files;
+    const files: FileData[] = circularPath[i].data.files;
     filePathChain.push(
       Object.keys(files)
-        .filter((key) => files[key].deps?.indexOf(next) !== -1)
+        .filter(
+          (key) => files[key].deps && files[key].deps.indexOf(next) !== -1
+        )
         .map((key) => files[key].file)
     );
   }

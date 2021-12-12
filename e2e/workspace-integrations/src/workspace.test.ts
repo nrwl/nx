@@ -6,13 +6,15 @@ import {
   newProject,
   readFile,
   readJson,
-  removeProject,
+  readProjectConfig,
+  cleanupProject,
   rmDist,
   runCLI,
   runCLIAsync,
   runCommand,
   uniq,
   updateFile,
+  updateProjectConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
@@ -22,9 +24,7 @@ describe('run-one', () => {
 
   beforeAll(() => (proj = newProject()));
   afterAll(() => {
-    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('daemon:stop');
-    removeProject({ onlyOnCI: true });
+    cleanupProject();
   });
 
   it('should build a specific project', () => {
@@ -32,6 +32,25 @@ describe('run-one', () => {
     runCLI(`generate @nrwl/react:app ${myapp}`);
 
     runCLI(`build ${myapp}`);
+  }, 10000);
+
+  it('should run targets from package json', () => {
+    const myapp = uniq('app');
+    const target = uniq('script');
+    const expectedOutput = uniq('myEchoedString');
+
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+    updateFile(
+      `apps/${myapp}/package.json`,
+      JSON.stringify({
+        name: myapp,
+        scripts: {
+          [target]: `echo ${expectedOutput}`,
+        },
+      })
+    );
+
+    expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
   }, 10000);
 
   it('should build a specific project with the daemon enabled', () => {
@@ -42,7 +61,6 @@ describe('run-one', () => {
       env: { ...process.env, NX_DAEMON: 'true' },
     });
 
-    expect(buildWithDaemon).toContain(`Daemon Client - Resolved ProjectGraph`);
     expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
   }, 10000);
 
@@ -127,15 +145,16 @@ describe('run-one', () => {
     });
 
     it('should be able to include deps using target dependencies', () => {
-      const originalWorkspace = readFile('workspace.json');
-      const workspace = readJson('workspace.json');
-      workspace.projects[myapp].targets.build.dependsOn = [
-        {
-          target: 'build',
-          projects: 'dependencies',
-        },
-      ];
-      updateFile('workspace.json', JSON.stringify(workspace));
+      const originalWorkspace = readProjectConfig(myapp);
+      updateProjectConfig(myapp, (config) => {
+        config.targets.build.dependsOn = [
+          {
+            target: 'build',
+            projects: 'dependencies',
+          },
+        ];
+        return config;
+      });
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
@@ -145,7 +164,7 @@ describe('run-one', () => {
       expect(output).toContain(mylib1);
       expect(output).toContain(mylib2);
 
-      updateFile('workspace.json', originalWorkspace);
+      updateProjectConfig(myapp, () => originalWorkspace);
     }, 10000);
 
     it('should be able to include deps using target dependencies defined at the root', () => {
@@ -184,9 +203,7 @@ describe('run-many', () => {
 
   beforeEach(() => (proj = newProject()));
   afterEach(() => {
-    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('daemon:stop');
-    removeProject({ onlyOnCI: true });
+    cleanupProject();
   });
 
   it('should build specific and all projects', () => {
@@ -267,52 +284,7 @@ describe('run-many', () => {
     const buildWithDaemon = runCLI(`run-many --target=build --all`, {
       env: { ...process.env, NX_DAEMON: 'true' },
     });
-    expect(buildWithDaemon).toContain(`Daemon Client - Resolved ProjectGraph`);
     expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
-  }, 1000000);
-
-  it('should run only failed projects', () => {
-    const myapp = uniq('myapp');
-    const myapp2 = uniq('myapp2');
-    runCLI(`generate @nrwl/angular:app ${myapp}`);
-    runCLI(`generate @nrwl/angular:app ${myapp2}`);
-
-    // set broken test for myapp
-    updateFile(
-      `apps/${myapp}/src/app/app.component.spec.ts`,
-      `
-              describe('sample test', () => {
-                it('should test', () => {
-                  expect(1).toEqual(2);
-                });
-              });
-            `
-    );
-
-    const failedTests = runCLI(`run-many --target=test --all`, {
-      silenceError: true,
-    });
-    expect(failedTests).toContain(`Running target test for 2 project(s):`);
-    expect(failedTests).toContain(`- ${myapp}`);
-    expect(failedTests).toContain(`- ${myapp2}`);
-    expect(failedTests).toContain(`Failed tasks:`);
-
-    // Fix failing Unit Test
-    updateFile(
-      `apps/${myapp}/src/app/app.component.spec.ts`,
-      readFile(`apps/${myapp}/src/app/app.component.spec.ts`).replace(
-        '.toEqual(2)',
-        '.toEqual(1)'
-      )
-    );
-
-    const isolatedTests = runCLI(`run-many --target=test --all --only-failed`);
-    expect(isolatedTests).toContain(`Running target test for 1 project(s)`);
-    expect(isolatedTests).toContain(`- ${myapp}`);
-    expect(isolatedTests).not.toContain(`- ${myapp2}`);
-
-    const interpolatedTests = runCLI(`run-many --target=test --all`);
-    expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
   }, 1000000);
 });
 
@@ -320,7 +292,7 @@ describe('affected:*', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should print, build, and test affected apps', async () => {
     const myapp = uniq('myapp');
@@ -446,23 +418,6 @@ describe('affected:*', () => {
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${mypublishablelib}`);
     expect(failedTests).toContain(`Failed tasks:`);
-    expect(failedTests).toContain(
-      'You can isolate the above projects by passing: --only-failed'
-    );
-    expect(
-      readJson(
-        `${
-          process.env.NX_CACHE_DIRECTORY ?? 'node_modules/.cache/nx'
-        }/results.json`
-      )
-    ).toEqual({
-      command: 'test',
-      results: {
-        [myapp]: false,
-        [mylib]: true,
-        [mypublishablelib]: true,
-      },
-    });
 
     // Fix failing Unit Test
     updateFile(
@@ -472,17 +427,6 @@ describe('affected:*', () => {
         '.toEqual(1)'
       )
     );
-
-    const isolatedTests = runCLI(
-      `affected:test --files="libs/${mylib}/src/index.ts" --only-failed`
-    );
-    expect(isolatedTests).toContain(`Running target test for 1 project(s)`);
-    expect(isolatedTests).toContain(`- ${myapp}`);
-
-    const interpolatedTests = runCLI(
-      `affected --target test --files="libs/${mylib}/src/index.ts" --jest-config {project.root}/jest.config.js`
-    );
-    expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
   }, 1000000);
 });
 
@@ -504,11 +448,12 @@ describe('affected (with git)', () => {
     runCommand(`git init`);
     runCommand(`git config user.email "test@test.com"`);
     runCommand(`git config user.name "Test"`);
+    runCommand(`git config commit.gpgsign false`);
     runCommand(
       `git add . && git commit -am "initial commit" && git checkout -b main`
     );
   });
-  afterAll(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => cleanupProject());
 
   function generateAll() {
     runCLI(`generate @nrwl/angular:app ${myapp}`);
@@ -536,15 +481,14 @@ describe('affected (with git)', () => {
     }
   }, 1000000);
 
-  it('should detect changes to projects based on the nx.json', () => {
+  it('should detect changes to projects based on tags changes', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const nxJson: NxJsonConfiguration = readJson('nx.json');
-
-      nxJson.projects[myapp].tags = ['tag'];
-      updateFile('nx.json', JSON.stringify(nxJson));
-
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
+        tags: ['tag'],
+      }));
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -555,10 +499,10 @@ describe('affected (with git)', () => {
     // TODO: investigate why affected gives different results on windows
     if (isNotWindows()) {
       generateAll();
-      const workspaceJson = readJson(workspaceConfigName());
-
-      workspaceJson.projects[myapp].prefix = 'my-app';
-      updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
+        prefix: 'my-app',
+      }));
 
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).not.toContain(myapp2);
@@ -568,14 +512,11 @@ describe('affected (with git)', () => {
 
   it('should affect all projects by removing projects', () => {
     generateAll();
-    const workspaceJson = readJson(workspaceConfigName());
-    const nxJson = readJson('nx.json');
-
-    delete workspaceJson.projects[mylib];
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
-    delete nxJson.projects[mylib];
-    updateFile('nx.json', JSON.stringify(nxJson));
-
+    updateFile(workspaceConfigName(), (old) => {
+      const workspaceJson = JSON.parse(old);
+      delete workspaceJson.projects[mylib];
+      return JSON.stringify(workspaceJson, null, 2);
+    });
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -586,7 +527,7 @@ describe('print-affected', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should print information about affected projects', async () => {
     const myapp = uniq('myapp-a');
@@ -655,7 +596,7 @@ describe('print-affected', () => {
         project: myapp,
         target: 'test',
       },
-      command: `${runNx} test ${myapp}`,
+      command: `${runNx} run ${myapp}:test`,
       outputs: [`coverage/apps/${myapp}`],
     });
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
@@ -670,13 +611,13 @@ describe('print-affected', () => {
     );
 
     expect(resWithDeps.tasks[0]).toMatchObject({
-      id: `${myapp}:build`,
+      id: `${myapp}:build:production`,
       overrides: {},
       target: {
         project: myapp,
         target: 'build',
       },
-      command: `${runNx} build ${myapp}`,
+      command: `${runNx} run ${myapp}:build:production`,
       outputs: [`dist/apps/${myapp}`],
     });
 
@@ -687,7 +628,7 @@ describe('print-affected', () => {
         project: mypublishablelib,
         target: 'build',
       },
-      command: `${runNx} build ${mypublishablelib}`,
+      command: `${runNx} run ${mypublishablelib}:build`,
       outputs: [`dist/libs/${mypublishablelib}`],
     });
 
@@ -735,7 +676,7 @@ describe('print-affected', () => {
 describe('cache', () => {
   beforeEach(() => newProject());
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');
@@ -879,24 +820,24 @@ describe('cache', () => {
     runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
 
     // Update outputs in workspace.json to just be a particular file
-    const workspaceJson = readJson(workspaceConfigName());
-
-    workspaceJson.projects[mylib1].targets['build-base'] = {
-      ...workspaceJson.projects[mylib1].targets.build,
-    };
-    workspaceJson.projects[mylib1].targets.build = {
-      executor: '@nrwl/workspace:run-commands',
-      outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
-      options: {
-        commands: [
-          {
-            command: `npx nx run ${mylib1}:build-base`,
-          },
-        ],
-        parallel: false,
-      },
-    };
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+    updateProjectConfig(mylib1, (config) => {
+      config.targets['build-base'] = {
+        ...config.targets.build,
+      };
+      config.targets.build = {
+        executor: '@nrwl/workspace:run-commands',
+        outputs: [`dist/libs/${mylib1}/index.esm.js`],
+        options: {
+          commands: [
+            {
+              command: `npx nx run ${mylib1}:build-base`,
+            },
+          ],
+          parallel: false,
+        },
+      };
+      return config;
+    });
 
     // run build with caching
     // --------------------------------------------
@@ -910,7 +851,7 @@ describe('cache', () => {
     expect(outputWithBuildTasksCached).toContain('from cache');
     expectCached(outputWithBuildTasksCached, [mylib1]);
     // Ensure that only the specific file in outputs was copied to cache
-    expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`${mylib1}.esm.js`]);
+    expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`index.esm.js`]);
   }, 120000);
 
   function expectCached(

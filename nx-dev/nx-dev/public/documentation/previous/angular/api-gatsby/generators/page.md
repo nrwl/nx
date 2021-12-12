@@ -1,4 +1,4 @@
-# page
+# @nrwl/gatsby:page
 
 Create a page
 
@@ -38,9 +38,23 @@ nx g page my-page --project=mylib --classComponent
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the component.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
+
 ### directory
 
-Alias(es): d
+Alias(es): dir
 
 Type: `string`
 
@@ -72,20 +86,6 @@ Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
 
-### name
-
-Type: `string`
-
-The name of the component.
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
-
 ### skipTests
 
 Default: `false`
@@ -102,6 +102,6 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `none`
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `styled-jsx`, `none`
 
 The file extension to be used for style files.

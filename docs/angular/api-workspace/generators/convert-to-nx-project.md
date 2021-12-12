@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:convert-to-nx-project generator'
+description: "Moves a project's configuration outside of workspace.json"
+---
+
 # @nrwl/workspace:convert-to-nx-project
 
 Moves a project's configuration outside of workspace.json

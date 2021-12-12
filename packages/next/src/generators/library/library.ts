@@ -16,7 +16,7 @@ export async function libraryGenerator(host: Tree, options: Schema) {
     : name;
 
   const { libsDir } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const task = await reactLibraryGenerator(host, options);
 
@@ -41,6 +41,13 @@ export async function libraryGenerator(host: Tree, options: Schema) {
       );
     } else {
       json.presets = ['next/babel'];
+    }
+    return json;
+  });
+
+  updateJson(host, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
+    if (options.style === '@emotion/styled') {
+      json.compilerOptions.jsxImportSource = '@emotion/react';
     }
     return json;
   });

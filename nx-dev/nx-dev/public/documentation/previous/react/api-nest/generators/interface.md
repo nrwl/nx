@@ -1,6 +1,6 @@
-# interface
+# @nrwl/nest:interface
 
-Run the 'interface' NestJs generator with Nx project support
+Run the `interface` NestJS generator with Nx project support.
 
 ## Usage
 
@@ -24,42 +24,40 @@ nx g interface ... --dry-run
 
 ## Options
 
-### directory
-
-Alias(es): d,path
+### name (_**required**_)
 
 Type: `string`
 
-Directory where the generated files are placed
+The name of the interface.
 
-### flat
-
-Default: `false`
-
-Type: `boolean`
-
-Flag to indicate if a directory is created.
-
-### name
-
-Type: `string`
-
-The name of generated generator
-
-### project
+### project (_**required**_)
 
 Alias(es): p
 
 Type: `string`
 
-The nest project to target
+The Nest project to target.
 
-### unitTestRunner
+### directory
 
-Default: `jest`
+Alias(es): dir,path
 
 Type: `string`
 
-Possible values: `jest`, `none`
+Directory where the generated files are placed.
 
-Test runner to use for unit tests
+### flat
+
+Default: `true`
+
+Type: `boolean`
+
+Flag to indicate if a directory is created.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

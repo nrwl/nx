@@ -6,6 +6,7 @@ import {
   updateProjectConfiguration,
   getWorkspaceLayout,
   offsetFromRoot,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace';
 import * as path from 'path';
@@ -13,7 +14,6 @@ import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
 
 export async function updateProject(host: Tree, options: NormalizedSchema) {
-  updateNxConfigWithProject(host, options);
   createFiles(host, options);
   updateProjectTsConfig(host, options);
   fixProjectWorkspaceConfig(host, options);
@@ -119,6 +119,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 
 function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.name);
+  project.tags = options.parsedTags;
 
   const fixedProject = replaceAppNameWithPath(
     project,
@@ -138,7 +139,11 @@ function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
         ? '@nrwl/angular:package'
         : '@nrwl/angular:ng-packagr-lite',
       outputs: [
-        `dist/${getWorkspaceLayout(host).libsDir}/${options.projectDirectory}`,
+        joinPathFragments(
+          'dist',
+          getWorkspaceLayout(host).libsDir,
+          options.projectDirectory
+        ),
       ],
       ...rest,
     };
@@ -171,14 +176,4 @@ function updateProjectTsConfig(host: Tree, options: NormalizedSchema) {
       },
     };
   });
-}
-
-function updateNxConfigWithProject(host: Tree, options: NormalizedSchema) {
-  updateJson(host, `/nx.json`, (json) => ({
-    ...json,
-    projects: {
-      ...json.projects,
-      [options.name]: { tags: options.parsedTags },
-    },
-  }));
 }

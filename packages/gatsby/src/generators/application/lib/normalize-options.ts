@@ -1,4 +1,9 @@
-import { Tree, names, getWorkspaceLayout } from '@nrwl/devkit';
+import {
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  Tree,
+} from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { assertValidStyle } from '@nrwl/react';
 
@@ -23,7 +28,7 @@ export function normalizeOptions(
     : name;
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const { appsDir } = getWorkspaceLayout(host);
-  const projectRoot = `${appsDir}/${projectDirectory}`;
+  const projectRoot = joinPathFragments(appsDir, projectDirectory);
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];

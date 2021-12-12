@@ -1,1 +1,1 @@
-<%= pageStyleContent %>
+<%- pageStyleContent %>

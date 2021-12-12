@@ -29,7 +29,8 @@ describe('Normalize Options', () => {
       parsedTags: [],
       projectName: 'my-app',
       linter: Linter.EsLint,
-      entryFile: '/virtual/apps/my-app/src/main.tsx',
+      entryFile: 'apps/my-app/src/main.tsx',
+      entryFileAbsolutePath: '/virtual/apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -51,7 +52,8 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      entryFile: '/virtual/apps/my-app/src/main.tsx',
+      entryFile: 'apps/my-app/src/main.tsx',
+      entryFileAbsolutePath: '/virtual/apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -75,7 +77,8 @@ describe('Normalize Options', () => {
       directory: 'directory',
       parsedTags: [],
       projectName: 'directory-my-app',
-      entryFile: '/virtual/apps/directory/my-app/src/main.tsx',
+      entryFile: 'apps/directory/my-app/src/main.tsx',
+      entryFileAbsolutePath: '/virtual/apps/directory/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -97,7 +100,8 @@ describe('Normalize Options', () => {
       name: 'directory/my-app',
       parsedTags: [],
       projectName: 'directory-my-app',
-      entryFile: '/virtual/apps/directory/my-app/src/main.tsx',
+      entryFile: 'apps/directory/my-app/src/main.tsx',
+      entryFileAbsolutePath: '/virtual/apps/directory/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -120,7 +124,8 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      entryFile: '/virtual/apps/my-app/src/main.tsx',
+      entryFile: 'apps/my-app/src/main.tsx',
+      entryFileAbsolutePath: '/virtual/apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });

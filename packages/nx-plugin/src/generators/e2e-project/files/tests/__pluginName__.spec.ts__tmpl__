@@ -27,14 +27,14 @@ describe('<%= pluginName %> e2e', () => {
     });
 
     describe('--tags', () => {
-      it('should add tags to nx.json', async () => {
+      it('should add tags to the project', async () => {
          const plugin = uniq('<%= pluginName %>');
         ensureNxProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
         await runNxCommandAsync(
           `generate <%=npmPackageName%>:<%= pluginName %> ${plugin} --tags e2etag,e2ePackage`
         );
-        const nxJson = readJson('nx.json');
-        expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
+        const project = readJson(`libs/${plugin}/project.json`);
+        expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
       }, 120000);
     });
 })

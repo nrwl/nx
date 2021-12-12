@@ -21,7 +21,7 @@ The executors that are available for each project are defined and configured in 
       "generators": {},
       "targets": {
         "build": {
-          "executor": "@nrwl/web:build",
+          "executor": "@nrwl/web:webpack",
           "options": {
             "outputPath": "dist/apps/cart",
             ...

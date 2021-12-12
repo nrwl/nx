@@ -1,5 +1,5 @@
 import {
-  NxJsonProjectConfiguration,
+  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
@@ -115,7 +115,7 @@ describe('convert-to-nx-project', () => {
     }
   });
 
-  it('should extract tags from nx.json into project.json', async () => {
+  it('should include tags in project.json', async () => {
     const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
@@ -128,7 +128,7 @@ describe('convert-to-nx-project', () => {
 
     await convertToNxProject(tree, { all: true });
 
-    const newConfigFile = await readJson<NxJsonProjectConfiguration>(
+    const newConfigFile = await readJson<ProjectConfiguration>(
       tree,
       getProjectConfigurationPath(config)
     );

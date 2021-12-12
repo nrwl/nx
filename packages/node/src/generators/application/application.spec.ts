@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { NxJsonConfiguration, readJson, Tree, getProjects } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -38,6 +38,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
@@ -81,17 +82,17 @@ describe('app', () => {
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
-      expect(workspaceJson.defaultProject).toEqual('my-node-app');
+      expect(nxJson.defaultProject).toEqual('my-node-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-node-app': {
           tags: ['one', 'two'],
         },
@@ -126,7 +127,7 @@ describe('app', () => {
       const tsconfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-
+      expect(tsconfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
       const eslintrc = readJson(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
         Object {
@@ -174,6 +175,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
@@ -190,18 +192,18 @@ describe('app', () => {
       });
 
       expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
-      expect(workspaceJson.defaultProject).toEqual('my-dir-my-node-app');
+      expect(nxJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-node-app': {
           tags: ['one', 'two'],
         },
@@ -239,6 +241,11 @@ describe('app', () => {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.types,
           expectedValue: ['node'],
+        },
+        {
+          path: 'apps/my-dir/my-node-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['**/*.spec.ts', '**/*.test.ts'],
         },
         {
           path: 'apps/my-dir/my-node-app/.eslintrc.json',
@@ -382,7 +389,12 @@ describe('app', () => {
 
       const tsConfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
-      expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+      expect(tsConfigApp.exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.spec.js',
+        '**/*.test.js',
+      ]);
     });
 
     it('should update workspace.json', async () => {

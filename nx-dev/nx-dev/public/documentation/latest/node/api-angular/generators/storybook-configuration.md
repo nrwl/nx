@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:storybook-configuration generator'
+description: 'Adds Storybook configuration to a project.'
+---
+
 # @nrwl/angular:storybook-configuration
 
 Adds Storybook configuration to a project.

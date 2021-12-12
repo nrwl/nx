@@ -4,10 +4,9 @@ import {
   joinPathFragments,
   parseJson,
   ProjectFileMap,
-  ProjectGraphBuilder,
-  ProjectGraphProcessorContext,
   Workspace,
 } from '@nrwl/devkit';
+import { join } from 'path';
 
 export function buildExplicitPackageJsonDependencies(
   workspace: Workspace,
@@ -15,13 +14,29 @@ export function buildExplicitPackageJsonDependencies(
   filesToProcess: ProjectFileMap
 ) {
   const res = [] as any;
+  let packageNameMap = undefined;
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
       if (isPackageJsonAtProjectRoot(graph.nodes, f.file)) {
-        processPackageJson(source, f.file, graph, res);
+        // we only create the package name map once and only if a package.json file changes
+        packageNameMap = packageNameMap || createPackageNameMap(workspace);
+        processPackageJson(source, f.file, graph, res, packageNameMap);
       }
     });
   });
+  return res;
+}
+
+function createPackageNameMap(w: Workspace) {
+  const res = {};
+  for (let projectName of Object.keys(w.projects)) {
+    try {
+      const packageJson = parseJson(
+        defaultFileRead(join(w.projects[projectName].root, 'package.json'))
+      );
+      res[packageJson.name || `@${w.npmScope}/${projectName}`] = projectName;
+    } catch (e) {}
+  }
   return res;
 }
 
@@ -40,16 +55,24 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   graph: ProjectGraph,
-  collectedDeps: any[]
+  collectedDeps: any[],
+  packageNameMap: { [packageName: string]: string }
 ) {
   try {
     const deps = readDeps(parseJson(defaultFileRead(fileName)));
+    // the name matches the import path
     deps.forEach((d) => {
       // package.json refers to another project in the monorepo
-      if (graph.nodes[d]) {
+      if (packageNameMap[d]) {
         collectedDeps.push({
           sourceProjectName: sourceProject,
-          targetProjectName: d,
+          targetProjectName: packageNameMap[d],
+          sourceProjectFile: fileName,
+        });
+      } else if (graph.externalNodes[`npm:${d}`]) {
+        collectedDeps.push({
+          sourceProjectName: sourceProject,
+          targetProjectName: `npm:${d}`,
           sourceProjectFile: fileName,
         });
       }

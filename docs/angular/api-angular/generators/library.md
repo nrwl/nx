@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:library generator'
+description: 'Creates an Angular library.'
+---
+
 # @nrwl/angular:library
 
 Creates an Angular library.
@@ -44,19 +49,19 @@ Type: `boolean`
 
 Generate a buildable library.
 
+### compilationMode
+
+Type: `string`
+
+Possible values: `full`, `partial`
+
+Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.
+
 ### directory
 
 Type: `string`
 
 A directory where the library is placed.
-
-### enableIvy
-
-Default: `false`
-
-Type: `boolean`
-
-Enable Ivy for library in `tsconfig.lib.prod.json`. Should not be used with publishable libraries.
 
 ### importPath
 
@@ -118,6 +123,14 @@ Type: `boolean`
 
 Add router configuration. See `lazy` for more information.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### simpleModuleName
 
 Default: `false`
@@ -151,8 +164,6 @@ Type: `boolean`
 Do not update `tsconfig.json` for development experience.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

@@ -1,5 +1,6 @@
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
+
 import { initGenerator } from './init';
 
 describe('workspace', () => {
@@ -54,6 +55,10 @@ describe('workspace', () => {
       );
       tree.write(
         '/tsconfig.spec.json',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+      );
+      tree.write(
+        '/e2e/tsconfig.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
       tree.write('/tsconfig.json', '{"compilerOptions": {}}');
@@ -134,7 +139,7 @@ describe('workspace', () => {
 
     it('should set the default collection to @nrwl/angular', async () => {
       await initGenerator(tree, { name: 'myApp' });
-      expect(readJson(tree, 'angular.json').cli.defaultCollection).toBe(
+      expect(readJson(tree, 'nx.json').cli.defaultCollection).toBe(
         '@nrwl/angular'
       );
     });
@@ -254,6 +259,7 @@ describe('workspace', () => {
       tree.write('/projects/myApp/tslint.json', '{"rules": {}}');
       tree.write('/projects/myApp/tsconfig.app.json', '{}');
       tree.write('/projects/myApp/tsconfig.spec.json', '{}');
+      tree.write('/projects/myApp/e2e/tsconfig.json', '{}');
       tree.write('/projects/myApp/e2e/protractor.conf.js', '// content');
       tree.write('/projects/myApp/src/app/app.module.ts', '// content');
 
@@ -345,7 +351,6 @@ describe('workspace', () => {
       });
 
       const nxJson = readJson(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({ myproj: { tags: [] } });
       expect(nxJson.npmScope).toEqual('myproj');
     });
 

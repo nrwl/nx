@@ -2,7 +2,7 @@ import {
   expectTestsPass,
   getSelectedPackageManager,
   newProject,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -11,7 +11,7 @@ import {
 describe('Angular Package', () => {
   describe('router config', () => {
     beforeEach(() => newProject());
-    afterEach(() => removeProject({ onlyOnCI: true }));
+    afterEach(() => cleanupProject());
 
     it('should support router config generation (lazy)', async () => {
       if (getSelectedPackageManager() !== 'npm') {

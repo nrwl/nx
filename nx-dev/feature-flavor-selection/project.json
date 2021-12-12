@@ -1,0 +1,25 @@
+{
+  "root": "nx-dev/feature-flavor-selection",
+  "sourceRoot": "nx-dev/feature-flavor-selection/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "nx-dev/feature-flavor-selection/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/feature-flavor-selection"],
+      "options": {
+        "jestConfig": "nx-dev/feature-flavor-selection/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

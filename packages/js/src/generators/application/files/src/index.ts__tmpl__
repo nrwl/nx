@@ -1,0 +1,3 @@
+import {<%= propertyName %>} from './app/<%= fileName %>';
+
+console.log(`Running ${<%= propertyName %>()}`)

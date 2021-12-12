@@ -15,10 +15,26 @@ const IGNORE_MATCHES = {
     '@ngrx/router-store',
     '@ngrx/store',
     '@storybook/angular',
-    'injection-js',
-    'ng-packagr',
     'rxjs',
     'semver',
+    // installed dynamically by the library generator
+    'ng-packagr',
+    // ng-packagr deps, some are handled if not installed
+    'injection-js',
+    'browserslist',
+    'cacache',
+    'find-cache-dir',
+    'less',
+    'node-sass',
+    'node-sass-tilde-importer',
+    'ora',
+    'postcss',
+    'postcss-import',
+    'postcss-preset-env',
+    'postcss-url',
+    'sass',
+    'stylus',
+    'tailwindcss',
   ],
   cli: ['@nrwl/cli'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
@@ -73,7 +89,14 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
   ],
-  web: ['fibers', 'node-sass'],
+  web: [
+    // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
+    '@swc/core',
+    'swc-loader',
+
+    'fibers',
+    'node-sass',
+  ],
   workspace: [
     'tslint',
     '@angular-devkit/architect',
@@ -87,7 +110,13 @@ const IGNORE_MATCHES = {
     'karma-jasmine-html-reporter',
     'webpack',
     'webpack-dev-server',
+    ,
+    '@nrwl/cli',
+    '@nrwl/jest',
+    '@nrwl/linter',
+    '@nrwl/devkit',
   ],
+  nest: ['semver'],
 };
 
 export default async function getMissingDependencies(

@@ -1,3 +1,8 @@
+---
+title: 'affected:lint - CLI command'
+description: 'Lint projects affected by changes'
+---
+
 # affected:lint
 
 Lint projects affected by changes
@@ -15,13 +20,7 @@ nx affected:lint
 Run lint in parallel:
 
 ```bash
-nx affected:lint --parallel --maxParallel=5
-```
-
-Rerun the lint target only for the projects that failed last time:
-
-```bash
-nx affected:lint --only-failed
+nx affected:lint --parallel=5
 ```
 
 Run the lint target for all projects:
@@ -36,16 +35,16 @@ Run lint for all the projects affected by changing the index.ts file:
 nx affected:lint --files=libs/mylib/src/index.ts
 ```
 
-Run lint for all the projects affected by the changes between master and HEAD (e.g., PR):
+Run lint for all the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:lint --base=master --head=HEAD
+nx affected:lint --base=main --head=HEAD
 ```
 
-Run lint for all the projects affected by the last commit on master:
+Run lint for all the projects affected by the last commit on main:
 
 ```bash
-nx affected:lint --base=master~1 --head=master
+nx affected:lint --base=main~1 --head=main
 ```
 
 ## Options
@@ -56,7 +55,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 
@@ -80,12 +79,6 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
-### maxParallel
-
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
-
 ### only-failed
 
 Default: `false`
@@ -94,9 +87,7 @@ Isolate projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Max number of parallel processes [default is 3]
 
 ### runner
 

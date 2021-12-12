@@ -29,6 +29,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -42,11 +45,14 @@ module.exports = {
         './Module': '<%= sourceRoot %>/src/app/remote-entry/entry.module.ts',
       },<% } %><% if(type === 'host') { %>
       remotes: {
-      <% remotes.forEach(function(remote) { %>"<%= remote.remoteName %>": "<%= remote.remoteName %>@http://localhost:<%= remote.port %>/remoteEntry.js",<% }); %>
+      <% remotes.forEach(function(remote) { %>"<%= remote.remoteName %>": "http://localhost:<%= remote.port %>/remoteEntry.js",<% }); %>
       },<% } %>
       shared: {<% sharedLibraries.forEach(function (lib) { %>
         "<%= lib %>": { singleton: true, strictVersion: true },<% }); %>
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),

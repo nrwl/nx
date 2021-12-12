@@ -110,18 +110,13 @@ function warnDeprecatedHeadless({ headless }: CypressExecutorOptions) {
     return;
   }
 
-  const deprecatedMsg = headless
-    ? stripIndents`
-       NOTE:
-       You can now remove the use of the '--headless' flag during 'cypress run' as this is the default for all browsers.`
-    : stripIndents`
-       NOTE:
-       You can now remove the use of the '--headless' flag.
-       If your run depends on a Chrome extension being loaded during 'cypress run', you should explicitly pass the '--headed' flag.
+  if (headless) {
+    const deprecatedMsg = stripIndents`
+    NOTE:
+    You can now remove the use of the '--headless' flag during 'cypress run' as this is the default for all browsers.`;
 
-       If you are trying to execute 'cypress open', you should pass the '--watch' flag instead.`;
-
-  logger.warn(deprecatedMsg);
+    logger.warn(deprecatedMsg);
+  }
 }
 
 async function* startDevServer(

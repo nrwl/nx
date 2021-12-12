@@ -1,14 +1,12 @@
 # React Nx Tutorial - Step 4: Connect to an API
 
-## Nx.dev Tutorial | React | Step 4: Connect to an API
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/HexxYHpIfAo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Real-world applications do not live in isolation — they need APIs to talk to. Setup your app to talk to an API.
 
 **Let's change our application to fetch the data from the API.**
 
-```typescript jsx
+```typescript
 import React, { useEffect, useState } from 'react';
 
 interface Todo {
@@ -52,10 +50,3 @@ const App = () => {
 
 export default App;
 ```
-
-!!!!!
-Run `npx nx serve todos` and open http://localhost:4200. What do you see?
-!!!!!
-"the server responded with a status of 404 (Not Found)" in Console.
-Blank screen.
-Exception rendered on the screen.

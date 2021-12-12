@@ -1,30 +1,10 @@
-import { defaultFileRead } from '../../file-utils';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
-
-export function convertNpmScriptsToTargets(projectRoot: string) {
-  try {
-    const packageJsonString = defaultFileRead(
-      `${projectRoot}/package.json`
-    ).toString();
-    const parsedPackagedJson = JSON.parse(packageJsonString);
-    const res = {};
-    // handle no scripts
-    Object.keys(parsedPackagedJson.scripts || {}).forEach((script) => {
-      res[script] = {
-        executor: '@nrwl/workspace:run-script',
-        options: {
-          script,
-        },
-      };
-    });
-    return res;
-  } catch (e) {
-    return undefined;
-  }
-}
+import { join } from 'path';
+import { existsSync } from 'fs';
+import { mergeNpmScriptsWithTargets } from '../../../utilities/project-graph-utils';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -33,8 +13,8 @@ export function buildWorkspaceProjectNodes(
   const toAdd = [];
   Object.keys(ctx.workspace.projects).forEach((key) => {
     const p = ctx.workspace.projects[key];
-    if (!p.targets) {
-      p.targets = convertNpmScriptsToTargets(p.root);
+    if (existsSync(join(p.root, 'package.json'))) {
+      p.targets = mergeNpmScriptsWithTargets(p.root, p.targets);
     }
     const projectType =
       p.projectType === 'application'

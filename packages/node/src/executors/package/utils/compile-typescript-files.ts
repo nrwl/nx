@@ -9,6 +9,13 @@ import {
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join } from 'path';
 import { NormalizedBuilderOptions } from './models';
+import { loadTsPlugins } from '../../../utils/load-ts-plugins';
+import type {
+  CustomTransformers,
+  Program,
+  SourceFile,
+  TransformerFactory,
+} from 'typescript';
 
 export default async function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
@@ -27,6 +34,20 @@ export default async function compileTypeScriptFiles(
     );
   }
 
+  const { compilerPluginHooks } = loadTsPlugins(options.tsPlugins);
+
+  const getCustomTransformers = (program: Program): CustomTransformers => ({
+    before: compilerPluginHooks.beforeHooks.map(
+      (hook) => hook(program) as TransformerFactory<SourceFile>
+    ),
+    after: compilerPluginHooks.afterHooks.map(
+      (hook) => hook(program) as TransformerFactory<SourceFile>
+    ),
+    afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
+      (hook) => hook(program) as TransformerFactory<SourceFile>
+    ),
+  });
+
   const tcsOptions = {
     outputPath: options.normalizedOutputPath,
     projectName: context.projectName,
@@ -35,6 +56,7 @@ export default async function compileTypeScriptFiles(
     deleteOutputPath: options.deleteOutputPath,
     rootDir: options.srcRootForCompilationRoot,
     watch: options.watch,
+    getCustomTransformers,
   };
 
   if (options.watch) {

@@ -39,6 +39,9 @@ describe('@nrwl/workspace:workspace', () => {
       affected: {
         defaultBase: 'main',
       },
+      cli: {
+        defaultCollection: '@nrwl/workspace',
+      },
       implicitDependencies: {
         'package.json': {
           dependencies: '*',
@@ -62,7 +65,6 @@ describe('@nrwl/workspace:workspace', () => {
           },
         ],
       },
-      projects: {},
     });
   });
 

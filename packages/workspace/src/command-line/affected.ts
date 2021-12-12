@@ -3,12 +3,14 @@ import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraphAsync,
-  onlyWorkspaceProjects,
   ProjectType,
   withDeps,
 } from '../core/project-graph';
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { DefaultReporter } from '../tasks-runner/default-reporter';
+import {
+  ProjectGraph,
+  ProjectGraphNode,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utilities/output';
 import { projectHasTarget } from '../utilities/project-graph-utils';
@@ -16,11 +18,10 @@ import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { parseFiles } from './shared';
-import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import type { NxArgs, RawNxArgs } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { performance } from 'perf_hooks';
 import type { Environment } from '../core/shared-interfaces';
-import { EmptyReporter } from '../tasks-runner/empty-reporter';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
@@ -37,7 +38,7 @@ export async function affected(
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync('4.0');
+  const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
@@ -119,7 +120,7 @@ export async function affected(
           env,
           nxArgs,
           overrides,
-          nxArgs.hideCachedOutput ? new EmptyReporter() : new DefaultReporter(),
+          nxArgs.hideCachedOutput ? 'hide-cached-output' : 'default',
           null
         );
         break;
@@ -141,8 +142,9 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
   if (nxArgs.withDeps) {
-    affectedGraph = onlyWorkspaceProjects(
-      withDeps(projectGraph, Object.values(affectedGraph.nodes))
+    affectedGraph = withDeps(
+      projectGraph,
+      Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[]
     );
   }
   return affectedGraph.nodes;

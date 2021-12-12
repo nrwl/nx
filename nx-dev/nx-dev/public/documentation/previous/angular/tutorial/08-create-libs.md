@@ -1,7 +1,5 @@
 # Angular Nx Tutorial - Step 8: Create Libs
 
-## Nx.dev Tutorial | Angular | Step 8: Create Libraries
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/szaH7fNw0zg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
@@ -10,7 +8,7 @@ Libraries are not just a way to share code in Nx. They are also useful for facto
 
 Every library has an `index.ts` file, which defines its public API. Other applications and libraries should only access what the `index.ts` exports. Everything else in the library is private.
 
-## UI Libraries
+## UI libraries
 
 To illustrate how useful libraries can be, create a library of Angular components.
 
@@ -40,7 +38,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -56,7 +54,7 @@ import { CommonModule } from '@angular/common';
 export class UiModule {}
 ```
 
-## Add a Component
+## Add a component
 
 **Add a component to the newly created ui library by running:**
 
@@ -91,7 +89,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -123,7 +121,7 @@ export class TodosComponent implements OnInit {
 </ul>
 ```
 
-## Use the UI Library
+## Use the UI library
 
 **Now import `UiModule` into `apps/todos/src/app/app.module.ts`.**
 
@@ -155,9 +153,3 @@ export class AppModule {}
 ```
 
 **Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
-
-!!!!!
-Libraries' public API is defined in...
-!!!!!
-index.ts
-angular.json and tsconfig.json files

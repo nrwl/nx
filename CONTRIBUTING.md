@@ -67,7 +67,7 @@ To publish packages to a local registry, do the following:
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to be logged in. You can use test/test/test@test.io.)
 - Run `yarn local-registry enable` in Terminal 2
 - Run `yarn nx-release 999.9.9 --local` in Terminal 2
-- Run `cd /tmp` in Terminal 2
+- Run `cd ./tmp` in Terminal 2
 - Run `npx create-nx-workspace@999.9.9` in Terminal 2
 
 If you have problems publishing, make sure you use Node 14 and NPM 6 instead of Node 15 and NPM 7.
@@ -224,18 +224,25 @@ The scope must be one of the following:
 
 - angular - anything Angular specific
 - core - anything Nx core specific
-- nxdev - anything related to docs infrastructure
-- nextjs - anything Next specific
-- nest - anything Nest specific
-- node - anything Node specific
-- linter - anything Linter specific
-- react - anything React specific
-- web - anything Web specific
-- storybook - anything Storybook specific
-- testing - anything testing specific (e.g., jest or cypress)
-- repo - anything related to managing the repo itself
-- misc - misc stuff
+- dep-graph - anything dep-graph app specific
+- detox - anything Detox specific
 - devkit - devkit-related changes
+- gatsby - anything Gatsby specific
+- express - anything Express specific
+- js - anything related to @nrwl/js package or general js/ts support
+- linter - anything Linter specific
+- nest - anything Nest specific
+- nextjs - anything Next specific
+- nxdev - anything related to docs infrastructure
+- nx-plugin - anything Nx Plugin specific
+- node - anything Node specific
+- react - anything React specific
+- react-native - anything React Native specific
+- repo - anything related to managing the Nx repo itself
+- storybook - anything Storybook specific
+- testing - anything testing specific (e.g., Jest or Cypress)
+- web - anything Web specific
+- misc - misc stuff
 
 ##### Subject and Body
 

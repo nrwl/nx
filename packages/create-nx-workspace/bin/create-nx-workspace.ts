@@ -16,6 +16,7 @@ import {
   getPackageManagerVersion,
   PackageManager,
 } from './package-manager';
+import { validateNpmPackage } from './validate-npm-package';
 
 export enum Preset {
   Empty = 'empty',
@@ -128,12 +129,13 @@ if (parsedArgs.help) {
 (async function main() {
   const packageManager: PackageManager =
     parsedArgs.packageManager || detectInvokedPackageManager();
+
   const { name, cli, preset, appName, style, nxCloud } = await getConfiguration(
     parsedArgs
   );
 
   output.log({
-    title: 'Nx is creating your workspace.',
+    title: `Nx is creating your v${cliVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${packageManager} install" several times. Please wait.`,
@@ -205,10 +207,17 @@ function showHelp() {
 
 async function getConfiguration(parsedArgs) {
   try {
+    let style, appName;
+
     const name = await determineWorkspaceName(parsedArgs);
-    const preset = await determinePreset(parsedArgs);
-    const appName = await determineAppName(preset, parsedArgs);
-    const style = await determineStyle(preset, parsedArgs);
+    let preset = await determineThirdPartyPackage(parsedArgs);
+
+    if (!preset) {
+      preset = await determinePreset(parsedArgs);
+      appName = await determineAppName(preset, parsedArgs);
+      style = await determineStyle(preset, parsedArgs);
+    }
+
     const cli = await determineCli(preset, parsedArgs);
     const nxCloud = await askAboutNxCloud(parsedArgs);
 
@@ -253,6 +262,28 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
       }
       return a.WorkspaceName;
     });
+}
+
+async function determineThirdPartyPackage({ preset }) {
+  if (preset && Object.values(Preset).indexOf(preset) === -1) {
+    const validateResult = validateNpmPackage(preset);
+    if (validateResult.validForNewPackages) {
+      return Promise.resolve(preset);
+    } else {
+      //! Error here
+      output.error({
+        title: 'Invalid preset npm package',
+        bodyLines: [
+          `There was an error with the preset npm package you provided:`,
+          '',
+          ...validateResult.errors,
+        ],
+      });
+      process.exit(1);
+    }
+  } else {
+    return Promise.resolve(null);
+  }
 }
 
 function determinePreset(parsedArgs: any): Promise<Preset> {
@@ -459,7 +490,7 @@ async function createSandbox(packageManager: string) {
     installSpinner.fail();
     output.error({
       title: `Nx failed to install dependencies`,
-      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
+      bodyLines: mapErrorToBodyLines(e),
     });
     process.exit(1);
   } finally {
@@ -486,6 +517,7 @@ async function createApp(
   const args = unparse(restArgs).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
+
   const command = `new ${name} ${args} --collection=@nrwl/workspace`;
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
@@ -515,7 +547,7 @@ async function createApp(
     workspaceSetupSpinner.fail();
     output.error({
       title: `Nx failed to create a workspace.`,
-      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
+      bodyLines: mapErrorToBodyLines(e),
     });
     process.exit(1);
   } finally {
@@ -538,7 +570,7 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
 
     output.error({
       title: `Nx failed to setup NxCloud`,
-      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
+      bodyLines: mapErrorToBodyLines(e),
     });
 
     process.exit(1);
@@ -555,13 +587,29 @@ function printNxCloudSuccessMessage(nxCloudOut: string) {
   });
 }
 
+function mapErrorToBodyLines(error: {
+  logMessage: string;
+  code: number;
+  logFile: string;
+}): string[] {
+  if (error.logMessage.split('\n').filter((line) => !!line).length === 1) {
+    // print entire log message only if it's only a single message
+    return [`Error: ${error.logMessage}`];
+  }
+  const lines = [`Exit code: ${error.code}`, `Log file: ${error.logFile}`];
+  if (process.env.NX_VERBOSE_LOGGING) {
+    lines.push(`Error: ${error.logMessage}`);
+  }
+  return lines;
+}
+
 function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
     exec(command, { cwd }, (error, stdout, stderr) => {
       if (error) {
         const logFile = path.join(cwd, 'error.log');
         writeFileSync(logFile, `${stdout}\n${stderr}`);
-        rej({ code: error.code, logFile });
+        rej({ code: error.code, logFile, logMessage: stderr });
       } else {
         res({ code: 0, stdout });
       }
@@ -580,7 +628,7 @@ async function askAboutNxCloud(parsedArgs: any) {
           choices: [
             {
               name: 'Yes',
-              hint: 'Faster builds, run details, Github integration. Learn more at https://nx.app',
+              hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
             },
 
             {

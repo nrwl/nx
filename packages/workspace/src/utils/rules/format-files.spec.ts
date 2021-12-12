@@ -18,6 +18,27 @@ describe('formatFiles', () => {
       .spyOn(prettier, 'format')
       .mockImplementation((input) => `formatted :: ${input}`);
     tree = Tree.empty();
+
+    tree.create(
+      'workspace.json',
+      `{
+      "version": 1,
+      "projects": {
+        "app1": {
+          "projectType": "application",
+          "schematics": {},
+          "root": "apps/app1",
+          "sourceRoot": "apps/app1/src",
+          "prefix": "nx",
+          "architect": {}
+        }
+      },
+      "cli": {
+        "defaultCollection": "@nrwl/angular"
+      },
+      "defaultProject": "app1"
+    }`
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -82,6 +103,18 @@ describe('formatFiles', () => {
       filepath: path.join(appRootPath, 'b.ts'),
     });
     expect(result.read('b.ts').toString()).toEqual('formatted :: const a=a');
+  });
+
+  it('should have a readable error when workspace file cannot be formatted', async () => {
+    tree.delete('workspace.json');
+
+    const errorSpy = jest.spyOn(console, 'error');
+
+    await schematicRunner.callRule(formatFiles(), tree).toPromise();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Failed to format workspace config: workspace.json'
+    );
   });
 
   describe('--skip-format', () => {

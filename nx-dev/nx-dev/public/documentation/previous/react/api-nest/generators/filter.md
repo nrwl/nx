@@ -1,6 +1,6 @@
-# filter
+# @nrwl/nest:filter
 
-Run the 'filter' NestJs generator with Nx project support
+Run the `filter` NestJS generator with Nx project support.
 
 ## Usage
 
@@ -24,35 +24,51 @@ nx g filter ... --dry-run
 
 ## Options
 
-### directory
-
-Alias(es): d,path
+### name (_**required**_)
 
 Type: `string`
 
-Directory where the generated files are placed
+The name of the filter.
 
-### flat
-
-Default: `false`
-
-Type: `boolean`
-
-Flag to indicate if a directory is created.
-
-### name
-
-Type: `string`
-
-The name of generated generator
-
-### project
+### project (_**required**_)
 
 Alias(es): p
 
 Type: `string`
 
-The nest project to target
+The Nest project to target.
+
+### directory
+
+Alias(es): dir,path
+
+Type: `string`
+
+Directory where the generated files are placed.
+
+### flat
+
+Default: `true`
+
+Type: `boolean`
+
+Flag to indicate if a directory is created.
+
+### language
+
+Type: `string`
+
+Possible values: `js`, `ts`
+
+Nest filter language.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.
 
 ### unitTestRunner
 
@@ -62,4 +78,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.

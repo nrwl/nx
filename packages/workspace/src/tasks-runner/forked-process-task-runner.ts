@@ -1,10 +1,10 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork } from 'child_process';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task } from './tasks-runner';
-import { output } from '../utilities/output';
+import { output, TaskCacheStatus } from '../utilities/output';
 import { getCliPath, getCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { join } from 'path';
@@ -15,6 +15,7 @@ import {
 } from './batch/batch-messages';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
+
 export class ForkedProcessTaskRunner {
   workspaceRoot = appRootPath;
   cliPath = getCliPath(this.workspaceRoot);
@@ -25,6 +26,7 @@ export class ForkedProcessTaskRunner {
     this.setupOnProcessExitListener();
   }
 
+  // TODO: vsavkin delegate terminal output printing
   public forkProcessForBatch({ executorName, taskGraph }: Batch) {
     return new Promise<BatchResults>((res, rej) => {
       try {
@@ -87,7 +89,10 @@ export class ForkedProcessTaskRunner {
 
   public forkProcessPipeOutputCapture(
     task: Task,
-    { forwardOutput }: { forwardOutput: boolean }
+    {
+      forwardOutput,
+      temporaryOutputPath,
+    }: { forwardOutput: boolean; temporaryOutputPath: string }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -130,10 +135,15 @@ export class ForkedProcessTaskRunner {
           // we didn't print any output as we were running the command
           // print all the collected output|
           const terminalOutput = outWithErr.join('');
+
           if (!forwardOutput) {
-            output.logCommand(commandLine);
-            process.stdout.write(terminalOutput);
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              TaskCacheStatus.NoCache,
+              terminalOutput
+            );
           }
+          this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
           res({ code, terminalOutput });
         });
       } catch (e) {
@@ -174,14 +184,11 @@ export class ForkedProcessTaskRunner {
           // print all the collected output
           const terminalOutput = this.readTerminalOutput(temporaryOutputPath);
           if (!forwardOutput) {
-            output.logCommand(commandLine);
-            if (terminalOutput) {
-              process.stdout.write(terminalOutput);
-            } else {
-              console.error(
-                `Nx could not find process's output. Run the command without --parallel.`
-              );
-            }
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              TaskCacheStatus.NoCache,
+              terminalOutput
+            );
           }
           res({
             code,
@@ -201,6 +208,12 @@ export class ForkedProcessTaskRunner {
     } catch (e) {
       return null;
     }
+  }
+
+  private writeTerminalOutput(outputPath: string, content: string) {
+    try {
+      writeFileSync(outputPath, content);
+    } catch (e) {}
   }
 
   // region Environment Variables
@@ -307,6 +320,7 @@ export class ForkedProcessTaskRunner {
       ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
     };
   }
+
   // endregion Environment Variables
 
   private signalToCode(signal: string) {

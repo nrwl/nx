@@ -1,3 +1,8 @@
+---
+title: '@nrwl/express:application generator'
+description: 'Create an express application'
+---
+
 # @nrwl/express:application
 
 Create an express application
@@ -107,8 +112,6 @@ Type: `boolean`
 Do not add dependencies to package.json.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

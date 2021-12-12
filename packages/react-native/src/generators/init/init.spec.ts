@@ -37,12 +37,12 @@ describe('init', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/react-native');
+      const { cli } = readJson(tree, 'nx.json');
+      expect(cli.defaultCollection).toEqual('@nrwl/react-native');
     });
 
     it('should not be set if something else was set before', async () => {
-      updateJson(tree, 'workspace.json', (json) => {
+      updateJson(tree, 'nx.json', (json) => {
         json.cli = {
           defaultCollection: '@nrwl/react',
         };
@@ -52,8 +52,8 @@ describe('init', () => {
         return json;
       });
       await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/react');
+      const { cli } = readJson(tree, 'nx.json');
+      expect(cli.defaultCollection).toEqual('@nrwl/react');
     });
   });
 });

@@ -156,7 +156,7 @@ describe('react:component-story', () => {
             title: 'Test',
           } as Meta;
           
-          const Template: Story<> = (args) => <Test {...args} />;
+          const Template: Story = (args) => <Test {...args} />;
           
           export const Primary = Template.bind({});
           Primary.args = {};

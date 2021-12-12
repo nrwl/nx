@@ -1,3 +1,8 @@
+---
+title: 'print-affected - CLI command'
+description: 'Prints information about the projects and targets affected by changes'
+---
+
 # print-affected
 
 Prints information about the projects and targets affected by changes

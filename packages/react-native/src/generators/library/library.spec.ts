@@ -23,7 +23,7 @@ describe('lib', () => {
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      await libraryGenerator(appTree, defaultSchema);
+      await libraryGenerator(appTree, { ...defaultSchema, tags: 'one,two' });
       const workspaceJson = readJson(appTree, '/workspace.json');
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
@@ -34,16 +34,7 @@ describe('lib', () => {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
         },
       });
-    });
-
-    it('should update nx.json', async () => {
-      await libraryGenerator(appTree, { ...defaultSchema, tags: 'one,two' });
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-lib': {
-          tags: ['one', 'two'],
-        },
-      });
+      expect(workspaceJson.projects['my-lib'].tags).toEqual(['one', 'two']);
     });
 
     it('should update tsconfig.base.json', async () => {
@@ -108,8 +99,8 @@ describe('lib', () => {
         directory: 'myDir',
         tags: 'one',
       });
-      const nxJson = readJson(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const workspaceJson = readJson(appTree, '/workspace.json');
+      expect(workspaceJson.projects).toMatchObject({
         'my-dir-my-lib': {
           tags: ['one'],
         },
@@ -122,8 +113,8 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const nxJson2 = readJson(appTree, '/nx.json');
-      expect(nxJson2.projects).toEqual({
+      const workspaceJson2 = readJson(appTree, '/workspace.json');
+      expect(workspaceJson2.projects).toMatchObject({
         'my-dir-my-lib': {
           tags: ['one'],
         },
@@ -230,7 +221,7 @@ describe('lib', () => {
       const workspaceJson = getProjects(appTree);
 
       expect(workspaceJson.get('my-lib').targets.build).toMatchObject({
-        executor: '@nrwl/web:package',
+        executor: '@nrwl/web:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime'],

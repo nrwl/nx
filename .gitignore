@@ -11,3 +11,4 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.verdaccio/build/local-registry
+dep-graph/dep-graph/src/assets/environment.js

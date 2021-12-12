@@ -20,7 +20,7 @@ export default async function* buildAndroidExecutor(
   chmodSync(join(projectRoot, 'android', 'gradlew.bat'), 0o775);
 
   try {
-    await runCliBuild(projectRoot, options);
+    await runCliBuild(context.root, projectRoot, options);
     yield { success: true };
   } finally {
     if (childProcess) {
@@ -29,13 +29,17 @@ export default async function* buildAndroidExecutor(
   }
 }
 
-function runCliBuild(projectRoot: string, options: ReactNativeBuildOptions) {
+function runCliBuild(
+  workspaceRoot: string,
+  projectRoot: string,
+  options: ReactNativeBuildOptions
+) {
   return new Promise((resolve, reject) => {
     childProcess = spawn(
       process.platform === 'win32' ? 'gradlew.bat' : './gradlew',
       [options.apk ? 'assembleRelease' : 'bundleRelease'],
       {
-        cwd: join(projectRoot, 'android'),
+        cwd: join(workspaceRoot, projectRoot, 'android'),
         stdio: [0, 1, 2],
       }
     );

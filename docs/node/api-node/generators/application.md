@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:application generator'
+description: 'Create a node application'
+---
+
 # @nrwl/node:application
 
 Create a node application
@@ -107,8 +112,6 @@ Type: `boolean`
 Do not add dependencies to package.json.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

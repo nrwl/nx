@@ -22,6 +22,11 @@
             "file": "angular/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -53,7 +58,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -107,6 +112,11 @@
             "file": "shared/guides/why-monorepos"
           },
           {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
+          },
+          {
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "angular/guides/update"
@@ -117,11 +127,6 @@
         "name": "Migration",
         "id": "migration",
         "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
           {
             "name": "From Angular CLI",
             "id": "migration-angular"
@@ -139,6 +144,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -182,14 +192,9 @@
             "file": "angular/cli/run"
           },
           {
-            "name": "daemon:start",
-            "id": "daemon-start",
-            "file": "angular/cli/daemon-start"
-          },
-          {
-            "name": "daemon:stop",
-            "id": "daemon-stop",
-            "file": "angular/cli/daemon-stop"
+            "name": "daemon",
+            "id": "daemon",
+            "file": "angular/cli/daemon"
           },
           {
             "name": "dep-graph",
@@ -287,9 +292,9 @@
             "file": "angular/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "angular/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "angular/cli/reset"
           }
         ]
       },
@@ -347,11 +352,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "angular/api-workspace/executors/tsc"
+            "file": "angular/api-js/executors/tsc"
           }
         ]
       },
@@ -373,12 +394,7 @@
           {
             "name": "build executor",
             "id": "build",
-            "file": "angular/api-web/executors/build"
-          },
-          {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "angular/api-web/generators/migrate-to-webpack-5"
+            "file": "angular/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -393,7 +409,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "angular/api-web/executors/package"
+            "file": "angular/api-web/executors/rollup"
           }
         ]
       },
@@ -438,6 +454,11 @@
             "file": "angular/api-angular/generators/library"
           },
           {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "angular/api-angular/generators/library-secondary-entry-point"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "angular/api-angular/generators/move"
@@ -446,6 +467,11 @@
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "angular/api-angular/generators/ngrx"
+          },
+          {
+            "name": "scam generator",
+            "id": "scam",
+            "file": "angular/api-angular/generators/scam"
           },
           {
             "name": "setup-mfe generator",
@@ -699,11 +725,6 @@
             "file": "angular/api-node/generators/library"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "angular/api-node/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
             "file": "angular/api-node/executors/build"
@@ -821,6 +842,11 @@
             "name": "resolver generator",
             "id": "resolver",
             "file": "angular/api-nest/generators/resolver"
+          },
+          {
+            "name": "resource generator",
+            "id": "resource",
+            "file": "angular/api-nest/generators/resource"
           },
           {
             "name": "service generator",
@@ -1164,19 +1190,34 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
+          },
+          {
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
+            "name": "Distributed CI",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
@@ -1232,6 +1273,11 @@
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
             "file": "shared/eslint"
+          },
+          {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
           },
           {
             "name": "Nx 7 => Nx 8",
@@ -1314,6 +1360,11 @@
             "file": "react/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -1345,7 +1396,7 @@
             "id": "05-add-node-app"
           },
           {
-            "name": "6 - Configure Proxy",
+            "name": "6 - Proxy Configuration",
             "id": "06-proxy"
           },
           {
@@ -1399,6 +1450,11 @@
             "file": "shared/guides/why-monorepos"
           },
           {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
+          },
+          {
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "shared/update"
@@ -1409,11 +1465,6 @@
         "name": "Migration",
         "id": "migration",
         "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
           {
             "name": "From CRA",
             "id": "migration-cra"
@@ -1427,6 +1478,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -1470,14 +1526,9 @@
             "file": "react/cli/run"
           },
           {
-            "name": "daemon:start",
-            "id": "daemon-start",
-            "file": "react/cli/daemon-start"
-          },
-          {
-            "name": "daemon:stop",
-            "id": "daemon-stop",
-            "file": "react/cli/daemon-stop"
+            "name": "daemon",
+            "id": "daemon",
+            "file": "react/cli/daemon"
           },
           {
             "name": "dep-graph",
@@ -1575,9 +1626,9 @@
             "file": "react/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "react/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "react/cli/reset"
           }
         ]
       },
@@ -1635,11 +1686,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "react/api-workspace/executors/tsc"
+            "file": "react/api-js/executors/tsc"
           }
         ]
       },
@@ -1659,14 +1726,9 @@
             "file": "react/api-web/generators/application"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "react/api-web/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
-            "file": "react/api-web/executors/build"
+            "file": "react/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -1681,7 +1743,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "react/api-web/executors/package"
+            "file": "react/api-web/executors/rollup"
           }
         ]
       },
@@ -1726,6 +1788,11 @@
             "file": "react/api-angular/generators/library"
           },
           {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "react/api-angular/generators/library-secondary-entry-point"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "react/api-angular/generators/move"
@@ -1734,6 +1801,11 @@
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "react/api-angular/generators/ngrx"
+          },
+          {
+            "name": "scam generator",
+            "id": "scam",
+            "file": "react/api-angular/generators/scam"
           },
           {
             "name": "setup-mfe generator",
@@ -1993,11 +2065,6 @@
             "file": "react/api-node/generators/library"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "react/api-node/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
             "file": "react/api-node/executors/build"
@@ -2115,6 +2182,11 @@
             "name": "resolver generator",
             "id": "resolver",
             "file": "react/api-nest/generators/resolver"
+          },
+          {
+            "name": "resource generator",
+            "id": "resource",
+            "file": "react/api-nest/generators/resource"
           },
           {
             "name": "service generator",
@@ -2458,19 +2530,34 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
+          },
+          {
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
+            "name": "Distributed CI",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
@@ -2507,6 +2594,11 @@
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
             "file": "shared/eslint"
+          },
+          {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
           },
           {
             "name": "JavaScript and TypeScript",
@@ -2586,6 +2678,11 @@
             "file": "node/getting-started/nx-cli"
           },
           {
+            "name": "Nx Core",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
             "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
@@ -2655,6 +2752,11 @@
             "file": "shared/guides/why-monorepos"
           },
           {
+            "name": "CI Setup",
+            "id": "ci-overview",
+            "file": "shared/ci-overview"
+          },
+          {
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "shared/update"
@@ -2666,11 +2768,6 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
@@ -2679,6 +2776,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -2722,14 +2824,9 @@
             "file": "node/cli/run"
           },
           {
-            "name": "daemon:start",
-            "id": "daemon-start",
-            "file": "node/cli/daemon-start"
-          },
-          {
-            "name": "daemon:stop",
-            "id": "daemon-stop",
-            "file": "node/cli/daemon-stop"
+            "name": "daemon",
+            "id": "daemon",
+            "file": "node/cli/daemon"
           },
           {
             "name": "dep-graph",
@@ -2827,9 +2924,9 @@
             "file": "node/cli/connect-to-nx-cloud"
           },
           {
-            "name": "clear-cache",
-            "id": "clear-cache",
-            "file": "node/cli/clear-cache"
+            "name": "reset",
+            "id": "reset",
+            "file": "node/cli/reset"
           }
         ]
       },
@@ -2887,11 +2984,27 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-js/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-js/generators/library"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "node/api-workspace/executors/tsc"
+            "file": "node/api-js/executors/tsc"
           }
         ]
       },
@@ -2911,14 +3024,9 @@
             "file": "node/api-web/generators/application"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "node/api-web/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
-            "file": "node/api-web/executors/build"
+            "file": "node/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
@@ -2933,7 +3041,7 @@
           {
             "name": "package executor",
             "id": "package",
-            "file": "node/api-web/executors/package"
+            "file": "node/api-web/executors/rollup"
           }
         ]
       },
@@ -2978,6 +3086,11 @@
             "file": "node/api-angular/generators/library"
           },
           {
+            "name": "library-secondary-entry-point generator",
+            "id": "library",
+            "file": "node/api-angular/generators/library-secondary-entry-point"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "node/api-angular/generators/move"
@@ -2986,6 +3099,11 @@
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "node/api-angular/generators/ngrx"
+          },
+          {
+            "name": "scam generator",
+            "id": "scam",
+            "file": "node/api-angular/generators/scam"
           },
           {
             "name": "setup-mfe generator",
@@ -3228,11 +3346,6 @@
             "file": "node/api-node/generators/library"
           },
           {
-            "name": "migrate to webpack 5 generator",
-            "id": "migrate-to-webpack-5",
-            "file": "node/api-node/generators/migrate-to-webpack-5"
-          },
-          {
             "name": "build executor",
             "id": "build",
             "file": "node/api-node/executors/build"
@@ -3350,6 +3463,11 @@
             "name": "resolver generator",
             "id": "resolver",
             "file": "node/api-nest/generators/resolver"
+          },
+          {
+            "name": "resource generator",
+            "id": "resource",
+            "file": "node/api-nest/generators/resource"
           },
           {
             "name": "service generator",
@@ -3693,19 +3811,34 @@
         "id": "ci",
         "itemList": [
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
-          },
-          {
-            "name": "Distributed CI: Azure",
+            "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI: Jenkins",
+            "name": "Setting up CircleCI",
+            "id": "monorepo-ci-circle-ci",
+            "file": "shared/monorepo-ci-circle-ci"
+          },
+          {
+            "name": "Setting up GitHub Actions",
+            "id": "monorepo-ci-github-actions",
+            "file": "shared/monorepo-ci-github-actions"
+          },
+          {
+            "name": "Setting up Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Setting up GitLab",
+            "id": "monorepo-ci-gitlab",
+            "file": "shared/monorepo-ci-gitlab"
+          },
+          {
+            "name": "Distributed CI",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
           },
           {
             "name": "Incremental Builds",
@@ -3732,6 +3865,11 @@
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
             "file": "shared/eslint"
+          },
+          {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
           },
           {
             "name": "Webpack 5 Migration",

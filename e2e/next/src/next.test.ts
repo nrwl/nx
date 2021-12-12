@@ -1,8 +1,8 @@
 import { stringUtils } from '@nrwl/workspace';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   createFile,
-  isNotWindows,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -14,7 +14,7 @@ import {
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import * as http from 'http';
 
@@ -140,6 +140,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: true,
+      checkExport: false,
     });
   }, 300000);
 
@@ -168,6 +169,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: true,
+      checkExport: false,
     });
   }, 300000);
 
@@ -272,6 +274,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: true,
+      checkExport: false,
     });
   }, 300000);
 
@@ -284,6 +287,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -296,6 +300,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -310,6 +315,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -324,6 +330,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
+      checkExport: false,
     });
   }, 120000);
 
@@ -337,16 +344,15 @@ describe('Next.js Applications', () => {
 
     // Shared assets
     const sharedLib = uniq('sharedLib');
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
-      json.projects[appName].targets.build.options.assets = [
+    updateProjectConfig(appName, (json) => {
+      json.targets.build.options.assets = [
         {
           glob: '**/*',
           input: `libs/${sharedLib}/src/assets`,
           output: 'shared/ui',
         },
       ];
-      return JSON.stringify(json, null, 2);
+      return json;
     });
     updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 
@@ -395,6 +401,23 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: true,
+      checkExport: false,
+    });
+  }, 300000);
+
+  it('should support --no-swc flag', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --no-swc`);
+
+    // Next.js enables SWC when custom .babelrc is not provided.
+    checkFilesExist(`apps/${appName}/.babelrc`);
+
+    await checkApp(appName, {
+      checkUnitTest: false,
+      checkLint: false,
+      checkE2E: true,
+      checkExport: true,
     });
   }, 300000);
 
@@ -462,101 +485,8 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: false,
+      checkExport: false,
     });
-  }, 120000);
-
-  it('webpack4 - should be able to consume a react libs (buildable and non-buildable)', async () => {
-    if (isNotWindows()) {
-      const appName = uniq('app');
-      const buildableLibName = uniq('lib');
-      const nonBuildableLibName = uniq('lib');
-
-      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none`
-      );
-      runCLI(
-        `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
-      );
-
-      const mainPath = `apps/${appName}/pages/index.tsx`;
-      updateFile(
-        mainPath,
-        `
-    import '@${proj}/${nonBuildableLibName}';
-    import '@${proj}/${buildableLibName}';
-    ${readFile(mainPath)}
-    `
-      );
-      // enable webpack 5
-      updateFile(
-        `apps/${appName}/next.config.js`,
-        `
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const withNx = require('@nrwl/next/plugins/with-nx');
-        module.exports = withNx({
-          nx: {
-            // Set this to false if you do not want to use SVGR
-            // See: https://github.com/gregberge/svgr
-            svgr: true,
-          },
-          webpack5: false
-        });
-      `
-      );
-
-      // Update non-buildable lib to use css modules to test that next.js can compile it
-      updateFile(
-        `libs/${nonBuildableLibName}/src/lib/${nonBuildableLibName}.tsx`,
-        `
-            import styles from './style.module.css';
-            export function Test() {
-              return <div className={styles.container}>Hello</div>;
-            }
-            export default Test;
-          `
-      );
-      updateFile(
-        `libs/${nonBuildableLibName}/src/lib/style.module.css`,
-        `
-            .container {}
-          `
-      );
-
-      await checkApp(appName, {
-        checkUnitTest: true,
-        checkLint: true,
-        checkE2E: true,
-        checkWebpack4: true,
-      });
-    }
-  }, 300000);
-
-  it('webpack4 - should build with a next.config.js file in the dist folder', async () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
-
-    updateFile(
-      `apps/${appName}/next.config.js`,
-      `
-        module.exports = {
-          webpack5: false,
-          webpack: (c) => {
-            console.log('NODE_ENV is', process.env.NODE_ENV);
-            return c;
-          }
-        }
-        `
-    );
-    // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`
-    // by the time it reaches the build executor.
-    // this simulates existing behaviour of running a next.js build executor via Nx
-    delete process.env.NODE_ENV;
-    const result = runCLI(`build ${appName}`);
-
-    checkFilesExist(`dist/apps/${appName}/next.config.js`);
-    expect(result).toContain('NODE_ENV is production');
   }, 120000);
 
   it('should allow using a custom server implementation in TypeScript', async () => {
@@ -595,11 +525,11 @@ describe('Next.js Applications', () => {
     `
     );
 
-    updateWorkspaceConfig((workspace) => {
-      workspace.projects[appName].targets.serve.options.customServerPath =
+    updateProjectConfig(appName, (config) => {
+      config.targets.serve.options.customServerPath =
         '../../tools/custom-next-server.ts';
 
-      return workspace;
+      return config;
     });
 
     // serve Next.js
@@ -650,6 +580,9 @@ export default function Home() {
 
     const lintResults = runCLI(`lint ${appName}`, { silenceError: true });
     expect(lintResults).toContain('Lint errors found');
+
+    // even though there's a lint error - building should not fail
+    expect(() => runCLI(`build ${appName}`)).not.toThrow();
   }, 300000);
 });
 
@@ -674,16 +607,12 @@ async function checkApp(
     checkUnitTest: boolean;
     checkLint: boolean;
     checkE2E: boolean;
-    checkWebpack4?: boolean;
+    checkExport: boolean;
   }
 ) {
   const buildResult = runCLI(`build ${appName} --withDeps`);
-  if (opts.checkWebpack4) {
-    expect(buildResult).toContain('Using webpack 4');
-  }
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
 
   const packageJson = readJson(`dist/apps/${appName}/package.json`);
   expect(packageJson.dependencies.react).toBeDefined();
@@ -703,11 +632,13 @@ async function checkApp(
   }
 
   if (opts.checkE2E && runCypressTests()) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
+    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
     expect(e2eResults).toContain('All specs passed!');
     expect(await killPorts()).toBeTruthy();
   }
 
-  runCLI(`export ${appName}`);
-  checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  if (opts.checkExport) {
+    runCLI(`export ${appName}`);
+    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  }
 }

@@ -2,64 +2,49 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import Head from 'next/head';
-import {
-  Footer,
-  Header,
-  InlineCommand,
-  NxUsersShowcase,
-} from '@nrwl/nx-dev/ui/common';
+import { NextSeo } from 'next-seo';
+import { Footer, Header, NxUsersShowcase } from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
+import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 
 export function ReactPage() {
   const router = useRouter();
-  const { value: storedFlavor } = useStorage('flavor');
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Head>
-        <title>Nx and React</title>
-        <meta
-          name="description"
-          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
-        />
-        <meta name="twitter:title" content="Nx and React" />
-        <meta
-          name="twitter:description"
-          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/react" />
-        <meta
-          property="og:description"
-          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
-        />
-        <meta property="og:title" content="Nx and React" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx and React"
+        description="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and fully support for monorepo."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and React',
+          description:
+            'Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and fully support for monorepo.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: selectedFlavor || 'React',
+          value: selectedFlavor || 'r',
         }}
         version={{
           name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
+          value: storedVersion || 'l',
         }}
       />
       <main>
@@ -230,7 +215,7 @@ export function ReactPage() {
                     </a>
                   </Link>{' '}
                   or{' '}
-                  <Link href="/l/r/migration/migration-cra">
+                  <Link href="/l/r/migration/adding-to-monorepo">
                     <a className="underline pointer">
                       "Adding Nx to Yarn/Lerna monorepo" migration
                     </a>
@@ -434,26 +419,25 @@ export function ReactPage() {
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Nx Integrated Development Experience
+                    Integrated Development Experience
                   </h3>
                   <p className="sm:text-lg mb-6">
-                    Nx provides a modern dev experience that is more integrated.
-                    Nx adds a high-quality VS Code plugin which helps you use
-                    the build tool effectively, generate components in folders,
-                    and much more.
+                    Nx provides a modern integrated dev experience. Nx adds a
+                    high-quality VS Code plugin which helps you use the build
+                    tool effectively, generate components in folders, and much
+                    more.
                   </p>
                   <p className="sm:text-lg mb-6">
-                    Nx also supports optional free cloud support with Nx Cloud
-                    as well as GitHub integration. Share links with your
-                    teammates where everyone working on a project can examine
-                    detailed build logs and get insights about how to improve
-                    your project and build.
+                    Nx also has optional free cloud support as well as GitHub
+                    integration. Share links with your teammates where everyone
+                    working on a project can examine detailed build logs and get
+                    insights about how to improve your project and build.
                   </p>
                 </div>
                 <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <Image
                     src="/images/vscode-nxcloud-pr.png"
-                    alt="Nx Integrated Development Experience illustration"
+                    alt="Integrated Development Experience illustration"
                     width={870}
                     height={830}
                   />
@@ -536,7 +520,7 @@ export function ReactPage() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Tune into regular Nx Office Hours livestreams
+                      Tune into regular Nx Show livestreams
                     </a>
                   </li>
                   <li className="mt-4">

@@ -1,9 +1,9 @@
 import { join } from 'path';
 import { getNodeWebpackConfig } from './node.config';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import TsConfigPathsPlugin from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
 import { BuildNodeBuilderOptions } from './types';
 
-jest.mock('tsconfig-paths-webpack-plugin');
+jest.mock('./webpack/plugins/tsconfig-paths/tsconfig-paths.plugin');
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   get appRootPath() {
     return join(__dirname, '../../../..');
@@ -46,22 +46,22 @@ describe('getNodePartial', () => {
   });
 
   describe('the optimization option when true', () => {
-    it('should not minify', () => {
+    it('should minify', () => {
       const result = getNodeWebpackConfig({
         ...input,
         optimization: true,
       });
 
-      expect(result.optimization.minimize).toEqual(false);
+      expect(result.optimization.minimize).toEqual(true);
     });
 
-    it('should not concatenate modules', () => {
+    it('should concatenate modules', () => {
       const result = getNodeWebpackConfig({
         ...input,
         optimization: true,
       });
 
-      expect(result.optimization.concatenateModules).toEqual(false);
+      expect(result.optimization.concatenateModules).toEqual(true);
     });
   });
 
@@ -79,9 +79,9 @@ describe('getNodePartial', () => {
         externalDependencies: ['module1'],
       });
       const callback = jest.fn();
-      result.externals[0](null, 'module1', callback);
+      result.externals[0]({ request: 'module1' }, callback);
       expect(callback).toHaveBeenCalledWith(null, 'commonjs module1');
-      result.externals[0](null, '@nestjs/core', callback);
+      result.externals[0]({ request: '@nestjs/core' }, callback);
       expect(callback).toHaveBeenCalledWith();
     });
 

@@ -9,13 +9,12 @@ export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
     ...packageJson.devDependencies,
   };
   Object.keys(deps).forEach((d) => {
-    builder.addNode({
+    builder.addExternalNode({
       type: 'npm',
       name: `npm:${d}`,
       data: {
         version: deps[d],
         packageName: d,
-        files: [],
       },
     });
   });

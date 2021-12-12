@@ -10,7 +10,7 @@ export default {
    <% } %> 
 }<% if ( !isPlainJs ) { %> as Meta <% } %>;
 
-const Template<% if ( !isPlainJs ) { %>: Story<<%= propsTypeName %>><% } %> = (args) => <<%= componentName %> {...args} />;
+const Template<% if ( !isPlainJs ) { %>: Story<% if ( propsTypeName ) { %><<%= propsTypeName %>><% } %><% } %> = (args) => <<%= componentName %> {...args} />;
 
 export const Primary = Template.bind({})
 Primary.args = {<% for (let prop of props) { %>

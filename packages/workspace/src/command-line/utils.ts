@@ -43,9 +43,7 @@ export interface NxArgs {
   target?: string;
   configuration?: string;
   runner?: string;
-  parallel?: boolean;
-  maxParallel?: number;
-  'max-parallel'?: number;
+  parallel?: number;
   untracked?: boolean;
   uncommitted?: boolean;
   all?: boolean;
@@ -94,7 +92,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   Object.entries(args).forEach(([key, value]) => {
     const dasherized = names(key).fileName;
     if (nxSpecific.includes(dasherized) || dasherized.startsWith('nx-')) {
-      nxArgs[key] = value;
+      if (value !== undefined) nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
     }
@@ -190,6 +188,20 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   if (!nxArgs.skipNxCache) {
     nxArgs.skipNxCache = false;
+  }
+
+  if (args['parallel'] === 'false' || args['parallel'] === false) {
+    nxArgs['parallel'] = 1;
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === ''
+  ) {
+    nxArgs['parallel'] = Number(
+      nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
+    );
+  } else if (args['parallel'] !== undefined) {
+    nxArgs['parallel'] = Number(args['parallel']);
   }
 
   return { nxArgs, overrides };

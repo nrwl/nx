@@ -1,3 +1,8 @@
+---
+title: '@nrwl/gatsby:build executor'
+description: 'Build a Gatsby app'
+---
+
 # @nrwl/gatsby:build
 
 Build a Gatsby app

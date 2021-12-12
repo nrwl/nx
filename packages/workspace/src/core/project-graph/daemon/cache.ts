@@ -1,38 +1,54 @@
 import { existsSync, readJson, unlinkSync, writeJson } from 'fs-extra';
 import { join } from 'path';
-import { ensureCacheDirectory, nxDepsDir } from '../../nx-deps/nx-deps-cache';
+import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
 
-/**
- * Because daemon server utilities will be executed across completely different processes,
- * it is not possible for us to cache valuable metadata in memory. We therefore
- * instead leverage the existing node_modules/.cache/nx directory to create a new
- * file called daemon.json in order to track things such as the background processes
- * created by this utility so that they can be cleaned up appropriately.
- */
-export interface DaemonJson {
-  serverLogOutputFile: string;
-  backgroundProcessId: number;
+export interface DaemonProcessJson {
+  processId: number;
 }
 
-const daemonJsonPath = join(nxDepsDir, 'daemon.json');
+const serverProcessJsonPath = join(
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
+  'server-process.json'
+);
 
-export async function readDaemonJsonCache(): Promise<DaemonJson | null> {
-  ensureCacheDirectory();
-  if (!existsSync(daemonJsonPath)) {
+async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
+  if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return await readJson(daemonJsonPath);
+  return await readJson(serverProcessJsonPath);
 }
 
-export async function writeDaemonJsonCache(
-  daemonJson: DaemonJson
-): Promise<void> {
-  ensureCacheDirectory();
-  await writeJson(daemonJsonPath, daemonJson);
-}
-
-export function deleteDaemonJsonCache(): void {
+function deleteDaemonJsonProcessCache(): void {
   try {
-    unlinkSync(daemonJsonPath);
+    unlinkSync(serverProcessJsonPath);
   } catch {}
+}
+
+export async function writeDaemonJsonProcessCache(
+  daemonJson: DaemonProcessJson
+): Promise<void> {
+  await writeJson(serverProcessJsonPath, daemonJson);
+}
+
+export async function safelyCleanUpExistingProcess(): Promise<void> {
+  const daemonProcessJson = await readDaemonProcessJsonCache();
+  if (daemonProcessJson && daemonProcessJson.processId) {
+    try {
+      process.kill(daemonProcessJson.processId);
+    } catch {}
+  }
+  deleteDaemonJsonProcessCache();
+}
+
+// Must be sync for the help output use case
+export function getDaemonProcessId(): number | null {
+  if (!existsSync(serverProcessJsonPath)) {
+    return null;
+  }
+  try {
+    const daemonProcessJson = require(serverProcessJsonPath);
+    return daemonProcessJson.processId;
+  } catch {
+    return null;
+  }
 }

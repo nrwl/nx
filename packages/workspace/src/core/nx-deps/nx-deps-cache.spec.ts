@@ -1,22 +1,36 @@
 import { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import {
+  createCache as _createCache,
   extractCachedFileData,
   ProjectGraphCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
+import { createCache } from './nx-deps-cache';
 
 describe('nx deps utils', () => {
   describe('shouldRecomputeWholeGraph', () => {
     it('should be false when nothing changes', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({}),
+          createCache({ version: '5.0' }),
           createPackageJsonDeps({}),
           createWorkspaceJson({}),
           createNxJson({}),
           createTsConfigJson()
         )
       ).toEqual(false);
+    });
+
+    it('should be true if cache version is outdated', () => {
+      expect(
+        shouldRecomputeWholeGraph(
+          createCache({ version: '4.0' }),
+          createPackageJsonDeps({}),
+          createWorkspaceJson({}),
+          createNxJson({}),
+          createTsConfigJson()
+        )
+      ).toEqual(true);
     });
 
     it('should be true when version of nrwl/workspace changes', () => {
@@ -265,6 +279,17 @@ describe('nx deps utils', () => {
     });
   });
 
+  describe('createCache', () => {
+    it('should work with empty tsConfig', () => {
+      _createCache(
+        createNxJson({}),
+        createPackageJsonDeps({}),
+        createCache({}),
+        {}
+      );
+    });
+  });
+
   function createCache(p: Partial<ProjectGraphCache>): ProjectGraphCache {
     const defaults: ProjectGraphCache = {
       version: '3.0',
@@ -304,7 +329,6 @@ describe('nx deps utils', () => {
   function createNxJson(p: Partial<NxJsonConfiguration>): NxJsonConfiguration {
     const defaults: NxJsonConfiguration = {
       npmScope: '',
-      projects: { mylib: {} },
       workspaceLayout: {} as any,
       targetDependencies: {},
       plugins: ['plugin'],

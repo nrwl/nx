@@ -1,10 +1,8 @@
 # Angular Nx Tutorial - Step 11: Test Affected Projects
 
-## Nx.dev Tutorial | Angular | Step 11: Test Affected Projects
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/5t77CPl-bbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Because Nx understands the dependency graph of your workspace, Nx can be efficient at retesting and rebuilding your projects.
+Because Nx understands the dependency graph of your workspace, Nx is efficient at retesting and rebuilding your projects.
 
 **Commit all the changes in the repo**:
 
@@ -26,7 +24,7 @@ git checkout -b testbranch
 
 **Run `npm run affected:libs`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 
-## Test Affected Projects
+## Test affected projects
 
 Printing the affected projects can be handy, but usually you want to do something with them. For instance, you may want to test everything that has been affected.
 
@@ -61,10 +59,3 @@ You can run any target against the affected projects in the graph like this:
 npx nx affected --target=build
 npx nx affected:build
 ```
-
-!!!!!
-Run "npx nx affected --target=invalid --base=master". What do you see?
-!!!!!
-No projects to run test
-The `todos` project failed as before
-`Cannot run tests against master` error

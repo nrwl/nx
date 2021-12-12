@@ -1,5 +1,4 @@
 import type { ProjectGraph } from '@nrwl/devkit';
-import { isNpmProject } from '../core/project-graph';
 import { readJsonFile } from './fileutils';
 
 /**
@@ -57,9 +56,9 @@ function findAllNpmDeps(
 
   seen.add(projectName);
 
-  const node = graph.nodes[projectName];
+  const node = graph.externalNodes[projectName];
 
-  if (isNpmProject(node)) {
+  if (node) {
     list[node.data.packageName] = node.data.version;
     recursivelyCollectPeerDependencies(node.name, graph, list);
   }
@@ -76,16 +75,13 @@ function recursivelyCollectPeerDependencies(
   list: { [packageName: string]: string } = {},
   seen = new Set<string>()
 ) {
-  if (
-    !graph.nodes[projectName] ||
-    !isNpmProject(graph.nodes[projectName]) ||
-    seen.has(projectName)
-  ) {
+  const npmPackage = graph.externalNodes[projectName];
+  if (!npmPackage || seen.has(projectName)) {
     return list;
   }
 
   seen.add(projectName);
-  const packageName = graph.nodes[projectName].data.packageName;
+  const packageName = npmPackage.data.packageName;
   try {
     const packageJson = require(`${packageName}/package.json`);
     if (!packageJson.peerDependencies) {
@@ -94,7 +90,7 @@ function recursivelyCollectPeerDependencies(
 
     Object.keys(packageJson.peerDependencies)
       .map((dependencyName) => `npm:${dependencyName}`)
-      .map((dependency) => graph.nodes[dependency])
+      .map((dependency) => graph.externalNodes[dependency])
       .filter(Boolean)
       .forEach((node) => {
         list[node.data.packageName] = node.data.version;

@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nrwl/devkit';
+import { NxJsonConfiguration, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from './application';
 import { readJson, Tree } from '@nrwl/devkit';
@@ -19,23 +19,31 @@ describe('app', () => {
       standaloneConfig: false,
     });
     const workspaceJson = readJson(tree, '/workspace.json');
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
     expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
     expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
       'apps/my-app-e2e'
     );
-    expect(workspaceJson.defaultProject).toEqual('my-app');
+    expect(nxJson.defaultProject).toEqual('my-app');
   });
 
-  it('should update nx.json', async () => {
+  it('should update tags + implicitDependencies', async () => {
     await applicationGenerator(tree, {
       name: 'myApp',
       style: 'css',
       tags: 'one,two',
       standaloneConfig: false,
     });
-    const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-    expect(nxJson.projects).toEqual({
+    const myAppConfig = readProjectConfiguration(tree, 'my-app');
+    const myAppConfigE2E = readProjectConfiguration(tree, 'my-app-e2e');
+    expect({
+      'my-app': { tags: myAppConfig.tags },
+      'my-app-e2e': {
+        tags: myAppConfigE2E.tags,
+        implicitDependencies: myAppConfigE2E.implicitDependencies,
+      },
+    }).toEqual({
       'my-app': {
         tags: ['one', 'two'],
       },
@@ -77,10 +85,10 @@ describe('app', () => {
         `import * as styles from './index.module.scss'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
-      ).toEqual('scss');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'scss'
+      );
     });
   });
 
@@ -102,10 +110,10 @@ describe('app', () => {
         `import * as styles from './index.module.less'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
-      ).toEqual('less');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'less'
+      );
     });
   });
 
@@ -127,10 +135,10 @@ describe('app', () => {
         `import * as styles from './index.module.styl'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
-      ).toEqual('styl');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'styl'
+      );
     });
   });
 
@@ -153,10 +161,10 @@ describe('app', () => {
       );
       expect(indexContent).toContain(`import styled from 'styled-components'`);
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
-      ).toEqual('styled-components');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'styled-components'
+      );
     });
   });
 
@@ -179,10 +187,10 @@ describe('app', () => {
       );
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
-      ).toEqual('@emotion/styled');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        '@emotion/styled'
+      );
     });
   });
 
@@ -210,10 +218,10 @@ describe('app', () => {
         `import styled from 'styled-components'`
       );
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(
-        workspaceJson.schematics['@nrwl/gatsby'].application.style
-      ).toEqual('styled-jsx');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.generators['@nrwl/gatsby'].application.style).toEqual(
+        'styled-jsx'
+      );
     });
   });
 
@@ -386,7 +394,14 @@ describe('app', () => {
 
       const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.app.json');
       expect(tsConfigApp.include).toContain('**/*.js');
-      expect(tsConfigApp.exclude).toContain('**/*.spec.js');
+      expect(tsConfigApp.exclude).toEqual(
+        expect.arrayContaining([
+          '**/*.spec.js',
+          '**/*.test.js',
+          '**/*.spec.jsx',
+          '**/*.test.jsx',
+        ])
+      );
     });
   });
 });

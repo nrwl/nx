@@ -1,11 +1,16 @@
-# cypress
+# @nrwl/cypress:cypress
 
 Run Cypress e2e tests
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/latest/react/getting-started/nx-cli#common-commands.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
 
-## Properties
+## Options
+
+### cypressConfig (_**required**_)
+
+Type: `string`
+
+The path of the Cypress configuration json file.
 
 ### baseUrl
 
@@ -25,17 +30,11 @@ Type: `string`
 
 A unique identifier for a run to enable grouping or parallelization.
 
-### copyFiles
+### ~~copyFiles~~
 
 Type: `string`
 
-DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder
-
-### cypressConfig
-
-Type: `string`
-
-The path of the Cypress configuration json file.
+**Deprecated:** A regex string that is used to choose what additional integration files to copy to the dist folder
 
 ### devServerTarget
 
@@ -57,13 +56,21 @@ Type: `string`
 
 A named group for recorded runs in the Cypress dashboard.
 
-### headless
+### headed
 
 Default: `false`
 
 Type: `boolean`
 
-Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
+Displays the browser instead of running headlessly. Set this to 'true' if your run depends on a Chrome extension being loaded.
+
+### ~~headless~~
+
+Default: `false`
+
+Type: `boolean`
+
+**Deprecated:** Hide the browser instead of running headed (default for cypress run).
 
 ### ignoreTestFiles
 
@@ -118,6 +125,16 @@ Skip dev-server build.
 Type: `string`
 
 A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**
+
+### testingType
+
+Default: `e2e`
+
+Type: `string`
+
+Possible values: `component`, `e2e`
+
+Specify the type of tests to execute
 
 ### tsConfig
 

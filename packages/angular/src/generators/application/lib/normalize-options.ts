@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, Tree } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -17,13 +17,15 @@ export function normalizeOptions(
     : names(options.name).fileName;
 
   let e2eProjectName = `${names(options.name).fileName}-e2e`;
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
+  const appProjectName = appDirectory
+    .replace(new RegExp('/', 'g'), '-')
+    .replace(/-\d+/g, '');
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;
   }
 
-  const appProjectRoot = `${appsDir}/${appDirectory}`;
-  const e2eProjectRoot = `${appsDir}/${appDirectory}-e2e`;
+  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
+  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -31,7 +33,7 @@ export function normalizeOptions(
 
   const defaultPrefix = npmScope;
 
-  options.standaloneConfig = options.standaloneConfig || standaloneAsDefault;
+  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
   // Set defaults and then overwrite with user options
   return {

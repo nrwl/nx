@@ -1,3 +1,8 @@
+---
+title: '@nrwl/workspace:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/workspace:library
 
 Create a library
@@ -84,7 +89,7 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`
 
 The tool to use for running lint checks.
 
@@ -132,15 +137,13 @@ Do not update tsconfig.json for development experience.
 
 ### standaloneConfig
 
-Default: `false`
-
 Type: `boolean`
 
 Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### strict
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 

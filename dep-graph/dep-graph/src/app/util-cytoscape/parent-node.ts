@@ -12,6 +12,7 @@ export class ParentNode {
         id: this.config.id,
         parent: this.config.parentId,
         label: this.config.label,
+        type: 'dir',
       },
       selectable: false,
       grabbable: false,

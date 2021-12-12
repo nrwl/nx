@@ -11,6 +11,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
@@ -61,17 +62,17 @@ describe('Build React libraries and apps', () => {
       );
     };
 
-    runCLI(`generate @nrwl/react:app ${app}`);
+    runCLI(`generate @nrwl/react:app ${app} `);
 
     // generate publishable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive`
+      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive`
+      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive`
+      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive `
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -85,12 +86,9 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
-      json.projects[childLib].targets.build.options.assets = [
-        `libs/${childLib}/src/assets`,
-      ];
-      return JSON.stringify(json, null, 2);
+    updateProjectConfig(childLib, (json) => {
+      json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
+      return json;
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
 
@@ -109,20 +107,14 @@ describe('Build React libraries and apps', () => {
       /*
        * 1. Without dependencies
        */
-      const childLibOutput = runCLI(`build ${childLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
-      const childLib2Output = runCLI(`build ${childLib2}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${childLib2}`);
 
-      checkFilesExist(`dist/libs/${childLib}/${childLib}.esm.js`);
-      checkFilesExist(`dist/libs/${childLib}/${childLib}.umd.js`);
-      expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.umd.js`);
 
-      checkFilesExist(`dist/libs/${childLib2}/${childLib2}.esm.js`);
-      checkFilesExist(`dist/libs/${childLib2}/${childLib2}.umd.js`);
-      expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
+      checkFilesExist(`dist/libs/${childLib2}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib2}/index.umd.js`);
 
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
       checkFilesExist(`dist/libs/${childLib2}/README.md`);
@@ -130,13 +122,10 @@ describe('Build React libraries and apps', () => {
       /*
        * 2. With dependencies
        */
-      let parentLibOutput = runCLI(`build ${parentLib}`)
-        // FIX for windows and OSX where output names might get broken to multipleline
-        .replace(/\s\s\s││\s\s\s/gm, '');
+      runCLI(`build ${parentLib}`);
 
-      checkFilesExist(`dist/libs/${parentLib}/${parentLib}.esm.js`);
-      checkFilesExist(`dist/libs/${parentLib}/${parentLib}.umd.js`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
+      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${parentLib}/index.umd.js`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.peerDependencies).toEqual(
@@ -151,13 +140,11 @@ describe('Build React libraries and apps', () => {
        */
       rmDist();
 
-      parentLibOutput = runCLI(
-        `build ${parentLib} --with-deps --skip-nx-cache`
-      ).replace(/\s\s\s││\s\s\s/gm, '');
+      runCLI(`build ${parentLib} --with-deps --skip-nx-cache`);
 
-      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
-      expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
+      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib2}/index.esm.js`);
     });
 
     it('should support --format option', () => {
@@ -172,18 +159,18 @@ export async function h() { return 'c'; }
 
       runCLI(`build ${childLib} --format cjs,esm,umd`);
 
-      checkFilesExist(`dist/libs/${childLib}/${childLib}.cjs.js`);
-      checkFilesExist(`dist/libs/${childLib}/${childLib}.esm.js`);
-      checkFilesExist(`dist/libs/${childLib}/${childLib}.umd.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.cjs.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.umd.js`);
 
       const cjsPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/${childLib}.cjs.js`)
+        tmpProjPath(`dist/libs/${childLib}/index.cjs.js`)
       );
       const esmPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/${childLib}.esm.js`)
+        tmpProjPath(`dist/libs/${childLib}/index.esm.js`)
       );
       const umdPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/${childLib}.umd.js`)
+        tmpProjPath(`dist/libs/${childLib}/index.umd.js`)
       );
 
       // This is a loose requirement that ESM and CJS packages should be less than the UMD counterpart.
@@ -233,7 +220,7 @@ export async function h() { return 'c'; }
       // What we're testing
       runCLI(`build ${myLib}`);
       // Assertion
-      const content = readFile(`dist/libs/${myLib}/${myLib}.esm.js`);
+      const content = readFile(`dist/libs/${myLib}/index.esm.js`);
 
       /**
        * Then check if the result contains this "promise" polyfill?

@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/devkit"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/devkit",
         "tsConfig": "packages/devkit/tsconfig.lib.json",
-        "packageJson": "packages/devkit/package.json",
         "main": "packages/devkit/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/devkit",

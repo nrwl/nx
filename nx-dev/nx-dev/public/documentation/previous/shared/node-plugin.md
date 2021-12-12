@@ -6,12 +6,12 @@ The Node Plugin contains generators and executors to manage Node applications wi
 
 Installing the Node plugin to a workspace can be done with the following:
 
-```shell script
+```bash
 #yarn
 yarn add -D @nrwl/node
 ```
 
-```shell script
+```bash
 #npm
 npm install -D @nrwl/node
 ```
@@ -20,7 +20,7 @@ npm install -D @nrwl/node
 
 Generating new applications can be done with the following:
 
-```shell script
+```bash
 nx generate @nrwl/node:application <node-app>
 ```
 
@@ -51,7 +51,7 @@ Make sure to import any files within the `main.ts` file so that they can be exec
 
 Generating Node applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
-```shell script
+```bash
 nx generate @nrwl/node:application <node-app> --frontendProject my-react-app
 ```
 
@@ -61,13 +61,13 @@ When a Node application is added to the workspace.json (or angular.json), the fo
 
 #### build
 
-```shell script
+```bash
 nx build <node-app>
 ```
 
 The build command will compile the application using Webpack. It supports a production configuration by building with the following command:
 
-```shell script
+```bash
 nx build <node-app> --configuration=production
 ```
 
@@ -75,7 +75,7 @@ Additional configurations can be added in the workspace.json. Changing the `--co
 
 #### serve
 
-```shell script
+```bash
 nx serve <node-app>
 ```
 
@@ -94,7 +94,7 @@ For additional information on how to debug Node applications, see the [Node.js d
 
 The lint command will run linting within the scope of the Node app.
 
-```shell script
+```bash
 nx lint <node-app>
 ```
 
@@ -102,7 +102,7 @@ nx lint <node-app>
 
 Test will execute Jest tests within the scope of the Node app.
 
-```shell script
+```bash
 nx test <node-app>
 ```
 
@@ -110,7 +110,7 @@ nx test <node-app>
 
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
 
-```shell script
+```bash
 nx generate @nrwl/node:library <node-lib>
 ```
 
@@ -118,7 +118,7 @@ nx generate @nrwl/node:library <node-lib>
 
 Libraries can also be enabled to be built separately from apps. To create a buildable library, add the `--buildable` flag to the generate command above.
 
-```shell script
+```bash
 nx generate @nrwl/node:library <node-lib> --buildable
 ```
 
@@ -130,7 +130,7 @@ When a Node library is added to the workspace.json (or angular.json), the follow
 
 The lint command will run linting within the scope of the Node library.
 
-```shell script
+```bash
 nx lint <node-lib>
 ```
 
@@ -138,7 +138,7 @@ nx lint <node-lib>
 
 Test will execute Jest tests within the scope of the Node library.
 
-```shell script
+```bash
 nx test <node-lib>
 ```
 
@@ -148,6 +148,6 @@ The build command will only be available if the library was generated with the `
 
 Buildable Node libraries use TypeScript to compile the source. The tsconfig files that are generated with the library allow customization of the compiled output.
 
-```shell script
+```bash
 nx build <node-lib>
 ```

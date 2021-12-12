@@ -1,18 +1,20 @@
 import {
   createProjectGraphAsync,
-  onlyWorkspaceProjects,
+  pruneExternalNodes,
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import { readWorkspaceFiles, workspaceLayout } from '../core/file-utils';
+import { FileData, workspaceLayout } from '../core/file-utils';
 import { output } from '../utilities/output';
 import * as path from 'path';
 
 export async function workspaceLint(): Promise<void> {
-  const graph = onlyWorkspaceProjects(await createProjectGraphAsync('4.0'));
+  const graph = await createProjectGraphAsync();
+  const allWorkspaceFiles = graph.allWorkspaceFiles;
+  const projectGraph = pruneExternalNodes(graph);
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
-    graph,
-    readAllFilesFromAppsAndLibs()
+    projectGraph,
+    readAllFilesFromAppsAndLibs(allWorkspaceFiles)
   ).run();
 
   if (cliErrorOutputConfigs.length > 0) {
@@ -23,9 +25,9 @@ export async function workspaceLint(): Promise<void> {
   }
 }
 
-function readAllFilesFromAppsAndLibs() {
+function readAllFilesFromAppsAndLibs(allWorkspaceFiles: FileData[]) {
   const wl = workspaceLayout();
-  return readWorkspaceFiles('4.0')
+  return allWorkspaceFiles
     .map((f) => f.file)
     .filter(
       (f) => f.startsWith(`${wl.appsDir}/`) || f.startsWith(`${wl.libsDir}/`)

@@ -30,11 +30,13 @@
   "builders": "./executors.json",
   "schematics": "./generators.json",
   "dependencies": {
+    "@phenomnomnominal/tsquery": "4.1.1",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
+    "eslint": "8.2.0",
     "glob": "7.1.4",
     "minimatch": "3.0.4",
     "tmp": "~0.2.1",
-    "tslib": "^2.0.0"
+    "tslib": "^2.3.0"
   }
 }

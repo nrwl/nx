@@ -1,6 +1,6 @@
 import { Linter } from '@nrwl/linter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { getProjects, readJson, NxJsonConfiguration, Tree } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 
@@ -12,7 +12,7 @@ describe('app', () => {
   });
 
   describe('not nested', () => {
-    it('should update workspace.json', async () => {
+    it('should update workspace.json and set defaultProject', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
@@ -20,15 +20,16 @@ describe('app', () => {
       });
 
       const workspaceJson = readJson(tree, 'workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(workspaceJson.defaultProject).toEqual('my-app');
+      expect(nxJson.defaultProject).toEqual('my-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
@@ -36,9 +37,9 @@ describe('app', () => {
         standaloneConfig: false,
       });
 
-      const nxJson = readJson(tree, 'nx.json');
+      const projects = Object.fromEntries(getProjects(tree));
 
-      expect(nxJson.projects).toMatchObject({
+      expect(projects).toMatchObject({
         'my-app': {
           tags: ['one', 'two'],
         },
@@ -151,6 +152,20 @@ describe('app', () => {
       const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
+    });
+
+    it('should add jsxImportSource in tsconfig.json', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: '@emotion/styled',
+        standaloneConfig: false,
+      });
+
+      const tsconfigJson = readJson(tree, 'apps/my-app/tsconfig.json');
+
+      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
+        '@emotion/react'
+      );
     });
   });
 

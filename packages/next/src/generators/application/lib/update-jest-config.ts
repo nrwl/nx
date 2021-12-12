@@ -8,9 +8,14 @@ export function updateJestConfig(host: Tree, options: NormalizedSchema) {
 
   const configPath = `${options.appProjectRoot}/jest.config.js`;
   const originalContent = host.read(configPath, 'utf-8');
-  const content = originalContent.replace(
-    'transform: {',
-    "transform: {\n    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',"
-  );
+  const content = originalContent
+    .replace(
+      'transform: {',
+      "transform: {\n    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',"
+    )
+    .replace(
+      `'babel-jest'`,
+      `['babel-jest', { presets: ['@nrwl/next/babel'] }]`
+    );
   host.write(configPath, content);
 }

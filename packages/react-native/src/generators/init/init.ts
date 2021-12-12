@@ -2,12 +2,14 @@ import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  detectPackageManager,
   formatFiles,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import {
+  babelRuntimeVersion,
   jestReactNativeVersion,
   metroReactNativeBabelPresetVersion,
   metroVersion,
@@ -19,16 +21,18 @@ import {
   reactNativeSvgVersion,
   reactNativeVersion,
   reactTestRendererVersion,
-  reactVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesReactNativeVersion,
-  typesReactVersion,
 } from '../../utils/versions';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
+import {
+  reactVersion,
+  typesReactVersion,
+} from '@nrwl/react/src/utils/versions';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   setDefaultCollection(host, '@nrwl/react-native');
@@ -54,6 +58,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree) {
+  const isPnpm = detectPackageManager(host.root) === 'pnpm';
   return addDependenciesToPackageJson(
     host,
     {
@@ -77,6 +82,12 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
+      ...(isPnpm
+        ? {
+            'metro-config': metroVersion, // metro-config is used by metro.config.js
+            '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
+          }
+        : {}),
     }
   );
 }

@@ -22,7 +22,6 @@ export async function createStorybookTestWorkspaceForLib(
   await libraryGenerator(tree, {
     name: libName,
     buildable: false,
-    enableIvy: false,
     linter: Linter.EsLint,
     publishable: false,
     simpleModuleName: false,
@@ -135,6 +134,90 @@ const COMPONENTS = [
   exports: COMPONENTS
 })
 export class VariableDeclareModule {}`
+  );
+
+  // create a module with components that get Angular exported and declared by variable
+  await moduleGenerator(tree, {
+    name: 'variable-spread-declare',
+    project: libName,
+  });
+
+  await componentGenerator(tree, {
+    name: 'variable-spread-declare-button',
+    project: libName,
+    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    module: 'variable-spread-declare',
+  });
+
+  await componentGenerator(tree, {
+    name: 'variable-spread-declare-view',
+    project: libName,
+    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    module: 'variable-spread-declare',
+  });
+
+  await componentGenerator(tree, {
+    name: 'variable-spread-declare-anotherview',
+    project: libName,
+    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    module: 'variable-spread-declare',
+  });
+
+  tree.write(
+    `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare.module.ts`,
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { VariableSpreadDeclareButtonComponent } from './variable-spread-declare-button/variable-spread-declare-button.component';
+import { VariableSpreadDeclareViewComponent } from './variable-spread-declare-view/variable-spread-declare-view.component';
+import { VariableSpreadDeclareAnotherviewComponent } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview.component';
+
+const COMPONENTS = [ 
+  VariableSpreadDeclareButtonComponent, 
+  VariableSpreadDeclareViewComponent 
+]
+
+@NgModule({
+  imports: [CommonModule],
+  declarations: [...COMPONENTS, VariableSpreadDeclareAnotherviewComponent],
+})
+export class VariableSpreadDeclareModule {}`
+  );
+
+  // create a module where declared components are pulled from a static member of the module
+  await moduleGenerator(tree, {
+    name: 'static-member-declarations',
+    project: libName,
+  });
+
+  await componentGenerator(tree, {
+    name: 'cmp1',
+    project: libName,
+    path: `libs/${libName}/src/lib/static-member-declarations`,
+    module: 'static-member-declarations',
+  });
+
+  await componentGenerator(tree, {
+    name: 'cmp2',
+    project: libName,
+    path: `libs/${libName}/src/lib/static-member-declarations`,
+    module: 'static-member-declarations',
+  });
+
+  tree.write(
+    `libs/${libName}/src/lib/static-member-declarations/static-member-declarations.module.ts`,
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Cmp1Component } from './cmp1/cmp1.component';
+import { Cmp2Component } from './cmp2/cmp2.component';
+
+@NgModule({
+  imports: [CommonModule],
+  declarations: StaticMemberDeclarationsModule.COMPONENTS,
+  exports: StaticMemberDeclarationsModule.COMPONENTS
+})
+export class StaticMemberDeclarationsModule {
+  static readonly COMPONENTS = [Cmp1Component, Cmp2Component];
+}`
   );
 
   // create another button in a nested subpath

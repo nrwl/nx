@@ -19,14 +19,11 @@ export async function ngrxGenerator(
     throw new Error(`Module does not exist: ${normalizedOptions.module}.`);
   }
 
-  if (
-    !normalizedOptions.onlyEmptyRoot ||
-    (!normalizedOptions.root && normalizedOptions.minimal)
-  ) {
+  if (!normalizedOptions.minimal || !normalizedOptions.root) {
     generateNgrxFilesFromTemplates(tree, normalizedOptions);
   }
 
-  if (!normalizedOptions.onlyAddFiles) {
+  if (!normalizedOptions.skipImport) {
     addImportsToModule(tree, normalizedOptions);
     addExportsToBarrel(tree, normalizedOptions);
   }

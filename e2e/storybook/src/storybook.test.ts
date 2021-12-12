@@ -2,7 +2,6 @@ import {
   checkFilesExist,
   killPorts,
   newProject,
-  readFile,
   runCLI,
   runCommandUntil,
   tmpProjPath,
@@ -11,18 +10,23 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  let reactStorybookLib: string;
+  let proj: string;
+
+  beforeAll(() => {
+    proj = newProject();
+    reactStorybookLib = uniq('test-ui-lib-react');
+
+    runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+    );
+  });
+
   describe('serve storybook', () => {
     afterEach(() => killPorts());
 
     it('should run a React based Storybook setup', async () => {
-      newProject();
-
-      const reactStorybookLib = uniq('test-ui-lib-react');
-      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
-      );
-
       // serve the storybook
       const p = await runCommandUntil(
         `run ${reactStorybookLib}:storybook`,
@@ -36,45 +40,16 @@ describe('Storybook schematics', () => {
 
   describe('build storybook', () => {
     it('should build a React based storybook', () => {
-      newProject();
-
-      const reactStorybookLib = uniq('test-ui-lib-react');
-      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
-      );
-
-      // build React lib
-      runCLI(`run ${reactStorybookLib}:build-storybook`);
+      runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-      expect(
-        readFile(`dist/storybook/${reactStorybookLib}/index.html`)
-      ).toContain(`<title>Storybook</title>`);
     }, 1000000);
 
     it('should lint a React based storybook without errors', () => {
-      newProject();
-
-      const reactStorybookLib = uniq('test-ui-lib-react');
-      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
-      );
-
-      // build React lib
       const output = runCLI(`run ${reactStorybookLib}:lint`);
       expect(output).toContain('All files pass linting.');
     }, 1000000);
 
     it('should build a React based storybook that references another lib', () => {
-      const proj = newProject();
-
-      const reactStorybookLib = uniq('test-ui-lib-react');
-      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
-      );
-
       const anotherReactLib = uniq('test-another-lib-react');
       runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference
@@ -130,11 +105,8 @@ describe('Storybook schematics', () => {
       );
 
       // build React lib
-      runCLI(`run ${reactStorybookLib}:build-storybook`);
+      runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-      expect(
-        readFile(`dist/storybook/${reactStorybookLib}/index.html`)
-      ).toContain(`<title>Storybook</title>`);
     }, 1000000);
   });
 });

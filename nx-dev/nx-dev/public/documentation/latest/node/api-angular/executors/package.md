@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:package executor'
+description: 'Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.'
+---
+
 # @nrwl/angular:package
 
 Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
@@ -21,6 +26,12 @@ Type: `string`
 Possible values: `dependencies`, `peerDependencies`
 
 When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
+
+### tailwindConfig
+
+Type: `string`
+
+The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured.
 
 ### tsConfig
 

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/storybook:storybook executor'
+description: 'Serve Storybook'
+---
+
 # @nrwl/storybook:storybook
 
 Serve Storybook
@@ -12,7 +17,7 @@ Default: `@storybook/angular`
 
 Type: `string`
 
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`, `@storybook/web-components`, `@storybook/vue`, `@storybook/vue3`
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`, `@storybook/web-components`, `@storybook/vue`, `@storybook/vue3`, `@storybook/svelte`
 
 Storybook framework npm package
 

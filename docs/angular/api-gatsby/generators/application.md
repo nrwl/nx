@@ -1,3 +1,8 @@
+---
+title: '@nrwl/gatsby:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/gatsby:application
 
 Create an application
@@ -67,8 +72,6 @@ Type: `boolean`
 Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

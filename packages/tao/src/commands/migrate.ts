@@ -13,7 +13,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
-import { appRootPath } from '../utils/app-root';
+import { NxJsonConfiguration } from '../shared/nx';
 
 type Dependencies = 'dependencies' | 'devDependencies';
 
@@ -242,21 +242,16 @@ export class Migrator {
           '@nrwl/web',
           '@nrwl/react-native',
           '@nrwl/detox',
-        ]
-          .filter((pkg) => {
-            const { dependencies, devDependencies } = this.packageJson;
-            return !!dependencies?.[pkg] || !!devDependencies?.[pkg];
-          })
-          .reduce(
-            (m, c) => ({
-              ...m,
-              [c]: {
-                version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
-                alwaysAddToPackageJson: false,
-              },
-            }),
-            {}
-          ),
+        ].reduce(
+          (m, c) => ({
+            ...m,
+            [c]: {
+              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+              alwaysAddToPackageJson: false,
+            },
+          }),
+          {}
+        ),
       };
     }
     if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
@@ -275,11 +270,18 @@ export class Migrator {
         if (!packages) return {};
 
         return Object.keys(packages)
-          .filter(
-            (p) =>
-              !packages[p].ifPackageInstalled ||
-              this.versions(packages[p].ifPackageInstalled)
-          )
+          .filter((pkg) => {
+            const { dependencies, devDependencies } = this.packageJson;
+
+            return (
+              (!packages[pkg].ifPackageInstalled ||
+                this.versions(packages[pkg].ifPackageInstalled)) &&
+              (packages[pkg].alwaysAddToPackageJson ||
+                packages[pkg].addToPackageJson ||
+                !!dependencies?.[pkg] ||
+                !!devDependencies?.[pkg])
+            );
+          })
           .reduce(
             (m, c) => ({
               ...m,
@@ -602,12 +604,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       logger.info(`- Run 'nx migrate --run-migrations'`);
     }
     logger.info(
-      `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
+      `- To learn more go to https://nx.dev/core-concepts/updating-nx`
     );
 
     if (showConnectToCloudMessage()) {
       logger.info(
-        `- You may run "nx connect-to-nx-cloud" to get faster builds, Github integration, and more. Check out https://nx.app`
+        `- You may run "nx connect-to-nx-cloud" to get faster builds, GitHub integration, and more. Check out https://nx.app`
       );
     }
   } catch (e) {
@@ -618,7 +620,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = readJsonFile('nx.json');
+    const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
     const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
       (r: any) => r.runner == '@nrwl/workspace/tasks-runners/default'
     );

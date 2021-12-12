@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:application generator'
+description: 'Create a NestJS application.'
+---
+
 # @nrwl/nest:application
 
 Create a NestJS application.
@@ -81,8 +86,6 @@ Type: `boolean`
 Do not add dependencies to package.json.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

@@ -1,7 +1,7 @@
 import {
+  Tree,
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
-  Tree,
 } from '@nrwl/devkit';
 
 /**

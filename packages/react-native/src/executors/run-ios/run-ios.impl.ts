@@ -30,18 +30,21 @@ export default async function* runIosExecutor(
   if (options.sync) {
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(context.projectName, projectRoot)
+      await syncDeps(context.projectName, projectRoot, context.root)
     );
   }
   if (options.install) {
-    await podInstall(join(projectRoot, 'ios'));
+    await podInstall(join(context.root, projectRoot, 'ios'));
   }
 
   try {
     const tasks = [runCliRunIOS(context.root, projectRoot, options)];
     if (options.packager && options.xcodeConfiguration !== 'Release') {
       tasks.push(
-        runCliStart(context.root, projectRoot, { port: options.port })
+        runCliStart(context.root, projectRoot, {
+          port: options.port,
+          resetCache: options.resetCache,
+        })
       );
     }
 
@@ -69,7 +72,7 @@ function runCliRunIOS(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
       ['run-ios', ...createRunIOSOptions(options), '--no-packager'],
       {
-        cwd: projectRoot,
+        cwd: join(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
       }
     );
@@ -91,14 +94,14 @@ function runCliRunIOS(
   });
 }
 
-const nxOptions = ['sync', 'install', 'packager'];
+const nxOrStartOptions = ['sync', 'install', 'packager', 'port', 'resetCache'];
 
 function createRunIOSOptions(options) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (k === 'xcodeConfiguration') {
       acc.push('--configuration', v);
-    } else if (v && !nxOptions.includes(k)) {
+    } else if (v && !nxOrStartOptions.includes(k)) {
       acc.push(`--${k}`, options[k]);
     }
     return acc;

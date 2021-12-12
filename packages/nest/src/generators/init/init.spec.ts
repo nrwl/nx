@@ -3,7 +3,7 @@ import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
   nestJsSchematicsVersion,
-  nestJsVersion,
+  nestJsVersion8,
   nxVersion,
 } from '../../utils/versions';
 import { initGenerator } from './init';
@@ -20,10 +20,10 @@ describe('init generator', () => {
     await initGenerator(tree, {});
 
     const packageJson = devkit.readJson(tree, 'package.json');
-    expect(packageJson.dependencies['@nestjs/common']).toBe(nestJsVersion);
-    expect(packageJson.dependencies['@nestjs/core']).toBe(nestJsVersion);
+    expect(packageJson.dependencies['@nestjs/common']).toBe(nestJsVersion8);
+    expect(packageJson.dependencies['@nestjs/core']).toBe(nestJsVersion8);
     expect(packageJson.dependencies['@nestjs/platform-express']).toBe(
-      nestJsVersion
+      nestJsVersion8
     );
     expect(packageJson.dependencies['reflect-metadata']).toBeDefined();
     expect(packageJson.dependencies['rxjs']).toBeDefined();
@@ -32,26 +32,29 @@ describe('init generator', () => {
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
       nestJsSchematicsVersion
     );
-    expect(packageJson.devDependencies['@nestjs/testing']).toBe(nestJsVersion);
+    expect(packageJson.devDependencies['@nestjs/testing']).toBe(nestJsVersion8);
     expect(packageJson.devDependencies['@nrwl/nest']).toBe(nxVersion);
   });
 
   it('should set @nrwl/nest as the default collection when none was set before', async () => {
     await initGenerator(tree, {});
 
-    const workspaceJson = devkit.readJson(tree, 'workspace.json');
-    expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/nest');
+    const { cli } = devkit.readJson<devkit.NxJsonConfiguration>(
+      tree,
+      'nx.json'
+    );
+    expect(cli.defaultCollection).toEqual('@nrwl/nest');
   });
 
   it('should not set @nrwl/nest as the default collection when another one was set before', async () => {
-    devkit.updateJson(tree, 'workspace.json', (json) => ({
+    devkit.updateJson(tree, 'nx.json', (json) => ({
       ...json,
       cli: { defaultCollection: '@nrwl/node' },
     }));
 
     await initGenerator(tree, {});
 
-    const workspaceJson = devkit.readJson(tree, 'workspace.json');
+    const workspaceJson = devkit.readJson(tree, 'nx.json');
     expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/node');
   });
 

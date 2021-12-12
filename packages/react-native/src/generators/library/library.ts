@@ -57,7 +57,8 @@ export async function reactNativeLibraryGenerator(
     host,
     options.unitTestRunner,
     options.name,
-    options.projectRoot
+    options.projectRoot,
+    options.js
   );
 
   if (options.publishable || options.buildable) {
@@ -79,7 +80,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     const external = ['react/jsx-runtime'];
 
     targets.build = {
-      executor: '@nrwl/web:package',
+      executor: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -143,7 +144,10 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
     const { libsDir } = getWorkspaceLayout(host);
 
     c.paths[options.importPath] = [
-      maybeJs(options, `${libsDir}/${options.projectDirectory}/src/index.ts`),
+      maybeJs(
+        options,
+        joinPathFragments(libsDir, `${options.projectDirectory}/src/index.ts`)
+      ),
     ];
 
     return json;

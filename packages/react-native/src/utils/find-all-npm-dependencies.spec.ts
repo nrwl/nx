@@ -24,11 +24,13 @@ test('findAllNpmDependencies', () => {
         name: 'lib3',
         data: { files: [] },
       },
+    },
+    externalNodes: {
       'npm:react-native-image-picker': {
         type: 'npm',
         name: 'npm:react-native-image-picker',
         data: {
-          files: [],
+          version: '1',
           packageName: 'react-native-image-picker',
         },
       },
@@ -36,7 +38,7 @@ test('findAllNpmDependencies', () => {
         type: 'npm',
         name: 'npm:react-native-dialog',
         data: {
-          files: [],
+          version: '1',
           packageName: 'react-native-dialog',
         },
       },
@@ -44,7 +46,7 @@ test('findAllNpmDependencies', () => {
         type: 'npm',
         name: 'npm:react-native-snackbar',
         data: {
-          files: [],
+          version: '1',
           packageName: 'react-native-snackbar',
         },
       },
@@ -52,7 +54,7 @@ test('findAllNpmDependencies', () => {
         type: 'npm',
         name: 'npm:@nrwl/react-native',
         data: {
-          files: [],
+          version: '1',
           packageName: '@nrwl/react-native',
         },
       },

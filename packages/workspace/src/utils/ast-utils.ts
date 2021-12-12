@@ -18,18 +18,14 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import { parseJson, serializeJson } from '@nrwl/devkit';
+import { parseJson, ProjectConfiguration, serializeJson } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
-import {
-  createProjectGraph,
-  onlyWorkspaceProjects,
-} from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import type {
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   ProjectGraph,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from '../utilities/typescript/find-nodes';
@@ -462,15 +458,21 @@ export function updateNxJsonInTree(
   };
 }
 
+/**
+ * Sets former nx.json options on projects which are already in workspace.json
+ * @deprecated(v14) project options are no longer stored in nx.json, this should not be used.
+ */
 export function addProjectToNxJsonInTree(
   projectName: string,
-  options: NxJsonProjectConfiguration
+  options: Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
 ): Rule {
-  const defaultOptions = {
-    tags: [],
-  };
-  return updateNxJsonInTree((json) => {
-    json.projects[projectName] = { ...defaultOptions, ...options };
+  return updateWorkspaceInTree((json: WorkspaceJsonConfiguration) => {
+    const project =
+      json.projects[projectName] ?? ({} as Partial<ProjectConfiguration>);
+    project.tags = options.tags ?? project.tags ?? [];
+    project.implicitDependencies =
+      options.implicitDependencies ?? project.implicitDependencies;
+    json.projects[projectName] = project as ProjectConfiguration;
     return json;
   });
 }

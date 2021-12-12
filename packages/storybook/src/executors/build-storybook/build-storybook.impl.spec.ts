@@ -5,11 +5,17 @@ jest.mock('@storybook/core/standalone', () =>
   jest.fn().mockImplementation(() => Promise.resolve())
 );
 import * as storybook from '@storybook/core/standalone';
-import storybookBuilder from './build-storybook.impl';
+import storybookBuilder, {
+  StorybookBuilderOptions,
+} from './build-storybook.impl';
 import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 describe('Build storybook', () => {
   let context: ExecutorContext;
+  let options: StorybookBuilderOptions;
+  let uiFramework: StorybookBuilderOptions['uiFramework'];
+  let outputPath: StorybookBuilderOptions['outputPath'];
+  let config: StorybookBuilderOptions['config'];
 
   beforeEach(async () => {
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
@@ -18,31 +24,9 @@ describe('Build storybook', () => {
         '@storybook/angular': '~6.2.9',
       },
     });
-
-    context = {
-      root: '/root',
-      cwd: '/root',
-      projectName: 'proj',
-      targetName: 'storybook',
-      workspace: {
-        version: 2,
-        projects: {
-          proj: {
-            root: '',
-            sourceRoot: 'src',
-            targets: {},
-          },
-        },
-      },
-      isVerbose: false,
-    };
-  });
-
-  it('should call the storybook static standalone build', async () => {
-    jest.spyOn(logger, 'info');
-    const uiFramework = '@storybook/angular';
-    const outputPath = `${context.root}/dist/storybook`;
-    const config = {
+    uiFramework = '@storybook/angular';
+    outputPath = '/root/dist/storybook';
+    config = {
       pluginPath: join(
         __dirname,
         `/../../generators/configuration/root-files/.storybook/main.js`
@@ -56,15 +40,51 @@ describe('Build storybook', () => {
         `/../../generators/configuration/root-files/.storybook/tsconfig.json`
       ),
     };
+    options = {
+      uiFramework,
+      outputPath,
+      config,
+    };
 
-    const result = await storybookBuilder(
-      {
-        uiFramework,
-        outputPath,
-        config,
+    context = {
+      root: '/root',
+      cwd: '/root',
+      projectName: 'proj',
+      targetName: 'storybook',
+      workspace: {
+        version: 2,
+        projects: {
+          proj: {
+            root: '',
+            sourceRoot: 'src',
+            targets: {
+              build: {
+                executor: '@angular-devkit/build-angular:browser',
+                options: {
+                  main: 'apps/proj/src/main.ts',
+                  outputPath: 'dist/apps/proj',
+                  tsConfig: 'apps/proj/tsconfig.app.json',
+                  index: 'apps/proj/src/index.html',
+                },
+              },
+              storybook: {
+                executor: '@nrwl/storybook:build-storybook',
+                options,
+              },
+            },
+          },
+        },
+        defaultProject: 'proj',
+        npmScope: 'test',
       },
-      context
-    );
+      isVerbose: false,
+    };
+  });
+
+  it('should call the storybook static standalone build', async () => {
+    jest.spyOn(logger, 'info');
+
+    const result = await storybookBuilder(options, context);
 
     expect(storybook).toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith(

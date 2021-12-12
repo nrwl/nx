@@ -28,10 +28,13 @@
       "@nrwl/devkit/testing": ["./packages/devkit/testing"],
       "@nrwl/e2e/cli": ["./e2e/cli"],
       "@nrwl/e2e/utils": ["./e2e/utils"],
+      "@nrwl/eslint-plugin-nx": ["./packages/eslint-plugin-nx/src"],
       "@nrwl/express": ["./packages/express"],
       "@nrwl/gatsby": ["./packages/gatsby"],
       "@nrwl/jest": ["./packages/jest"],
       "@nrwl/jest/*": ["./packages/jest/*"],
+      "@nrwl/js": ["./packages/js/src"],
+      "@nrwl/js/*": ["./packages/js/*"],
       "@nrwl/linter": ["./packages/linter"],
       "@nrwl/nest": ["./packages/nest"],
       "@nrwl/next": ["./packages/next"],
@@ -47,11 +50,19 @@
       "@nrwl/nx-dev/feature-doc-viewer": [
         "./nx-dev/feature-doc-viewer/src/index.ts"
       ],
+      "@nrwl/nx-dev/feature-flavor-selection": [
+        "./nx-dev/feature-flavor-selection/src/index.ts"
+      ],
       "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"],
       "@nrwl/nx-dev/feature-storage": ["./nx-dev/feature-storage/src/index.ts"],
-      "@nrwl/nx-dev/ui/common": ["./nx-dev/ui/common/src/index.ts"],
-      "@nrwl/nx-dev/ui/member-card": ["./nx-dev/ui/member-card/src/index.ts"],
-      "@nrwl/nx-dev/ui/sponsor-card": ["./nx-dev/ui/sponsor-card/src/index.ts"],
+      "@nrwl/nx-dev/feature-versions-and-flavors": [
+        "./nx-dev/feature-versions-and-flavors/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-commands": ["./nx-dev/ui-commands/src/index.ts"],
+      "@nrwl/nx-dev/ui-common": ["./nx-dev/ui-common/src/index.ts"],
+      "@nrwl/nx-dev/ui-home": ["./nx-dev/ui-home/src/index.ts"],
+      "@nrwl/nx-dev/ui-member-card": ["./nx-dev/ui-member-card/src/index.ts"],
+      "@nrwl/nx-dev/ui-sponsor-card": ["./nx-dev/ui-sponsor-card/src/index.ts"],
       "@nrwl/react": ["./packages/react"],
       "@nrwl/react-native": ["./packages/react-native"],
       "@nrwl/react/*": ["./packages/react/*"],

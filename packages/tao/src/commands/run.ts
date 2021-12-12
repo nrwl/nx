@@ -18,6 +18,12 @@ import {
 
 import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
+import { NxJsonConfiguration } from '../shared/nx';
+import { splitTarget } from '../utils/split-target';
+import { readJsonFile } from '../utils/fileutils';
+import { buildTargetFromScript, PackageJson } from '../shared/package-json';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 export interface Target {
   project: string;
@@ -55,8 +61,10 @@ function parseRunOpts(
     throwInvalidInvocation();
   }
   // eslint-disable-next-line prefer-const
-  let [project, target, configuration]: [string, string, string] =
-    runOptions._[0].split(':');
+  let [project, target, configuration]: [string, string, string] = splitTarget(
+    runOptions._[0]
+  );
+
   if (!project && defaultProjectName) {
     logger.debug(
       `No project name specified. Using default project : ${chalk.bold(
@@ -155,15 +163,19 @@ async function iteratorToProcessStatusCode(
 }
 
 function createImplicitTargetConfig(
+  root: string,
   proj: ProjectConfiguration,
   targetName: string
-): TargetConfiguration {
-  return {
-    executor: '@nrwl/workspace:run-script',
-    options: {
-      script: targetName,
-    },
-  };
+): TargetConfiguration | null {
+  const packageJsonPath = join(root, proj.root, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return null;
+  }
+  const { scripts, nx } = readJsonFile<PackageJson>(packageJsonPath);
+  if (!(targetName in (scripts || {}))) {
+    return null;
+  }
+  return buildTargetFromScript(targetName, nx);
 }
 
 async function runExecutorInternal<T extends { success: boolean }>(
@@ -179,7 +191,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   options: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: WorkspaceJsonConfiguration,
+  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -187,9 +199,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
 
   const ws = new Workspaces(root);
   const proj = workspace.projects[project];
-  const targetConfig = proj.targets
-    ? proj.targets[target]
-    : createImplicitTargetConfig(proj, target);
+  const targetConfig =
+    proj.targets?.[target] || createImplicitTargetConfig(root, proj, target);
 
   if (!targetConfig) {
     throw new Error(

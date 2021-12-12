@@ -1,6 +1,6 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
-  getWorkspaceLayout,
   installPackagesTask,
   moveFilesToNewDirectory,
   Tree,
@@ -30,10 +30,6 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use --lazy option, --routing must also be set.`);
-  }
-
-  if (schema.enableIvy === true && !schema.buildable) {
-    throw new Error('enableIvy must only be used with buildable.');
   }
 
   if (schema.publishable === true && !schema.importPath) {
@@ -69,6 +65,19 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   addModule(host, options);
   setStrictMode(host, options);
   await addLinting(host, options);
+
+  if (options.buildable || options.publishable) {
+    addDependenciesToPackageJson(
+      host,
+      {},
+      {
+        postcss: '^8.3.9',
+        'postcss-import': '^14.0.2',
+        'postcss-preset-env': '^6.7.0',
+        'postcss-url': '^10.1.1',
+      }
+    );
+  }
 
   if (options.standaloneConfig) {
     await convertToNxProjectGenerator(host, {
@@ -126,6 +135,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     projectName: options.name,
     projectRoot: options.projectRoot,
     prefix: options.prefix,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 }
 

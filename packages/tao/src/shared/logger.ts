@@ -11,6 +11,8 @@ export const logger = {
   error: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
       console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`);
+    } else if (s instanceof Error && s.stack) {
+      console.error(chalk.bold(chalk.red(s.stack)));
     } else {
       console.error(chalk.bold(chalk.red(s)));
     }

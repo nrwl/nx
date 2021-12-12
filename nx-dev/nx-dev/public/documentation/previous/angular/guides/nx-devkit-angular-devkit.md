@@ -167,8 +167,7 @@ interface Schema {
   message: string;
   allCaps: boolean;
 }
-
-export default function (
+export function run(
   options: Schema,
   context: BuilderContext
 ): Observable<{ success: true }> {
@@ -184,7 +183,7 @@ export default createBuilder<NextBuildBuilderOptions>(run);
 
 ### Notable Differences
 
-- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable. See [Using Rxjs Observables](/{{framework}}/core-concepts/nx-devkit#using-rxjs-observables)
+- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable. See [Using Rxjs Observables](/{{framework}}/executors/using-builders#using-rxjs-observables)
 - Nx Devkit executors do not have to be wrapped using `createBuilder`.
 
 The schema files for both Nx Devkit executors and Angular Builders are the same. Nx can run both of them in the same way.
@@ -194,3 +193,7 @@ The schema files for both Nx Devkit executors and Angular Builders are the same.
 If you are writing an Nx plugin, use Nx Devkit. It's **much** easier to use and debug. It has better docs and more people supporting it.
 
 Do you have to rewrite your Nx Plugin if it is written using Angular Devkit? No. Nx supports both and will always support both. And, most importantly, the end user might not even know what you used to write a generator or an executor.
+
+```
+
+```

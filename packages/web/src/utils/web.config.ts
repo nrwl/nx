@@ -1,23 +1,19 @@
-// TODO @FrozenPandaz we should remove the following imports
-import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs/browser';
-import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
-import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
 import * as path from 'path';
-import { basename, posix, resolve } from 'path';
-import { WebBuildBuilderOptions } from '../executors/build/build.impl';
-import { convertBuildOptions } from './normalize';
+import { posix, resolve } from 'path';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-import { getBaseWebpackPartial } from './config';
-import { LegacyIndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/legacy-index-html-webpack-plugin';
-import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-html-webpack-plugin';
-import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
-import { sassImplementation } from './sass';
-import postcssImports = require('postcss-import');
+import { Configuration } from 'webpack';
 
-// TODO(jack): Remove this in Nx 13
-type Configuration = any;
+import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
+import { convertBuildOptions } from './normalize';
+import { getBaseWebpackPartial } from './config';
+import { getBrowserConfig } from './webpack/partials/browser';
+import { getCommonConfig } from './webpack/partials/common';
+import { getStylesConfig } from './webpack/partials/styles';
+import MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import webpackMerge = require('webpack-merge');
+import postcssImports = require('postcss-import');
 
 // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
 // https://github.com/webpack-contrib/postcss-loader/blob/0d342b1/src/utils.js#L36
@@ -31,14 +27,11 @@ export function getWebConfig(
   workspaceRoot,
   projectRoot,
   sourceRoot,
-  options: WebBuildBuilderOptions,
+  options: WebWebpackExecutorOptions,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
   configuration?: string
 ) {
-  // TODO(jack): Remove this in Nx 13 and go back to proper import
-  const { webpackMerge } = require('../webpack/entry');
-
   const tsConfig = readTsConfig(options.tsConfig);
 
   if (isScriptOptimizeOn) {
@@ -58,7 +51,7 @@ export function getWebConfig(
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
-  return webpackMerge([
+  return webpackMerge.merge([
     _getBaseWebpackPartial(
       options,
       esm,
@@ -72,64 +65,18 @@ export function getWebConfig(
       esm,
       isScriptOptimizeOn
     ),
-    getStylesPartial(
-      wco.root,
-      wco.projectRoot,
-      wco.buildOptions,
-      options.extractCss
-    ),
+    getStylesPartial(wco.root, wco.projectRoot, wco.buildOptions, true),
     getCommonPartial(wco),
-    getBrowserPartial(wco, options, isScriptOptimizeOn),
+    getBrowserPartial(wco, options),
   ]);
 }
 
-function getBrowserPartial(
-  wco: any,
-  options: WebBuildBuilderOptions,
-  isScriptOptimizeOn: boolean
-) {
-  const config = getBrowserConfig(wco);
-  const { isWebpack5 } = require('../webpack/entry');
-
-  if (!isScriptOptimizeOn) {
-    const {
-      deployUrl,
-      subresourceIntegrity,
-      scripts = [],
-      styles = [],
-      index,
-      baseHref,
-    } = options;
-
-    config.plugins.push(
-      isWebpack5
-        ? new IndexHtmlWebpackPlugin({
-            indexPath: resolve(wco.root, index),
-            outputPath: basename(index),
-            baseHref,
-            entrypoints: generateEntryPoints({ scripts, styles }),
-            deployUrl,
-            sri: subresourceIntegrity,
-            moduleEntrypoints: [],
-            noModuleEntrypoints: ['polyfills-es5'],
-          })
-        : new LegacyIndexHtmlWebpackPlugin({
-            input: resolve(wco.root, index),
-            output: basename(index),
-            baseHref,
-            entrypoints: generateEntryPoints({ scripts, styles }),
-            deployUrl,
-            sri: subresourceIntegrity,
-            noModuleEntrypoints: ['polyfills-es5'],
-          })
-    );
-  }
-
-  return config;
+function getBrowserPartial(wco: any, options: WebWebpackExecutorOptions) {
+  return getBrowserConfig(wco);
 }
 
 function _getBaseWebpackPartial(
-  options: WebBuildBuilderOptions,
+  options: WebWebpackExecutorOptions,
   esm: boolean,
   isScriptOptimizeOn: boolean,
   emitDecoratorMetadata: boolean,
@@ -162,9 +109,6 @@ export function getStylesPartial(
   options: any,
   extractCss: boolean
 ): Configuration {
-  // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { MiniCssExtractPlugin } = require('../webpack/entry');
-
   const includePaths: string[] = [];
 
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
@@ -258,7 +202,7 @@ export function getStylesPartial(
             {
               loader: require.resolve('sass-loader'),
               options: {
-                implementation: sassImplementation,
+                implementation: require('sass'),
                 sassOptions: {
                   fiber: false,
                   precision: 8,
@@ -275,7 +219,9 @@ export function getStylesPartial(
             {
               loader: require.resolve('less-loader'),
               options: {
-                paths: includePaths,
+                lessOptions: {
+                  paths: includePaths,
+                },
               },
             },
           ],
@@ -287,7 +233,9 @@ export function getStylesPartial(
             {
               loader: require.resolve('stylus-loader'),
               options: {
-                paths: includePaths,
+                stylusOptions: {
+                  include: includePaths,
+                },
               },
             },
           ],
@@ -313,9 +261,7 @@ export function getPolyfillsPartial(
     // Safari 10.1 supports <script type="module"> but not <script nomodule>.
     // Need to patch it up so the browser doesn't load both sets.
     config.entry.polyfills = [
-      require.resolve(
-        '@nrwl/web/src/utils/third-party/cli-files/models/safari-nomodule.js'
-      ),
+      require.resolve('@nrwl/web/src/utils/webpack/safari-nomodule.js'),
       ...(polyfills ? [polyfills] : []),
     ];
   } else if (es2015Polyfills && !esm && isScriptOptimizeOn) {

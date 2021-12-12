@@ -99,14 +99,18 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     },
-    "enableIvy": {
-      "description": "Enable Ivy for library in `tsconfig.lib.prod.json`. Should not be used with publishable libraries.",
-      "type": "boolean",
-      "default": false
-    },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+      "type": "boolean"
+    },
+    "compilationMode": {
+      "description": "Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.",
+      "type": "string",
+      "enum": ["full", "partial"]
+    },
+    "setParserOptionsProject": {
       "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

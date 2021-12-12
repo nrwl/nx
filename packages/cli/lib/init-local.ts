@@ -1,8 +1,11 @@
-import * as path from 'path';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+
+import { performance } from 'perf_hooks';
+import { execSync } from 'child_process';
+
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
-import { performance } from 'perf_hooks';
-import { readJsonFile } from '@nrwl/tao/src/utils/fileutils';
 
 /**
  * Nx is being run inside a workspace.
@@ -16,13 +19,12 @@ export function initLocal(workspace: Workspace) {
   //nx-ignore-next-line
   require('@nrwl/workspace/src/utilities/perf-logging');
 
-  //nx-ignore-next-line
   const supportedNxCommands =
+    //nx-ignore-next-line
     require('@nrwl/workspace/src/command-line/supported-nx-commands').supportedNxCommands;
 
   const runOpts = runOneOptions(workspace);
   const running = runOpts !== false;
-
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
     //nx-ignore-next-line
@@ -62,6 +64,34 @@ export function initLocal(workspace: Workspace) {
         console.log(
           `If you need to use it, run "FORCE_NG_UPDATE=true ng update".`
         );
+      } else if (
+        (process.argv[2] === 'add' || process.argv[3] === 'add') &&
+        process.env.FORCE_NG_ADD != 'true'
+      ) {
+        console.log('Ng add is not natively supported by Nx');
+        const pkg =
+          process.argv[2] === 'add' ? process.argv[3] : process.argv[4];
+        if (!pkg) {
+          process.exit(1);
+        }
+
+        const pm = getPackageManagerCommand();
+        const cmd = `${pm.add} ${pkg} && ${pm.exec} nx g ${pkg}:ng-add`;
+        console.log(`Instead, we recommend running \`${cmd}\``);
+
+        import('enquirer').then((x) =>
+          x
+            .prompt<{ c: boolean }>({
+              name: 'c',
+              type: 'confirm',
+              message: 'Run this command?',
+            })
+            .then(({ c }) => {
+              if (c) {
+                execSync(cmd, { stdio: 'inherit' });
+              }
+            })
+        );
       } else {
         loadCli(workspace, '@angular/cli/lib/init.js');
       }
@@ -83,16 +113,13 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const workspaceConfigJson = readJsonFile(
-      path.join(
-        workspace.dir,
-        workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
-      )
-    );
+    const workspaceConfig = new Workspaces(
+      workspace.dir
+    ).readWorkspaceConfiguration();
 
     return parseRunOneOptions(
       workspace.dir,
-      workspaceConfigJson,
+      workspaceConfig,
       process.argv.slice(2)
     );
   } catch {

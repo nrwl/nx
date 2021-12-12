@@ -7,7 +7,7 @@ import {
   promisifiedTreeKill,
   readFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCommandUntil,
   uniq,
@@ -23,27 +23,29 @@ describe('Angular Package', () => {
     let buildableLib;
     let proj: string;
 
-    // This fails with pnpm due to incompatibilities with ngcc.
-    // Since this suite has a single test, we wrap everything to avoid the hooks to run and
-    // waste time.
-    if (getSelectedPackageManager() !== 'pnpm') {
-      beforeEach(() => {
-        app = uniq('app');
-        buildableLib = uniq('buildlib1');
+    beforeEach(() => {
+      app = uniq('app');
+      buildableLib = uniq('buildlib1');
 
-        proj = newProject();
+      // This fails with pnpm due to incompatibilities with ngcc.
+      // Since this suite has a single test, we wrap everything to avoid the hooks to run and
+      // waste time.
+      // therefore switch to yarn
 
-        runCLI(
-          `generate @nrwl/angular:app ${app} --style=css --no-interactive`
-        );
-        runCLI(
-          `generate @nrwl/angular:library ${buildableLib} --buildable=true --no-interactive`
-        );
+      proj =
+        getSelectedPackageManager() === 'pnpm'
+          ? newProject({ packageManager: 'yarn' })
+          : newProject();
 
-        // update the app module to include a ref to the buildable lib
-        updateFile(
-          `apps/${app}/src/app/app.module.ts`,
-          `
+      runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);
+      runCLI(
+        `generate @nrwl/angular:library ${buildableLib} --buildable=true --no-interactive`
+      );
+
+      // update the app module to include a ref to the buildable lib
+      updateFile(
+        `apps/${app}/src/app/app.module.ts`,
+        `
         import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
         import {${
@@ -51,43 +53,41 @@ describe('Angular Package', () => {
         }Module} from '@${proj}/${buildableLib}';
 
         import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
 
         @NgModule({
-          declarations: [AppComponent],
+          declarations: [AppComponent, NxWelcomeComponent],
           imports: [BrowserModule, ${names(buildableLib).className}Module],
           providers: [],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
     `
-        );
+      );
 
-        // update the angular.json
-        const workspaceJson = readJson(`angular.json`);
-        workspaceJson.projects[app].architect.build.builder =
-          '@nrwl/angular:webpack-browser';
-        updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
-      });
+      // update the angular.json
+      const workspaceJson = readJson(`angular.json`);
+      workspaceJson.projects[app].architect.build.builder =
+        '@nrwl/angular:webpack-browser';
+      updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
+    });
 
-      afterEach(() => removeProject({ onlyOnCI: true }));
+    afterEach(() => cleanupProject());
 
-      it('should build the dependent buildable lib as well as the app', () => {
-        const libOutput = runCLI(
-          `build ${app} --with-deps --configuration=development`
-        );
-        expect(libOutput).toContain(
-          `Building entry point '@${proj}/${buildableLib}'`
-        );
-        expect(libOutput).toContain(`nx run ${app}:build:development`);
+    it('should build the dependent buildable lib as well as the app', () => {
+      const libOutput = runCLI(
+        `build ${app} --with-deps --configuration=development`
+      );
+      expect(libOutput).toContain(
+        `Building entry point '@${proj}/${buildableLib}'`
+      );
+      expect(libOutput).toContain(`nx run ${app}:build:development`);
 
-        // to proof it has been built from source the "main.js" should actually contain
-        // the path to dist
-        const mainBundle = readFile(`dist/apps/${app}/main.js`);
-        expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
-      });
-    } else {
-      it('Skip tests with pnpm', () => {});
-    }
+      // to proof it has been built from source the "main.js" should actually contain
+      // the path to dist
+      const mainBundle = readFile(`dist/apps/${app}/main.js`);
+      expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
+    });
   });
 });
 
@@ -107,17 +107,17 @@ describe('Angular MFE App Serve', () => {
 
     // generate host app
     runCLI(
-      `generate @nrwl/angular:app ${hostApp} -- --mfe --mfeType=host --port=4205 --routing --style=css --no-interactive`
+      `generate @nrwl/angular:app ${hostApp} -- --mfe --mfeType=host --port=${port1} --routing --style=css --no-interactive`
     );
 
     // generate remote apps
     runCLI(
-      `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=4206 --routing --style=css --no-interactive`
+      `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=${port2} --routing --style=css --no-interactive`
     );
   });
 
   afterEach(() => {
-    removeProject({ onlyOnCI: true });
+    cleanupProject();
   });
 
   it('should serve the host and remote apps successfully', async () => {
@@ -127,8 +127,8 @@ describe('Angular MFE App Serve', () => {
     try {
       process = await runCommandUntil(`serve-mfe ${hostApp}`, (output) => {
         return (
-          output.includes(`listening on localhost:4206`) &&
-          output.includes(`listening on localhost:4205`)
+          output.includes(`listening on localhost:${port2}`) &&
+          output.includes(`listening on localhost:${port1}`)
         );
       });
     } catch (err) {
@@ -140,8 +140,8 @@ describe('Angular MFE App Serve', () => {
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }
-      await killPorts(4205);
-      await killPorts(4206);
+      await killPorts(port1);
+      await killPorts(port2);
     } catch (err) {
       expect(err).toBeFalsy();
     }
@@ -163,7 +163,7 @@ describe('Angular App Build and Serve Ops', () => {
     );
   });
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   it('should build the app successfully', () => {
     // ACT

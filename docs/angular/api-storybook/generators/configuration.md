@@ -1,3 +1,8 @@
+---
+title: '@nrwl/storybook:configuration generator'
+description: 'Add storybook configuration to a ui library or an application'
+---
+
 # @nrwl/storybook:configuration
 
 Add storybook configuration to a ui library or an application
@@ -61,8 +66,6 @@ Possible values: `eslint`, `tslint`, `none`
 The tool to use for running lint checks.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

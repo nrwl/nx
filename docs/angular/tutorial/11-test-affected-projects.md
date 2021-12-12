@@ -1,4 +1,4 @@
-# Angular Nx Tutorial - Step 11: Test Affected Projects
+# Angular Nx Tutorial - Step 11: Testing Affected Projects
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/5t77CPl-bbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -16,19 +16,35 @@ git checkout -b testbranch
 
 ```html
 <ul>
-  <li *ngFor="let t of todos">{{ t.title }}!</li>
+  <li *ngFor="let t of todos" class="todo">{{ t.title }}!</li>
 </ul>
 ```
 
-**Run `npm run affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
+Run the command to see affected apps.
 
-**Run `npm run affected:libs`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
+```sh
+npx nx affected:apps
+```
+
+You should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
+
+Run the command to see affected libraries
+
+```sh
+npx nx affected:libs
+```
+
+You should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 
 ## Test affected projects
 
 Printing the affected projects can be handy, but usually you want to do something with them. For instance, you may want to test everything that has been affected.
 
-**Run `npx nx affected:test` to retest only the projects affected by the change.**
+Run the command to retest only the projects affected by the change:
+
+```sh
+npx nx affected:test
+```
 
 You will see the following:
 
@@ -48,9 +64,13 @@ You will see the following:
 
 Note that Nx only tried to retest `ui` and `todos`. It didn't retest `api` or `data` because there is no way that could be affected by the changes in this branch.
 
-**Run `npm run affected:test -- --only-failed` to retest the failed projects.**
+Run the command to retest the failed projects.
 
-## Affected:\*
+```sh
+npx nx affected:test -- --only-failed
+```
+
+## Affected:
 
 You can run any target against the affected projects in the graph like this:
 
@@ -59,3 +79,7 @@ You can run any target against the affected projects in the graph like this:
 npx nx affected --target=build
 npx nx affected:build
 ```
+
+## What's Next
+
+- Continue to [Step 12: Summary](/latest/angular/tutorial/12-summary)

@@ -15,4 +15,5 @@ export interface Schema {
   js?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  swc?: boolean;
 }

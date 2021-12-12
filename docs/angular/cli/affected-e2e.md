@@ -1,3 +1,8 @@
+---
+title: 'affected:e2e - CLI command'
+description: 'Run e2e tests for the applications affected by changes'
+---
+
 # affected:e2e
 
 Run e2e tests for the applications affected by changes
@@ -15,13 +20,7 @@ nx affected:e2e
 Run tests in parallel:
 
 ```bash
-nx affected:e2e --parallel --maxParallel=5
-```
-
-Rerun the test target only for the projects that failed last time:
-
-```bash
-nx affected:e2e --only-failed
+nx affected:e2e --parallel=5
 ```
 
 Run the test target for all projects:
@@ -80,12 +79,6 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
-### maxParallel
-
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
-
 ### only-failed
 
 Default: `false`
@@ -94,9 +87,7 @@ Isolate projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Max number of parallel processes [default is 3]
 
 ### runner
 

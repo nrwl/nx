@@ -1,3 +1,8 @@
+---
+title: '@nrwl/storybook:cypress-project generator'
+description: 'Add cypress e2e app to test a ui library that is set up for storybook'
+---
+
 # @nrwl/storybook:cypress-project
 
 Add cypress e2e app to test a ui library that is set up for storybook
@@ -55,8 +60,6 @@ Possible values: `eslint`, `tslint`, `none`
 The tool to use for running lint checks.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

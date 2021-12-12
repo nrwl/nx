@@ -1,30 +1,37 @@
 import yargsParser = require('yargs-parser');
 import * as fs from 'fs';
+import type {
+  WorkspaceJsonConfiguration,
+  NxJsonConfiguration,
+} from '@nrwl/devkit';
 
-function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
+function calculateDefaultProjectName(
+  cwd: string,
+  root: string,
+  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {
     relativeCwd = relativeCwd.startsWith('/')
       ? relativeCwd.substring(1)
       : relativeCwd;
-    const matchingProject = Object.keys(wc.projects).find((p) => {
-      const projectRoot = wc.projects[p].root;
-      return (
-        relativeCwd == projectRoot || relativeCwd.startsWith(`${projectRoot}/`)
-      );
-    });
+    const matchingProject = Object.keys(workspaceConfiguration.projects).find(
+      (p) => {
+        const projectRoot = workspaceConfiguration.projects[p].root;
+        return (
+          relativeCwd == projectRoot ||
+          relativeCwd.startsWith(`${projectRoot}/`)
+        );
+      }
+    );
     if (matchingProject) return matchingProject;
   }
-  let defaultProjectName = null;
-  try {
-    defaultProjectName = wc.cli.defaultProjectName;
-  } catch (e) {}
-  try {
-    if (!defaultProjectName) {
-      defaultProjectName = wc.defaultProject;
-    }
-  } catch (e) {}
-  return defaultProjectName;
+  return (
+    (workspaceConfiguration.cli as { defaultProjectName: string })
+      ?.defaultProjectName ||
+    workspaceConfiguration.defaultProject ||
+    workspaceConfiguration.defaultProject
+  );
 }
 
 const invalidTargetNames = [
@@ -43,8 +50,7 @@ const invalidTargetNames = [
   'affected:dep-graph',
   'affected:lint',
   'print-affected',
-  'daemon:start',
-  'daemon:stop',
+  'daemon',
   'format:check',
   'format',
   'format:write',
@@ -53,19 +59,20 @@ const invalidTargetNames = [
   'workspace-schematic',
   'connect-to-nx-cloud',
   'clear-cache',
+  'reset',
   'report',
   'list',
 ];
 
 export function parseRunOneOptions(
   root: string,
-  workspaceConfigJson: any,
+  workspaceConfiguration: any,
   args: string[]
 ): false | { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     process.cwd(),
     root,
-    workspaceConfigJson
+    workspaceConfiguration
   );
 
   const parsedArgs = yargsParser(args, {
@@ -95,14 +102,13 @@ export function parseRunOneOptions(
     project = parsedArgs._[1];
     parsedArgs._ = parsedArgs._.slice(2);
   }
+  if (parsedArgs.project) {
+    project = parsedArgs.project;
+  }
 
   const projectIsNotSetExplicitly = !project;
   if (!project && defaultProjectName) {
     project = defaultProjectName;
-  }
-
-  if (parsedArgs.project) {
-    project = parsedArgs.project;
   }
 
   // we need both to be able to run a target, no tasks runner
@@ -112,7 +118,7 @@ export function parseRunOneOptions(
 
   // we need both to be able to run a target, no tasks runner
   const p =
-    workspaceConfigJson.projects && workspaceConfigJson.projects[project];
+    workspaceConfiguration.projects && workspaceConfiguration.projects[project];
   if (!p) return false;
 
   let targets;

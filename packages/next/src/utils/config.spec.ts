@@ -1,11 +1,17 @@
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
 import { importConstants } from './require-shim';
+// Inlining tsconfig-paths-webpack-plugin with a patch
+// See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
+// TODO(jack): Remove once the patch lands in original package
+import { TsconfigPathsPlugin } from '@nrwl/web/src/utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
+
 const { PHASE_PRODUCTION_BUILD } = importConstants();
 
-jest.mock('tsconfig-paths-webpack-plugin');
+jest.mock(
+  '@nrwl/web/src/utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin'
+);
 jest.mock('next/dist/server/config', () => ({
   __esModule: true,
   default: () => ({
@@ -76,7 +82,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       const svgrRule = config.module.rules.find(
-        (rule) => rule.test.toString() === String(/\.svg$/)
+        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
       );
       expect(svgrRule).toBeTruthy();
     });
@@ -96,7 +102,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       const svgrRule = config.module.rules.find(
-        (rule) => rule.test.toString() === String(/\.svg$/)
+        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
       );
       expect(svgrRule).toBeFalsy();
     });
@@ -112,7 +118,8 @@ describe('Next.js webpack config builder', () => {
           fileReplacements: [],
         },
         { root: '/root' } as any,
-        []
+        [],
+        ''
       );
 
       expect(config).toEqual(
@@ -136,10 +143,10 @@ describe('Next.js webpack config builder', () => {
           customValue: 'test',
         } as NextBuildBuilderOptions,
         { root: rootPath } as any,
-        []
+        [],
+        ''
       );
 
-      console.log('config', config);
       expect(config).toMatchObject({
         myCustomValue: 'test',
       });
@@ -157,7 +164,8 @@ describe('Next.js webpack config builder', () => {
             customValue: 'test',
           } as NextBuildBuilderOptions,
           { root: '/root' } as any,
-          []
+          [],
+          ''
         )
       ).rejects.toThrow(/Could not find file/);
     });
@@ -174,7 +182,8 @@ describe('Next.js webpack config builder', () => {
             customValue: 'test',
           } as NextBuildBuilderOptions,
           { root: '/root' } as any,
-          []
+          [],
+          ''
         )
       ).rejects.toThrow(/option does not export a function/);
     });

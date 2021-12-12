@@ -8,7 +8,7 @@ Graph dependencies affected by changes
 nx affected:dep-graph
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -70,7 +70,7 @@ Exclude certain projects from being processed
 
 ### file
 
-output file (e.g. --file=output.json or --file=dep-graph.html)
+Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### files
 
@@ -82,7 +82,7 @@ Use to show the dependency graph for a particular project and every node that is
 
 ### groupByFolder
 
-Group projects by folder in dependency graph
+Group projects by folder in the dependency graph
 
 ### head
 
@@ -94,7 +94,7 @@ Show help
 
 ### host
 
-Bind the dep graph server to a specific ip address.
+Bind the dependency graph server to a specific ip address.
 
 ### only-failed
 
@@ -102,9 +102,15 @@ Default: `false`
 
 Isolate projects which previously failed
 
+### open
+
+Default: `true`
+
+Open the dependency graph in the browser.
+
 ### port
 
-Bind the dep graph server to a specific port.
+Bind the dependecy graph server to a specific port.
 
 ### runner
 
@@ -131,3 +137,9 @@ Print additional error stack trace on failure
 ### version
 
 Show version number
+
+### watch
+
+Default: `false`
+
+Watch for changes to dependency graph and update in-browser

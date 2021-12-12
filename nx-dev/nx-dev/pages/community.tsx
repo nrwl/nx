@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui/common';
-import React from 'react';
+import { NextSeo } from 'next-seo';
+import { useRouter } from 'next/router';
+import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui-common';
 import { useStorage } from '@nrwl/nx-dev/feature-storage';
-import Head from 'next/head';
 
 declare const fetch: any;
 
@@ -28,46 +28,38 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
 }
 
 export function Community(props: CommunityProps) {
-  const { value: storedFlavor } = useStorage('flavor');
+  const router = useRouter();
+  const { value: selectedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
 
   return (
     <>
-      <Head>
-        <title>Nx Community and Plugin Listing</title>
-        <meta name="description" content="Nx Community and Plugin Listing" />
-        <meta name="twitter:title" content="Nx Community and Plugin Listing" />
-        <meta
-          name="twitter:description"
-          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta
-          name="twitter:image:alt"
-          content="Nx: Smart, Extensible Build Framework"
-        />
-        <meta property="og:url" content="https://nx.dev/community" />
-        <meta
-          property="og:description"
-          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
-        />
-        <meta property="og:title" content="Nx Community and Plugin Listing" />
-        <meta
-          property="og:image"
-          content="https://nx.dev/images/nx-media.jpg"
-        />
-        <meta property="og:image:width" content="800" />
-        <meta property="og:image:height" content="400" />
-      </Head>
+      <NextSeo
+        title="Nx Community and Plugin Listing"
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx and Modern Angular',
+          description:
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+          type: 'website',
+        }}
+      />
       <Header
         useDarkBackground={false}
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: selectedFlavor || 'react',
+          value: selectedFlavor || 'react',
         }}
         version={{
           name: storedVersion || 'Latest',
@@ -121,11 +113,11 @@ export function Community(props: CommunityProps) {
                 </p>
 
                 <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
-                  Office Hours & Twitter
+                  Livestreams & Twitter
                 </h2>
                 <p className="sm:text-lg mb-6">
-                  Our live Nx Office Hours take place every second and fourth
-                  Monday, from 1:00 - 2:00 PM EST on the{' '}
+                  The Nx Show takes place every second and fourth Monday, from
+                  1:00 - 2:00 PM EST on the{' '}
                   <a
                     className="underline cursor-pointer"
                     target="_blank"
@@ -134,7 +126,7 @@ export function Community(props: CommunityProps) {
                   >
                     Nrwl YouTube channel
                   </a>
-                  . Info about upcoming Office Hours sessions is shared on the{' '}
+                  . Info about upcoming sessions is shared on the{' '}
                   <a
                     className="underline cursor-pointer"
                     target="_blank"
@@ -151,7 +143,7 @@ export function Community(props: CommunityProps) {
                     rel="noreferrer"
                     href="https://www.youtube.com/watch?v=JS3m1wIwRBg&list=PLakNactNC1dH8LCp2mvx5lbO6maNrlBVN"
                   >
-                    'Nx Office Hours' Youtube Playlist
+                    'Nx Show' Youtube Playlist
                   </a>
                   .
                 </p>
@@ -160,13 +152,13 @@ export function Community(props: CommunityProps) {
                   In each session, members of the Nx core team answer your
                   questions, help get you up and running with Nx, and address
                   particular challenges. If you have a question or topic you’d
-                  like to see covered in Nx Office Hours, you can{' '}
+                  like to see covered during The Nx Show, you can{' '}
                   <a
                     className="underline cursor-pointer"
                     target="_blank"
                     rel="noreferrer"
-                    aria-label="Nx Office Hours Questions and Suggestions Form"
-                    title="Nx Office Hours Questions and Suggestions Form"
+                    aria-label="Nx Show Questions and Suggestions Form"
+                    title="Nx Show Questions and Suggestions Form"
                     href="https://forms.gle/ehzCjzcF1xxNaviC7"
                   >
                     submit them here
@@ -237,10 +229,10 @@ export function Community(props: CommunityProps) {
                   use the full power of the workspace while using different
                   technologies!
                 </p>
-                <div className="inline-flex rounded-md shadow mb-6">
+                <div className="mb-6">
                   <a
                     href="#community-plugin-list"
-                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
+                    className="underline cursor-pointer"
                   >
                     Check the community plugins right now!
                   </a>
@@ -255,22 +247,12 @@ export function Community(props: CommunityProps) {
                 </p>
               </div>
               <div className="w-full lg:w-3/5 flex flex-col justify-between items-start md:pl-16 pb-10 mt-8 md:mt-0">
-                <div className="py-4 px-6 bg-gray-50 border border-gray-100">
+                <div className="py-4 px-6 w-full bg-gray-50 border border-gray-100">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-bold text-gray-800 tracking-tight mb-4">
                     How to Create Your Own
                   </h3>
                   <p className="sm:text-lg mb-6">
-                    Check out the{' '}
-                    <a
-                      className="underline cursor-pointer"
-                      target="_blank"
-                      rel="noreferrer"
-                      href="https://go.nrwl.io/nx-newsletter"
-                    >
-                      subscribe to the Nx Newsletter
-                    </a>{' '}
-                    Nx Plugin guide to learn how to get started with building
-                    your own plugin!
+                    Get started with building your own plugin!
                   </p>
                   <iframe
                     width="560"
@@ -287,19 +269,19 @@ export function Community(props: CommunityProps) {
             </div>
           </div>
           {/*Call out*/}
-          <div className="bg-gray-50">
+          <div className="text-white bg-blue-nx-base">
             <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
                 <span className="block">Ready to dive in?</span>
-                <span className="block text-blue-nx-base">
-                  Start using Nx with Node today.
+                <span className="block text-gray-200">
+                  Start using Nx today.
                 </span>
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link href="/l/r/getting-started/intro">
-                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base">
-                      Get started with Node
+                  <Link href="/getting-started/intro">
+                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-nx-base bg-white">
+                      Get started with Nx
                     </a>
                   </Link>
                 </div>
@@ -308,14 +290,22 @@ export function Community(props: CommunityProps) {
           </div>
           {/*Plugins*/}
           <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-            <div className="my-12 flex sm:flex-row flex-col justify-center">
-              <div className="w-full py-6 mt-8">
+            <div className="my-32 flex sm:flex-row flex-col justify-center">
+              <div className="w-full lg:w-3/5 py-6 mt-8">
                 <h2
                   id="community-plugin-list"
-                  className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4 text-center"
+                  className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4"
                 >
                   Community Plugins Directory
                 </h2>
+              </div>
+              <div className="w-full lg:w-2/5 py-6 mt-8 text-right">
+                <a
+                  href="/nx-plugin/overview#listing-your-nx-plugin"
+                  className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
+                >
+                  Add your Nx plugin to the list!
+                </a>
               </div>
             </div>
             <div className="my-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

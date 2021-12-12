@@ -11,13 +11,19 @@ export async function storybookConfigurationGenerator(
 ): Promise<GeneratorCallback> {
   assertCompatibleStorybookVersion();
   validateOptions(options);
-  const installTask = await generateStorybookConfiguration(tree, options);
+
+  const storybookGeneratorInstallTask = await generateStorybookConfiguration(
+    tree,
+    options
+  );
 
   if (options.generateStories) {
     generateStories(tree, options);
   }
 
-  return installTask;
+  return () => {
+    storybookGeneratorInstallTask();
+  };
 }
 
 export default storybookConfigurationGenerator;

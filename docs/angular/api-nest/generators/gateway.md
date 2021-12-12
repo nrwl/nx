@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:gateway generator'
+description: 'Run the `gateway` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:gateway
 
 Run the `gateway` NestJS generator with Nx project support.

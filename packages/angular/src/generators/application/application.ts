@@ -1,4 +1,3 @@
-import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -7,6 +6,7 @@ import {
   moveFilesToNewDirectory,
   formatFiles,
   installPackagesTask,
+  Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace';
@@ -17,8 +17,8 @@ import init from '../init/init';
 import {
   createFiles,
   normalizeOptions,
-  updateComponentStyles,
-  updateComponentTemplate,
+  updateAppComponentTemplate,
+  updateNxComponentTemplate,
   updateConfigFiles,
   addE2e,
   updateComponentSpec,
@@ -40,13 +40,16 @@ export async function applicationGenerator(
 
   // Determine the roots where @schematics/angular will place the projects
   // This is not where the projects actually end up
-  const workspaceJson = readJson(host, getWorkspacePath(host));
-
-  const appProjectRoot = workspaceJson.newProjectRoot
-    ? `${workspaceJson.newProjectRoot}/${options.name}`
+  const workspaceJsonPath = getWorkspacePath(host);
+  let newProjectRoot = null;
+  if (workspaceJsonPath) {
+    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
+  }
+  const appProjectRoot = newProjectRoot
+    ? `${newProjectRoot}/${options.name}`
     : options.name;
-  const e2eProjectRoot = workspaceJson.newProjectRoot
-    ? `${workspaceJson.newProjectRoot}/${options.e2eProjectName}`
+  const e2eProjectRoot = newProjectRoot
+    ? `${newProjectRoot}/${options.e2eProjectName}`
     : `${options.name}/e2e`;
 
   await init(host, {
@@ -75,8 +78,24 @@ export async function applicationGenerator(
 
   moveFilesToNewDirectory(host, appProjectRoot, options.appProjectRoot);
   updateConfigFiles(host, options);
-  updateComponentTemplate(host, options);
-  updateComponentStyles(host, options);
+  updateAppComponentTemplate(host, options);
+
+  // Create the NxWelcomeComponent
+  const angularComponentSchematic = wrapAngularDevkitSchematic(
+    '@schematics/angular',
+    'component'
+  );
+  await angularComponentSchematic(host, {
+    name: 'NxWelcome',
+    inlineTemplate: true,
+    prefix: options.prefix,
+    skipTests: true,
+    style: 'none',
+    flat: true,
+    viewEncapsulation: 'None',
+    project: options.name,
+  });
+  updateNxComponentTemplate(host, options);
 
   if (options.unitTestRunner !== UnitTestRunner.None) {
     updateComponentSpec(host, options);

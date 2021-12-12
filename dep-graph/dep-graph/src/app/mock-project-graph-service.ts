@@ -38,16 +38,13 @@ export class MockProjectGraphService implements ProjectGraphService {
       ],
       'existing-lib-1': [],
     },
-    changes: {
-      added: [],
-    },
     affected: [],
     focus: null,
     exclude: [],
     groupByFolder: false,
   };
 
-  constructor(updateFrequency: number = 7500) {
+  constructor(updateFrequency: number = 5000) {
     setInterval(() => this.updateResponse(), updateFrequency);
   }
 
@@ -88,8 +85,14 @@ export class MockProjectGraphService implements ProjectGraphService {
         type: 'static',
       },
     ];
-    this.response.projects.push(newProject);
-    this.response.dependencies[newProject.name] = newDependency;
-    this.response.changes.added.push(newProject.name);
+
+    this.response = {
+      ...this.response,
+      projects: [...this.response.projects, newProject],
+      dependencies: {
+        ...this.response.dependencies,
+        [newProject.name]: newDependency,
+      },
+    };
   }
 }

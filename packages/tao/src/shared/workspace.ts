@@ -1,15 +1,19 @@
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
-import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
-import type { PackageManager } from './package-manager';
+import type { NxJsonConfiguration } from './nx';
 import { TaskGraph } from './tasks';
+import { logger } from './logger';
+import { sync as globSync } from 'fast-glob';
+import ignore, { Ignore } from 'ignore';
+import { basename, dirname, join, toNamespacedPath } from 'path';
+import { performance } from 'perf_hooks';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
     NxJsonConfiguration {
-  projects: Record<string, ProjectConfiguration & NxJsonProjectConfiguration>;
+  projects: Record<string, ProjectConfiguration>;
 }
 
 /**
@@ -21,41 +25,10 @@ export interface WorkspaceJsonConfiguration {
    */
   version: number;
   /**
-   * Projects' configurations
+   * Projects' projects
    */
-  projects: { [projectName: string]: ProjectConfiguration };
-
-  /**
-   * Default project. When project isn't provided, the default project
-   * will be used. Convenient for small workspaces with one main application.
-   */
-  defaultProject?: string;
-
-  /**
-   * List of default values used by generators.
-   *
-   * These defaults are global. They are used when no other defaults are configured.
-   *
-   * Example:
-   *
-   * ```
-   * {
-   *   "@nrwl/react": {
-   *     "library": {
-   *       "style": "scss"
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  generators?: { [collectionName: string]: { [generatorName: string]: any } };
-
-  /**
-   * Default generator collection. It is used when no collection is provided.
-   */
-  cli?: {
-    packageManager?: PackageManager;
-    defaultCollection?: string;
+  projects: {
+    [projectName: string]: ProjectConfiguration;
   };
 }
 
@@ -73,6 +46,11 @@ export type ProjectType = 'library' | 'application';
  * Project configuration
  */
 export interface ProjectConfiguration {
+  /**
+   * Project's name. Optional if specified in workspace.json
+   */
+  name?: string;
+
   /**
    * Project's targets
    */
@@ -111,6 +89,16 @@ export interface ProjectConfiguration {
    * ```
    */
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
+
+  /**
+   * List of projects which are added as a dependency
+   */
+  implicitDependencies?: string[];
+
+  /**
+   * List of tags used by nx-enforce-module-boundaries / dep-graph
+   */
+  tags?: string[];
 }
 
 export interface TargetDependencyConfig {
@@ -135,7 +123,7 @@ export interface TargetConfiguration {
   /**
    * The executor/builder used to implement the target.
    *
-   * Example: '@nrwl/web:package'
+   * Example: '@nrwl/web:rollup'
    */
   executor: string;
 
@@ -258,7 +246,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceJsonConfiguration;
+  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration;
 
   /**
    * The current working directory
@@ -278,7 +266,10 @@ export class Workspaces {
     return path.relative(this.root, cwd) || null;
   }
 
-  calculateDefaultProjectName(cwd: string, wc: WorkspaceJsonConfiguration) {
+  calculateDefaultProjectName(
+    cwd: string,
+    wc: WorkspaceJsonConfiguration & NxJsonConfiguration
+  ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
       const matchingProject = Object.keys(wc.projects).find((p) => {
@@ -293,11 +284,23 @@ export class Workspaces {
     return wc.defaultProject;
   }
 
-  readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
-    const w = readJsonFile(
-      path.join(this.root, workspaceConfigName(this.root))
-    );
-    return resolveNewFormatWithInlineProjects(w, this.root);
+  readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
+    NxJsonConfiguration {
+    const nxJsonPath = path.join(this.root, 'nx.json');
+    const nxJson = existsSync(nxJsonPath)
+      ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
+      : ({} as NxJsonConfiguration);
+    const workspacePath = path.join(this.root, workspaceConfigName(this.root));
+    const workspace = existsSync(workspacePath)
+      ? this.readFromWorkspaceJson()
+      : buildWorkspaceConfigurationFromGlobs(
+          nxJson,
+          globForProjectFiles(this.root),
+          (path) => readJsonFile(join(this.root, path))
+        );
+
+    assertValidWorkspaceConfiguration(nxJson);
+    return { ...workspace, ...nxJson };
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -474,6 +477,25 @@ export class Workspaces {
   private resolvePaths() {
     return this.root ? [this.root, __dirname] : [__dirname];
   }
+
+  private readFromWorkspaceJson() {
+    const rawWorkspace = readJsonFile(
+      path.join(this.root, workspaceConfigName(this.root))
+    );
+    return resolveNewFormatWithInlineProjects(rawWorkspace, this.root);
+  }
+}
+
+function assertValidWorkspaceConfiguration(
+  nxJson: NxJsonConfiguration & { projects?: any }
+) {
+  // Assert valid workspace configuration
+  if (nxJson.projects) {
+    logger.error(
+      'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
+    );
+    process.exit(1);
+  }
 }
 
 function findFullGeneratorName(
@@ -517,7 +539,7 @@ export function toNewFormatOrNull(w: any) {
       formatted = true;
     }
     Object.values(projectConfig.targets || {}).forEach((target: any) => {
-      if (target.builder) {
+      if (target.builder !== undefined) {
         renamePropertyWithStableKeys(target, 'builder', 'executor');
         formatted = true;
       }
@@ -552,7 +574,7 @@ export function toOldFormatOrNull(w: any) {
       formatted = true;
     }
     Object.values(projectConfig.architect || {}).forEach((target: any) => {
-      if (target.executor) {
+      if (target.executor !== undefined) {
         renamePropertyWithStableKeys(target, 'executor', 'builder');
         formatted = true;
       }
@@ -600,6 +622,163 @@ export function inlineProjectConfigurations(
     }
   );
   return w;
+}
+
+/**
+ * Pulled from toFileName in names from @nrwl/devkit.
+ * Todo: Should refactor, not duplicate.
+ */
+export function toProjectName(
+  fileName: string,
+  nxJson: NxJsonConfiguration
+): string {
+  const directory = dirname(fileName);
+  let { appsDir, libsDir } = nxJson?.workspaceLayout || {};
+  appsDir ??= 'apps';
+  libsDir ??= 'libs';
+  const parts = directory.split(/[\/\\]/g);
+  if ([appsDir, libsDir].includes(parts[0])) {
+    parts.splice(0, 1);
+  }
+  return parts.join('-').toLowerCase();
+}
+
+let projectGlobCache: string[];
+export function globForProjectFiles(root) {
+  if (projectGlobCache) return projectGlobCache;
+  performance.mark('start-glob-for-projects');
+  /**
+   * This configures the files and directories which we always want to ignore as part of file watching
+   * and which we know the location of statically (meaning irrespective of user configuration files).
+   * This has the advantage of being ignored directly within globSync
+   *
+   * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
+   * .gitignore and .nxignore files below.
+   */
+  const ALWAYS_IGNORE = [
+    join(root, 'node_modules'),
+    join(root, 'dist'),
+    join(root, '.git'),
+  ];
+
+  /**
+   * TODO: This utility has been implemented multiple times across the Nx codebase,
+   * discuss whether it should be moved to a shared location.
+   */
+  const ig = ignore();
+  try {
+    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
+  } catch {}
+  try {
+    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
+  } catch {}
+
+  const globResults = globSync('**/@(project.json|package.json)', {
+    ignore: ALWAYS_IGNORE,
+    absolute: false,
+    cwd: root,
+  });
+  projectGlobCache = deduplicateProjectFiles(globResults, ig);
+  performance.mark('finish-glob-for-projects');
+  performance.measure(
+    'glob-for-project-files',
+    'start-glob-for-projects',
+    'finish-glob-for-projects'
+  );
+  return projectGlobCache;
+}
+
+export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
+  const filtered = new Map();
+  files.forEach((file) => {
+    const projectFolder = dirname(file);
+    const projectFile = basename(file);
+    if (
+      ig?.ignores(file) || // file is in .gitignore or .nxignore
+      file === 'package.json' || // file is workspace root package json
+      // equivalent project.json file already found
+      (filtered.has(projectFolder) && projectFile === 'package.json')
+    ) {
+      return;
+    }
+    filtered.set(projectFolder, projectFile);
+  });
+  return Array.from(filtered.entries()).map(([folder, file]) =>
+    join(folder, file)
+  );
+}
+
+export function buildProjectConfigurationFromPackageJson(
+  path: string,
+  packageJson: { name: string },
+  nxJson: NxJsonConfiguration
+): ProjectConfiguration & { name: string } {
+  const directory = dirname(path).split('\\').join('/');
+  const npmPrefix = `@${nxJson.npmScope}/`;
+  let name = packageJson.name ?? toProjectName(directory, nxJson);
+  if (name.startsWith(npmPrefix)) {
+    name = name.replace(npmPrefix, '');
+  }
+  return {
+    root: directory,
+    sourceRoot: directory,
+    name,
+  };
+}
+
+export function buildWorkspaceConfigurationFromGlobs(
+  nxJson: NxJsonConfiguration,
+  projectFiles: string[] = globForProjectFiles(appRootPath), // making this parameter allows devkit to pick up newly created projects
+  readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
+): WorkspaceJsonConfiguration {
+  const projects: Record<string, ProjectConfiguration> = {};
+
+  for (const file of projectFiles) {
+    const directory = dirname(file).split('\\').join('/');
+    const fileName = basename(file) as 'project.json' | 'package.json';
+
+    // We can infer projects from package.json files,
+    // if a package.json file is in a directory w/o a `project.json` file.
+    // this results in targets being inferred by Nx from package scripts,
+    // and the root / sourceRoot both being the directory.
+    if (fileName === 'package.json') {
+      const { name, ...config } = buildProjectConfigurationFromPackageJson(
+        file,
+        readJson(file),
+        nxJson
+      );
+      if (!projects[name]) {
+        projects[name] = config;
+      } else {
+        logger.error(
+          `Skipping project found at ${directory} since project ${name} already exists! To have multiple Nx projects publish to the same npm package, you must use project.json based configuration`
+        );
+        throw new Error();
+      }
+      projects[name] = config;
+    } else if (fileName === 'project.json') {
+      //  Nx specific project configuration (`project.json` files) in the same
+      // directory as a package.json should overwrite the inferred package.json
+      // project configuration.
+      const configuration = readJson(file);
+      let name = configuration.name;
+      if (!configuration.name) {
+        name = toProjectName(file, nxJson);
+      }
+      if (!projects[name]) {
+        projects[name] = configuration;
+      } else {
+        logger.warn(
+          `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects.`
+        );
+      }
+    }
+  }
+
+  return {
+    version: 2,
+    projects: projects,
+  };
 }
 
 // we have to do it this way to preserve the order of properties

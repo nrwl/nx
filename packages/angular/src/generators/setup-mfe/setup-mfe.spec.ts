@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -151,7 +151,7 @@ describe('Init MFE', () => {
     const webpackContents = host.read(`apps/app1/webpack.config.js`, 'utf-8');
 
     expect(webpackContents).toContain(
-      '"remote1": "remote1@http://localhost:4200/remoteEntry.js"'
+      '"remote1": "http://localhost:4200/remoteEntry.js"'
     );
   });
   it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
@@ -163,9 +163,12 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const nxJson: NxJsonConfiguration = readJson(host, 'nx.json');
+    const projectConfig: ProjectConfiguration = readProjectConfiguration(
+      host,
+      'app1'
+    );
 
-    expect(nxJson.projects['app1'].implicitDependencies).toContain('remote1');
+    expect(projectConfig.implicitDependencies).toContain('remote1');
   });
 
   it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {

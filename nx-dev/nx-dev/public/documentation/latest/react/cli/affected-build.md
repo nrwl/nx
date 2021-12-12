@@ -1,3 +1,8 @@
+---
+title: 'affected:build - CLI command'
+description: 'Build applications and publishable libraries affected by changes'
+---
+
 # affected:build
 
 Build applications and publishable libraries affected by changes
@@ -15,13 +20,7 @@ nx affected:build
 Run build in parallel:
 
 ```bash
-nx affected:build --parallel --maxParallel=5
-```
-
-Rerun the build target only for the projects that failed last time:
-
-```bash
-nx affected:build --only-failed
+nx affected:build --parallel=5
 ```
 
 Run the build target for all projects:
@@ -36,16 +35,16 @@ Run build for all the projects affected by changing the index.ts file:
 nx affected:build --files=libs/mylib/src/index.ts
 ```
 
-Run build for all the projects affected by the changes between master and HEAD (e.g., PR):
+Run build for all the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:build --base=master --head=HEAD
+nx affected:build --base=main --head=HEAD
 ```
 
-Run build for all the projects affected by the last commit on master:
+Run build for all the projects affected by the last commit on main:
 
 ```bash
-nx affected:build --base=master~1 --head=master
+nx affected:build --base=main~1 --head=main
 ```
 
 ## Options
@@ -56,7 +55,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 
@@ -80,12 +79,6 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
-### maxParallel
-
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
-
 ### only-failed
 
 Default: `false`
@@ -94,9 +87,7 @@ Isolate projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Max number of parallel processes [default is 3]
 
 ### runner
 

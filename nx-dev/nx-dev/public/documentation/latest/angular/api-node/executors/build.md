@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:build executor'
+description: 'Build a Node application'
+---
+
 # @nrwl/node:build
 
 Build a Node application
@@ -110,6 +115,14 @@ Type: `boolean`
 
 Defines the optimization level of the build.
 
+### outputFileName
+
+Default: `main.js`
+
+Type: `string`
+
+Name of the main output file. (defaults to 'main.js')
+
 ### outputPath
 
 Type: `string`
@@ -129,16 +142,6 @@ Default: `false`
 Type: `boolean`
 
 Log progress to the console while building.
-
-### ~~showCircularDependencies~~
-
-Default: `false`
-
-Type: `boolean`
-
-**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
-
-Show circular dependency warnings on builds.
 
 ### sourceMap
 

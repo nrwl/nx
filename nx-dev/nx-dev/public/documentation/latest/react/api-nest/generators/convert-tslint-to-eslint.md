@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:convert-tslint-to-eslint generator'
+description: 'Convert a project from TSLint to ESLint.'
+---
+
 # @nrwl/nest:convert-tslint-to-eslint
 
 Convert a project from TSLint to ESLint.

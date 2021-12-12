@@ -27,6 +27,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { importConstants } from '../../utils/require-shim';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
 const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_SERVER } = importConstants();
 
@@ -37,11 +38,13 @@ export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
-  process.env.NODE_ENV = process.env.NODE_ENV
+  // Cast to any to overwrite NODE_ENV
+  (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
     : options.dev
     ? 'development'
     : 'production';
+
   let dependencies: DependentBuildableProjectNode[] = [];
   const buildTarget = parseTargetString(options.buildTarget);
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
@@ -51,9 +54,10 @@ export default async function* serveExecutor(
   );
 
   const root = resolve(context.root, buildOptions.root);
+  const libsDir = join(context.root, workspaceLayout().libsDir);
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph('4.0'),
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       'build', // should be generalized
@@ -68,7 +72,8 @@ export default async function* serveExecutor(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
     buildOptions,
     context,
-    dependencies
+    dependencies,
+    libsDir
   );
 
   const settings: NextServerOptions = {

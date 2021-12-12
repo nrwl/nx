@@ -1,3 +1,8 @@
+---
+title: 'test - CLI command'
+description: 'Runs unit tests in a project using the configured unit test runner.'
+---
+
 # test
 
 Runs unit tests in a project using the configured unit test runner.

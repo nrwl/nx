@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:application generator'
+description: 'Create an application'
+---
+
 # @nrwl/web:application
 
 Create an application
@@ -35,6 +40,16 @@ Default: `false`
 Type: `boolean`
 
 Use babel instead ts-jest
+
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+The compiler to use
 
 ### directory
 
@@ -85,8 +100,6 @@ Type: `boolean`
 Skip formatting files
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

@@ -1,7 +1,6 @@
 import {
   formatFiles,
   getProjects,
-  NxJsonProjectConfiguration,
   parseTargetString,
   ProjectConfiguration,
   Target,
@@ -104,7 +103,7 @@ function getTargetConfigurationOptions(
 }
 
 function updateTargetsConfigurations(
-  project: ProjectConfiguration & NxJsonProjectConfiguration,
+  project: ProjectConfiguration,
   projectName: string,
   target: TargetConfiguration,
   buildTargetName: string,
@@ -144,7 +143,7 @@ function updateTargetsConfigurations(
 }
 
 function updateTargetsOptions(
-  project: ProjectConfiguration & NxJsonProjectConfiguration,
+  project: ProjectConfiguration,
   target: TargetConfiguration,
   buildTargetName: string
 ) {

@@ -5,11 +5,11 @@ import type { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import buildExecutor from './build.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 
-jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('@nrwl/workspace/src/utilities/run-webpack', () => ({
+jest.mock('../../utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin');
+jest.mock('../../utils/run-webpack', () => ({
   runWebpack: jest.fn(),
 }));
-import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
+import { runWebpack } from '../../utils/run-webpack';
 
 describe('Node Build Executor', () => {
   let context: ExecutorContext;
@@ -34,6 +34,7 @@ describe('Node Build Executor', () => {
             sourceRoot: 'apps/wibble',
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };
@@ -54,13 +55,29 @@ describe('Node Build Executor', () => {
 
     expect(runWebpack).toHaveBeenCalledWith(
       expect.objectContaining({
-        output: {
+        output: expect.objectContaining({
           filename: 'main.js',
           libraryTarget: 'commonjs',
           path: '/root/dist/apps/wibble',
-        },
-      }),
-      expect.anything()
+        }),
+      })
+    );
+  });
+
+  it('should use outputFileName if passed in', async () => {
+    await buildExecutor(
+      { ...options, outputFileName: 'index.js' },
+      context
+    ).next();
+
+    expect(runWebpack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        output: expect.objectContaining({
+          filename: 'index.js',
+          libraryTarget: 'commonjs',
+          path: '/root/dist/apps/wibble',
+        }),
+      })
     );
   });
 
@@ -78,14 +95,13 @@ describe('Node Build Executor', () => {
 
       expect(runWebpack).toHaveBeenCalledWith(
         expect.objectContaining({
-          output: {
+          output: expect.objectContaining({
             filename: 'main.js',
             libraryTarget: 'commonjs',
             path: '/root/dist/apps/wibble',
-          },
+          }),
           prop: 'my-val',
-        }),
-        expect.anything()
+        })
       );
     });
 
@@ -111,15 +127,14 @@ describe('Node Build Executor', () => {
 
       expect(runWebpack).toHaveBeenCalledWith(
         expect.objectContaining({
-          output: {
+          output: expect.objectContaining({
             filename: 'main.js',
             libraryTarget: 'commonjs',
             path: '/root/dist/apps/wibble',
-          },
+          }),
           prop1: 'my-val-1-my-val-2',
           prop2: 'my-val-2',
-        }),
-        expect.anything()
+        })
       );
     });
   });

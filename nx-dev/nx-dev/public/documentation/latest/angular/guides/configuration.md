@@ -1,89 +1,56 @@
 # Configuration
 
-There are three top-level configuration files every Nx workspace has: `angular.json`, `nx.json`, and `tsconfig.base.json`. Many Nx plugins modify these files when generating new code, but you can also modify them manually.
+There are two main types of configuration in every Nx workspace: [project configuration](#project-configuration) and [workspace configuration](#workspace-configuration). Project configuration consists of `workspace.json`/`angular.json`, `**/project.json`, and `**/package.json`. Workspace configuration consists of `nx.json` and `tsconfig.base.json`.
 
-## angular.json
+Many Nx plugins modify these files when generating new code, but you can also modify them manually.
 
-The `angular.json` configuration file contains information about the targets and generators. Let's look at the following example:
+## Project Configuration
+
+### workspace json / angular json
+
+`workspace.json` is used in all Nx monorepos, regardless of framework. In repositories created from an existing angular project, the file
+may be called `angular.json` instead. To transition, optionally rename the file.
+
+Since `workspace.json` is used in most Nx repositories, we will refer to that from here on.
+
+The `workspace.json` file contains a list of project configurations, as well as the version of your workspace. Let's look at the following example:
 
 ```json
 {
+  "version": 2,
   "projects": {
-    "myapp": {
-      "root": "apps/myapp/",
-      "sourceRoot": "apps/myapp/src",
-      "projectType": "application",
-      "architect": {
-        "build": {
-          "builder": "@nrwl/web:build",
-          "outputs": ["dist/apps/myapp"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
-          "options": {
-            "index": "apps/myapp/src/app.html",
-            "main": "apps/myapp/src/main.ts"
-          },
-          "configurations": {
-            "production": {
-              "optimization": true
-            }
-          }
-        },
-        "serve": {
-          "builder": "@nrwl/web:dev-server",
-          "options": {
-            "buildTarget": "myapp:build",
-            "proxyConfig": "apps/myapp/proxy.conf.json"
-          }
-        },
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "apps/myapp/jest.config.js",
-            "tsConfig": "apps/myapp/tsconfig.spec.json"
-          }
-        }
-      }
-    },
-    "mylib": {
-      "root": "libs/mylib/",
-      "sourceRoot": "libs/mylib/src",
-      "projectType": "library",
-      "architect": {
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "libs/mylib/jest.config.js",
-            "tsConfig": "libs/mylib/tsconfig.spec.json"
-          }
-        }
-      }
-    }
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/web"
+    "myapp": "apps/myapp"
   }
 }
 ```
 
-### Projects
+- `"version": 2` tells Nx that we are using Nx's format for the `workspace.json` file.
+- `projects` is a map of project name to either the project location, or its configuration. (see [`project.json`](#project-json))
 
-The `projects` property configures all apps and libs.
+> This file is optional as of Nx v13.3.
+> To convert an existing repository to use standalone configurations, run `nx g convert-to-nx-project --all`
 
-For instance, the following configures `mylib`.
+#### Version 1 vs Version 2
+
+- Version 1 workspaces do not support standalone configuration (`project.json` files), so all of the entries in projects are inline configurations.
+- In Version 1 workspaces the `targets` property is replaced with `architect` in project configuration
+- In Version 1 workspaces the `executor` property on a target is replaced with `executor`
+- In Version 1 workspaces the `generators` property used to define generator defaults for a project is replaced with `schematics`
+
+> To upgrade to version 2, change the version number to 2 and run `nx format`.
+
+### project json
+
+The `project.json` file contains configuration specific to it's project. Lets look at the following example:
 
 ```json
 {
-  "mylib": {
-    "root": "libs/mylib/",
-    "sourceRoot": "libs/mylib/src",
-    "projectType": "library",
-    "architect": {}
-  }
+  "root": "libs/mylib/",
+  "sourceRoot": "libs/mylib/src",
+  "projectType": "library",
+  "targets": {},
+  "tags": [],
+  "implicitDependencies": []
 }
 ```
 
@@ -91,19 +58,34 @@ For instance, the following configures `mylib`.
 - `sourceRoot` tells Nx the location of the library's source files.
 - `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux commands.
 - `architect` configures all the targets which define what tasks you can run against the library.
+- `tags` configures tags used for linting
+- `implicitDependencies` configure implicit dependencies between projects in the workspace ([see below](#implicit-dependencies))
 
-> Nx uses the architect library built by the Angular team at Google. The naming reflects that. Important to note: it's a general purpose library that **does not** have any dependency on Angular.
+The contents of `project.json` can be inlined into workspace.json by replacing the project location with the contents file. For example, in `workspace.json`, you could have something like:
 
-> Projects utilizing `project.json` files are not present in `angular.json`.
+```jsonc
+{
+  // ... other configuration
+  "projects": {
+    // ... other (poterntially standalone) projects
+    "my-inline-project": {
+      "root": "apps/my-inline-project"
+      //... other project configuration
+    }
+  }
+}
+```
 
-### Targets
+> In workspaces without `workspace.json` or `angular.json`, a `project.json` is optional for your project if it already has a `package.json`. Instead, its configuration is inferred based on its `package.json` as described below.
 
-Let's look at the simple architect target:
+#### Targets
+
+Let's look at a sample test target:
 
 ```json
 {
   "test": {
-    "builder": "@nrwl/jest:jest",
+    "executor": "@nrwl/jest:jest",
     "options": {
       "jestConfig": "libs/mylib/jest.config.js",
       "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -116,13 +98,13 @@ Let's look at the simple architect target:
 
 The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx mytest mylib` or `nx run mylib:mytest`.
 
-**Builder**
+**Executor**
 
-The `builder` property tells Nx what function to invoke when you run the target. `"@nrwl/jest:jest"` tells Nx to find the `@nrwl/jest` package, find the builder named `jest` and invoke it with the options.
+The `executor` property tells Nx what function to invoke when you run the target. `"@nrwl/jest:jest"` tells Nx to find the `@nrwl/jest` package, find the executor named `jest` and invoke it with the options.
 
 **Options**
 
-The `options` provides a map of values that will be passed to the builder. The provided command line args will be merged into this map. I.e., `nx test mylib --jestConfig=libs/mylib/another-jest.config.js` will pass the following to the builder:
+The `options` provides a map of values that will be passed to the executor. The provided command line args will be merged into this map. I.e., `nx test mylib --jestConfig=libs/mylib/another-jest.config.js` will pass the following to the executor:
 
 ```json
 {
@@ -133,12 +115,12 @@ The `options` provides a map of values that will be passed to the builder. The p
 
 **Outputs**
 
-The `outputs` property lists the folders the builder creates files in. The property is optional. If not provided, Nx assumes it is `dist/libs/mylib`.
+The `outputs` property lists the folders the executor creates files in. The property is optional. If not provided, Nx assumes it is `dist/libs/mylib`.
 
 ```json
 {
   "build": {
-    "builder": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -155,7 +137,7 @@ The `configurations` property provides extra sets of values that will be merged 
 ```json
 {
   "build": {
-    "builder": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -172,10 +154,10 @@ The `configurations` property provides extra sets of values that will be merged 
 
 You can select a configuration like this: `nx build myapp --configuration=production` or `nx run myapp:build:configuration=production`.
 
-The following show how the builder options get constructed:
+The following show how the executor options get constructed:
 
 ```javascript
-require(`@nrwl/jest`).builders['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
+require(`@nrwl/jest`).executors['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
 ```
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the configuration options.
@@ -187,7 +169,7 @@ Targets can depend on other targets. A common scenario is having to build depend
 ```json
 {
   "build": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -203,7 +185,7 @@ Targets can depend on other targets. A common scenario is having to build depend
 }
 ```
 
-In this case, running `nx build myapp` builds all the buildable libraries `myapp` depends on first. In other words, `nx build myapp` results in multiple tasks executing. The `--parallel`, and `--max-parallel` flags have the same effect as they would with `run-many` or `affected`.
+In this case, running `nx build myapp` builds all the buildable libraries `myapp` depends on first. In other words, `nx build myapp` results in multiple tasks executing. The `--parallel` flag has the same effect as they would with `run-many` or `affected`.
 
 It is also possible to define dependencies between the targets of the same project.
 
@@ -212,7 +194,7 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 ```json
 {
   "build-base": {
-    "executor": "@nrwl/web:build",
+    "executor": "@nrwl/web:webpack",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -240,62 +222,48 @@ In the following example invoking `nx build myapp` builds all the libraries firs
 
 Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
 
-### Generators
+### package-json
 
-Generators that are created using `@angular-devkit` are called schematics. Default generator options are configured `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
+Nx also infers additional project targets from scripts defined in it's `package.json` file, if it exists. For example, you may have a package.json in the root of your lib like this:
 
-```json
+```jsonc
 {
-  "schematics": {
-    "@nrwl/angular:library": {
-      "style": "scss"
+  "name": "@company/my-lib",
+  "scripts": {
+    "clean": "echo 1" // the actual command here is arbitrary
+  }
+}
+```
+
+This would lead to Nx being able to run the clean script, just like a target in `project.json`. You could run `nx clean my-lib` in this instance.
+
+Targets inferred from `package.json` scripts are ran using the `@nrwl/workspace:run-script` executor, with the project's root as the current working directory.
+
+> Targets inside `package.json` are overwritten if a target inside `project.json` has the same name.
+
+Additional target configuration options such as those described in [targets](#targets) above can be defined for targets that are inferred from `package.json`. Here is an example for defining custom outputs to be able to cache an inferred test target:
+
+```jsonc
+{
+  "name": "@company/my-lib",
+  "scripts": {
+    "test": "run-my-tests"
+  },
+  "nx": {
+    "targets": {
+      "test": {
+        "outputs": ["packages/my-lib/coverage"]
+      }
     }
   }
 }
 ```
 
-### CLI Options
+All of the options except `executor` are availble here.
 
-The following command generates a new library: `nx g @nrwl/angular:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
+## Workspace Configuration
 
-```json
-{
-  "cli": {
-    "defaultCollection": "@nrwl/angular"
-  }
-}
-```
-
-### workspace.json
-
-Your `angular.json` file can be renamed to `workspace.json` and Nx will process it in the same way. The `workspace.json` has one additional top level property `version`. Setting `version` to 1 means the `workspace.json` file syntax is identical to `angular.json` When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
-
-## project.json
-
-In version 2 workspaces, project configurations can also be independent files, referenced by `angular.json`. For instance, an `angular.json` may contain projects configured as below.
-
-```json
-{
-  "projects": {
-    "mylib": "libs/mylib"
-  }
-}
-```
-
-This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file. This file contains a combination of the project's configuration from both `angular.json` and `nx.json`.
-
-```json
-{
-  "root": "libs/mylib/",
-  "sourceRoot": "libs/mylib/src",
-  "projectType": "library",
-  "targets": {},
-  "tags": [],
-  "implicitDependencies": []
-}
-```
-
-## nx.json
+### nx json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
 
@@ -303,7 +271,7 @@ The `nx.json` file contains extra configuration options mostly related to the pr
 {
   "npmScope": "happyorg",
   "affected": {
-    "defaultBase": "master"
+    "defaultBase": "main"
   },
   "tasksRunnerOptions": {
     "default": {
@@ -314,7 +282,7 @@ The `nx.json` file contains extra configuration options mostly related to the pr
     }
   },
   "implicitDependencies": {
-    "angular.json": "*",
+    "workspace.json": "*",
     "package.json": {
       "dependencies": "*",
       "devDependencies": "*"
@@ -330,22 +298,11 @@ The `nx.json` file contains extra configuration options mostly related to the pr
       }
     ]
   },
-  "projects": {
-    "myapp": {
-      "tags": []
-    },
-    "mylib": {
-      "tags": []
-    },
-    "myapp-e2e": {
-      "tags": [],
-      "implicitDependencies": ["myapp"]
-    }
+  "cli": {
+    "defaultCollection": "@nrwl/web"
   }
 }
 ```
-
-> Projects utilizing `project.json` files will not be present in `nx.json`.
 
 **NPM Scope**
 
@@ -355,7 +312,7 @@ Tells Nx what prefix to use when generating library imports.
 
 Tells Nx which branch and HEAD to use when calculating affected projects.
 
-- `defaultBase` defines the default base branch, defaulted to `master`.
+- `defaultBase` defines the default base branch, defaulted to `main`.
 
 ### Tasks Runner Options
 
@@ -366,8 +323,7 @@ Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx
 Tasks runners can accept different options. The following are the options supported by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
 - `cacheableOperations` defines the list of targets/operations that are cached by Nx.
-- `parallel` defines whether to run targets in parallel
-- `maxParallel` defines the max number of processes used.
+- `parallel` defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)
 - `captureStderr` defines whether the cache captures stderr or just stdout
 - `skipNxCache` defines whether the Nx Cache should be skipped. Defaults to `false`
 - `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
@@ -391,7 +347,7 @@ Tasks runners can accept different options. The following are the options suppor
 }
 ```
 
-You can configure `parallel` and `maxParallel` in `nx.json`, but you can also pass them in the terminal `nx run-many --target=test --parallel`.
+You can configure `parallel` in `nx.json`, but you can also pass them in the terminal `nx run-many --target=test --parallel=5`.
 
 ### Workspace Layout
 
@@ -415,7 +371,7 @@ Nx performs advanced source-code analysis to figure out the project graph of the
 ```json
 {
   "implicitDependencies": {
-    "angular.json": "*",
+    "workspace.json": "*",
     "package.json": {
       "dependencies": "*",
       "devDependencies": {
@@ -433,22 +389,24 @@ Nx performs advanced source-code analysis to figure out the project graph of the
 
 In the example above:
 
-- Changing `angular.json` affects every project.
+- Changing `workspace.json` affects every project.
 - Changing the `dependencies` property in `package.json` affects every project.
 - Changing the `devDependencies` property in `package.json` only affects `mylib`.
 - Changing any of the custom check `scripts` in `package.json` affects every project.
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-You can also add dependencies between projects. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
+You can also add dependencies between projects in [project configuration](#project-json). For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
 
-```json
+```jsonc
 {
   "projects": {
     "myapp": {
+      //... other project config
       "tags": []
     },
     "myapp-e2e": {
+      //... other project config
       "tags": [],
       "implicitDependencies": ["myapp"]
     }
@@ -479,7 +437,33 @@ The configuration above is identical to adding `{"dependsOn": [{"target": "build
 
 The `dependsOn` property in `workspace.json` takes precedence over the `targetDependencies` in `nx.json`.
 
-## .nxignore
+### CLI Options
+
+The following command generates a new library: `nx g @nrwl/angular:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
+
+```json
+{
+  "cli": {
+    "defaultCollection": "@nrwl/angular"
+  }
+}
+```
+
+### Generators
+
+Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always pass `--style=scss` when creating new libraries.
+
+```json
+{
+  "generators": {
+    "@nrwl/angular:library": {
+      "style": "scss"
+    }
+  }
+}
+```
+
+## nxignore
 
 You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should be completely ignored by Nx.
 
@@ -521,3 +505,30 @@ nx workspace-lint
 ```
 
 This will identify any projects with no files in the configured project root folder, as well as any file that's not part of any project configured in the workspace.
+
+```
+
+```
+
+## Recent Changes
+
+### v13-3-0
+
+- `workspace.json` is now optional
+  - projects can be inferred completely from `package.json` if `workspace.json` not present
+- Targets are now merged from `package.json` instead of only being used if the project has no targets defined.
+- Targets inferred from `package.json` can now have an extended configuration. See [above](#package-json)
+
+### v13-0-0
+
+Some settings were moved between `workspace.json`/`project.json` and `nx.json`.
+
+- tags / implicit dependencies are no longer in `nx.json` were moved from `nx.json` to project configuration.
+- `cli` and `defaultProject` moved to `nx.json` from `workspace.json`
+- Non-project specific generator defaults in `workspace.json` via the `generators`/`schematics` property moved to `nx.json`
+
+### v12-4-0
+
+Standalone configuration and `project.json` introduced. See [above](#project-json)
+
+- tags / implicit dependencies are no longer in `nx.json` for projects using `project.json`.

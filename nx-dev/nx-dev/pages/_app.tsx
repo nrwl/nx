@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { DefaultSeo } from 'next-seo';
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import '../styles/main.css';
 
@@ -16,11 +17,33 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
   }, [router]);
   return (
     <>
+      <DefaultSeo
+        title="Nx: Smart, Extensible Build Framework"
+        description="Nx helps architect, test, and build at any scale: full monorepo support, integrations with modern frameworks, computation caching, smart rebuilds of affected projects, distributed task execution, powerful code generators, editor support, GitHub apps, and more."
+        openGraph={{
+          url: 'https://nx.dev' + router.asPath,
+          title: 'Nx: Smart, Extensible Build Framework',
+          description:
+            'Nx helps architect, test, and build at any scale: full monorepo support, integrations with modern frameworks, computation caching, smart rebuilds of affected projects, distributed task execution, powerful code generators, editor support, GitHub apps, and more.',
+          images: [
+            {
+              url: 'https://nx.dev/images/nx-media.jpg',
+              width: 800,
+              height: 400,
+              alt: 'Nx: Smart, Extensible Build Framework',
+              type: 'image/jpeg',
+            },
+          ],
+          site_name: 'NxDev',
+        }}
+        twitter={{
+          handle: '@nrwl_io',
+          site: '@nxdevtools',
+          cardType: 'summary_large_image',
+        }}
+      />
       <Head>
         <meta charSet="utf-8" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@nxdevtools" />
-        <meta name="twitter:creator" content="@nrwl_io" />
         <link
           rel="apple-touch-icon"
           sizes="180x180"

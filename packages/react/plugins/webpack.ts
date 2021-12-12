@@ -1,9 +1,8 @@
 import type { Configuration } from 'webpack';
+import ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 // Add React-specific configuration
 function getWebpackConfig(config: Configuration) {
-  // TODO(jack): Remove in Nx 13
-  const { ReactRefreshPlugin, isWebpack5 } = require('../src/webpack/entry');
   config.module.rules.push(
     {
       test: /\.(png|jpe?g|gif|webp)$/,
@@ -18,7 +17,7 @@ function getWebpackConfig(config: Configuration) {
       oneOf: [
         // If coming from JS/TS file, then transform into React component using SVGR.
         {
-          issuer: isWebpack5 ? /\.[jt]sx?$/ : { test: /\.[jt]sx?$/ },
+          issuer: /\.[jt]sx?$/,
           use: [
             {
               loader: require.resolve('@svgr/webpack'),
@@ -56,10 +55,12 @@ function getWebpackConfig(config: Configuration) {
 
   if (config.mode === 'development' && config['devServer']?.hot) {
     // add `react-refresh/babel` to babel loader plugin
-    const babelLoader = config.module.rules.find((rule) =>
-      rule.loader.toString().includes('babel-loader')
+    const babelLoader = config.module.rules.find(
+      (rule) =>
+        typeof rule !== 'string' &&
+        rule.loader?.toString().includes('babel-loader')
     );
-    if (babelLoader) {
+    if (babelLoader && typeof babelLoader !== 'string') {
       babelLoader.options['plugins'] = [
         ...(babelLoader.options['plugins'] || []),
         [

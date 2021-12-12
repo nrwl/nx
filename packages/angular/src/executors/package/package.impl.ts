@@ -1,18 +1,23 @@
-import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import type { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-  updatePaths,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { from } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 import { mapTo, switchMap, tap } from 'rxjs/operators';
+import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
+import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
+import {
+  NX_PACKAGE_PROVIDERS,
+  NX_PACKAGE_TRANSFORM,
+} from './ng-packagr-adjustments/ng-package/package.di';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
 async function initializeNgPackagr(
@@ -20,15 +25,26 @@ async function initializeNgPackagr(
   context: ExecutorContext,
   projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
-  const packager = (await import('ng-packagr')).ngPackagr();
+  const packager = new (await import('ng-packagr')).NgPackagr([
+    ...NX_PACKAGE_PROVIDERS,
+    ...NX_ENTRY_POINT_PROVIDERS,
+    nxProvideOptions({
+      tailwindConfig: options.tailwindConfig,
+      watch: options.watch,
+    }),
+  ]);
+
   packager.forProject(resolve(context.root, options.project));
+  packager.withBuildTransform(NX_PACKAGE_TRANSFORM.provide);
 
   if (options.tsConfig) {
-    // read the tsconfig and modify its path in memory to
-    // pass it on to ngpackagr
-    const parsedTSConfig = ng.readConfiguration(options.tsConfig);
-    updatePaths(projectDependencies, parsedTSConfig.options.paths);
-    packager.withTsConfig(parsedTSConfig);
+    const tsConfigPath = createTmpTsConfig(
+      options.tsConfig,
+      context.root,
+      context.workspace.projects[context.projectName].root,
+      projectDependencies
+    );
+    packager.withTsConfig(tsConfigPath);
   }
 
   return packager;
@@ -51,7 +67,7 @@ export function createLibraryExecutor(
     context: ExecutorContext
   ) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph('4.0'),
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       context.targetName,

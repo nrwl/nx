@@ -1,3 +1,8 @@
+---
+title: '@nrwl/detox:build executor'
+description: 'Run the command defined in build property of the specified configuration.'
+---
+
 # @nrwl/detox:build
 
 Run the command defined in build property of the specified configuration.

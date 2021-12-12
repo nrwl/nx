@@ -34,5 +34,6 @@ Array [
   "app.component.html",
   "app.component.spec.ts",
   "app.component.ts",
+  "nx-welcome.component.ts",
 ]
 `;

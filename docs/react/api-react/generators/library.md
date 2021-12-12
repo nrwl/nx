@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/react:library
 
 Create a library
@@ -63,6 +68,16 @@ Default: `false`
 Type: `boolean`
 
 Generate a buildable library.
+
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+Which compiler to use.
 
 ### component
 
@@ -159,8 +174,6 @@ Type: `boolean`
 Do not update tsconfig.json for development experience.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

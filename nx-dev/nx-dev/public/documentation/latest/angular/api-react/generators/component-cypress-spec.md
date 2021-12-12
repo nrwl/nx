@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:component-cypress-spec generator'
+description: 'Create a cypress spec for a ui component that has a story'
+---
+
 # @nrwl/react:component-cypress-spec
 
 Create a cypress spec for a ui component that has a story

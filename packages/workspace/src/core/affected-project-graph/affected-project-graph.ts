@@ -5,7 +5,11 @@ import {
   readPackageJson,
   readWorkspaceJson,
 } from '../file-utils';
-import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
+import type {
+  NxJsonConfiguration,
+  ProjectGraph,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
@@ -17,25 +21,26 @@ import {
   TouchedProjectLocator,
 } from './affected-project-graph-models';
 import { normalizeNxJson } from '../normalize-nx-json';
-import { getTouchedProjectsInNxJson } from './locators/nx-json-changes';
 import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
 
 export function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
-  workspaceJson: any = readWorkspaceJson(),
+  workspaceJson: WorkspaceJsonConfiguration = readWorkspaceJson(),
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
-  const normalizedNxJson = normalizeNxJson(nxJson);
+  const normalizedNxJson = normalizeNxJson(
+    nxJson,
+    Object.keys(workspaceJson.projects)
+  );
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
     getImplicitlyTouchedProjects,
     getTouchedNpmPackages,
     getImplicitlyTouchedProjectsByJsonChanges,
-    getTouchedProjectsInNxJson,
     getTouchedProjectsInWorkspaceJson,
     getTouchedProjectsFromTsConfig,
   ];
@@ -58,7 +63,11 @@ function filterAffectedProjects(
   graph: ProjectGraph,
   ctx: AffectedProjectGraphContext
 ): ProjectGraph {
-  const result = { nodes: {}, dependencies: {} } as ProjectGraph;
+  const result: ProjectGraph = {
+    nodes: {},
+    externalNodes: {},
+    dependencies: {},
+  };
   const reversed = reverse(graph);
   ctx.touchedProjects.forEach((p) => {
     addAffectedNodes(p, reversed, result, []);
@@ -76,13 +85,19 @@ function addAffectedNodes(
   visited: string[]
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
-  if (!reversed.nodes[startingProject]) {
+  const reversedNode = reversed.nodes[startingProject];
+  const reversedExternalNode = reversed.externalNodes[startingProject];
+  if (!reversedNode && !reversedExternalNode) {
     throw new Error(`Invalid project name is detected: "${startingProject}"`);
   }
   visited.push(startingProject);
-  result.nodes[startingProject] = reversed.nodes[startingProject];
-  result.dependencies[startingProject] = [];
-  reversed.dependencies[startingProject].forEach(({ target }) =>
+  if (reversedNode) {
+    result.nodes[startingProject] = reversedNode;
+    result.dependencies[startingProject] = [];
+  } else {
+    result.externalNodes[startingProject] = reversedExternalNode;
+  }
+  reversed.dependencies[startingProject]?.forEach(({ target }) =>
     addAffectedNodes(target, reversed, result, visited)
   );
 }
@@ -95,16 +110,23 @@ function addAffectedDependencies(
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
   visited.push(startingProject);
-
-  reversed.dependencies[startingProject].forEach(({ target }) =>
-    addAffectedDependencies(target, reversed, result, visited)
-  );
-  reversed.dependencies[startingProject].forEach(({ type, source, target }) => {
-    // Since source and target was reversed,
-    // we need to reverse it back to original direction.
-    if (!result.dependencies[target]) {
-      result.dependencies[target] = [];
-    }
-    result.dependencies[target].push({ type, source: target, target: source });
-  });
+  if (reversed.dependencies[startingProject]) {
+    reversed.dependencies[startingProject].forEach(({ target }) =>
+      addAffectedDependencies(target, reversed, result, visited)
+    );
+    reversed.dependencies[startingProject].forEach(
+      ({ type, source, target }) => {
+        // Since source and target was reversed,
+        // we need to reverse it back to original direction.
+        if (!result.dependencies[target]) {
+          result.dependencies[target] = [];
+        }
+        result.dependencies[target].push({
+          type,
+          source: target,
+          target: source,
+        });
+      }
+    );
+  }
 }

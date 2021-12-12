@@ -2,22 +2,22 @@ import React, { useCallback, useState } from 'react';
 import cx from 'classnames';
 import Link from 'next/link';
 import {
-  FlavorMetadata,
   Menu,
   MenuItem,
   MenuSection,
-  VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
-import { Selector } from '@nrwl/nx-dev/ui/common';
-import { useStorage } from '@nrwl/nx-dev/feature-storage';
+import { Selector } from '@nrwl/nx-dev/ui-common';
+import { useSelectedFlavor } from '@nrwl/nx-dev/feature-flavor-selection';
+import {
+  useActiveFlavor,
+  useActiveVersion,
+  useFlavors,
+  useVersions,
+} from '@nrwl/nx-dev/feature-versions-and-flavors';
 
 export interface SidebarProps {
   menu: Menu;
-  version: VersionMetadata;
-  versionList: VersionMetadata[];
-  flavorList: FlavorMetadata[];
-  flavor: FlavorMetadata;
   navIsOpen?: boolean;
 }
 
@@ -31,16 +31,12 @@ export function createNextPath(
   return `/${version}/${flavor}/${genericPath}`;
 }
 
-export function Sidebar({
-  flavor,
-  flavorList,
-  version,
-  versionList,
-  menu,
-  navIsOpen,
-}: SidebarProps) {
-  const { setValue: setStoredFlavor } = useStorage('flavor');
-  const { setValue: setStoredVersion } = useStorage('version');
+export function Sidebar({ menu, navIsOpen }: SidebarProps) {
+  const version = useActiveVersion();
+  const flavor = useActiveFlavor();
+  const { setSelectedFlavor } = useSelectedFlavor();
+  const flavorList = useFlavors();
+  const versionList = useVersions();
   const router = useRouter();
   return (
     <div
@@ -58,29 +54,32 @@ export function Sidebar({
         <div className="hidden lg:block h-12 pointer-events-none absolute inset-x-0 z-10 bg-gradient-to-b from-white" />
         <div className="px-1 pt-6 sm:px-3 xl:px-5 lg:pt-10">
           <Selector
-            data={versionList.map((version) => ({
+            items={versionList.map((version) => ({
               label: version.name,
               value: version.alias,
             }))}
             selected={{ label: version.name, value: version.alias }}
             onChange={(item) =>
-              router
-                .push(createNextPath(item.value, flavor.alias, router.asPath))
-                .then((success) => success && setStoredVersion(item.value))
+              router.push(
+                createNextPath(item.value, flavor.alias, router.asPath)
+              )
             }
           />
         </div>
         <div className="px-1 pt-3 sm:px-3 xl:px-5">
           <Selector
-            data={flavorList.map((flavor) => ({
+            items={flavorList.map((flavor) => ({
               label: flavor.name,
               value: flavor.alias,
+              data: flavor,
             }))}
             selected={{ label: flavor.name, value: flavor.alias }}
             onChange={(item) =>
-              router.push(
+              !!router.push(
                 createNextPath(version.alias, item.value, router.asPath)
-              ) && setStoredFlavor(item.value)
+              ) &&
+              item.data &&
+              setSelectedFlavor(item.data)
             }
           />
         </div>
@@ -90,8 +89,8 @@ export function Sidebar({
           data-testid="navigation"
           className="px-1 pt-1 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
         >
-          {menu.sections.map((section) => (
-            <SidebarSection key={section.id} section={section} />
+          {menu.sections.map((section, index) => (
+            <SidebarSection key={section.id + '-' + index} section={section} />
           ))}
         </nav>
       </div>
@@ -112,8 +111,8 @@ function SidebarSection({ section }: { section: MenuSection }) {
       )}
       <ul>
         <li className="mt-2">
-          {section.itemList.map((item) => (
-            <SidebarSectionItems key={item.id} item={item} />
+          {section.itemList.map((item, index) => (
+            <SidebarSectionItems key={item.id + '-' + index} item={item} />
           ))}
         </li>
       </ul>
@@ -154,10 +153,13 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
         )}
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
-        {(item.itemList as MenuItem[]).map((item) => {
+        {(item.itemList as MenuItem[]).map((item, index) => {
           const isActiveLink = item.url === withoutAnchors(router?.asPath);
           return (
-            <li key={item.id} data-testid={`section-li:${item.id}`}>
+            <li
+              key={item.id + '-' + index}
+              data-testid={`section-li:${item.id}`}
+            >
               <Link href={item.url as string}>
                 <a
                   className={cx(

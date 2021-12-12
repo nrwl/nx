@@ -35,7 +35,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 ## Creating your app
 
-Your new workspace won’t have much in it because of the `empty` preset. You’ll need to generate an application to have some structure created. Add the Angular capability to your workspace:
+Your new workspace won’t have much in it because of the `empty` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
 ```bash
 ng add @nrwl/angular  --unitTestRunner=karma --e2eTestRunner=protractor
@@ -58,7 +58,7 @@ Accept the default options for each prompt:
 ? Would you like to configure routing for this application? No
 ```
 
-> The RealWorld app doesn’t have any styles to actually bundle here. They’re all downloaded from a CDN that all of the RealWorld apps use. If your codebase uses something other than CSS, like Sass or PostCSS, you can choose that here.
+> The RealWorld app doesn’t have any styles to actually bundle here. They’re all downloaded from a CDN that all of the RealWorld apps use. If your codebase uses something other than CSS, like Sass, you can choose that here.
 
 ## Migrating dependencies
 
@@ -363,7 +363,7 @@ Navigate around the application and see that things work.
 
 ## Switching to webpack
 
-So far, you’ve mostly gotten already existing code and processes to work. This is the best way to get started with any migration: get existing code to work before you start making changes. This gives you a good, stable base to build on. It also means you having working code now rather than hoping you’ll have working code in the future!
+So far, you’ve mostly gotten already existing code and processes to work. This is the best way to get started with any migration: get existing code to work before you start making changes. This gives you a good, stable base to build on. It also means you have working code now rather than hoping you’ll have working code in the future!
 
 But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
@@ -371,7 +371,8 @@ But migrating AngularJS code means we need to switch some of our tools to a more
 npm install -D @nrwl/web babel-plugin-angularjs-annotate
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](https://nx.dev/latest/angular/executors/using-builders) we need to use to build and serve the application with webpack and `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
+Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](/{{version}}/{{framework}}/executors/using-builders) we need to use to build and serve the application with webpack and
+`babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:
 
@@ -687,7 +688,7 @@ You should see green text as your test passes.
 
 ## End to End testing
 
-End to End (or E2E) testing is another important part of migration. The more tests you have to verify your code, the easier it is to confirm that your code works the same way it did before. Again, the realworld application doesn’t have any e2e tests, so you need to add your own.
+End to End (or E2E) testing is another important part of any migration. The more tests you have to verify your code, the easier it is to confirm that your code works the same way it did before. Again, the realworld application doesn’t have any e2e tests, so you need to add your own.
 
 Nx created `realworld-e2e` for you when you generated your app. There is an example test already generated in `apps/realworld-e2e/src/app.e2e-spec.ts`. It has a helper file named `app.po.ts`. The `spec` file contains the actual tests, while the `po` file contains helper functions to retrieve information about the page. The generated test checks to make sure the title of the app is displayed properly, an indication that the app bootstrapped properly in the browser.
 

@@ -26,13 +26,11 @@
       "outputs": ["coverage/packages/detox"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/detox",
         "tsConfig": "packages/detox/tsconfig.lib.json",
-        "packageJson": "packages/detox/package.json",
         "main": "packages/detox/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/detox",

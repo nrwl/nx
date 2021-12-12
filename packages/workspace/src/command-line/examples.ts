@@ -37,13 +37,8 @@ export const examples: Record<string, Example[]> = {
       description: 'Run custom target for all affected projects',
     },
     {
-      command: 'affected --target=test --parallel --maxParallel=5',
+      command: 'affected --target=test --parallel=5',
       description: 'Run tests in parallel',
-    },
-    {
-      command: 'affected --target=test --only-failed',
-      description:
-        'Rerun the test target only for the projects that failed last time',
     },
     {
       command: 'affected --target=test --all',
@@ -67,13 +62,8 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:test': [
     {
-      command: 'affected:test --parallel --maxParallel=5',
+      command: 'affected:test --parallel=5',
       description: 'Run tests in parallel',
-    },
-    {
-      command: 'affected:test --only-failed',
-      description:
-        'Rerun the test target only for the projects that failed last time',
     },
     {
       command: 'affected:test --all',
@@ -97,13 +87,8 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:build': [
     {
-      command: 'affected:build --parallel --maxParallel=5',
+      command: 'affected:build --parallel=5',
       description: 'Run build in parallel',
-    },
-    {
-      command: 'affected:build --only-failed',
-      description:
-        'Rerun the build target only for the projects that failed last time',
     },
     {
       command: 'affected:build --all',
@@ -127,13 +112,8 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:e2e': [
     {
-      command: 'affected:e2e --parallel --maxParallel=5',
+      command: 'affected:e2e --parallel=5',
       description: 'Run tests in parallel',
-    },
-    {
-      command: 'affected:e2e --only-failed',
-      description:
-        'Rerun the test target only for the projects that failed last time',
     },
     {
       command: 'affected:e2e --all',
@@ -157,13 +137,8 @@ export const examples: Record<string, Example[]> = {
   ],
   'affected:lint': [
     {
-      command: 'affected:lint --parallel --maxParallel=5',
+      command: 'affected:lint --parallel=5',
       description: 'Run lint in parallel',
-    },
-    {
-      command: 'affected:lint --only-failed',
-      description:
-        'Rerun the lint target only for the projects that failed last time',
     },
     {
       command: 'affected:lint --all',
@@ -313,8 +288,7 @@ export const examples: Record<string, Example[]> = {
       description: 'Test proj1 and proj2',
     },
     {
-      command:
-        'run-many --target=test --projects=proj1,proj2 --parallel --maxParallel=2',
+      command: 'run-many --target=test --projects=proj1,proj2 --parallel=2',
       description: 'Test proj1 and proj2 in parallel',
     },
   ],

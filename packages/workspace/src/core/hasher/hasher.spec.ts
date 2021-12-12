@@ -16,10 +16,6 @@ fs.existsSync = () => true;
 describe('Hasher', () => {
   const nxJson = {
     npmScope: 'nrwl',
-    projects: {
-      parent: { implicitDependencies: [], tags: [] },
-      child: { implicitDependencies: [], tags: [] },
-    },
   };
 
   const workSpaceJson = {
@@ -113,7 +109,7 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       parent:
-        '/file|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/file|file.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -170,7 +166,7 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       parent:
-        '/file.ts|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
+        '/file.ts|file.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -267,9 +263,9 @@ describe('Hasher', () => {
     // note that the parent hash is based on parent source files only!
     expect(hash.details.nodes).toEqual({
       child:
-        '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
@@ -279,19 +275,22 @@ describe('Hasher', () => {
     const hasher = new Hasher(
       {
         nodes: {
-          'npm:react': {
-            name: 'parent',
-            type: 'npm',
-            data: {
-              version: '17.0.0',
-            },
-          },
           app: {
             name: 'app',
             type: 'app',
             data: {
               root: '',
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
+            },
+          },
+        },
+        externalNodes: {
+          'npm:react': {
+            name: 'npm:react',
+            type: 'npm',
+            data: {
+              version: '17.0.0',
+              packageName: 'react',
             },
           },
         },
@@ -315,7 +314,7 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(hash.details.nodes).toEqual({
-      app: '/filea.ts|a.hash|""|""|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      app: '/filea.ts|a.hash|""|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '17.0.0',
     });
   });
@@ -367,9 +366,9 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('build'); //target
     expect(tasksHash.details.nodes).toEqual({
       child:
-        '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
 
     const hashb = await hasher.hashTaskWithDepsAndContext({
@@ -386,9 +385,9 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('build'); //target
     expect(hashb.details.nodes).toEqual({
       child:
-        '/fileb.ts|b.hash|{"root":"libs/child"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 

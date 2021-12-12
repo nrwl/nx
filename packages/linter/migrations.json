@@ -58,6 +58,12 @@
       "version": "12.9.0-beta.0",
       "description": "Remove ESLint parserOptions.project config if no rules requiring type-checking are in use",
       "factory": "./src/migrations/update-12-4-0/remove-eslint-project-config-if-no-type-checking-rules"
+    },
+    "eslint-8-updates": {
+      "cli": "nx",
+      "version": "13.3.0-beta.0",
+      "description": "Update eslint-rules jest.config.js in order to support ESLint v8 exports mapping, remove category field",
+      "factory": "./src/migrations/update-13-3-0/eslint-8-updates"
     }
   },
   "packageJsonUpdates": {
@@ -126,6 +132,40 @@
         },
         "@typescript-eslint/experimental-utils": {
           "version": "~4.31.1"
+        }
+      }
+    },
+    "13.0.0": {
+      "version": "12.10.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~4.33.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~4.33.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~4.33.0"
+        },
+        "eslint": {
+          "version": "7.32.0"
+        }
+      }
+    },
+    "13.3.0": {
+      "version": "13.3.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.3.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.3.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~5.3.0"
+        },
+        "eslint": {
+          "version": "8.2.0"
         }
       }
     }

@@ -4,22 +4,23 @@ import {
   createBuilder,
 } from '@angular-devkit/architect';
 import { executeBrowserBuilder } from '@angular-devkit/build-angular';
+import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 import { JsonObject } from '@angular-devkit/core';
-import { from, Observable, of } from 'rxjs';
+import { joinPathFragments } from '@nrwl/devkit';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { joinPathFragments } from '@nrwl/devkit';
-import { join } from 'path';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
-import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
+import { join } from 'path';
+import { from, Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { merge } from 'webpack-merge';
+import { resolveCustomWebpackConfig } from '../utilities/webpack';
 
-type BrowserBuilderSchema = Schema & {
+export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
     path: string;
   };
@@ -68,9 +69,12 @@ function buildAppWithCustomWebpackConfiguration(
   context: BuilderContext,
   pathToWebpackConfig: string
 ) {
-  return executeBrowserBuilder(options, context, {
+  return executeBrowserBuilder(options, context as any, {
     webpackConfiguration: async (baseWebpackConfig) => {
-      const customWebpackConfiguration = require(pathToWebpackConfig);
+      const customWebpackConfiguration = resolveCustomWebpackConfig(
+        pathToWebpackConfig,
+        options.tsConfig
+      );
       // The extra Webpack configuration file can export a synchronous or asynchronous function,
       // for instance: `module.exports = async config => { ... }`.
       if (typeof customWebpackConfiguration === 'function') {
@@ -93,7 +97,7 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph('4.0'),
+    readCachedProjectGraph(),
     context.workspaceRoot,
     context.target.project,
     context.target.target,
@@ -127,4 +131,4 @@ function run(
   );
 }
 
-export default createBuilder<JsonObject & BrowserBuilderSchema>(run);
+export default createBuilder<JsonObject & BrowserBuilderSchema>(run) as any;

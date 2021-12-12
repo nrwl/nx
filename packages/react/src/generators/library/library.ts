@@ -1,5 +1,3 @@
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-
 import * as ts from 'typescript';
 import { assertValidStyle } from '../../utils/assertion';
 import {
@@ -9,8 +7,8 @@ import {
   findComponentImportPath,
 } from '../../utils/ast-utils';
 import {
-  extraEslintDependencies,
   createReactEslintJson,
+  extraEslintDependencies,
 } from '../../utils/lint';
 import {
   reactDomVersion,
@@ -42,6 +40,7 @@ import init from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import componentGenerator from '../component/component';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -121,7 +120,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       react: reactVersion,
       'react-dom': reactDomVersion,
     },
-    {}
+    options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {}
   );
   tasks.push(installTask);
 
@@ -182,7 +181,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     }
 
     targets.build = {
-      builder: '@nrwl/web:package',
+      builder: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -191,6 +190,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        compiler: options.compiler ?? 'babel',
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,
@@ -251,7 +251,10 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
     const { libsDir } = getWorkspaceLayout(host);
 
     c.paths[options.importPath] = [
-      maybeJs(options, `${libsDir}/${options.projectDirectory}/src/index.ts`),
+      maybeJs(
+        options,
+        joinPathFragments(libsDir, `${options.projectDirectory}/src/index.ts`)
+      ),
     ];
 
     return json;
@@ -380,7 +383,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
   const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

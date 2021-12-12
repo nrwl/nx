@@ -2,6 +2,7 @@
   "extends": "<%= offsetFromRoot %>tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
+    <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

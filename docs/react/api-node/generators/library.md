@@ -1,3 +1,8 @@
+---
+title: '@nrwl/node:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/node:library
 
 Create a library
@@ -147,8 +152,6 @@ Type: `boolean`
 Do not update tsconfig.base.json for development experience.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

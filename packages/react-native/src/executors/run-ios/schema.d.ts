@@ -9,4 +9,5 @@ export interface ReactNativeRunIosOptions {
   install?: boolean;
   sync?: boolean;
   terminal?: string;
+  resetCache?: boolean;
 }

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nx-plugin:migration generator'
+description: 'Create a migration for an Nx Plugin'
+---
+
 # @nrwl/nx-plugin:migration
 
 Create a migration for an Nx Plugin

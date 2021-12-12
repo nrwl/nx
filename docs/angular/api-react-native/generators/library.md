@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:library generator'
+description: 'Create a library'
+---
+
 # @nrwl/react-native:library
 
 Create a library

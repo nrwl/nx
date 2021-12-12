@@ -26,8 +26,8 @@ export interface ProjectFileMap {
  */
 export interface ProjectGraph<T = any> {
   nodes: Record<string, ProjectGraphNode<T>>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
-
   // this is optional otherwise it might break folks who use project graph creation
   allWorkspaceFiles?: FileData[];
   version?: string;
@@ -52,10 +52,17 @@ export enum DependencyType {
 }
 
 /**
+ * A node describing a node in a workspace
+ */
+export type ProjectGraphNode<T = any> =
+  | ProjectGraphProjectNode<T>
+  | ProjectGraphExternalNode;
+
+/**
  * A node describing a project in a workspace
  */
-export interface ProjectGraphNode<T = any> {
-  type: string;
+export interface ProjectGraphProjectNode<T = any> {
+  type: 'app' | 'e2e' | 'lib';
   name: string;
   /**
    * Additional metadata about a project
@@ -64,15 +71,36 @@ export interface ProjectGraphNode<T = any> {
     /**
      * The project's root directory
      */
-    root?: string;
+    root: string;
+    sourceRoot?: string;
     /**
      * Targets associated to the project
      */
     targets?: { [targetName: string]: TargetConfiguration };
     /**
+     * Project's tags used for enforcing module boundaries
+     */
+    tags?: string[];
+    /**
+     * Projects on which this node implicitly depends on
+     */
+    implicitDependencies?: string[];
+    /**
      * Files associated to the project
      */
     files: FileData[];
+  };
+}
+
+/**
+ * A node describing an external dependency
+ */
+export interface ProjectGraphExternalNode {
+  type: 'npm';
+  name: `npm:${string}`;
+  data: {
+    version: string;
+    packageName: string;
   };
 }
 

@@ -1,3 +1,8 @@
+---
+title: 'workspace-generator - CLI command'
+description: 'Runs a workspace generator from the tools/generators directory'
+---
+
 # workspace-generator
 
 Runs a workspace generator from the tools/generators directory

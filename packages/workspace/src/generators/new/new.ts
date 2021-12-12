@@ -10,6 +10,7 @@ import {
   getPackageManagerCommand,
   WorkspaceJsonConfiguration,
   PackageManager,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -25,6 +26,7 @@ import {
   checkGitVersion,
   deduceDefaultBase,
 } from '../../utilities/default-base';
+import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -36,7 +38,7 @@ export interface Schema {
   skipGit?: boolean;
   style?: string;
   nxCloud?: boolean;
-  preset: Preset;
+  preset: string;
   commit?: { name: string; email: string; message?: string };
   defaultBase: string;
   linter: 'tslint' | 'eslint';
@@ -55,17 +57,8 @@ function generatePreset(host: Tree, opts: Schema) {
   };
   const pmc = getPackageManagerCommand();
   const executable = `${pmc.exec} ${cliCommand}`;
-  const args = [
-    `g`,
-    `@nrwl/workspace:preset`,
-    `--name=${opts.appName}`,
-    opts.style ? `--style=${opts.style}` : null,
-    opts.linter ? `--linter=${opts.linter}` : null,
-    opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
-    opts.preset ? `--preset=${opts.preset}` : null,
-    `--cli=${cliCommand}`,
-    parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
-  ].filter((e) => !!e);
+  const args = getPresetArgs(opts);
+
   return new Promise<void>((resolve, reject) => {
     spawn(executable, args, spawnOptions).on('close', (code: number) => {
       if (code === 0) {
@@ -76,6 +69,46 @@ function generatePreset(host: Tree, opts: Schema) {
       }
     });
   });
+
+  function getPresetArgs(options: Schema) {
+    if (Object.values(Preset).some((val) => val === options.preset)) {
+      // supported presets
+      return getDefaultArgs(options);
+    }
+    return getThirdPartyPresetArgs();
+  }
+
+  function getDefaultArgs(opts: Schema) {
+    return [
+      `g`,
+      `@nrwl/workspace:preset`,
+      `--name=${opts.appName}`,
+      opts.style ? `--style=${opts.style}` : null,
+      opts.linter ? `--linter=${opts.linter}` : null,
+      opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
+      opts.preset ? `--preset=${opts.preset}` : null,
+      `--cli=${cliCommand}`,
+      parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
+    ].filter((e) => !!e);
+  }
+
+  function getThirdPartyPresetArgs() {
+    const thirdPartyPkgArgs = Object.entries(opts).reduce(
+      (acc, [key, value]) => {
+        if (value === true) {
+          acc.push(`${key}`);
+        } else if (value === false) {
+          acc.push(`--no-${key}`);
+        } else {
+          // string, number (don't handle arrays or nested objects)
+          acc.push(`${key}=${value}`);
+        }
+        return acc;
+      },
+      []
+    );
+    return [`g`, `${opts.preset}:preset`, ...thirdPartyPkgArgs];
+  }
 }
 
 async function initializeGitRepo(
@@ -180,9 +213,6 @@ export async function newGenerator(host: Tree, options: Schema) {
 
   await workspaceGenerator(host, { ...options, nxCloud: undefined } as any);
 
-  if (options.cli === 'angular') {
-    setDefaultPackageManager(host, options);
-  }
   setDefaultLinter(host, options);
   addPresetDependencies(host, options);
   addCloudDependencies(host, options);
@@ -211,69 +241,59 @@ function addCloudDependencies(host: Tree, options: Schema) {
   }
 }
 
-const presetDependencies: Omit<
-  Record<
-    Preset,
-    { dependencies: Record<string, string>; dev: Record<string, string> }
-  >,
-  Preset.Empty | Preset.NPM
-> = {
-  [Preset.WebComponents]: { dependencies: {}, dev: { '@nrwl/web': nxVersion } },
-  [Preset.Angular]: { dependencies: { '@nrwl/angular': nxVersion }, dev: {} },
-  [Preset.AngularWithNest]: {
-    dependencies: { '@nrwl/angular': nxVersion },
-    dev: { '@nrwl/nest': nxVersion },
-  },
-  [Preset.React]: {
-    dependencies: {},
-    dev: {
-      '@nrwl/react': nxVersion,
-    },
-  },
-  [Preset.ReactWithExpress]: {
-    dependencies: {},
-    dev: {
-      '@nrwl/react': nxVersion,
-      '@nrwl/express': nxVersion,
-    },
-  },
-  [Preset.Nest]: {
-    dependencies: {},
-    dev: {
-      '@nrwl/nest': nxVersion,
-    },
-  },
-  [Preset.Express]: {
-    dependencies: {},
-    dev: {
-      '@nrwl/express': nxVersion,
-    },
-  },
-  [Preset.NextJs]: {
-    dependencies: {
-      '@nrwl/next': nxVersion,
-    },
-    dev: {},
-  },
-  [Preset.Gatsby]: {
-    dependencies: {},
-    dev: {
-      '@nrwl/gatsby': nxVersion,
-    },
-  },
-  [Preset.ReactNative]: {
-    dependencies: {},
-    dev: {
-      '@nrwl/react-native': nxVersion,
-    },
-  },
-};
+function getPresetDependencies(preset: string) {
+  switch (preset) {
+    case Preset.Angular:
+      return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
+
+    case Preset.AngularWithNest:
+      return {
+        dependencies: { '@nrwl/angular': nxVersion },
+        dev: { '@nrwl/nest': nxVersion },
+      };
+
+    case Preset.Express:
+      return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
+
+    case Preset.Gatsby:
+      return { dependencies: {}, dev: { '@nrwl/gatsby': nxVersion } };
+
+    case Preset.Nest:
+      return { dependencies: {}, dev: { '@nrwl/nest': nxVersion } };
+
+    case Preset.NextJs:
+      return { dependencies: { '@nrwl/next': nxVersion }, dev: {} };
+
+    case Preset.React:
+      return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
+
+    case Preset.ReactWithExpress:
+      return {
+        dependencies: {},
+        dev: {
+          '@nrwl/react': nxVersion,
+          '@nrwl/express': nxVersion,
+        },
+      };
+
+    case Preset.ReactNative:
+      return { dependencies: {}, dev: { '@nrwl/react-native': nxVersion } };
+
+    case Preset.WebComponents:
+      return { dependencies: {}, dev: { '@nrwl/web': nxVersion } };
+
+    default: {
+      const version = getNpmPackageVersion(preset);
+      return { dev: {}, dependencies: { [preset]: version } };
+    }
+  }
+}
 
 function addPresetDependencies(host: Tree, options: Schema) {
   if (options.preset === Preset.Empty || options.preset === Preset.NPM) {
     return;
   }
-  const { dependencies, dev } = presetDependencies[options.preset];
+  const { dependencies, dev } = getPresetDependencies(options.preset);
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -287,7 +307,6 @@ function normalizeOptions(options: Schema): Schema {
   if (!options.directory) {
     options.directory = options.name;
   }
-
   return options;
 }
 
@@ -349,24 +368,6 @@ function setTSLintDefault(host: Tree, options: Schema) {
 
 function getWorkspacePath(host: Tree, { directory, cli }: Schema) {
   return join(directory, cli === 'angular' ? 'angular.json' : 'workspace.json');
-}
-
-function setDefaultPackageManager(host: Tree, options: Schema) {
-  if (!options.packageManager) {
-    return;
-  }
-
-  updateJson<WorkspaceJsonConfiguration>(
-    host,
-    getWorkspacePath(host, options),
-    (json) => {
-      if (!json.cli) {
-        json.cli = {};
-      }
-      json.cli.packageManager = options.packageManager;
-      return json;
-    }
-  );
 }
 
 function setDefault(

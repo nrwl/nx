@@ -1,12 +1,8 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import type { ProjectGraph } from '@nrwl/devkit';
-import {
-  isNpmProject,
-  ProjectType,
-  readCachedProjectGraph,
-} from '../core/project-graph';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
+import { ProjectType, readCachedProjectGraph } from '../core/project-graph';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   DepConstraint,
@@ -38,7 +34,8 @@ export class Rule extends Lint.Rules.AbstractRule {
     private readonly projectPath?: string,
     private readonly npmScope?: string,
     private readonly projectGraph?: MappedProjectGraph,
-    private readonly targetProjectLocator?: TargetProjectLocator
+    private readonly targetProjectLocator?: TargetProjectLocator,
+    private readonly workspaceLayout?: NxJsonConfiguration['workspaceLayout']
   ) {
     super(options);
 
@@ -47,6 +44,7 @@ export class Rule extends Lint.Rules.AbstractRule {
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
+        (global as any).workspaceLayout = nxJson.workspaceLayout;
 
         /**
          * Because there are a number of ways in which the rule can be invoked (executor vs TSLint CLI vs IDE Plugin),
@@ -54,16 +52,18 @@ export class Rule extends Lint.Rules.AbstractRule {
          */
         try {
           (global as any).projectGraph = mapProjectGraphFiles(
-            readCachedProjectGraph('4.0')
+            readCachedProjectGraph()
           );
         } catch {}
       }
       this.npmScope = (global as any).npmScope;
+      this.workspaceLayout = (global as any).workspaceLayout;
       this.projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
       if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
-          this.projectGraph.nodes
+          this.projectGraph.nodes,
+          this.projectGraph.externalNodes
         );
       }
       this.targetProjectLocator = (global as any).targetProjectLocator;
@@ -79,7 +79,8 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.projectPath,
         this.npmScope,
         this.projectGraph,
-        this.targetProjectLocator
+        this.targetProjectLocator,
+        this.workspaceLayout
       )
     );
   }
@@ -96,8 +97,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private readonly projectPath: string,
     private readonly npmScope: string,
-    private readonly projectGraph: ProjectGraph,
-    private readonly targetProjectLocator: TargetProjectLocator
+    private readonly projectGraph: MappedProjectGraph,
+    private readonly targetProjectLocator: TargetProjectLocator,
+    private readonly workspaceLayout: NxJsonConfiguration['workspaceLayout']
   ) {
     super(sourceFile, options);
 
@@ -142,7 +144,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         filePath,
         sourceProject
       ) ||
-      isAbsoluteImportIntoAnotherProject(imp)
+      isAbsoluteImportIntoAnotherProject(imp, this.workspaceLayout)
     ) {
       this.addFailureAt(
         node.getStart(),
@@ -161,7 +163,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     );
 
     // If source or target are not part of an nx workspace, return.
-    if (!sourceProject || !targetProject) {
+    if (!sourceProject || !targetProject || targetProject.type === 'npm') {
       super.visitImportDeclaration(node);
       return;
     }
@@ -174,12 +176,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       } else {
         super.visitImportDeclaration(node);
       }
-      return;
-    }
-
-    // project => npm package
-    if (isNpmProject(targetProject)) {
-      super.visitImportDeclaration(node);
       return;
     }
 

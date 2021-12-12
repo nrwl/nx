@@ -1,3 +1,8 @@
+---
+title: 'format:write - CLI command'
+description: 'Overwrite un-formatted files'
+---
+
 # format:write
 
 Overwrite un-formatted files
@@ -18,7 +23,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

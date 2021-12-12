@@ -1,3 +1,8 @@
+---
+title: 'format:check - CLI command'
+description: 'Check for un-formatted files'
+---
+
 # format:check
 
 Check for un-formatted files

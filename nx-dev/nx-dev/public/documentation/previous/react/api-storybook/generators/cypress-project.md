@@ -1,4 +1,4 @@
-# cypress-project
+# @nrwl/storybook:cypress-project
 
 Add cypress e2e app to test a ui library that is set up for storybook
 
@@ -24,6 +24,18 @@ nx g cypress-project ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Library or application name
+
+### directory
+
+Type: `string`
+
+A directory where the project is placed
+
 ### js
 
 Default: `false`
@@ -38,12 +50,14 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
 
-### name
+### standaloneConfig
 
-Type: `string`
+Default: `false`
 
-Library or application name
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json

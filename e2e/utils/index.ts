@@ -15,15 +15,21 @@ import {
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { check as portCheck } from 'tcp-port-used';
-import { parseJson } from '@nrwl/devkit';
+import {
+  parseJson,
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import { promisify } from 'util';
 import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
+import { join } from 'path';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const kill = require('kill-port');
-const isWindows = require('is-windows');
+export const isWindows = require('is-windows');
 
 export const promisifiedTreeKill: (
   pid: number,
@@ -56,11 +62,44 @@ export function workspaceConfigName() {
   return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
-export function updateWorkspaceConfig(
-  callback: (json: { [key: string]: any }) => Object
+export function updateProjectConfig(
+  projectName: string,
+  callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const file = workspaceConfigName();
-  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
+  const root = readJson(workspaceConfigName()).projects[projectName];
+  const path = join(root, 'project.json');
+  const current = readJson(path);
+  updateFile(path, JSON.stringify(callback(current), null, 2));
+}
+
+/**
+ * Use readProjectConfig or readInlineProjectConfig instead
+ * if you need a project's configuration.
+ */
+export function readWorkspaceConfig(): Omit<
+  WorkspaceJsonConfiguration,
+  'projects'
+> {
+  const w = readJson(workspaceConfigName());
+  delete w.projects;
+  return w;
+}
+
+export function readProjectConfig(projectName: string): ProjectConfiguration {
+  const root = readJson(workspaceConfigName()).projects[projectName];
+  const path = join(root, 'project.json');
+  return readJson(path);
+}
+
+export function createNonNxProjectDirectory(name = uniq('proj')) {
+  projName = name;
+  ensureDirSync(tmpProjPath());
+  createFile(
+    'package.json',
+    JSON.stringify({
+      name,
+    })
+  );
 }
 
 export function runCreateWorkspace(
@@ -127,7 +166,11 @@ export function packageInstall(
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const install = execSync(`${pm.addDev} ${pkg}@${version}`, {
+  const pkgsWithVersions = pkg
+    .split(' ')
+    .map((pgk) => `${pgk}@${version}`)
+    .join(' ');
+  const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
     cwd,
     stdio: [0, 1, 2],
     env: process.env,
@@ -156,9 +199,10 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject({ name = uniq('proj') } = {}): string {
-  const packageManager = getSelectedPackageManager();
-
+export function newProject({
+  name = uniq('proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
   try {
     const useBackupProject = packageManager !== 'pnpm';
     const projScope = useBackupProject ? 'proj' : name;
@@ -180,6 +224,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
         `@nrwl/express`,
         `@nrwl/gatsby`,
         `@nrwl/jest`,
+        `@nrwl/js`,
         `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
@@ -199,6 +244,10 @@ export function newProject({ name = uniq('proj') } = {}): string {
     projName = name;
     if (useBackupProject) {
       copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
+    }
+
+    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+      console.log(`E2E test is creating a project: ${tmpProjPath()}`);
     }
     return projScope;
   } catch (e) {
@@ -239,13 +288,14 @@ export async function killPorts(port?: number): Promise<boolean> {
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export async function removeProject({ onlyOnCI = false } = {}) {
-  if (onlyOnCI && !isCI) {
-    return;
+export async function cleanupProject() {
+  if (isCI) {
+    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
+    runCLI('reset');
+    try {
+      removeSync(tmpProjPath());
+    } catch (e) {}
   }
-  try {
-    removeSync(tmpProjPath());
-  } catch (e) {}
 }
 
 export function runCypressTests() {
@@ -404,7 +454,7 @@ export function runCLI(
         maxBuffer: 50 * 1024 * 1024,
       })
     );
-    if (process.env.VERBOSE_OUTPUT) {
+    if (process.env.NX_VERBOSE_LOGGING) {
       logInfo(`result of running: ${command}`, r);
     }
 
@@ -456,7 +506,7 @@ export function runCommand(command: string): string {
       },
       encoding: 'utf-8',
     }).toString();
-    if (process.env.VERBOSE_OUTPUT) {
+    if (process.env.NX_VERBOSE_LOGGING) {
       console.log(r);
     }
     return r;
@@ -475,21 +525,22 @@ export function runCommand(command: string): string {
  */
 function setMaxWorkers() {
   if (isCI) {
+    const ws = new Workspaces(tmpProjPath());
     const workspaceFile = workspaceConfigName();
-    const workspace = readJson(workspaceFile);
+    const workspaceFileExists = fileExists(tmpProjPath(workspaceFile));
+    const workspace = ws.readWorkspaceConfiguration();
+    const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
+    let requireWorkspaceFileUpdate = false;
 
     Object.keys(workspace.projects).forEach((appName) => {
       let project = workspace.projects[appName];
-      if (typeof project === 'string') {
-        project = readJson(path.join(project, 'project.json'));
-      }
-      const { build } = project.targets ?? project.architect;
+      const { build } = project.targets;
 
       if (!build) {
         return;
       }
 
-      const executor = build.builder ?? build.executor;
+      const executor = build.executor;
       if (
         executor.startsWith('@nrwl/node') ||
         executor.startsWith('@nrwl/web') ||
@@ -497,9 +548,22 @@ function setMaxWorkers() {
       ) {
         build.options.maxWorkers = 4;
       }
-    });
 
-    updateFile(workspaceFile, JSON.stringify(workspace));
+      if (
+        !workspaceFileExists ||
+        typeof rawWorkspace.projects[appName] === 'string'
+      ) {
+        updateFile(
+          join(project.root, 'project.json'),
+          JSON.stringify(project, null, 2)
+        );
+      } else {
+        requireWorkspaceFileUpdate = true;
+      }
+    });
+    if (workspaceFileExists && requireWorkspaceFileUpdate) {
+      updateFile(workspaceFile, JSON.stringify(workspace));
+    }
   }
 }
 

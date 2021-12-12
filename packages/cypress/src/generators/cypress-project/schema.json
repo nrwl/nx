@@ -48,8 +48,7 @@
     },
     "standaloneConfig": {
       "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     }
   },
   "required": ["name"]

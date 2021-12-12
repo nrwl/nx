@@ -15,7 +15,7 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
   "npmScope": "myorg",
   "implicitDependencies": {
     "package.json": "*",
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {
@@ -132,7 +132,7 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 
 If you try to violate the constrains, you will get an error:
 
-```
+```bash
 A project tagged with "scope:admin" can only depend on projects tagged with "scoped:shared" or "scope:admin".
 ```
 

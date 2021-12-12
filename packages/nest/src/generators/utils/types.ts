@@ -14,6 +14,7 @@ export type NestSchematic =
   | 'pipe'
   | 'provider'
   | 'resolver'
+  | 'resource'
   | 'service';
 
 export type NestGeneratorOptions = {

@@ -14,12 +14,6 @@
     "ESLint",
     "CLI"
   ],
-  "files": [
-    "src",
-    "package.json",
-    "README.md",
-    "LICENSE"
-  ],
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
   "author": "Victor Savkin",
@@ -29,13 +23,13 @@
   },
   "homepage": "https://nx.dev",
   "peerDependencies": {
-    "@typescript-eslint/parser": "~4.31.1",
+    "@typescript-eslint/parser": "~5.3.0",
     "eslint-config-prettier": "^8.1.0"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
-    "@typescript-eslint/experimental-utils": "~4.31.1",
+    "@typescript-eslint/experimental-utils": "~5.3.0",
     "confusing-browser-globals": "^1.0.9",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0"

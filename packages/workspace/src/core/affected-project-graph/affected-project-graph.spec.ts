@@ -1,10 +1,13 @@
 import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createProjectGraphAsync } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
 import { WholeFileChange } from '../file-utils';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import { buildProjectGraph } from '../project-graph/build-project-graph';
+import type {
+  NxJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -13,7 +16,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 
 describe('project graph', () => {
   let packageJson: any;
-  let workspaceJson: any;
+  let workspaceJson: WorkspaceJsonConfiguration;
   let tsConfigJson: any;
   let nxJson: NxJsonConfiguration;
   let filesJson: any;
@@ -33,31 +36,38 @@ describe('project graph', () => {
       },
     };
     workspaceJson = {
+      version: 2,
       projects: {
         demo: {
           root: 'apps/demo/',
           sourceRoot: 'apps/demo/src',
           projectType: 'application',
+          implicitDependencies: ['api'],
+          targets: {},
         },
         'demo-e2e': {
           root: 'apps/demo-e2e/',
           sourceRoot: 'apps/demo-e2e/src',
           projectType: 'application',
+          targets: {},
         },
         ui: {
           root: 'libs/ui/',
           sourceRoot: 'libs/ui/src',
           projectType: 'library',
+          targets: {},
         },
         util: {
           root: 'libs/util/',
           sourceRoot: 'libs/util/src',
           projectType: 'library',
+          targets: {},
         },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
           projectType: 'application',
+          targets: {},
         },
       },
     };
@@ -73,13 +83,6 @@ describe('project graph', () => {
           },
         },
         'something-for-api.txt': ['api'],
-      },
-      projects: {
-        api: { tags: [] },
-        demo: { tags: [], implicitDependencies: ['api'] },
-        'demo-e2e': { tags: [] },
-        ui: { tags: [] },
-        util: { tags: [] },
       },
     };
     tsConfigJson = {
@@ -118,7 +121,7 @@ describe('project graph', () => {
   afterEach(() => [delete process.env.NX_CACHE_PROJECT_GRAPH]);
 
   it('should create nodes and dependencies with workspace projects', async () => {
-    const graph = await createProjectGraphAsync();
+    const graph = await buildProjectGraph();
     const affected = filterAffected(graph, [
       {
         file: 'something-for-api.txt',
@@ -168,8 +171,8 @@ describe('project graph', () => {
     });
   });
 
-  it('should create nodes and dependencies with npm packages', async () => {
-    const graph = await createProjectGraphAsync();
+  it('should create nodes and dependencies with npm packages in externalNodes', async () => {
+    const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
       dependencies: {
@@ -187,11 +190,6 @@ describe('project graph', () => {
 
     expect(affected).toEqual({
       nodes: {
-        'npm:happy-nrwl': {
-          type: 'npm',
-          name: 'npm:happy-nrwl',
-          data: expect.anything(),
-        },
         util: {
           name: 'util',
           type: 'lib',
@@ -208,8 +206,14 @@ describe('project graph', () => {
           data: expect.anything(),
         },
       },
+      externalNodes: {
+        'npm:happy-nrwl': {
+          type: 'npm',
+          name: 'npm:happy-nrwl',
+          data: expect.anything(),
+        },
+      },
       dependencies: {
-        'npm:happy-nrwl': [],
         demo: [
           {
             type: 'static',
@@ -224,7 +228,7 @@ describe('project graph', () => {
   });
 
   it('should support implicit JSON file dependencies (some projects)', async () => {
-    const graph = await createProjectGraphAsync();
+    const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
       scripts: {
@@ -244,7 +248,7 @@ describe('project graph', () => {
   });
 
   it('should support implicit JSON file dependencies (all projects)', async () => {
-    const graph = await createProjectGraphAsync();
+    const graph = await buildProjectGraph();
     const updatedPackageJson = {
       ...packageJson,
       devDependencies: {
@@ -261,12 +265,11 @@ describe('project graph', () => {
     ]);
 
     expect(Object.keys(affected.nodes)).toEqual([
-      'npm:@nrwl/workspace',
-      'api',
       'demo',
       'demo-e2e',
       'ui',
       'util',
+      'api',
     ]);
   });
 });

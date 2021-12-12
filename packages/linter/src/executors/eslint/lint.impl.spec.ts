@@ -89,6 +89,7 @@ describe('Linter Builder', () => {
             targets: {},
           },
         },
+        npmScope: 'test',
       },
       isVerbose: false,
     };

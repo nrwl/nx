@@ -9,11 +9,7 @@ import {
   sassVersion,
 } from './versions';
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import {
-  addDependenciesToPackageJson,
-  GeneratorCallback,
-  updateJson,
-} from '@nrwl/devkit';
+import { addDependenciesToPackageJson, GeneratorCallback } from '@nrwl/devkit';
 
 export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
   'styled-components': {
@@ -68,15 +64,6 @@ export function addStyleDependencies(host: Tree, style: string) {
     extraDependencies.dependencies,
     extraDependencies.devDependencies
   );
-
-  // @zeit/next-less & @zeit/next-stylus internal configuration is working only
-  // for specific CSS loader version, causing PNPM resolution to fail.
-  if (host.exists('pnpm-lock.yaml') && (style === 'less' || style === 'styl')) {
-    updateJson(host, `package.json`, (json) => {
-      json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
-      return json;
-    });
-  }
 
   return installTask;
 }

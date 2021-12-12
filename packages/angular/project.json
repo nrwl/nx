@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/angular"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/angular",
         "tsConfig": "packages/angular/tsconfig.lib.json",
-        "packageJson": "packages/angular/package.json",
         "main": "packages/angular/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/angular",

@@ -7,27 +7,29 @@ import {
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 import { updateJsonInTree } from '../../utils/ast-utils';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
+import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
-const addE2eImplicitDependencies = updateJsonInTree<NxJsonConfiguration>(
-  'nx.json',
-  (json) => {
-    Object.keys(json.projects).forEach((proj) => {
-      const implicitE2eName = proj.replace(/-e2e$/, '');
-      if (proj.endsWith('-e2e') && json.projects[implicitE2eName]) {
-        json.projects[proj].implicitDependencies =
-          json.projects[proj].implicitDependencies || [];
-        if (
-          !json.projects[proj].implicitDependencies.includes(implicitE2eName)
-        ) {
-          json.projects[proj].implicitDependencies.push(implicitE2eName);
+const addE2eImplicitDependencies: Rule = (tree: Tree) =>
+  updateJsonInTree<WorkspaceJsonConfiguration>(
+    workspaceConfigName(tree.root.path),
+    (json) => {
+      Object.keys(json.projects).forEach((proj) => {
+        const implicitE2eName = proj.replace(/-e2e$/, '');
+        if (proj.endsWith('-e2e') && json.projects[implicitE2eName]) {
+          json.projects[proj].implicitDependencies =
+            json.projects[proj].implicitDependencies || [];
+          if (
+            !json.projects[proj].implicitDependencies.includes(implicitE2eName)
+          ) {
+            json.projects[proj].implicitDependencies.push(implicitE2eName);
+          }
         }
-      }
-    });
-    return json;
-  }
-);
+      });
+      return json;
+    }
+  );
 
 function showInfo(host: Tree, context: SchematicContext) {
   context.logger.info(stripIndents`

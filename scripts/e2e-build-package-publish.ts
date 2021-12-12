@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, remove } from 'fs-extra';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import {
   prettierVersion,
   typescriptVersion,
@@ -11,19 +11,30 @@ process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 async function buildPackagePublishAndCleanPorts() {
-  await Promise.all([
-    remove('./build'),
-    remove('./tmp/nx/proj-backup'),
-    remove('./tmp/angular/proj-backup'),
-    remove('./tmp/local-registry'),
-  ]);
-
-  build(process.env.PUBLISHED_VERSION);
-  try {
-    await updateVersionsAndPublishPackages();
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP) {
+    if (!process.env.CI) {
+      console.log(`
+  Did you know that you can run the command with:
+    > NX_E2E_SKIP_BUILD_CLEANUP - saves time by reusing the previously built local packages
+    > CI - simulate the CI environment settings\n`);
+    }
+    await Promise.all([
+      remove('./build'),
+      remove('./tmp/nx/proj-backup'),
+      remove('./tmp/angular/proj-backup'),
+      remove('./tmp/local-registry'),
+    ]);
+  }
+  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP || !existsSync('./build')) {
+    build(process.env.PUBLISHED_VERSION);
+    try {
+      await updateVersionsAndPublishPackages();
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
+  } else {
+    console.log(`\n⏩ Project building skipped. Reusing the existing packages`);
   }
 }
 
@@ -67,7 +78,7 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
 
     // NPM@7 requires a token to publish, thus, is just a matter of fake a token to bypass npm.
     // See: https://twitter.com/verdaccio_npm/status/1357798427283910660
-    if (npmMajorVersion === 7) {
+    if (npmMajorVersion >= 7) {
       writeFileSync(
         `${packagePath}/.npmrc`,
         `registry=${
@@ -86,18 +97,19 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
     });
   } catch (e) {
     console.log(e);
+    process.exit(1);
   }
 }
 
 function build(nxVersion: string) {
   try {
-    execSync(
-      'npx nx run-many --target=build --all --parallel --max-parallel=8',
-      {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }
-    );
-    console.log('Packages built successfully');
+    const b = new Date();
+    execSync('npx nx run-many --target=build --all --parallel=8', {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, NX_INVOKED_BY_RUNNER: 'false' },
+    });
+    const a = new Date();
+    console.log(`Packages built successfully in ${a.getTime() - b.getTime()}`);
   } catch (e) {
     console.log(e.output.toString());
     console.log('Build failed. See error above.');
@@ -122,6 +134,7 @@ function build(nxVersion: string) {
       'workspace',
       'react-native',
       'detox',
+      'js',
     ].map((f) => `${f}/src/utils/versions.js`),
     ...[
       'react',
@@ -146,6 +159,7 @@ function build(nxVersion: string) {
       'nx-plugin',
       'react-native',
       'detox',
+      'js',
     ].map((f) => `${f}/package.json`),
     'create-nx-workspace/bin/create-nx-workspace.js',
     'create-nx-plugin/bin/create-nx-plugin.js',

@@ -29,7 +29,7 @@ export function normalizeOptions(
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
   const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(`${libsDir}/${projectDirectory}`);
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

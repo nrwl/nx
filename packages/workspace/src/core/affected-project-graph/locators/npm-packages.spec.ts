@@ -24,10 +24,6 @@ describe('getTouchedNpmPackages', () => {
         },
       },
       npmScope: 'scope',
-      projects: {
-        proj1: {},
-        proj2: {},
-      },
     };
     projectGraph = {
       nodes: {
@@ -45,12 +41,14 @@ describe('getTouchedNpmPackages', () => {
             files: [],
           },
         },
+      },
+      externalNodes: {
         'npm:happy-nrwl': {
           name: 'npm:happy-nrwl',
           type: 'npm',
           data: {
             packageName: 'happy-nrwl',
-            files: [],
+            version: '1',
           },
         },
       },
@@ -122,12 +120,12 @@ describe('getTouchedNpmPackages', () => {
   });
 
   it('should handle package addition', () => {
-    projectGraph.nodes['npm:awesome-nrwl'] = {
+    projectGraph.externalNodes['npm:awesome-nrwl'] = {
       name: 'npm:awesome-nrwl',
       type: 'npm',
       data: {
         packageName: 'awesome-nrwl',
-        files: [],
+        version: '1',
       },
     };
     const result = getTouchedNpmPackages(
@@ -161,12 +159,12 @@ describe('getTouchedNpmPackages', () => {
   });
 
   it('should handle whole file changes', () => {
-    projectGraph.nodes['npm:awesome-nrwl'] = {
+    projectGraph.externalNodes['npm:awesome-nrwl'] = {
       name: 'npm:awesome-nrwl',
       type: 'npm',
       data: {
         packageName: 'awesome-nrwl',
-        files: [],
+        version: '1',
       },
     };
     const result = getTouchedNpmPackages(

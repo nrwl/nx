@@ -30,7 +30,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 ```bash
 ? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
-? Use Nx Cloud? (It's free and doesn't require registration.) Yes [Faster builds, run details, Github integration. Learn more at https://nx.app]
+? Use Nx Cloud? (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
 ```
 
 ## Creating your app
@@ -139,7 +139,7 @@ Your `package.json` should now look like this:
     "browserify": "^13.0.0",
     "browserify-ngannotate": "^2.0.0",
     "dotenv": "6.2.0",
-    "eslint": "7.10.0",
+    "eslint": "7.32.0",
     "eslint-config-prettier": "8.1.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",
@@ -411,7 +411,7 @@ To use webpack instead of gulp, go back to your `angular.json` file and modify t
 ```json
 ...
 "build": {
-  "executor": "@nrwl/web:build",
+  "executor": "@nrwl/web:webpack",
   "options": {
     "outputPath": "dist/apps/realworld",
     "index": "apps/realworld/src/index.html",

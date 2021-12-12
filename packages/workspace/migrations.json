@@ -181,6 +181,24 @@
       "description": "Add default base to nx.json if its not currently set",
       "factory": "./src/migrations/update-13-0-0/set-default-base-if-not-set",
       "cli": "nx"
+    },
+    "13-0-0-config-locations": {
+      "version": "13.0.0-beta.4",
+      "description": "Move global settings into nx.json, and project specific settings into workspace.json",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-0-0/config-locations/config-locations"
+    },
+    "set-parallel-default": {
+      "version": "13.2.0",
+      "description": "Set --parallel=1 for existing repos to preserve the existing behavior",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-2-0/set-parallel-default"
+    },
+    "13-3-0-tsc-location": {
+      "version": "13.3.0-beta.0",
+      "description": "@nrwl/workspace:tsc is now @nrwl/js:tsc",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-3-0/update-tsc-executor-location"
     }
   },
   "packageJsonUpdates": {

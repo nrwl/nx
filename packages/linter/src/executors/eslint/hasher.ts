@@ -1,8 +1,7 @@
 import { Task, TaskGraph } from '@nrwl/devkit';
 import { Hash, Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
-import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { join } from 'path';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 export default async function run(
   task: Task,
@@ -15,9 +14,9 @@ export default async function run(
   const command = hasher.hashCommand(task);
   const sources = await hasher.hashSource(task);
   const deps = allDeps(task.id, taskGraph);
-  const nxJson = readJsonFile(join(appRootPath, 'nx.json'));
+  const workspace = new Workspaces(appRootPath).readWorkspaceConfiguration();
   const tags = hasher.hashArray(
-    deps.map((d) => (nxJson.projects[d].tags || []).join('|'))
+    deps.map((d) => (workspace.projects[d].tags || []).join('|'))
   );
   const context = await hasher.hashContext();
   return {

@@ -1,6 +1,6 @@
-# karma
+# @nrwl/angular:karma
 
-Add karma configuration to a workspace
+Adds Karma configuration to a workspace.
 
 ## Usage
 

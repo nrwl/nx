@@ -4,14 +4,7 @@ import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
-import {
-  generateFiles,
-  names,
-  offsetFromRoot,
-  toJS,
-  Tree,
-  updateTsConfigsToJs,
-} from '@nrwl/devkit';
+import { generateFiles, names, offsetFromRoot, toJS, Tree } from '@nrwl/devkit';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
@@ -37,6 +30,12 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
   if (options.unitTestRunner === 'none') {
     host.delete(`${options.appProjectRoot}/specs/${options.fileName}.spec.tsx`);
+  }
+
+  // SWC will be disabled if custom babelrc is provided.
+  // Check for `!== false` because `create-nx-workspace` is not passing default values.
+  if (options.swc !== false) {
+    host.delete(`${options.appProjectRoot}/.babelrc`);
   }
 
   if (options.styledModule) {

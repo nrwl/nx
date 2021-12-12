@@ -16,7 +16,7 @@ import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 /**
  * This configures the files and directories which we always want to ignore as part of file watching
  * and which we know the location of statically (meaning irrespective of user configuration files).
- * This has the advantage of being ignored directly within the C++ layer of `@parcel/bunder` so there
+ * This has the advantage of being ignored directly within the C++ layer of `@parcel/watcher` so there
  * is less pressure on the main JavaScript thread.
  *
  * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
@@ -96,9 +96,10 @@ export async function subscribeToWorkspaceChanges(
         cachedIgnoreGlobs = getIgnoredGlobs(appRootPath);
       }
 
-      const nonIgnoredEvents = workspaceRelativeEvents.filter(
-        ({ path }) => !cachedIgnoreGlobs.ignores(path)
-      );
+      const nonIgnoredEvents = workspaceRelativeEvents
+        .filter(({ path }) => !!path)
+        .filter(({ path }) => !cachedIgnoreGlobs.ignores(path));
+
       if (!nonIgnoredEvents || !nonIgnoredEvents.length) {
         return;
       }

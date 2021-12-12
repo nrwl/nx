@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:run-ios executor'
+description: 'Runs iOS application.'
+---
+
 # @nrwl/react-native:run-ios
 
 Runs iOS application.
@@ -35,6 +40,14 @@ Default: `8081`
 Type: `number`
 
 The port where the packager server is listening on.
+
+### resetCache
+
+Default: `false`
+
+Type: `boolean`
+
+Resets metro cache
 
 ### scheme
 

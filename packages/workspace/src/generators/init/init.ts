@@ -4,11 +4,13 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  getProjects,
   getWorkspacePath,
   installPackagesTask,
   joinPathFragments,
   names,
   normalizePath,
+  NxJsonConfiguration,
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
@@ -208,6 +210,7 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
       implicitDependencies: [appName],
       tags: [],
     });
+    delete defaultProject.targets.e2e;
   }
 
   updateProjectConfiguration(host, appName, defaultProject);
@@ -251,9 +254,8 @@ function updateTsConfig(host: Tree) {
 }
 
 function updateTsConfigsJson(host: Tree, options: Schema) {
-  const workspaceJson = readJson(host, 'angular.json');
-  const app = workspaceJson.projects[options.name];
-  const e2eProject = getE2eProject(workspaceJson);
+  const app = readProjectConfiguration(host, options.name);
+  const e2eProject = getE2eProject(host);
   const tsConfigPath = getRootTsConfigPath(host);
   const appOffset = offsetFromRoot(app.root);
 
@@ -360,34 +362,36 @@ function moveOutOfSrc(
   renameSyncInTree(tree, from, to, required);
 }
 
-function getE2eKey(workspaceJson: any) {
-  return Object.keys(workspaceJson.projects).find((key) => {
-    return !!workspaceJson.projects[key]?.architect?.e2e;
-  });
+function getE2eKey(host: Tree) {
+  const projects = getProjects(host);
+  for (const [projectName, project] of projects) {
+    if (project.targets.e2e) {
+      return projectName;
+    }
+  }
 }
 
-function getE2eProject(workspaceJson: any) {
-  const key = getE2eKey(workspaceJson);
+function getE2eProject(host: Tree) {
+  const key = getE2eKey(host);
   if (key) {
-    return workspaceJson.projects[key];
+    return readProjectConfiguration(host, key);
   } else {
     return null;
   }
 }
 
 function moveExistingFiles(host: Tree, options: Schema) {
-  const workspaceJson = readJson(host, getWorkspacePath(host));
-  const app = workspaceJson.projects[options.name];
-  const e2eApp = getE2eProject(workspaceJson);
+  const app = readProjectConfiguration(host, options.name);
+  const e2eApp = getE2eProject(host);
 
   // it is not required to have a browserslist
   moveOutOfSrc(host, options.name, 'browserslist', false);
   moveOutOfSrc(host, options.name, '.browserslistrc', false);
-  moveOutOfSrc(host, options.name, app.architect.build.options.tsConfig);
+  moveOutOfSrc(host, options.name, app.targets.build.options.tsConfig);
 
-  if (app.architect.test) {
-    moveOutOfSrc(host, options.name, app.architect.test.options.karmaConfig);
-    moveOutOfSrc(host, options.name, app.architect.test.options.tsConfig);
+  if (app.targets.test) {
+    moveOutOfSrc(host, options.name, app.targets.test.options.karmaConfig);
+    moveOutOfSrc(host, options.name, app.targets.test.options.tsConfig);
   } else {
     // there could still be a karma.conf.js file in the root
     // so move to new location
@@ -398,18 +402,15 @@ function moveExistingFiles(host: Tree, options: Schema) {
     }
   }
 
-  if (app.architect.server) {
-    moveOutOfSrc(host, options.name, app.architect.server.options.tsConfig);
+  if (app.targets.server) {
+    moveOutOfSrc(host, options.name, app.targets.server.options.tsConfig);
   }
   const oldAppSourceRoot = app.sourceRoot;
   const newAppSourceRoot = joinPathFragments('apps', options.name, 'src');
   renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot);
   if (e2eApp) {
     const oldE2eRoot = joinPathFragments(app.root || '', 'e2e');
-    const newE2eRoot = joinPathFragments(
-      'apps',
-      `${getE2eKey(workspaceJson)}-e2e`
-    );
+    const newE2eRoot = joinPathFragments('apps', `${getE2eKey(host)}-e2e`);
     renameDirSyncInTree(host, oldE2eRoot, newE2eRoot);
   } else {
     console.warn(
@@ -421,31 +422,20 @@ function moveExistingFiles(host: Tree, options: Schema) {
 }
 
 async function createAdditionalFiles(host: Tree, options: Schema) {
-  const workspaceJson = readJson(host, 'angular.json');
-  host.write(
-    'nx.json',
-    serializeJson({
-      npmScope: options.npmScope,
-      affected: {
-        defaultBase: `${options.defaultBase}` || deduceDefaultBase(),
-      },
-      implicitDependencies: {
-        'angular.json': '*',
-        'package.json': '*',
-        'tslint.json': '*',
-        '.eslintrc.json': '*',
-        'nx.json': '*',
-      },
-      projects: {
-        [options.name]: {
-          tags: [],
-        },
-        [`${getE2eKey(workspaceJson)}-e2e`]: {
-          tags: [],
-        },
-      },
-    })
-  );
+  const nxJson: NxJsonConfiguration = {
+    npmScope: options.npmScope,
+    affected: {
+      defaultBase: `${options.defaultBase}` || deduceDefaultBase(),
+    },
+    implicitDependencies: {
+      'angular.json': '*',
+      'package.json': '*',
+      'tslint.json': '*',
+      '.eslintrc.json': '*',
+      'nx.json': '*',
+    },
+  };
+  host.write('nx.json', serializeJson(nxJson));
   host.write('libs/.gitkeep', '');
 
   const recommendations = [
@@ -504,14 +494,14 @@ function checkCanConvertToWorkspace(host: Tree) {
     if (Object.keys(workspaceJson.projects).length > 2 || hasLibraries) {
       throw new Error('Can only convert projects with one app');
     }
-    const e2eKey = getE2eKey(workspaceJson);
-    const e2eApp = getE2eProject(workspaceJson);
-    if (e2eApp && !host.exists(e2eApp.architect.e2e.options.protractorConfig)) {
+    const e2eKey = getE2eKey(host);
+    const e2eApp = getE2eProject(host);
+    if (e2eApp && !host.exists(e2eApp.targets.e2e.options.protractorConfig)) {
       console.info(
         `Make sure the ${e2eKey}.architect.e2e.options.protractorConfig is valid or the ${e2eKey} project is removed from angular.json.`
       );
       throw new Error(
-        `An e2e project was specified but ${e2eApp.architect.e2e.options.protractorConfig} could not be found.`
+        `An e2e project was specified but ${e2eApp.targets.e2e.options.protractorConfig} could not be found.`
       );
     }
 
@@ -543,7 +533,7 @@ function createNxJson(host: Tree) {
   const tsConfigPath = getRootTsConfigPath(host);
   host.write(
     'nx.json',
-    serializeJson({
+    serializeJson<NxJsonConfiguration>({
       npmScope: name,
       implicitDependencies: {
         'angular.json': '*',
@@ -552,11 +542,6 @@ function createNxJson(host: Tree) {
         'tslint.json': '*',
         '.eslintrc.json': '*',
         'nx.json': '*',
-      },
-      projects: {
-        [name]: {
-          tags: [],
-        },
       },
       tasksRunnerOptions: {
         default: {

@@ -1,3 +1,8 @@
+---
+title: 'affected:apps - CLI command'
+description: 'Print applications affected by changes'
+---
+
 # affected:apps
 
 Print applications affected by changes
@@ -18,16 +23,16 @@ Print the names of all the apps affected by changing the index.ts file:
 nx affected:apps --files=libs/mylib/src/index.ts
 ```
 
-Print the names of all the apps affected by the changes between master and HEAD (e.g., PR):
+Print the names of all the apps affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:apps --base=master --head=HEAD
+nx affected:apps --base=main --head=HEAD
 ```
 
-Print the names of all the apps affected by the last commit on master:
+Print the names of all the apps affected by the last commit on main:
 
 ```bash
-nx affected:apps --base=master~1 --head=master
+nx affected:apps --base=main~1 --head=main
 ```
 
 ## Options
@@ -38,7 +43,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

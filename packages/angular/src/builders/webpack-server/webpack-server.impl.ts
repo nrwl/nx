@@ -1,16 +1,16 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
-import type { Schema } from './schema';
-
-import { parseTargetString, joinPathFragments } from '@nrwl/devkit';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import {
   DevServerBuilderOptions,
   serveWebpackBrowser,
-} from '@angular-devkit/build-angular/src/dev-server';
+} from '@angular-devkit/build-angular/src/builders/dev-server';
+import { JsonObject } from '@angular-devkit/core';
+import { joinPathFragments, parseTargetString } from '@nrwl/devkit';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
+import { resolveCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
+import type { Schema } from './schema';
 
 export function webpackServer(schema: Schema, context: BuilderContext) {
   const options = normalizeOptions(schema);
@@ -41,24 +41,31 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
     );
 
     if (existsSync(pathToWebpackConfig)) {
-      return serveWebpackBrowser(options as DevServerBuilderOptions, context, {
-        webpackConfiguration: async (baseWebpackConfig) => {
-          const customWebpackConfiguration = require(pathToWebpackConfig);
-          // The extra Webpack configuration file can export a synchronous or asynchronous function,
-          // for instance: `module.exports = async config => { ... }`.
-          if (typeof customWebpackConfiguration === 'function') {
-            return customWebpackConfiguration(baseWebpackConfig);
-          } else {
-            return merge(
-              baseWebpackConfig,
-              // The extra Webpack configuration file can also export a Promise, for instance:
-              // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
-              // then await will just resolve that object.
-              await customWebpackConfiguration
+      return serveWebpackBrowser(
+        options as DevServerBuilderOptions,
+        context as any,
+        {
+          webpackConfiguration: async (baseWebpackConfig) => {
+            const customWebpackConfiguration = resolveCustomWebpackConfig(
+              pathToWebpackConfig,
+              buildTarget.options.tsConfig
             );
-          }
-        },
-      });
+            // The extra Webpack configuration file can export a synchronous or asynchronous function,
+            // for instance: `module.exports = async config => { ... }`.
+            if (typeof customWebpackConfiguration === 'function') {
+              return customWebpackConfiguration(baseWebpackConfig);
+            } else {
+              return merge(
+                baseWebpackConfig,
+                // The extra Webpack configuration file can also export a Promise, for instance:
+                // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
+                // then await will just resolve that object.
+                await customWebpackConfiguration
+              );
+            }
+          },
+        }
+      );
     } else {
       throw new Error(
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
@@ -66,7 +73,10 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
     }
   }
 
-  return serveWebpackBrowser(options as DevServerBuilderOptions, context);
+  return serveWebpackBrowser(
+    options as DevServerBuilderOptions,
+    context as any
+  );
 }
 
-export default createBuilder<JsonObject & Schema>(webpackServer);
+export default createBuilder<JsonObject & Schema>(webpackServer) as any;

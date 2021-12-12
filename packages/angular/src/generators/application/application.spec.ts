@@ -7,12 +7,11 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from './application';
+import type { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
@@ -42,21 +41,25 @@ describe('app', () => {
       expect(workspaceJson.projects['my-app'].architect.e2e).not.toBeDefined();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags + implicit dependencies', async () => {
       // ACT
       await generateApp(appTree, 'myApp', { tags: 'one,two,my-app' });
 
       // ASSERT
-      const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-app': {
-          tags: ['one', 'two', 'my-app'],
-        },
-        'my-app-e2e': {
-          implicitDependencies: ['my-app'],
-          tags: [],
-        },
-      });
+      const projects = devkit.getProjects(appTree);
+      expect(projects).toEqual(
+        new Map(
+          Object.entries({
+            'my-app': expect.objectContaining({
+              tags: ['one', 'two', 'my-app'],
+            }),
+            'my-app-e2e': expect.objectContaining({
+              implicitDependencies: ['my-app'],
+              tags: [],
+            }),
+          })
+        )
+      );
     });
 
     it('should generate files', async () => {
@@ -88,6 +91,7 @@ describe('app', () => {
       );
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
+      expect(tsconfigApp.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
 
       const eslintrcJson = parseJson(
         appTree.read('apps/my-app/.eslintrc.json', 'utf-8')
@@ -129,7 +133,7 @@ describe('app', () => {
       const myAppPrefix = workspaceJson.projects['my-app'].prefix;
 
       expect(myAppPrefix).toEqual('proj');
-      expect(appE2eSpec).toContain('Welcome to my-app!');
+      expect(appE2eSpec).toContain('Welcome my-app');
     });
 
     it('should set a new prefix and use it', async () => {
@@ -147,7 +151,7 @@ describe('app', () => {
       const myAppPrefix = workspaceJson.projects['my-app-with-prefix'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
-      expect(appE2eSpec).toContain('Welcome to my-app-with-prefix!');
+      expect(appE2eSpec).toContain('Welcome my-app-with-prefix');
     });
 
     // TODO: this should work
@@ -187,21 +191,25 @@ describe('app', () => {
       expect(workspaceJson.projects['my-dir-my-app-e2e']).toMatchSnapshot();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags + implicit dependencies', async () => {
       await generateApp(appTree, 'myApp', {
         directory: 'myDir',
         tags: 'one,two,my-dir-my-app',
       });
-      const nxJson = readJson<NxJsonConfiguration>(appTree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-dir-my-app': {
-          tags: ['one', 'two', 'my-dir-my-app'],
-        },
-        'my-dir-my-app-e2e': {
-          implicitDependencies: ['my-dir-my-app'],
-          tags: [],
-        },
-      });
+      const projects = devkit.getProjects(appTree);
+      expect(projects).toEqual(
+        new Map(
+          Object.entries({
+            'my-dir-my-app': expect.objectContaining({
+              tags: ['one', 'two', 'my-dir-my-app'],
+            }),
+            'my-dir-my-app-e2e': expect.objectContaining({
+              implicitDependencies: ['my-dir-my-app'],
+              tags: [],
+            }),
+          })
+        )
+      );
     });
 
     it('should generate files', async () => {
@@ -234,9 +242,76 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
+          path: 'apps/my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['**/*.test.ts', '**/*.spec.ts'],
+        },
+        {
           path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
           expectedValue: ['../../../.eslintrc.json'],
+        },
+      ].forEach(hasJsonValue);
+    });
+  });
+
+  describe('at the root', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace(2);
+      updateJson(appTree, 'nx.json', (json) => ({
+        ...json,
+        workspaceLayout: { appsDir: '' },
+      }));
+    });
+
+    it('should accept numbers in the path', async () => {
+      // ACT
+      await generateApp(appTree, 'myApp', { directory: 'src/9-websites' });
+
+      // ASSERT
+      const workspaceJson = readJson(appTree, '/workspace.json');
+
+      expect(workspaceJson.projects['src-websites-my-app']).toMatchSnapshot();
+    });
+
+    it('should generate files', async () => {
+      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
+        const content = readJson(appTree, path);
+
+        expect(lookupFn(content)).toEqual(expectedValue);
+      };
+      await generateApp(appTree, 'myApp', { directory: 'myDir' });
+
+      const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
+      expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
+
+      // Make sure these exist
+      [
+        'my-dir/my-app/jest.config.js',
+        'my-dir/my-app/src/main.ts',
+        'my-dir/my-app/src/app/app.module.ts',
+        'my-dir/my-app/src/app/app.component.ts',
+        'my-dir/my-app-e2e/cypress.json',
+      ].forEach((path) => {
+        expect(appTree.exists(path)).toBeTruthy();
+      });
+
+      // Make sure these have properties
+      [
+        {
+          path: 'my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../dist/out-tsc',
+        },
+        {
+          path: 'my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.exclude,
+          expectedValue: ['**/*.test.ts', '**/*.spec.ts'],
+        },
+        {
+          path: 'my-dir/my-app/.eslintrc.json',
+          lookupFn: (json) => json.extends,
+          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -276,7 +351,7 @@ describe('app', () => {
       await generateApp(appTree, 'myApp', { directory: 'myDir' });
       expect(
         appTree.read('apps/my-dir/my-app/src/app/app.component.html', 'utf-8')
-      ).toContain('Thank you for using and showing some ♥ for Nx.');
+      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
@@ -286,7 +361,17 @@ describe('app', () => {
       });
       expect(
         appTree.read('apps/my-dir/my-app/src/app/app.component.ts', 'utf-8')
-      ).toContain('Thank you for using and showing some ♥ for Nx.');
+      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
+    });
+
+    it('should create Nx specific `nx-welcome.component.ts` file', async () => {
+      await generateApp(appTree, 'myApp', { directory: 'myDir' });
+      expect(
+        appTree.read(
+          'apps/my-dir/my-app/src/app/nx-welcome.component.ts',
+          'utf-8'
+        )
+      ).toContain('Hello there');
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {
@@ -300,7 +385,7 @@ describe('app', () => {
       );
 
       expect(testFileContent).toContain(`querySelector('h1')`);
-      expect(testFileContent).toContain('Welcome to my-dir-my-app!');
+      expect(testFileContent).toContain('Welcome my-dir-my-app');
     });
   });
 
@@ -561,6 +646,18 @@ describe('app', () => {
 
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
+      it('should create the e2e project in v2 workspace', async () => {
+        appTree = createTreeWithEmptyWorkspace(2);
+
+        expect(
+          async () =>
+            await generateApp(appTree, 'myApp', {
+              e2eTestRunner: E2eTestRunner.Protractor,
+              standaloneConfig: true,
+            })
+        ).not.toThrow();
+      });
+
       it('should update workspace.json', async () => {
         await generateApp(appTree, 'myApp', {
           e2eTestRunner: E2eTestRunner.Protractor,
@@ -596,6 +693,8 @@ describe('app', () => {
               },
             },
           },
+          implicitDependencies: ['my-app'],
+          tags: [],
         });
       });
 
@@ -606,7 +705,7 @@ describe('app', () => {
 
         expect(
           appTree.read('apps/my-app-e2e/src/app.e2e-spec.ts', 'utf-8')
-        ).toContain(`'Welcome to my-app!'`);
+        ).toContain(`'Welcome my-app'`);
         expect(
           appTree.read('apps/my-app-e2e/src/app.po.ts', 'utf-8')
         ).toContain(`'proj-root header h1'`);
@@ -623,7 +722,7 @@ describe('app', () => {
             'apps/my-directory/my-app-e2e/src/app.e2e-spec.ts',
             'utf-8'
           )
-        ).toContain(`'Welcome to my-directory-my-app!'`);
+        ).toContain(`'Welcome my-directory-my-app'`);
         expect(
           appTree.read('apps/my-directory/my-app-e2e/src/app.po.ts', 'utf-8')
         ).toContain(`'proj-root header h1'`);
@@ -720,9 +819,9 @@ describe('app', () => {
       }
 
       // should not update workspace configuration since --strict=true is the default
-      const workspaceJson = readJson(appTree, 'workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(
-        workspaceJson.schematics['@nrwl/angular:application'].strict
+        nxJson.generators['@nrwl/angular:application'].strict
       ).not.toBeDefined();
     });
 
@@ -731,10 +830,8 @@ describe('app', () => {
 
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
-      const workspaceJson = readJson(appTree, 'workspace.json');
-      expect(workspaceJson.schematics['@nrwl/angular:application'].strict).toBe(
-        false
-      );
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
+      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(false);
     });
   });
 
@@ -817,6 +914,17 @@ describe('app', () => {
         'utf-8'
       );
       expect(hostWebpackConfig).toMatchSnapshot();
+    });
+
+    it('should add a port to a non-mfe app', async () => {
+      // ACT
+      await generateApp(appTree, 'app1', {
+        port: 4205,
+      });
+
+      // ASSERT
+      const projectConfig = readProjectConfiguration(appTree, 'app1');
+      expect(projectConfig.targets.serve.options.port).toBe(4205);
     });
   });
 });

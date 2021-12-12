@@ -6,7 +6,8 @@ import {
   runExecutor,
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
+
 import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
@@ -19,6 +20,8 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { importConstants } from '../../utils/require-shim';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import nextTrace = require('next/dist/trace');
 
 const { PHASE_EXPORT } = importConstants();
 
@@ -29,7 +32,7 @@ export default async function exportExecutor(
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph('4.0'),
+      readCachedProjectGraph(),
       context.root,
       context.projectName,
       'build', // this should be generalized
@@ -40,6 +43,7 @@ export default async function exportExecutor(
     assertDependentProjectsHaveBeenBuilt(dependencies, context);
   }
 
+  const libsDir = join(context.root, workspaceLayout().libsDir);
   const buildTarget = parseTargetString(options.buildTarget);
   const build = await runExecutor(buildTarget, {}, context);
 
@@ -58,8 +62,13 @@ export default async function exportExecutor(
     PHASE_EXPORT,
     buildOptions,
     context,
-    dependencies
+    dependencies,
+    libsDir
   );
+
+  // Taken from:
+  // https://github.com/vercel/next.js/blob/ead56eaab68409e96c19f7d9139747bac1197aa9/packages/next/cli/next-export.ts#L13
+  const nextExportCliSpan = nextTrace.trace('next-export-cli');
 
   await exportApp(
     root,
@@ -69,6 +78,7 @@ export default async function exportExecutor(
       threads: options.threads,
       outdir: `${buildOptions.outputPath}/exported`,
     } as any,
+    nextExportCliSpan,
     config
   );
 

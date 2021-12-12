@@ -50,11 +50,12 @@ describe('calculateProjectDependencies', () => {
             root: '/root/example',
           },
         },
+      },
+      externalNodes: {
         'npm:formik': {
           type: 'npm',
           name: 'npm:formik',
           data: {
-            files: [],
             packageName: 'formik',
             version: '0.0.0',
           },

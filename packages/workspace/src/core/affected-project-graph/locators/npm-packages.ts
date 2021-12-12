@@ -5,7 +5,6 @@ import {
   JsonChange,
 } from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { isNpmProject } from '../../project-graph/operators';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
@@ -22,7 +21,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   let touched = [];
   const changes = packageJsonChange.getChanges();
 
-  const npmPackages = Object.values(projectGraph.nodes).filter(isNpmProject);
+  const npmPackages = Object.values(projectGraph.externalNodes);
 
   for (const c of changes) {
     if (

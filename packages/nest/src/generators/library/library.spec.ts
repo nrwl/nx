@@ -111,14 +111,14 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, { name: libName, tags: 'one,two' });
 
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        [libFileName]: {
+      const projects = Object.fromEntries(devkit.getProjects(tree));
+      expect(projects).toEqual({
+        [libFileName]: expect.objectContaining({
           tags: ['one', 'two'],
-        },
+        }),
       });
     });
 
@@ -156,6 +156,7 @@ describe('lib', () => {
         `libs/${libFileName}/tsconfig.lib.json`
       );
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+      expect(tsconfigJson.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
     });
 
     it('should generate files', async () => {
@@ -177,16 +178,16 @@ describe('lib', () => {
     const dirFileName = 'my-dir';
     const nestedLibFileName = `${dirFileName}-${libFileName}`;
 
-    it('should update nx.json', async () => {
+    it('should update tags', async () => {
       await libraryGenerator(tree, {
         name: libName,
         directory: dirName,
         tags: 'one,two',
       });
 
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        [nestedLibFileName]: { tags: ['one', 'two'] },
+      const projects = Object.fromEntries(devkit.getProjects(tree));
+      expect(projects).toEqual({
+        [nestedLibFileName]: expect.objectContaining({ tags: ['one', 'two'] }),
       });
     });
 

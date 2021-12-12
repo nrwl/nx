@@ -32,21 +32,28 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "cypress": ">= 3 < 9"
-  },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
     "@nrwl/workspace": "*",
-    "@cypress/webpack-preprocessor": "4.1.5",
+    "@cypress/webpack-preprocessor": "^5.9.1",
     "chalk": "4.1.0",
-    "ts-loader": "5.4.5",
+    "enhanced-resolve": "^5.8.3",
+    "ts-loader": "^9.2.6",
+    "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-webpack-plugin": "3.4.1",
-    "webpack-node-externals": "1.7.2",
+    "webpack-node-externals": "^3.0.0",
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "rxjs": "^6.5.4",
-    "tslib": "^2.0.0",
+    "tslib": "^2.3.0",
     "yargs-parser": "20.0.0"
+  },
+  "peerDependencies": {
+    "cypress": ">= 3 < 9"
+  },
+  "peerDependenciesMeta": {
+    "cypress": {
+      "optional": true
+    }
   }
 }

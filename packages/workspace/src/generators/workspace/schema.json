@@ -90,6 +90,11 @@
       ],
       "default": true
     },
+    "packageManager": {
+      "description": "The package manager used to install dependencies.",
+      "type": "string",
+      "enum": ["npm", "yarn", "pnpm"]
+    },
     "cli": {
       "description": "CLI used for generating code and running tasks",
       "type": "string",

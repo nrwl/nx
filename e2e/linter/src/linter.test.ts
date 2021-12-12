@@ -8,6 +8,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import * as ts from 'typescript';
 
@@ -61,32 +62,30 @@ describe('Linter', () => {
       it('linting should error when an invalid linter is specified', () => {
         // This test is only relevant for the deprecated lint builder,
         // so we need to patch the workspace.json to use it
-        const workspaceJson = readJson(`workspace.json`);
-        const workspaceJsonCopy = JSON.stringify(workspaceJson, null, 2);
-        workspaceJson.projects[myapp].targets.lint = {
-          executor: '@nrwl/linter:lint',
-          options: {
-            linter: 'eslint',
-            tsConfig: [
-              `apps/${myapp}/tsconfig.app.json`,
-              `apps/${myapp}/tsconfig.spec.json`,
-            ],
-            exclude: ['**/node_modules/**', `!apps/${myapp}/**/*`],
-          },
-        };
-        updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
-
+        let configCopy;
+        updateProjectConfig(myapp, (config) => {
+          configCopy = JSON.parse(JSON.stringify(config, null, 2));
+          config.targets.lint = {
+            executor: '@nrwl/linter:lint',
+            options: {
+              linter: 'eslint',
+              tsConfig: [
+                `apps/${myapp}/tsconfig.app.json`,
+                `apps/${myapp}/tsconfig.spec.json`,
+              ],
+              exclude: ['**/node_modules/**', `!apps/${myapp}/**/*`],
+            },
+          };
+          return config;
+        });
         expect(() => runCLI(`lint ${myapp} --linter=tslint`)).toThrow(
-          /'tslint' option is no longer supported/
+          /"@nrwl\/linter:lint" was deprecated in v10 and is no longer supported\. Update your project configuration to use "@nrwl\/linter:eslint" builder instead\./
         );
         expect(() => runCLI(`lint ${myapp} --linter=random`)).toThrow(
           /'random' should be one of eslint,tslint/
         );
         // revert change
-        updateFile(
-          'workspace.json',
-          JSON.stringify(workspaceJsonCopy, null, 2)
-        );
+        updateProjectConfig(myapp, () => configCopy);
       }, 1000000);
     });
   });
@@ -171,11 +170,11 @@ describe('Linter', () => {
     const outputFile = 'a/b/c/lint-output.json';
     newProject();
     runCLI(`generate @nrwl/react:app ${myapp}`);
-    const workspaceJson = readJson(`workspace.json`);
-    workspaceJson.projects[myapp].targets.lint.outputs = [
-      '{options.outputFile}',
-    ];
-    updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
+
+    updateProjectConfig(myapp, (config) => {
+      config.targets.lint.outputs = ['{options.outputFile}'];
+      return config;
+    });
 
     expect(() => checkFilesExist(outputFile)).toThrow();
     runCLI(`lint ${myapp} --output-file="${outputFile}" --format=json`, {

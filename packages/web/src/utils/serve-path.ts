@@ -1,6 +1,6 @@
-import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
 
-export function buildServePath(browserOptions: WebBuildBuilderOptions) {
+export function buildServePath(browserOptions: WebWebpackExecutorOptions) {
   let servePath =
     _findDefaultServePath(browserOptions.baseHref, browserOptions.deployUrl) ||
     '/';

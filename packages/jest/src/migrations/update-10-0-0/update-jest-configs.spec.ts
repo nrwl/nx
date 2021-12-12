@@ -91,7 +91,7 @@ describe('update 10.0.0', () => {
             sourceRoot: 'apps/cart/src',
             architect: {
               build: {
-                builder: '@nrwl/web:build',
+                builder: '@nrwl/web:webpack',
               },
               test: {
                 builder: '@nrwl/jest:jest',

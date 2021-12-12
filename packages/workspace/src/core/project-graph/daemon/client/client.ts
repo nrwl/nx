@@ -1,82 +1,82 @@
-import { logger, normalizePath, ProjectGraph } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { spawn, spawnSync } from 'child_process';
-import { ensureFileSync } from 'fs-extra';
-import { join } from 'path';
-import { dirSync } from 'tmp';
-import {
-  DaemonJson,
-  readDaemonJsonCache,
-  writeDaemonJsonCache,
-} from '../cache';
+import { logger, ProjectGraph } from '@nrwl/devkit';
+import { ChildProcess, spawn, spawnSync } from 'child_process';
+import { existsSync, openSync, readFileSync } from 'fs';
 import { connect } from 'net';
-import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
 import { performance } from 'perf_hooks';
-import { existsSync } from 'fs';
+import {
+  safelyCleanUpExistingProcess,
+  writeDaemonJsonProcessCache,
+} from '../cache';
+import {
+  deserializeResult,
+  FULL_OS_SOCKET_PATH,
+  killSocketOrPath,
+} from '../socket-utils';
+import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
+import { output } from '../../../../utilities/output';
 
-export async function startInBackground(): Promise<void> {
-  /**
-   * For now, while the daemon is an opt-in feature, we will log to stdout when
-   * starting the server, as well as providing a reference to where any subsequent
-   * log files can be found.
-   */
-  const tmpDirPrefix = `nx-daemon--${normalizePath(appRootPath).replace(
-    // Replace the occurrences of / in the unix-style normalized path with a -
-    new RegExp(escapeRegExp('/'), 'g'),
-    '-'
-  )}`;
-  const serverLogOutputDir = dirSync({
-    prefix: tmpDirPrefix,
-  }).name;
-  const serverLogOutputFile = join(serverLogOutputDir, 'nx-daemon.log');
-  ensureFileSync(serverLogOutputFile);
-
-  // Clean up any existing orphaned background process before creating a new one
-  const cachedDaemonJson = await readDaemonJsonCache();
-  if (cachedDaemonJson && cachedDaemonJson.backgroundProcessId) {
-    try {
-      process.kill(cachedDaemonJson.backgroundProcessId);
-    } catch (e) {}
-  }
-
-  logger.info(`NX Daemon Server - Starting in a background process...`);
-  logger.log(
-    `  Logs from the Daemon process can be found here: ${serverLogOutputFile}\n`
-  );
+export async function startInBackground(): Promise<ChildProcess['pid']> {
+  await safelyCleanUpExistingProcess();
 
   try {
-    const backgroundProcess = spawn(
-      process.execPath,
-      ['../server/start.js', serverLogOutputFile],
-      {
-        cwd: __dirname,
-        stdio: 'ignore',
-        detached: true,
-      }
-    );
+    const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
+      cwd: __dirname,
+      stdio: ['ignore', out, err],
+      detached: true,
+      windowsHide: true,
+      shell: false,
+    });
     backgroundProcess.unref();
 
     // Persist metadata about the background process so that it can be cleaned up later if needed
-    const daemonJson: DaemonJson = {
-      backgroundProcessId: backgroundProcess.pid,
-      serverLogOutputFile: serverLogOutputFile,
-    };
-    await writeDaemonJsonCache(daemonJson);
+    await writeDaemonJsonProcessCache({
+      processId: backgroundProcess.pid,
+    });
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
      */
+    let attempts = 0;
     return new Promise((resolve) => {
       const id = setInterval(async () => {
         if (await isServerAvailable()) {
           clearInterval(id);
-          resolve();
+          resolve(backgroundProcess.pid);
+        } else if (attempts > 200) {
+          // daemon fails to start, the process probably exited
+          // we print the logs and exit the client
+          throw daemonProcessException(
+            'Failed to start the Nx Daemon process.'
+          );
+        } else {
+          attempts++;
         }
-      }, 500);
+      }, 10);
     });
   } catch (err) {
-    logger.error(err);
-    process.exit(1);
+    throw err;
+  }
+}
+
+function daemonProcessException(message: string) {
+  try {
+    let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
+    if (log.length > 20) {
+      log = log.slice(log.length - 20);
+    }
+    return new Error(
+      [
+        message,
+        'Messages from the log:',
+        ...log,
+        '\n',
+        `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
+      ].join('\n')
+    );
+  } catch (e) {
+    return new Error(message);
   }
 }
 
@@ -90,42 +90,36 @@ export function startInCurrentProcess(): void {
 }
 
 export function stop(): void {
-  logger.info(`NX Daemon Server - Stopping...`);
-
   spawnSync(process.execPath, ['../server/stop.js'], {
     cwd: __dirname,
     stdio: 'inherit',
   });
-}
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+  logger.info('NX Daemon Server - Stopped');
 }
 
 /**
  * As noted in the comments above the createServer() call, in order to reliably (meaning it works
- * cross-platform) check whether or not the server is availabe to request a project graph from we
+ * cross-platform) check whether the server is available to request a project graph from we
  * need to actually attempt connecting to it.
  *
  * Because of the behavior of named pipes on Windows, we cannot simply treat them as a file and
  * check for their existence on disk (unlike with Unix Sockets).
  */
 export async function isServerAvailable(): Promise<boolean> {
-  try {
-    const socket = connect(FULL_OS_SOCKET_PATH);
-    return new Promise((resolve) => {
-      socket.on('connect', () => {
+  return new Promise((resolve) => {
+    try {
+      const socket = connect(FULL_OS_SOCKET_PATH, () => {
         socket.destroy();
         resolve(true);
       });
-      socket.on('error', () => {
+      socket.once('error', () => {
         resolve(false);
       });
-    });
-  } catch {
-    return Promise.resolve(false);
-  }
+    } catch (err) {
+      resolve(false);
+    }
+  });
 }
 
 /**
@@ -144,19 +138,22 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
     const socket = connect(FULL_OS_SOCKET_PATH);
 
     socket.on('error', (err) => {
-      let errorMessage: string | undefined;
+      let error: any;
       if (err.message.startsWith('connect ENOENT')) {
-        errorMessage = 'Error: The Daemon Server is not running';
+        error = daemonProcessException('The Daemon Server is not running');
       }
       if (err.message.startsWith('connect ECONNREFUSED')) {
-        // If somehow the file descriptor had not been released during a previous shut down.
-        if (existsSync(FULL_OS_SOCKET_PATH)) {
-          errorMessage = `Error: A server instance had not been fully shut down. Please try running the command again.`;
-          killSocketOrPath();
-        }
+        error = daemonProcessException(
+          `A server instance had not been fully shut down. Please try running the command again.`
+        );
+        killSocketOrPath();
       }
-      logger.error(`NX Daemon Client - ${errorMessage || err}`);
-      return reject(new Error(errorMessage) || err);
+      if (err.message.startsWith('read ECONNRESET')) {
+        error = daemonProcessException(
+          `Unable to connect to the daemon process.`
+        );
+      }
+      return reject(error || err);
     });
 
     /**
@@ -167,35 +164,38 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
     socket.on('connect', () => {
       socket.write('REQUEST_PROJECT_GRAPH_PAYLOAD');
 
-      let serializedProjectGraph = '';
+      let serializedProjectGraphResult = '';
       socket.on('data', (data) => {
-        serializedProjectGraph += data.toString();
+        serializedProjectGraphResult += data.toString();
       });
 
       socket.on('end', () => {
         try {
           performance.mark('json-parse-start');
-          const projectGraph = JSON.parse(
-            serializedProjectGraph
-          ) as ProjectGraph;
+          const projectGraphResult = deserializeResult(
+            serializedProjectGraphResult
+          );
           performance.mark('json-parse-end');
           performance.measure(
-            'deserialize graph on the client',
+            'deserialize graph result on the client',
             'json-parse-start',
             'json-parse-end'
           );
-          logger.info('NX Daemon Client - Resolved ProjectGraph');
+
+          if (projectGraphResult.error) {
+            return reject(projectGraphResult.error);
+          }
+
           performance.measure(
             'total for getProjectGraphFromServer()',
             'getProjectGraphFromServer-start',
             'json-parse-end'
           );
-          return resolve(projectGraph);
-        } catch {
-          logger.error(
-            'NX Daemon Client - Error: Could not deserialize the ProjectGraph'
+          return resolve(projectGraphResult.projectGraph);
+        } catch (e) {
+          return reject(
+            new Error(`Could not deserialize the ProjectGraph.\n${e.message}`)
           );
-          return reject(new Error('Could not deserialize the ProjectGraph'));
         }
       });
     });

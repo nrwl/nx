@@ -1,25 +1,23 @@
 import {
-  getCheckedProjectCheckboxes,
+  getCheckedProjectItems,
   getDeselectAllButton,
   getIncludeProjectsInPathButton,
-  getProjectCheckboxes,
+  getProjectItems,
   getSelectAllButton,
   getSelectProjectsMessage,
-  getTextFilterButton,
   getTextFilterInput,
+  getUncheckedProjectItems,
   getUnfocusProjectButton,
 } from '../support/app.po';
 
 describe('dep-graph-client', () => {
   beforeEach(() => {
-    cy.visit('/');
-    cy.get('[data-cy=project-select]').select('Ocean');
-  });
+    cy.intercept('/assets/graphs/*').as('getGraph');
 
-  it('should toggle the sidebar', () => {
-    cy.get('#sidebar').should('be.visible');
-    cy.get('#sidebar-toggle-button').click();
-    cy.get('#sidebar').should('not.be.visible');
+    cy.visit('/');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
   });
 
   it('should display message to select projects', () => {
@@ -27,83 +25,104 @@ describe('dep-graph-client', () => {
   });
 
   it('should hide select projects message when a project is selected', () => {
-    cy.contains('nx-docs-site').siblings('button').click();
+    cy.contains('nx-dev').scrollIntoView().should('be.visible');
+    cy.get('[data-project="nx-dev"]').should('be.visible');
+    cy.get('[data-project="nx-dev"]').click({ force: true });
     getSelectProjectsMessage().should('not.be.visible');
   });
 
   describe('selecting a different project', () => {
     it('should change the available projects', () => {
-      getProjectCheckboxes().should('have.length', 135);
-      cy.get('[data-cy=project-select]').select('Nx');
-      getProjectCheckboxes().should('have.length', 45);
-    });
-
-    it("should restore sidebar if it's been hidden", () => {
-      cy.get('#sidebar').should('be.visible');
-      cy.get('#sidebar-toggle-button').click();
-      cy.get('#sidebar').should('not.be.visible');
-      cy.get('[data-cy=project-select]').select('Nx');
-      cy.get('#sidebar').should('be.visible');
+      getProjectItems().should('have.length', 55);
+      cy.get('[data-cy=project-select]').select('Ocean', { force: true });
+      getProjectItems().should('have.length', 124);
     });
   });
 
   describe('select all button', () => {
-    it('should check all project checkboxes', () => {
-      getSelectAllButton().click();
-      getProjectCheckboxes().should('be.checked');
+    it('should check all project items', () => {
+      getSelectAllButton().scrollIntoView().click({ force: true });
+      getCheckedProjectItems().should('have.length', 55);
     });
   });
 
   describe('deselect all button', () => {
-    it('should uncheck all project checkboxes', () => {
+    it('should uncheck all project items', () => {
       getDeselectAllButton().click();
-      getProjectCheckboxes().should('not.be.checked');
+      getUncheckedProjectItems().should('have.length', 55);
       getSelectProjectsMessage().should('be.visible');
+    });
+  });
+
+  describe('selecting projects', () => {
+    it('should select a project by clicking on the project name', () => {
+      cy.get('[data-project="nx-dev"]').should('have.data', 'active', false);
+      cy.get('[data-project="nx-dev"]').click({
+        force: true,
+      });
+
+      cy.get('[data-project="nx-dev"]').should('have.data', 'active', true);
+    });
+
+    it('should deselect a project by clicking on the project name again', () => {
+      cy.get('[data-project="nx-dev"][data-active="false"]').click({
+        force: true,
+      });
+      cy.get('[data-project="nx-dev"][data-active="true"]')
+        .should('exist')
+        .click({
+          force: true,
+        });
+      cy.get('[data-project="nx-dev"][data-active="false"]').should('exist');
+    });
+
+    it('should select a project by clicking on the selected icon', () => {
+      cy.get('[data-project="nx-dev"][data-active="false"]').click({
+        force: true,
+      });
+      cy.get('[data-project="nx-dev"][data-active="true"]')
+        .should('exist')
+        .parent()
+        .siblings()
+        .first()
+        .should('exist')
+        .click({
+          force: true,
+        });
+      cy.get('[data-project="nx-dev"][data-active="false"]').should('exist');
     });
   });
 
   describe('focusing projects in sidebar', () => {
     it('should select appropriate projects', () => {
-      cy.contains('nx-docs-site').siblings('button').click();
+      cy.contains('nx-dev').scrollIntoView().should('be.visible');
+      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
 
-      getCheckedProjectCheckboxes().should('have.length', 16);
-      cy.contains('nx-docs-site-e2e').children('input').should('be.checked');
-      cy.contains('common-platform').children('input').should('be.checked');
-      cy.contains('private-nx-cloud')
-        .children('input')
-        .should('not.be.checked');
+      cy.get('[data-project="nx-dev"]').should('have.data', 'active', true);
     });
   });
 
   describe('unfocus button', () => {
-    it('should uncheck all project checkboxes', () => {
-      cy.contains('nx-docs-site').siblings('button').click();
+    it('should uncheck all project items', () => {
+      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
       getUnfocusProjectButton().click();
 
-      getProjectCheckboxes().should('not.be.checked');
+      getUncheckedProjectItems().should('have.length', 55);
     });
   });
 
   describe('text filtering', () => {
-    it('should filter projects by text when clicked', () => {
-      getTextFilterInput().type('nx-docs-site');
-      getTextFilterButton().click();
-
-      getCheckedProjectCheckboxes().should('have.length', 11);
-    });
-
     it('should filter projects by text when pressing enter', () => {
-      getTextFilterInput().type('nx-docs-site{enter}');
+      getTextFilterInput().type('nx-dev{enter}');
 
-      getCheckedProjectCheckboxes().should('have.length', 11);
+      getCheckedProjectItems().should('have.length', 9);
     });
 
     it('should include projects in path when option is checked', () => {
-      getTextFilterInput().type('nx-docs-site');
+      getTextFilterInput().type('nx-dev');
       getIncludeProjectsInPathButton().click();
-      getTextFilterButton().click();
 
-      getCheckedProjectCheckboxes().should('have.length', 16);
+      getCheckedProjectItems().should('have.length', 17);
     });
   });
 });

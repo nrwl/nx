@@ -31,7 +31,7 @@ describe('Add update-enforce-boundary-lint rule', () => {
     );
     tree.create(
       '/nx.json',
-      JSON.stringify(<NxJsonConfiguration>{ npmScope: 'proj', projects: {} })
+      JSON.stringify(<NxJsonConfiguration>{ npmScope: 'proj' })
     );
     tree.create(
       '/tsconfig.json',

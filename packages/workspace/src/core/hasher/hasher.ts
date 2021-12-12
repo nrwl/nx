@@ -15,7 +15,6 @@ import { performance } from 'perf_hooks';
 import { appRootPath } from '../../utils/app-root';
 import { workspaceFileName } from '../file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
-import { isNpmProject } from '../project-graph';
 
 export interface Hash {
   value: string;
@@ -343,8 +342,9 @@ class ProjectHasher {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
 
-        if (isNpmProject(p)) {
-          res(this.hashing.hashArray([p.data.version]));
+        if (!p) {
+          const n = this.projectGraph.externalNodes[projectName];
+          res(this.hashing.hashArray([n.data.version]));
           return;
         }
 
@@ -354,7 +354,6 @@ class ProjectHasher {
         const workspaceJson = JSON.stringify(
           this.workspaceJson.projects[projectName] ?? ''
         );
-        const nxJson = JSON.stringify(this.nxJson.projects[projectName] ?? '');
 
         let tsConfig: string;
 
@@ -369,7 +368,6 @@ class ProjectHasher {
             ...fileNames,
             ...values,
             workspaceJson,
-            nxJson,
             tsConfig,
           ])
         );
@@ -423,7 +421,7 @@ class ProjectHasher {
       res.projects ??= {};
       return res;
     } catch {
-      return { projects: {}, npmScope: '' };
+      return { npmScope: '' };
     }
   }
 }

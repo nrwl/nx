@@ -1,5 +1,10 @@
 [
   {
+    "name": "@codebrew/nx-aws-cdk",
+    "description": "An Nx plugin for aws cdk develop.",
+    "url": "https://github.com/codebrewlab/nx-plugins/tree/main/packages/nx-aws-cdk"
+  },
+  {
     "name": "@rxap/plugin-localazy",
     "description": "An Nx plugin for localazy.com upload and download tasks.",
     "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
@@ -223,5 +228,10 @@
     "name": "@jnxplus/nx-boot-maven",
     "description": "Nx plugin to add Spring Boot and Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-boot-maven"
+  },
+  {
+    "name": "@nxtensions/astro",
+    "description": "Nx plugin adding first class support for Astro (https://astro.build).",
+    "url": "https://github.com/nxtensions/nxtensions/tree/main/packages/astro"
   }
 ]

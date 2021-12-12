@@ -141,6 +141,8 @@ export type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  ProjectGraphProjectNode,
+  ProjectGraphExternalNode,
   NxPlugin,
   ProjectGraphProcessorContext,
 } from './src/project-graph/interfaces';

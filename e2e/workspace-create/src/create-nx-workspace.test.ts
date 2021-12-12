@@ -7,7 +7,7 @@ import {
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -18,7 +18,7 @@ describe('create-nx-workspace', () => {
   let packageManager;
 
   beforeEach(() => (packageManager = getSelectedPackageManager() || 'npm'));
-  afterAll(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => cleanupProject());
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');
@@ -90,7 +90,7 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an gatsby workspace', () => {
+  xit('should be able to create an gatsby workspace', () => {
     const wsName = uniq('gatsby');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
@@ -236,8 +236,8 @@ describe('create-nx-workspace', () => {
       cli: 'angular',
     });
 
-    const workspaceJson = readJson('angular.json');
-    expect(workspaceJson.cli.packageManager).toEqual('yarn');
+    const nxJson = readJson('nx.json');
+    expect(nxJson.cli.packageManager).toEqual('yarn');
     checkFilesExist('yarn.lock');
     checkFilesDoNotExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;

@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nx-plugin:generator generator'
+description: 'Create a generator for an Nx Plugin'
+---
+
 # @nrwl/nx-plugin:generator
 
 Create a generator for an Nx Plugin

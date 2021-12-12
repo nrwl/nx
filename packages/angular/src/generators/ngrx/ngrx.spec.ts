@@ -36,7 +36,7 @@ describe('ngrx', () => {
     ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
   });
 
-  it('should add an empty root module when minimal is true', async () => {
+  it('should add an empty root module when minimal and root are set to true', async () => {
     await ngrxGenerator(tree, {
       ...defaultOptions,
       root: true,
@@ -48,25 +48,38 @@ describe('ngrx', () => {
     ).toMatchSnapshot();
   });
 
-  it('should add an empty root module when onlyEmptyRoot is true', async () => {
+  it('should not generate files when minimal and root are set to true', async () => {
     await ngrxGenerator(tree, {
       ...defaultOptions,
       root: true,
-      minimal: false,
-      onlyEmptyRoot: true,
+      minimal: true,
     });
 
+    expect(tree.exists('/apps/myapp/src/app/+state/users.actions.ts')).toBe(
+      false
+    );
+    expect(tree.exists('/apps/myapp/src/app/+state/users.effects.ts')).toBe(
+      false
+    );
     expect(
-      tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
-    ).toMatchSnapshot();
+      tree.exists('/apps/myapp/src/app/+state/users.effects.spec.ts')
+    ).toBe(false);
+    expect(tree.exists('/apps/myapp/src/app/+state/users.reducer.ts')).toBe(
+      false
+    );
+    expect(tree.exists('/apps/myapp/src/app/+state/users.selectors.ts')).toBe(
+      false
+    );
+    expect(
+      tree.exists('/apps/myapp/src/app/+state/users.selectors.spec.ts')
+    ).toBe(false);
   });
 
-  it('should add a root module with feature module when minimal and onlyEmptyRoot are false', async () => {
+  it('should add a root module with feature module when minimal is set to false', async () => {
     await ngrxGenerator(tree, {
       ...defaultOptions,
       root: true,
       minimal: false,
-      onlyEmptyRoot: false,
     });
 
     expect(
@@ -129,43 +142,11 @@ describe('ngrx', () => {
     ).not.toContain('providers: [UsersFacade]');
   });
 
-  it('should not add facade provider when onlyEmptyRoot is true', async () => {
-    await ngrxGenerator(tree, {
-      ...defaultOptions,
-      root: true,
-      minimal: false,
-      onlyEmptyRoot: true,
-      facade: true,
-    });
-
-    expect(
-      tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
-    ).not.toContain('providers: [UsersFacade]');
-  });
-
-  it('should only add files when skipImport is true', async () => {
+  it('should not generate imports when skipImport is true', async () => {
     await ngrxGenerator(tree, {
       ...defaultOptions,
       minimal: false,
       skipImport: true,
-    });
-
-    expectFileToExist('/apps/myapp/src/app/+state/users.actions.ts');
-    expectFileToExist('/apps/myapp/src/app/+state/users.effects.ts');
-    expectFileToExist('/apps/myapp/src/app/+state/users.effects.spec.ts');
-    expectFileToExist('/apps/myapp/src/app/+state/users.reducer.ts');
-    expectFileToExist('/apps/myapp/src/app/+state/users.selectors.ts');
-    expectFileToExist('/apps/myapp/src/app/+state/users.selectors.spec.ts');
-    expect(
-      tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
-    ).toMatchSnapshot();
-  });
-
-  it('should only add files when onlyAddFiles is true', async () => {
-    await ngrxGenerator(tree, {
-      ...defaultOptions,
-      minimal: false,
-      onlyAddFiles: true,
     });
 
     expectFileToExist('/apps/myapp/src/app/+state/users.actions.ts');
@@ -196,6 +177,7 @@ describe('ngrx', () => {
     expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
       ngrxVersion
     );
+    expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
   });
 
   it('should not update package.json when skipPackageJson is true', async () => {

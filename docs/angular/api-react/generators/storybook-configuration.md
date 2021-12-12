@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react:storybook-configuration generator'
+description: 'Set up storybook for a react library'
+---
+
 # @nrwl/react:storybook-configuration
 
 Set up storybook for a react library
@@ -79,8 +84,6 @@ Possible values: `eslint`, `tslint`
 The tool to use for running lint checks.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

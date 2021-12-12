@@ -4,7 +4,7 @@ import {
   expectTestsPass,
   newProject,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -14,7 +14,7 @@ import {
 describe('Angular Package', () => {
   describe('config compat', () => {
     beforeEach(() => newProject());
-    afterEach(() => removeProject({ onlyOnCI: true }));
+    afterEach(() => cleanupProject());
 
     it('should work', async () => {
       const myapp = uniq('myapp');

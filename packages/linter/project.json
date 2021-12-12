@@ -12,13 +12,11 @@
       "outputs": ["coverage/packages/linter"]
     },
     "build-base": {
-      "executor": "@nrwl/node:package",
+      "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/linter",
         "tsConfig": "packages/linter/tsconfig.lib.json",
-        "packageJson": "packages/linter/package.json",
         "main": "packages/linter/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/linter",

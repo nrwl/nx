@@ -2,7 +2,9 @@
 const withNx = require('@nrwl/next/plugins/with-nx');
 
 <% if (style === 'less') { %>
-const withLess = require('@zeit/next-less');
+// This plugin is needed until this PR is merged.
+// https://github.com/vercel/next.js/pull/23185
+const withLess = require('@nrwl/next/plugins/with-less');
 
 /**
  * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
@@ -16,13 +18,11 @@ const nextConfig = {
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
   cssModules: false,
-  // @zeit/next-less does not support webpack 5
-  webpack5: false,
 };
 
 module.exports = withLess(withNx(nextConfig));
 <% } else if (style === 'styl') { %>
-const withStylus = require('@zeit/next-stylus');
+const withStylus = require('@nrwl/next/plugins/with-stylus');
 
 /**
  * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
@@ -36,8 +36,6 @@ const nextConfig = {
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
   cssModules: false,
-  // @zeit/next-stylus does not support webpack 5
-  webpack5: false,
 };
 
 module.exports = withStylus(withNx(nextConfig));

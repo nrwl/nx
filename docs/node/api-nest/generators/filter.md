@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:filter generator'
+description: 'Run the `filter` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:filter
 
 Run the `filter` NestJS generator with Nx project support.

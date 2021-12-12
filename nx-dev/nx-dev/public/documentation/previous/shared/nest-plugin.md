@@ -15,11 +15,11 @@ Many conventions and best practices used in Angular applications can be also be 
 
 Installing the Nest plugin to a workspace can be done with the following:
 
-```shell script
+```bash
 yarn add -D @nrwl/nest
 ```
 
-```shell script
+```bash
 npm install -D @nrwl/nest
 ```
 
@@ -27,7 +27,7 @@ npm install -D @nrwl/nest
 
 Generating new applications can be done with the following:
 
-```shell script
+```bash
 nx generate @nrwl/nest:application <nest-app>
 ```
 
@@ -78,7 +78,7 @@ bootstrap();
 
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
-```shell script
+```bash
 nx generate @nrwl/nest:application <nest-app> --frontendProject my-angular-app
 ```
 
@@ -88,13 +88,13 @@ When a Nest application is added to the workspace.json (or angular.json), the fo
 
 #### build
 
-```shell script
+```bash
 nx build <nest-app>
 ```
 
 The build command will compile the application using Webpack. It supports a production configuration by building with the following command:
 
-```shell script
+```bash
 nx build <nest-app> --configuration=production
 ```
 
@@ -102,7 +102,7 @@ Additional configurations can be added in the workspace.json. Changing the `--co
 
 #### serve
 
-```shell script
+```bash
 nx serve <nest-app>
 ```
 
@@ -125,7 +125,7 @@ Setting the `waitUntilTargets` option with an array of projects (with the follow
 
 The lint command will run linting within the scope of the Nest app.
 
-```shell script
+```bash
 nx lint <nest-app>
 ```
 
@@ -133,7 +133,7 @@ nx lint <nest-app>
 
 Test will execute Jest tests within the scope of the Nest app.
 
-```shell script
+```bash
 nx test <nest-app>
 ```
 
@@ -141,13 +141,13 @@ nx test <nest-app>
 
 Nest libraries are a good way to separate features within your organization. To create a Nest library run the following command:
 
-```shell script
+```bash
 nx generate @nrwl/nest:library <nest-lib>
 ```
 
 Nest libraries can also be generated with an included controller, service or making the module global with their respective flags.
 
-```shell script
+```bash
 nx generate @nrwl/nest:library <nest-lib> [--controller] [--service] [--global]
 
 ```
@@ -156,7 +156,7 @@ nx generate @nrwl/nest:library <nest-lib> [--controller] [--service] [--global]
 
 Libraries can also be enabled to be built separately from apps. To create a buildable library, add the `--buildable` flag to the generate command above.
 
-```shell script
+```bash
 nx generate @nrwl/nest:library <nest-lib> --buildable
 ```
 
@@ -168,7 +168,7 @@ When a Nest library is added to the workspace.json (or angular.json), the follow
 
 The lint command will run linting within the scope of the Nest library.
 
-```shell script
+```bash
 nx lint <nest-lib>
 ```
 
@@ -176,7 +176,7 @@ nx lint <nest-lib>
 
 Test will execute Jest tests within the scope of the Nest library.
 
-```shell script
+```bash
 nx test <nest-lib>
 ```
 
@@ -188,7 +188,7 @@ The build command will only be available if the library was generated with the `
 
 Buildable Nest libraries use TypeScript to compile the source. The tsconfig files that are generated with the library allow customization of the compiled output.
 
-```shell script
+```bash
 nx build <nest-lib>
 ```
 

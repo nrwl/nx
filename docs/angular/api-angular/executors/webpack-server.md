@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:webpack-server executor'
+description: 'Serves a browser application with support for a custom webpack configuration.'
+---
+
 # @nrwl/angular:webpack-server
 
 Serves a browser application with support for a custom webpack configuration.
@@ -18,38 +23,6 @@ Type: `array`
 
 List of hosts that are allowed to access the dev server.
 
-### ~~aot~~
-
-Type: `boolean`
-
-**Deprecated:** Use the "aot" option in the browser builder instead.
-
-Build using Ahead of Time compilation.
-
-### ~~baseHref~~
-
-Type: `string`
-
-**Deprecated:** Use the "baseHref" option in the browser builder instead.
-
-Base url for the application being built.
-
-### ~~commonChunk~~
-
-Type: `boolean`
-
-**Deprecated:** Use the "commonChunk" option in the browser builder instead.
-
-Generate a seperate bundle containing code used across multiple bundles.
-
-### ~~deployUrl~~
-
-Type: `string`
-
-**Deprecated:** Use the "deployUrl" option in the browser builder instead.
-
-URL where files will be deployed.
-
 ### disableHostCheck
 
 Default: `false`
@@ -65,16 +38,6 @@ Default: `false`
 Type: `boolean`
 
 Enable hot module replacement.
-
-### ~~hmrWarning~~
-
-Default: `true`
-
-Type: `boolean`
-
-**Deprecated:** No longer has an effect.
-
-Show a warning when the --hmr option is enabled.
 
 ### host
 
@@ -102,14 +65,6 @@ Type: `boolean`
 
 Opens the url in default browser.
 
-### ~~optimization~~
-
-Type: `boolean`
-
-**Deprecated:** Use the "optimization" option in the browser builder instead.
-
-Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, tree-shaking and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.
-
 ### poll
 
 Type: `number`
@@ -123,14 +78,6 @@ Default: `4200`
 Type: `number`
 
 Port to listen on.
-
-### ~~progress~~
-
-Type: `boolean`
-
-**Deprecated:** Use the "progress" option in the browser builder instead.
-
-Log progress to the console while building.
 
 ### proxyConfig
 
@@ -149,24 +96,6 @@ The URL that the browser client (or live-reload client, if enabled) should use t
 Type: `string`
 
 The pathname where the app will be served.
-
-### ~~servePathDefaultWarning~~
-
-Default: `true`
-
-Type: `boolean`
-
-**Deprecated:** No longer has an effect.
-
-Show a warning when deploy-url/base-href use unsupported serve path values.
-
-### ~~sourceMap~~
-
-Type: `boolean`
-
-**Deprecated:** Use the "sourceMap" option in the browser builder instead.
-
-Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.
 
 ### ssl
 
@@ -187,14 +116,6 @@ SSL certificate to use for serving HTTPS.
 Type: `string`
 
 SSL key to use for serving HTTPS.
-
-### ~~vendorChunk~~
-
-Type: `boolean`
-
-**Deprecated:** Use the "vendorChunk" option in the browser builder instead.
-
-Generate a seperate bundle containing only vendor libraries. This option should only used for development.
 
 ### verbose
 

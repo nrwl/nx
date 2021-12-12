@@ -8,7 +8,6 @@ import {
   joinPathFragments,
   logger,
   names,
-  NxJsonProjectConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -83,7 +82,7 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  const project: ProjectConfiguration & NxJsonProjectConfiguration = {
+  const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
     projectType: 'application',

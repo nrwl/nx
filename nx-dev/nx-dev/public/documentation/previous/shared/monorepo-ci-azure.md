@@ -1,6 +1,6 @@
 # Distributed CI Using Azure Pipelines
 
-Nx is a set of extensible dev tools for monorepos. Monorepos provide a lot of advantages:
+Nx is a set of smart and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
 
 - Everything at that current commit works together. Changes can be verified across all affected parts of the organization.
 - Easy to split code into composable modules
@@ -243,7 +243,7 @@ This example doesn't do anything with the artifacts created by the build, but of
         "project": "react-app",
         "target": "build"
       },
-      "command": "npm run nx -- build react-app",
+      "command": "npx nx -- build react-app",
       "outputs": [
         "dist/apps/react-app"
       ]
@@ -255,7 +255,7 @@ This example doesn't do anything with the artifacts created by the build, but of
         "project": "ng-app",
         "target": "build"
       },
-      "command": "npm run nx -- build ng-app",
+      "command": "npx nx -- build ng-app",
       "outputs": [
         "dist/apps/ng-app"
       ]

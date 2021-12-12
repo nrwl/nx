@@ -10,7 +10,8 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "incremental": true
   },
   "files": [],
   "include": [],

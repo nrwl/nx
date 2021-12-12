@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:application generator'
+description: 'Creates an Angular application.'
+---
+
 # @nrwl/angular:application
 
 Creates an Angular application.
@@ -173,8 +178,6 @@ Type: `boolean`
 Skip creating spec files.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

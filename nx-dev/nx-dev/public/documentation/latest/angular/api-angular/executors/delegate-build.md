@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:delegate-build executor'
+description: 'Delegates the build to a different target while supporting incremental builds.'
+---
+
 # @nrwl/angular:delegate-build
 
 Delegates the build to a different target while supporting incremental builds.

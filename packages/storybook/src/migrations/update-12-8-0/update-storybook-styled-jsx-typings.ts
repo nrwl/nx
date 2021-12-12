@@ -26,9 +26,11 @@ export default async function addStyledJsxTypings(tree: Tree) {
       ),
     };
 
-    const storybookExecutor = Object.keys(targets).find(
-      (x) => targets[x].executor === '@nrwl/storybook:storybook'
-    );
+    const storybookExecutor =
+      targets &&
+      Object.keys(targets).find(
+        (x) => targets[x].executor === '@nrwl/storybook:storybook'
+      );
 
     const hasStorybookConfig =
       storybookExecutor && tree.exists(paths.tsConfigStorybook);

@@ -26,7 +26,8 @@ export async function defaultServer(
 
   // Set up the proxy.
   if (proxyConfig) {
-    const proxyMiddleware = require('http-proxy-middleware');
+    const proxyMiddleware =
+      require('http-proxy-middleware').createProxyMiddleware;
     Object.keys(proxyConfig).forEach((context) => {
       server.use(proxyMiddleware(context, proxyConfig[context]));
     });

@@ -1,4 +1,4 @@
-import { readJson } from '@nrwl/devkit';
+import { getProjects, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 
@@ -19,22 +19,23 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(workspaceJson.defaultProject).toEqual('my-app');
+      expect(nxJson.defaultProject).toEqual('my-app');
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-app': {
           tags: ['one', 'two'],
         },
@@ -148,15 +149,15 @@ describe('app', () => {
       );
     });
 
-    it('should update nx.json', async () => {
+    it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         directory: 'myDir',
         tags: 'one,two',
         standaloneConfig: false,
       });
-      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      const projects = Object.fromEntries(getProjects(tree));
+      expect(projects).toMatchObject({
         'my-dir-my-app': {
           tags: ['one', 'two'],
         },
@@ -220,7 +221,7 @@ describe('app', () => {
       ).toBeTruthy();
       expect(
         tree.read('apps/my-dir/my-app/src/app/app.element.ts', 'utf-8')
-      ).toContain('Thank you for using and showing some ♥ for Nx.');
+      ).toContain('Hello there');
     });
   });
 
@@ -253,9 +254,10 @@ describe('app', () => {
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.build.builder).toEqual('@nrwl/web:build');
+    expect(architectConfig.build.builder).toEqual('@nrwl/web:webpack');
     expect(architectConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(architectConfig.build.options).toEqual({
+      compiler: 'babel',
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
       baseHref: '/',
@@ -268,14 +270,6 @@ describe('app', () => {
     });
     expect(architectConfig.build.configurations.production).toEqual({
       optimization: true,
-      budgets: [
-        {
-          maximumError: '5mb',
-          maximumWarning: '2mb',
-          type: 'initial',
-        },
-      ],
-      extractCss: true,
       extractLicenses: true,
       fileReplacements: [
         {

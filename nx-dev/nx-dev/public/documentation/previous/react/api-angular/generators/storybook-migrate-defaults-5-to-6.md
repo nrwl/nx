@@ -1,6 +1,6 @@
-# storybook-migrate-defaults-5-to-6
+# @nrwl/angular:storybook-migrate-defaults-5-to-6
 
-Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
+Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
 
 ## Usage
 
@@ -30,7 +30,7 @@ Default: `true`
 
 Type: `boolean`
 
-Generate new Storybook configurations for all Storybook instances across all apps and libs.
+Generate new Storybook configurations for all Storybook instances across all applications and libraries.
 
 ### keepOld
 
@@ -38,10 +38,10 @@ Default: `true`
 
 Type: `boolean`
 
-Keep the old configuration files - put them in a folder called .old_storybook.
+Keep the old configuration files by placing them in a folder called `.old_storybook`.
 
 ### name
 
 Type: `string`
 
-Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration. Library or application name for which you want to generate the new Storybook configuration.
+Library or application name for which you want to generate the new Storybook configuration. Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration.

@@ -16,7 +16,7 @@ nx e2e <project>
 nx run <project>:e2e
 ```
 
-Install the `nx` package globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -44,7 +44,7 @@ The options below are common to the E2E commands used within an Nx workspace. Cy
 
 ### baseUrl
 
-Use this to pass directly the address of your distant server address with the port running your application.
+Use this to pass directly the address of your distant server address with the port running your application. Setting this will ignore any local server targets. To skip running local targets, reset the `devServerTarget` to empty string.
 
 ### configuration (-c)
 

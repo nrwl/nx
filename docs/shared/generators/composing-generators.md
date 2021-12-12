@@ -16,3 +16,27 @@ export default async function (tree: Tree, schema: any) {
   );
 }
 ```
+
+## Using jscodeshift Codemods
+
+Codemods created for use with [`jscodeshift`](https://github.com/facebook/jscodeshift) can be used within Nx Devkit generators using the `visitNotIgnoredFiles` helper function. This way you can compose codemods with other generators while retaining `--dry-run` and Nx Console compatibilities.
+
+```typescript
+import { Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
+import { applyTransform } from 'jscodeshift/src/testUtils';
+import arrowFunctionsTransform from './arrow-functions';
+
+// The schema path can be an individual file or a directory
+export default async function (tree: Tree, schema: { path: string }): any {
+  visitNotIgnoredFiles(tree, schema.path, (filePath) => {
+    const input = tree.read(filePath).toString();
+    const transformOptions = {};
+    const output = applyTransform(
+      { default: arrowFunctionsTransform, parser: 'ts' },
+      transformOptions,
+      { source: input, path: filePath }
+    );
+    tree.write(filePath, output);
+  });
+}
+```

@@ -1,19 +1,18 @@
 import * as path from 'path';
 import {
   checkFilesExist,
-  exists,
+  fileExists,
   isNotWindows,
+  isWindows,
   newProject,
   readFile,
   readJson,
-  removeProject,
+  cleanupProject,
   runCLI,
   runCLIAsync,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;
@@ -271,6 +270,22 @@ describe('dep-graph', () => {
     expect(jsonFileContents2.criticalPath).not.toContain(mylib2);
   }, 1000000);
 
+  if (isNotWindows()) {
+    it('dep-graph should output json to file by absolute path', () => {
+      runCLI(`dep-graph --file=/tmp/project-graph.json`);
+
+      expect(() => checkFilesExist('/tmp/project-graph.json')).not.toThrow();
+    }, 1000000);
+  }
+
+  if (isWindows()) {
+    it('dep-graph should output json to file by absolute path in Windows', () => {
+      runCLI(`dep-graph --file=C:\\tmp\\project-graph.json`);
+
+      expect(fileExists('C:\\tmp\\project-graph.json')).toBeTruthy();
+    }, 1000000);
+  }
+
   it('dep-graph should focus requested project', () => {
     runCLI(`dep-graph --focus=${myapp} --file=project-graph.json`);
 
@@ -357,7 +372,7 @@ describe('Move Angular Project', () => {
     runCLI(`generate @nrwl/angular:app ${app1}`);
   });
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => cleanupProject());
 
   /**
    * Tries moving an app from ${app1} -> subfolder/${app2}

@@ -1,9 +1,9 @@
 export const nxVersion = '*';
 
-export const nextVersion = '11.1.0';
-export const eslintConfigNextVersion = '11.1.0';
-export const sassVersion = '1.42.1';
-export const zeitNextLess = '1.0.1';
-export const zeitNextStylus = '1.0.1';
-export const emotionServerVersion = '11.0.0';
+export const nextVersion = '12.0.7';
+export const eslintConfigNextVersion = '12.0.7';
+export const sassVersion = '1.43.2';
+export const lessLoader = '10.2.0';
+export const stylusLoader = '6.2.0';
+export const emotionServerVersion = '11.4.0';
 export const babelPluginStyledComponentsVersion = '1.10.7';

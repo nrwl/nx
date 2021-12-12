@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
   readWorkspaceConfiguration,
   TargetConfiguration,
@@ -10,20 +9,16 @@ import {
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const nxConfig: NxJsonProjectConfiguration = {
-    tags: options.parsedTags,
-  };
-
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
     targets: { ...getTargets(options) },
+    tags: options.parsedTags,
   };
 
   addProjectConfiguration(host, options.projectName, {
     ...project,
-    ...nxConfig,
   });
 
   const workspace = readWorkspaceConfiguration(host);
@@ -61,7 +56,7 @@ function getTargets(options: NormalizedSchema) {
     executor: '@nrwl/react-native:bundle',
     outputs: [`${options.appProjectRoot}/build`],
     options: {
-      entryFile: `${options.appProjectRoot}/src/main.tsx`,
+      entryFile: options.entryFile,
       platform: 'ios',
       bundleOutput: `dist/${options.appProjectRoot}/ios/main.jsbundle`,
     },
@@ -84,7 +79,7 @@ function getTargets(options: NormalizedSchema) {
   architect['bundle-android'] = {
     executor: '@nrwl/react-native:bundle',
     options: {
-      entryFile: `${options.appProjectRoot}/src/main.tsx`,
+      entryFile: options.entryFile,
       platform: 'android',
       bundleOutput: `dist/${options.appProjectRoot}/android/main.jsbundle`,
     },

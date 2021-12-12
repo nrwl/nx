@@ -7,17 +7,16 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import { resolve } from 'path';
 
 import { getNodeWebpackConfig } from '../../utils/node.config';
-import { OUT_FILENAME } from '../../utils/config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
+import { runWebpack } from '../../utils/run-webpack';
 
 export type NodeBuildEvent = {
   outfile: string;
@@ -28,7 +27,6 @@ export async function* buildExecutor(
   rawOptions: BuildNodeBuilderOptions,
   context: ExecutorContext
 ) {
-  const { webpack } = require('../../webpack/entry');
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
 
   if (!sourceRoot) {
@@ -84,14 +82,18 @@ export async function* buildExecutor(
   }, getNodeWebpackConfig(options));
 
   return yield* eachValueFrom(
-    runWebpack(config, webpack).pipe(
+    runWebpack(config).pipe(
       tap((stats) => {
         console.info(stats.toString(config.stats));
       }),
       map((stats) => {
         return {
           success: !stats.hasErrors(),
-          outfile: resolve(context.root, options.outputPath, OUT_FILENAME),
+          outfile: resolve(
+            context.root,
+            options.outputPath,
+            options.outputFileName
+          ),
         } as NodeBuildEvent;
       })
     )

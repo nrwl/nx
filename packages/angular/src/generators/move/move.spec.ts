@@ -15,7 +15,6 @@ describe('@nrwl/angular:move', () => {
     await libraryGenerator(tree, {
       name: 'mylib',
       buildable: false,
-      enableIvy: false,
       linter: Linter.EsLint,
       publishable: false,
       simpleModuleName: true,

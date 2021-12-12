@@ -1,6 +1,8 @@
 # Setup incremental builds for Angular applications
 
-In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications.
+In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications. Please read the [incremental builds guide](/angular/ci/incremental-builds) to see if incremental builds are a good fit for you.
+
+> Incremental builds requires Nx version 10.4.0 or later.
 
 ## Requirements
 
@@ -23,15 +25,14 @@ It’s required that you run the Angular compatibility compiler (`ngcc`) after e
 ## Use buildable libraries
 
 To enable incremental builds you need to use buildable libraries.
-You can generate a new buildable lib with
+
+You can generate a new buildable library with:
 
 ```bash
 nx g @nrwl/angular:lib mylib --buildable
 ```
 
-## Adjust the executors/builders
-
-Nx comes with faster executors allowing for a faster build. Make sure that your libraries use the @nrwl/angular:ng-packagr-lite builder.
+The generated buildable library uses the `@nrwl/angular:ng-packagr-lite` executor which is optimized for the incremental builds scenario:
 
 ```json
 "mylib": {
@@ -40,6 +41,7 @@ Nx comes with faster executors allowing for a faster build. Make sure that your 
     "architect": {
         "build": {
             "builder": "@nrwl/angular:ng-packagr-lite",
+            "outputs": ["dist/libs/mylib"],
             "options": {...},
             "configurations": {...}
         },
@@ -50,7 +52,11 @@ Nx comes with faster executors allowing for a faster build. Make sure that your 
 },
 ```
 
-Change your Angular app’s executor to @nrwl/angular:webpack-browser and the “serve” executor to @nrwl/web:file-server instead.
+> Please note that it is important to keep the `outputs` property in sync with the `dest` property in the file `ng-package.json` located inside the library root. When a library is generated, this is configured correctly, but if the path is later changed in `ng-package.json`, it needs to be updated as well in the project configuration.
+
+## Adjust the app executor
+
+Change your Angular app’s “build” target executor to `@nrwl/angular:webpack-browser` and the “serve” target executor to `@nrwl/web:file-server` as shown below:
 
 ```json
 "app0": {
@@ -59,6 +65,7 @@ Change your Angular app’s executor to @nrwl/angular:webpack-browser and the �
     "architect": {
         "build": {
             "builder": "@nrwl/angular:webpack-browser",
+            "outputs": ["{options.outputPath}"],
             "options": { ... }
             "configurations": { ... }
         },
@@ -80,7 +87,7 @@ Change your Angular app’s executor to @nrwl/angular:webpack-browser and the �
 
 ## Running and serving incremental builds
 
-To build an app incrementally use the following commands.
+To build an app incrementally use the following command:
 
 ```bash
 nx build myapp --with-deps --parallel
@@ -101,6 +108,7 @@ Note: you can specify the `--with-deps` and `--parallel` flags as part of the op
     "architect": {
         "build": {
             "builder": "@nrwl/angular:webpack-browser",
+            "outputs": ["{options.outputPath}"],
             "options": { ... }
             "configurations": { ... }
         },

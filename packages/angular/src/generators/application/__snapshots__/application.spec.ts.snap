@@ -32,6 +32,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -40,8 +43,8 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		\\"remote1\\": 'remote1@http://localhost:4201/remoteEntry.js',
-    		\\"remote2\\": 'remote2@http://localhost:4202/remoteEntry.js',
+    		\\"remote1\\": 'http://localhost:4201/remoteEntry.js',
+    		\\"remote2\\": 'http://localhost:4202/remoteEntry.js',
       
       },
       shared: {
@@ -50,6 +53,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),
@@ -90,6 +96,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -98,7 +107,7 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       remotes: {
-    		\\"remote1\\": 'remote1@http://localhost:4200/remoteEntry.js',
+    		\\"remote1\\": 'http://localhost:4200/remoteEntry.js',
       
       },
       shared: {
@@ -107,6 +116,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),
@@ -147,6 +159,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -163,6 +178,9 @@ module.exports = {
         \\"@angular/common/http\\": { singleton: true, strictVersion: true },
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
+      },
+      library: { 
+        type: 'module' 
       },
     }),
     sharedMappings.getPlugin(),
@@ -203,6 +221,9 @@ module.exports = {
     runtimeChunk: false,
     minimize: false,
   },
+  experiments: {
+    outputModule: true
+  },
   resolve: {
     alias: {
       ...sharedMappings.getAliases(),
@@ -222,12 +243,17 @@ module.exports = {
         \\"@angular/router\\": { singleton: true, strictVersion: true },
         ...sharedMappings.getDescriptors(),
       },
+      library: { 
+        type: 'module' 
+      },
     }),
     sharedMappings.getPlugin(),
   ],
 };
 "
 `;
+
+exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app nested should update workspace.json 1`] = `
 Object {
@@ -327,6 +353,7 @@ Object {
   "projectType": "application",
   "root": "apps/my-dir/my-app",
   "sourceRoot": "apps/my-dir/my-app/src",
+  "tags": Array [],
 }
 `;
 
@@ -357,9 +384,13 @@ Object {
       ],
     },
   },
+  "implicitDependencies": Array [
+    "my-dir-my-app",
+  ],
   "projectType": "application",
   "root": "apps/my-dir/my-app-e2e",
   "sourceRoot": "apps/my-dir/my-app-e2e/src",
+  "tags": Array [],
 }
 `;
 
@@ -489,6 +520,7 @@ Object {
   "projectType": "application",
   "root": "apps/my-app",
   "sourceRoot": "apps/my-app/src",
+  "tags": Array [],
 }
 `;
 
@@ -519,8 +551,12 @@ Object {
       ],
     },
   },
+  "implicitDependencies": Array [
+    "my-app",
+  ],
   "projectType": "application",
   "root": "apps/my-app-e2e",
   "sourceRoot": "apps/my-app-e2e/src",
+  "tags": Array [],
 }
 `;

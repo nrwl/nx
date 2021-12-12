@@ -1,12 +1,11 @@
 import { buildExplicitPackageJsonDependencies } from '@nrwl/workspace/src/core/project-graph/build-dependencies/explicit-package-json-dependencies';
 import { vol } from 'memfs';
-import { DependencyType, ProjectGraphNode } from '../project-graph-models';
-import { createProjectFileMap } from '../../file-graph';
-import { readWorkspaceFiles } from '../../file-utils';
+import { ProjectGraphNode } from '../project-graph-models';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
+import { createProjectFileMap } from '../../file-utils';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -37,9 +36,6 @@ describe('explicit package json dependencies', () => {
 
     const nxJson = {
       npmScope: 'proj',
-      projects: {
-        proj1: {},
-      },
     };
 
     fsJson = {
@@ -51,8 +47,10 @@ describe('explicit package json dependencies', () => {
       './workspace.json': JSON.stringify(workspaceJson),
       './nx.json': JSON.stringify(nxJson),
       './tsconfig.base.json': JSON.stringify({}),
+      './libs/proj2/package.json': JSON.stringify({ name: 'proj2' }),
+      './libs/proj3/package.json': JSON.stringify({ name: 'proj3' }),
       './libs/proj/package.json': JSON.stringify({
-        dependencies: { proj2: '*' },
+        dependencies: { proj2: '*', external: '12.0.0' },
         devDependencies: { proj3: '*' },
       }),
     };
@@ -60,10 +58,18 @@ describe('explicit package json dependencies', () => {
 
     ctx = {
       workspace: {
+        projects: {
+          proj2: {
+            root: 'libs/proj2',
+          },
+          proj3: {
+            root: 'libs/proj3',
+          },
+        },
         workspaceJson,
         nxJson,
       },
-      filesToProcess: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+      filesToProcess: createProjectFileMap(workspaceJson).projectFileMap,
     } as any;
 
     projects = {
@@ -78,12 +84,12 @@ describe('explicit package json dependencies', () => {
       proj2: {
         name: 'proj2',
         type: 'lib',
-        data: { files: [] },
+        data: { root: 'libs/proj2', files: [] },
       },
       proj3: {
         name: 'proj3',
         type: 'lib',
-        data: { files: [] },
+        data: { root: 'libs/proj4', iles: [] },
       },
     };
   });
@@ -92,6 +98,14 @@ describe('explicit package json dependencies', () => {
     const builder = new ProjectGraphBuilder();
     Object.values(projects).forEach((p) => {
       builder.addNode(p);
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:external',
+      data: {
+        version: '12.0.0',
+        packageName: 'external',
+      },
     });
 
     const res = buildExplicitPackageJsonDependencies(
@@ -105,6 +119,11 @@ describe('explicit package json dependencies', () => {
         sourceProjectName: 'proj',
         targetProjectName: 'proj2',
         sourceProjectFile: 'libs/proj/package.json',
+      },
+      {
+        sourceProjectFile: 'libs/proj/package.json',
+        sourceProjectName: 'proj',
+        targetProjectName: 'npm:external',
       },
       {
         sourceProjectName: 'proj',

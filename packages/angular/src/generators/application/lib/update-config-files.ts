@@ -13,32 +13,11 @@ import { replaceAppNameWithPath } from '@nrwl/workspace';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
-  addProjectToNx(host, options);
-  updateTsConfigCompilerOptions(host, options);
+  updateTsConfigOptions(host, options);
   updateAppAndE2EProjectConfigurations(host, options);
 }
 
-function addProjectToNx(host: Tree, options: NormalizedSchema) {
-  // nx.json
-  updateJson(host, '/nx.json', (json) => {
-    const resultJson = {
-      ...json,
-      projects: {
-        ...json.projects,
-        [options.name]: { tags: options.parsedTags },
-      },
-    };
-    if (options.e2eTestRunner === 'protractor') {
-      resultJson.projects[options.e2eProjectName] = { tags: [] };
-      resultJson.projects[options.e2eProjectName].implicitDependencies = [
-        options.name,
-      ];
-    }
-    return resultJson;
-  });
-}
-
-function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {
+function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
   // tsconfig.app.json
   updateJson(host, `${options.appProjectRoot}/tsconfig.app.json`, (json) => ({
     ...json,
@@ -47,6 +26,9 @@ function updateTsConfigCompilerOptions(host: Tree, options: NormalizedSchema) {
       ...json.compilerOptions,
       outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
     },
+    exclude: [
+      ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
+    ],
   }));
 }
 
@@ -77,6 +59,18 @@ function updateAppAndE2EProjectConfigurations(
   if (fixedProject.generators) {
     delete fixedProject.generators;
   }
+
+  if (options.port) {
+    fixedProject.targets.serve = {
+      ...fixedProject.targets.serve,
+      options: {
+        ...fixedProject.targets.serve.options,
+        port: options.port,
+      },
+    };
+  }
+
+  fixedProject.tags = options.parsedTags;
 
   updateProjectConfiguration(host, options.name, fixedProject);
 

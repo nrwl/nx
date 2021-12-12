@@ -25,6 +25,7 @@ export {
   readWorkspaceJson,
   readNxJson,
   readWorkspaceConfig,
+  readPackageJson,
 } from './src/core/file-utils';
 export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
 export {

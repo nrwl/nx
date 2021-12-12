@@ -1,17 +1,12 @@
 import { NormalizedSchema } from '../schema';
 import {
-  joinPathFragments,
   addProjectConfiguration,
-  NxJsonProjectConfiguration,
+  joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
 } from '@nrwl/devkit';
 
 export function addProject(host, options: NormalizedSchema) {
-  const nxConfig: NxJsonProjectConfiguration = {
-    tags: options.parsedTags,
-  };
-
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -20,6 +15,7 @@ export function addProject(host, options: NormalizedSchema) {
       build: createBuildTarget(options),
       serve: createServeTarget(options),
     },
+    tags: options.parsedTags,
   };
 
   addProjectConfiguration(
@@ -27,7 +23,6 @@ export function addProject(host, options: NormalizedSchema) {
     options.projectName,
     {
       ...project,
-      ...nxConfig,
     },
     options.standaloneConfig
   );
@@ -41,9 +36,11 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 
 function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/web:build',
+    executor: '@nrwl/web:webpack',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
+      compiler: options.compiler ?? 'babel',
       outputPath: joinPathFragments('dist', options.appProjectRoot),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',
@@ -89,25 +86,9 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         optimization: true,
         outputHashing: 'all',
         sourceMap: false,
-        extractCss: true,
         namedChunks: false,
         extractLicenses: true,
         vendorChunk: false,
-        budgets: options.strict
-          ? [
-              {
-                type: 'initial',
-                maximumWarning: '500kb',
-                maximumError: '1mb',
-              },
-            ]
-          : [
-              {
-                type: 'initial',
-                maximumWarning: '2mb',
-                maximumError: '5mb',
-              },
-            ],
       },
     },
   };

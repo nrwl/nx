@@ -1,6 +1,6 @@
 # print-affected
 
-Graph execution plan
+Prints information about the projects and targets affected by changes
 
 ## Usage
 
@@ -8,41 +8,35 @@ Graph execution plan
 nx print-affected
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
-Print information about affected projects and the dependency graph.:
+Print information about affected projects and the dependency graph:
 
 ```bash
 nx print-affected
 ```
 
-Print information about the projects affected by the changes between master and HEAD (e.g,. PR).:
+Print information about the projects affected by the changes between master and HEAD (e.g,. PR):
 
 ```bash
 nx print-affected --base=master --head=HEAD
 ```
 
-Prints information about the affected projects and a list of tasks to test them.:
+Prints information about the affected projects and a list of tasks to test them:
 
 ```bash
 nx print-affected --target=test
 ```
 
-Prints information about the affected projects and a list of tasks to build them and their dependencies.:
-
-```bash
-nx print-affected --target=build --with-deps
-```
-
-Prints the projects property from the print-affected output.:
+Prints the projects property from the print-affected output:
 
 ```bash
 nx print-affected --target=build --select=projects
 ```
 
-Prints the tasks.target.project property from the print-affected output.:
+Prints the tasks.target.project property from the print-affected output:
 
 ```bash
 nx print-affected --target=build --select=tasks.target.project
@@ -91,6 +85,8 @@ Isolate projects which previously failed
 This is the name of the tasks runner configured in nx.json
 
 ### select
+
+Select the subset of the returned json document (e.g., --selected=projects)
 
 ### skip-nx-cache
 

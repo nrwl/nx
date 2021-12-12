@@ -15,6 +15,9 @@ export function setupServeTarget(host: Tree, options: Schema) {
     options: {
       ...appConfig.targets['serve'].options,
       port: options.port ?? undefined,
+      publicHost: options.host
+        ? undefined
+        : `http://localhost:${options.port ?? 4200}`,
     },
   };
 

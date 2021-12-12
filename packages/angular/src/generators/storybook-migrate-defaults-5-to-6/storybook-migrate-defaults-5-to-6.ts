@@ -1,6 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import { migrateDefaultsGenerator } from '@nrwl/storybook';
-import storybookConfigurationGenerator from '../storybook-configuration/storybook-configuration';
 import type { StorybookMigrateDefault5to6Schema } from './schema';
 
 export function storybookMigrateDefaults5To6Generator(
@@ -14,4 +13,4 @@ export function storybookMigrateDefaults5To6Generator(
   });
 }
 
-export default storybookConfigurationGenerator;
+export default storybookMigrateDefaults5To6Generator;

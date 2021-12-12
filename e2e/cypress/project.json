@@ -30,5 +30,5 @@
       "outputs": ["coverage/e2e/cypress"]
     }
   },
-  "implicitDependencies": ["cypress"]
+  "implicitDependencies": ["cypress", "react"]
 }

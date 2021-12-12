@@ -1,3 +1,8 @@
+---
+title: '@nrwl/web:dev-server executor'
+description: 'Serve a web application'
+---
+
 # @nrwl/web:dev-server
 
 Serve a web application
@@ -13,8 +18,6 @@ Type: `string`
 This option allows you to whitelist services that are allowed to access the dev server.
 
 ### baseHref
-
-Default: `/`
 
 Type: `string`
 

@@ -1,6 +1,7 @@
 import { vol } from 'memfs';
 import type {
-  ProjectGraphNode,
+  ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
@@ -12,7 +13,8 @@ jest.mock('fs', () => require('memfs').fs);
 
 describe('findTargetProjectWithImport', () => {
   let ctx: ProjectGraphProcessorContext;
-  let projects: Record<string, ProjectGraphNode>;
+  let projects: Record<string, ProjectGraphProjectNode>;
+  let npmProjects: Record<string, ProjectGraphExternalNode>;
   let fsJson;
   let targetProjectLocator: TargetProjectLocator;
   beforeEach(() => {
@@ -23,9 +25,6 @@ describe('findTargetProjectWithImport', () => {
     };
     const nxJson = {
       npmScope: 'proj',
-      projects: {
-        proj1: {},
-      },
     };
     const tsConfig = {
       compilerOptions: {
@@ -220,70 +219,6 @@ describe('findTargetProjectWithImport', () => {
           files: [],
         },
       },
-      'npm:@ng/core': {
-        name: 'npm:@ng/core',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@ng/core',
-        },
-      },
-      'npm:@ng/common': {
-        name: 'npm:@ng/common',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@ng/common',
-        },
-      },
-      'npm:npm-package': {
-        name: 'npm:npm-package',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: 'npm-package',
-        },
-      },
-      'npm:@proj/my-second-proj': {
-        name: 'npm:@proj/my-second-proj',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@proj/my-second-proj',
-        },
-      },
-      'npm:@proj/proj5': {
-        name: 'npm:@proj/proj5',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@proj/proj5',
-        },
-      },
-      'npm:@proj/proj6': {
-        name: 'npm:@proj/proj6',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@proj/proj6',
-        },
-      },
-      'npm:@proj/proj7': {
-        name: 'npm:@proj/proj7',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@proj/proj7',
-        },
-      },
-      'npm:@proj/proj123-base': {
-        name: 'npm:@proj/proj123-base',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: '@proj/proj123-base',
-        },
-      },
       'proj1234-child': {
         name: 'proj1234-child',
         type: 'lib',
@@ -293,8 +228,74 @@ describe('findTargetProjectWithImport', () => {
         },
       },
     };
+    npmProjects = {
+      'npm:@ng/core': {
+        name: 'npm:@ng/core',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@ng/core',
+        },
+      },
+      'npm:@ng/common': {
+        name: 'npm:@ng/common',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@ng/common',
+        },
+      },
+      'npm:npm-package': {
+        name: 'npm:npm-package',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: 'npm-package',
+        },
+      },
+      'npm:@proj/my-second-proj': {
+        name: 'npm:@proj/my-second-proj',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@proj/my-second-proj',
+        },
+      },
+      'npm:@proj/proj5': {
+        name: 'npm:@proj/proj5',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@proj/proj5',
+        },
+      },
+      'npm:@proj/proj6': {
+        name: 'npm:@proj/proj6',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@proj/proj6',
+        },
+      },
+      'npm:@proj/proj7': {
+        name: 'npm:@proj/proj7',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@proj/proj7',
+        },
+      },
+      'npm:@proj/proj123-base': {
+        name: 'npm:@proj/proj123-base',
+        type: 'npm',
+        data: {
+          version: '1',
+          packageName: '@proj/proj123-base',
+        },
+      },
+    };
 
-    targetProjectLocator = new TargetProjectLocator(projects);
+    targetProjectLocator = new TargetProjectLocator(projects, npmProjects);
   });
 
   it('should be able to resolve a module by using relative paths', () => {

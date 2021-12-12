@@ -25,7 +25,7 @@ import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 /**
  * @WhatItDoes: Generates default documentation from the schematics' schema.
  *    We need to construct an Array of objects containing all the information
- *    of the schematics and their associates schema info. It should be easily
+ *    of the schematics and their associated schema info. It should be easily
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
@@ -35,9 +35,11 @@ function generateSchematicList(
   config: Configuration,
   flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  const schematicCollectionFile = path.join(config.root, 'generators.json');
+  const schematicCollectionFilePath = path.join(config.root, 'generators.json');
+  const schematicCollectionFile = readJsonSync(schematicCollectionFilePath);
   removeSync(config.schematicOutput);
-  const schematicCollection = readJsonSync(schematicCollectionFile).schematics;
+  const schematicCollection =
+    schematicCollectionFile.schematics || schematicCollectionFile.generators;
   return Object.keys(schematicCollection).map((schematicName) => {
     const schematic = {
       name: schematicName,
@@ -68,16 +70,21 @@ function generateTemplate(
   const cliCommand = 'nx';
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   let template = dedent`
-    # ${schematic.collectionName}:${schematic.name} ${
+---
+title: "${schematic.collectionName}:${schematic.name} generator"
+description: "${schematic.description}"
+---
+# ${schematic.collectionName}:${schematic.name} ${
     schematic.hidden ? '[hidden]' : ''
   }
-    ${schematic.description}
+
+${schematic.description}
   
-    ## Usage
-    \`\`\`bash
-    ${cliCommand} generate ${schematic.name} ...
-    \`\`\`
-    `;
+## Usage
+\`\`\`bash
+${cliCommand} generate ${schematic.name} ...
+\`\`\`
+`;
 
   if (schematic.alias) {
     template += dedent`

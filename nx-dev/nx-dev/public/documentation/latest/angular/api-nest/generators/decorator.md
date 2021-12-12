@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:decorator generator'
+description: 'Run the `decorator` NestJS generator with Nx project support.'
+---
+
 # @nrwl/nest:decorator
 
 Run the `decorator` NestJS generator with Nx project support.

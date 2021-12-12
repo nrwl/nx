@@ -49,6 +49,15 @@ const tsconfig = {
   include: ['**/*.ts'],
 };
 
+const packageJson = {
+  dependencies: {
+    'npm-package': '2.3.4',
+  },
+  devDependencies: {
+    'npm-awesome-package': '1.2.3',
+  },
+};
+
 const fileSys = {
   './libs/impl/src/index.ts': '',
   './libs/untagged/src/index.ts': '',
@@ -70,6 +79,7 @@ const fileSys = {
   './libs/buildableLib/src/main.ts': '',
   './libs/nonBuildableLib/src/main.ts': '',
   './tsconfig.base.json': JSON.stringify(tsconfig),
+  './package.json': JSON.stringify(packageJson),
 };
 
 describe('Enforce Module Boundaries (eslint)', () => {
@@ -182,7 +192,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
   });
 
   describe('depConstraints', () => {
-    const graph = {
+    const graph: ProjectGraph = {
       nodes: {
         apiName: {
           name: 'apiName',
@@ -250,13 +260,38 @@ describe('Enforce Module Boundaries (eslint)', () => {
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
-        npmPackage: {
+      },
+      externalNodes: {
+        'npm:npm-package': {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
             packageName: 'npm-package',
+            version: '2.3.4',
+          },
+        },
+        'npm:npm-package2': {
+          name: 'npm:npm-package2',
+          type: 'npm',
+          data: {
+            packageName: 'npm-package2',
             version: '0.0.0',
-            files: [],
+          },
+        },
+        'npm:1npm-package': {
+          name: 'npm:1npm-package',
+          type: 'npm',
+          data: {
+            packageName: '1npm-package',
+            version: '0.0.0',
+          },
+        },
+        'npm:npm-awesome-package': {
+          name: 'npm:npm-awesome-package',
+          type: 'npm',
+          data: {
+            packageName: 'npm-awesome-package',
+            version: '1.2.3',
           },
         },
       },
@@ -294,7 +329,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
-    it('should allow imports to npm packages', () => {
+    it('should allow imports of npm packages', () => {
       const failures = runRule(
         depConstraints,
         `${process.cwd()}/proj/libs/api/src/index.ts`,
@@ -306,6 +341,92 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       expect(failures.length).toEqual(0);
+    });
+
+    it('should error when importing forbidden npm packages', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should error when importing transitive npm packages', () => {
+      const failures = runRule(
+        {
+          ...depConstraints,
+          banTransitiveDependencies: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package2';
+          import('npm-package2');
+        `,
+        graph
+      );
+
+      const message =
+        'Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when importing direct npm dependencies', () => {
+      const failures = runRule(
+        {
+          ...depConstraints,
+          banTransitiveDependencies: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+          import 'npm-awesome-package';
+          import('npm-awesome-package');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should allow wildcards for defining forbidden npm packages', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-*ge'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import 'npm-awesome-package';
+          import 'npm-package2';
+          import '1npm-package';
+        `,
+        graph
+      );
+
+      const message = (packageName) =>
+        `A project tagged with "api" is not allowed to import the "${packageName}" package`;
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message('npm-package'));
+      expect(failures[1].message).toEqual(message('npm-awesome-package'));
     });
 
     it('should error when the target library is untagged', () => {
@@ -1553,7 +1674,8 @@ function runRule(
   (global as any).npmScope = 'mycompany';
   (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
-    projectGraph.nodes
+    projectGraph.nodes,
+    projectGraph.externalNodes
   );
 
   const config = {

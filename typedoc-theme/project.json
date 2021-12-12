@@ -4,7 +4,7 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/workspace:tsc",
+      "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/typedoc-theme",
@@ -14,13 +14,10 @@
       }
     },
     "build": {
-      "executor": "@nrwl/workspace:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nrwl/workspace:run-commands",
       "options": {
         "outputPath": "dist/typedoc-theme",
-        "main": "typedoc-theme/src/index.ts",
-        "tsConfig": "typedoc-theme/tsconfig.lib.json",
-        "assets": ["typedoc-theme/*.md"]
+        "command": "echo 'Building TypeDoc custom theme'"
       }
     },
     "lint": {

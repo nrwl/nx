@@ -83,33 +83,13 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
           {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          },
-          {
-            "name": "Why Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "angular/guides/update"
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
           },
           {
             "name": "Configuration",
@@ -117,9 +97,19 @@
             "file": "angular/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
+          },
+          {
+            "name": "Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "angular/guides/update"
           }
         ]
       },
@@ -127,11 +117,6 @@
         "name": "Migration",
         "id": "migration",
         "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
           {
             "name": "From Angular CLI",
             "id": "migration-angular"
@@ -141,7 +126,7 @@
             "id": "migration-angularjs"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -149,6 +134,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -190,6 +180,16 @@
             "name": "run",
             "id": "run",
             "file": "angular/cli/run"
+          },
+          {
+            "name": "daemon:start",
+            "id": "daemon-start",
+            "file": "angular/cli/daemon-start"
+          },
+          {
+            "name": "daemon:stop",
+            "id": "daemon-stop",
+            "file": "angular/cli/daemon-stop"
           },
           {
             "name": "dep-graph",
@@ -280,6 +280,16 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "angular/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "angular/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "angular/cli/clear-cache"
           }
         ]
       },
@@ -297,6 +307,11 @@
             "name": "library generator",
             "id": "library",
             "file": "angular/api-workspace/generators/library"
+          },
+          {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "file": "angular/api-workspace/generators/npm-package"
           },
           {
             "name": "move generator",
@@ -319,6 +334,11 @@
             "file": "angular/api-workspace/generators/workspace-generator"
           },
           {
+            "name": "convert-to-nx-project generator",
+            "id": "convert-to-nx-project-generator",
+            "file": "angular/api-workspace/generators/convert-to-nx-project"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "angular/api-workspace/executors/run-commands"
@@ -327,6 +347,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "angular/api-workspace/executors/tsc"
           }
         ]
       },
@@ -349,6 +374,11 @@
             "name": "build executor",
             "id": "build",
             "file": "angular/api-web/executors/build"
+          },
+          {
+            "name": "migrate to webpack 5 generator",
+            "id": "migrate-to-webpack-5",
+            "file": "angular/api-web/generators/migrate-to-webpack-5"
           },
           {
             "name": "dev-server executor",
@@ -383,19 +413,24 @@
             "file": "angular/api-angular/generators/application"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
             "file": "angular/api-angular/generators/downgrade-module"
           },
           {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "angular/api-angular/generators/karma-project"
-          },
-          {
             "name": "karma generator",
             "id": "karma",
             "file": "angular/api-angular/generators/karma"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "angular/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
@@ -413,6 +448,11 @@
             "file": "angular/api-angular/generators/ngrx"
           },
           {
+            "name": "setup-mfe generator",
+            "id": "setup-mfe",
+            "file": "angular/api-angular/generators/setup-mfe"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "angular/api-angular/generators/stories"
@@ -428,19 +468,24 @@
             "file": "angular/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
+            "name": "storybook-migrate-stories-to-6-2 generator",
+            "id": "storybook-migrate-stories-to-6-2",
+            "file": "angular/api-angular/generators/storybook-migrate-stories-to-6-2"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "angular/api-angular/generators/upgrade-module"
           },
           {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+            "name": "web-worker generator",
+            "id": "web-worker",
+            "file": "angular/api-angular/generators/web-worker"
           },
           {
-            "name": "package executor",
-            "id": "package",
-            "file": "angular/api-angular/executors/package"
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "angular/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
@@ -448,9 +493,19 @@
             "file": "angular/api-angular/executors/ng-packagr-lite"
           },
           {
+            "name": "package executor",
+            "id": "package",
+            "file": "angular/api-angular/executors/package"
+          },
+          {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "angular/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -508,6 +563,11 @@
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
             "file": "angular/api-react/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
+            "name": "hook generator",
+            "id": "hook",
+            "file": "angular/api-react/generators/hook"
           }
         ]
       },
@@ -556,6 +616,16 @@
             "file": "angular/guides/storybook-plugin"
           },
           {
+            "id": "migrate-webpack-final",
+            "name": "Migrate your webpack config",
+            "file": "angular/guides/storybook/migrate-webpack-final"
+          },
+          {
+            "id": "upgrade-storybook-v6",
+            "name": "Upgrading to Storybook 6",
+            "file": "angular/guides/storybook/storybook-v6"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "angular/api-storybook/generators/configuration"
@@ -564,6 +634,11 @@
             "name": "migrate-defaults-5-to-6 generator",
             "id": "migrate-defaults-5-to-6",
             "file": "angular/api-storybook/generators/migrate-defaults-5-to-6"
+          },
+          {
+            "name": "migrate-stories-to-6-2 generator",
+            "id": "migrate-stories-to-6-2",
+            "file": "angular/api-storybook/generators/migrate-stories-to-6-2"
           },
           {
             "name": "cypress-project generator",
@@ -595,6 +670,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "angular/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "file": "angular/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -617,6 +697,11 @@
             "name": "library generator",
             "id": "library",
             "file": "angular/api-node/generators/library"
+          },
+          {
+            "name": "migrate to webpack 5 generator",
+            "id": "migrate-to-webpack-5",
+            "file": "angular/api-node/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -829,6 +914,83 @@
         ]
       },
       {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "angular/api-detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "angular/api-react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-react-native/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "angular/api-react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "file": "angular/api-react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "angular/api-react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "file": "angular/api-react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "file": "angular/api-react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "angular/api-react-native/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "angular/api-react-native/executors/sync-deps"
+          }
+        ]
+      },
+      {
         "name": "Nx Plugin",
         "id": "nx-plugin",
         "itemList": [
@@ -866,13 +1028,47 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "Overview",
+            "searchResultsName": "Nx Devkit",
+            "file": "angular/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "angular/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
+        "name": "Core",
+        "id": "core-extended",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -893,12 +1089,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "angular/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "angular/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "angular/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -932,9 +1148,14 @@
             "file": "shared/monorepo-tags"
           },
           {
-            "name": "Dependency Graph",
+            "name": "Project Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -990,6 +1211,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Using NgRx",
             "id": "misc-ngrx"
           },
@@ -1001,6 +1227,11 @@
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
             "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Using ESLint in Nx Workspaces",
+            "id": "eslint",
+            "file": "shared/eslint"
           },
           {
             "name": "Nx 7 => Nx 8",
@@ -1024,6 +1255,16 @@
             "name": "Nx Devkit and Angular Devkit",
             "id": "nx-devkit-angular-devkit",
             "file": "angular/guides/nx-devkit-angular-devkit"
+          },
+          {
+            "name": "Webpack 5 Migration",
+            "id": "webpack-5",
+            "file": "shared/guides/webpack-5"
+          },
+          {
+            "name": "Setup MFE with Angular and Nx",
+            "id": "setup-mfe-with-angular",
+            "file": "angular/guides/setup-mfe-with-angular"
           }
         ]
       },
@@ -1134,33 +1375,13 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
           {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          },
-          {
-            "name": "Why Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "shared/update"
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
           },
           {
             "name": "Configuration",
@@ -1168,9 +1389,19 @@
             "file": "react/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
+          },
+          {
+            "name": "Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
           }
         ]
       },
@@ -1179,16 +1410,11 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
             "name": "From CRA",
             "id": "migration-cra"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -1196,6 +1422,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -1237,6 +1468,16 @@
             "name": "run",
             "id": "run",
             "file": "react/cli/run"
+          },
+          {
+            "name": "daemon:start",
+            "id": "daemon-start",
+            "file": "react/cli/daemon-start"
+          },
+          {
+            "name": "daemon:stop",
+            "id": "daemon-stop",
+            "file": "react/cli/daemon-stop"
           },
           {
             "name": "dep-graph",
@@ -1327,6 +1568,16 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "react/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "react/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "react/cli/clear-cache"
           }
         ]
       },
@@ -1344,6 +1595,11 @@
             "name": "library generator",
             "id": "library",
             "file": "react/api-workspace/generators/library"
+          },
+          {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "file": "react/api-workspace/generators/npm-package"
           },
           {
             "name": "move generator",
@@ -1366,6 +1622,11 @@
             "file": "react/api-workspace/generators/workspace-generator"
           },
           {
+            "name": "convert-to-nx-project generator",
+            "id": "convert-to-nx-project-generator",
+            "file": "react/api-workspace/generators/convert-to-nx-project"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "react/api-workspace/executors/run-commands"
@@ -1374,6 +1635,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "react/api-workspace/executors/tsc"
           }
         ]
       },
@@ -1391,6 +1657,11 @@
             "name": "application generator",
             "id": "application",
             "file": "react/api-web/generators/application"
+          },
+          {
+            "name": "migrate to webpack 5 generator",
+            "id": "migrate-to-webpack-5",
+            "file": "react/api-web/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -1430,19 +1701,24 @@
             "file": "react/api-angular/generators/application"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "react/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
             "file": "react/api-angular/generators/downgrade-module"
           },
           {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "react/api-angular/generators/karma-project"
-          },
-          {
             "name": "karma generator",
             "id": "karma",
             "file": "react/api-angular/generators/karma"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "react/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
@@ -1460,9 +1736,9 @@
             "file": "react/api-angular/generators/ngrx"
           },
           {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "react/api-angular/generators/convert-tslint-to-eslint"
+            "name": "setup-mfe generator",
+            "id": "setup-mfe",
+            "file": "react/api-angular/generators/setup-mfe"
           },
           {
             "name": "stories generator",
@@ -1480,14 +1756,24 @@
             "file": "react/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
+            "name": "storybook-migrate-stories-to-6-2 generator",
+            "id": "storybook-migrate-stories-to-6-2",
+            "file": "react/api-angular/generators/storybook-migrate-stories-to-6-2"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "react/api-angular/generators/upgrade-module"
           },
           {
-            "name": "package executor",
-            "id": "package",
-            "file": "react/api-angular/executors/package"
+            "name": "web-worker generator",
+            "id": "web-worker",
+            "file": "react/api-angular/generators/web-worker"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "react/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
@@ -1495,9 +1781,19 @@
             "file": "react/api-angular/executors/ng-packagr-lite"
           },
           {
+            "name": "package executor",
+            "id": "package",
+            "file": "react/api-angular/executors/package"
+          },
+          {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "react/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -1555,6 +1851,11 @@
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
             "file": "react/api-react/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
+            "name": "hook generator",
+            "id": "hook",
+            "file": "react/api-react/generators/hook"
           }
         ]
       },
@@ -1603,6 +1904,16 @@
             "file": "react/guides/storybook-plugin"
           },
           {
+            "id": "migrate-webpack-final",
+            "name": "Migrate to the Nrwl React Storybook Preset",
+            "file": "react/guides/storybook/migrate-webpack-final"
+          },
+          {
+            "id": "upgrade-storybook-v6",
+            "name": "Upgrading to Storybook 6",
+            "file": "react/guides/storybook/storybook-v6"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "react/api-storybook/generators/configuration"
@@ -1616,6 +1927,11 @@
             "name": "migrate-defaults-5-to-6 generator",
             "id": "migrate-defaults-5-to-6",
             "file": "react/api-storybook/generators/migrate-defaults-5-to-6"
+          },
+          {
+            "name": "migrate-stories-to-6-2 generator",
+            "id": "migrate-stories-to-6-2",
+            "file": "react/api-storybook/generators/migrate-stories-to-6-2"
           },
           {
             "id": "executors",
@@ -1648,6 +1964,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "react/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "file": "react/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -1670,6 +1991,11 @@
             "name": "library generator",
             "id": "library",
             "file": "react/api-node/generators/library"
+          },
+          {
+            "name": "migrate to webpack 5 generator",
+            "id": "migrate-to-webpack-5",
+            "file": "react/api-node/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -1882,6 +2208,104 @@
         ]
       },
       {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "react/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "react/api-detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-detox/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-detox/executors/build"
+          },
+          {
+            "name": "test executor",
+            "id": "test",
+            "file": "node/api-detox/executors/test"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "react/api-react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-react-native/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "react/api-react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "file": "react/api-react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "react/api-react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "file": "react/api-react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "file": "react/api-react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "react/api-react-native/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "react/api-react-native/executors/sync-deps"
+          }
+        ]
+      },
+      {
         "name": "Nx Plugin",
         "id": "nx-plugin",
         "itemList": [
@@ -1919,13 +2343,47 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "Overview",
+            "searchResultsName": "Nx Devkit",
+            "file": "react/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "react/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
+        "name": "Core",
+        "id": "core-extended",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -1946,12 +2404,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -1988,6 +2466,11 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -2022,6 +2505,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
             "file": "react/guides/adding-assets"
@@ -2037,6 +2525,11 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
+            "name": "Using ESLint in Nx Workspaces",
+            "id": "eslint",
+            "file": "shared/eslint"
+          },
+          {
             "name": "JavaScript and TypeScript",
             "id": "js-and-ts",
             "file": "react/guides/js-and-ts"
@@ -2050,6 +2543,21 @@
             "name": "Next.js projects with Nx",
             "id": "nextjs",
             "file": "react/guides/nextjs"
+          },
+          {
+            "name": "Deploying Next.js applications to Vercel",
+            "id": "deploy-nextjs-to-vercel",
+            "file": "react/guides/deploy-nextjs-to-vercel"
+          },
+          {
+            "name": "Webpack 5 Migration",
+            "id": "webpack-5",
+            "file": "shared/guides/webpack-5"
+          },
+          {
+            "name": "Using Tailwind CSS in React",
+            "id": "using-tailwind-css-in-react",
+            "file": "react/guides/using-tailwind-css-in-react"
           }
         ]
       },
@@ -2144,33 +2652,13 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
           {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          },
-          {
-            "name": "Why Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "shared/update"
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
           },
           {
             "name": "Configuration",
@@ -2178,9 +2666,19 @@
             "file": "node/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
+          },
+          {
+            "name": "Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
           }
         ]
       },
@@ -2189,12 +2687,7 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "overview",
-            "file": "shared/migration/overview"
-          },
-          {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -2202,6 +2695,11 @@
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
           }
         ]
       },
@@ -2243,6 +2741,16 @@
             "name": "run",
             "id": "run",
             "file": "node/cli/run"
+          },
+          {
+            "name": "daemon:start",
+            "id": "daemon-start",
+            "file": "node/cli/daemon-start"
+          },
+          {
+            "name": "daemon:stop",
+            "id": "daemon-stop",
+            "file": "node/cli/daemon-stop"
           },
           {
             "name": "dep-graph",
@@ -2333,6 +2841,16 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "node/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "node/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "node/cli/clear-cache"
           }
         ]
       },
@@ -2350,6 +2868,11 @@
             "name": "library generator",
             "id": "library",
             "file": "node/api-workspace/generators/library"
+          },
+          {
+            "name": "npm-package generator",
+            "id": "npm-package",
+            "file": "node/api-workspace/generators/npm-package"
           },
           {
             "name": "move generator",
@@ -2372,6 +2895,11 @@
             "file": "node/api-workspace/generators/workspace-generator"
           },
           {
+            "name": "convert-to-nx-project generator",
+            "id": "convert-to-nx-project-generator",
+            "file": "node/api-workspace/generators/convert-to-nx-project"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "node/api-workspace/executors/run-commands"
@@ -2380,6 +2908,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "node/api-workspace/executors/tsc"
           }
         ]
       },
@@ -2397,6 +2930,11 @@
             "name": "application generator",
             "id": "application",
             "file": "node/api-web/generators/application"
+          },
+          {
+            "name": "migrate to webpack 5 generator",
+            "id": "migrate-to-webpack-5",
+            "file": "node/api-web/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -2436,19 +2974,24 @@
             "file": "node/api-angular/generators/application"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "node/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
             "file": "node/api-angular/generators/downgrade-module"
           },
           {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "node/api-angular/generators/karma-project"
-          },
-          {
             "name": "karma generator",
             "id": "karma",
             "file": "node/api-angular/generators/karma"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "node/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
@@ -2466,6 +3009,11 @@
             "file": "node/api-angular/generators/ngrx"
           },
           {
+            "name": "setup-mfe generator",
+            "id": "setup-mfe",
+            "file": "node/api-angular/generators/setup-mfe"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "node/api-angular/generators/stories"
@@ -2481,19 +3029,24 @@
             "file": "node/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
+            "name": "storybook-migrate-stories-to-6-2 generator",
+            "id": "storybook-migrate-stories-to-6-2",
+            "file": "node/api-angular/generators/storybook-migrate-stories-to-6-2"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "node/api-angular/generators/upgrade-module"
           },
           {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "node/api-angular/generators/convert-tslint-to-eslint"
+            "name": "web-worker generator",
+            "id": "web-worker",
+            "file": "node/api-angular/generators/web-worker"
           },
           {
-            "name": "package executor",
-            "id": "package",
-            "file": "node/api-angular/executors/package"
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "node/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
@@ -2501,9 +3054,19 @@
             "file": "node/api-angular/executors/ng-packagr-lite"
           },
           {
+            "name": "package executor",
+            "id": "package",
+            "file": "node/api-angular/executors/package"
+          },
+          {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "node/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -2561,6 +3124,11 @@
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
             "file": "node/api-react/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
+            "name": "hook generator",
+            "id": "hook",
+            "file": "node/api-react/generators/hook"
           }
         ]
       },
@@ -2618,6 +3186,11 @@
             "file": "node/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
+            "name": "migrate-stories-to-6-2 generator",
+            "id": "migrate-stories-to-6-2",
+            "file": "node/api-storybook/generators/migrate-stories-to-6-2"
+          },
+          {
             "name": "cypress-project generator",
             "id": "cypress-project",
             "file": "node/api-storybook/generators/cypress-project"
@@ -2647,6 +3220,11 @@
             "name": "lint executor",
             "id": "lint",
             "file": "node/api-linter/executors/lint"
+          },
+          {
+            "name": "workspace-rule generator",
+            "id": "workspace-rule",
+            "file": "node/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -2669,6 +3247,11 @@
             "name": "library generator",
             "id": "library",
             "file": "node/api-node/generators/library"
+          },
+          {
+            "name": "migrate to webpack 5 generator",
+            "id": "migrate-to-webpack-5",
+            "file": "node/api-node/generators/migrate-to-webpack-5"
           },
           {
             "name": "build executor",
@@ -2881,6 +3464,62 @@
         ]
       },
       {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-react-native/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "node/api-react-native/generators/component"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-react-native/generators/library"
+          },
+          {
+            "name": "build android executor",
+            "id": "build-android",
+            "file": "node/api-react-native/executors/build-android"
+          },
+          {
+            "name": "bundle executor",
+            "id": "bundle",
+            "file": "node/api-react-native/executors/bundle"
+          },
+          {
+            "name": "ensure symlink executor",
+            "id": "ensure-symlink",
+            "file": "node/api-react-native/executors/ensure-symlink"
+          },
+          {
+            "name": "run android executor",
+            "id": "run-android",
+            "file": "node/api-react-native/executors/run-android"
+          },
+          {
+            "name": "run ios executor",
+            "id": "run-ios",
+            "file": "node/api-react-native/executors/run-ios"
+          },
+          {
+            "name": "start executor",
+            "id": "start",
+            "file": "node/api-react-native/executors/start"
+          },
+          {
+            "name": "sync deps executor",
+            "id": "sync-deps",
+            "file": "node/api-react-native/executors/sync-deps"
+          }
+        ]
+      },
+      {
         "name": "Nx Plugin",
         "id": "nx-plugin",
         "itemList": [
@@ -2918,13 +3557,47 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "Overview",
+            "searchResultsName": "Nx Devkit",
+            "file": "node/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "node/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
+        "name": "Core",
+        "id": "core-extended",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -2945,12 +3618,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -2987,6 +3680,11 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -3021,9 +3719,24 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
             "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Using ESLint in Nx Workspaces",
+            "id": "eslint",
+            "file": "shared/eslint"
+          },
+          {
+            "name": "Webpack 5 Migration",
+            "id": "webpack-5",
+            "file": "shared/guides/webpack-5"
           }
         ]
       }

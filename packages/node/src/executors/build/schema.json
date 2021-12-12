@@ -79,12 +79,6 @@
       "description": "Defines the optimization level of the build.",
       "default": false
     },
-    "showCircularDependencies": {
-      "type": "boolean",
-      "description": "Show circular dependency warnings on builds.",
-      "default": false,
-      "x-deprecated": "The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling."
-    },
     "maxWorkers": {
       "type": "number",
       "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
@@ -160,6 +154,11 @@
           }
         }
       }
+    },
+    "outputFileName": {
+      "type": "string",
+      "description": "Name of the main output file. (defaults to 'main.js')",
+      "default": "main.js"
     }
   },
   "required": ["tsConfig", "main"],

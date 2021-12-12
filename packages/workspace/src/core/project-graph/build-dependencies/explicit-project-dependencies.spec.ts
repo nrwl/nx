@@ -1,13 +1,13 @@
+import { createProjectFileMap } from '@nrwl/workspace/src/core/file-utils';
+
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 
 import { vol } from 'memfs';
-import { ProjectGraphNode, DependencyType } from '../project-graph-models';
+import { ProjectGraphNode } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { createProjectFileMap } from '../../file-graph';
-import { readWorkspaceFiles } from '../../file-utils';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
@@ -42,9 +42,6 @@ describe('explicit project dependencies', () => {
     };
     const nxJson = {
       npmScope: 'proj',
-      projects: {
-        proj1: {},
-      },
     };
     const tsConfig = {
       compilerOptions: {
@@ -114,7 +111,7 @@ describe('explicit project dependencies', () => {
         ...workspaceJson,
         ...nxJson,
       } as any,
-      filesToProcess: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
+      filesToProcess: createProjectFileMap(workspaceJson).projectFileMap,
     } as any;
 
     projects = {

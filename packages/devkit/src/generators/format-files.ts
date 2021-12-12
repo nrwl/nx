@@ -1,10 +1,14 @@
 import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
-import { readJson, writeJson } from '../utils/json';
+import { readJson, updateJson, writeJson } from '../utils/json';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import {
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
+  WorkspaceConfiguration,
+} from './project-configuration';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -16,9 +20,8 @@ export async function formatFiles(tree: Tree): Promise<void> {
     prettier = await import('prettier');
   } catch {}
 
-  updateWorkspaceJsonToMatchFormatVersion(tree);
+  ensurePropertiesAreInNewLocations(tree);
   sortWorkspaceJson(tree);
-  sortNxJson(tree);
   sortTsConfig(tree);
 
   if (!prettier) return;
@@ -61,27 +64,9 @@ export async function formatFiles(tree: Tree): Promise<void> {
   );
 }
 
-function updateWorkspaceJsonToMatchFormatVersion(tree: Tree) {
-  const path = getWorkspacePath(tree);
-  if (!path) {
-    return;
-  }
-
-  try {
-    const workspaceJson = readJson(tree, path);
-    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
-    if (reformatted) {
-      writeJson(tree, path, reformatted);
-    }
-  } catch (e) {
-    console.error(`Failed to format: ${path}`);
-    console.error(e);
-  }
-}
-
 function sortWorkspaceJson(tree: Tree) {
   const workspaceJsonPath = getWorkspacePath(tree);
-  if (!path) {
+  if (!workspaceJsonPath) {
     return;
   }
 
@@ -99,17 +84,34 @@ function sortWorkspaceJson(tree: Tree) {
   }
 }
 
-function sortNxJson(tree: Tree) {
-  try {
-    const nxJson = readJson(tree, 'nx.json');
-    const sortedProjects = sortObjectByKeys(nxJson.projects);
-    writeJson(tree, 'nx.json', {
-      ...nxJson,
-      projects: sortedProjects,
-    });
-  } catch (e) {
-    // catch noop
+/**
+ * `updateWorkspaceConfiguration` already handles
+ * placing properties in their new locations, so
+ * reading + updating it ensures that props are placed
+ * correctly.
+ */
+function ensurePropertiesAreInNewLocations(tree: Tree) {
+  const workspacePath = getWorkspacePath(tree);
+  if (!workspacePath) {
+    return;
   }
+  const wc = readWorkspaceConfiguration(tree);
+  updateJson<WorkspaceConfiguration>(tree, workspacePath, (json) => {
+    wc.generators ??= json.generators ?? (json as any).schematics;
+    if (wc.cli) {
+      wc.cli.defaultCollection ??= json.cli?.defaultCollection;
+      wc.cli.packageManager ??= json.cli?.packageManager;
+    } else if (json.cli) {
+      wc.cli ??= json.cli;
+    }
+    wc.defaultProject ??= json.defaultProject;
+    delete json.cli;
+    delete json.defaultProject;
+    delete (json as any).schematics;
+    delete json.generators;
+    return json;
+  });
+  updateWorkspaceConfiguration(tree, wc);
 }
 
 function sortTsConfig(tree: Tree) {

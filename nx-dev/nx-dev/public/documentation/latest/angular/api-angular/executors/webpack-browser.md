@@ -1,3 +1,8 @@
+---
+title: '@nrwl/angular:webpack-browser executor'
+description: 'Builds a browser application with support for incremental builds and custom webpack configuration.'
+---
+
 # @nrwl/angular:webpack-browser
 
 Builds a browser application with support for incremental builds and custom webpack configuration.
@@ -22,7 +27,9 @@ The full path for the main entry point to the app, relative to the current works
 
 Type: `string`
 
-The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
+            The full path for the new output directory, relative to the current workspace.
+
+By default, writes output to a folder named dist/ in the current project.
 
 ### tsConfig (_**required**_)
 
@@ -96,21 +103,13 @@ Type: `boolean`
 
 Delete the output path before building.
 
-### deployUrl
+### ~~deployUrl~~
 
 Type: `string`
 
+**Deprecated:** Use "baseHref" option, "APP_BASE_HREF" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url.
+
 URL where files will be deployed.
-
-### ~~extractCss~~
-
-Default: `true`
-
-Type: `boolean`
-
-**Deprecated:** Deprecated since version 11.0. No longer required to disable CSS extraction for HMR.
-
-Extract CSS from global styles into '.css' files instead of '.js'.
 
 ### extractLicenses
 

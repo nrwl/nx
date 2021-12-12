@@ -15,7 +15,6 @@ import {
 import type {
   Tree,
   GeneratorCallback,
-  NxJsonProjectConfiguration,
   ProjectConfiguration,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
@@ -56,8 +55,7 @@ export interface ConvertTSLintToESLintSchema {
  * and it will extend from the root workspace .eslintrc.json file as normal.
  */
 export class ProjectConverter {
-  private readonly projectConfig: ProjectConfiguration &
-    NxJsonProjectConfiguration;
+  private readonly projectConfig: ProjectConfiguration;
   private readonly rootTSLintJsonPath = 'tslint.json';
   private readonly rootTSLintJson: Record<string, unknown>;
   private readonly projectTSLintJsonPath: string;
@@ -67,7 +65,7 @@ export class ProjectConverter {
   private readonly ignoreExistingTslintConfig: boolean;
   private readonly eslintInitializer: (projectInfo: {
     projectName: string;
-    projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
+    projectConfig: ProjectConfiguration;
   }) => Promise<void>;
 
   /**
@@ -86,7 +84,7 @@ export class ProjectConverter {
     ignoreExistingTslintConfig: boolean;
     eslintInitializer: (projectInfo: {
       projectName: string;
-      projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
+      projectConfig: ProjectConfiguration;
     }) => Promise<void>;
   }) {
     this.host = host;

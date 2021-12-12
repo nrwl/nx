@@ -12,10 +12,11 @@ import {
   GeneratorCallback,
   joinPathFragments,
   ProjectConfiguration,
-  NxJsonProjectConfiguration,
+  addDependenciesToPackageJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 // nx-ignore-next-line
@@ -33,8 +34,7 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  const projectConfiguration: ProjectConfiguration &
-    NxJsonProjectConfiguration = {
+  const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
@@ -44,8 +44,9 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 
   if (options.buildable) {
     const { libsDir } = getWorkspaceLayout(tree);
+    addDependenciesToPackageJson(tree, {}, { '@nrwl/js': nxVersion });
     projectConfiguration.targets.build = {
-      executor: '@nrwl/workspace:tsc',
+      executor: '@nrwl/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -82,8 +83,8 @@ export function addLint(
   });
 }
 
-function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.projectRoot, 'tsconfig.lib.json'), (json) => {
+function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, join(options.projectRoot, 'tsconfig.json'), (json) => {
     if (options.strict) {
       json.compilerOptions = {
         ...json.compilerOptions,
@@ -157,7 +158,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tree.delete(join(options.projectRoot, 'package.json'));
   }
 
-  updateLibTsConfig(tree, options);
+  updateTsConfig(tree, options);
 }
 
 async function addJest(
@@ -228,7 +229,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
 
   const { libsDir, npmScope } = getWorkspaceLayout(tree);
 
-  const projectRoot = `${libsDir}/${projectDirectory}`;
+  const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

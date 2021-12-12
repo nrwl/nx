@@ -39,13 +39,10 @@ describe('app', () => {
       e2eTestRunner: 'none',
     });
 
-    const nxJson = readJson(appTree, '/nx.json');
-    expect(nxJson).toMatchObject({
-      npmScope: 'proj',
-      projects: {
-        'my-app': {
-          tags: ['one', 'two'],
-        },
+    const { projects } = readJson(appTree, '/workspace.json');
+    expect(projects).toMatchObject({
+      'my-app': {
+        tags: ['one', 'two'],
       },
     });
   });

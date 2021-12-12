@@ -46,9 +46,13 @@ describe('@nrwl/storybook:configuration', () => {
     );
     expect(rootStorybookTsconfigJson.exclude).toEqual([
       '../**/*.spec.js',
+      '../**/*.test.js',
       '../**/*.spec.ts',
+      '../**/*.test.ts',
       '../**/*.spec.tsx',
+      '../**/*.test.tsx',
       '../**/*.spec.jsx',
+      '../**/*.test.jsx',
     ]);
 
     // Local

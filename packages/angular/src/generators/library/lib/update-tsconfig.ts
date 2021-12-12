@@ -1,4 +1,9 @@
-import { getWorkspaceLayout, Tree, updateJson } from '@nrwl/devkit';
+import {
+  getWorkspaceLayout,
+  joinPathFragments,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
 function updateRootConfig(host: Tree, options: NormalizedSchema) {
@@ -14,9 +19,11 @@ function updateRootConfig(host: Tree, options: NormalizedSchema) {
     }
 
     c.paths[options.importPath] = [
-      `${getWorkspaceLayout(host).libsDir}/${
-        options.projectDirectory
-      }/src/index.ts`,
+      joinPathFragments(
+        getWorkspaceLayout(host).libsDir,
+        options.projectDirectory,
+        '/src/index.ts'
+      ),
     ];
 
     return json;
@@ -26,17 +33,21 @@ function updateRootConfig(host: Tree, options: NormalizedSchema) {
 function updateProjectConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
     json.include = ['**/*.ts'];
+    json.exclude = [
+      ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
+    ];
     return json;
   });
 }
 
-function updateProjectProdConfig(host: Tree, options: NormalizedSchema) {
-  if (options.enableIvy) {
+function updateProjectIvyConfig(host: Tree, options: NormalizedSchema) {
+  if (options.buildable || options.publishable) {
     return updateJson(
       host,
       `${options.projectRoot}/tsconfig.lib.prod.json`,
       (json) => {
-        json.angularCompilerOptions['enableIvy'] = true;
+        json.angularCompilerOptions['compilationMode'] =
+          options.compilationMode === 'full' ? undefined : 'partial';
         return json;
       }
     );
@@ -46,5 +57,5 @@ function updateProjectProdConfig(host: Tree, options: NormalizedSchema) {
 export function updateTsConfig(host: Tree, options: NormalizedSchema) {
   updateRootConfig(host, options);
   updateProjectConfig(host, options);
-  updateProjectProdConfig(host, options);
+  updateProjectIvyConfig(host, options);
 }

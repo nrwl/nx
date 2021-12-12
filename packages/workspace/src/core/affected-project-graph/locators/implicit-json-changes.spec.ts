@@ -31,7 +31,6 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
         },
       },
       npmScope: 'scope',
-      projects: {},
     };
   });
 

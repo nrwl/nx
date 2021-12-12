@@ -1,3 +1,8 @@
+---
+title: 'connect-to-nx-cloud - CLI command'
+description: 'Makes sure the workspace is connected to Nx Cloud'
+---
+
 # connect-to-nx-cloud
 
 Makes sure the workspace is connected to Nx Cloud

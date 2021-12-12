@@ -1,3 +1,8 @@
+---
+title: '@nrwl/nest:library generator'
+description: 'Create a new NestJS library.'
+---
+
 # @nrwl/nest:library
 
 Create a new NestJS library.
@@ -129,8 +134,6 @@ Type: `boolean`
 Do not update tsconfig.base.json for development experience.
 
 ### standaloneConfig
-
-Default: `false`
 
 Type: `boolean`
 

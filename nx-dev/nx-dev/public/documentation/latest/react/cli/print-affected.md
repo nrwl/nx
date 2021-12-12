@@ -1,3 +1,8 @@
+---
+title: 'print-affected - CLI command'
+description: 'Prints information about the projects and targets affected by changes'
+---
+
 # print-affected
 
 Prints information about the projects and targets affected by changes
@@ -18,10 +23,10 @@ Print information about affected projects and the dependency graph:
 nx print-affected
 ```
 
-Print information about the projects affected by the changes between master and HEAD (e.g,. PR):
+Print information about the projects affected by the changes between main and HEAD (e.g,. PR):
 
 ```bash
-nx print-affected --base=master --head=HEAD
+nx print-affected --base=main --head=HEAD
 ```
 
 Prints information about the affected projects and a list of tasks to test them:
@@ -50,7 +55,7 @@ All projects
 
 ### base
 
-Base of the current branch (usually master)
+Base of the current branch (usually main)
 
 ### configuration
 

@@ -36,6 +36,10 @@ function withNx(nextConfig = {} as WithNxOptions) {
 
   const userWebpack = nextConfig.webpack || ((x) => x);
   return {
+    eslint: {
+      ignoreDuringBuilds: true,
+      ...(nextConfig.eslint ?? {}),
+    },
     ...nextConfig,
     webpack: (config, options) => {
       /*

@@ -1,4 +1,4 @@
-import { Sponsor, SponsorCard } from '@nrwl/nx-dev/ui/sponsor-card';
+import { Sponsor, SponsorCard } from '@nrwl/nx-dev/ui-sponsor-card';
 import cx from 'classnames';
 
 export function ConfSponsors(): JSX.Element {

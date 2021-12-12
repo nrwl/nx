@@ -1,5 +1,5 @@
 import React from 'react';
-import { MemberCard } from '@nrwl/nx-dev/ui/member-card';
+import { MemberCard } from '@nrwl/nx-dev/ui-member-card';
 
 export function ConfWorkshop(): JSX.Element {
   return (

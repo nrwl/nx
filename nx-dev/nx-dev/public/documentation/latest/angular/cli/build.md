@@ -1,3 +1,8 @@
+---
+title: 'build - CLI command'
+description: 'Compiles an application into an output directory named dist/ at the given output path. Must be executed from within a workspace directory.'
+---
+
 # build
 
 Compiles an application into an output directory named dist/ at the given output path. Must be executed from within a workspace directory.

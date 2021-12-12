@@ -1,3 +1,8 @@
+---
+title: '@nrwl/react-native:build-android executor'
+description: 'Release Build for Android.'
+---
+
 # @nrwl/react-native:build-android
 
 Release Build for Android.

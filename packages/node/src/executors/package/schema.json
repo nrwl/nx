@@ -61,6 +61,14 @@
     "cli": {
       "type": "boolean",
       "description": "Adds a CLI wrapper to main entry-point file."
+    },
+    "tsPlugins": {
+      "type": "array",
+      "description": "List of TypeScript Compiler Plugins.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/tsPluginPattern"
+      }
     }
   },
   "required": ["tsConfig", "main"],
@@ -89,6 +97,11 @@
             "output": {
               "type": "string",
               "description": "Absolute path within the output."
+            },
+            "dot": {
+              "type": "boolean",
+              "description": "Whether or not files beginning with '.' should be included. Defaults to false",
+              "default": false
             }
           },
           "additionalProperties": false,
@@ -96,6 +109,27 @@
         },
         {
           "type": "string"
+        }
+      ]
+    },
+    "tsPluginPattern": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["name"]
         }
       ]
     }

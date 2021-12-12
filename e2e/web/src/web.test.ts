@@ -6,41 +6,28 @@ import {
   killPorts,
   newProject,
   readFile,
-  readJson,
+  removeFile,
+  cleanupProject,
   runCLI,
   runCLIAsync,
   runCypressTests,
   uniq,
   updateFile,
-  updateWorkspaceConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
+  afterEach(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
-    checkFilesDoNotExist(`apps/${appName}/project.json`);
-
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    runCLI(`build ${appName}`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
-      `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/styles.js`
-    );
-
-    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'class AppElement'
-    );
-
-    runCLI(`build ${appName} --prod --output-hashing none`);
+    runCLI(`build ${appName} --outputHashing none --compiler babel`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.esm.js`,
@@ -64,7 +51,7 @@ describe('Web Components Applications', () => {
     expect(lintE2eResults).toContain('All files pass linting.');
 
     if (isNotWindows() && runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
+      const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }
@@ -86,8 +73,10 @@ describe('Web Components Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/react:lib ${libName} --buildable --no-interactive`);
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive --compiler swc`);
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --buildable --no-interactive --compiler swc`
+    );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);
@@ -96,7 +85,7 @@ describe('Web Components Applications', () => {
       `dist/apps/${appName}/_should_remove.txt`,
       `dist/apps/_should_not_remove.txt`
     );
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName} --outputHashing none`);
     runCLI(`build ${libName}`);
     checkFilesDoNotExist(
       `dist/apps/${appName}/_should_remove.txt`,
@@ -106,11 +95,11 @@ describe('Web Components Applications', () => {
 
     // `delete-output-path`
     createFile(`dist/apps/${appName}/_should_keep.txt`);
-    runCLI(`build ${appName} --delete-output-path=false`);
+    runCLI(`build ${appName} --delete-output-path=false --outputHashing none`);
     checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
 
     createFile(`dist/libs/${libName}/_should_keep.txt`);
-    runCLI(`build ${libName} --delete-output-path=false`);
+    runCLI(`build ${libName} --delete-output-path=false --outputHashing none`);
     checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
   }, 120000);
 
@@ -121,7 +110,7 @@ describe('Web Components Applications', () => {
 
     updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
 
-    runCLI(`build ${appName} --prod --outputHashing=none`);
+    runCLI(`build ${appName} --outputHashing=none`);
 
     checkFilesExist(
       `dist/apps/${appName}/main.esm.js`,
@@ -162,9 +151,9 @@ describe('Web Components Applications', () => {
       `;
       return newContent;
     });
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName} --outputHashing none`);
 
-    expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
+    expect(readFile(`dist/apps/${appName}/main.esm.js`)).toMatch(
       /Reflect\.metadata/
     );
 
@@ -175,12 +164,23 @@ describe('Web Components Applications', () => {
       return JSON.stringify(json);
     });
 
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName} --outputHashing none`);
 
-    expect(readFile(`dist/apps/${appName}/main.js`)).not.toMatch(
+    expect(readFile(`dist/apps/${appName}/main.esm.js`)).not.toMatch(
       /Reflect\.metadata/
     );
   }, 120000);
+
+  it('should support workspaces w/o workspace config file', async () => {
+    removeFile('workspace.json');
+    const myapp = uniq('myapp');
+    runCLI(`generate @nrwl/web:app ${myapp} --directory=myDir`);
+
+    runCLI(`build my-dir-${myapp}`);
+    expect(() =>
+      checkFilesDoNotExist('workspace.json', 'angular.json')
+    ).not.toThrow();
+  }, 1000000);
 });
 
 describe('CLI - Environment Variables', () => {
@@ -257,7 +257,7 @@ describe('CLI - Environment Variables', () => {
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
-    runCLI(`run-many --target=build --all`, {
+    runCLI(`run-many --target build --all --no-optimization`, {
       env: {
         ...process.env,
         NODE_ENV: 'test',
@@ -303,46 +303,45 @@ describe('Build Options', () => {
     updateFile(fooJs, fooJsContent);
     updateFile(barJs, barJsContent);
 
-    const workspacePath = `workspace.json`;
-    const workspaceConfig = readJson(workspacePath);
-    const buildOptions =
-      workspaceConfig.projects[appName].targets.build.options;
-
     const barScriptsBundleName = 'bar-scripts';
-    buildOptions.scripts = [
-      {
-        input: fooJs,
-        inject: true,
-      },
-      {
-        input: barJs,
-        inject: false,
-        bundleName: barScriptsBundleName,
-      },
-    ];
-
     const barStylesBundleName = 'bar-styles';
-    buildOptions.styles = [
-      {
-        input: fooCss,
-        inject: true,
-      },
-      {
-        input: barCss,
-        inject: false,
-        bundleName: barStylesBundleName,
-      },
-    ];
 
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateProjectConfig(appName, (config) => {
+      const buildOptions = config.targets.build.options;
 
-    runCLI(`build ${appName}`);
+      buildOptions.scripts = [
+        {
+          input: fooJs,
+          inject: true,
+        },
+        {
+          input: barJs,
+          inject: false,
+          bundleName: barScriptsBundleName,
+        },
+      ];
+
+      buildOptions.styles = [
+        {
+          input: fooCss,
+          inject: true,
+        },
+        {
+          input: barCss,
+          inject: false,
+          bundleName: barStylesBundleName,
+        },
+      ];
+      return config;
+    });
+
+    runCLI(`build ${appName} --outputHashing none --optimization false`);
 
     const distPath = `dist/apps/${appName}`;
     const scripts = readFile(`${distPath}/scripts.js`);
-    const styles = readFile(`${distPath}/styles.js`);
+    const styles = readFile(`${distPath}/styles.css`);
     const barScripts = readFile(`${distPath}/${barScriptsBundleName}.js`);
-    const barStyles = readFile(`${distPath}/${barStylesBundleName}.js`);
+    const barStyles = readFile(`${distPath}/${barStylesBundleName}.css`);
 
     expect(scripts).toContain(fooJsContent);
     expect(scripts).not.toContain(barJsContent);
@@ -392,13 +391,11 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    const workspacePath = `workspace.json`;
-    const workspaceConfig = readJson(workspacePath);
-    const buildOptions =
-      workspaceConfig.projects[appName].targets.build.options;
-    buildOptions.deployUrl = 'baz';
-
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateProjectConfig(appName, (config) => {
+      const buildOptions = config.targets.build.options;
+      buildOptions.deployUrl = 'baz';
+      return config;
+    });
 
     runCLI(`build ${appName}`);
 
