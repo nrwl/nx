@@ -7,7 +7,6 @@ import {
   Header,
   NpxCreateNxWorkspace,
   NxUsersShowcase,
-  Testimonials,
 } from '@nrwl/nx-dev/ui-common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import {
@@ -16,7 +15,6 @@ import {
   DependencyGraph,
   EcosystemFeatures,
   EggheadCourses,
-  EventBanner,
   ExperienceFeatures,
   GettingStarted,
   MonorepoFeatures,
@@ -109,12 +107,6 @@ export function Index() {
                       </a>
                     </Link>
 
-                    {/*<Link href="#getting-started">*/}
-                    {/*  <a className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">*/}
-                    {/*    Documentation*/}
-                    {/*  </a>*/}
-                    {/*</Link>*/}
-
                     <InlineCommand
                       language={'bash'}
                       command={'npx create-nx-workspace'}
@@ -134,7 +126,7 @@ export function Index() {
               </div>
             </div>
           </div>
-          <EventBanner />
+
           <div className="hidden md:block bg-gray-50 border-b border-gray-100">
             {/*COMPANIES*/}
             <NxUsersShowcase />
