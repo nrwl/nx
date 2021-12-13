@@ -238,6 +238,11 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             nxJson,
             staticProjects.filter((x) => basename(x) !== 'package.json')
           );
+          Object.entries(this.__nxInMemoryWorkspace.projects).forEach(
+            ([project, config]) => {
+              this.__nxInMemoryWorkspace.projects[project] = config.root as any;
+            }
+          );
           return of(this.__nxInMemoryWorkspace);
         }
       }
@@ -359,7 +364,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             return of({
               isWorkspaceConfig: true,
               actualConfigFileName: null,
-              isNewFormat: false,
+              // AngularJson / WorkspaceJson v2 is always used for standalone project config
+              isNewFormat: true,
             });
           }
           const actualConfigFileName = isAngularJson
@@ -463,7 +469,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     config
   ) {
     // copy to avoid removing inlined config files.
-    let writeObservable: Observable<void>;
+    const writeObservables: Observable<void>[] = [];
     const configToWrite = {
       ...config,
       projects: { ...config.projects },
@@ -471,7 +477,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     const projects: [string, any][] = Object.entries(configToWrite.projects);
     for (const [project, projectConfig] of projects) {
       if (projectConfig.configFilePath) {
-        if (!isNewFormat) {
+        if (workspaceFileName && !isNewFormat) {
           throw new Error(
             'Attempted to write standalone project configuration into a v1 workspace'
           );
@@ -484,9 +490,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           configPath,
           Buffer.from(serializeJson(fileConfigObject))
         ); // write back to the project.json file
-        writeObservable = writeObservable
-          ? merge(writeObservable, projectJsonWrite)
-          : projectJsonWrite;
+        writeObservables.push(projectJsonWrite);
         configToWrite.projects[project] = normalize(dirname(configPath)); // update the config object to point to the written file.
       }
     }
@@ -496,11 +500,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         workspaceFileName,
         Buffer.from(serializeJson(configToWrite))
       );
-      writeObservable = writeObservable
-        ? merge(writeObservable, workspaceJsonWrite)
-        : workspaceJsonWrite;
+      writeObservables.push(workspaceJsonWrite);
     }
-    return writeObservable;
+    return merge(...writeObservables);
   }
 
   protected resolveInlineProjectConfigurations(

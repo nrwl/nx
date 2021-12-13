@@ -1,18 +1,20 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import {
-  updateJsonInTree,
-  readJsonInTree,
-  updateWorkspaceInTree,
-  readWorkspace,
-  getWorkspacePath,
-} from '@nrwl/workspace';
+import { readWorkspace } from '@nrwl/workspace';
+
+import * as taoWorkspace from '@nrwl/tao/src/shared/workspace';
 
 import * as path from 'path';
 
 describe('Update 8-5-0', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
+
+  beforeAll(() => {
+    jest
+      .spyOn(taoWorkspace, 'workspaceConfigName')
+      .mockReturnValue('workspace.json');
+  });
 
   beforeEach(async () => {
     tree = Tree.empty();
