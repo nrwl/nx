@@ -63,6 +63,16 @@ Type: `boolean`
 
 Use a separate bundle containing code used across multiple bundles.
 
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+The compiler to use
+
 ### crossOrigin
 
 Type: `string`
