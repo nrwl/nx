@@ -364,7 +364,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             return of({
               isWorkspaceConfig: true,
               actualConfigFileName: null,
-              isNewFormat: false,
+              // AngularJson / WorkspaceJson v2 is always used for standalone project config
+              isNewFormat: true,
             });
           }
           const actualConfigFileName = isAngularJson

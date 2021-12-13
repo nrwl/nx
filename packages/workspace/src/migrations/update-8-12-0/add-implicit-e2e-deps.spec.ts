@@ -2,7 +2,6 @@ import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 import { callRule, runMigration } from '../../utils/testing';
 import { readJsonInTree, updateJsonInTree } from '../../utils/ast-utils';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('Update 8.12.0', () => {
   let tree: Tree;

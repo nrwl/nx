@@ -292,14 +292,18 @@ export class Workspaces {
     const nxJson = existsSync(nxJsonPath)
       ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
       : ({} as NxJsonConfiguration);
-    const workspacePath = path.join(this.root, workspaceConfigName(this.root));
-    const workspace = existsSync(workspacePath)
-      ? this.readFromWorkspaceJson()
-      : buildWorkspaceConfigurationFromGlobs(
-          nxJson,
-          globForProjectFiles(this.root),
-          (path) => readJsonFile(join(this.root, path))
-        );
+    const workspaceFile = workspaceConfigName(this.root);
+    const workspacePath = workspaceFile
+      ? path.join(this.root, workspaceFile)
+      : null;
+    const workspace =
+      workspacePath && existsSync(workspacePath)
+        ? this.readFromWorkspaceJson()
+        : buildWorkspaceConfigurationFromGlobs(
+            nxJson,
+            globForProjectFiles(this.root),
+            (path) => readJsonFile(join(this.root, path))
+          );
 
     assertValidWorkspaceConfiguration(nxJson);
     return { ...workspace, ...nxJson };

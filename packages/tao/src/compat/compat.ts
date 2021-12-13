@@ -22,6 +22,14 @@ if (!patched) {
         `@angular-devkit/core/src/workspace/core`,
       ]);
       core._test_addWorkspaceFile('workspace.json', core.WorkspaceFormat.JSON);
+      const originalReadWorkspace = core.readWorkspace;
+      core.readWorkspace = (path, ...rest) => {
+        const configFile = workspaceConfigName(appRootPath);
+        if (!configFile) {
+          path = 'workspace.json';
+        }
+        return originalReadWorkspace.apply(this, [path, ...rest]);
+      };
       const originalWriteWorkspace = core.writeWorkspace;
       core.writeWorkspace = (...args) => {
         const configFile = workspaceConfigName(appRootPath);
