@@ -1252,9 +1252,14 @@
         "id": "guides",
         "itemList": [
           {
-            "name": "Lerna/Yarn and Nx",
+            "name": "Nx and Lerna/Yarn",
             "id": "lerna-and-nx",
             "file": "shared/guides/lerna-and-nx"
+          },
+          {
+            "name": "Nx and Turborepo",
+            "id": "turbo-and-nx",
+            "file": "shared/guides/turbo-and-nx"
           },
           {
             "name": "Using NgRx",
@@ -2571,9 +2576,14 @@
         "id": "guides",
         "itemList": [
           {
-            "name": "Lerna/Yarn and Nx",
+            "name": "Nx and Lerna/Yarn",
             "id": "lerna-and-nx",
             "file": "shared/guides/lerna-and-nx"
+          },
+          {
+            "name": "Nx and Turborepo",
+            "id": "turbo-and-nx",
+            "file": "shared/guides/turbo-and-nx"
           },
           {
             "name": "Adding Images, Fonts, and Files",
@@ -3852,9 +3862,14 @@
         "id": "guides",
         "itemList": [
           {
-            "name": "Lerna/Yarn and Nx",
+            "name": "Nx and Lerna/Yarn",
             "id": "lerna-and-nx",
             "file": "shared/guides/lerna-and-nx"
+          },
+          {
+            "name": "Nx and Turborepo",
+            "id": "turbo-and-nx",
+            "file": "shared/guides/turbo-and-nx"
           },
           {
             "name": "Using Nx at Enterprises",
