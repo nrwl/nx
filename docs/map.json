@@ -474,6 +474,16 @@
             "file": "angular/api-angular/generators/scam"
           },
           {
+            "name": "scam-directive generator",
+            "id": "scam-directive",
+            "file": "angular/api-angular/generators/scam-directive"
+          },
+          {
+            "name": "scam-pipe generator",
+            "id": "scam-pipe",
+            "file": "angular/api-angular/generators/scam-pipe"
+          },
+          {
             "name": "setup-mfe generator",
             "id": "setup-mfe",
             "file": "angular/api-angular/generators/setup-mfe"
@@ -1808,6 +1818,16 @@
             "file": "react/api-angular/generators/scam"
           },
           {
+            "name": "scam-directive generator",
+            "id": "scam-directive",
+            "file": "react/api-angular/generators/scam-directive"
+          },
+          {
+            "name": "scam-pipe generator",
+            "id": "scam-pipe",
+            "file": "react/api-angular/generators/scam-pipe"
+          },
+          {
             "name": "setup-mfe generator",
             "id": "setup-mfe",
             "file": "react/api-angular/generators/setup-mfe"
@@ -3104,6 +3124,16 @@
             "name": "scam generator",
             "id": "scam",
             "file": "node/api-angular/generators/scam"
+          },
+          {
+            "name": "scam-directive generator",
+            "id": "scam-directive",
+            "file": "node/api-angular/generators/scam-directive"
+          },
+          {
+            "name": "scam-pipe generator",
+            "id": "scam-pipe",
+            "file": "node/api-angular/generators/scam-pipe"
           },
           {
             "name": "setup-mfe generator",
