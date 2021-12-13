@@ -63,6 +63,16 @@ Type: `boolean`
 
 Use class components instead of functional component.
 
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+The compiler to use
+
 ### directory
 
 Alias(es): dir
