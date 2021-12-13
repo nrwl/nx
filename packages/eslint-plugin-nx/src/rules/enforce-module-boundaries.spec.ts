@@ -643,7 +643,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope';
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -687,7 +687,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope';
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -724,7 +724,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
     );
 
     const message =
-      'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope';
+      'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope';
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);

@@ -38,7 +38,7 @@ export function hasNoneOfTheseTags(
 }
 
 function hasTag(proj: ProjectGraphNode, tag: string) {
-  return (proj.data.tags || []).indexOf(tag) > -1 || tag === '*';
+  return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
 }
 
 function removeExt(file: string): string {
