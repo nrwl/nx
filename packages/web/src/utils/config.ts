@@ -233,7 +233,7 @@ function getClientEnvironment(mode) {
       },
       {
         // Useful for determining whether we’re running in production mode.
-        NODE_ENV: process.env.NODE_ENV || mode,
+        NODE_ENV: mode,
       }
     );
 
