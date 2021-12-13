@@ -41,9 +41,22 @@ const dynamicEdges: Stylesheet = {
   },
 };
 
+const typeOnlyEdges: Stylesheet = {
+  selector: 'edge.typeOnly',
+  style: {
+    label: 'type only',
+    'font-size': '16px',
+    'edge-text-rotation': 'autorotate',
+    'curve-style': 'unbundled-bezier',
+    'line-dash-pattern': [5, 5],
+    'line-style': 'dashed',
+  },
+};
+
 export const edgeStyles: Stylesheet[] = [
   allEdges,
   affectedEdges,
   implicitEdges,
   dynamicEdges,
+  typeOnlyEdges,
 ];
