@@ -15,3 +15,5 @@ export * from './src/generators/storybook-migrate-stories-to-6-2/migrate-stories
 export * from './src/generators/upgrade-module/upgrade-module';
 export * from './src/generators/setup-mfe/setup-mfe';
 export * from './src/generators/scam/scam';
+export * from './src/generators/scam-directive/scam-directive';
+export * from './src/generators/scam-pipe/scam-pipe';
