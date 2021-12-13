@@ -59,7 +59,7 @@ export class ScriptsWebpackPlugin {
     }
 
     for (let i = 0; i < scripts.length; i++) {
-      const scriptTime = compilation.fileTimestamps.get(scripts[i]);
+      const scriptTime = compilation.fileTimestamps?.get(scripts[i]);
       if (!scriptTime || scriptTime > this._lastBuildTime) {
         this._lastBuildTime = Date.now();
         return false;
@@ -78,13 +78,24 @@ export class ScriptsWebpackPlugin {
     chunk.rendered = !cached;
     chunk.id = this.options.name;
     chunk.ids = [chunk.id];
-    chunk.files.push(filename);
+
+    if (chunk.files instanceof Set) {
+      chunk.files.add(filename);
+    } else if (chunk.files instanceof Array) {
+      chunk.files.push(filename);
+    }
 
     const entrypoint = new EntryPoint(this.options.name);
     entrypoint.pushChunk(chunk);
     chunk.addGroup(entrypoint);
     compilation.entrypoints.set(this.options.name, entrypoint);
-    compilation.chunks.push(chunk);
+
+    if (compilation.chunks instanceof Set) {
+      compilation.chunks.add(chunk);
+    } else if (compilation.chunks instanceof Array) {
+      compilation.chunks.push(chunk);
+    }
+
     compilation.assets[filename] = source;
   }
 
