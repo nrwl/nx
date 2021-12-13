@@ -210,4 +210,55 @@ describe('SCAM Generator', () => {
       }
     });
   });
+
+  describe('--type', () => {
+    it('should create the inline scam with default type', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace(2);
+      addProjectConfiguration(tree, 'app1', {
+        projectType: 'application',
+        sourceRoot: 'apps/app1/src',
+        root: 'apps/app1',
+      });
+
+      // ACT
+      await scamGenerator(tree, {
+        name: 'example',
+        project: 'app1',
+        inlineScam: true,
+        type: 'component',
+      });
+
+      // ASSERT
+      const componentSource = tree.read(
+        'apps/app1/src/app/example/example.component.ts',
+        'utf-8'
+      );
+      expect(componentSource).toMatchInlineSnapshot(`
+        "import { Component, OnInit, NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @Component({
+          selector: 'example',
+          templateUrl: './example.component.html',
+          styleUrls: ['./example.component.css']
+        })
+        export class ExampleComponent implements OnInit {
+
+          constructor() { }
+
+          ngOnInit(): void {
+          }
+
+        }
+
+        @NgModule({
+          imports: [CommonModule],
+          declarations: [ExampleComponent],
+          exports: [ExampleComponent],
+        })
+        export class ExampleComponentModule {}"
+      `);
+    });
+  });
 });
