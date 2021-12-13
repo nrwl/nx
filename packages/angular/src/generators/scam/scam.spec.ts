@@ -75,7 +75,7 @@ describe('SCAM Generator', () => {
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleComponent } from './example.component.ts';
+      import { ExampleComponent } from './example.component';
 
       @NgModule({
         imports: [CommonModule],

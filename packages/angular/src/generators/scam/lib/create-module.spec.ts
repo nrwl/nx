@@ -2,6 +2,7 @@ import { addProjectConfiguration } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { createScam } from './create-module';
+
 describe('Create module in the tree', () => {
   it('should create the scam inline correctly', async () => {
     // ARRANGE
@@ -97,7 +98,7 @@ describe('Create module in the tree', () => {
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleComponent } from './example.component.ts';
+      import { ExampleComponent } from './example.component';
 
       @NgModule({
         imports: [CommonModule],
@@ -206,7 +207,7 @@ describe('Create module in the tree', () => {
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleComponent } from './example.component.ts';
+      import { ExampleComponent } from './example.component';
 
       @NgModule({
         imports: [CommonModule],
@@ -319,7 +320,7 @@ describe('Create module in the tree', () => {
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleRandom } from './example.random.ts';
+      import { ExampleRandom } from './example.random';
 
       @NgModule({
         imports: [CommonModule],
