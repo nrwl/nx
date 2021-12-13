@@ -2,6 +2,7 @@ import { addProjectConfiguration } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { createScamPipe } from './create-module';
+
 describe('Create module in the tree', () => {
   it('should create the scam pipe inline correctly', async () => {
     // ARRANGE
@@ -98,7 +99,7 @@ describe('Create module in the tree', () => {
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExamplePipe } from './example.pipe.ts';
+      import { ExamplePipe } from './example.pipe';
 
       @NgModule({
         imports: [CommonModule],
@@ -201,7 +202,7 @@ describe('Create module in the tree', () => {
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExamplePipe } from './example.pipe.ts';
+      import { ExamplePipe } from './example.pipe';
 
       @NgModule({
         imports: [CommonModule],

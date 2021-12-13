@@ -72,7 +72,7 @@ describe('SCAM Directive Generator', () => {
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleDirective } from './example.directive.ts';
+      import { ExampleDirective } from './example.directive';
 
       @NgModule({
         imports: [CommonModule],
