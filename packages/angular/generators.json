@@ -219,6 +219,16 @@
       "schema": "./src/generators/scam/schema.json",
       "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
     },
+    "scam-directive": {
+      "factory": "./src/generators/scam-directive/scam-directive",
+      "schema": "./src/generators/scam-directive/schema.json",
+      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-pipe": {
+      "factory": "./src/generators/scam-pipe/scam-pipe",
+      "schema": "./src/generators/scam-pipe/schema.json",
+      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
+    },
     "stories": {
       "factory": "./src/generators/stories/stories",
       "schema": "./src/generators/stories/schema.json",
