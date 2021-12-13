@@ -101,7 +101,7 @@ function generatePreset(host: Tree, opts: Schema) {
           acc.push(`--no-${key}`);
         } else {
           // string, number (don't handle arrays or nested objects)
-          acc.push(`${key}=${value}`);
+          acc.push(`--${key}=${value}`);
         }
         return acc;
       },
