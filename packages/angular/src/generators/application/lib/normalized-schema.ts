@@ -1,7 +1,11 @@
-import type { Schema } from '../schema';
+import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import type { AngularLinter, Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
-  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
+  linter: AngularLinter;
+  unitTestRunner: UnitTestRunner;
+  e2eTestRunner: E2eTestRunner;
+  prefix: string;
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;

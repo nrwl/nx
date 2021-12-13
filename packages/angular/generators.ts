@@ -8,6 +8,7 @@ export * from './src/generators/library/library';
 export * from './src/generators/library-secondary-entry-point/library-secondary-entry-point';
 export * from './src/generators/move/move';
 export * from './src/generators/ngrx/ngrx';
+export * from './src/generators/setup-tailwind/setup-tailwind';
 export * from './src/generators/stories/stories';
 export * from './src/generators/storybook-configuration/storybook-configuration';
 export * from './src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6';

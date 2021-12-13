@@ -112,7 +112,13 @@
       "type": "boolean",
       "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
       "default": false
+    },
+    "addTailwind": {
+      "type": "boolean",
+      "description": "Whether to configure TailwindCSS for the application. It can only be used with buildable and publishable libraries. Non-buildable libraries will use the application's Tailwind configuration.",
+      "default": false
     }
   },
-  "required": []
+  "additionalProperties": false,
+  "required": ["name"]
 }

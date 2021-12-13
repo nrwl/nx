@@ -8,33 +8,39 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
-
+import { convertToNxProjectGenerator } from '@nrwl/workspace';
 import init from '../../generators/init/init';
+import { postcssVersion } from '../../utils/versions';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
-
+import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import { addModule } from './lib/add-module';
-import { normalizeOptions } from './lib/normalize-options';
-import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
-import { updateProject } from './lib/update-project';
-import { updateTsConfig } from './lib/update-tsconfig';
 import {
   enableStrictTypeChecking,
   setLibraryStrictDefault,
 } from './lib/enable-strict-type-checking';
+import { normalizeOptions } from './lib/normalize-options';
 import { NormalizedSchema } from './lib/normalized-schema';
+import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
+import { updateProject } from './lib/update-project';
+import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
 export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
-    throw new Error(`To use --lazy option, --routing must also be set.`);
+    throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
   }
 
   if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+    );
+  }
+
+  if (schema.addTailwind && !schema.buildable && !schema.publishable) {
+    throw new Error(
+      `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
     );
   }
 
@@ -66,12 +72,19 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   setStrictMode(host, options);
   await addLinting(host, options);
 
+  if (options.addTailwind) {
+    await setupTailwindGenerator(host, {
+      project: options.name,
+      skipFormat: true,
+    });
+  }
+
   if (options.buildable || options.publishable) {
     addDependenciesToPackageJson(
       host,
       {},
       {
-        postcss: '^8.3.9',
+        postcss: postcssVersion,
         'postcss-import': '^14.0.2',
         'postcss-preset-env': '^6.7.0',
         'postcss-url': '^10.1.1',

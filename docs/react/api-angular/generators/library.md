@@ -33,6 +33,12 @@ nx g library ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the library.
+
 ### addModuleSpec
 
 Default: `false`
@@ -40,6 +46,14 @@ Default: `false`
 Type: `boolean`
 
 Add a module spec file.
+
+### addTailwind
+
+Default: `false`
+
+Type: `boolean`
+
+Whether to configure TailwindCSS for the application. It can only be used with buildable and publishable libraries. Non-buildable libraries will use the application's Tailwind configuration.
 
 ### buildable
 
@@ -86,12 +100,6 @@ Type: `string`
 Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-The name of the library.
 
 ### parentModule
 

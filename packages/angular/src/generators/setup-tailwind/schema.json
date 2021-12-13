@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularTailwindSetupGenerator",
+  "cli": "nx",
+  "title": "Configures TailwindCSS for an application or a buildable/publishable library.",
+  "description": "Adds the TailwindCSS configuration files for a given Angular project and installs, if needed, the packages required for TailwindCSS to work.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add the TailwindCSS setup for.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What project would you like to add the TailwindCSS setup?"
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "The name of the target used to build the project. This option only applies to buildable/publishable libraries.",
+      "default": "build"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skips formatting the workspace after the generator completes."
+    },
+    "stylesEntryPoint": {
+      "type": "string",
+      "description": "Path to the styles entry point relative to the workspace root. If not provided the generator will do its best to find it and it will error if it can't. This option only applies to applications."
+    }
+  },
+  "additionalProperties": false,
+  "required": ["project"]
+}

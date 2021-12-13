@@ -1,7 +1,10 @@
-import { Schema } from '../schema';
+import { UnitTestRunner } from '../../../utils/test-runners';
+import type { AngularLinter, Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
-  name: string;
+  linter: AngularLinter;
+  unitTestRunner: UnitTestRunner;
+  prefix: string;
   fileName: string;
   projectRoot: string;
   entryFile: string;
@@ -9,5 +12,4 @@ export interface NormalizedSchema extends Schema {
   moduleName: string;
   projectDirectory: string;
   parsedTags: string[];
-  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
 }

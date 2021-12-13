@@ -1,36 +1,34 @@
-import type { Schema } from './schema';
-
 import {
-  readJson,
-  getWorkspacePath,
-  moveFilesToNewDirectory,
   formatFiles,
+  getWorkspacePath,
   installPackagesTask,
+  moveFilesToNewDirectory,
+  readJson,
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace';
-
 import { UnitTestRunner } from '../../utils/test-runners';
-import init from '../init/init';
-
+import { angularInitGenerator } from '../init/init';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
-  createFiles,
-  normalizeOptions,
-  updateAppComponentTemplate,
-  updateNxComponentTemplate,
-  updateConfigFiles,
   addE2e,
-  updateComponentSpec,
-  addRouterRootConfiguration,
-  updateEditorTsConfig,
-  addProxyConfig,
-  enableStrictTypeChecking,
-  setApplicationStrictDefault,
   addLinting,
   addMfe,
+  addProxyConfig,
+  addRouterRootConfiguration,
+  addUnitTestRunner,
+  createFiles,
+  enableStrictTypeChecking,
+  normalizeOptions,
+  setApplicationStrictDefault,
+  updateAppComponentTemplate,
+  updateComponentSpec,
+  updateConfigFiles,
+  updateEditorTsConfig,
+  updateNxComponentTemplate,
 } from './lib';
-import { addUnitTestRunner } from './lib/add-unit-test-runner';
+import type { Schema } from './schema';
 
 export async function applicationGenerator(
   host: Tree,
@@ -52,7 +50,7 @@ export async function applicationGenerator(
     ? `${newProjectRoot}/${options.e2eProjectName}`
     : `${options.name}/e2e`;
 
-  await init(host, {
+  await angularInitGenerator(host, {
     ...options,
     skipFormat: true,
   });
@@ -96,6 +94,13 @@ export async function applicationGenerator(
     project: options.name,
   });
   updateNxComponentTemplate(host, options);
+
+  if (options.addTailwind) {
+    await setupTailwindGenerator(host, {
+      project: options.name,
+      skipFormat: true,
+    });
+  }
 
   if (options.unitTestRunner !== UnitTestRunner.None) {
     updateComponentSpec(host, options);
