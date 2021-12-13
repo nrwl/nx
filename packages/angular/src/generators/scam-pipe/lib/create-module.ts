@@ -106,6 +106,6 @@ function createSeparateAngularPipeModuleFile(
 ) {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ${name} } from './${pipeFileName}.ts';
+import { ${name} } from './${pipeFileName}';
 ${createAngularPipeModule(name)}`;
 }

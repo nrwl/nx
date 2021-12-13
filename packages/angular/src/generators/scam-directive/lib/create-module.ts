@@ -112,6 +112,6 @@ function createSeparateAngularDirectiveModuleFile(
 ) {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ${name} } from './${directiveFileName}.ts';
+import { ${name} } from './${directiveFileName}';
 ${createAngularDirectiveModule(name)}`;
 }

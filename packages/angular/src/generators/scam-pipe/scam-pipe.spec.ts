@@ -74,7 +74,7 @@ describe('SCAM Pipe Generator', () => {
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExamplePipe } from './example.pipe.ts';
+      import { ExamplePipe } from './example.pipe';
 
       @NgModule({
         imports: [CommonModule],
