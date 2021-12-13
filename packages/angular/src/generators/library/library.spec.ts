@@ -1352,7 +1352,6 @@ describe('lib', () => {
       expect(tree.read('libs/my-lib/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},
           },

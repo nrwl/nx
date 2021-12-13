@@ -298,12 +298,10 @@ describe('setupTailwind generator', () => {
         const { join } = require('path');
 
         module.exports = {
-          mode: 'jit',
-          purge: [
+          content: [
             join(__dirname, 'src/**/*.{html,ts}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
-          darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},
           },
@@ -468,7 +466,6 @@ describe('setupTailwind generator', () => {
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},
           },

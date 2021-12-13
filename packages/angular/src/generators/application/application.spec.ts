@@ -971,12 +971,10 @@ describe('app', () => {
         const { join } = require('path');
 
         module.exports = {
-          mode: 'jit',
-          purge: [
+          content: [
             join(__dirname, 'src/**/*.{html,ts}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
-          darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},
           },

@@ -2,12 +2,10 @@
 const { join } = require('path');
 
 module.exports = {
-  mode: 'jit',
-  purge: [
+  content: [
     join(__dirname, '<%= relativeSourceRoot %>/**/*.{html,ts}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],<% } else { %>module.exports = {<% } %>
-  darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},
   },
