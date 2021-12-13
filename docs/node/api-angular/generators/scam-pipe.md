@@ -57,14 +57,6 @@ Type: `string`
 
 The path at which to create the pipe file, relative to the current workspace. Default is a folder with the same name as the pipe in the project root.
 
-### prefix
-
-Alias(es): p
-
-Type: `string`
-
-The prefix to apply to the generated pipe selector.
-
 ### project
 
 Type: `string`
