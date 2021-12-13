@@ -27,7 +27,6 @@ module.exports = {
   },
   optimization: {
     runtimeChunk: false,
-    minimize: false,
   },
   experiments: {
     outputModule: true
