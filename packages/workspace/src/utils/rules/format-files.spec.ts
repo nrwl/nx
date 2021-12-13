@@ -3,12 +3,21 @@ import { Tree } from '@angular-devkit/schematics';
 
 import * as prettier from 'prettier';
 import * as path from 'path';
+import * as taoWorkspace from '@nrwl/tao/src/shared/workspace';
+
 import { formatFiles } from './format-files';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 describe('formatFiles', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
+
+  beforeAll(() => {
+    jest
+      .spyOn(taoWorkspace, 'workspaceConfigName')
+      .mockReturnValue('workspace.json');
+  });
+
   beforeEach(() => {
     schematicRunner = new SchematicTestRunner(
       '@nrwl/workspace',
@@ -106,7 +115,7 @@ describe('formatFiles', () => {
   });
 
   it('should have a readable error when workspace file cannot be formatted', async () => {
-    tree.delete('workspace.json');
+    tree.overwrite('workspace.json', '{ invalidJson: true');
 
     const errorSpy = jest.spyOn(console, 'error');
 
