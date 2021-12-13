@@ -1,7 +1,8 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, logger } from '@nrwl/devkit';
+import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, dirname } from 'path';
-import type { Statement } from 'typescript';
+import type { SourceFile, Statement } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import { getModuleDeclaredComponents } from './module-info';
@@ -34,10 +35,8 @@ export function getComponentsInfo(
       (statement) => statement.kind === SyntaxKind.ImportDeclaration
     );
 
-    const moduleFolderPath = dirname(moduleFilePath);
-
     const componentsInfo = declaredComponents.map((componentName) =>
-      getComponentInfo(tree, imports, moduleFolderPath, componentName)
+      getComponentInfo(tree, file, imports, moduleFilePath, componentName)
     );
 
     return componentsInfo;
@@ -78,11 +77,31 @@ function getComponentImportPath(
 
 function getComponentInfo(
   tree: Tree,
+  sourceFile: SourceFile,
   imports: Statement[],
-  moduleFolderPath: string,
+  moduleFilePath: string,
   componentName: string
 ): ComponentInfo {
   try {
+    const moduleFolderPath = dirname(moduleFilePath);
+
+    // try to get the component from the same file (inline scam)
+    const node = tsquery(
+      sourceFile,
+      `ClassDeclaration:has(Decorator > CallExpression > Identifier[name=Component]):has(Identifier[name=${componentName}])`,
+      { visitAllChildren: true }
+    )[0];
+
+    if (node) {
+      return {
+        componentFileName: basename(moduleFilePath, '.ts'),
+        moduleFolderPath,
+        name: componentName,
+        path: '.',
+      };
+    }
+
+    // try to get the component from the imports
     const componentFilePathRelativeToModule = getComponentImportPath(
       componentName,
       imports
