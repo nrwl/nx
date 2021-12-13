@@ -157,8 +157,10 @@ export interface TargetConfiguration {
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
     return 'angular.json';
-  } else {
+  } else if (existsSync(path.join(root, 'workspace.json'))) {
     return 'workspace.json';
+  } else {
+    return null;
   }
 }
 
@@ -701,6 +703,7 @@ export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
     ) {
       return;
     }
+
     filtered.set(projectFolder, projectFile);
   });
   return Array.from(filtered.entries()).map(([folder, file]) =>
