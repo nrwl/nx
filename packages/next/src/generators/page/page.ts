@@ -1,5 +1,10 @@
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
-import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import {
+  convertNxGenerator,
+  Tree,
+  names,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
@@ -11,15 +16,17 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, options: Schema) {
+  const directory = options.directory ? `pages/${options.directory}` : 'pages';
   const componentTask = await reactComponentGenerator(host, {
     ...options,
-    directory: options.directory ? `pages/${options.directory}` : 'pages',
+    directory,
     pascalCaseFiles: false,
     export: false,
     classComponent: false,
     routing: false,
     skipTests: !options.withTests,
     flat: !!options.flat,
+    fileName: !options.flat ? 'index' : undefined,
   });
 
   const styledTask = addStyleDependencies(host, options.style);

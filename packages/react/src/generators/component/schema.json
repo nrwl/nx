@@ -127,6 +127,10 @@
       "type": "boolean",
       "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
       "default": false
+    },
+    "fileName": {
+      "type": "string",
+      "description": "Create a component with this file name."
     }
   },
   "required": ["name", "project"]
