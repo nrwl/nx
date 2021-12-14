@@ -36,7 +36,7 @@ describe('@nrwl/storybook:configuration', () => {
       uiFramework: '@storybook/angular',
       standaloneConfig: false,
     });
-  
+
     // Root
     expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
     expect(tree.exists('.storybook/main.js')).toBeTruthy();
@@ -62,10 +62,10 @@ describe('@nrwl/storybook:configuration', () => {
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
     expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
 
-    const storybookTsconfigJson = readJson<{ exclude: string[], compilerOptions: { outDir: string }}>(
-      tree,
-      'libs/test-ui-lib/.storybook/tsconfig.json'
-    );
+    const storybookTsconfigJson = readJson<{
+      exclude: string[];
+      compilerOptions: { outDir: string };
+    }>(tree, 'libs/test-ui-lib/.storybook/tsconfig.json');
 
     expect(
       storybookTsconfigJson.exclude.includes('../**/*.spec.ts')
@@ -78,8 +78,10 @@ describe('@nrwl/storybook:configuration', () => {
     ).toBeFalsy();
     expect(
       storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
-    ).toBeFalsy();    
-    expect(storybookTsconfigJson.compilerOptions.outDir).toEqual('../../../dist/out-tsc');
+    ).toBeFalsy();
+    expect(storybookTsconfigJson.compilerOptions.outDir).toEqual(
+      '../../../dist/out-tsc'
+    );
   });
 
   it('should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition', async () => {

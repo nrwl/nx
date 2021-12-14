@@ -35,12 +35,10 @@ describe('Add outdir to Storybook tsconfig when uiFramework is angular migration
       compilerOptions: {
         emitDecoratorMetadata: true,
         // apps/myapps/ui-angular/.storybook -> should be 4 directories up to root
-        outDir: '../../../../dist/out-tsc'
+        outDir: '../../../../dist/out-tsc',
       },
-      
-      exclude: [
-        '../**/*.spec.ts',        
-      ],
+
+      exclude: ['../**/*.spec.ts'],
       include: ['../src/**/*', '*.js'],
     });
   });

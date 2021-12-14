@@ -59,7 +59,7 @@ export default async function addOutDirToAngularStorybookTsconfig(tree: Tree) {
 
       tsConfig.storybook.compilerOptions.outDir = `${offsetFromRoot(
         storybookRoot
-      )}dist/out-tsc`
+      )}dist/out-tsc`;
 
       writeJson(tree, paths.tsConfigStorybook, tsConfig.storybook);
       changesMade = true;
