@@ -147,7 +147,7 @@ The file extension or preprocessor to use for style files, or 'none' to skip gen
 
 ### type
 
-Default: `Component`
+Default: `component`
 
 Type: `string`
 
