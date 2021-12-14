@@ -138,7 +138,8 @@ async function normalizeOptions(
   assertValidOptions(options);
 
   const { className, fileName } = names(options.name);
-  const componentFileName = options.pascalCaseFiles ? className : fileName;
+  const componentFileName =
+    options.fileName ?? (options.pascalCaseFiles ? className : fileName);
   const project = getProjects(host).get(options.project);
 
   if (!project) {

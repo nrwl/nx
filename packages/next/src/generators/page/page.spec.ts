@@ -24,9 +24,9 @@ describe('component', () => {
       style: 'css',
     });
 
-    expect(tree.exists('apps/my-app/pages/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('apps/my-app/pages/hello/index.tsx')).toBeTruthy();
     expect(
-      tree.exists('apps/my-app/pages/hello/hello.module.css')
+      tree.exists('apps/my-app/pages/hello/index.module.css')
     ).toBeTruthy();
   });
 
@@ -39,14 +39,14 @@ describe('component', () => {
     });
 
     expect(
-      tree.exists('apps/my-app/pages/posts/[dynamic]/[dynamic].tsx')
+      tree.exists('apps/my-app/pages/posts/[dynamic]/index.tsx')
     ).toBeTruthy();
     expect(
-      tree.exists('apps/my-app/pages/posts/[dynamic]/[dynamic].module.css')
+      tree.exists('apps/my-app/pages/posts/[dynamic]/index.module.css')
     ).toBeTruthy();
 
     const content = tree
-      .read('apps/my-app/pages/posts/[dynamic]/[dynamic].tsx')
+      .read('apps/my-app/pages/posts/[dynamic]/index.tsx')
       .toString();
     expect(content).toMatch(/DynamicProps/);
   });
