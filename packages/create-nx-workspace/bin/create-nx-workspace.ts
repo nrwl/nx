@@ -266,7 +266,10 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
 
 async function determineThirdPartyPackage({ preset }) {
   if (preset && Object.values(Preset).indexOf(preset) === -1) {
-    const validateResult = validateNpmPackage(preset);
+    const packageName = preset.match(/.+@/)
+      ? preset[0] + preset.substring(1).split('@')[0]
+      : preset;
+    const validateResult = validateNpmPackage(packageName);
     if (validateResult.validForNewPackages) {
       return Promise.resolve(preset);
     } else {
