@@ -133,6 +133,9 @@ new ModuleFederationPlugin({
     '@angular/router': { singleton: true, strictVersion: true },
     ...sharedMappings.getDescriptors(),
   },
+  library: {
+    type: 'module',
+  },
 }),
 ```
 
@@ -150,7 +153,7 @@ We can see the following in Dashboard's webpack configuration:
 ```js
 new ModuleFederationPlugin({
   remotes: {
-    login: 'login@http://localhost:4201/remoteEntry.js',
+    login: 'http://localhost:4201/remoteEntry.js',
   },
   shared: {
     '@angular/core': { singleton: true, strictVersion: true },
@@ -159,6 +162,9 @@ new ModuleFederationPlugin({
     '@angular/router': { singleton: true, strictVersion: true },
     ...sharedMappings.getDescriptors(),
   },
+  library: {
+    type: 'module',
+  },
 }),
 ```
 
@@ -166,10 +172,9 @@ The key difference to note with the Dashboard's configuration is the `remotes` o
 
 You give it a name that you can reference in your code, in this case `login`.  
 Then you assign it a string value of the following pattern:  
-`{name}@{url}/{remoteEntrypointFilename}`  
+`{url}/{remoteEntrypointFilename}`  
 where:
 
-- `name` is the name given to the remote in the remote's webpack configuration
 - `url` is the url where the remote application is hosted
 - `remoteEntrypointFilename` is the filename supplied in the remote's webpack configuration
 
@@ -352,9 +357,14 @@ To make this work, however, there are some initial steps we need to take. We nee
 Open up each and replace the `sharedMappings` config _(found near the top)_ with the following:
 
 ```js
-sharedMappings.register(path.join(__dirname, '../../tsconfig.base.json'), [
-  '@ng-mfe/shared/data-access-user',
-]);
+sharedMappings.register(
+  tsConfigPath,
+  [
+    /* mapped paths to share */
+    '@ng-mfe/shared/data-access-user',
+  ],
+  workspaceRootPath
+);
 ```
 
 Now, let's delete the `app.component.html` and `app.component.css` files in the Dashboard app. They will not be needed for this tutorial.
