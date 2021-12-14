@@ -45,7 +45,11 @@ export interface Schema {
   packageManager?: PackageManager;
 }
 
-function generatePreset(host: Tree, opts: Schema) {
+export interface NormalizedSchema extends Schema {
+  presetVersion?: string;
+}
+
+function generatePreset(host: Tree, opts: NormalizedSchema) {
   const cliCommand = opts.cli === 'angular' ? 'ng' : 'nx';
   const parsedArgs = yargsParser(process.argv, {
     boolean: ['interactive'],
@@ -70,7 +74,7 @@ function generatePreset(host: Tree, opts: Schema) {
     });
   });
 
-  function getPresetArgs(options: Schema) {
+  function getPresetArgs(options: NormalizedSchema) {
     if (Object.values(Preset).some((val) => val === options.preset)) {
       // supported presets
       return getDefaultArgs(options);
@@ -241,7 +245,7 @@ function addCloudDependencies(host: Tree, options: Schema) {
   }
 }
 
-function getPresetDependencies(preset: string) {
+function getPresetDependencies(preset: string, version?: string) {
   switch (preset) {
     case Preset.Angular:
       return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
@@ -283,17 +287,22 @@ function getPresetDependencies(preset: string) {
       return { dependencies: {}, dev: { '@nrwl/web': nxVersion } };
 
     default: {
-      const version = getNpmPackageVersion(preset);
-      return { dev: {}, dependencies: { [preset]: version } };
+      return {
+        dev: {},
+        dependencies: { [preset]: version ?? getNpmPackageVersion(preset) },
+      };
     }
   }
 }
 
-function addPresetDependencies(host: Tree, options: Schema) {
+function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   if (options.preset === Preset.Empty || options.preset === Preset.NPM) {
     return;
   }
-  const { dependencies, dev } = getPresetDependencies(options.preset);
+  const { dependencies, dev } = getPresetDependencies(
+    options.preset,
+    options.presetVersion
+  );
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -302,10 +311,18 @@ function addPresetDependencies(host: Tree, options: Schema) {
   );
 }
 
-function normalizeOptions(options: Schema): Schema {
+function normalizeOptions(options: NormalizedSchema): NormalizedSchema {
   options.name = names(options.name).fileName;
   if (!options.directory) {
     options.directory = options.name;
+  }
+  const { preset } = options;
+  if (preset.match(/.+@/)) {
+    // If the preset already contains a version in the name
+    // -- my-package@2.0.1
+    // -- @scope/package@version
+    options.preset = preset[0] + preset.substring(1).split('@')[0];
+    options.presetVersion = preset.substring(1).split('@')[1];
   }
   return options;
 }
