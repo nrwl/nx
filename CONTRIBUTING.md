@@ -157,11 +157,21 @@ By default, the site displays the `Latest` cut release of the docs. To see your 
 
 <img src="https://raw.githubusercontent.com/nrwl/nx/master/images/selecting-preview-from-version-selection-box.png" width="600" alt="Selecting Preview from Version Selection box">
 
+#### Troubleshooting: `JavaScript heap out of memory`
+
+If you see an error that states: `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`, you need to [increase the max memory size of V8's old memory section](https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes):
+
+```bash
+export NODE_OPTIONS="--max-old-space-size=4096"
+```
+
+After configuring this, try to run `npx nx serve nx-dev` again.
+
 ### PR Preview
 
 When submitting a PR, this repo will automatically generate a preview of the `nx-dev` application based on the contents of your pull request.
 
-Once the preview site is launched, a comment will automatically be added to your PR with the link your your PR's preview. To check your docs changes, make sure to select `Preview` from the version selection box of the site.
+Once the preview site is launched, a comment will automatically be added to your PR with the link your PR's preview. To check your docs changes, make sure to select `Preview` from the version selection box of the site.
 
 ## Submission Guidelines
 
@@ -177,7 +187,7 @@ We want to fix all the issues as soon as possible, but before fixing a bug we ne
 
 A minimal reproduction allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.
 
-We will be insisting on a minimal reproduction in order to save maintainers time and ultimately be able to fix more bugs. Interestingly, from our experience, users often find coding problems themselves while preparing a minimal repository. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base but we really need to isolate the problem before we can fix it.
+We will be insisting on a minimal reproduction in order to save maintainers time and ultimately be able to fix more bugs. Interestingly, from our experience, users often find coding problems themselves while preparing a minimal repository. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base, but we really need to isolate the problem before we can fix it.
 
 You can file new issues by filling out our [issue form](https://github.com/nrwl/nx/issues/new).
 
@@ -202,7 +212,7 @@ Please follow the following guidelines:
 
 The commit message should follow the following format:
 
-```
+```plain
 type(scope): subject
 BLANK LINE
 body
@@ -252,7 +262,7 @@ Including the issue number that the PR relates to also helps with tracking.
 
 #### Example
 
-```
+```plain
 feat(angular): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
