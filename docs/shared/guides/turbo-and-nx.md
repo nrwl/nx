@@ -14,14 +14,37 @@ We are going to compare the tools in three different ways: **features**, **tech*
 
 ## Features
 
-#### 1. Local task coordination
+#### 1. Understanding your workspace
+
+The starting point of any non-trivial monorepo management tool is to be able to understand the monorepo workspace structure, what projects there are and how they relate to each other.
+
+- Turborepo only analyzes package.json files to understand how projects relate to each other. Built-in Nx plugins also analyze package.json files but in addition they analyze JS/TS files, so you don't have to have bogus package.json files (that you don’t use for the purposes of installing packages or publishing) in your repo. There are plugins for Nx that do that for other languages (e.g., Golang, .Net).
+- Since the computation of the project graph can take a lot of time for complex workspaces, **Nx does its analysis in the background. Turborepo does it at request time.**
+- **Nx has visibility rules, which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have visibility rules. **Visibility rules prevent the monorepo from becoming the “big ball of mud”.**
+
+#### 2. Dependency graph visualization
+
+Being able to visually explore a monorepo workspace can be a deal breaker when it comes to debug and troubleshoot large monorepo workspaces.
+
+- Nx has a rich, interactive visualiser (watch a video [here](https://www.youtube.com/watch?v=UTB5dOJF43o))
+- Turborepo has a basic graphviz image export.
+
+#### 3. Detecting affected projects/packages
+
+Optimizing for speed is crucial to be able to scale. One strategy is to leverage the knowledge about the monorepo workspace structure in combination with Git to determine what projects/packages might be affected by a given pull request.
+
+- Both Nx and Turborepo support it.
+
+Learn more about it in this [Egghead lesson on scaling CI runs with Nx Affected Commands](https://egghead.io/lessons/javascript-scale-ci-runs-with-nx-affected-commands).
+
+#### 4. Local task coordination
 
 Running multiple tasks in parallel, in the right order, on a single machine is crucial for a monorepo.
 
 - Both Nx and Turborepo support it. And both can run different types of targets (e.g., tests and builds) as part of the same command.
 - **Everything in Nx is pluggable, including task coordination**. You can provide your own strategy (e.g., running multiple jest tasks using the jest monorepo mode when possible). Nx plugins supply custom strategies. Turborepos’s coordination logic at this point isn’t pluggable.
 
-#### 2. Local computation caching
+#### 5. Local computation caching
 
 Local computation caching (often also refered to as "build caching") is the process of not having to run the same command twice, but rather to restore file artifacts and terminal outputs from a local cache. We refer to it as "computation caching", because in Nx you can really apply it to any type of task (not just builds).
 
@@ -30,30 +53,7 @@ Local computation caching (often also refered to as "build caching") is the proc
 - Turborepo only uses piping to capture the terminal output. Piping doesn’t work well for the tasks emitting “interesting” output (cypress, webpack, etc). As a result, **the terminal output with Turborepo and without it doesn’t look the same**. Nx can use piping, but it also supports other strategies. As a result, Nx is able to capture the output “as is”. **Running say Cypress with Nx or without Nx results in the same output**, and the replayed output matches the original output exactly as well.
 - Once again, Nx is pluggable, so you can write plugins which determine what can affect a given computation, and some Nx plugins do that.
 
-#### 3. Understanding your workspace
-
-The starting point of any non-trivial monorepo management tool is to be able to understand the monorepo workspace structure, what projects there are and how they relate to each other.
-
-- Turborepo only analyzes package.json files to understand how projects relate to each other. Built-in Nx plugins also analyze package.json files but in addition they analyze JS/TS files, so you don't have to have bogus package.json files (that you don’t use for the purposes of installing packages or publishing) in your repo. There are plugins for Nx that do that for other languages (e.g., Golang, .Net).
-- Since the computation of the project graph can take a lot of time for complex workspaces, **Nx does its analysis in the background. Turborepo does it at request time.**
-- **Nx has visibility rules, which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have visibility rules. **Visibility rules prevent the monorepo from becoming the “big ball of mud”.**
-
-#### 4. Affected
-
-Optimizing for speed is crucial to be able to scale. One strategy is to leverage the knowledge about the monorepo workspace structure in combination with Git to determine what projects/packages might be affected by a given pull request.
-
-- Both Nx and Turborepo support it.
-
-Learn more about it in this [Egghead lesson on scaling CI runs with Nx Affected Commands](https://egghead.io/lessons/javascript-scale-ci-runs-with-nx-affected-commands).
-
-#### 5. Dep graph visualization
-
-Being able to visually explore a monorepo workspace can be a deal breaker when it comes to debug and troubleshoot large monorepo workspaces.
-
-- Nx has a rich, interactive visualiser (watch a video [here](https://www.youtube.com/watch?v=UTB5dOJF43o))
-- Turborepo has a basic graphviz image export.
-
-#### 6. Distributed computation cache
+#### 6. Distributed computation caching
 
 Local computation caching helps speed up things locally, but the real benefits start when you distribute and share that cache remotely with your CI system and teammates.
 
