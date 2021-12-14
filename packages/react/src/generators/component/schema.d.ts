@@ -14,4 +14,5 @@ export interface Schema {
   js?: boolean;
   flat?: boolean;
   globalCss?: boolean;
+  fileName?: string;
 }
