@@ -10,13 +10,17 @@ import {
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
+import { register } from 'ts-node';
 
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
 import { runWebpack } from '../../utils/run-webpack';
+
+import { existsSync } from 'fs';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export type NodeBuildEvent = {
   outfile: string;
@@ -43,6 +47,11 @@ export async function* buildExecutor(
     sourceRoot,
     root
   );
+
+  if (options.webpackConfig.some((x) => x.endsWith('.ts'))) {
+    registerTsNode();
+  }
+
   const projGraph = readCachedProjectGraph();
   if (!options.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
@@ -98,6 +107,13 @@ export async function* buildExecutor(
       })
     )
   );
+}
+
+function registerTsNode() {
+  const rootTsConfig = join(appRootPath, 'tsconfig.base.json');
+  register({
+    ...(existsSync(rootTsConfig) ? { project: rootTsConfig } : null),
+  });
 }
 
 export default buildExecutor;
