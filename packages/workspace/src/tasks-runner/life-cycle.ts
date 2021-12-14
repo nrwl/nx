@@ -2,6 +2,10 @@ import type { Task } from '@nrwl/devkit';
 import { TaskStatus } from './tasks-runner';
 import { TaskCacheStatus } from '../utilities/output';
 
+export interface TaskMetadata {
+  groupId: number;
+}
+
 export interface LifeCycle {
   startCommand?(): void;
 
@@ -23,10 +27,11 @@ export interface LifeCycle {
    */
   endTask?(task: Task, code: number): void;
 
-  startTasks?(task: Task[]): void;
+  startTasks?(task: Task[], metadata: TaskMetadata): void;
 
   endTasks?(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>
+    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
+    metadata: TaskMetadata
   ): void;
 
   printTaskTerminalOutput?(
@@ -79,10 +84,10 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  startTasks(tasks: Task[]): void {
+  startTasks(tasks: Task[], metadata: TaskMetadata): void {
     for (let l of this.lifeCycles) {
       if (l.startTasks) {
-        l.startTasks(tasks);
+        l.startTasks(tasks, metadata);
       } else if (l.startTask) {
         tasks.forEach((t) => l.startTask(t));
       }
@@ -90,11 +95,12 @@ export class CompositeLifeCycle implements LifeCycle {
   }
 
   endTasks(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>
+    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
+    metadata: TaskMetadata
   ): void {
     for (let l of this.lifeCycles) {
       if (l.endTasks) {
-        l.endTasks(taskResults);
+        l.endTasks(taskResults, metadata);
       } else if (l.endTask) {
         taskResults.forEach((t) => l.endTask(t.task, t.code));
       }
