@@ -72,6 +72,12 @@
       "cli": "nx",
       "description": "Adjust Storybook tsconfig to add styled-jsx typings",
       "factory": "./src/migrations/update-12-8-0/update-storybook-styled-jsx-typings"
+    },
+    "update-13-3.0": {
+      "version": "13.3.0",
+      "cli": "nx",
+      "description": "Adjust Storybook tsconfig to add outDir for Angular projects.",
+      "factory": "./src/migrations/update-13.3.0/update-angular-storybook-tsconfig-outdir"
     }
   },
   "packageJsonUpdates": {

@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Add outdir to Storybook tsconfig when uiFramework is angular migration should add outDir compilerOption 1`] = `
+Object {
+  "compilerOptions": Object {
+    "emitDecoratorMetadata": true,
+    "outDir": "../../../../dist/out-tsc",
+  },
+  "exclude": Array [
+    "../**/*.spec.ts",
+  ],
+  "extends": "../tsconfig.json",
+  "include": Array [
+    "../src/**/*",
+    "*.js",
+  ],
+}
+`;
