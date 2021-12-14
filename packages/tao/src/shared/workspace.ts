@@ -663,6 +663,7 @@ export function globForProjectFiles(root) {
    */
   const ALWAYS_IGNORE = [
     join(root, 'node_modules'),
+    '**/node_modules',
     join(root, 'dist'),
     join(root, '.git'),
   ];
