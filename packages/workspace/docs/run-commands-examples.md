@@ -120,6 +120,38 @@ Normally, `run-commands` considers the commands done when all of them have finis
 
 The above commands will finish immediately, instead of waiting for 5 seconds.
 
+##### Custom **done** conditions per command and waiting for other commands
+
+Additionally, each command can specify a prior command to wait for using the `waitUntilCommand` property. This can be combined with individual commands having a `readyWhen` condition set to orchestrate some complex scenarios, such as waiting for your API to be stable and serving traffic before starting the web app.
+
+```json
+"serve-with-api": {
+    "executor": "@nrwl/workspace:run-commands",
+    "options": {
+        "commands": [
+            {
+                "name": "serveApi",
+                "command": "nx serve nest-api",
+                "readyWhen": "No issues found."
+            },
+            {
+                "name": "waitForApi",
+                "command": "ECHO 'Waiting for API...' && until curl --silent https://my-api:3333/api/health-check | grep 'OK'; do sleep 0.5; echo '  performing health check...'; done;",
+                "waitUntilCommand": "serveApi"
+            },
+            {
+                "command": "nx serve react-app-vitejs",
+                "waitUntilCommand": "waitForApi"
+            }
+        ]
+    }
+},
+```
+
+```bash
+<%= cli %> run frontend:serve-with-api
+```
+
 ##### Nx Affected
 
 The true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your dependency graph. So you can run **custom commands** only for the projects that have been affected by a change.

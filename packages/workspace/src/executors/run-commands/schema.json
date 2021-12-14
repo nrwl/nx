@@ -24,6 +24,18 @@
               "description": {
                 "type": "string",
                 "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command"
+              },
+              "name": {
+                "type": "string",
+                "description": "(optional) An optional name for the command which can be used if another command depends on this command using `waitUntilCommand`"
+              },
+              "readyWhen": {
+                "type": "string",
+                "description": "(optional) String to appear in `stdout` or `stderr` that indicates that the task is ready.  Meant to be used with `waitUntilCommand` to indicate when a command has completed.  This is useful when running multiple watchers that might require another watcher to be stable, such as serving an API _then_ serving the app"
+              },
+              "waitUntilCommand": {
+                "type": "string",
+                "description": "(optional) An optional description useful for inline documentation purposes. It is not used as part of the execution of the command"
               }
             },
             "additionalProperties": false,

@@ -520,4 +520,85 @@ describe('Command Runner Builder', () => {
       }
     });
   });
+
+  describe('commands', () => {
+    describe('readyWhen', () => {
+      it('allows setting `readyWhen` on individual commands', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
+          {
+            commands: [
+              {
+                command: `echo READY && sleep 0.1 && echo 1 >> ${f}`,
+                readyWhen: 'READY',
+              },
+              {
+                command: `echo 2 >> ${f}`,
+              },
+            ],
+            parallel: true,
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        const contents = readFile(f);
+        expect(contents).toEqual('2');
+      });
+    });
+
+    describe('waitUntilCommand', () => {
+      it('waits until another command is finished before executing', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
+          {
+            commands: [
+              {
+                name: 'first',
+                command: `echo READY && sleep 0.1 && echo 1 >> ${f}`,
+              },
+              {
+                command: `echo 2 >> ${f}`,
+                waitUntilCommand: 'first',
+              },
+            ],
+            parallel: true,
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        const contents = readFile(f);
+        expect(contents).toEqual('12');
+      });
+
+      it('waits until another command that uses readyWhen is finished before executing', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
+          {
+            commands: [
+              {
+                name: 'first',
+                command: `echo READY && sleep 0.2 && echo 1 >> ${f}`,
+                readyWhen: 'READY',
+              },
+              {
+                name: 'second',
+                command: `echo READY && sleep 0.1 && echo 1 >> ${f}`,
+                readyWhen: '1',
+                waitUntilCommand: 'first',
+              },
+              {
+                command: `echo 2 >> ${f}`,
+                waitUntilCommand: 'second',
+              },
+            ],
+            parallel: true,
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        const contents = readFile(f);
+        expect(contents).toEqual('12');
+      });
+    });
+  });
 });

@@ -31,6 +31,9 @@ export interface RunCommandsBuilderOptions extends Json {
          * it is not intended to be used as part of the execution of the command.
          */
         description?: string;
+        name?: string;
+        readyWhen?: string;
+        waitUntilCommand?: string;
       }
     | string
   )[];
@@ -60,9 +63,13 @@ export interface NormalizedRunCommandsBuilderOptions
   commands: {
     command: string;
     forwardAllArgs?: boolean;
+    name?: string;
+    readyWhen?: string;
+    waitUntilCommand?: string;
   }[];
   parsedArgs: { [k: string]: any };
 }
+export type Command = NormalizedRunCommandsBuilderOptions['commands'][0];
 
 export default async function (
   options: RunCommandsBuilderOptions,
@@ -96,42 +103,103 @@ async function runInParallel(
   options: NormalizedRunCommandsBuilderOptions,
   context: ExecutorContext
 ) {
-  const procs = options.commands.map((c) =>
-    createProcess(
-      c.command,
-      options.readyWhen,
-      options.color,
-      calculateCwd(options.cwd, context)
-    ).then((result) => ({
-      result,
-      command: c.command,
-    }))
+  const { completedCommands, commandsByWaitingFor } = options.commands?.reduce(
+    (
+      acc: {
+        completedCommands: Record<string, boolean>;
+        commandsByWaitingFor: Record<string, Command[]>;
+      },
+      command
+    ) => {
+      if (command.name) {
+        acc.completedCommands[command.name] = false;
+      }
+      // default group are commands that aren't dependent on any prior commands
+      const waitUntilCommandKey = command.waitUntilCommand ?? 'default';
+      acc.commandsByWaitingFor[waitUntilCommandKey] =
+        acc.commandsByWaitingFor[waitUntilCommandKey] ?? [];
+      acc.commandsByWaitingFor[waitUntilCommandKey].push(command);
+      return acc;
+    },
+    { completedCommands: {}, commandsByWaitingFor: {} }
   );
 
-  if (options.readyWhen) {
-    const r = await Promise.race(procs);
-    if (!r.result) {
-      process.stderr.write(
-        `Warning: @nrwl/run-commands command "${r.command}" exited with non-zero status code`
+  const setupProcsBuilder =
+    (readyWhen: string, color: boolean, cwd: string) => (commands: Command[]) =>
+      commands.map((command) =>
+        createProcess({
+          command,
+          readyWhen,
+          color,
+          cwd,
+        }).then((result) => {
+          if (command.name) {
+            completedCommands[command.name] = true;
+          }
+          return {
+            result,
+            command,
+          };
+        })
       );
-      return false;
-    } else {
-      return true;
-    }
-  } else {
-    const r = await Promise.all(procs);
-    const failed = r.filter((v) => !v.result);
-    if (failed.length > 0) {
-      failed.forEach((f) => {
+
+  const procsBuilder = setupProcsBuilder(
+    options.readyWhen,
+    options.color,
+    calculateCwd(options.cwd, context)
+  );
+
+  const processProcs = async (procs: ReturnType<typeof procsBuilder>) => {
+    if (options.readyWhen) {
+      const commandResults = await Promise.race(procs);
+      if (!commandResults.result) {
         process.stderr.write(
-          `Warning: @nrwl/run-commands command "${f.command}" exited with non-zero status code`
+          `Warning: @nrwl/run-commands command "${commandResults.command.command}" exited with non-zero status code`
         );
-      });
-      return false;
+        return false;
+      }
+      return true;
     } else {
+      const commandResults = await Promise.all(procs);
+      const failed = commandResults.filter(
+        (commandResult) => !commandResult.result
+      );
+      if (failed.length > 0) {
+        failed.forEach((failure) => {
+          process.stderr.write(
+            `Warning: @nrwl/run-commands command "${failure.command.command}" exited with non-zero status code`
+          );
+        });
+        return false;
+      }
       return true;
     }
-  }
+  };
+
+  const results: Array<boolean> = [];
+
+  do {
+    if (!completedCommands.default) {
+      results.push(
+        await processProcs(procsBuilder(commandsByWaitingFor.default))
+      );
+      commandsByWaitingFor.default.length = 0;
+    }
+    for (const [commandName, commandCompleted] of Object.entries(
+      completedCommands
+    )) {
+      if (commandCompleted && commandsByWaitingFor[commandName]?.length > 0) {
+        const procs = procsBuilder(commandsByWaitingFor[commandName]);
+        commandsByWaitingFor[commandName].length = 0;
+        results.push(await processProcs(procs));
+      }
+    }
+  } while (
+    results.every(Boolean) &&
+    Object.values(commandsByWaitingFor).some((commands) => commands.length > 0)
+  );
+
+  return results.every(Boolean);
 }
 
 function normalizeOptions(
@@ -171,14 +239,15 @@ async function runSerially(
   return true;
 }
 
-function createProcess(
-  command: string,
-  readyWhen: string,
-  color: boolean,
-  cwd: string
-): Promise<boolean> {
+function createProcess(options: {
+  command: Command;
+  readyWhen: string;
+  color: boolean;
+  cwd: string;
+}): Promise<boolean> {
+  const { command, readyWhen, color, cwd } = options;
   return new Promise((res) => {
-    const childProcess = exec(command, {
+    const childProcess = exec(command.command, {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(color),
       cwd,
@@ -194,10 +263,19 @@ function createProcess(
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
+      if (
+        command.readyWhen &&
+        data.toString().indexOf(command.readyWhen) > -1
+      ) {
+        res(true);
+      }
     });
     childProcess.stderr.on('data', (err) => {
       process.stderr.write(err);
       if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
+        res(true);
+      }
+      if (command.readyWhen && err.toString().indexOf(command.readyWhen) > -1) {
         res(true);
       }
     });
