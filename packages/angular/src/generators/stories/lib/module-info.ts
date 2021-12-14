@@ -1,6 +1,8 @@
 import type { Tree } from '@nrwl/devkit';
 import { logger, stripIndents, visitNotIgnoredFiles } from '@nrwl/devkit';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
+import { tsquery } from '@phenomnomnominal/tsquery';
+import { extname } from 'path';
 import type {
   ClassDeclaration,
   Node,
@@ -45,12 +47,24 @@ export function getModuleFilePaths(tree: Tree, projectPath: string): string[] {
   let moduleFilePaths = [] as string[];
 
   visitNotIgnoredFiles(tree, projectPath, (filePath: string) => {
-    if (filePath.endsWith('.module.ts')) {
+    if (extname(filePath) === '.ts' && hasNgModule(tree, filePath)) {
       moduleFilePaths.push(filePath);
     }
   });
 
   return moduleFilePaths;
+}
+
+function hasNgModule(tree: Tree, filePath: string): boolean {
+  const fileContent = tree.read(filePath, 'utf-8');
+  const ast = tsquery.ast(fileContent);
+  const ngModule = tsquery(
+    ast,
+    'ClassDeclaration > Decorator > CallExpression > Identifier[name=NgModule]',
+    { visitAllChildren: true }
+  );
+
+  return ngModule.length > 0;
 }
 
 function getDeclaredComponentsInDeclarations(

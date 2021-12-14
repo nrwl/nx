@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "SCAMPipeGenerator",
+  "cli": "nx",
+  "title": "SCAM Pipe Generator Options Schema",
+  "type": "object",
+  "description": "Creates a new, generic pipe definition in the given or default project.",
+  "additionalProperties": false,
+  "properties": {
+    "path": {
+      "type": "string",
+      "format": "path",
+      "description": "The path at which to create the pipe file, relative to the current workspace. Default is a folder with the same name as the pipe in the project root.",
+      "visible": false
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the pipe.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the pipe?"
+    },
+    "skipTests": {
+      "type": "boolean",
+      "description": "Do not create \"spec.ts\" test files for the new pipe.",
+      "default": false
+    },
+    "inlineScam": {
+      "type": "boolean",
+      "description": "Create the NgModule in the same file as the Pipe.",
+      "default": true
+    },
+    "flat": {
+      "type": "boolean",
+      "description": "Create the new files at the top level of the current project.",
+      "default": true
+    }
+  },
+  "required": ["name"]
+}

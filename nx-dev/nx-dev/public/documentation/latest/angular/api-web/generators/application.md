@@ -41,6 +41,16 @@ Type: `boolean`
 
 Use babel instead ts-jest
 
+### compiler
+
+Default: `babel`
+
+Type: `string`
+
+Possible values: `babel`, `swc`
+
+The compiler to use
+
 ### directory
 
 Type: `string`

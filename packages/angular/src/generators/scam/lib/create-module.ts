@@ -114,6 +114,6 @@ function createSeparateAngularComponentModuleFile(
 ) {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ${name} } from './${componentFileName}.ts';
+import { ${name} } from './${componentFileName}';
 ${createAngularComponentModule(name)}`;
 }

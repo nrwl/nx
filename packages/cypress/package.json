@@ -49,7 +49,7 @@
     "yargs-parser": "20.0.0"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 9"
+    "cypress": ">= 3 < 10"
   },
   "peerDependenciesMeta": {
     "cypress": {

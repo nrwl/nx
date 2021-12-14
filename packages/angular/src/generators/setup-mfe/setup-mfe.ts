@@ -16,6 +16,7 @@ import {
   generateWebpackConfig,
   getRemotesWithPorts,
   setupServeTarget,
+  updateTsConfigTarget,
 } from './lib';
 import { angularArchitectsModuleFederationPluginVersion } from '../../utils/versions';
 
@@ -30,6 +31,7 @@ export async function setupMfe(host: Tree, options: Schema) {
   addEntryModule(host, options, projectConfig.root);
   addImplicitDeps(host, options);
   changeBuildTarget(host, options);
+  updateTsConfigTarget(host, options);
   setupServeTarget(host, options);
 
   fixBootstrap(host, projectConfig.root);

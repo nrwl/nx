@@ -30,7 +30,6 @@ module.exports = {
   },
   optimization: {
     runtimeChunk: false,
-    minimize: false,
   },
   experiments: {
     outputModule: true
@@ -94,7 +93,6 @@ module.exports = {
   },
   optimization: {
     runtimeChunk: false,
-    minimize: false,
   },
   experiments: {
     outputModule: true
@@ -157,7 +155,6 @@ module.exports = {
   },
   optimization: {
     runtimeChunk: false,
-    minimize: false,
   },
   experiments: {
     outputModule: true
@@ -219,7 +216,6 @@ module.exports = {
   },
   optimization: {
     runtimeChunk: false,
-    minimize: false,
   },
   experiments: {
     outputModule: true

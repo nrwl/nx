@@ -3,6 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator } from '@nrwl/storybook';
 import { libraryGenerator } from '../library/library';
+import { scamGenerator } from '../scam/scam';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 
@@ -227,6 +228,34 @@ describe('angularStories generator: libraries', () => {
       expect(
         tree.exists(
           `apps/${libName}-e2e/src/integration/cmp2/cmp2.component.spec.ts`
+        )
+      ).toBeTruthy();
+    });
+
+    it('should generate stories file for scam component', async () => {
+      await scamGenerator(tree, { name: 'my-scam', project: libName });
+
+      angularStoriesGenerator(tree, { name: libName });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/my-scam/my-scam.component.stories.ts`
+        )
+      ).toBeTruthy();
+    });
+
+    it('should generate stories file for inline scam component', async () => {
+      await scamGenerator(tree, {
+        name: 'my-scam',
+        project: libName,
+        inlineScam: true,
+      });
+
+      angularStoriesGenerator(tree, { name: libName });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/my-scam/my-scam.component.stories.ts`
         )
       ).toBeTruthy();
     });

@@ -9,11 +9,10 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { updateJsonInTree } from '../../utils/ast-utils';
 import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
 const addE2eImplicitDependencies: Rule = (tree: Tree) =>
   updateJsonInTree<WorkspaceJsonConfiguration>(
-    workspaceConfigName(tree.root.path),
+    'workspace.json', // ngcli-adapter should handle conversion of workspace file names
     (json) => {
       Object.keys(json.projects).forEach((proj) => {
         const implicitE2eName = proj.replace(/-e2e$/, '');

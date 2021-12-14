@@ -157,8 +157,10 @@ export interface TargetConfiguration {
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
     return 'angular.json';
-  } else {
+  } else if (existsSync(path.join(root, 'workspace.json'))) {
     return 'workspace.json';
+  } else {
+    return null;
   }
 }
 
@@ -290,14 +292,18 @@ export class Workspaces {
     const nxJson = existsSync(nxJsonPath)
       ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
       : ({} as NxJsonConfiguration);
-    const workspacePath = path.join(this.root, workspaceConfigName(this.root));
-    const workspace = existsSync(workspacePath)
-      ? this.readFromWorkspaceJson()
-      : buildWorkspaceConfigurationFromGlobs(
-          nxJson,
-          globForProjectFiles(this.root),
-          (path) => readJsonFile(join(this.root, path))
-        );
+    const workspaceFile = workspaceConfigName(this.root);
+    const workspacePath = workspaceFile
+      ? path.join(this.root, workspaceFile)
+      : null;
+    const workspace =
+      workspacePath && existsSync(workspacePath)
+        ? this.readFromWorkspaceJson()
+        : buildWorkspaceConfigurationFromGlobs(
+            nxJson,
+            globForProjectFiles(this.root),
+            (path) => readJsonFile(join(this.root, path))
+          );
 
     assertValidWorkspaceConfiguration(nxJson);
     return { ...workspace, ...nxJson };
@@ -701,6 +707,7 @@ export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
     ) {
       return;
     }
+
     filtered.set(projectFolder, projectFile);
   });
   return Array.from(filtered.entries()).map(([folder, file]) =>

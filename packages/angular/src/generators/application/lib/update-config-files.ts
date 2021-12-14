@@ -25,6 +25,7 @@ function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
     compilerOptions: {
       ...json.compilerOptions,
       outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
+      target: 'ES2017',
     },
     exclude: [
       ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
