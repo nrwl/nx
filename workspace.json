@@ -58,6 +58,7 @@
     "nx-dev-ui-member-card": "nx-dev/ui-member-card",
     "nx-dev-ui-sponsor-card": "nx-dev/ui-sponsor-card",
     "nx-plugin": "packages/nx-plugin",
+    "fastify": "packages/fastify",
     "react": "packages/react",
     "react-native": "packages/react-native",
     "storybook": "packages/storybook",

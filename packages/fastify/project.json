@@ -1,0 +1,76 @@
+{
+  "root": "packages/fastify",
+  "sourceRoot": "packages/fastify",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/fastify/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/fastify"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/fastify",
+        "tsConfig": "packages/fastify/tsconfig.lib.json",
+        "main": "packages/fastify/index.ts",
+        "assets": [
+          {
+            "input": "packages/fastify",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/fastify",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/fastify",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/fastify",
+            "glob": "**/*.js",
+            "output": "/"
+          },
+          {
+            "input": "packages/fastify",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/fastify"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js fastify"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/fastify/**/*.ts",
+          "packages/fastify/**/*.spec.ts",
+          "packages/fastify/**/*_spec.ts",
+          "packages/fastify/**/*.spec.tsx",
+          "packages/fastify/**/*.spec.js",
+          "packages/fastify/**/*.spec.jsx",
+          "packages/fastify/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["node", "linter"]
+}

@@ -1,4 +1,10 @@
+import {
+  parseJson,
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
@@ -13,20 +19,14 @@ import {
   writeFileSync,
 } from 'fs-extra';
 import * as path from 'path';
-import { dirSync } from 'tmp';
+import { join } from 'path';
 import { check as portCheck } from 'tcp-port-used';
-import {
-  parseJson,
-  ProjectConfiguration,
-  WorkspaceJsonConfiguration,
-} from '@nrwl/devkit';
+import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
-import { join } from 'path';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -222,6 +222,7 @@ export function newProject({
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
+        `@nrwl/fastify`,
         `@nrwl/gatsby`,
         `@nrwl/jest`,
         `@nrwl/js`,

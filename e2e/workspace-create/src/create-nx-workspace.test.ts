@@ -1,18 +1,18 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   e2eCwd,
   expectNoAngularDevkit,
   getPackageManagerCommand,
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
-  cleanupProject,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
-import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
+import { existsSync, mkdirSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
   let packageManager;
@@ -145,6 +145,19 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
       preset: 'express',
+      style: 'css',
+      appName,
+      packageManager,
+    });
+
+    expectNoAngularDevkit();
+  });
+
+  it('should be able to create an fastify workspace', () => {
+    const wsName = uniq('fastify');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'fastify',
       style: 'css',
       appName,
       packageManager,

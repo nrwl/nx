@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 
 import { exec } from 'child_process';
-import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
+import { writeFileSync } from 'fs';
+import * as ora from 'ora';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
-import { showNxWarning, unparse } from './shared';
 import { output } from './output';
-import * as ora from 'ora';
-
 import {
   detectInvokedPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
 } from './package-manager';
+import { showNxWarning, unparse } from './shared';
 import { validateNpmPackage } from './validate-npm-package';
 
 export enum Preset {
@@ -31,6 +30,7 @@ export enum Preset {
   Gatsby = 'gatsby',
   Nest = 'nest',
   Express = 'express',
+  Fastify = 'fastify',
 }
 
 const presetOptions: { name: Preset; message: string }[] = [
@@ -70,6 +70,11 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.Express,
     message:
       'express           [a workspace with a single Express application]',
+  },
+  {
+    name: Preset.Fastify,
+    message:
+      'fastify           [a workspace with a single Fastify application]',
   },
   {
     name: Preset.WebComponents,
@@ -380,6 +385,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     preset === Preset.NPM ||
     preset === Preset.Nest ||
     preset === Preset.Express ||
+    preset === Preset.Fastify ||
     preset === Preset.ReactNative
   ) {
     return Promise.resolve(null);

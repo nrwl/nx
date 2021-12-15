@@ -144,6 +144,11 @@
       "data": { "tags": [], "root": "packages/express", "files": [] }
     },
     {
+      "name": "fastify",
+      "type": "lib",
+      "data": { "tags": [], "root": "packages/fastify", "files": [] }
+    },
+    {
       "name": "nx-dev-ui-common",
       "type": "lib",
       "data": {
@@ -467,6 +472,12 @@
       { "source": "express", "target": "devkit", "type": "static" },
       { "source": "express", "target": "linter", "type": "static" },
       { "source": "express", "target": "workspace", "type": "static" }
+    ],
+    "fastify": [
+      { "source": "fastify", "target": "node", "type": "implicit" },
+      { "source": "fastify", "target": "devkit", "type": "static" },
+      { "source": "fastify", "target": "linter", "type": "static" },
+      { "source": "fastify", "target": "workspace", "type": "static" }
     ],
     "nx-dev-ui-common": [
       {

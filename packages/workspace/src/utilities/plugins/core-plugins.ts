@@ -17,6 +17,10 @@ export function fetchCorePlugins() {
       capabilities: 'executors,generators',
     },
     {
+      name: '@nrwl/fastify',
+      capabilities: 'executors,generators',
+    },
+    {
       name: '@nrwl/jest',
       capabilities: 'executors,generators',
     },

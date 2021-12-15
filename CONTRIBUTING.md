@@ -239,6 +239,7 @@ The scope must be one of the following:
 - devkit - devkit-related changes
 - gatsby - anything Gatsby specific
 - express - anything Express specific
+- fastify - anything Fastify specific
 - js - anything related to @nrwl/js package or general js/ts support
 - linter - anything Linter specific
 - nest - anything Nest specific

@@ -23,6 +23,7 @@ module.exports = {
     { name: 'node', description: 'anything Node specific' },
     { name: 'js', description: 'anything TS->JS specific' },
     { name: 'express', description: 'anything Express specific' },
+    { name: 'fastify', description: 'anything Fastify specific' },
     { name: 'nx-plugin', description: 'anything Nx Plugin specific' },
     { name: 'react', description: 'anything React specific' },
     { name: 'react-native', description: 'anything React Native specific' },

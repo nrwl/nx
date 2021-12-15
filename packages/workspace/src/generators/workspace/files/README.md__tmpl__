@@ -34,6 +34,8 @@ Below are our core plugins:
   - `ng add @nrwl/nest`
 - [Express](https://expressjs.com)
   - `ng add @nrwl/express`
+- [Fastify](https://fastify.io)
+  - `ng add @nrwl/fastify`
 - [Node](https://nodejs.org)
   - `ng add @nrwl/node`
 

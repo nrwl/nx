@@ -1,6 +1,7 @@
 [
   "cypress",
   "express",
+  "fastify",
   "jest",
   "linter",
   "nest",

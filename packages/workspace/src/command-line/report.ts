@@ -1,13 +1,13 @@
-import * as chalk from 'chalk';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   detectPackageManager,
   getPackageManagerVersion,
   readJsonFile,
 } from '@nrwl/devkit';
-import { output } from '../utilities/output';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import * as chalk from 'chalk';
 import { join } from 'path';
 import { resolve } from '../utilities/fileutils';
+import { output } from '../utilities/output';
 
 export const packagesWeCareAbout = [
   'nx',
@@ -17,6 +17,7 @@ export const packagesWeCareAbout = [
   '@nrwl/devkit',
   '@nrwl/eslint-plugin-nx',
   '@nrwl/express',
+  '@nrwl/fastify',
   '@nrwl/jest',
   '@nrwl/linter',
   '@nrwl/nest',

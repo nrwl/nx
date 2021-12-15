@@ -3,6 +3,7 @@
   "cypress",
   "detox",
   "express",
+  "fastify",
   "gatsby",
   "jest",
   "js",

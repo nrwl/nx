@@ -769,6 +769,23 @@
         ]
       },
       {
+        "name": "fastify",
+        "id": "fastify",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/fastify Overview",
+            "file": "shared/fastify-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-fastify/generators/application"
+          }
+        ]
+      },
+      {
         "name": "nest",
         "id": "nest",
         "itemList": [
@@ -2124,6 +2141,23 @@
         ]
       },
       {
+        "name": "fastify",
+        "id": "fastify",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/fastify Overview",
+            "file": "shared/fastify-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-fastify/generators/application"
+          }
+        ]
+      },
+      {
         "name": "nest",
         "id": "nest",
         "itemList": [
@@ -3416,6 +3450,23 @@
             "name": "application generator",
             "id": "application",
             "file": "node/api-express/generators/application"
+          }
+        ]
+      },
+      {
+        "name": "fastify",
+        "id": "fastify",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/fastify Overview",
+            "file": "shared/fastify-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-fastify/generators/application"
           }
         ]
       },

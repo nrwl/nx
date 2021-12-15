@@ -47,6 +47,7 @@ function check() {
     ...allFilesInDir('packages/create-nx-plugin'),
     ...allFilesInDir('packages/cypress'),
     ...allFilesInDir('packages/express'),
+    ...allFilesInDir('packages/fastify'),
     ...allFilesInDir('packages/gatsby'),
     ...allFilesInDir('packages/jest'),
     ...allFilesInDir('packages/nest'),

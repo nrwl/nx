@@ -11,6 +11,7 @@ packages/web/src/generators/**/files/**/*.json
 packages/node/src/schematics/**/files/**/*.json
 packages/express/src/schematics/**/files/**/*.json
 packages/nest/src/schematics/**/files/**/*.json
+packages/fastify/src/schematics/**/files/**/*.json
 packages/react/src/schematics/**/files/**/*.json
 packages/jest/src/schematics/**/files/**/*.json
 packages/**/schematics/**/files/**/*.html

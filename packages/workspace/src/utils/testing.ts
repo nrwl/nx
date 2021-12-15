@@ -1,12 +1,12 @@
-import { join } from 'path';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { Rule, Tree } from '@angular-devkit/schematics';
-import { updateWorkspace } from './workspace';
+import { Architect } from '@angular-devkit/architect';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
-import { Architect } from '@angular-devkit/architect';
-import { MockBuilderContext } from './testing-utils';
+import { Rule, Tree } from '@angular-devkit/schematics';
+import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { names } from '@nrwl/devkit';
+import { join } from 'path';
+import { MockBuilderContext } from './testing-utils';
+import { updateWorkspace } from './workspace';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/workspace',
@@ -26,6 +26,11 @@ testRunner.registerCollection(
 testRunner.registerCollection(
   '@nrwl/express',
   join(__dirname, '../../../express/generators.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/fastify',
+  join(__dirname, '../../../fastify/generators.json')
 );
 
 testRunner.registerCollection(

@@ -10,21 +10,18 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-
-import { join } from 'path';
-import * as yargsParser from 'yargs-parser';
 import { spawn, SpawnOptions } from 'child_process';
-
+import { join } from 'path';
 import { gte } from 'semver';
-
-import { workspaceGenerator } from '../workspace/workspace';
-import { nxVersion } from '../../utils/versions';
-import { Preset } from '../utils/presets';
+import * as yargsParser from 'yargs-parser';
 import {
   checkGitVersion,
   deduceDefaultBase,
 } from '../../utilities/default-base';
+import { nxVersion } from '../../utils/versions';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
+import { Preset } from '../utils/presets';
+import { workspaceGenerator } from '../workspace/workspace';
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -257,6 +254,9 @@ function getPresetDependencies(preset: string, version?: string) {
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
 
+    case Preset.Fastify:
+      return { dependencies: {}, dev: { '@nrwl/fastify': nxVersion } };
+
     case Preset.Gatsby:
       return { dependencies: {}, dev: { '@nrwl/gatsby': nxVersion } };
 
@@ -380,6 +380,8 @@ function setTSLintDefault(host: Tree, options: Schema) {
     setDefault(json, '@nrwl/nest', 'library', 'linter', 'tslint');
     setDefault(json, '@nrwl/express', 'application', 'linter', 'tslint');
     setDefault(json, '@nrwl/express', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/fastify', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/fastify', 'library', 'linter', 'tslint');
 
     return json;
   });

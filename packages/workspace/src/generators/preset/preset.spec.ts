@@ -1,9 +1,9 @@
-import { Tree, readJson, NxJsonConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
-import { presetGenerator } from './preset';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import * as path from 'path';
 import { Preset } from '../utils/presets';
+import { presetGenerator } from './preset';
 
 describe('preset', () => {
   let tree: Tree;
@@ -33,6 +33,10 @@ describe('preset', () => {
       '@nrwl/express': path.join(
         __dirname,
         '../../../../express/generators.json'
+      ),
+      '@nrwl/fastify': path.join(
+        __dirname,
+        '../../../../fastify/generators.json'
       ),
     });
   });
@@ -142,6 +146,19 @@ describe('preset', () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.Express,
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+    });
+
+    expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
+    expect(tree.exists('apps/proj/.eslintrc.json')).toBe(true);
+  });
+
+  it(`should create files (preset = ${Preset.Fastify})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.Fastify,
       linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,

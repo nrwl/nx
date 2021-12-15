@@ -105,6 +105,7 @@ export function getApiSection(items: MenuItem[]): MenuSection {
         m.id === 'linter' ||
         m.id === 'node' ||
         m.id === 'express' ||
+        m.id === 'fastify' ||
         m.id === 'nest' ||
         m.id === 'next' ||
         m.id === 'gatsby' ||

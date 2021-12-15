@@ -1,0 +1,39 @@
+/**
+ * This is not a production server yet!
+ * This is only a minimal backend to get started.
+ */
+
+import Fastify, { FastifyInstance, RouteShorthandOptions } from 'fastify';
+
+const server: FastifyInstance = Fastify({ logger: true });
+
+const opts: RouteShorthandOptions = {
+  schema: {
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          pong: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+};
+
+// Declare a route
+server.get('/ping', opts, async (request, reply) => {
+  return { pong: 'it worked!' };
+});
+
+// Run the server!
+const start = async () => {
+  try {
+    await server.listen(3000);
+  } catch (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+};
+start();

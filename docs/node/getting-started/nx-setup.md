@@ -22,6 +22,12 @@ To create an Nx workspace with an Express app run:
 npx create-nx-workspace --preset=express
 ```
 
+To create an Nx workspace with an Fastify app run:
+
+```bash
+npx create-nx-workspace --preset=fastify
+```
+
 ## Add Nx to an Existing Project
 
 If you have an existing Lerna or Yarn workspaces repo, you can gain the benefits of Nx's computation cache without modifying the file structure by running this command:

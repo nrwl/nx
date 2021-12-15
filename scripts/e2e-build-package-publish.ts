@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync, remove } from 'fs-extra';
 import { existsSync, readdirSync } from 'fs';
+import { readFileSync, remove, writeFileSync } from 'fs-extra';
 import {
   prettierVersion,
   typescriptVersion,
@@ -127,6 +127,7 @@ function build(nxVersion: string) {
       'jest',
       'node',
       'express',
+      'fastify',
       'nest',
       'cypress',
       'storybook',
@@ -144,6 +145,7 @@ function build(nxVersion: string) {
       'jest',
       'node',
       'express',
+      'fastify',
       'nest',
       'cypress',
       'storybook',

@@ -20,6 +20,7 @@ Nx is an extensible framework with plugins for many modern tools and frameworks.
 >  NX  Also available:
 
   @nrwl/express (executors,generators)
+  @nrwl/fastify (executors,generators)
   @nrwl/linter (builders)
   @nrwl/nest (executors,generators)
   @nrwl/next (executors,generators)

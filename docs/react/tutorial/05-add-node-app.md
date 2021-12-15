@@ -24,6 +24,7 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 
   @nrwl/angular (generators)
   @nrwl/express (executors,generators)
+  @nrwl/fastify (executors,generators)
   @nrwl/nest (executors,generators)
   @nrwl/next (executors,generators)
   @nrwl/node (executors,generators)

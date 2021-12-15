@@ -8,13 +8,11 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { Schema } from './schema';
-
 import { libraryGenerator } from '../library/library';
-
 import { insertImport } from '../utils/insert-import';
 import { insertStatement } from '../utils/insert-statement';
 import { Preset } from '../utils/presets';
+import { Schema } from './schema';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
@@ -166,6 +164,16 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/express');
+  } else if (options.preset === Preset.Fastify) {
+    const {
+      applicationGenerator: fastifyApplicationGenerator,
+    } = require('@nrwl' + '/fastify');
+    await fastifyApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
+    });
+    setDefaultCollection(tree, '@nrwl/fastify');
   } else if (options.preset === Preset.Gatsby) {
     const {
       applicationGenerator: gatsbyApplicationGenerator,

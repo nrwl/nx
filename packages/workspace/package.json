@@ -39,6 +39,7 @@
       "@nrwl/devkit",
       "@nrwl/eslint-plugin-nx",
       "@nrwl/express",
+      "@nrwl/fastify",
       "@nrwl/gatsby",
       "@nrwl/jest",
       "@nrwl/linter",

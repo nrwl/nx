@@ -769,6 +769,23 @@
         ]
       },
       {
+        "name": "fastify",
+        "id": "fastify",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/fastify Overview",
+            "file": "shared/fastify-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-fastify/generators/application"
+          }
+        ]
+      },
+      {
         "name": "nest",
         "id": "nest",
         "itemList": [

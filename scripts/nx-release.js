@@ -64,6 +64,7 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/web/package.json',
     'build/npm/node/package.json',
     'build/npm/express/package.json',
+    'build/npm/fastify/package.json',
     'build/npm/nest/package.json',
     'build/npm/workspace/package.json',
     'build/npm/cli/package.json',

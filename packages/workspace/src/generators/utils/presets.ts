@@ -10,5 +10,6 @@ export enum Preset {
   Gatsby = 'gatsby',
   Nest = 'nest',
   Express = 'express',
+  Fastify = 'fastify',
   ReactNative = 'react-native',
 }
