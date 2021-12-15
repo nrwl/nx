@@ -5,6 +5,7 @@ import {
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { mergeNpmScriptsWithTargets } from '../../../utilities/project-graph-utils';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -13,8 +14,9 @@ export function buildWorkspaceProjectNodes(
   const toAdd = [];
   Object.keys(ctx.workspace.projects).forEach((key) => {
     const p = ctx.workspace.projects[key];
-    if (existsSync(join(p.root, 'package.json'))) {
-      p.targets = mergeNpmScriptsWithTargets(p.root, p.targets);
+    const projectRoot = join(appRootPath, p.root);
+    if (existsSync(join(projectRoot, 'package.json'))) {
+      p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
     }
     const projectType =
       p.projectType === 'application'
