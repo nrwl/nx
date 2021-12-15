@@ -49,7 +49,7 @@ function isNotAsset(linkPath: string): boolean {
 }
 
 function isNotImage(linkPath: string): boolean {
-  return !linkPath.endsWith('.png');
+  return !linkPath.endsWith('.png') && !linkPath.endsWith('.gif');
 }
 
 function isNotNxCommunityLink(linkPath: string): boolean {

@@ -10,7 +10,7 @@ This document was written on December 14, 2021. At this point Turborepo has just
 
 We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples). That said, you don’t have to use Nx Cloud to get features such as distributed caching and distributed task execution. We provide public APIs so you can build your own, if you'd prefer not to use Nx Cloud.
 
-We are going to compare the tools in three different ways: **features**, **tech**, and **community**.
+We are going to compare the tools in three different ways: **features**, **tech and performance**, and **community**.
 
 ## Features
 
@@ -117,13 +117,22 @@ Nx doesn’t replace any of your tools, and it’s not “all in”. You can sta
 
 Read [this guide](https://nx.dev/l/r/getting-started/nx-core) to learn more about how to only use Nx Core.
 
-## Tech
+## Tech and Performance
 
 Turborepo is mostly written in Golang. Nx is mostly written in TypeScript, but most of the heavy computation in Nx is done by core Node.js capabilities and node modules written in C++, so performance isn’t affected by this.
 
-The one advantage the Go implementation has, is that any time you run an Nx command you pay a ~150ms penalty to boot Node.js. If you test 1 project, you pay a 150ms penalty, if you test 1000 projects, it is still a 150ms penalty. We don’t think in practice it matters because most other CLIs (e.g,. yarn) have the same penalty. The real performance gains from both Nx and Turborepo are in how intelligently they reduce, cache, and in Nx's case, distribute tasks.
+Benchmarking is hard because a lot depends on what you are trying to run, in what environment, etc. This is one benchmark we use when measuring Nx perf: [Nx and Turbo benchmark](https://github.com/vsavkin/large-monorepo/). It is a repo with 5 Next.js apps. We are measuring how quickly Nx and Turbo can figure out what needs to be restored from cache, and how quickly they can do it.
 
-Benchmarking things, in general, is tricky, so we aren’t making claims that Nx is categorically faster. Based on our measurements, distributed task execution and optimizations in restoring files make Nx significantly faster for real-world scenarios, but you should do your own measurements because a lot of it is project specific.
+This is the result:
+![nx and turbo benchmark](/shared/nx-turbo.gif)
+
+Nx is 5 times faster on the latest MBP. Nx is 7.5 times faster on a Windows laptop.
+
+Why is it faster? Nx is in many ways akin to React in that it's doing tree diffing when restoring files from the cache. If the right files are in the right place, Nx won't touch them. Turbo blows everything away every time. Nx's version isn't just faster, it's also more useful (again similarly to tree diffing in React). Blowing everything away on every restoration means that if any tools watch the folders (which is common when you build large apps or build microfrontends), they are going to get confused or triggered for no reason. This is similar to how recreating the DOM from scratch isn't just slower, but results in worse UX. But even if you disable tree-diffing and make Nx do what Turbo does, it is still 1.5 times faster.
+
+The cache restoration Turborepo provides might be fast enough for a lot of repos (3 seconds is still plenty fast). What matters for larger repos like this one is the ability to distribute any command across say 50 machines while preserving the dev ergonomics of running it on a single machine. Nx can do it. Bazel can do it (which Nx borrows some ideas from). Turbo can't.
+
+The one advantage Turbo's Go implementation has, is that any time you run an Nx command you pay a ~150ms penalty to boot Node.js. If you test 1 project, you pay a 150ms penalty, if you test 1000 projects, it is still a 150ms penalty. We don’t think in practice it matters because most other CLIs (e.g,. yarn) have the same penalty. The real performance gains from both Nx and Turborepo are in how intelligently they reduce, cache, and in Nx's case, distribute tasks.
 
 **Nx and Turborepo often have different philosophies of how workspaces should be built.** Turborepo tends to think in terms of "packages", whereas Nx is focused on many lightweight projects. Large Nx Workspaces tend to be composed of hundreds or even thousands of projects, which helps the average build performance in three ways:
 
