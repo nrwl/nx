@@ -185,9 +185,9 @@ describe('lib', () => {
             }
           },
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+            '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
           },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "
@@ -784,7 +784,7 @@ describe('lib', () => {
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "

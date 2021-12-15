@@ -101,7 +101,9 @@ function generatePreset(host: Tree, opts: NormalizedSchema) {
           acc.push(`${key}`);
         } else if (value === false) {
           acc.push(`--no-${key}`);
-        } else {
+          // nxWorkspaceRoot breaks Tao CLI if incorrectly set, so need to exclude it.
+          // TODO(jack): Should read in the preset schema and only pass the options specified.
+        } else if (key !== 'nxWorkspaceRoot') {
           // string, number (don't handle arrays or nested objects)
           acc.push(`--${key}=${value}`);
         }
