@@ -19,7 +19,7 @@ describe('app', () => {
     name: 'myApp',
     linter: Linter.EsLint,
     style: 'css',
-    strict: false,
+    strict: true,
     standaloneConfig: false,
   };
 
@@ -76,14 +76,16 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfig.compilerOptions.strict).not.toBeDefined();
+      expect(tsconfig.compilerOptions.forceConsistentCasingInFileNames).toEqual(
+        true
+      );
+      expect(tsconfig.compilerOptions.strict).toEqual(true);
+      expect(tsconfig.compilerOptions.noImplicitOverride).toEqual(true);
       expect(
-        tsconfig.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfig.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfig.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+        tsconfig.compilerOptions.noPropertyAccessFromIndexSignature
+      ).toEqual(true);
+      expect(tsconfig.compilerOptions.noImplicitReturns).toEqual(true);
+      expect(tsconfig.compilerOptions.noFallthroughCasesInSwitch).toEqual(true);
 
       const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
@@ -718,22 +720,26 @@ Object {
     });
   });
 
-  describe('--strict', () => {
-    it('should update tsconfig.json', async () => {
+  describe('--no-strict', () => {
+    it('should not add options for strict mode', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        strict: true,
+        strict: false,
       });
       const tsconfigJson = readJson(appTree, '/apps/my-app/tsconfig.json');
 
-      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toBeTruthy();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitOverride).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).toBeTruthy();
+      ).not.toBeDefined();
     });
   });
 

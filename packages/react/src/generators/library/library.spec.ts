@@ -104,6 +104,10 @@ describe('lib', () => {
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
       ).toEqual(true);
       expect(tsconfigJson.compilerOptions.strict).toEqual(true);
+      expect(tsconfigJson.compilerOptions.noImplicitOverride).toEqual(true);
+      expect(
+        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
+      ).toEqual(true);
       expect(tsconfigJson.compilerOptions.noImplicitReturns).toEqual(true);
       expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toEqual(
         true
@@ -630,6 +634,10 @@ describe('lib', () => {
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
       ).not.toBeDefined();
       expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitOverride).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
+      ).not.toBeDefined();
       expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch

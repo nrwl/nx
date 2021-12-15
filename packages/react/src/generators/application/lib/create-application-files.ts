@@ -20,6 +20,8 @@ function updateTsConfig(host: Tree, options: NormalizedSchema) {
           ...json.compilerOptions,
           forceConsistentCasingInFileNames: true,
           strict: true,
+          noImplicitOverride: true,
+          noPropertyAccessFromIndexSignature: true,
           noImplicitReturns: true,
           noFallthroughCasesInSwitch: true,
         };
