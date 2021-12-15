@@ -34,7 +34,7 @@ describe('Angular Package', () => {
 
       proj =
         getSelectedPackageManager() === 'pnpm'
-          ? newProject({ packageManager: 'yarn' })
+          ? newProject({ packageManager: 'npm' })
           : newProject();
 
       runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);

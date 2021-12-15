@@ -23,7 +23,6 @@ describe('Angular Package', () => {
     let proj: string;
 
     beforeEach(() => (proj = newProject()));
-    afterEach(() => cleanupProject());
 
     it('should work', async () => {
       const myapp = uniq('myapp');
