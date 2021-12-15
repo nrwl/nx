@@ -1,16 +1,14 @@
 import {
-  Tree,
-  formatFiles,
-  updateJson,
   addDependenciesToPackageJson,
-  installPackagesTask,
-  getWorkspacePath as devkitGetWorkspacePath,
   convertNxGenerator,
-  names,
+  formatFiles,
   getPackageManagerCommand,
-  WorkspaceJsonConfiguration,
+  getWorkspacePath as devkitGetWorkspacePath,
+  installPackagesTask,
+  names,
   PackageManager,
-  NxJsonConfiguration,
+  Tree,
+  updateJson,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -316,14 +314,18 @@ function normalizeOptions(options: NormalizedSchema): NormalizedSchema {
   if (!options.directory) {
     options.directory = options.name;
   }
-  const { preset } = options;
-  if (preset.match(/.+@/)) {
-    // If the preset already contains a version in the name
-    // -- my-package@2.0.1
-    // -- @scope/package@version
-    options.preset = preset[0] + preset.substring(1).split('@')[0];
-    options.presetVersion = preset.substring(1).split('@')[1];
+
+  // If the preset already contains a version in the name
+  // -- my-package@2.0.1
+  // -- @scope/package@version
+  const match = options.preset.match(
+    /^(?<package>(@.+\/)?[^@]+)(@(?<version>\d+\.\d+\.\d+))?$/
+  );
+  if (match) {
+    options.preset = match.groups.package;
+    options.presetVersion = match.groups.version;
   }
+
   return options;
 }
 
