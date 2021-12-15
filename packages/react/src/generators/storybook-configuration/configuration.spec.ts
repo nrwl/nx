@@ -188,7 +188,6 @@ export async function createTestAppLib(
   let appTree = createTreeWithEmptyWorkspace();
 
   await applicationGenerator(appTree, {
-    babelJest: false,
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
     skipFormat: false,

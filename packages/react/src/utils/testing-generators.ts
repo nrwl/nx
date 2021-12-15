@@ -1,37 +1,19 @@
 import { addProjectConfiguration, names, Tree } from '@nrwl/devkit';
 import applicationGenerator from '../generators/application/application';
 import { Linter } from '@nrwl/linter';
-import { applicationGenerator as webApplicationGenerator } from '@nrwl/web';
 
 export async function createApp(
   tree: Tree,
   appName: string,
   standaloneConfig?: boolean
 ): Promise<any> {
-  const { fileName } = names(appName);
-
   await applicationGenerator(tree, {
-    babelJest: true,
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
     name: appName,
-    standaloneConfig,
-  });
-}
-
-export async function createWebApp(
-  tree: Tree,
-  appName: string,
-  standaloneConfig?: boolean
-): Promise<any> {
-  const { fileName } = names(appName);
-
-  await webApplicationGenerator(tree, {
-    name: appName,
-    skipFormat: true,
     standaloneConfig,
   });
 }

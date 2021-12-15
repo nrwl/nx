@@ -48,7 +48,6 @@ describe('redux', () => {
   describe('--appProject', () => {
     it('should configure app main', async () => {
       await applicationGenerator(appTree, {
-        babelJest: false,
         e2eTestRunner: 'none',
         linter: Linter.EsLint,
         skipFormat: true,

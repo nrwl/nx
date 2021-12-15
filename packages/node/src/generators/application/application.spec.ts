@@ -365,7 +365,7 @@ describe('app', () => {
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
-            moduleFileExtensions: ['ts', 'js', 'html'],
+          moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-node-app'
         };
         "

@@ -3,8 +3,9 @@ import {
   jestTypesVersion,
   jestVersion,
   nxVersion,
-  tslibVersion,
+  swcJestVersion,
   tsJestVersion,
+  tslibVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 import {
@@ -18,7 +19,7 @@ import {
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
 const schemaDefaults = {
-  babelJest: false,
+  compiler: 'tsc',
 } as const;
 
 function removeNrwlJestFromDeps(host: Tree) {
@@ -63,11 +64,14 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
     '@types/jest': jestTypesVersion,
-    'ts-jest': tsJestVersion,
   };
 
-  if (options.babelJest) {
+  if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
+  } else if (options.compiler === 'swc') {
+    devDeps['@swc/jest'] = swcJestVersion;
+  } else {
+    devDeps['ts-jest'] = tsJestVersion;
   }
 
   return addDependenciesToPackageJson(tree, dependencies, devDeps);

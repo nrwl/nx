@@ -375,11 +375,11 @@ describe('app', () => {
     });
   });
 
-  describe('--babelJest', () => {
-    it('should use babel for jest', async () => {
+  describe('--compiler', () => {
+    it('should support babel compiler', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
-        babelJest: true,
+        compiler: 'babel',
       } as Schema);
 
       expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
@@ -391,7 +391,29 @@ describe('app', () => {
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
-            moduleFileExtensions: ['ts', 'js', 'html'],
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-app'
+        };
+        "
+      `);
+    });
+
+    it('should support swc compiler', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        compiler: 'swc',
+      } as Schema);
+
+      expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-app',
+          preset: '../../jest.preset.js',
+          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          transform: {
+            '^.+\\\\\\\\.[tj]s$': '@swc/jest'
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-app'
         };
         "

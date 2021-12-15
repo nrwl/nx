@@ -27,8 +27,12 @@ function normalizeOptions(options: JestProjectSchema) {
     options.supportTsx = false;
   }
 
-  // if we support TSX or babelJest we don't support angular(html templates)
-  if (options.supportTsx || options.babelJest) {
+  // if we support TSX or compiler is not tsc, then we don't support angular(html templates)
+  if (
+    options.supportTsx ||
+    options.babelJest ||
+    ['swc', 'babel'].includes(options.compiler)
+  ) {
     options.skipSerializers = true;
   }
 

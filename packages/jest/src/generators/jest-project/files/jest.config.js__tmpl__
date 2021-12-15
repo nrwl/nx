@@ -9,9 +9,8 @@ module.exports = {
   },<% } %><% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
   transform: {
-    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformer == 'babel-jest') { %>'babel-jest'<% } else { %> 'ts-jest' <% } %>
-  },<% if (supportTsx) { %>
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>
-    moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
+    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (supportTsx && transformer === '@swc/jest') { %>['<%= transformer %>', { jsc: { transform: { react: { runtime: 'automatic' } } } }]<% } else { %>'<%= transformer %>'<% } %>
+  },
+  <% if (supportTsx) { %>moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'
 };

@@ -33,14 +33,6 @@ nx g application ... --dry-run
 
 ## Options
 
-### babelJest
-
-Default: `false`
-
-Type: `boolean`
-
-Use babel instead ts-jest
-
 ### compiler
 
 Default: `babel`

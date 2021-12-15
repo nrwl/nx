@@ -11,9 +11,9 @@ exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1
   },
   testEnvironment: 'node',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/my-lib'
 };
 "
@@ -30,9 +30,9 @@ exports[`lib --testEnvironment should set target jest testEnvironment to node by
   },
   testEnvironment: 'node',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/my-lib'
 };
 "

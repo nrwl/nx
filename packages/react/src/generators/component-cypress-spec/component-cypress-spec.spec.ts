@@ -147,7 +147,6 @@ describe('react:component-cypress-spec', () => {
   it('should target the correct cypress suite', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await applicationGenerator(appTree, {
-      babelJest: false,
       e2eTestRunner: 'none',
       linter: Linter.EsLint,
       name: `other-e2e`,
@@ -194,7 +193,6 @@ export async function createTestUILib(
   // create some Nx app that we'll use to generate the cypress
   // spec into it. We don't need a real Cypress setup
   await applicationGenerator(appTree, {
-    babelJest: false,
     js: plainJS,
     e2eTestRunner: 'none',
     linter: Linter.EsLint,

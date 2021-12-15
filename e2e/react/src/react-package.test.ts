@@ -8,6 +8,7 @@ import {
   readJson,
   rmDist,
   runCLI,
+  runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
@@ -64,15 +65,15 @@ describe('Build React libraries and apps', () => {
 
     runCLI(`generate @nrwl/react:app ${app} `);
 
-    // generate publishable libs
+    // generate buildable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive `
+      `generate @nrwl/react:library ${parentLib} --buildable --importPath=@${proj}/${parentLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive `
+      `generate @nrwl/react:library ${childLib} --buildable --importPath=@${proj}/${childLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive `
+      `generate @nrwl/react:library ${childLib2} --buildable --importPath=@${proj}/${childLib2} --no-interactive `
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -102,7 +103,7 @@ describe('Build React libraries and apps', () => {
 
   afterEach(() => killPorts());
 
-  describe('Publishable libraries', () => {
+  describe('Buildable libraries', () => {
     it('should build libraries with and without dependencies', () => {
       /*
        * 1. Without dependencies
@@ -140,7 +141,7 @@ describe('Build React libraries and apps', () => {
        */
       rmDist();
 
-      runCLI(`build ${parentLib} --with-deps --skip-nx-cache`);
+      runCLI(`build ${parentLib} --skip-nx-cache`);
 
       checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
       checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
@@ -182,7 +183,7 @@ export async function h() { return 'c'; }
       // Setup
       const myLib = uniq('my-lib');
       runCLI(
-        `generate @nrwl/react:library ${myLib} --publishable=true --importPath="@mproj/${myLib}" --no-interactive`
+        `generate @nrwl/react:library ${myLib} --publishable --importPath="@mproj/${myLib}" --no-interactive`
       );
 
       /**
@@ -229,20 +230,37 @@ export async function h() { return 'c'; }
       expect(content).toContain('function __generator(thisArg, body) {');
     });
 
-    it('should build an app composed out of publishable libs', () => {
-      const buildWithDeps = runCLI(
-        `build ${app} --with-deps --buildLibsFromSource=false`
+    it('should build an app composed out of buildable libs', () => {
+      const buildFromSource = runCLI(
+        `build ${app} --buildLibsFromSource=false`
       );
-      expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+      expect(buildFromSource).toContain(`Running target "build" succeeded`);
       checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 
       // we remove all path mappings from the root tsconfig, so when trying to build
       // libs from source, the builder will throw
-      const failedBuild = runCLI(
-        `build ${app} --with-deps --buildLibsFromSource`,
-        { silenceError: true }
-      );
+      const failedBuild = runCLI(`build ${app} --buildLibsFromSource`, {
+        silenceError: true,
+      });
       expect(failedBuild).toContain(`Can't resolve`);
     }, 1000000);
+
+    it('should not create a dist folder if there is an error', async () => {
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --buildable --importPath=@${proj}/${libName} --no-interactive`
+      );
+
+      const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
+      updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
+
+      await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
+        /Bundle failed/
+      );
+      expect(() => {
+        checkFilesExist(`dist/libs/${libName}/package.json`);
+      }).toThrow();
+    }, 250000);
   });
 });
