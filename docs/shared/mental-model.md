@@ -272,7 +272,7 @@ paid. One of them is the distributed computation cache, which allows you to shar
 agents.
 
 Another one is config-free distributed task execution (DTE). When using the distributed task execution, Nx is able to
-run any task graph on a many agents instead of locally.
+run any task graph on many agents instead of locally.
 
 When using this, `nx affected --build`, won't run the build locally (which for large workspace can take hours). Instead,
 it will send the Task Graph to Nx Cloud. Nx Cloud Agents will then pick up the task they can run and execute them.
