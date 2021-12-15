@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "incremental": false,
+    "module": "esnext",
+    "moduleResolution": "node"
+  }
+}

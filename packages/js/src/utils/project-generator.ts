@@ -12,9 +12,11 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { join } from 'path';
-import { Schema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { join } from 'path';
+import { GeneratorSchema } from './schema';
+import { addSwcConfig } from './swc/add-swc-config';
+import { addSwcDependencies } from './swc/add-swc-dependencies';
 
 // nx-ignore-next-line
 const { jestProjectGenerator } = require('@nrwl/jest');
@@ -23,7 +25,7 @@ const { lintProjectGenerator, Linter } = require('@nrwl/linter');
 
 export async function projectGenerator(
   tree: Tree,
-  schema: Schema,
+  schema: GeneratorSchema,
   destinationDir: string,
   filesDir: string,
   projectType: 'library' | 'application'
@@ -56,7 +58,7 @@ export async function projectGenerator(
   return runTasksInSerial(...tasks);
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends GeneratorSchema {
   name: string;
   fileName: string;
   projectRoot: string;
@@ -80,24 +82,21 @@ function addProject(
   };
 
   if (options.buildable && options.config != 'npm-scripts') {
-    if (options.compiler === 'tsc') {
-      projectConfiguration.targets.build = {
-        executor: '@nrwl/js:tsc',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: `dist/${destinationDir}/${options.projectDirectory}`,
-          main:
-            `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
-          tsConfig: `${options.projectRoot}/${
-            projectType === 'library'
-              ? 'tsconfig.lib.json'
-              : 'tsconfig.app.json'
-          }`,
-          assets: [`${options.projectRoot}/*.md`],
-        },
-      };
-    } else {
-      throw new Error(`Compiler ${options.compiler} is not supported`);
+    projectConfiguration.targets.build = {
+      executor: `@nrwl/js:${options.compiler}`,
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath: `dist/${destinationDir}/${options.projectDirectory}`,
+        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+        tsConfig: `${options.projectRoot}/${
+          projectType === 'library' ? 'tsconfig.lib.json' : 'tsconfig.app.json'
+        }`,
+        assets: [`${options.projectRoot}/*.md`],
+      },
+    };
+
+    if (options.compiler === 'swc' && options.skipTypeCheck) {
+      projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
   }
 
@@ -170,6 +169,11 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 
+  if (options.buildable && options.compiler === 'swc') {
+    addSwcDependencies(tree);
+    addSwcConfig(tree, options.projectRoot);
+  }
+
   if (options.unitTestRunner === 'none') {
     tree.delete(
       join(options.projectRoot, 'src/lib', `${options.fileName}.spec.ts`)
@@ -215,13 +219,17 @@ async function addJest(
 
 function normalizeOptions(
   tree: Tree,
-  options: Schema,
+  options: GeneratorSchema,
   destinationDir: string
 ): NormalizedSchema {
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
     options.buildable = false;
+  }
+
+  if (options.compiler === 'swc' && options.skipTypeCheck == null) {
+    options.skipTypeCheck = false;
   }
 
   const name = names(options.name).fileName;

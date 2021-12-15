@@ -15,6 +15,13 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a application"
+    },
+    "convert-to-swc": {
+      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcSchematic",
+      "schema": "./src/generators/convert-to-swc/schema.json",
+      "aliases": ["swc"],
+      "x-type": "library",
+      "description": "Convert a tsc library to swc"
     }
   },
   "generators": {
@@ -31,6 +38,13 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a application"
+    },
+    "convert-to-swc": {
+      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
+      "schema": "./src/generators/convert-to-swc/schema.json",
+      "aliases": ["swc"],
+      "x-type": "library",
+      "description": "Convert a tsc library to swc"
     }
   }
 }

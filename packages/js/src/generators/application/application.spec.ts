@@ -1,14 +1,14 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { GeneratorSchema } from '../../utils/schema';
 import applicationGenerator from './application';
-import { Schema } from '../../utils/schema';
 
 // most of the functionality is tested via the library generator because the library and application share
 // most of the code
 // only testing the difference here
 describe('app', () => {
   let tree: Tree;
-  const defaultOptions: Omit<Schema, 'name'> = {
+  const defaultOptions: Omit<GeneratorSchema, 'name'> = {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,

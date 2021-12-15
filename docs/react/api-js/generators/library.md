@@ -139,6 +139,14 @@ Type: `boolean`
 
 Do not update tsconfig.json for development experience.
 
+### skipTypeCheck
+
+Default: `false`
+
+Type: `boolean`
+
+Whether to skip TypeScript type checking for SWC compiler.
+
 ### strict
 
 Default: `true`

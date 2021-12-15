@@ -1,7 +1,13 @@
 // nx-ignore-next-line
 const { Linter } = require('@nrwl/linter');
+import type {
+  AssetGlob,
+  FileInputOutput,
+} from '@nrwl/workspace/src/utilities/assets';
 
-export interface Schema {
+export type Compiler = 'tsc' | 'swc';
+
+export interface GeneratorSchema {
   name: string;
   directory?: string;
   skipFormat?: boolean;
@@ -18,5 +24,17 @@ export interface Schema {
   buildable?: boolean;
   setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';
-  compiler?: 'tsc' | 'swc';
+  compiler?: Compiler;
+  skipTypeCheck?: boolean;
+}
+
+export interface ExecutorOptions {
+  assets: Array<AssetGlob | string>;
+  main: string;
+  outputPath: string;
+  tsConfig: string;
+}
+
+export interface NormalizedExecutorOptions extends ExecutorOptions {
+  files: Array<FileInputOutput>;
 }
