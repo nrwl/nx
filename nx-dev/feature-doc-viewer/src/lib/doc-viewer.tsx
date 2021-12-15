@@ -47,7 +47,9 @@ export function DocViewer({
             'Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, full monorepo support and more.',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: router.asPath.includes('turbo-and-nx')
+                ? 'https://nx.dev/images/nx-media-monorepo.jpg'
+                : 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 400,
               alt: 'Nx: Smart, Extensible Build Framework',
