@@ -810,6 +810,8 @@ describe('app', () => {
         // check that the TypeScript compiler options have been updated
         expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
         expect(compilerOptions.strict).toBe(true);
+        expect(compilerOptions.noImplicitOverride).toBe(true);
+        expect(compilerOptions.noPropertyAccessFromIndexSignature).toBe(true);
         expect(compilerOptions.noImplicitReturns).toBe(true);
         expect(compilerOptions.noFallthroughCasesInSwitch).toBe(true);
 
