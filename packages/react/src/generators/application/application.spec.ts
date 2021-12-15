@@ -12,7 +12,7 @@ import { Linter } from '@nrwl/linter';
 describe('app', () => {
   let appTree: Tree;
   let schema: Schema = {
-    babelJest: false,
+    compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
     unitTestRunner: 'jest',

@@ -126,27 +126,27 @@ describe('lib', () => {
         await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
         expect(tsconfigJson).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
-            "forceConsistentCasingInFileNames": true,
-            "module": "CommonJS",
-            "noFallthroughCasesInSwitch": true,
-            "noImplicitReturns": true,
-            "strict": true,
-          },
-          "extends": "../../tsconfig.base.json",
-          "files": Array [],
-          "include": Array [],
-          "references": Array [
-            Object {
-              "path": "./tsconfig.lib.json",
-            },
-            Object {
-              "path": "./tsconfig.spec.json",
-            },
-          ],
-        }
-      `);
+                  Object {
+                    "compilerOptions": Object {
+                      "forceConsistentCasingInFileNames": true,
+                      "module": "CommonJS",
+                      "noFallthroughCasesInSwitch": true,
+                      "noImplicitReturns": true,
+                      "strict": true,
+                    },
+                    "extends": "../../tsconfig.base.json",
+                    "files": Array [],
+                    "include": Array [],
+                    "references": Array [
+                      Object {
+                        "path": "./tsconfig.lib.json",
+                      },
+                      Object {
+                        "path": "./tsconfig.spec.json",
+                      },
+                    ],
+                  }
+              `);
       });
     });
 
@@ -571,40 +571,40 @@ describe('lib', () => {
         ).toEqual(['libs/my-dir/my-lib/**/*.js']);
         expect(readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
-            "../../../.eslintrc.json",
-          ],
-          "ignorePatterns": Array [
-            "!**/*",
-          ],
-          "overrides": Array [
-            Object {
-              "files": Array [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": Object {},
-            },
-            Object {
-              "files": Array [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": Object {},
-            },
-            Object {
-              "files": Array [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": Object {},
-            },
-          ],
-        }
-      `);
+                  Object {
+                    "extends": Array [
+                      "../../../.eslintrc.json",
+                    ],
+                    "ignorePatterns": Array [
+                      "!**/*",
+                    ],
+                    "overrides": Array [
+                      Object {
+                        "files": Array [
+                          "*.ts",
+                          "*.tsx",
+                          "*.js",
+                          "*.jsx",
+                        ],
+                        "rules": Object {},
+                      },
+                      Object {
+                        "files": Array [
+                          "*.ts",
+                          "*.tsx",
+                        ],
+                        "rules": Object {},
+                      },
+                      Object {
+                        "files": Array [
+                          "*.js",
+                          "*.jsx",
+                        ],
+                        "rules": Object {},
+                      },
+                    ],
+                  }
+              `);
       });
     });
   });
@@ -636,9 +636,9 @@ describe('lib', () => {
             }
           },
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$':  'ts-jest' 
+            '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
           },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "

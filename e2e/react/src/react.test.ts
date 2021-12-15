@@ -40,57 +40,12 @@ describe('React Applications', () => {
     );
 
     await testGeneratedApp(appName, {
+      checkSourceMap: true,
       checkStyles: true,
       checkLinter: true,
       checkE2E: true,
     });
   }, 500000);
-
-  it('should support sourcemaps', () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
-
-    runCLI(`build ${appName} --sourceMap --outputHashing none`);
-
-    checkFilesExist(`dist/apps/${appName}/main.esm.js.map`);
-  }, 250000);
-
-  it('should be able to generate a publishable react lib', async () => {
-    const libName = uniq('lib');
-
-    runCLI(
-      `generate @nrwl/react:lib ${libName} --publishable --importPath=@${proj}/${libName} --no-interactive`
-    );
-
-    const libTestResults = await runCLIAsync(
-      `build ${libName} --no-extract-css`
-    );
-    expect(libTestResults.stdout).toMatch(/Done in \d+\.\d+s/);
-
-    checkFilesExist(
-      `dist/libs/${libName}/package.json`,
-      `dist/libs/${libName}/index.d.ts`,
-      `dist/libs/${libName}/${libName}.esm.js`,
-      `dist/libs/${libName}/${libName}.umd.js`
-    );
-
-    checkFilesDoNotExist(
-      `dist/libs/${libName}/${libName}.esm.css`,
-      `dist/libs/${libName}/${libName}.umd.css`
-    );
-
-    await runCLIAsync(`build ${libName} --extract-css`);
-
-    checkFilesExist(
-      `dist/libs/${libName}/package.json`,
-      `dist/libs/${libName}/index.d.ts`,
-      `dist/libs/${libName}/${libName}.esm.css`,
-      `dist/libs/${libName}/${libName}.esm.js`,
-      `dist/libs/${libName}/${libName}.umd.css`,
-      `dist/libs/${libName}/${libName}.umd.js`
-    );
-  }, 250000);
 
   it('should be able to generate a react lib with no components', async () => {
     const appName = uniq('app');
@@ -117,106 +72,6 @@ describe('React Applications', () => {
     });
   }, 250000);
 
-  it('should not create a dist folder if there is an error', async () => {
-    const libName = uniq('lib');
-
-    runCLI(
-      `generate @nrwl/react:lib ${libName} --publishable --importPath=@${proj}/${libName} --no-interactive`
-    );
-
-    const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
-    updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
-
-    await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
-      /Bundle failed/
-    );
-    expect(() => {
-      checkFilesExist(`dist/libs/${libName}/package.json`);
-    }).toThrow();
-  }, 250000);
-
-  it('should generate app with routing', async () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
-
-    await testGeneratedApp(appName, {
-      checkStyles: true,
-      checkLinter: false,
-      checkE2E: false,
-    });
-  }, 250000);
-
-  it('should generate app with different style options', async () => {
-    const styledComponentsApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/react:app ${styledComponentsApp} --style styled-components --no-interactive`
-    );
-
-    // Checking that we can enable displayName just for development.
-    updateFile(
-      `apps/${styledComponentsApp}/.babelrc`,
-      JSON.stringify(
-        {
-          presets: ['@nrwl/react/babel'],
-          plugins: [
-            ['styled-components', { pure: true, ssr: true, displayName: true }],
-          ],
-          env: {
-            production: {
-              plugins: [
-                [
-                  'styled-components',
-                  { pure: true, ssr: true, displayName: false },
-                ],
-              ],
-            },
-          },
-        },
-        null,
-        2
-      )
-    );
-
-    await testGeneratedApp(styledComponentsApp, {
-      checkStyles: false,
-      checkLinter: false,
-      checkE2E: false,
-    });
-
-    const styledJsxApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/react:app ${styledJsxApp} --style styled-jsx --no-interactive`
-    );
-
-    await testGeneratedApp(styledJsxApp, {
-      checkStyles: false,
-      checkLinter: false,
-      checkE2E: false,
-    });
-
-    const noStylesApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/react:app ${noStylesApp} --style none --no-interactive`
-    );
-
-    await testGeneratedApp(noStylesApp, {
-      checkStyles: false,
-      checkLinter: false,
-      checkE2E: false,
-    });
-
-    expect(() =>
-      checkFilesExist(`dist/apps/${noStylesApp}/styles.css`)
-    ).toThrow(/does not exist/);
-    expect(readFile(`dist/apps/${noStylesApp}/index.html`)).not.toContain(
-      `<link rel="stylesheet" href="styles.css">`
-    );
-  }, 250000);
-
   it('should generate app with legacy-ie support', async () => {
     const appName = uniq('app');
 
@@ -240,26 +95,6 @@ describe('React Applications', () => {
 
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
-    );
-  }, 250000);
-
-  it('should be able to add a redux slice', async () => {
-    const appName = uniq('app');
-    const libName = uniq('lib');
-
-    runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
-    runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
-    runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
-    runCLI(`g @nrwl/react:redux orange --project=${libName}`);
-
-    const appTestResults = await runCLIAsync(`test ${appName}`);
-    expect(appTestResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
-
-    const libTestResults = await runCLIAsync(`test ${libName}`);
-    expect(libTestResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
     );
   }, 250000);
 
@@ -308,6 +143,7 @@ describe('React Applications', () => {
       checkStyles: boolean;
       checkLinter: boolean;
       checkE2E: boolean;
+      checkSourceMap?: boolean;
     }
   ) {
     if (opts.checkLinter) {
@@ -315,13 +151,22 @@ describe('React Applications', () => {
       expect(lintResults).toContain('All files pass linting.');
     }
 
-    runCLI(`build ${appName} --outputHashing none`);
+    runCLI(
+      `build ${appName} --outputHashing none ${
+        opts.checkSourceMap ? '--sourceMap' : ''
+      }`
+    );
     const filesToCheck = [
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.esm.js`,
       `dist/apps/${appName}/polyfills.esm.js`,
       `dist/apps/${appName}/main.esm.js`,
     ];
+
+    if (opts.checkSourceMap) {
+      filesToCheck.push(`dist/apps/${appName}/main.esm.js.map`);
+    }
+
     if (opts.checkStyles) {
       filesToCheck.push(`dist/apps/${appName}/styles.css`);
     }
@@ -346,7 +191,8 @@ describe('React Applications', () => {
   }
 });
 
-fdescribe('--style option', () => {
+describe('React Applications: --style option', () => {
+  // Only create workspace once
   beforeAll(() => newProject());
 
   it.each`
@@ -387,4 +233,43 @@ fdescribe('--style option', () => {
       /Comic Sans MS/
     );
   });
+});
+
+describe('React Applications: additional packages', () => {
+  beforeAll(() => newProject());
+
+  it('should generate app with routing', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
+
+    runCLI(`build ${appName} --outputHashing none`);
+
+    checkFilesExist(
+      `dist/apps/${appName}/index.html`,
+      `dist/apps/${appName}/runtime.esm.js`,
+      `dist/apps/${appName}/polyfills.esm.js`,
+      `dist/apps/${appName}/main.esm.js`
+    );
+  }, 250000);
+
+  it('should be able to add a redux slice', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
+    runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
+    runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
+    runCLI(`g @nrwl/react:redux orange --project=${libName}`);
+
+    const appTestResults = await runCLIAsync(`test ${appName}`);
+    expect(appTestResults.combinedOutput).toContain(
+      'Test Suites: 2 passed, 2 total'
+    );
+
+    const libTestResults = await runCLIAsync(`test ${libName}`);
+    expect(libTestResults.combinedOutput).toContain(
+      'Test Suites: 2 passed, 2 total'
+    );
+  }, 250000);
 });

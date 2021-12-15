@@ -37,11 +37,31 @@ describe('jest', () => {
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
   });
 
-  describe('--babelJest', () => {
+  describe('Deprecated: --babelJest', () => {
     it('should add babel dependencies', async () => {
       jestInitGenerator(tree, { babelJest: true });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
+    });
+  });
+
+  describe('--compiler', () => {
+    it('should support tsc compiler', () => {
+      jestInitGenerator(tree, { compiler: 'tsc' });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['ts-jest']).toBeDefined();
+    });
+
+    it('should support babel compiler', () => {
+      jestInitGenerator(tree, { compiler: 'babel' });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['babel-jest']).toBeDefined();
+    });
+
+    it('should support swc compiler', () => {
+      jestInitGenerator(tree, { compiler: 'swc' });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc/jest']).toBeDefined();
     });
   });
 

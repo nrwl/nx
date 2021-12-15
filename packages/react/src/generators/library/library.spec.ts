@@ -365,7 +365,7 @@ describe('lib', () => {
   describe('--appProject', () => {
     it('should add new route to existing routing code', async () => {
       await applicationGenerator(appTree, {
-        babelJest: true,
+        compiler: 'babel',
         e2eTestRunner: 'none',
         linter: Linter.EsLint,
         skipFormat: true,
@@ -393,7 +393,6 @@ describe('lib', () => {
 
     it('should initialize routes if none were set up then add new route', async () => {
       await applicationGenerator(appTree, {
-        babelJest: true,
         e2eTestRunner: 'none',
         linter: Linter.EsLint,
         skipFormat: true,

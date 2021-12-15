@@ -24,9 +24,9 @@ const scoped = [
   'babel',
   'emotion',
   'reduxjs',
+  'swc',
   'testing-library',
   'types',
-  'zeit',
 ];
 
 try {

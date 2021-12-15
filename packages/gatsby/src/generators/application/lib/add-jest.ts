@@ -12,7 +12,7 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     supportTsx: true,
     skipSerializers: true,
     setupFile: 'none',
-    babelJest: true,
+    compiler: 'babel',
   });
 
   updateJson(host, `${options.projectRoot}/tsconfig.spec.json`, (json) => {

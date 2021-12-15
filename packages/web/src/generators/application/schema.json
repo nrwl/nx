@@ -76,11 +76,6 @@
       "type": "string",
       "description": "Add tags to the application (used for linting)"
     },
-    "babelJest": {
-      "type": "boolean",
-      "description": "Use babel instead ts-jest",
-      "default": false
-    },
     "setParserOptionsProject": {
       "type": "boolean",
       "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",

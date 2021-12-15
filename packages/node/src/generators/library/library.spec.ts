@@ -440,7 +440,7 @@ describe('lib', () => {
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },
-            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "

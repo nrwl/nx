@@ -90,7 +90,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       setupFile: 'none',
       supportTsx: true,
       skipSerializers: true,
-      babelJest: true,
+      compiler: options.compiler,
     });
     tasks.push(jestTask);
   }

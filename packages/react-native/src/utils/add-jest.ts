@@ -17,7 +17,7 @@ export async function addJest(
     supportTsx: true,
     skipSerializers: true,
     setupFile: 'none',
-    babelJest: true,
+    compiler: 'babel',
   });
 
   // overwrite the jest.config.js file because react native needs to have special transform property

@@ -94,7 +94,6 @@ export async function createTestUIApp(
   let appTree = createTreeWithEmptyWorkspace();
 
   await applicationGenerator(appTree, {
-    babelJest: false,
     e2eTestRunner: 'cypress',
     linter: Linter.EsLint,
     skipFormat: false,

@@ -40,10 +40,17 @@
       "description": "The test environment for jest",
       "default": "jsdom"
     },
+    "compiler": {
+      "type": "string",
+      "enum": ["tsc", "swc", "babel"],
+      "description": "The compiler to use for source and tests",
+      "default": "tsc"
+    },
     "babelJest": {
       "type": "boolean",
       "alias": "babel-jest",
-      "description": "Use babel-jest instead of ts-jest",
+      "description": "Use babel-jest instead of ts-jest (Deprecated: Use --compiler=babel instead)",
+      "x-deprecated": true,
       "default": false
     },
     "skipFormat": {

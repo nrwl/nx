@@ -113,7 +113,6 @@ export async function createTestUILib(
   // spec into it. We don't need a real Cypress setup
 
   await applicationGenerator(appTree, {
-    babelJest: false,
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
     skipFormat: false,
