@@ -274,10 +274,10 @@ agents.
 Another one is config-free distributed task execution (DTE). When using the distributed task execution, Nx is able to
 run any task graph on many agents instead of locally.
 
-When using this, `nx affected --build`, won't run the build locally (which for large workspace can take hours). Instead,
-it will send the Task Graph to Nx Cloud. Nx Cloud Agents will then pick up the task they can run and execute them.
+When using this, `nx affected --build`, won't run the build locally (which can take hours for large workspaces). Instead,
+it will send the Task Graph to Nx Cloud. Nx Cloud Agents will then pick up the tasks they can run and execute them.
 
-Note this happens transparently. If an agent builds `app1`, it will fetch the outputs for `lib` if it doesn't have it
+Note that this happens transparently. If an agent builds `app1`, it will fetch the outputs for `lib` if it doesn't have them
 already.
 
 As agents complete tasks, the main job where you invoked `nx affected --build` will start receiving created files and
