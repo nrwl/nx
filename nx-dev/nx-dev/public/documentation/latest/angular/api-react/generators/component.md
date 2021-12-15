@@ -89,6 +89,12 @@ Type: `boolean`
 
 When true, the component is exported from the project index.ts (if it exists).
 
+### fileName
+
+Type: `string`
+
+Create a component with this file name.
+
 ### flat
 
 Default: `false`
