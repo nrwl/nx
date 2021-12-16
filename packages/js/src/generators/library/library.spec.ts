@@ -131,7 +131,9 @@ describe('lib', () => {
                       "forceConsistentCasingInFileNames": true,
                       "module": "CommonJS",
                       "noFallthroughCasesInSwitch": true,
+                      "noImplicitOverride": true,
                       "noImplicitReturns": true,
+                      "noPropertyAccessFromIndexSignature": true,
                       "strict": true,
                     },
                     "extends": "../../tsconfig.base.json",
@@ -250,7 +252,7 @@ describe('lib', () => {
       });
     });
 
-    describe('--strict', () => {
+    describe('--no-strict', () => {
       it('should update the projects tsconfig with strict false', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -259,9 +261,15 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.json');
 
-        expect(tsconfigJson.compilerOptions?.strict).not.toBeDefined();
         expect(
           tsconfigJson.compilerOptions?.forceConsistentCasingInFileNames
+        ).not.toBeDefined();
+        expect(tsconfigJson.compilerOptions?.strict).not.toBeDefined();
+        expect(
+          tsconfigJson.compilerOptions?.noImplicitOverride
+        ).not.toBeDefined();
+        expect(
+          tsconfigJson.compilerOptions?.noPropertyAccessFromIndexSignature
         ).not.toBeDefined();
         expect(
           tsconfigJson.compilerOptions?.noImplicitReturns
