@@ -70,6 +70,7 @@
     "@nrwl/next": "13.3.0",
     "@nrwl/node": "13.3.0",
     "@nrwl/nx-cloud": "13.0.0",
+    "@nrwl/nx-plugin": "13.3.6",
     "@nrwl/react": "13.3.0",
     "@nrwl/tao": "13.3.0",
     "@nrwl/web": "13.3.0",

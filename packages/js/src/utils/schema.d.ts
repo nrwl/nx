@@ -1,9 +1,11 @@
 // nx-ignore-next-line
 const { Linter } = require('@nrwl/linter');
+import { NodeBuildEvent } from '@nrwl/node/src/executors/build/build.impl';
 import type {
   AssetGlob,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
+import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
 
@@ -33,8 +35,19 @@ export interface ExecutorOptions {
   main: string;
   outputPath: string;
   tsConfig: string;
+  watch: boolean;
+  transformers: TransformerEntry[];
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
+  root?: string;
+  sourceRoot?: string;
+  projectRoot?: string;
+  mainOutputPath: string;
   files: Array<FileInputOutput>;
+}
+
+export interface ExecutorEvent {
+  outfile: string;
+  success: boolean;
 }

@@ -1,21 +1,30 @@
-import { logger } from '@nrwl/devkit';
-import { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
 import { normalizeTsCompilationOptions } from '../normalize-ts-compilation-options';
+import { NormalizedExecutorOptions } from '../schema';
 
 export async function compileSwc(
-  tsCompilationOptions: TypeScriptCompilationOptions,
+  context: ExecutorContext,
+  normalizedOptions: NormalizedExecutorOptions,
   postCompilationCallback: () => void | Promise<void>
 ): Promise<{ success: boolean }> {
-  const normalizedOptions = normalizeTsCompilationOptions(tsCompilationOptions);
+  const tsOptions = {
+    outputPath: normalizedOptions.outputPath,
+    projectName: context.projectName,
+    projectRoot: normalizedOptions.projectRoot,
+    tsConfig: normalizedOptions.tsConfig,
+    watch: normalizedOptions.watch,
+  };
 
-  logger.log(`Compiling with SWC for ${normalizedOptions.projectName}...`);
-  const srcPath = normalizedOptions.projectRoot;
-  const destPath = normalizedOptions.outputPath.replace(
-    `/${normalizedOptions.projectName}`,
+  const normalizedTsOptions = normalizeTsCompilationOptions(tsOptions);
+
+  logger.log(`Compiling with SWC for ${normalizedTsOptions.projectName}...`);
+  const srcPath = normalizedTsOptions.projectRoot;
+  const destPath = normalizedTsOptions.outputPath.replace(
+    `/${normalizedTsOptions.projectName}`,
     ''
   );
-  const swcrcPath = `${normalizedOptions.projectRoot}/.swcrc`;
+  const swcrcPath = `${normalizedTsOptions.projectRoot}/.swcrc`;
 
   // TODO(chau): use `--ignore` for swc cli to exclude spec files
   // Open issue: https://github.com/swc-project/cli/issues/20

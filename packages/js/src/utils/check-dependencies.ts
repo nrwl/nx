@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -10,14 +10,15 @@ import { join } from 'path';
 
 export function checkDependencies(
   context: ExecutorContext,
-  tsConfigPath: string
+  tsConfigPath: string,
+  graph?: ProjectGraph
 ): {
   shouldContinue: boolean;
   tmpTsConfig: string | null;
   projectRoot: string;
   projectDependencies: DependentBuildableProjectNode[];
 } {
-  const projectGraph = readCachedProjectGraph();
+  const projectGraph = graph || readCachedProjectGraph();
   const { target, dependencies } = calculateProjectDependencies(
     projectGraph,
     context.root,

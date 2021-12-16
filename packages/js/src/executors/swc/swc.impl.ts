@@ -5,7 +5,7 @@ import {
   copyAssetFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { checkDependencies } from '../../utils/check-dependencies';
 import { compileSwc } from '../../utils/swc/compile-swc';
 import { printDiagnostics } from '../../utils/typescript/print-diagnostics';
@@ -15,25 +15,38 @@ import { NormalizedSwcExecutorOptions, SwcExecutorOptions } from './schema';
 
 export function normalizeOptions(
   options: SwcExecutorOptions,
-  context: ExecutorContext
+  contextRoot: string,
+  sourceRoot?: string,
+  projectRoot?: string
 ): NormalizedSwcExecutorOptions {
-  const outputPath = join(context.root, options.outputPath);
+  const outputPath = join(contextRoot, options.outputPath);
 
   if (options.skipTypeCheck == null) {
     options.skipTypeCheck = false;
   }
 
+  if (options.watch == null) {
+    options.watch = false;
+  }
+
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
-    context.root,
+    contextRoot,
     outputPath
   );
 
   return {
     ...options,
+    mainOutputPath: resolve(
+      outputPath,
+      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
+    ),
     files,
+    root: contextRoot,
+    sourceRoot,
+    projectRoot,
     outputPath,
-    tsConfig: join(context.root, options.tsConfig),
+    tsConfig: join(contextRoot, options.tsConfig),
   } as NormalizedSwcExecutorOptions;
 }
 
@@ -41,7 +54,13 @@ export async function swcExecutor(
   options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
-  const normalizedOptions = normalizeOptions(options, context);
+  const { sourceRoot, root } = context.workspace.projects[context.projectName];
+  const normalizedOptions = normalizeOptions(
+    options,
+    context.root,
+    sourceRoot,
+    root
+  );
   const { shouldContinue, tmpTsConfig, projectRoot } = checkDependencies(
     context,
     options.tsConfig
@@ -60,6 +79,11 @@ export async function swcExecutor(
     projectName: context.projectName,
     projectRoot,
     tsConfig: normalizedOptions.tsConfig,
+    watch: normalizedOptions.watch,
+  };
+
+  const postCompilationCallback = async () => {
+    await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
   };
 
   if (!options.skipTypeCheck) {
@@ -81,17 +105,16 @@ export async function swcExecutor(
 
         return Promise.resolve({ success: !hasErrors });
       }),
-      compileSwc(tsOptions, async () => {
-        await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
-      }),
+      compileSwc(context, normalizedOptions, postCompilationCallback),
     ]).then(([typeCheckResult, transpileResult]) => ({
       success: typeCheckResult.success && transpileResult.success,
+      outfile: normalizedOptions.mainOutputPath,
     }));
   }
 
-  return compileSwc(tsOptions, async () => {
-    await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
-  });
+  return compileSwc(context, normalizedOptions, postCompilationCallback).then(
+    ({ success }) => ({ success, outfile: normalizedOptions.mainOutputPath })
+  );
 }
 
 async function updatePackageAndCopyAssets(
