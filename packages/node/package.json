@@ -51,6 +51,7 @@
     "webpack": "^5.58.1",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
-    "rxjs-for-await": "0.0.2"
+    "rxjs-for-await": "0.0.2",
+    "ts-node": "~9.1.1"
   }
 }
