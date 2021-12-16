@@ -1,15 +1,14 @@
 import {
   formatFiles,
-  generateFiles,
   GeneratorCallback,
-  joinPathFragments,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { relative } from 'path';
 import {
+  addTailwindConfig,
   addTailwindConfigPathToProject,
   addTailwindRequiredPackages,
+  detectTailwindInstalledVersion,
   normalizeOptions,
   updateApplicationStyles,
 } from './lib';
@@ -18,16 +17,18 @@ import { GeneratorOptions } from './schema';
 export async function setupTailwindGenerator(
   tree: Tree,
   rawOptions: GeneratorOptions
-): Promise<GeneratorCallback> {
+): Promise<GeneratorCallback | undefined> {
   const options = normalizeOptions(rawOptions);
   const project = readProjectConfiguration(tree, options.project);
 
-  const installTask = addTailwindRequiredPackages(tree);
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), project.root, {
-    projectType: project.projectType,
-    relativeSourceRoot: relative(project.root, project.sourceRoot),
-    tmpl: '',
-  });
+  const tailwindInstalledVersion = detectTailwindInstalledVersion(tree);
+
+  let installTask: GeneratorCallback | undefined;
+  if (tailwindInstalledVersion === undefined) {
+    installTask = addTailwindRequiredPackages(tree);
+  }
+
+  addTailwindConfig(tree, project, tailwindInstalledVersion ?? '3');
 
   if (project.projectType === 'application') {
     updateApplicationStyles(tree, options, project);

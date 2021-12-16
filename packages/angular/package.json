@@ -49,6 +49,7 @@
     "webpack-merge": "5.7.3",
     "find-parent-dir": "^0.3.1",
     "ts-node": "~9.1.1",
-    "tsconfig-paths": "^3.9.0"
+    "tsconfig-paths": "^3.9.0",
+    "semver": "7.3.4"
   }
 }

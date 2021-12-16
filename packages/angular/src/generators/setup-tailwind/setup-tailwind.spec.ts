@@ -22,7 +22,7 @@ describe('setupTailwind generator', () => {
     jest.clearAllMocks();
   });
 
-  it('should fail if the project does not exist', async () => {
+  it('should fail when the project does not exist', async () => {
     await expect(
       setupTailwindGenerator(tree, { project: 'not-found' })
     ).rejects.toThrow();
@@ -38,6 +38,28 @@ describe('setupTailwind generator', () => {
         root: `apps/${project}`,
         sourceRoot: `apps/${project}/src`,
       });
+    });
+
+    it('should throw when tailwind is installed as a dependency with a version lower than 2.0.0', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({ dependencies: { tailwindcss: '^1.99.99' } })
+      );
+
+      await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
+      );
+    });
+
+    it('should throw when tailwind is installed as a devDependency with a version lower than 2.0.0', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({ devDependencies: { tailwindcss: '^1.99.99' } })
+      );
+
+      await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
+      );
     });
 
     it('should throw when the provided styles entry point is not found', async () => {
@@ -286,7 +308,7 @@ describe('setupTailwind generator', () => {
       expect(devDependencies.postcss).toBe(postcssVersion);
     });
 
-    it('should generate the tailwind.config.js file in the project root', async () => {
+    it('should generate the tailwind.config.js file in the project root with the config for v3 by default', async () => {
       const stylesEntryPoint = `apps/${project}/src/styles.scss`;
       tree.write(stylesEntryPoint, 'p { margin: 0; }');
 
@@ -302,6 +324,72 @@ describe('setupTailwind generator', () => {
             join(__dirname, 'src/**/*.{html,ts}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
+          theme: {
+            extend: {},
+          },
+          variants: {
+            extend: {},
+          },
+          plugins: [],
+        };
+        "
+      `);
+    });
+
+    it('should generate the tailwind.config.js file in the project root with the config for v3 when a version greater than 3 is installed', async () => {
+      const stylesEntryPoint = `apps/${project}/src/styles.scss`;
+      tree.write(stylesEntryPoint, 'p { margin: 0; }');
+      tree.write(
+        'package.json',
+        JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } })
+      );
+
+      await setupTailwindGenerator(tree, { project, stylesEntryPoint });
+
+      expect(tree.read(`apps/${project}/tailwind.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          content: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
+          theme: {
+            extend: {},
+          },
+          variants: {
+            extend: {},
+          },
+          plugins: [],
+        };
+        "
+      `);
+    });
+
+    it('should generate the tailwind.config.js file in the project root with the config for v2 when a version greater than 2 and lower than 3 is installed', async () => {
+      const stylesEntryPoint = `apps/${project}/src/styles.scss`;
+      tree.write(stylesEntryPoint, 'p { margin: 0; }');
+      tree.write(
+        'package.json',
+        JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } })
+      );
+
+      await setupTailwindGenerator(tree, { project, stylesEntryPoint });
+
+      expect(tree.read(`apps/${project}/tailwind.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          mode: 'jit',
+          purge: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
+          darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},
           },
@@ -349,6 +437,28 @@ describe('setupTailwind generator', () => {
         root: `libs/${project}`,
         sourceRoot: `libs/${project}/src`,
       });
+    });
+
+    it('should throw when tailwind is installed as a dependency with a version lower than 2.0.0', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({ dependencies: { tailwindcss: '^1.99.99' } })
+      );
+
+      await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
+      );
+    });
+
+    it('should throw when tailwind is installed as a devDependency with a version lower than 2.0.0', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({ devDependencies: { tailwindcss: '^1.99.99' } })
+      );
+
+      await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
+      );
     });
 
     it('should throw when the build target is not found', async () => {
@@ -454,7 +564,7 @@ describe('setupTailwind generator', () => {
       expect(devDependencies.postcss).toBe(postcssVersion);
     });
 
-    it('should generate the tailwind.config.js file in the project root', async () => {
+    it('should generate the tailwind.config.js file in the project root for v3 by default', async () => {
       const projectConfig = readProjectConfiguration(tree, project);
       projectConfig.targets = {
         build: { executor: '@nrwl/angular:package', options: {} },
@@ -466,6 +576,63 @@ describe('setupTailwind generator', () => {
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
+          theme: {
+            extend: {},
+          },
+          variants: {
+            extend: {},
+          },
+          plugins: [],
+        };
+        "
+      `);
+    });
+
+    it('should generate the tailwind.config.js file in the project root with the config for v3 when a version greater than 3 is installed', async () => {
+      const projectConfig = readProjectConfiguration(tree, project);
+      projectConfig.targets = {
+        build: { executor: '@nrwl/angular:package', options: {} },
+      };
+      updateProjectConfiguration(tree, project, projectConfig);
+      tree.write(
+        'package.json',
+        JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } })
+      );
+
+      await setupTailwindGenerator(tree, { project });
+
+      expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          theme: {
+            extend: {},
+          },
+          variants: {
+            extend: {},
+          },
+          plugins: [],
+        };
+        "
+      `);
+    });
+
+    it('should generate the tailwind.config.js file in the project root with the config for v2 when a version greater than 2 and lower than 3 is installed', async () => {
+      const projectConfig = readProjectConfiguration(tree, project);
+      projectConfig.targets = {
+        build: { executor: '@nrwl/angular:package', options: {} },
+      };
+      updateProjectConfiguration(tree, project, projectConfig);
+      tree.write(
+        'package.json',
+        JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } })
+      );
+
+      await setupTailwindGenerator(tree, { project });
+
+      expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},
           },
