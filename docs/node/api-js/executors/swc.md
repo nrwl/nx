@@ -42,3 +42,11 @@ Default: `false`
 Type: `boolean`
 
 Whether to skip TypeScript type checking.
+
+### watch
+
+Default: `false`
+
+Type: `boolean`
+
+Enable re-building when files change.

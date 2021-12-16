@@ -6,15 +6,13 @@ export async function validateTypes(opts: {
   projectRoot: string;
   tsconfig: string;
 }): Promise<void> {
-  const ts = await import('typescript');
   const result = await runTypeCheck({
-    ts,
     workspaceRoot: opts.workspaceRoot,
     tsConfigPath: join(opts.workspaceRoot, opts.tsconfig),
     mode: 'noEmit',
   });
 
-  await printDiagnostics(result);
+  await printDiagnostics(result.errors, result.warnings);
 
   if (result.errors.length > 0) {
     throw new Error('Found type errors. See above.');

@@ -375,6 +375,11 @@
             "file": "angular/api-js/generators/convert-to-swc"
           },
           {
+            "name": "node executor",
+            "id": "node",
+            "file": "angular/api-js/executors/node"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "angular/api-js/executors/tsc"
@@ -1744,6 +1749,11 @@
             "file": "react/api-js/generators/convert-to-swc"
           },
           {
+            "name": "node executor",
+            "id": "node",
+            "file": "react/api-js/executors/node"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "react/api-js/executors/tsc"
@@ -3075,6 +3085,11 @@
             "name": "convert-to-swc generator",
             "id": "library",
             "file": "node/api-js/generators/convert-to-swc"
+          },
+          {
+            "name": "node executor",
+            "id": "node",
+            "file": "node/api-js/executors/node"
           },
           {
             "name": "tsc executor",

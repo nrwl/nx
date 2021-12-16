@@ -23,10 +23,22 @@
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": false
+    },
+    "transformers": {
+      "type": "array",
+      "description": "List of TypeScript Transformer Plugins.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/transformerPattern"
+      }
     }
   },
   "required": ["main", "outputPath", "tsConfig"],
-
   "definitions": {
     "assetPattern": {
       "oneOf": [
@@ -58,6 +70,27 @@
         },
         {
           "type": "string"
+        }
+      ]
+    },
+    "transformerPattern": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["name"]
         }
       ]
     }

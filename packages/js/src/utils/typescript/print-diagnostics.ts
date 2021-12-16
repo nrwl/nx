@@ -1,21 +1,18 @@
-import { TypeCheckResult } from './run-type-check';
-
-export async function printDiagnostics(result: TypeCheckResult) {
-  if (result.errors.length > 0) {
-    result.errors.forEach((err) => {
+export async function printDiagnostics(
+  errors: string[] = [],
+  warnings: string[] = []
+) {
+  if (errors.length > 0) {
+    errors.forEach((err) => {
       console.log(`${err}\n`);
     });
 
-    console.log(
-      `Found ${result.errors.length} error${
-        result.errors.length > 1 ? 's' : ''
-      }.`
-    );
-  } else if (result.warnings.length > 0) {
-    result.warnings.forEach((err) => {
+    console.log(`Found ${errors.length} error${errors.length > 1 ? 's' : ''}.`);
+  } else if (warnings.length > 0) {
+    warnings.forEach((err) => {
       console.log(`${err}\n`);
     });
 
-    console.log(`Found ${result.warnings.length} warnings.`);
+    console.log(`Found ${warnings.length} warnings.`);
   }
 }

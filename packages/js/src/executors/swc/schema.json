@@ -17,11 +17,6 @@
       "type": "string",
       "description": "The path to the Typescript configuration file."
     },
-    "skipTypeCheck": {
-      "type": "boolean",
-      "description": "Whether to skip TypeScript type checking.",
-      "default": false
-    },
     "assets": {
       "type": "array",
       "description": "List of static assets.",
@@ -29,6 +24,16 @@
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": false
+    },
+    "skipTypeCheck": {
+      "type": "boolean",
+      "description": "Whether to skip TypeScript type checking.",
+      "default": false
     }
   },
   "required": ["main", "outputPath", "tsConfig"],

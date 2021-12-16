@@ -72,4 +72,18 @@ describe('app', () => {
       outputs: ['{options.outputPath}'],
     });
   });
+
+  it('should generate a "serve" target', async () => {
+    await applicationGenerator(tree, {
+      ...defaultOptions,
+      name: 'my-app',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-app');
+    expect(projectConfig.targets.serve).toEqual({
+      executor: `@nrwl/js:node`,
+      options: {
+        buildTarget: `my-app:build`,
+      },
+    });
+  });
 });

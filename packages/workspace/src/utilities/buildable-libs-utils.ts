@@ -28,9 +28,14 @@ export function calculateProjectDependencies(
   projectName: string,
   targetName: string,
   configurationName: string
-): { target: ProjectGraphNode; dependencies: DependentBuildableProjectNode[] } {
+): {
+  target: ProjectGraphNode;
+  dependencies: DependentBuildableProjectNode[];
+  nonBuildableDependencies: string[];
+} {
   const target = projGraph.nodes[projectName];
   // gather the library dependencies
+  const nonBuildableDependencies = [];
   const dependencies = recursivelyCollectDependencies(
     projectName,
     projGraph,
@@ -38,29 +43,30 @@ export function calculateProjectDependencies(
   )
     .map((dep) => {
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
-      if (
-        depNode.type === ProjectType.lib &&
-        isBuildable(targetName, depNode)
-      ) {
-        const libPackageJson = readJsonFile(
-          join(root, depNode.data.root, 'package.json')
-        );
+      if (depNode.type === ProjectType.lib) {
+        if (isBuildable(targetName, depNode)) {
+          const libPackageJson = readJsonFile(
+            join(root, depNode.data.root, 'package.json')
+          );
 
-        return {
-          name: libPackageJson.name, // i.e. @workspace/mylib
-          outputs: getOutputsForTargetAndConfiguration(
-            {
-              overrides: {},
-              target: {
-                project: projectName,
-                target: targetName,
-                configuration: configurationName,
+          return {
+            name: libPackageJson.name, // i.e. @workspace/mylib
+            outputs: getOutputsForTargetAndConfiguration(
+              {
+                overrides: {},
+                target: {
+                  project: projectName,
+                  target: targetName,
+                  configuration: configurationName,
+                },
               },
-            },
-            depNode
-          ),
-          node: depNode,
-        };
+              depNode
+            ),
+            node: depNode,
+          };
+        } else {
+          nonBuildableDependencies.push(dep);
+        }
       } else if (depNode.type === 'npm') {
         return {
           name: depNode.data.packageName,
@@ -72,7 +78,7 @@ export function calculateProjectDependencies(
       }
     })
     .filter((x) => !!x);
-  return { target, dependencies };
+  return { target, dependencies, nonBuildableDependencies };
 }
 
 function recursivelyCollectDependencies(

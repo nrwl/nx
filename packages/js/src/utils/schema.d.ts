@@ -4,6 +4,7 @@ import type {
   AssetGlob,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
+import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
 
@@ -33,8 +34,28 @@ export interface ExecutorOptions {
   main: string;
   outputPath: string;
   tsConfig: string;
+  watch: boolean;
+  transformers: TransformerEntry[];
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
+  root?: string;
+  sourceRoot?: string;
+  projectRoot?: string;
+  mainOutputPath: string;
   files: Array<FileInputOutput>;
+}
+
+export interface SwcExecutorOptions extends ExecutorOptions {
+  skipTypeCheck?: boolean;
+}
+
+export interface NormalizedSwcExecutorOptions
+  extends NormalizedExecutorOptions {
+  skipTypeCheck: boolean;
+}
+
+export interface ExecutorEvent {
+  outfile: string;
+  success: boolean;
 }

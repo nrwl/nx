@@ -88,5 +88,6 @@ function readDeps(packageJsonDeps: any) {
   return [
     ...Object.keys(packageJsonDeps?.dependencies ?? {}),
     ...Object.keys(packageJsonDeps?.devDependencies ?? {}),
+    ...Object.keys(packageJsonDeps?.peerDependencies ?? {}),
   ];
 }
