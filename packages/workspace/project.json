@@ -2,7 +2,7 @@
   "root": "packages/workspace",
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
-  "implicitDependencies": ["dep-graph-dep-graph"],
+  "implicitDependencies": ["dep-graph-client"],
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",

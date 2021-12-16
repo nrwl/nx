@@ -1,0 +1,124 @@
+{
+  "root": "dep-graph/client",
+  "sourceRoot": "dep-graph/client/src",
+  "projectType": "application",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/web:webpack",
+      "options": {
+        "maxWorkers": 8,
+        "outputPath": "build/apps/dep-graph",
+        "index": "dep-graph/client/src/index.html",
+        "main": "dep-graph/client/src/main.tsx",
+        "polyfills": "dep-graph/client/src/polyfills.ts",
+        "tsConfig": "dep-graph/client/tsconfig.app.json",
+        "styles": ["dep-graph/client/src/styles.scss"],
+        "scripts": [],
+        "assets": [],
+        "optimization": true,
+        "outputHashing": "none",
+        "sourceMap": false,
+        "extractCss": true,
+        "namedChunks": false,
+        "extractLicenses": true,
+        "vendorChunk": false,
+        "budgets": [
+          {
+            "type": "initial",
+            "maximumWarning": "2mb",
+            "maximumError": "5mb"
+          }
+        ]
+      },
+      "configurations": {
+        "dev": {
+          "fileReplacements": [],
+          "assets": [
+            "dep-graph/client/src/favicon.ico",
+            "dep-graph/client/src/assets/graphs/",
+            {
+              "input": "dep-graph/client/src/assets",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ],
+          "optimization": false,
+          "outputHashing": "none",
+          "sourceMap": true,
+          "extractCss": true,
+          "namedChunks": false,
+          "extractLicenses": false,
+          "vendorChunk": true,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "5mb"
+            }
+          ]
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "serve-base": {
+      "executor": "@nrwl/web:dev-server",
+      "options": {
+        "buildTarget": "dep-graph-client:build-base:dev"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["dep-graph/client/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/dep-graph/client"],
+      "options": {
+        "jestConfig": "dep-graph/client/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts dev",
+          "nx serve-base dep-graph-client"
+        ]
+      },
+      "configurations": {
+        "watch": {
+          "commands": [
+            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
+            "nx serve-base dep-graph-client"
+          ]
+        }
+      }
+    },
+    "serve-for-e2e": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts dev",
+          "nx serve-base dep-graph-client"
+        ],
+        "readyWhen": "No issues found."
+      },
+      "configurations": {
+        "watch": {
+          "commands": [
+            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
+            "nx serve-base dep-graph-client"
+          ],
+          "readyWhen": "No issues found."
+        }
+      }
+    }
+  },
+  "tags": []
+}
