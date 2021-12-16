@@ -43,7 +43,7 @@ export function compileTypeScriptWatcher(
     options: ts.CompilerOptions,
     errorCount: number
   ) => void | Promise<void>
-): Promise<any> {
+) {
   const normalizedOptions = normalizeOptions(options);
   const tsConfig = getNormalizedTsConfig(normalizedOptions);
 
@@ -67,13 +67,13 @@ export function compileTypeScriptWatcher(
       emitOnlyDtsFiles,
       customTransformers
     ) => {
-      const consumerCustomTransfomers = options.getCustomTransformers?.(
+      const consumerCustomTransformers = options.getCustomTransformers?.(
         builderProgram.getProgram()
       );
 
       const mergedCustomTransformers = mergeCustomTransformers(
         customTransformers,
-        consumerCustomTransfomers
+        consumerCustomTransformers
       );
 
       return originalProgramEmit(
@@ -94,30 +94,29 @@ export function compileTypeScriptWatcher(
     await callback?.(a, b, c, d);
   };
 
-  ts.createWatchProgram(host);
-  return new Promise(() => {});
+  return ts.createWatchProgram(host);
 }
 
 function mergeCustomTransformers(
-  originalCustomTransfomers: CustomTransformers | undefined,
+  originalCustomTransformers: CustomTransformers | undefined,
   consumerCustomTransformers: CustomTransformers | undefined
 ): CustomTransformers | undefined {
-  if (!consumerCustomTransformers) return originalCustomTransfomers;
+  if (!consumerCustomTransformers) return originalCustomTransformers;
 
   const mergedCustomTransformers: CustomTransformers = {};
   if (consumerCustomTransformers.before) {
-    mergedCustomTransformers.before = originalCustomTransfomers?.before
+    mergedCustomTransformers.before = originalCustomTransformers?.before
       ? [
-          ...originalCustomTransfomers.before,
+          ...originalCustomTransformers.before,
           ...consumerCustomTransformers.before,
         ]
       : consumerCustomTransformers.before;
   }
 
   if (consumerCustomTransformers.after) {
-    mergedCustomTransformers.after = originalCustomTransfomers?.after
+    mergedCustomTransformers.after = originalCustomTransformers?.after
       ? [
-          ...originalCustomTransfomers.after,
+          ...originalCustomTransformers.after,
           ...consumerCustomTransformers.after,
         ]
       : consumerCustomTransformers.after;
@@ -125,9 +124,9 @@ function mergeCustomTransformers(
 
   if (consumerCustomTransformers.afterDeclarations) {
     mergedCustomTransformers.afterDeclarations =
-      originalCustomTransfomers?.afterDeclarations
+      originalCustomTransformers?.afterDeclarations
         ? [
-            ...originalCustomTransfomers.afterDeclarations,
+            ...originalCustomTransformers.afterDeclarations,
             ...consumerCustomTransformers.afterDeclarations,
           ]
         : consumerCustomTransformers.afterDeclarations;

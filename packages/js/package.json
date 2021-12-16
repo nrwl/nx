@@ -12,6 +12,10 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "chalk": "4.1.0",
-    "js-tokens": "^4.0.0"
+    "js-tokens": "^4.0.0",
+    "rxjs": "^6.5.4",
+    "rxjs-for-await": "0.0.2",
+    "source-map-support": "0.5.19",
+    "tree-kill": "1.2.2"
   }
 }

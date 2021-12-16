@@ -98,6 +98,15 @@ function addProject(
     if (options.compiler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
+
+    if (projectType === 'application') {
+      projectConfiguration.targets.serve = {
+        executor: `@nrwl/js:node`,
+        options: {
+          buildTarget: `${options.name}:build`,
+        },
+      };
+    }
   }
 
   if (options.config === 'workspace') {

@@ -1,10 +1,9 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-  DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { join } from 'path';
 
@@ -12,20 +11,29 @@ export function checkDependencies(
   context: ExecutorContext,
   tsConfigPath: string
 ): {
-  shouldContinue: boolean;
   tmpTsConfig: string | null;
   projectRoot: string;
-  projectDependencies: DependentBuildableProjectNode[];
 } {
   const projectGraph = readCachedProjectGraph();
-  const { target, dependencies } = calculateProjectDependencies(
-    projectGraph,
-    context.root,
-    context.projectName,
-    context.targetName,
-    context.configurationName
-  );
+  const { target, dependencies, nonBuildableDependencies } =
+    calculateProjectDependencies(
+      projectGraph,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
   const projectRoot = target.data.root;
+
+  if (nonBuildableDependencies.length > 0) {
+    throw new Error(
+      `Buildable libraries can only depend on other buildable libraries. You must define the ${
+        context.targetName
+      } target for the following libraries: ${nonBuildableDependencies
+        .map((t) => `"${t}"`)
+        .join(', ')}`
+    );
+  }
 
   if (dependencies.length > 0) {
     const areDependentProjectsBuilt = checkDependentProjectsHaveBeenBuilt(
@@ -34,25 +42,24 @@ export function checkDependencies(
       context.targetName,
       dependencies
     );
+    if (!areDependentProjectsBuilt) {
+      throw new Error(
+        `Some dependencies of '${context.projectName}' have not been built. This probably due to the ${context.targetName} target being misconfigured.`
+      );
+    }
     return {
-      shouldContinue: areDependentProjectsBuilt,
-      tmpTsConfig:
-        areDependentProjectsBuilt &&
-        createTmpTsConfig(
-          join(context.root, tsConfigPath),
-          context.root,
-          projectRoot,
-          dependencies
-        ),
+      tmpTsConfig: createTmpTsConfig(
+        join(context.root, tsConfigPath),
+        context.root,
+        projectRoot,
+        dependencies
+      ),
       projectRoot,
-      projectDependencies: dependencies,
     };
   }
 
   return {
-    shouldContinue: true,
     tmpTsConfig: null,
     projectRoot,
-    projectDependencies: dependencies,
   };
 }

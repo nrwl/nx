@@ -10,6 +10,11 @@
       "implementation": "./src/executors/swc/swc.impl",
       "schema": "./src/executors/swc/schema.json",
       "description": "Build a project using SWC"
+    },
+    "node": {
+      "implementation": "./src/executors/node/node.impl",
+      "schema": "./src/executors/node/schema.json",
+      "description": "Build Node.js applications"
     }
   },
   "builders": {
@@ -22,6 +27,11 @@
       "implementation": "./src/executors/swc/compat",
       "schema": "./src/executors/swc/schema.json",
       "description": "Build a project using SWC"
+    },
+    "node": {
+      "implementation": "./src/executors/node/compat",
+      "schema": "./src/executors/node/schema.json",
+      "description": "Build Node.js applications"
     }
   }
 }
