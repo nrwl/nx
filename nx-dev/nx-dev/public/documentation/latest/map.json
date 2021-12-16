@@ -499,6 +499,11 @@
             "file": "angular/api-angular/generators/setup-mfe"
           },
           {
+            "name": "setup-tailwind generator",
+            "id": "setup-tailwind",
+            "file": "angular/api-angular/generators/setup-tailwind"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "angular/api-angular/generators/stories"
@@ -1858,6 +1863,11 @@
             "file": "react/api-angular/generators/setup-mfe"
           },
           {
+            "name": "setup-tailwind generator",
+            "id": "setup-tailwind",
+            "file": "react/api-angular/generators/setup-tailwind"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "react/api-angular/generators/stories"
@@ -3179,6 +3189,11 @@
             "name": "setup-mfe generator",
             "id": "setup-mfe",
             "file": "node/api-angular/generators/setup-mfe"
+          },
+          {
+            "name": "setup-tailwind generator",
+            "id": "setup-tailwind",
+            "file": "node/api-angular/generators/setup-tailwind"
           },
           {
             "name": "stories generator",
