@@ -79,6 +79,31 @@
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
     },
+    "scam": {
+      "factory": "./src/generators/scam/scam.compat",
+      "schema": "./src/generators/scam/schema.json",
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-directive": {
+      "factory": "./src/generators/scam-directive/scam-directive.compat",
+      "schema": "./src/generators/scam-directive/schema.json",
+      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "scam-pipe": {
+      "factory": "./src/generators/scam-pipe/scam-pipe.compat",
+      "schema": "./src/generators/scam-pipe/schema.json",
+      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/setup-mfe.compat",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/compat",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Configures TailwindCSS for an application or a buildable/publishable library."
+    },
     "stories": {
       "factory": "./src/generators/stories/compat",
       "schema": "./src/generators/stories/schema.json",
@@ -104,28 +129,6 @@
       "schema": "./src/generators/upgrade-module/schema.json",
       "description": "Sets up an Upgrade Module."
     },
-
-    "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/setup-mfe.compat",
-      "schema": "./src/generators/setup-mfe/schema.json",
-      "description": "Generate a Module Federation configuration for a given Angular application."
-    },
-    "scam": {
-      "factory": "./src/generators/scam/scam.compat",
-      "schema": "./src/generators/scam/schema.json",
-      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
-    },
-    "scam-directive": {
-      "factory": "./src/generators/scam-directive/scam-directive.compat",
-      "schema": "./src/generators/scam-directive/schema.json",
-      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM)."
-    },
-    "scam-pipe": {
-      "factory": "./src/generators/scam-pipe/scam-pipe.compat",
-      "schema": "./src/generators/scam-pipe/schema.json",
-      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
-    },
-
     "web-worker": {
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
@@ -145,11 +148,6 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Creates an Angular application."
-    },
-    "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/setup-mfe",
-      "schema": "./src/generators/setup-mfe/schema.json",
-      "description": "Generate a Module Federation configuration for a given Angular application."
     },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
@@ -228,6 +226,16 @@
       "factory": "./src/generators/scam-pipe/scam-pipe",
       "schema": "./src/generators/scam-pipe/schema.json",
       "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
+    },
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/setup-mfe",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Configures TailwindCSS for an application or a buildable/publishable library."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",

@@ -1,0 +1,16 @@
+<% if (projectType === 'application') { %>const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+const { join } = require('path');
+
+module.exports = {
+  content: [
+    join(__dirname, '<%= relativeSourceRoot %>/**/*.{html,ts}'),
+    ...createGlobPatternsForDependencies(__dirname),
+  ],<% } else { %>module.exports = {<% } %>
+  theme: {
+    extend: {},
+  },
+  variants: {
+    extend: {},
+  },
+  plugins: [],
+};

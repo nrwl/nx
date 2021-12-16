@@ -94,22 +94,10 @@ describe('Angular Package', () => {
       runCLI('run-many --target build --all --parallel');
     });
 
-    it('should support Ivy', async () => {
-      const myapp = uniq('myapp');
-      runCLI(
-        `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`
-      );
-
-      runCLI(`build my-dir-${myapp} --aot`);
-      expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-    }, 1000000);
-
     it('should support workspaces w/o workspace config file', async () => {
       removeFile('workspace.json');
       const myapp = uniq('myapp');
-      runCLI(
-        `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`
-      );
+      runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
 
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));

@@ -51,7 +51,6 @@ function setDefaults(host: Tree, options: Schema) {
     ...(workspace.generators['@nrwl/angular:application'] || {}),
   };
   workspace.generators['@nrwl/angular:library'] = {
-    style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     ...(workspace.generators['@nrwl/angular:library'] || {}),

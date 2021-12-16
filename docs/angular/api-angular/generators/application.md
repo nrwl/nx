@@ -33,6 +33,20 @@ nx g application ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the application.
+
+### addTailwind
+
+Default: `false`
+
+Type: `boolean`
+
+Whether to configure TailwindCSS for the application.
+
 ### backendProject
 
 Type: `string`
@@ -108,12 +122,6 @@ Type: `string`
 Possible values: `host`, `remote`
 
 Type of application to generate the Module Federation configuration for.
-
-### name
-
-Type: `string`
-
-The name of the application.
 
 ### port
 

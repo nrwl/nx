@@ -52,6 +52,8 @@ export function normalizeOptions(
 
   return {
     ...options,
+    linter: options.linter ?? Linter.EsLint,
+    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
     prefix: options.prefix ?? defaultPrefix,
     name: projectName,
     projectRoot,

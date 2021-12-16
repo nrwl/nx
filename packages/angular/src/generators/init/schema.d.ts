@@ -5,7 +5,7 @@ import type { Styles } from '../utils/types';
 export interface Schema {
   unitTestRunner: UnitTestRunner;
   e2eTestRunner?: E2eTestRunner;
-  skipFormat: boolean;
+  skipFormat?: boolean;
   skipInstall?: boolean;
   style?: Styles;
   linter: Exclude<Linter, Linter.TsLint>;

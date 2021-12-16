@@ -10,6 +10,11 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
+import {
+  autoprefixerVersion,
+  postcssVersion,
+  tailwindVersion,
+} from '../../utils/versions';
 import { applicationGenerator } from './application';
 import type { Schema } from './schema';
 
@@ -927,6 +932,63 @@ describe('app', () => {
       // ASSERT
       const projectConfig = readProjectConfiguration(appTree, 'app1');
       expect(projectConfig.targets.serve.options.port).toBe(4205);
+    });
+  });
+
+  describe('--add-tailwind', () => {
+    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind" is not specified', async () => {
+      // ACT
+      await generateApp(appTree, 'app1');
+
+      // ASSERT
+      expect(appTree.exists('apps/app1/tailwind.config.js')).toBeFalsy();
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['tailwindcss']).toBeUndefined();
+      expect(devDependencies['postcss']).toBeUndefined();
+      expect(devDependencies['autoprefixer']).toBeUndefined();
+    });
+
+    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind=false"', async () => {
+      // ACT
+      await generateApp(appTree, 'app1', { addTailwind: false });
+
+      // ASSERT
+      expect(appTree.exists('apps/app1/tailwind.config.js')).toBeFalsy();
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['tailwindcss']).toBeUndefined();
+      expect(devDependencies['postcss']).toBeUndefined();
+      expect(devDependencies['autoprefixer']).toBeUndefined();
+    });
+
+    it('should add a tailwind.config.js and relevant packages when "--add-tailwind=true"', async () => {
+      // ACT
+      await generateApp(appTree, 'app1', { addTailwind: true });
+
+      // ASSERT
+      expect(appTree.read('apps/app1/tailwind.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          content: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
+          theme: {
+            extend: {},
+          },
+          variants: {
+            extend: {},
+          },
+          plugins: [],
+        };
+        "
+      `);
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
+      expect(devDependencies['postcss']).toBe(postcssVersion);
+      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
     });
   });
 });

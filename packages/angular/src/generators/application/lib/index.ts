@@ -3,6 +3,7 @@ export * from './add-linting';
 export * from './add-mfe';
 export * from './add-protractor';
 export * from './add-proxy-config';
+export * from './add-unit-test-runner';
 export * from './create-files';
 export * from './enable-strict-type-checking';
 export * from './normalize-options';
