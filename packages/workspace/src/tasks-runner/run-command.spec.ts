@@ -1,6 +1,6 @@
-import { TasksRunner } from '../tasks-runner';
-import defaultTaskRunner from '../default-tasks-runner';
-import { createTasksForProjectToRun, getRunner } from '../run-command';
+import { TasksRunner } from './tasks-runner';
+import defaultTaskRunner from './default-tasks-runner';
+import { createTasksForProjectToRun, getRunner } from './run-command';
 import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
 

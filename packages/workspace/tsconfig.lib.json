@@ -4,9 +4,8 @@
     "module": "commonjs",
     "outDir": "../../dist/out-tsc",
     "declaration": true,
-    "jsx": "react",
     "types": ["node"]
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts"]
 }
