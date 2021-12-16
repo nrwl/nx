@@ -370,9 +370,19 @@
             "file": "angular/api-js/generators/library"
           },
           {
+            "name": "convert-to-swc generator",
+            "id": "library",
+            "file": "angular/api-js/generators/convert-to-swc"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "angular/api-js/executors/tsc"
+          },
+          {
+            "name": "swc executor",
+            "id": "swc",
+            "file": "angular/api-js/executors/swc"
           }
         ]
       },
@@ -1719,9 +1729,19 @@
             "file": "react/api-js/generators/library"
           },
           {
+            "name": "convert-to-swc generator",
+            "id": "library",
+            "file": "react/api-js/generators/convert-to-swc"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "react/api-js/executors/tsc"
+          },
+          {
+            "name": "swc executor",
+            "id": "swc",
+            "file": "react/api-js/executors/swc"
           }
         ]
       },
@@ -3032,9 +3052,19 @@
             "file": "node/api-js/generators/library"
           },
           {
+            "name": "convert-to-swc generator",
+            "id": "library",
+            "file": "node/api-js/generators/convert-to-swc"
+          },
+          {
             "name": "tsc executor",
             "id": "tsc",
             "file": "node/api-js/executors/tsc"
+          },
+          {
+            "name": "swc executor",
+            "id": "swc",
+            "file": "node/api-js/executors/swc"
           }
         ]
       },
