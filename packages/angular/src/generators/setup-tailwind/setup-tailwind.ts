@@ -28,7 +28,7 @@ export async function setupTailwindGenerator(
     installTask = addTailwindRequiredPackages(tree);
   }
 
-  addTailwindConfig(tree, project, tailwindInstalledVersion ?? '3');
+  addTailwindConfig(tree, options, project, tailwindInstalledVersion ?? '3');
 
   if (project.projectType === 'application') {
     updateApplicationStyles(tree, options, project);

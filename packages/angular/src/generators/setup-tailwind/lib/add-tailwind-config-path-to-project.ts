@@ -37,6 +37,16 @@ export function addTailwindConfigPathToProject(
     );
   }
 
+  if (
+    buildTarget.options?.tailwindConfig &&
+    tree.exists(buildTarget.options.tailwindConfig)
+  ) {
+    throw new Error(
+      stripIndents`The "${buildTarget.options.tailwindConfig}" file is already configured for the project "${options.project}". Are you sure this is the right project to set up Tailwind?
+      If you are sure, you can remove the configuration and re-run the generator.`
+    );
+  }
+
   buildTarget.options = {
     ...buildTarget.options,
     tailwindConfig: joinPathFragments(project.root, 'tailwind.config.js'),
