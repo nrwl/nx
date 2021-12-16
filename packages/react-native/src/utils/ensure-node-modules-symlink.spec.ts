@@ -1,6 +1,6 @@
 import { tmpdir } from 'os';
 import { join } from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import { ensureNodeModulesSymlink } from './ensure-node-modules-symlink';
 
 const workspaceDir = join(tmpdir(), 'nx-react-native-test');
@@ -9,8 +9,7 @@ const appDirAbsolutePath = join(workspaceDir, appDir);
 
 describe('ensureNodeModulesSymlink', () => {
   beforeEach(() => {
-    if (fs.existsSync(workspaceDir))
-      fs.rmdirSync(workspaceDir, { recursive: true });
+    if (fs.existsSync(workspaceDir)) fs.removeSync(workspaceDir);
     fs.mkdirSync(workspaceDir);
     fs.mkdirSync(appDirAbsolutePath, { recursive: true });
     fs.mkdirSync(appDirAbsolutePath, { recursive: true });
@@ -36,8 +35,7 @@ describe('ensureNodeModulesSymlink', () => {
   });
 
   afterEach(() => {
-    if (fs.existsSync(workspaceDir))
-      fs.rmdirSync(workspaceDir, { recursive: true });
+    if (fs.existsSync(workspaceDir)) fs.removeSync(workspaceDir);
   });
 
   it('should create symlinks', () => {
