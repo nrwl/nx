@@ -93,6 +93,16 @@ Getting started quickly is very easy. Check out some of the examples below:
 - [Nx with Minimal Configuration - Adding Nx to the Strapi repository](https://youtu.be/sVSLIyghhGo)
 - [How Nx leverages package.json scripts in Nx 13.3](https://youtu.be/XOZkjDMxsA8)
 
+#### 10. Transparency
+
+Nx core make things faster but doesn't change how your commands run or how the terminal output looks. Compare Nx's and Turbo's terminal outputs:
+
+![nx and turbo terminal output](/shared/turbo-nx-terminal.gif)
+
+Nx doesn't change your terminal output. Spinners, animations, colors are the same whether you use Nx or not (we instrument Node.js to get this result). What is also important is that when you restore things from cache, Nx will replay the terminal output identical to the one you would have had you run the command. Examine Turbo's output: no spinners, no animations, no colors. Pretty much anything you run with Turbo looks different (and in our opinion worse) from running the same command without Turbo.
+
+A lot of Nx users don't even know they use Nx, or even what Nx is. Things they run look the same, they just got faster.
+
 ## Plugins and Supporting Features
 
 The following set of features are tricky to compare. The scope of Nx is broader. **Having a monorepo doesn't just mean running things fast (scaling tech wise), it also means helping teams work effectively (scaling org-wise).** If your monorepo has 10 packages and is managed by a single team, then the org-wise scaling isn’t relevant, but for larger repos with thousands of projects and hundreds or thousands of contributors (an enterprise system) org scaling is just important (or perhaps more important) than the tech scaling.
@@ -124,7 +134,7 @@ Turborepo is mostly written in Golang. Nx is mostly written in TypeScript, but m
 Benchmarking is hard because a lot depends on what you are trying to run, in what environment, etc. This is one benchmark we use when measuring Nx perf: [Nx and Turbo benchmark](https://github.com/vsavkin/large-monorepo/). It is a repo with 5 Next.js apps. We are measuring how quickly Nx and Turbo can figure out what needs to be restored from cache, and how quickly they can do it.
 
 This is the result:
-![nx and turbo benchmark](/shared/nx-turbo.gif)
+![nx and turbo benchmark](/shared/turbo-nx-perf.gif)
 
 Nx is 5 times faster on the latest MBP. Nx is 7.5 times faster on a Windows laptop.
 
