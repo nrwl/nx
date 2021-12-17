@@ -33,11 +33,15 @@ function decorateAngularClI(host: Tree, options: Schema) {
 
 function setPresetProperty(tree: Tree, options: Schema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.preset === Preset.NPM) {
+    if (
+      options.preset === Preset.Core ||
+      options.preset === Preset.TS ||
+      options.preset === Preset.NPM
+    ) {
       addPropertyWithStableKeys(
         json,
         'extends',
-        '@nrwl/workspace/presets/npm.json'
+        '@nrwl/workspace/presets/core.json'
       );
       delete json.implicitDependencies;
       delete json.targetDependencies;
@@ -48,7 +52,11 @@ function setPresetProperty(tree: Tree, options: Schema) {
 }
 
 function createAppsAndLibsFolders(host: Tree, options: Schema) {
-  if (options.preset === Preset.NPM) {
+  if (
+    options.preset === Preset.Core ||
+    options.preset === Preset.TS ||
+    options.preset === Preset.NPM
+  ) {
     host.write(join(options.directory, 'packages/.gitkeep'), '');
   } else {
     host.write(join(options.directory, 'apps/.gitkeep'), '');
@@ -116,7 +124,11 @@ function addNpmScripts(host: Tree, options: Schema) {
     });
   }
 
-  if (options.preset !== Preset.NPM) {
+  if (
+    options.preset !== Preset.TS &&
+    options.preset !== Preset.Core &&
+    options.preset !== Preset.NPM
+  ) {
     updateJson(host, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         start: 'nx serve',

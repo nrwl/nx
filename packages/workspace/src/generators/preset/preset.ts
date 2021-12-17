@@ -29,9 +29,13 @@ export const presetSchematic = convertNxGenerator(presetGenerator);
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (options.preset === Preset.Empty) {
-    return;
-  } else if (options.preset === Preset.NPM) {
+  if (
+    options.preset === Preset.Empty ||
+    options.preset === Preset.Apps ||
+    options.preset === Preset.NPM ||
+    options.preset === Preset.Core ||
+    options.preset === Preset.TS
+  ) {
     return;
   } else if (options.preset === Preset.Angular) {
     const {

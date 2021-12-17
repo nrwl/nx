@@ -19,8 +19,11 @@ import {
 import { validateNpmPackage } from './validate-npm-package';
 
 export enum Preset {
-  Empty = 'empty',
-  NPM = 'npm',
+  Apps = 'apps',
+  Empty = 'empty', // same as apps, deprecated
+  Core = 'core',
+  NPM = 'npm', // same as core, deprecated
+  TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
   AngularWithNest = 'angular-nest',
@@ -35,14 +38,19 @@ export enum Preset {
 
 const presetOptions: { name: Preset; message: string }[] = [
   {
-    name: Preset.Empty,
+    name: Preset.Apps,
     message:
-      'empty             [an empty workspace with a layout that works best for building apps]',
+      'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
   },
   {
-    name: Preset.NPM,
+    name: Preset.Core,
     message:
-      'npm               [an empty workspace set up to publish npm packages (similar to and compatible with yarn workspaces)]',
+      'core              [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
+  },
+  {
+    name: Preset.TS,
+    message:
+      'ts                [an empty workspace with the JS/TS plugin preinstalled]',
   },
   {
     name: Preset.React,
@@ -320,7 +328,13 @@ function determinePreset(parsedArgs: any): Promise<Preset> {
 }
 
 function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
-  if (preset === Preset.Empty || preset === Preset.NPM) {
+  if (
+    preset === Preset.Apps ||
+    preset === Preset.Core ||
+    preset === Preset.TS ||
+    preset === Preset.Empty ||
+    preset === Preset.NPM
+  ) {
     return Promise.resolve('');
   }
 
@@ -376,6 +390,9 @@ function determineCli(
 
 function determineStyle(preset: Preset, parsedArgs: any) {
   if (
+    preset === Preset.Apps ||
+    preset === Preset.Core ||
+    preset === Preset.TS ||
     preset === Preset.Empty ||
     preset === Preset.NPM ||
     preset === Preset.Nest ||
@@ -650,6 +667,18 @@ async function askAboutNxCloud(parsedArgs: any) {
 function pointToTutorialAndCourse(preset: Preset) {
   const title = `First time using Nx? Check out this interactive Nx tutorial.`;
   switch (preset) {
+    case Preset.Empty:
+    case Preset.NPM:
+    case Preset.Apps:
+    case Preset.Core:
+    case Preset.TS:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [`https://nx.dev/getting-started/nx-core`],
+      });
+      break;
+
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:

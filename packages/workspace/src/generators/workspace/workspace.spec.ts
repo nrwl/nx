@@ -165,7 +165,7 @@ Object {
     expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
-    expect(nx.extends).toEqual('@nrwl/workspace/presets/npm.json');
+    expect(nx.extends).toEqual('@nrwl/workspace/presets/core.json');
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`Object {}`);
