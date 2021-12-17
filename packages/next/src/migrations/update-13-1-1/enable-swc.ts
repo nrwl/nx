@@ -14,6 +14,10 @@ export async function update(host: Tree) {
     const nextConfigPath = joinPathFragments(project.root, 'next.config.js');
     const jestConfigPath = joinPathFragments(project.root, 'jest.config.js');
     const babelConfigPath = joinPathFragments(project.root, '.babelrc');
+    const storybookMainPath = joinPathFragments(
+      project.root,
+      '.storybook/main.js'
+    );
 
     if (!host.exists(nextConfigPath) || !host.exists(jestConfigPath)) return;
 
@@ -21,6 +25,10 @@ export async function update(host: Tree) {
       if (customBabelConfig(host, babelConfigPath)) {
         logger.info(
           `NX Custom .babelrc file detected, skipping deletion. You can delete this file yourself to enable SWC: ${babelConfigPath}`
+        );
+      } else if (host.exists(storybookMainPath)) {
+        logger.info(
+          `NX Storybook configuration for project "${project.name}" detected, skipping deletion of .babelrc`
         );
       } else {
         // Deleting custom babel config enables SWC
