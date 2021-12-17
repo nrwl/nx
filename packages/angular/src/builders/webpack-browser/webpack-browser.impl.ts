@@ -52,16 +52,7 @@ function buildApp(
     }
   }
 
-  const scheduledBuilder = context.scheduleBuilder(
-    '@angular-devkit/build-angular:browser',
-    delegateOptions as Schema & JsonObject,
-    {
-      target: context.target,
-      logger: context.logger as any,
-    }
-  );
-
-  return from(scheduledBuilder).pipe(switchMap((x) => x.result));
+  return executeBrowserBuilder(delegateOptions, context);
 }
 
 function buildAppWithCustomWebpackConfiguration(
