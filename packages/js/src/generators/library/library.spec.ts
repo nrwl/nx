@@ -709,6 +709,18 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/.swcrc')).toBeTruthy();
       });
 
+      it('should setup jest project using swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          compiler: 'swc',
+        });
+
+        const jestConfig = tree.read('libs/my-lib/jest.config.js').toString();
+        expect(jestConfig).toContain('@swc/jest');
+      });
+
       it('should generate a package.json file', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
