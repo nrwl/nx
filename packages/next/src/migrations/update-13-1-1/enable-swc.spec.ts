@@ -122,4 +122,30 @@ module.exports = {
 
     expect(tree.exists('apps/demo/.babelrc')).toBe(false);
   });
+
+  it('should skip migration if storybook configuration is detected', async () => {
+    await applicationGenerator(tree, {
+      style: 'none',
+      name: 'demo',
+      skipFormat: false,
+      swc: false,
+    });
+
+    tree.write(
+      'apps/demo/.babelrc',
+      `{
+        "presets": ["@nrwl/next/babel"]
+      }`
+    );
+    tree.write(
+      'apps/demo/.storybook/main.js',
+      `module.exports = {
+        stories: []
+      }`
+    );
+
+    await update(tree);
+
+    expect(tree.exists('apps/demo/.babelrc')).toBe(true);
+  });
 });

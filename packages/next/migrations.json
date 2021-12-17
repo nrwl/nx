@@ -78,12 +78,6 @@
       "version": "13.0.3-beta.1",
       "description": "Fix setup for less stylesheets",
       "factory": "./src/migrations/update-13-0-3/fix-less"
-    },
-    "enable-swc": {
-      "cli": "nx",
-      "version": "13.1.1-beta.1",
-      "description": "Enables SWC for Next.js apps.",
-      "factory": "./src/migrations/update-13-1-1/enable-swc"
     }
   },
   "packageJsonUpdates": {
