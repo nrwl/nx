@@ -95,7 +95,7 @@ export function NpxCreateNxWorkspaceAnimation({
       transition: { ease: 'easeOut', duration: 0.24 },
     });
     await wrapper.start({
-      y: -100,
+      y: -32,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
     return await restartButton.start({
@@ -121,7 +121,7 @@ export function NpxCreateNxWorkspaceAnimation({
       },
     });
     await frameworkSelectionAnswerSectionArrow.start({
-      y: 36,
+      y: 18,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
     await frameworkSelectionAnswerSectionPreviousHighlight.start({

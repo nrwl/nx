@@ -36,6 +36,7 @@ export function Community(props: CommunityProps) {
     <>
       <NextSeo
         title="Nx Community and Plugin Listing"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx and Modern Angular',

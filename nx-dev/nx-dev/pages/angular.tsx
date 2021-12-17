@@ -16,12 +16,12 @@ export function AngularPage() {
     <>
       <NextSeo
         title="Nx and Modern Angular"
-        description="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, full monorepo support and more."
+        description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx and Modern Angular',
           description:
-            'Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, full monorepo support and more.',
+            'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -31,7 +31,7 @@ export function AngularPage() {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          site_name: 'Nx',
           type: 'website',
         }}
       />
