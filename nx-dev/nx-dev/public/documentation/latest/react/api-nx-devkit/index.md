@@ -27,10 +27,13 @@ It only uses language primitives and immutable objects
 
 - [Target](../../react/nx-devkit/index#target)
 
+### Other Interfaces
+
+- [NxPlugin](../../react/nx-devkit/index#nxplugin)
+
 ### Project Graph Interfaces
 
 - [FileData](../../react/nx-devkit/index#filedata)
-- [NxPlugin](../../react/nx-devkit/index#nxplugin)
 - [ProjectFileMap](../../react/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../react/nx-devkit/index#projectgraph)
 - [ProjectGraphDependency](../../react/nx-devkit/index#projectgraphdependency)
@@ -68,6 +71,10 @@ It only uses language primitives and immutable objects
 ### Generators Type aliases
 
 - [WorkspaceConfiguration](../../react/nx-devkit/index#workspaceconfiguration)
+
+### Other Type aliases
+
+- [ProjectTargetConfigurator](../../react/nx-devkit/index#projecttargetconfigurator)
 
 ### Package Manager Type aliases
 
@@ -167,17 +174,21 @@ It only uses language primitives and immutable objects
 
 ---
 
+## Other Interfaces
+
+### NxPlugin
+
+• **NxPlugin**: `Object`
+
+A plugin for Nx
+
+---
+
 ## Project Graph Interfaces
 
 ### FileData
 
 • **FileData**: `Object`
-
----
-
-### NxPlugin
-
-• **NxPlugin**: `Object`
 
 ---
 
@@ -358,6 +369,28 @@ It only uses language primitives and immutable objects
 ### WorkspaceConfiguration
 
 Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../react/nx-devkit/index#nxjsonconfiguration)\>
+
+---
+
+## Other Type aliases
+
+### ProjectTargetConfigurator
+
+Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../react/nx-devkit/index#targetconfiguration)\>
+
+#### Type declaration
+
+▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../react/nx-devkit/index#targetconfiguration)\>
+
+##### Parameters
+
+| Name   | Type     |
+| :----- | :------- |
+| `file` | `string` |
+
+##### Returns
+
+`Record`<`string`, [`TargetConfiguration`](../../react/nx-devkit/index#targetconfiguration)\>
 
 ---
 
