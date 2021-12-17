@@ -78,5 +78,9 @@ export function compileTypeScriptFiles(
       subscriber.next(result);
       subscriber.complete();
     });
+
+    return () => {
+      subscriber.complete();
+    };
   });
 }
