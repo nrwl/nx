@@ -187,7 +187,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   if (!nxArgs.skipNxCache) {
-    nxArgs.skipNxCache = false;
+    nxArgs.skipNxCache = process.env.NX_SKIP_NX_CACHE === 'true';
   }
 
   if (args['parallel'] === 'false' || args['parallel'] === false) {
