@@ -29,7 +29,7 @@ export function ConfPage() {
               url: 'https://nx.dev/images/nx-conf-media.jpg',
               width: 1000,
               height: 500,
-              alt: 'Nx: Smart, Extensible Build Framework',
+              alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
           ],

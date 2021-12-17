@@ -1,6 +1,6 @@
 # Intro to Nx
 
-Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
+Nx is a smart, fast and extensible build system. It comes with first class monorepo support and powerful integrations.
 
 Nx helps you develop [Angular](/{{framework}}/angular/overview) applications with fully integrated support for
 modern tools and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview),

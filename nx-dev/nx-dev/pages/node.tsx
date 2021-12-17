@@ -71,7 +71,7 @@ export function Node() {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 400,
-              alt: 'Nx: Smart, Extensible Build Framework',
+              alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
           ],
@@ -146,8 +146,8 @@ export function Node() {
               <div className="my-32 flex sm:flex-row flex-col justify-center">
                 <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Nx is a smart and extensible build framework that helps you
-                    develop, test, build, and scale Node applications.
+                    Nx is a smart, fast and extensible build system that helps
+                    you develop, test, build, and scale Node applications.
                   </h3>
                   <p className="sm:text-lg mb-6">
                     Nx is a set of tools that provides a standardized and

@@ -27,7 +27,7 @@ export function ReactPage() {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 400,
-              alt: 'Nx: Smart, Extensible Build Framework',
+              alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
           ],
@@ -64,7 +64,7 @@ export function ReactPage() {
                   Nx and React
                 </h2>
                 <p className="sm:text-lg mb-16">
-                  Nx is a smart and extensible build framework to help you
+                  Nx is a smart, fast and extensible build system to help you
                   develop, test, build, and scale with React and React
                   frameworks like <b>Next.js</b>, <b>React Native</b>, and{' '}
                   <b>Gatsby</b>.

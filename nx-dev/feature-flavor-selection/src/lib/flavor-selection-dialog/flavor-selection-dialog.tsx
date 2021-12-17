@@ -44,7 +44,7 @@ export function FlavorSelectionDialog(props: FlavorSelectionDialogProps) {
             Before You Continue...
           </Dialog.Title>
           <Dialog.Description className="m-5">
-            Nx is a smart and extensible build framework that has first-class
+            Nx is a smart, fast and extensible build system that has first-class
             support for many frontend and backend technologies.
           </Dialog.Description>
           <Dialog.Description className="m-5">

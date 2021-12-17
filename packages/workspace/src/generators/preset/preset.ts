@@ -257,7 +257,7 @@ describe('AppComponent', () => {
   <img
     width="450"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
-    alt="Nx - Smart, Extensible Build Framework"
+    alt="Nx - Smart, Fast and Extensible Build System"
   />
 </div>
 <div>Message: {{ (hello$|async)|json }}</div>
@@ -327,7 +327,7 @@ export const App = () => {
         <img
           width="450"
           src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
-          alt="Nx - Smart, Extensible Build Framework"
+          alt="Nx - Smart, Fast and Extensible Build System"
         />
       </div>
       <div>{m.message}</div>

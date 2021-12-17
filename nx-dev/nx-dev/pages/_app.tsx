@@ -18,11 +18,11 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <DefaultSeo
-        title="Nx: Smart, Extensible Build Framework"
+        title="Nx: Smart, Fast and Extensible Build System"
         description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx: Smart, Extensible Build Framework',
+          title: 'Nx: Smart, Fast and Extensible Build System',
           description:
             'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
@@ -30,7 +30,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 400,
-              alt: 'Nx: Smart, Extensible Build Framework',
+              alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
           ],
