@@ -34,7 +34,7 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/node:14.17-browsers
+      - image: cimg/node:16.13-browsers
 
   macos:
     <<: *defaults
@@ -159,9 +159,14 @@ jobs:
   main-linux:
     executor: linux
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+      GIT_AUTHOR_EMAIL: test@test.com
+      GIT_AUTHOR_NAME: Test
+      GIT_COMMITTER_EMAIL: test@test.com
+      GIT_COMMITTER_NAME: Test
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
+      SELECTED_PM: 'pnpm'
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -169,48 +174,53 @@ jobs:
             echo "export NX_RUN_GROUP=\"run-group-linux-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: linux
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Check repository
-          command: |
-            pids=()
+      # - nx/set-shas:
+      #     main-branch-name: 'master'
+      # - run:
+      #     name: Check repository
+      #     command: |
+      #       pids=()
 
-            yarn check-imports &
-            pids+=($!)
-            yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-            yarn check-commit &
-            pids+=($!)
-            yarn depcheck &
-            pids+=($!)
+      #       yarn check-imports &
+      #       pids+=($!)
+      #       yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &
+      #       pids+=($!)
+      #       yarn check-commit &
+      #       pids+=($!)
+      #       yarn depcheck &
+      #       pids+=($!)
 
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
-      - run:
-          name: Check Documentation
-          command: yarn documentation
-          no_output_timeout: 20m
-      - run:
-          name: Run Lint/Test/Build
-          command: |
-            pids=()
+      #       for pid in "${pids[@]}"; do
+      #         wait "$pid"
+      #       done
+      # - run:
+      #     name: Check Documentation
+      #     command: yarn documentation
+      #     no_output_timeout: 20m
+      # - run:
+      #     name: Run Lint/Test/Build
+      #     command: |
+      #       pids=()
 
-            # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
-            (yarn nx workspace-lint; echo "Linting is temporarily disabled until ESLint v8 support is published") &
-            pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
-            pids+=($!)
-            yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
-            pids+=($!)
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+      #       # npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3
+      #       (yarn nx workspace-lint; echo "Linting is temporarily disabled until ESLint v8 support is published") &
+      #       pids+=($!)
+      #       yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
+      #       pids+=($!)
+      #       yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel --max-parallel=3 &
+      #       pids+=($!)
+      #       for pid in "${pids[@]}"; do
+      #         wait "$pid"
+      #       done
+      # - run:
+      #     name: Run E2E Tests
+      #     command: |
+      #       npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox,e2e-gatsby --parallel=1
+      #     no_output_timeout: 45m
       - run:
           name: Run E2E Tests
           command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-react-native,e2e-detox,e2e-gatsby --parallel=1
+            yarn nx e2e e2e-angular-extensions --parallel=1
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
@@ -282,5 +292,5 @@ workflows:
       #     Pull request logic
       # -------------------------
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e
+      # - mainmacos:
+      #     name: main-macos-e2e
