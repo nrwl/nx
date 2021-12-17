@@ -724,7 +724,7 @@ export function getPackageManagerCommand({
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} --verbose && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       addDev: `yarn add -D`,

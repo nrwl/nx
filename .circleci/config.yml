@@ -220,7 +220,7 @@ jobs:
       - run:
           name: Run E2E Tests
           command: |
-            yarn nx e2e e2e-angular-extensions --parallel=1
+            npx nx e2e e2e-angular-extensions --parallel=1 --skip-nx-cache
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
