@@ -27,7 +27,7 @@ export function AngularPage() {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 400,
-              alt: 'Nx: Smart, Extensible Build Framework',
+              alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
           ],
@@ -64,7 +64,7 @@ export function AngularPage() {
                   Nx and Modern Angular
                 </h2>
                 <p className="sm:text-lg mb-16">
-                  Nx is a smart and extensible build framework that helps you
+                  Nx is a smart, fast and extensible build system that helps you
                   develop, test, build, and scale Angular applications with
                   fully integrated support for modern tools like Jest, Cypress,
                   Storybook, ESLint, NgRx, and more.

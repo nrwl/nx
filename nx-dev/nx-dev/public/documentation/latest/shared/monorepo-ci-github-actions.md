@@ -1,6 +1,6 @@
 # Configuring CI Using GitHub Actions and Nx
 
-Nx is a smart and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
+Nx is a smart, fast and extensible build system, and it works really well with monorepos. Monorepos provide a lot of advantages:
 
 - Everything at that current commit works together. Changes can be verified across all affected parts of the organization.
 - Easy to split code into composable modules

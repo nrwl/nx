@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/devkit",
   "version": "0.0.1",
-  "description": "Smart, Extensible Build Framework",
+  "description": "Smart, Fast and Extensible Build System",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

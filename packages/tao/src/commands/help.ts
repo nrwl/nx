@@ -4,7 +4,7 @@ import { logger, stripIndent } from '../shared/logger';
 export function help() {
   logger.info(
     stripIndent(`
-    ${chalk.bold('Nx - Smart, Extensible Build Framework')}
+    ${chalk.bold('Nx - Smart, Fast and Extensible Build System')}
   
     ${chalk.bold('Create a new project.')}
      nx new ${chalk.grey(

@@ -47,7 +47,7 @@ export function Community(props: CommunityProps) {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 400,
-              alt: 'Nx: Smart, Extensible Build Framework',
+              alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
           ],

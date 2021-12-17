@@ -95,7 +95,7 @@ And the template of the generated component will look as follows:
   <img
     width="300"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
-    alt="Nx - Smart, Extensible Build Framework"
+    alt="Nx - Smart, Fast and Extensible Build System"
   />
 </div>
 
@@ -323,7 +323,7 @@ Finally, we can update `app.component.html` to use our shared web component.
   <img
     width="300"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
-    alt="Nx - Smart, Extensible Build Framework"
+    alt="Nx - Smart, Fast and Extensible Build System"
   />
 </div>
 

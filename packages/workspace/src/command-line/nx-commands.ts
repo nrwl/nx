@@ -33,7 +33,7 @@ export const commandsObject = yargs
   })
   .usage(
     `
-${chalk.bold('Smart, Extensible Build Framework')}` +
+${chalk.bold('Smart, Fast and Extensible Build System')}` +
       (daemonHelpOutput
         ? `
 

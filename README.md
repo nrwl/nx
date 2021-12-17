@@ -1,5 +1,5 @@
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" 
-width="100%" alt="Nx - Smart, Extensible Build Framework"></p>
+width="100%" alt="Nx - Smart, Fast and Extensible Build System"></p>
 
 <div style="text-align: center;">
 
@@ -17,9 +17,9 @@ width="100%" alt="Nx - Smart, Extensible Build Framework"></p>
 
 # What is Nx?
 
-🔎 **Smart, Extensible Build Framework**
+🔎 **Smart, Fast and Extensible Build System**
 
-Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
+Nx is a smart, fast and extensible build system. It comes with first class monorepo support and powerful integrations.
 
 ### Best-in-Class Support for Monorepos
 
@@ -67,7 +67,7 @@ written in React, Node or Angular.
 ### Videos, Blogs, Books, Examples
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank"><img src="./images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart, Extensible Build Framework"></a></p>
+width="100%" alt="Nx - Smart, Fast and Extensible Build System"></a></p>
 
 - [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
 - [Scale React Development with Nx (Free Egghead course)](https://egghead.io/playlists/scale-react-development-with-nx-4038)
