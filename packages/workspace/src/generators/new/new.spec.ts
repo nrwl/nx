@@ -6,7 +6,7 @@ import { Preset } from '../utils/presets';
 
 const defaultOptions: Omit<Schema, 'name' | 'directory' | 'appName'> = {
   cli: 'nx',
-  preset: Preset.Empty,
+  preset: Preset.Apps,
   skipInstall: false,
   skipGit: false,
   linter: Linter.EsLint,

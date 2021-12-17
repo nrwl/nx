@@ -188,6 +188,9 @@ async function initializeGitRepo(
 export async function newGenerator(host: Tree, options: Schema) {
   if (
     options.skipInstall &&
+    options.preset !== Preset.Apps &&
+    options.preset !== Preset.Core &&
+    options.preset !== Preset.TS &&
     options.preset !== Preset.Empty &&
     options.preset !== Preset.NPM
   ) {
@@ -247,6 +250,9 @@ function addCloudDependencies(host: Tree, options: Schema) {
 
 function getPresetDependencies(preset: string, version?: string) {
   switch (preset) {
+    case Preset.TS:
+      return { dependencies: {}, dev: { '@nrwl/js': nxVersion } };
+
     case Preset.Angular:
       return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
 
@@ -296,7 +302,12 @@ function getPresetDependencies(preset: string, version?: string) {
 }
 
 function addPresetDependencies(host: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.Empty || options.preset === Preset.NPM) {
+  if (
+    options.preset === Preset.Apps ||
+    options.preset === Preset.Core ||
+    options.preset === Preset.Empty ||
+    options.preset === Preset.NPM
+  ) {
     return;
   }
   const { dependencies, dev } = getPresetDependencies(

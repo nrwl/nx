@@ -20,8 +20,8 @@ describe('create-nx-workspace', () => {
   beforeEach(() => (packageManager = getSelectedPackageManager() || 'npm'));
   afterAll(() => cleanupProject());
 
-  it('should be able to create an empty workspace', () => {
-    const wsName = uniq('empty');
+  it('should be able to create an empty workspace built for apps', () => {
+    const wsName = uniq('apps');
     runCreateWorkspace(wsName, {
       preset: 'empty',
       packageManager,
@@ -43,8 +43,18 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an npm workspace', () => {
-    const wsName = uniq('npm');
+  it('should be able to create an empty workspace with core capabilities', () => {
+    const wsName = uniq('core');
+    runCreateWorkspace(wsName, {
+      preset: 'npm',
+      packageManager,
+    });
+
+    expectNoAngularDevkit();
+  });
+
+  it('should be able to create an empty workspace with ts/js capabilities', () => {
+    const wsName = uniq('ts');
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager,
@@ -192,7 +202,7 @@ describe('create-nx-workspace', () => {
     const createCommand = getPackageManagerCommand({
       packageManager,
     }).createWorkspace;
-    const fullCommand = `${createCommand} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
+    const fullCommand = `${createCommand} ${wsName} --cli=nx --preset=apps --no-nxCloud --no-interactive`;
     execSync(fullCommand, {
       cwd: tmpDir,
       stdio: [0, 1, 2],
