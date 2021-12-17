@@ -94,4 +94,66 @@ describe('js e2e', () => {
 
     // expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(`Running ${lib}`)
   }, 120000);
+
+  // reenable when once ci runs on node 16
+  // it('should create libs and apps with js executors (--compiler=swc)', async () => {
+  //   const scope = newProject();
+  //   const lib = uniq('lib');
+  //   runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=swc`);
+  //   const libPackageJson = readJson(`libs/${lib}/package.json`);
+  //   expect(libPackageJson.scripts).toBeUndefined();
+  //   expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+  //     'Ran all test suites'
+  //   );
+  //   expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+  //     'match the cache'
+  //   );
+  //
+  //   expect(runCLI(`build ${lib}`)).toContain('Successfully compiled: 2 files with swc');
+  //   checkFilesExist(
+  //     `dist/libs/${lib}/package.json`,
+  //     `dist/libs/${lib}/src/index.js`,
+  //     `dist/libs/${lib}/src/lib/${lib}.js`
+  //   );
+  //
+  //   const app = uniq('app');
+  //   runCLI(`generate @nrwl/js:app ${app} --buildable --compiler=swc`);
+  //   const appPackageJson = readJson(`apps/${app}/package.json`);
+  //   expect(appPackageJson.scripts).toBeUndefined();
+  //   expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
+  //     'Ran all test suites'
+  //   );
+  //   expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
+  //     'match the cache'
+  //   );
+  //
+  //   expect(runCLI(`build ${app}`)).toContain('Successfully compiled: 2 files with swc');
+  //   checkFilesExist(
+  //     `dist/apps/${app}/package.json`,
+  //     `dist/apps/${app}/src/index.js`,
+  //     `dist/apps/${app}/src/app/${app}.js`
+  //   );
+  //
+  //   expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(
+  //     `Running ${app}`
+  //   );
+  //
+  //   const tsconfig = readJson(`tsconfig.base.json`);
+  //   expect(tsconfig.compilerOptions.paths).toEqual({
+  //     [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
+  //   });
+  //
+  //   updateFile(`apps/${app}/src/index.ts`, () => {
+  //     return `
+  //       import { ${lib} } from '@${scope}/${lib}'
+  //       console.log('Running ' + ${lib}())
+  //     `;
+  //   });
+  //
+  //   const output = runCLI(`build ${app}`);
+  //   expect(output).toContain('1 task(s) that it depends on');
+  //   expect(output).toContain('Successfully compiled: 2 files with swc');
+  //
+  //   // expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(`Running ${lib}`)
+  // }, 120000);
 });
