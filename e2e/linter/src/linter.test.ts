@@ -287,7 +287,7 @@ describe('Linter', () => {
 
     const out = runCLI(`lint ${myapp}`, { silenceError: true });
     expect(out).toContain(
-      'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
+      'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
     );
     // expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
     expect(out).toContain('Imports of apps are forbidden');
