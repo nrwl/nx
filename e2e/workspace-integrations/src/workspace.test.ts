@@ -53,6 +53,36 @@ describe('run-one', () => {
     expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
   }, 10000);
 
+  it('should run targets inferred from plugin-specified project files', () => {
+    // Setup an app to extend
+    const myapp = uniq('app');
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    // Register an Nx plugin
+    const plugin = `module.exports = {
+  projectFilePatterns: ['inferred-project.nxproject'],
+  registerProjectTargets: () => ({
+    "echo": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "echo inferred-target"
+      }
+    }
+  })
+}`;
+    updateFile('tools/local-plugin/plugin.js', plugin);
+    updateFile('nx.json', (c) => {
+      const nxJson = JSON.parse(c);
+      nxJson.plugins = ['./tools/local-plugin/plugin.js'];
+      return JSON.stringify(nxJson, null, 2);
+    });
+
+    // Create a custom project file for the app
+    updateFile(`apps/${myapp}/inferred-project.nxproject`, 'contents');
+
+    expect(runCLI(`echo ${myapp}`)).toContain('inferred-target');
+  });
+
   it('should build a specific project with the daemon enabled', () => {
     const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
