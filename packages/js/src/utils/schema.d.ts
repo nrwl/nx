@@ -47,6 +47,15 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
   files: Array<FileInputOutput>;
 }
 
+export interface SwcExecutorOptions extends ExecutorOptions {
+  skipTypeCheck?: boolean;
+}
+
+export interface NormalizedSwcExecutorOptions
+  extends NormalizedExecutorOptions {
+  skipTypeCheck: boolean;
+}
+
 export interface ExecutorEvent {
   outfile: string;
   success: boolean;
