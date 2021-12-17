@@ -145,11 +145,17 @@ export function shouldRecomputeWholeGraph(
 
   // a path mapping for an existing project has changed
   if (
-    Object.keys(cache.pathMappings).some(
-      (t) =>
-        JSON.stringify(cache.pathMappings[t]) !=
-        JSON.stringify(tsConfig.compilerOptions.paths[t])
-    )
+    Object.keys(cache.pathMappings).some((t) => {
+      const cached =
+        cache.pathMappings && cache.pathMappings[t]
+          ? JSON.stringify(cache.pathMappings[t])
+          : undefined;
+      const notCached =
+        tsConfig?.compilerOptions?.paths && tsConfig?.compilerOptions?.paths[t]
+          ? JSON.stringify(tsConfig.compilerOptions.paths[t])
+          : undefined;
+      return cached !== notCached;
+    })
   ) {
     return true;
   }
