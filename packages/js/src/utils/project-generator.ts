@@ -100,6 +100,15 @@ function addProject(
     }
   }
 
+  if (projectType === 'application') {
+    projectConfiguration.targets.serve = {
+      executor: `@nrwl/js:node`,
+      options: {
+        buildTarget: `${options.name}:build`,
+      },
+    };
+  }
+
   if (options.config === 'workspace') {
     addProjectConfiguration(tree, options.name, projectConfiguration, false);
   } else if (options.config === 'project') {
