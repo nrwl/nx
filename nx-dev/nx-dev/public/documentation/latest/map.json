@@ -653,6 +653,11 @@
             "name": "cypress executor",
             "id": "cypress",
             "file": "angular/api-cypress/executors/cypress"
+          },
+          {
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "file": "angular/api-cypress/generators/cypress-project"
           }
         ]
       },
@@ -2017,6 +2022,11 @@
             "name": "cypress executor",
             "id": "cypress",
             "file": "react/api-cypress/executors/cypress"
+          },
+          {
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "file": "react/api-cypress/generators/cypress-project"
           }
         ]
       },
@@ -3345,6 +3355,11 @@
             "name": "cypress executor",
             "id": "cypress",
             "file": "node/api-cypress/executors/cypress"
+          },
+          {
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "file": "node/api-cypress/generators/cypress-project"
           }
         ]
       },
