@@ -60,12 +60,12 @@ export function Node() {
     <>
       <NextSeo
         title="Nx and Node"
-        description="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications and with full monorepo support."
+        description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx and Node',
           description:
-            'Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications and with full monorepo support.',
+            'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -75,7 +75,7 @@ export function Node() {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          site_name: 'Nx',
           type: 'website',
         }}
       />

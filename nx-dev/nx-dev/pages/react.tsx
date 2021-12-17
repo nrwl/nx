@@ -16,12 +16,12 @@ export function ReactPage() {
     <>
       <NextSeo
         title="Nx and React"
-        description="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and fully support for monorepo."
+        description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx and React',
           description:
-            'Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and fully support for monorepo.',
+            'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -31,7 +31,7 @@ export function ReactPage() {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          site_name: 'Nx',
           type: 'website',
         }}
       />

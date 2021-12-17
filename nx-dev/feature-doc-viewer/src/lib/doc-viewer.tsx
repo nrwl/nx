@@ -39,12 +39,12 @@ export function DocViewer({
       <NextSeo
         noindex={version.id === 'previous'}
         title={document.data.title + ' | Nx'}
-        description="Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, full monorepo support and more."
+        description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: document.data.title + ' | Nx',
+          title: document.data.title,
           description:
-            'Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, full monorepo support and more.',
+            'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
               url: router.asPath.includes('turbo-and-nx')
@@ -56,7 +56,7 @@ export function DocViewer({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          site_name: 'Nx',
           type: 'website',
         }}
       />

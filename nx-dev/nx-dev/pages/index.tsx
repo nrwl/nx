@@ -8,7 +8,6 @@ import {
   NpxCreateNxWorkspace,
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui-common';
-import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import {
   AffectedCommand,
   CloudSupport,
@@ -25,7 +24,6 @@ import {
   VscodePlugin,
   YoutubeChannel,
 } from '@nrwl/nx-dev/ui-home';
-import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
 
 export function Index() {
   const router = useRouter();
@@ -33,8 +31,8 @@ export function Index() {
   return (
     <>
       <NextSeo
-        title="Nx: Smart, Extensible Build Framework"
-        description="Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, full monorepo support and more."
+        title="Nx: Smart, Fast and Extensible Build System"
+        description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev',
           title: 'Nx: Smart, Extensible Build Framework',
@@ -49,7 +47,7 @@ export function Index() {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          site_name: 'Nx',
           type: 'website',
         }}
       />
@@ -64,64 +62,35 @@ export function Index() {
               backgroundImage: 'url(/images/background/hero-bg-large.svg)',
             }}
           >
-            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-4 py-4 md:py-24">
-              <div className="my-8 md:my-18 2xl:my-24 flex lg:flex-row flex-col items-center justify-center">
-                <div className="w-full lg:w-1/2 flex flex-col">
-                  <h1 className="text-center md:text-left text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight sm:mt-10 mb-8 sm:mt-14 sm:mb-10">
-                    <span className="block md:inline">Smart, Extensible</span>{' '}
-                    Build Framework
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-4 py-4 md:py-18">
+              <div className="my-8 md:my-18 2xl:my-24 flex  flex-col items-center justify-center">
+                <div className="w-full text-center flex flex-col">
+                  <h1 className="text-4xl sm:text-5xl lg:text-5xl leading-none font-extrabold tracking-tight sm:mt-10 mb-8 sm:mt-14 sm:mb-10">
+                    <span className="block lg:inline">
+                      Smart, Fast and Extensible
+                    </span>{' '}
+                    Build System
                   </h1>
-                  <h2 className="text-2xl font-medium mb-1">
-                    Nx helps <b>architect</b>, <b>test</b>, and <b>build</b> at
-                    any scale:
+                  <h2 className="max-w-2xl mx-auto text-2xl font-semibold mb-10 sm:mb-11">
+                    Next generation build system with first class monorepo
+                    support and powerful integrations.
                   </h2>
-                  <p className="max-w-screen-lg text-lg font-medium mb-10 sm:mb-11 flex flex-wrap">
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      integrations with modern frameworks
-                    </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      computation caching
-                    </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      smart rebuilds of affected projects
-                    </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      distributed task execution
-                    </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      powerful code generators
-                    </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      editor support
-                    </span>
-                    <span className="rounded px-1 mr-1 mb-1 text-white bg-blue-nx-base">
-                      GitHub apps
-                    </span>
-                    and more.
-                  </p>
-
-                  <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
-                    <Link href="#getting-started">
-                      <a className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
-                        Get Started
-                      </a>
-                    </Link>
-
-                    <InlineCommand
-                      language={'bash'}
-                      command={'npx create-nx-workspace'}
-                      callback={() =>
-                        sendCustomEvent(
-                          'code-snippets',
-                          'click',
-                          router.pathname
-                        )
-                      }
-                    />
-                  </div>
                 </div>
-                <div className="hidden sm:flex w-full lg:w-1/2 flex-col justify-between items-center lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0">
+                <div className="max-w-2xl mx-auto hidden sm:flex w-full  flex-col justify-between items-center lg:pb-0 pb-10 mt-8 lg:mt-0">
                   <NpxCreateNxWorkspace />
+                </div>
+                <div className="my-14 flex flex-wrap sm:space-x-4 text-center">
+                  <Link href="#getting-started">
+                    <a className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
+                      Create Nx Workspace
+                    </a>
+                  </Link>
+
+                  <Link href="/l/r/migration/adding-to-monorepo">
+                    <a className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
+                      Add Nx to Monorepo
+                    </a>
+                  </Link>
                 </div>
               </div>
             </div>
