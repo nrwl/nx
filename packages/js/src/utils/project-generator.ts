@@ -212,7 +212,7 @@ async function addJest(
   return await jestProjectGenerator(tree, {
     project: options.name,
     setupFile: 'none',
-    supportTsx: true,
+    supportTsx: false,
     skipSerializers: true,
     testEnvironment: options.testEnvironment,
     skipFormat: true,
