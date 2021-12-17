@@ -72,9 +72,9 @@ cp -r /path/to/cra-app/{README.md,package.json,tsconfig.json,src,public} apps/we
 
 Replace `/path/to/cra-app` with the actual path to your CRA app on your machine.
 
-### 4. Add CRA commands to workspace.json
+### 4. Add CRA commands to project.json
 
-Run the following terminal commands to set up the CRA commands in `workspace.json`. `cwd` specifies the directory the command should be executed from and `outputs` lets Nx know which files are modified when the command is executed.
+Run the following terminal commands to set up the CRA commands in your application's `project.json`. `cwd` specifies the directory the command should be executed from and `outputs` lets Nx know which files are modified when the command is executed.
 
 ```bash
 nx g @nrwl/workspace:run-commands serve \
