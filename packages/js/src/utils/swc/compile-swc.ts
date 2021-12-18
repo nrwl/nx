@@ -1,16 +1,21 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
-import { Observable } from 'rxjs';
+import { Observable, zip } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { normalizeTsCompilationOptions } from '../normalize-ts-compilation-options';
 import { NormalizedSwcExecutorOptions } from '../schema';
+import { printDiagnostics } from '../typescript/print-diagnostics';
+import {
+  runTypeCheck,
+  runTypeCheckWatch,
+  TypeCheckOptions,
+} from '../typescript/run-type-check';
 
 export function compileSwc(
   context: ExecutorContext,
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => void | Promise<void>
 ) {
-  // const ts = await import('typescript');
-
   const tsOptions = {
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
@@ -18,6 +23,7 @@ export function compileSwc(
     tsConfig: normalizedOptions.tsConfig,
     watch: normalizedOptions.watch,
   };
+  const outDir = tsOptions.outputPath.replace(`/${tsOptions.projectRoot}`, '');
 
   const normalizedTsOptions = normalizeTsCompilationOptions(tsOptions);
   logger.log(`Compiling with SWC for ${normalizedTsOptions.projectName}...`);
@@ -29,16 +35,18 @@ export function compileSwc(
   const swcrcPath = `${normalizedTsOptions.projectRoot}/.swcrc`;
   let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config-file=${swcrcPath}`;
 
-  const compile$ = new Observable((subscriber) => {
+  const postCompilationOperator = () =>
+    tap(({ success }) => {
+      if (success) {
+        void postCompilationCallback();
+      }
+    });
+
+  const compile$ = new Observable<{ success: boolean }>((subscriber) => {
     if (normalizedOptions.watch) {
       swcCmd += ' --watch';
-      const watchProcess = createSwcWatchProcess(swcCmd, async (success) => {
-        if (success) {
-          await postCompilationCallback();
-          subscriber.next({ success });
-        } else {
-          subscriber.error();
-        }
+      const watchProcess = createSwcWatchProcess(swcCmd, (success) => {
+        subscriber.next({ success });
       });
 
       return () => {
@@ -49,9 +57,64 @@ export function compileSwc(
 
     const swcCmdLog = execSync(swcCmd).toString();
     logger.log(swcCmdLog.replace(/\n/, ''));
+    subscriber.next({ success: swcCmdLog.includes('Successfully compiled') });
 
-    (postCompilationCallback() as Promise<void>).then(() => {
-      subscriber.next({ success: true });
+    return () => {
+      subscriber.complete();
+    };
+  });
+
+  if (normalizedOptions.skipTypeCheck) {
+    return compile$.pipe(postCompilationOperator());
+  }
+
+  const typeCheck$ = new Observable<{ success: boolean }>((subscriber) => {
+    const typeCheckOptions: TypeCheckOptions = {
+      mode: 'emitDeclarationOnly',
+      tsConfigPath: tsOptions.tsConfig,
+      outDir,
+      workspaceRoot: normalizedOptions.root,
+    };
+    if (normalizedOptions.watch) {
+      let typeCheckRunner: { close: () => void };
+      let preEmit = false;
+      runTypeCheckWatch(
+        typeCheckOptions,
+        (diagnostic, formattedDiagnostic, errorCount) => {
+          if (preEmit && diagnostic.code !== 6031 && diagnostic.code !== 6032) {
+            const hasErrors = errorCount > 0;
+            if (hasErrors) {
+              void printDiagnostics([formattedDiagnostic]);
+            } else {
+              void printDiagnostics([], [formattedDiagnostic]);
+            }
+            subscriber.next({ success: !hasErrors });
+          }
+        }
+      ).then(({ close, preEmitErrors, preEmitWarnings }) => {
+        const hasErrors = preEmitErrors.length > 0;
+        if (hasErrors) {
+          void printDiagnostics(preEmitErrors, preEmitWarnings);
+        }
+        typeCheckRunner = { close };
+        subscriber.next({ success: !hasErrors });
+        preEmit = true;
+      });
+
+      return () => {
+        if (typeCheckRunner) {
+          typeCheckRunner.close();
+        }
+        subscriber.complete();
+      };
+    }
+
+    runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
+      const hasErrors = errors.length > 0;
+      if (hasErrors) {
+        void printDiagnostics(errors, warnings);
+      }
+      subscriber.next({ success: !hasErrors });
       subscriber.complete();
     });
 
@@ -60,27 +123,12 @@ export function compileSwc(
     };
   });
 
-  if (normalizedOptions.skipTypeCheck) {
-    return compile$;
-  }
-
-  return compile$;
-  //
-  //
-  // logger.log(`Compiling with SWC for ${normalizedTsOptions.projectName}...`);
-  //
-  // // TODO(chau): use `--ignore` for swc cli to exclude spec files
-  // // Open issue: https://github.com/swc-project/cli/issues/20
-  //
-  // if (normalizedOptions.watch) {
-  //   swcCmd += ' --watch';
-  //   return createSwcWatchProcess(swcCmd, postCompilationCallback);
-  // }
-  //
-  // const swcCmdLog = execSync(swcCmd).toString();
-  // logger.log(swcCmdLog.replace(/\n/, ''));
-  // await postCompilationCallback();
-  // return { success: true };
+  return zip(compile$, typeCheck$).pipe(
+    map(([compileResult, typeCheckResult]) => ({
+      success: compileResult.success && typeCheckResult.success,
+    })),
+    postCompilationOperator()
+  );
 }
 
 function createSwcWatchProcess(
@@ -91,9 +139,7 @@ function createSwcWatchProcess(
 
   watchProcess.stdout.on('data', (data) => {
     process.stdout.write(data);
-    if (data.includes('Successfully compiled')) {
-      callback(true);
-    }
+    callback(data.includes('Successfully compiled'));
   });
 
   watchProcess.stderr.on('data', (err) => {
