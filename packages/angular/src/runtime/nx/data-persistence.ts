@@ -18,42 +18,53 @@ import {
 /**
  * See {@link DataPersistence.pessimisticUpdate} for more information.
  */
-export interface PessimisticUpdateOpts<T, A> {
-  run(a: A, state?: T): Observable<Action> | Action | void;
+export interface PessimisticUpdateOpts<T extends Array<unknown>, A> {
+  run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
   onError(a: A, e: any): Observable<any> | any;
 }
 /**
  * See {@link DataPersistence.pessimisticUpdate} for more information.
  */
-export interface OptimisticUpdateOpts<T, A> {
-  run(a: A, state?: T): Observable<Action> | Action | void;
+export interface OptimisticUpdateOpts<T extends Array<unknown>, A> {
+  run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
   undoAction(a: A, e: any): Observable<Action> | Action;
 }
 
 /**
  * See {@link DataPersistence.fetch} for more information.
  */
-export interface FetchOpts<T, A> {
-  id?(a: A, state?: T): any;
-  run(a: A, state?: T): Observable<Action> | Action | void;
+export interface FetchOpts<T extends Array<unknown>, A> {
+  id?(a: A, ...slices: [...T]): any;
+  run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
   onError?(a: A, e: any): Observable<any> | any;
 }
 
 /**
  * See {@link DataPersistence.navigation} for more information.
  */
-export interface HandleNavigationOpts<T> {
-  run(a: ActivatedRouteSnapshot, state?: T): Observable<Action> | Action | void;
+export interface HandleNavigationOpts<T extends Array<unknown>> {
+  run(
+    a: ActivatedRouteSnapshot,
+    ...slices: [...T]
+  ): Observable<Action> | Action | void;
   onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
 }
 
-export type ActionOrActionWithState<T, A> = A | [A, T];
-export type ActionStateStream<T, A> = Observable<ActionOrActionWithState<T, A>>;
+export type ActionOrActionWithStates<T extends Array<unknown>, A> =
+  | A
+  | [A, ...T];
+export type ActionOrActionWithState<T, A> = ActionOrActionWithStates<[T], A>;
+export type ActionStatesStream<T extends Array<unknown>, A> = Observable<
+  ActionOrActionWithStates<T, A>
+>;
+export type ActionStateStream<T, A> = Observable<
+  ActionOrActionWithStates<[T], A>
+>;
 
-export function pessimisticUpdate<T, A extends Action>(
+export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
   opts: PessimisticUpdateOpts<T, A>
 ) {
-  return (source: ActionStateStream<T, A>): Observable<Action> => {
+  return (source: ActionStatesStream<T, A>): Observable<Action> => {
     return source.pipe(
       mapActionAndState(),
       concatMap(runWithErrorHandling(opts.run, opts.onError))
@@ -61,10 +72,10 @@ export function pessimisticUpdate<T, A extends Action>(
   };
 }
 
-export function optimisticUpdate<T, A extends Action>(
+export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
   opts: OptimisticUpdateOpts<T, A>
 ) {
-  return (source: ActionStateStream<T, A>): Observable<Action> => {
+  return (source: ActionStatesStream<T, A>): Observable<Action> => {
     return source.pipe(
       mapActionAndState(),
       concatMap(runWithErrorHandling(opts.run, opts.undoAction))
@@ -72,13 +83,15 @@ export function optimisticUpdate<T, A extends Action>(
   };
 }
 
-export function fetch<T, A extends Action>(opts: FetchOpts<T, A>) {
-  return (source: ActionStateStream<T, A>): Observable<Action> => {
+export function fetch<T extends Array<unknown>, A extends Action>(
+  opts: FetchOpts<T, A>
+) {
+  return (source: ActionStatesStream<T, A>): Observable<Action> => {
     if (opts.id) {
       const groupedFetches = source.pipe(
         mapActionAndState(),
-        groupBy(([action, store]) => {
-          return opts.id(action, store);
+        groupBy(([action, ...store]) => {
+          return opts.id(action, ...store);
         })
       );
 
@@ -96,15 +109,15 @@ export function fetch<T, A extends Action>(opts: FetchOpts<T, A>) {
   };
 }
 
-export function navigation<T, A extends Action>(
+export function navigation<T extends Array<unknown>, A extends Action>(
   component: Type<any>,
   opts: HandleNavigationOpts<T>
 ) {
-  return (source: ActionStateStream<T, A>) => {
+  return (source: ActionStatesStream<T, A>) => {
     const nav = source.pipe(
       mapActionAndState(),
-      filter(([action, state]) => isStateSnapshot(action)),
-      map(([action, state]) => {
+      filter(([action]) => isStateSnapshot(action)),
+      map(([action, ...slices]) => {
         if (!isStateSnapshot(action)) {
           // Because of the above filter we'll never get here,
           // but this properly type narrows `action`
@@ -113,10 +126,10 @@ export function navigation<T, A extends Action>(
 
         return [
           findSnapshot(component, action.payload.routerState.root),
-          state,
-        ] as [ActivatedRouteSnapshot, T];
+          ...slices,
+        ] as [ActivatedRouteSnapshot, ...T];
       }),
-      filter(([snapshot, state]) => !!snapshot)
+      filter(([snapshot]) => !!snapshot)
     );
 
     return nav.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)));
@@ -129,13 +142,13 @@ function isStateSnapshot(
   return action.type === ROUTER_NAVIGATION;
 }
 
-function runWithErrorHandling<T, A, R>(
-  run: (a: A, state?: T) => Observable<R> | R | void,
+function runWithErrorHandling<T extends Array<unknown>, A, R>(
+  run: (a: A, ...slices: [...T]) => Observable<R> | R | void,
   onError: any
 ) {
-  return ([action, state]: [A, T]): Observable<R> => {
+  return ([action, ...slices]: [A, ...T]): Observable<R> => {
     try {
-      const r = wrapIntoObservable(run(action, state));
+      const r = wrapIntoObservable(run(action, ...slices));
       return r.pipe(catchError((e) => wrapIntoObservable(onError(action, e))));
     } catch (e) {
       return wrapIntoObservable(onError(action, e));
@@ -147,33 +160,33 @@ function runWithErrorHandling<T, A, R>(
  * @whatItDoes maps Observable<Action | [Action, State]> to
  * Observable<[Action, State]>
  */
-function mapActionAndState<T, A>() {
-  return (source: Observable<ActionOrActionWithState<T, A>>) => {
+function mapActionAndState<T extends Array<unknown>, A>() {
+  return (source: Observable<ActionOrActionWithStates<T, A>>) => {
     return source.pipe(
       map((value) => {
-        const [action, store] = normalizeActionAndState(value);
-        return [action, store] as [A, T];
+        const [action, ...store] = normalizeActionAndState(value);
+        return [action, ...store] as [A, ...T];
       })
     );
   };
 }
 
 /**
- * @whatItDoes Normalizes either a bare action or an array of action and state
- * into an array of action and state (or undefined)
+ * @whatItDoes Normalizes either a bare action or an array of action and slices
+ * into an array of action and slices (or undefined)
  */
-function normalizeActionAndState<T, A>(
-  args: ActionOrActionWithState<T, A>
-): [A, T] {
-  let action: A, state: T;
+function normalizeActionAndState<T extends Array<unknown>, A>(
+  args: ActionOrActionWithStates<T, A>
+): [A, ...T] {
+  let action: A, slices: T;
 
   if (args instanceof Array) {
-    [action, state] = args;
+    [action, ...slices] = args;
   } else {
     action = args;
   }
 
-  return [action, state];
+  return [action, ...slices];
 }
 
 /**
@@ -231,7 +244,7 @@ export class DataPersistence<T> {
    */
   pessimisticUpdate<A extends Action = Action>(
     actionType: string | ActionCreator,
-    opts: PessimisticUpdateOpts<T, A>
+    opts: PessimisticUpdateOpts<[T], A>
   ): Observable<any> {
     return this.actions.pipe(
       ofType<A>(actionType),
@@ -288,7 +301,7 @@ export class DataPersistence<T> {
    */
   optimisticUpdate<A extends Action = Action>(
     actionType: string | ActionCreator,
-    opts: OptimisticUpdateOpts<T, A>
+    opts: OptimisticUpdateOpts<[T], A>
   ): Observable<any> {
     return this.actions.pipe(
       ofType<A>(actionType),
@@ -366,7 +379,7 @@ export class DataPersistence<T> {
    */
   fetch<A extends Action = Action>(
     actionType: string | ActionCreator,
-    opts: FetchOpts<T, A>
+    opts: FetchOpts<[T], A>
   ): Observable<any> {
     return this.actions.pipe(
       ofType<A>(actionType),
@@ -410,7 +423,7 @@ export class DataPersistence<T> {
    */
   navigation(
     component: Type<any>,
-    opts: HandleNavigationOpts<T>
+    opts: HandleNavigationOpts<[T]>
   ): Observable<any> {
     return this.actions.pipe(
       withLatestFrom(this.store),
