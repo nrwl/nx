@@ -39,7 +39,6 @@ export function DocViewer({
       <NextSeo
         noindex={version.id === 'previous'}
         title={document.data.title + ' | Nx'}
-        description="Next generation build system with first class monorepo support and powerful integrations."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: document.data.title,
