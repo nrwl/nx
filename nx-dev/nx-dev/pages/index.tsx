@@ -76,7 +76,7 @@ export function Index() {
                     support and powerful integrations.
                   </h2>
                 </div>
-                <div className="max-w-2xl mx-auto hidden sm:flex w-full  flex-col justify-between items-center lg:pb-0 pb-10 mt-8 lg:mt-0">
+                <div className="max-w-2xl mx-auto hidden sm:flex w-full flex-col justify-between items-center lg:pb-0 pb-10 mt-8 lg:mt-0">
                   <NpxCreateNxWorkspace />
                 </div>
                 <div className="my-14 flex flex-wrap sm:space-x-4 text-center">
@@ -87,7 +87,7 @@ export function Index() {
                   </Link>
 
                   <Link href="/l/r/migration/adding-to-monorepo">
-                    <a className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
+                    <a className="mt-4 md:mt-0 w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
                       Add Nx to Monorepo
                     </a>
                   </Link>
