@@ -237,9 +237,9 @@ This is what Nx offers:
 - Consistent dev experience for any framework
 - Automatic upgrade to the latest versions of all frameworks and tools
 
-As you can see, there is basically no overlap. Nx is notisn't a package manager nor does it (it's not a JS-only tool),
+As you can see, there is basically no overlap. Nx isn't a package manager nor does it (it's not a JS-only tool),
 so deduping `node_modules` isn't in that list. Nx doesn't care whether your repo has multiple node_modules folders or
-not, and whether you choose to dedupe them or not. In fact, many companies use Nx and yarn-workspaces together to get
+not, or whether you choose to dedupe them or not. In fact, many companies use Nx and yarn-workspaces together to get
 the benefits of both. If you want to use Yarn Workspaces to dedupe `node_modules` in your Nx workspace, you can do it.
 Many companies do.
 
