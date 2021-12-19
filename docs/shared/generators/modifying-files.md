@@ -57,7 +57,7 @@ export default async function (tree: Tree, schema: any) {
 
 ASTs (Abstract Syntax Trees) allow you to understand exactly the code you're modifying. Replacing a string value can accidentally modify text found in a comment rather than changing the name of a variable.
 
-We'll write a generator that replaces all instances of the type `Array<something>` with `something[]`. To help accomplish this, we'll use the `@phenomnominal/tsquery` npm package and the [AST Explorer](https://astexplorer.net) site. TSQuery allows you to query and modify ASTs with a syntax similar to CSS selectors. The AST Explorer tool allows you to easily examine the AST for a given snippet of code.
+We'll write a generator that replaces all instances of the type `Array<something>` with `something[]`. To help accomplish this, we'll use the `@phenomnomnominal/tsquery` npm package and the [AST Explorer](https://astexplorer.net) site. TSQuery allows you to query and modify ASTs with a syntax similar to CSS selectors. The AST Explorer tool allows you to easily examine the AST for a given snippet of code.
 
 First, go to [AST Explorer](https://astexplorer.net) and paste in a snippet of code that contains the input and desired output of our generator.
 
