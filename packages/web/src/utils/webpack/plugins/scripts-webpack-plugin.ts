@@ -59,7 +59,7 @@ export class ScriptsWebpackPlugin {
     }
 
     for (let i = 0; i < scripts.length; i++) {
-      const scriptTime = compilation.fileTimestamps.get(scripts[i]);
+      const scriptTime = compilation.fileTimestamps?.get(scripts[i]);
       if (!scriptTime || scriptTime > this._lastBuildTime) {
         this._lastBuildTime = Date.now();
         return false;
