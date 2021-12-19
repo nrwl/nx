@@ -14,7 +14,7 @@ happynrwl/
 │   ├── generators
 │   |   └── my-generator/
 │   |   |    └── files
-│   |   |        └── NOTES.md
+│   |   |        └── NOTES.md.template
 │   |   |    ├── index.ts
 │   |   |    └── schema.json
 ├── nx.json
