@@ -70,7 +70,7 @@ myorg/
 
 `/tools/` contains scripts that act on your code base. This could be database scripts, [custom executors](/{{framework}}/executors/creating-custom-builders), or [workspace generators](/{{framework}}/generators/workspace-generators).
 
-`/workspace.json` lists every project in your workspace.
+`/workspace.json` lists every project in your workspace. (this file optional)
 
 `/nx.json` configures the Nx CLI itself. It tells Nx what needs to be cached, how to run tasks etc.
 
