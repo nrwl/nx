@@ -23,17 +23,6 @@ function regexEqual(x, y) {
 }
 
 function withNx(nextConfig = {} as WithNxOptions) {
-  /**
-   * In collaboration with Vercel themselves, we have been advised to set the "experimental-serverless-trace" target
-   * if we detect that the build is running on Vercel to allow for the most ergonomic configuration for Vercel users.
-   */
-  if (process.env.NOW_BUILDER) {
-    console.log(
-      'withNx() plugin: Detected Vercel build environment, applying "experimental-serverless-trace" target'
-    );
-    nextConfig.target = 'experimental-serverless-trace';
-  }
-
   const userWebpack = nextConfig.webpack || ((x) => x);
   return {
     eslint: {
