@@ -715,7 +715,7 @@ export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
   );
 }
 
-export function buildProjectConfigurationFromPackageJson(
+function buildProjectConfigurationFromPackageJson(
   path: string,
   packageJson: { name: string },
   nxJson: NxJsonConfiguration
@@ -749,9 +749,12 @@ export function buildWorkspaceConfigurationFromGlobs(
     // this results in targets being inferred by Nx from package scripts,
     // and the root / sourceRoot both being the directory.
     if (fileName === 'package.json') {
+      const packageJson = readJson(file);
+      if (packageJson && packageJson.nx && packageJson.nx.ignore) continue;
+
       const { name, ...config } = buildProjectConfigurationFromPackageJson(
         file,
-        readJson(file),
+        packageJson,
         nxJson
       );
       if (!projects[name]) {
