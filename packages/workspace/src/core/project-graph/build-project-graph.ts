@@ -105,6 +105,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess
   );
   let projectGraph = await buildProjectGraphUsingContext(
+    nxJson,
     context,
     cachedFileData,
     projectGraphVersion
@@ -131,6 +132,7 @@ function readCombinedDeps() {
 }
 
 async function buildProjectGraphUsingContext(
+  nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string
@@ -150,7 +152,7 @@ async function buildProjectGraphUsingContext(
     }
   }
 
-  await buildExplicitDependencies(ctx, builder);
+  await buildExplicitDependencies(jsPluginConfig(nxJson), ctx, builder);
 
   buildImplicitProjectDependencies(ctx, builder);
   builder.setVersion(projectGraphVersion);
@@ -168,7 +170,24 @@ async function buildProjectGraphUsingContext(
   return r;
 }
 
+function jsPluginConfig(nxJson: any) {
+  if (
+    nxJson &&
+    nxJson &&
+    nxJson?.pluginsConfig &&
+    nxJson?.pluginsConfig['@nrwl/js']
+  ) {
+    return nxJson?.pluginsConfig['@nrwl/js'];
+  } else {
+    return {};
+  }
+}
+
 function buildExplicitDependencies(
+  jsPluginConfig: {
+    analyzeSourceFiles?: boolean;
+    analyzePackageJson?: boolean;
+  },
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder
 ) {
@@ -178,9 +197,14 @@ function buildExplicitDependencies(
   // to be able to use at least 2 workers (1 worker per CPU and
   // 1 CPU for the main thread)
   if (totalNumOfFilesToProcess < 100 || os.cpus().length < 3) {
-    return buildExplicitDependenciesWithoutWorkers(ctx, builder);
+    return buildExplicitDependenciesWithoutWorkers(
+      jsPluginConfig,
+      ctx,
+      builder
+    );
   } else {
     return buildExplicitDependenciesUsingWorkers(
+      jsPluginConfig,
       ctx,
       totalNumOfFilesToProcess,
       builder
@@ -240,10 +264,15 @@ function createWorkerPool(numberOfWorkers: number) {
 }
 
 function buildExplicitDependenciesWithoutWorkers(
+  jsPluginConfig: {
+    analyzeSourceFiles?: boolean;
+    analyzePackageJson?: boolean;
+  },
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder
 ) {
   buildExplicitTypescriptAndPackageJsonDependencies(
+    jsPluginConfig,
     ctx.workspace,
     builder.graph,
     ctx.filesToProcess
@@ -257,6 +286,10 @@ function buildExplicitDependenciesWithoutWorkers(
 }
 
 function buildExplicitDependenciesUsingWorkers(
+  jsPluginConfig: {
+    analyzeSourceFiles?: boolean;
+    analyzePackageJson?: boolean;
+  },
   ctx: ProjectGraphProcessorContext,
   totalNumOfFilesToProcess: number,
   builder: ProjectGraphBuilder
@@ -304,6 +337,7 @@ function buildExplicitDependenciesUsingWorkers(
       w.postMessage({
         workspace: ctx.workspace,
         projectGraph: builder.graph,
+        jsPluginConfig,
       });
       w.postMessage({ filesToProcess: bins.shift() });
     }
