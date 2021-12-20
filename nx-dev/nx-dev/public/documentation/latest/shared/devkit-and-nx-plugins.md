@@ -22,6 +22,18 @@ Plugins have:
   - Anytime you run `nx run ...` (or `nx test`, `nx build`), you invoke an executor.
   - They are used to build applications and libraries, test them, lint them, and more.
 
+- **Project Graph Extensions**
+
+  - Plugins can provide a function `processProjectGraph` to add extra edges to the project graph.
+  - This allows plugins to influence the behavior of `nx affected` and the dep-graph visualization.
+  - See [project graph plugins]('./workspace/project-graph-plugins') for more information.
+
+- **Project Inference Extensions**
+
+  - Plugins can provide an array of glob patterns, `projectFilePatterns` that are used to infer project information.
+  - Plugins can provide a function `registerProjectTargets` that takes in one of the matched project files, and returns an object containing inferred targets from the file.
+  - This allows plugins to add new projects to the workspace when it doesn't contain workspace.json, and infer extra targets without adding them into project configuration.
+
 All of the core plugins are written using Nx Devkit, and you can use the same utilities to write your own generators and
 executors.
 

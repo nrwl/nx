@@ -24,6 +24,10 @@ import { readJsonFile } from '../utils/fileutils';
 import { buildTargetFromScript, PackageJson } from '../shared/package-json';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import {
+  loadNxPlugins,
+  mergePluginTargetsWithNxTargets,
+} from '../shared/nx-plugin';
 
 export interface Target {
   project: string;
@@ -200,7 +204,13 @@ async function runExecutorInternal<T extends { success: boolean }>(
   const ws = new Workspaces(root);
   const proj = workspace.projects[project];
   const targetConfig =
-    proj.targets?.[target] || createImplicitTargetConfig(root, proj, target);
+    proj.targets?.[target] ||
+    createImplicitTargetConfig(root, proj, target) ||
+    mergePluginTargetsWithNxTargets(
+      proj.root,
+      proj.targets,
+      loadNxPlugins(workspace.plugins)
+    )[target];
 
   if (!targetConfig) {
     throw new Error(

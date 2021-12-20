@@ -38,6 +38,7 @@ import {
 import { existsSync } from 'fs';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
+import { loadNxPlugins } from '@nrwl/tao/src/shared/nx-plugin';
 
 export async function buildProjectGraph() {
   const workspaceJson = readWorkspaceJson();
@@ -339,21 +340,14 @@ function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
-  return (context.workspace.plugins || []).reduce((graph, path) => {
+  const plugins = loadNxPlugins(context.workspace.plugins).filter(
+    (x) => !!x.processProjectGraph
+  );
+  return (plugins || []).reduce((graph, plugin) => {
     try {
-      const pluginPath = require.resolve(path, {
-        paths: [appRootPath],
-      });
-
-      const pluginModule = require(pluginPath) as NxPlugin;
-
-      if (!pluginModule.processProjectGraph) {
-        return graph;
-      }
-
-      return pluginModule.processProjectGraph(graph, context);
+      return plugin.processProjectGraph(graph, context);
     } catch (e) {
-      const message = `Failed to process the project graph with "${path}". This will error in the future!`;
+      const message = `Failed to process the project graph with "${plugin.name}". This will error in the future!`;
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(e);
         logger.error(message);

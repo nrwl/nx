@@ -1,5 +1,6 @@
 import {
   normalizePath,
+  NxPlugin,
   ProjectGraph,
   ProjectGraphNode,
   readJsonFile,
@@ -9,7 +10,8 @@ import {
   buildTargetFromScript,
   PackageJson,
 } from '@nrwl/tao/src/shared/package-json';
-import { relative } from 'path';
+import { sync } from 'glob';
+import { join, relative } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 
 export function projectHasTarget(project: ProjectGraphNode, target: string) {
@@ -28,7 +30,10 @@ export function projectHasTargetAndConfiguration(
   );
 }
 
-export function mergeNpmScriptsWithTargets(projectRoot: string, targets) {
+export function mergeNpmScriptsWithTargets(
+  projectRoot: string,
+  targets
+): Record<string, TargetConfiguration> {
   try {
     const { scripts, nx }: PackageJson = readJsonFile(
       `${projectRoot}/package.json`
