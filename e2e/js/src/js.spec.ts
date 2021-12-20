@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   newProject,
   readJson,
+  readProjectConfig,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -156,4 +157,48 @@ describe('js e2e', () => {
   //
   //   // expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(`Running ${lib}`)
   // }, 120000);
+
+  it('should execute js apps with js:tsc', async () => {
+    const app = uniq('app');
+    runCLI(`generate @nrwl/js:app ${app}`);
+
+    expect(
+      (await runCLIAsync(`serve ${app} --watch=false`)).combinedOutput
+    ).toContain(`Running ${app}`);
+  });
+
+  it('should execute js apps with js:swc', async () => {
+    const app = uniq('app');
+    runCLI(`generate @nrwl/js:app ${app} --compiler=swc`);
+
+    expect(
+      (await runCLIAsync(`serve ${app} --watch=false`)).combinedOutput
+    ).toContain(`Running ${app}`);
+  });
+
+  describe('convert js:tsc to js:swc', () => {
+    it('should convert apps', async () => {
+      const app = uniq('app');
+      runCLI(`generate @nrwl/js:app ${app}`);
+
+      let projectConfig = readProjectConfig(app);
+      expect(projectConfig.targets['build'].executor).toEqual('@nrwl/js:tsc');
+
+      await runCLIAsync(`generate @nrwl/js:convert-to-swc ${app}`);
+      projectConfig = readProjectConfig(app);
+      expect(projectConfig.targets['build'].executor).toEqual('@nrwl/js:swc');
+    });
+
+    it('should convert libs', async () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nrwl/js:lib ${lib} --buildable`);
+
+      let projectConfig = readProjectConfig(lib);
+      expect(projectConfig.targets['build'].executor).toEqual('@nrwl/js:tsc');
+
+      await runCLIAsync(`generate @nrwl/js:convert-to-swc ${lib}`);
+      projectConfig = readProjectConfig(lib);
+      expect(projectConfig.targets['build'].executor).toEqual('@nrwl/js:swc');
+    });
+  });
 });

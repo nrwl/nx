@@ -110,13 +110,20 @@ const IGNORE_MATCHES = {
     'karma-jasmine-html-reporter',
     'webpack',
     'webpack-dev-server',
-    ,
     '@nrwl/cli',
     '@nrwl/jest',
     '@nrwl/linter',
     '@nrwl/devkit',
   ],
   nest: ['semver'],
+  js: [
+    '@nrwl/js',
+    'chokidar',
+    'rxjs',
+    'rxjs-for-await',
+    'source-map-support',
+    'tree-kill',
+  ],
 };
 
 export default async function getMissingDependencies(

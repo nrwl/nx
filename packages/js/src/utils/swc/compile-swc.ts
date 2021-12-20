@@ -81,6 +81,9 @@ export function compileSwc(
       runTypeCheckWatch(
         typeCheckOptions,
         (diagnostic, formattedDiagnostic, errorCount) => {
+          // 6031 and 6032 are to skip watchCompilerHost initialization (Start watching for changes... message)
+          // We also skip if preEmit has been set to true, because it means that the first type check before
+          // the WatchCompiler emits.
           if (preEmit && diagnostic.code !== 6031 && diagnostic.code !== 6032) {
             const hasErrors = errorCount > 0;
             if (hasErrors) {

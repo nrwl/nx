@@ -1,18 +1,16 @@
 jest.mock('@nrwl/workspace/src/core/project-graph');
-jest.mock('@nrwl/workspace/src/utilities/assets');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('@nrwl/tao/src/utils/fileutils');
 jest.mock('../../utils/swc/compile-swc');
 jest.mock('../../utils/typescript/run-type-check');
 
-import { ExecutorContext, readJsonFile, writeJsonFile } from '@nrwl/devkit';
-import { copyAssetFiles } from '@nrwl/workspace/src/utilities/assets';
+import { ExecutorContext, readJsonFile } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { join } from 'path';
+import { of } from 'rxjs';
 import { compileSwc } from '../../utils/swc/compile-swc';
 import { runTypeCheck } from '../../utils/typescript/run-type-check';
 import { NormalizedSwcExecutorOptions, SwcExecutorOptions } from './schema';
@@ -27,6 +25,8 @@ describe('executor: swc', () => {
   let normalizedOptions: NormalizedSwcExecutorOptions;
   let context: ExecutorContext;
   let tsOptions: Record<string, unknown>;
+  let sourceRoot: string;
+  let root: string;
   const defaultPackageJson = { name: 'workspacelib', version: '0.0.1' };
   const compileSwcMock = compileSwc as jest.Mock;
   const readJsonFileMock = readJsonFile as jest.Mock;
@@ -71,13 +71,22 @@ describe('executor: swc', () => {
       },
       isVerbose: false,
     };
+    sourceRoot = context.workspace.projects['workspacelib'].sourceRoot;
+    root = context.workspace.projects['workspacelib'].root;
     options = {
       assets,
       main: 'libs/workspacelib/src/index.ts',
       outputPath: 'dist/libs/workspacelib',
       tsConfig: 'libs/workspacelib/tsconfig.lib.json',
+      watch: false,
+      transformers: [],
     };
-    normalizedOptions = normalizeSwcOptions(options, context);
+    normalizedOptions = normalizeSwcOptions(
+      options,
+      context.root,
+      sourceRoot,
+      root
+    );
     tsOptions = {
       outputPath: normalizedOptions.outputPath,
       projectName: context.projectName,
@@ -93,53 +102,34 @@ describe('executor: swc', () => {
     }));
     (checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(false);
 
-    const result = await swcExecutor(options, context);
-    expect(result).toEqual({ success: false });
+    const result = swcExecutor(options, context);
+    expect((await result.next()).value).toEqual({ success: false });
     expect(compileSwcMock).not.toHaveBeenCalled();
   });
 
-  it('should return {success: false} if typecheck emits errors', async () => {
-    (runTypeCheck as jest.Mock).mockImplementation(() =>
-      Promise.resolve({ errors: ['error'] })
-    );
-    const result = await swcExecutor(options, context);
-    expect(result).toEqual({ success: false });
+  it('should success if compileSwc success', async () => {
+    compileSwcMock.mockImplementationOnce(() => of({ success: true }));
+    const result = swcExecutor(options, context);
+    expect((await result.next()).value).toEqual({
+      success: true,
+      outfile: '/root/dist/libs/workspacelib/src/index.js',
+    });
     expect(compileSwcMock).toHaveBeenCalledWith(
-      tsOptions,
+      context,
+      normalizedOptions,
       expect.any(Function)
-    );
-  });
-
-  it('should success if both typecheck and compileSwc success', async () => {
-    const result = await swcExecutor(options, context);
-    expect(result).toEqual({ success: true });
-    expect(compileSwcMock).toHaveBeenCalledWith(
-      tsOptions,
-      expect.any(Function)
-    );
-  });
-
-  it('should copy assets files', async () => {
-    await swcExecutor(options, context);
-    expect(copyAssetFiles).toHaveBeenCalledWith(normalizedOptions.files);
-  });
-
-  it('should update packageJson typings', async () => {
-    await swcExecutor(options, context);
-    expect(writeJsonFile).toHaveBeenCalledWith(
-      join(context.root, options.outputPath, 'package.json'),
-      {
-        ...defaultPackageJson,
-        main: './src/index.js',
-        typings: './src/index.d.ts',
-      }
     );
   });
 
   describe('without typecheck', () => {
     beforeEach(() => {
       options.skipTypeCheck = true;
-      normalizedOptions = normalizeSwcOptions(options, context);
+      normalizedOptions = normalizeSwcOptions(
+        options,
+        context.root,
+        sourceRoot,
+        root
+      );
       tsOptions = {
         outputPath: normalizedOptions.outputPath,
         projectName: context.projectName,
@@ -151,26 +141,6 @@ describe('executor: swc', () => {
     it('should not call runTypeCheck', async () => {
       await swcExecutor(options, context);
       expect(runTypeCheck).not.toHaveBeenCalled();
-    });
-
-    it('should success if compileSwc success', async () => {
-      const result = await swcExecutor(options, context);
-      expect(result).toEqual({ success: true });
-      expect(compileSwcMock).toHaveBeenCalledWith(
-        tsOptions,
-        expect.any(Function)
-      );
-    });
-
-    it('should not update packageJson typings', async () => {
-      await swcExecutor(options, context);
-      expect(writeJsonFile).toHaveBeenCalledWith(
-        join(context.root, options.outputPath, 'package.json'),
-        {
-          ...defaultPackageJson,
-          main: './src/index.js',
-        }
-      );
     });
   });
 });

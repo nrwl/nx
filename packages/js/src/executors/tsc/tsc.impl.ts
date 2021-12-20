@@ -16,7 +16,7 @@ import {
 } from '../../utils/schema';
 import { updatePackageJson } from '../../utils/update-package-json';
 
-function normalizeOptions(
+export function normalizeOptions(
   options: ExecutorOptions,
   contextRoot: string,
   sourceRoot?: string,
@@ -79,7 +79,7 @@ export async function* tscExecutor(
       await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
     }).pipe(
       map(
-        (success) =>
+        ({ success }) =>
           ({
             success,
             outfile: normalizedOptions.mainOutputPath,
@@ -87,13 +87,6 @@ export async function* tscExecutor(
       )
     )
   );
-
-  // return compileTypeScriptFiles(normalizedOptions, context, async () => {
-  //   await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
-  // }).then(({ success }) => ({
-  //   success,
-  //   outfile: normalizedOptions.mainOutputPath,
-  // }));
 }
 
 async function updatePackageAndCopyAssets(
