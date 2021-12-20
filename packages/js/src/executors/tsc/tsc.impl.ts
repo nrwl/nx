@@ -1,5 +1,4 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import { compileTypeScriptFiles } from '@nrwl/js/src/utils/typescript/compile-typescript-files';
 import {
   assetGlobsToFiles,
   copyAssetFiles,
@@ -14,6 +13,7 @@ import {
   ExecutorOptions,
   NormalizedExecutorOptions,
 } from '../../utils/schema';
+import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { updatePackageJson } from '../../utils/update-package-json';
 
 export function normalizeOptions(
