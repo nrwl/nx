@@ -302,7 +302,7 @@ export class Workspaces {
         ? this.readFromWorkspaceJson()
         : buildWorkspaceConfigurationFromGlobs(
             nxJson,
-            globForProjectFiles(this.root),
+            globForProjectFiles(this.root, nxJson),
             (path) => readJsonFile(join(this.root, path))
           );
 
