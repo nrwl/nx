@@ -151,6 +151,8 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 /libs/shared/utils-testing  julie,hank
 ```
 
+If you want to know more about code ownership on Github, please check [the documentation on the `CODEOWNERS` file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+
 ## Enforcing Best Practices
 
 When we have 10 people working on an app in the same room, we can agree on best practices over lunch. We can also make sure the team follows them by reviewing each other's PRs. For a team of a hundred located in different cities, this no longer works.
