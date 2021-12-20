@@ -3,23 +3,38 @@ import { buildExplicitTypeScriptDependencies } from './explicit-project-dependen
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
 export function buildExplicitTypescriptAndPackageJsonDependencies(
+  jsPluginConfig: {
+    analyzeSourceFiles?: boolean;
+    analyzePackageJson?: boolean;
+  },
   workspace: Workspace,
   projectGraph: ProjectGraph,
   filesToProcess: ProjectFileMap
 ) {
-  return []
-    .concat(
+  let res = [];
+  if (
+    jsPluginConfig.analyzeSourceFiles === undefined ||
+    jsPluginConfig.analyzeSourceFiles === true
+  ) {
+    res = res.concat(
       buildExplicitTypeScriptDependencies(
         workspace,
         projectGraph,
         filesToProcess
       )
-    )
-    .concat(
+    );
+  }
+  if (
+    jsPluginConfig.analyzePackageJson === undefined ||
+    jsPluginConfig.analyzePackageJson === true
+  ) {
+    res = res.concat(
       buildExplicitPackageJsonDependencies(
         workspace,
         projectGraph,
         filesToProcess
       )
     );
+  }
+  return res;
 }

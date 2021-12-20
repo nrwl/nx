@@ -4,13 +4,19 @@ import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-depen
 
 let workspace: Workspace | null;
 let projectGraph: ProjectGraph | null;
+let jsPluginConfig: {
+  analyzeSourceFiles?: boolean;
+  analyzePackageJson?: boolean;
+} | null;
 
 parentPort.on('message', (message) => {
   if (message.workspace) {
     workspace = message.workspace;
     projectGraph = message.projectGraph;
+    jsPluginConfig = message.jsPluginConfig;
   } else {
     const res = buildExplicitTypescriptAndPackageJsonDependencies(
+      jsPluginConfig,
       workspace,
       projectGraph,
       message.filesToProcess
