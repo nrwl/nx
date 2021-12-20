@@ -760,12 +760,10 @@ export function buildWorkspaceConfigurationFromGlobs(
       if (!projects[name]) {
         projects[name] = config;
       } else {
-        logger.error(
-          `Skipping project found at ${directory} since project ${name} already exists! To have multiple Nx projects publish to the same npm package, you must use project.json based configuration`
+        logger.warn(
+          `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects. See here https://nx.dev/core-concepts/configuration#ignoring-a-project on how to tell Nx to ignore this package.json.`
         );
-        throw new Error();
       }
-      projects[name] = config;
     } else if (fileName === 'project.json') {
       //  Nx specific project configuration (`project.json` files) in the same
       // directory as a package.json should overwrite the inferred package.json
