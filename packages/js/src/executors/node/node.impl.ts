@@ -2,7 +2,6 @@ import {
   ExecutorContext,
   logger,
   parseTargetString,
-  readTargetOptions,
   runExecutor,
 } from '@nrwl/devkit';
 import { ChildProcess, fork } from 'child_process';
@@ -111,20 +110,6 @@ async function* startBuild(
   context: ExecutorContext
 ) {
   const buildTarget = parseTargetString(options.buildTarget);
-  const buildOptions = readTargetOptions<NodeExecutorOptions>(
-    buildTarget,
-    context
-  );
-  // if (buildOptions.optimization) {
-  //   logger.warn(stripIndents`
-  //           ************************************************
-  //           This is a simple process manager for use in
-  //           testing or debugging Node applications locally.
-  //           DO NOT USE IT FOR PRODUCTION!
-  //           You should look into proper means of deploying
-  //           your node application to production.
-  //           ************************************************`);
-  // }
 
   yield* await runExecutor<ExecutorEvent>(
     buildTarget,

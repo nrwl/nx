@@ -1,6 +1,5 @@
 // nx-ignore-next-line
 const { Linter } = require('@nrwl/linter');
-import { NodeBuildEvent } from '@nrwl/node/src/executors/build/build.impl';
 import type {
   AssetGlob,
   FileInputOutput,
