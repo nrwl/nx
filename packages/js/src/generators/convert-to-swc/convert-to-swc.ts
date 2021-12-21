@@ -17,12 +17,12 @@ export async function convertToSwcGenerator(
   schema: ConvertToSwcGeneratorSchema
 ) {
   const options = normalizeOptions(schema);
-  const projectConfiguration = readProjectConfiguration(tree, options.name);
+  const projectConfiguration = readProjectConfiguration(tree, options.project);
 
   updateProjectBuildTargets(
     tree,
     projectConfiguration,
-    options.name,
+    options.project,
     options.targets
   );
 

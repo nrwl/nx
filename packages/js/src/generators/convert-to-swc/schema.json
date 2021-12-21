@@ -11,7 +11,7 @@
     }
   ],
   "properties": {
-    "name": {
+    "project": {
       "type": "string",
       "description": "Library name",
       "$default": {
@@ -31,5 +31,5 @@
       "default": ["build"]
     }
   },
-  "required": ["name"]
+  "required": ["project"]
 }
