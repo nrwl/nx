@@ -41,7 +41,7 @@ nx g swc mylib
 
 ## Options
 
-### name (_**required**_)
+### project (_**required**_)
 
 Type: `string`
 
