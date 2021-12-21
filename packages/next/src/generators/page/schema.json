@@ -6,12 +6,8 @@
   "type": "object",
   "examples": [
     {
-      "command": "g component my-component --project=mylib",
-      "description": "Generate a component in the mylib library"
-    },
-    {
-      "command": "g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the mylib library"
+      "command": "nx g page my-new-page --project=my-app",
+      "description": "Generate a page in the my-app application"
     }
   ],
   "properties": {

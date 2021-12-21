@@ -29,16 +29,10 @@ nx g page ... --dry-run
 
 ### Examples
 
-Generate a component in the mylib library:
+Generate a page in the my-app application:
 
 ```bash
-nx g component my-component --project=mylib
-```
-
-Generate a class component in the mylib library:
-
-```bash
-nx g component my-component --project=mylib --classComponent
+nx g page my-new-page --project=my-app
 ```
 
 ## Options
