@@ -4,7 +4,7 @@ Nx is a smart, fast and extensible build system. It comes with first class monor
 
 ## 10-Minute Nx Overview
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/iIh5h_G52kI" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/iIh5h_G52kI" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 ## Philosophy
 

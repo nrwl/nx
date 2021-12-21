@@ -107,8 +107,7 @@ export function AngularPage() {
                     height="315"
                     src="https://www.youtube.com/embed/cXOkmOy-8dk"
                     frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     className="w-full"
                   />
                 </div>
@@ -159,8 +158,7 @@ export function AngularPage() {
                   height="315"
                   src="https://www.youtube.com/embed/i37yJKK8qGI"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   className="w-full"
                 />
               </div>

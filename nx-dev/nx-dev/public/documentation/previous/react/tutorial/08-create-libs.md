@@ -1,6 +1,6 @@
 # React Nx Tutorial - Step 8: Create Libs
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/a1CAYlXizWM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/a1CAYlXizWM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 

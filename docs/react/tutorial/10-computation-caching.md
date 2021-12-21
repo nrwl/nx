@@ -1,6 +1,6 @@
 # React Nx Tutorial - Step 10: Computation Caching
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/aNjvT3VX1Ts" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/aNjvT3VX1Ts" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
 

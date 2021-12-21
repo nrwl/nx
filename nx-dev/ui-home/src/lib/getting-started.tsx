@@ -203,8 +203,7 @@ function AngularPane(): ReactComponentElement<any> {
               height="315"
               src="https://www.youtube.com/embed/i37yJKK8qGI"
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
             <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
               <motion.div
@@ -434,8 +433,7 @@ function NodeJsPane(): ReactComponentElement<any> {
               height="315"
               src="https://www.youtube.com/embed/UcBSBQYNlhE"
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
             <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
               <motion.div
@@ -638,8 +636,7 @@ function ReactPane(): ReactComponentElement<any> {
               height="315"
               src="https://www.youtube.com/embed/HcQE5R6ucng"
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
             <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
               <motion.div
@@ -838,8 +835,7 @@ function TypescriptPane(): ReactComponentElement<any> {
               height="315"
               src="https://www.youtube.com/embed/HcQE5R6ucng"
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
             <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
               <motion.div

@@ -1,6 +1,6 @@
 # Node Nx Tutorial - Step 4: Create Libraries
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/V29I_DHGlB8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/V29I_DHGlB8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 

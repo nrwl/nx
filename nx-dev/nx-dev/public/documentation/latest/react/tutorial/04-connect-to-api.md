@@ -1,6 +1,6 @@
 # React Nx Tutorial - Step 4: Connect to an API
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/HexxYHpIfAo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/HexxYHpIfAo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 Real-world applications do not live in isolation — they need APIs to talk to. Setup your app to talk to an API.
 
