@@ -18,10 +18,17 @@ import {
   SourceFile,
 } from 'typescript';
 
-export function insertNgModuleImport(
+type ngModuleDecoratorProperty =
+  | 'imports'
+  | 'providers'
+  | 'declarations'
+  | 'exports';
+
+export function insertNgModuleProperty(
   tree: Tree,
   modulePath: string,
-  importName: string
+  name: string,
+  property: ngModuleDecoratorProperty
 ) {
   const contents = tree.read(modulePath).toString('utf-8');
 
@@ -59,7 +66,7 @@ export function insertNgModuleImport(
       {
         type: ChangeType.Insert,
         index: ngModuleCall.getEnd() - 1,
-        text: `{ imports: [${importName}]}`,
+        text: `{ ${property}: [${name}]}`,
       },
     ]);
     tree.write(modulePath, newContents);
@@ -73,10 +80,10 @@ export function insertNgModuleImport(
     const ngModuleOptions = ngModuleCall
       .arguments[0] as ObjectLiteralExpression;
 
-    const importsProperty = findPropertyAssignment(ngModuleOptions);
+    const typeProperty = findPropertyAssignment(ngModuleOptions, property);
 
-    if (!importsProperty) {
-      let text = `imports: [${importName}]`;
+    if (!typeProperty) {
+      let text = `${property}: [${name}]`;
       if (ngModuleOptions.properties.hasTrailingComma) {
         text = `${text},`;
       } else {
@@ -91,28 +98,36 @@ export function insertNgModuleImport(
       ]);
       tree.write(modulePath, newContents);
     } else {
-      if (!isArrayLiteralExpression(importsProperty.initializer)) {
+      if (!isArrayLiteralExpression(typeProperty.initializer)) {
         throw new Error(
-          `The NgModule imports for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an array literal`
+          `The NgModule ${property} for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an array literal`
         );
       }
 
       let text: string;
-      if (importsProperty.initializer.elements.hasTrailingComma) {
-        text = `${importName},`;
+      if (typeProperty.initializer.elements.hasTrailingComma) {
+        text = `${name},`;
       } else {
-        text = `, ${importName}`;
+        text = `, ${name}`;
       }
       const newContents = applyChangesToString(contents, [
         {
           type: ChangeType.Insert,
-          index: importsProperty.initializer.getEnd() - 1,
+          index: typeProperty.initializer.getEnd() - 1,
           text,
         },
       ]);
       tree.write(modulePath, newContents);
     }
   }
+}
+
+export function insertNgModuleImport(
+  tree: Tree,
+  modulePath: string,
+  importName: string
+) {
+  insertNgModuleProperty(tree, modulePath, importName, 'imports');
 }
 
 function findImport(sourceFile: SourceFile, importPath: string) {
@@ -157,11 +172,14 @@ function findDecoratedClass(sourceFile: SourceFile, ngModuleName: __String) {
   );
 }
 
-function findPropertyAssignment(ngModuleOptions: ObjectLiteralExpression) {
+function findPropertyAssignment(
+  ngModuleOptions: ObjectLiteralExpression,
+  propertyName: ngModuleDecoratorProperty
+) {
   return ngModuleOptions.properties.find(
     (property) =>
       isPropertyAssignment(property) &&
       isIdentifier(property.name) &&
-      property.name.escapedText === 'imports'
+      property.name.escapedText === propertyName
   ) as PropertyAssignment;
 }
