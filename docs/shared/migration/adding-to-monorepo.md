@@ -74,7 +74,7 @@ other tools because it looks not just at the changed files but also at the natur
 Run `npx nx dep-graph` to see a visualization of your workspace. `npx nx affected:dep-graph` shows what is affected by
 your commit. `npx nx dep-graph --watch` watches your workspace for changes and updates the visualization.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/v87Y8NgAYLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
 ### GitHub integration
 
