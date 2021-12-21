@@ -13,6 +13,7 @@ export function normalizeOptions(
   const { sourceRoot } = readProjectConfiguration(tree, options.project);
 
   const normalizedOptions: NormalizedOptions = {
+    ...options,
     flat: options.flat,
     name: names(options.name).fileName,
     path: options.directory,

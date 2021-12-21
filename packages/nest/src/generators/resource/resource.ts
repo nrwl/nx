@@ -32,7 +32,6 @@ function normalizeResourceOptions(
   options: ResourceGeneratorOptions
 ): NormalizedOptions {
   return {
-    ...options,
     ...normalizeOptions(tree, options),
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
