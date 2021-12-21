@@ -85,11 +85,11 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@schematics/angular": "~13.1.0",
-    "@storybook/addon-essentials": "6.4.0-rc.3",
+    "@storybook/addon-essentials": "6.4.5",
     "@storybook/addon-knobs": "~6.3.0",
-    "@storybook/angular": "6.4.0-rc.3",
-    "@storybook/core": "6.4.0-rc.3",
-    "@storybook/react": "6.4.0-rc.3",
+    "@storybook/angular": "6.4.5",
+    "@storybook/core": "6.4.5",
+    "@storybook/react": "6.4.5",
     "@svgr/webpack": "5.5.0",
     "@tailwindcss/typography": "^0.4.1",
     "@testing-library/react": "11.2.6",
@@ -302,6 +302,7 @@
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
-    "**/xmlhttprequest-ssl": "~1.6.2"
+    "**/xmlhttprequest-ssl": "~1.6.2",
+    "immer": "~9.0.6"
   }
 }
