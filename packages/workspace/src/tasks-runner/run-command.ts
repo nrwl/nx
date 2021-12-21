@@ -100,7 +100,7 @@ export async function runCommand<T extends RunArgs>(
   ] as LifeCycle[];
 
   if (process.env.NX_PERF_LOGGING) {
-    lifeCycles.push(new TaskTimingsLifeCycle());
+    lifeCycles.push(new TaskTimingsLifeCycle(process.env.NX_PERF_LOGGING));
   }
   const lifeCycle = new CompositeLifeCycle(lifeCycles);
 

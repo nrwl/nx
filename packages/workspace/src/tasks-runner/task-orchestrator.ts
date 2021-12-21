@@ -15,6 +15,7 @@ import {
   removeTasksFromTaskGraph,
 } from './utils';
 import { Batch, TasksSchedule } from './tasks-schedule';
+import { TaskMetadata } from '@nrwl/workspace/src/tasks-runner/life-cycle';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
@@ -34,6 +35,7 @@ export class TaskOrchestrator {
   } = {};
   private waitingForTasks: Function[] = [];
 
+  private groups = [];
   // endregion internal state
 
   constructor(
@@ -80,14 +82,22 @@ export class TaskOrchestrator {
 
     const batch = this.tasksSchedule.nextBatch();
     if (batch) {
-      await this.applyFromCacheOrRunBatch(doNotSkipCache, batch);
+      const groupId = this.closeGroup();
+
+      await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
+
+      this.openGroup(groupId);
 
       return this.executeNextBatchOfTasksUsingTaskSchedule();
     }
 
     const task = this.tasksSchedule.nextTask();
     if (task) {
-      await this.applyFromCacheOrRunTask(doNotSkipCache, task);
+      const groupId = this.closeGroup();
+
+      await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+
+      this.openGroup(groupId);
 
       return this.executeNextBatchOfTasksUsingTaskSchedule();
     }
@@ -140,12 +150,13 @@ export class TaskOrchestrator {
   // region Batch
   private async applyFromCacheOrRunBatch(
     doNotSkipCache: boolean,
-    batch: Batch
+    batch: Batch,
+    groupId: number
   ) {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    await this.preRunSteps(tasks);
+    await this.preRunSteps(tasks, { groupId });
 
     let results: {
       task: Task;
@@ -174,7 +185,7 @@ export class TaskOrchestrator {
       results.push(...batchResults);
     }
 
-    await this.postRunSteps(results);
+    await this.postRunSteps(results, { groupId });
 
     const tasksCompleted = taskEntries.filter(
       ([taskId]) => this.completedTasks[taskId]
@@ -182,13 +193,17 @@ export class TaskOrchestrator {
 
     // Batch is still not done, run it again
     if (tasksCompleted.length !== taskEntries.length) {
-      await this.applyFromCacheOrRunBatch(doNotSkipCache, {
-        executorName: batch.executorName,
-        taskGraph: removeTasksFromTaskGraph(
-          batch.taskGraph,
-          tasksCompleted.map(([taskId]) => taskId)
-        ),
-      });
+      await this.applyFromCacheOrRunBatch(
+        doNotSkipCache,
+        {
+          executorName: batch.executorName,
+          taskGraph: removeTasksFromTaskGraph(
+            batch.taskGraph,
+            tasksCompleted.map(([taskId]) => taskId)
+          ),
+        },
+        groupId
+      );
     }
   }
 
@@ -214,8 +229,12 @@ export class TaskOrchestrator {
   // endregion Batch
 
   // region Single Task
-  private async applyFromCacheOrRunTask(doNotSkipCache: boolean, task: Task) {
-    await this.preRunSteps([task]);
+  private async applyFromCacheOrRunTask(
+    doNotSkipCache: boolean,
+    task: Task,
+    groupId: number
+  ) {
+    await this.preRunSteps([task], { groupId });
 
     // hash the task here
     let results: {
@@ -238,7 +257,7 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
-    await this.postRunSteps(results);
+    await this.postRunSteps(results, { groupId });
   }
 
   private async runTaskInForkedProcess(task: Task) {
@@ -279,8 +298,8 @@ export class TaskOrchestrator {
   // endregion Single Task
 
   // region Lifecycle
-  private async preRunSteps(tasks: Task[]) {
-    this.options.lifeCycle.startTasks(tasks);
+  private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
+    this.options.lifeCycle.startTasks(tasks, metadata);
   }
 
   private async postRunSteps(
@@ -288,7 +307,8 @@ export class TaskOrchestrator {
       task: Task;
       status: TaskStatus;
       terminalOutput?: string;
-    }[]
+    }[],
+    { groupId }: { groupId: number }
   ) {
     // cache the results
     await Promise.all(
@@ -316,7 +336,8 @@ export class TaskOrchestrator {
           status: result.status,
           code,
         };
-      })
+      }),
+      { groupId }
     );
 
     this.complete(
@@ -400,5 +421,17 @@ export class TaskOrchestrator {
     return !!task.overrides['watch'];
   }
 
+  private closeGroup() {
+    for (let i = 0; i < this.options.parallel; i++) {
+      if (!this.groups[i]) {
+        this.groups[i] = true;
+        return i;
+      }
+    }
+  }
+
+  private openGroup(id: number) {
+    this.groups[id] = false;
+  }
   // endregion utils
 }
