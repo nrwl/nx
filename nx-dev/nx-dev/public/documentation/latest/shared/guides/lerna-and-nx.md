@@ -212,7 +212,7 @@ When running `npx add-nx-to-monorepo`, a `workspace.json` file is not required (
 to infer the projects in your repository by looking for existing `package.json` files. These can be mixed with `project.json`
 files and traditional configuration settings described in the [configuration guide]({{framework}}/configuration).
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 ## Clarifying Misconceptions
 

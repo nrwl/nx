@@ -182,7 +182,7 @@ Unfortunately, the example we have here is too basic and won't benefit from usin
 
 The following 10-min video walks you through the steps of adding Nx to a Lerna repo and showing many affordances Nx offers. Although the video uses Lerna, everything said applies to Yarn Workspaces or PNPM. Basically, any time you hear "Lerna" you can substitute it for Yarn or PNPM.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 ## Clarifying Misconceptions
 

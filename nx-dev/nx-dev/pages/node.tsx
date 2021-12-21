@@ -198,8 +198,7 @@ export function Node() {
                   {/*  src="https://www.youtube.com/embed/iIh5h_G52kI"*/}
                   {/*  title="YouTube video player"*/}
                   {/*  frameBorder="0"*/}
-                  {/*  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"*/}
-                  {/*  allowFullScreen*/}
+                  {/*  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"*/}
                   {/*  className="w-full"*/}
                   {/*/>*/}
                 </div>
@@ -293,8 +292,7 @@ export function Node() {
                   src="https://www.youtube.com/embed/UcBSBQYNlhE"
                   title="YouTube video player"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   className="w-full"
                 />
               </div>
@@ -345,8 +343,7 @@ export function Node() {
                   height="440"
                   src="https://www.youtube.com/embed/iIh5h_G52kI"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   className="w-max-full mb-8"
                   style={{ boxShadow: '-48px 48px 0 0 hsla(162, 47%, 50%, 1)' }}
                 />

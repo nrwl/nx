@@ -9,7 +9,7 @@ npx add-nx-to-monorepo
 
 See it in action (3-minute video):
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/jkPeUFhH5h4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Dq2ftPf3sn4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 `npx add-nx-to-monorepo` does the following:
 
@@ -74,7 +74,7 @@ other tools because it looks not just at the changed files but also at the natur
 Run `npx nx dep-graph` to see a visualization of your workspace. `npx nx affected:dep-graph` shows what is affected by
 your commit. `npx nx dep-graph --watch` watches your workspace for changes and updates the visualization.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
 ### GitHub integration
 
@@ -142,8 +142,8 @@ import source code analysis. If the path mappings are deduced incorrectly, feel 
 
 ### Speeding Up Remotion Monorepo with Nx
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/TXySu4dZLp0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TXySu4dZLp0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
 ### Speeding Up Storybook Monorepo with Nx
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/3o8w6jbDr4A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/3o8w6jbDr4A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>

@@ -234,4 +234,4 @@ what `build` means. It can be an npm script, a custom Nx executor, a Gradle task
 As you can see, the core of Nx is generic, simple, and unobtrusive. Nx Plugins are completely optional, but they can
 really level up your developer experience. Watch this video to see the plugins in actions.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
