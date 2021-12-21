@@ -36,7 +36,7 @@ describe('convert to swc', () => {
       readProjectConfiguration(tree, 'tsc-lib').targets['build']['executor']
     ).toEqual('@nrwl/js:tsc');
 
-    await convertToSwcGenerator(tree, { name: 'tsc-lib' });
+    await convertToSwcGenerator(tree, { project: 'tsc-lib' });
 
     expect(
       readProjectConfiguration(tree, 'tsc-lib').targets['build']['executor']

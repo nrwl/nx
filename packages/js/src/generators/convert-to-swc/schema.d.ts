@@ -1,4 +1,4 @@
 export interface ConvertToSwcGeneratorSchema {
-  name: string;
+  project: string;
   targets?: string[];
 }
