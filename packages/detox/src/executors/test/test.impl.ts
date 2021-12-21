@@ -1,5 +1,5 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import { toFileName } from '@nrwl/workspace/src/devkit-reexport';
+import { names } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -61,7 +61,7 @@ function runCliTest(
 
 function createDetoxTestOptions(options: DetoxTestOptions): string[] {
   return Object.keys(options).reduce((acc, k) => {
-    const propertyName = toFileName(k); // convert camelCase to kebab-case
+    const propertyName = names(k).fileName; // convert camelCase to kebab-case
     const propertyValue = options[k];
     if (k === 'detoxConfiguration') {
       acc.push('--configuration', propertyValue);

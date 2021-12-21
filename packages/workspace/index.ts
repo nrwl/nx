@@ -1,16 +1,11 @@
 export { readTsConfig } from './src/utilities/typescript';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
-  serializeJson,
   renameSync,
   updateJsonFile,
-  readJsonFile,
   copyFile,
   createDirectory,
 } from './src/utilities/fileutils';
-
-// TODO: vsavkin delete after Nx 12
-export * from './src/devkit-reexport';
 
 export {
   ExistingPrettierConfig,

@@ -2,7 +2,6 @@ import { runMigration } from '../../utils/testing';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '@nrwl/workspace';
-import { serializeJson } from '@nrwl/devkit';
 
 describe('Update implicitDependencies within nx.json to include root .eslintrc.json', () => {
   let tree: UnitTestTree;
@@ -10,7 +9,7 @@ describe('Update implicitDependencies within nx.json to include root .eslintrc.j
     tree = new UnitTestTree(Tree.empty());
     tree.create(
       'nx.json',
-      serializeJson({
+      JSON.stringify({
         npmScope: 'nrwl',
         implicitDependencies: {
           'workspace.json': '*',

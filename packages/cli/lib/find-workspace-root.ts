@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 /**
  * Recursive function that walks back up the directory

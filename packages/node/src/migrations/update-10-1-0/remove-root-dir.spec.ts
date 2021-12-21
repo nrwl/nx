@@ -1,7 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { serializeJson } from '@nrwl/workspace';
 import * as path from 'path';
 
 describe('update 10.1.0', () => {
@@ -28,7 +27,7 @@ describe('update 10.1.0', () => {
     initialTree.create('libs/my-node-lib/tsconfig.lib.json', tsConfig);
     initialTree.overwrite(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         version: 1,
         projects: {
           'my-node-lib': {

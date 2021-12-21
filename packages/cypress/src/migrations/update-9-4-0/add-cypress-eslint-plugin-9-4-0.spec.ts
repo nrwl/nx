@@ -1,9 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import {
-  readJsonInTree,
-  serializeJson,
-  updateJsonInTree,
-} from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { callRule, runMigration } from '../../utils/testing';
 
 describe('Add Cypress ESLint Plugin 9.4.0', () => {
@@ -13,14 +9,14 @@ describe('Add Cypress ESLint Plugin 9.4.0', () => {
     tree = Tree.empty();
     tree.create(
       'package.json',
-      serializeJson({
+      JSON.stringify({
         devDependencies: { '@nrwl/cypress': '9.3.0', eslint: '6.8.0' },
       })
     );
 
     tree.create(
       'workspace.json',
-      serializeJson({
+      JSON.stringify({
         projects: {
           'project-one-e2e': {
             root: 'apps/project-one-e2e',
@@ -44,14 +40,14 @@ describe('Add Cypress ESLint Plugin 9.4.0', () => {
 
     tree.create(
       'apps/project-one-e2e/.eslintrc',
-      serializeJson({
+      JSON.stringify({
         extends: '../../.eslintrc',
       })
     );
 
     tree.create(
       'apps/project-two-e2e/.eslintrc',
-      serializeJson({
+      JSON.stringify({
         extends: ['../../.eslintrc'],
       })
     );

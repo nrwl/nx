@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import { readJsonFile } from '@nrwl/devkit';
 
 function onCreateBabelConfig({ actions }, options) {
   const tsConfig = readJsonFile(path.join(appRootPath, 'tsconfig.base.json'));

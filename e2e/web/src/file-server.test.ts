@@ -7,7 +7,6 @@ import {
   uniq,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
   it('should serve folder of files', async () => {

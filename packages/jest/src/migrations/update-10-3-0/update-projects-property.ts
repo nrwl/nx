@@ -9,14 +9,13 @@ import {
   getWorkspace,
   insert,
   InsertChange,
-  serializeJson,
 } from '@nrwl/workspace';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from '../utils/config/legacy/update-config';
 import { jestConfigObjectAst } from '../utils/config/legacy/functions';
-import { offsetFromRoot } from '@nrwl/devkit';
+import { offsetFromRoot, serializeJson } from '@nrwl/devkit';
 
 function updateRootJestConfig(): Rule {
   return async (host: Tree, context: SchematicContext) => {

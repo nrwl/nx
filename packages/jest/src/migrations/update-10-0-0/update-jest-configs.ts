@@ -8,12 +8,12 @@ import {
   formatFiles,
   getWorkspace,
   getWorkspacePath,
-  serializeJson,
   updateWorkspace,
 } from '@nrwl/workspace';
 import { addPropertyToJestConfig } from '../utils/config/legacy/update-config';
 import { getJestObject } from './require-jest-config';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { serializeJson } from '@nrwl/devkit';
 
 function checkJestPropertyObject(object: unknown): object is object {
   return object !== null && object !== undefined;

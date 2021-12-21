@@ -8,7 +8,7 @@ import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
-import { ProjectGraphProjectNode } from '@nrwl/devkit';
+import { ProjectGraphProjectNode, writeJsonFile } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
@@ -20,7 +20,6 @@ import {
   ProjectGraphNode,
   pruneExternalNodes,
 } from '../core/project-graph';
-import { writeJsonFile } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 
 export interface DepGraphClientResponse {

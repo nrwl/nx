@@ -1,8 +1,7 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, readJsonFile } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
 import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
-import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { logger } from '@storybook/node-logger';
 import { join } from 'path';

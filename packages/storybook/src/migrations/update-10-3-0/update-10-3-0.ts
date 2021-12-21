@@ -10,11 +10,11 @@ import {
   formatFiles,
   readJsonInTree,
   updateWorkspaceInTree,
-  serializeJson,
 } from '@nrwl/workspace';
 
 import { isFramework, TsConfig } from '../../utils/utilities';
 import { normalize } from '@angular-devkit/core';
+import { serializeJson } from '@nrwl/devkit';
 
 interface ProjectDefinition {
   root: string;

@@ -8,16 +8,12 @@ import type {
   ProjectGraphExternalNode,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { existsSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
-import {
-  directoryExists,
-  fileExists,
-  readJsonFile,
-  writeJsonFile,
-} from '../../utilities/fileutils';
+import { directoryExists, fileExists } from '../../utilities/fileutils';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,

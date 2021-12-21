@@ -24,7 +24,6 @@ import {
 } from '@nrwl/devkit';
 import { readFileSync } from 'fs';
 import { basename } from 'path';
-import { serializeJson } from '../../utilities/fileutils';
 import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import {
@@ -435,7 +434,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
       'nx.json': '*',
     },
   };
-  host.write('nx.json', serializeJson(nxJson));
+  writeJson(host, 'nx.json', nxJson);
   host.write('libs/.gitkeep', '');
 
   const recommendations = [
@@ -469,7 +468,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
   // of any kind, create one
   const existingPrettierConfig = await resolveUserExistingPrettierConfig();
   if (!existingPrettierConfig) {
-    host.write('.prettierrc', serializeJson(DEFAULT_NRWL_PRETTIER_CONFIG));
+    writeJson(host, '.prettierrc', DEFAULT_NRWL_PRETTIER_CONFIG);
   }
 }
 
@@ -531,28 +530,25 @@ function createNxJson(host: Tree) {
   }
   const name = Object.keys(projects)[0];
   const tsConfigPath = getRootTsConfigPath(host);
-  host.write(
-    'nx.json',
-    serializeJson<NxJsonConfiguration>({
-      npmScope: name,
-      implicitDependencies: {
-        'angular.json': '*',
-        'package.json': '*',
-        [tsConfigPath]: '*',
-        'tslint.json': '*',
-        '.eslintrc.json': '*',
-        'nx.json': '*',
-      },
-      tasksRunnerOptions: {
-        default: {
-          runner: '@nrwl/workspace/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
+  writeJson<NxJsonConfiguration>(host, 'nx.json', {
+    npmScope: name,
+    implicitDependencies: {
+      'angular.json': '*',
+      'package.json': '*',
+      [tsConfigPath]: '*',
+      'tslint.json': '*',
+      '.eslintrc.json': '*',
+      'nx.json': '*',
+    },
+    tasksRunnerOptions: {
+      default: {
+        runner: '@nrwl/workspace/tasks-runners/default',
+        options: {
+          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
         },
       },
-    })
-  );
+    },
+  });
 }
 
 function decorateAngularClI(host: Tree) {

@@ -1,11 +1,12 @@
 import { join } from 'path';
 import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
+import * as chalk from 'chalk';
 import {
+  ExecutorContext,
+  logger,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
-import * as chalk from 'chalk';
-import { ExecutorContext, logger } from '@nrwl/devkit';
+} from '@nrwl/devkit';
 import { ReactNativeSyncDepsOptions } from './schema';
 import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
