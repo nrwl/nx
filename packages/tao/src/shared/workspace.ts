@@ -680,6 +680,7 @@ export function globForProjectFiles(root, nxJson?: NxJsonConfiguration) {
    */
   const ALWAYS_IGNORE = [
     join(root, 'node_modules'),
+    '**/node_modules',
     join(root, 'dist'),
     join(root, '.git'),
   ];
