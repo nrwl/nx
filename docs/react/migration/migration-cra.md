@@ -6,6 +6,8 @@ You can either use a CLI tool to migrate your app automatically, or you can foll
 
 **Note:** This guide has been updated for Nx 13 and may not work for earlier versions of Nx.
 
+If you have a monorepo (more than one project in the same repo), follow the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](https://nx.dev/l/r/migration/adding-to-monorepo) guide instead.
+
 ## Using a tool that will do it for you
 
 You can use the [`cra-to-nx`](https://www.npmjs.com/package/cra-to-nx) tool, that will run the following steps for you, and will turn your Create-React-App (CRA) project into an Nx workspace.
@@ -20,6 +22,10 @@ Then just sit back and wait. After a while, take advantage of the [full magic of
 Start from [the commands mentioned in this article](https://nx.dev/l/r/migration/migration-cra#try-nx).
 
 **Note:** The command will fail if you try execute it and you have uncommitted changes in your repository. Commit any local changes, and then try to run the command.
+
+See it in action:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_XmbVpwo1vs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 ## Doing the migration manually
 
