@@ -11,6 +11,7 @@ import { DependencyType } from './interfaces';
  */
 export class ProjectGraphBuilder {
   readonly graph: ProjectGraph;
+  readonly removedEdges: { [source: string]: Set<string> } = {};
 
   constructor(g?: ProjectGraph) {
     if (g) {
@@ -79,6 +80,31 @@ export class ProjectGraphBuilder {
   }
 
   /**
+   * Removes a dependency from source project to target project
+   */
+  removeDependency(sourceProjectName: string, targetProjectName: string): void {
+    if (sourceProjectName === targetProjectName) {
+      return;
+    }
+    if (!this.graph.nodes[sourceProjectName]) {
+      throw new Error(`Source project does not exist: ${sourceProjectName}`);
+    }
+    if (
+      !this.graph.nodes[targetProjectName] &&
+      !this.graph.externalNodes[targetProjectName]
+    ) {
+      throw new Error(`Target project does not exist: ${targetProjectName}`);
+    }
+    // this.graph.dependencies[sourceProjectName] = this.graph.dependencies[
+    //   sourceProjectName
+    // ].filter((d) => d.target !== targetProjectName);
+    if (!this.removedEdges[sourceProjectName]) {
+      this.removedEdges[sourceProjectName] = new Set<string>();
+    }
+    this.removedEdges[sourceProjectName].add(targetProjectName);
+  }
+
+  /**
    * Add an explicit dependency from a file in source project to target project
    */
   addExplicitDependency(
@@ -137,11 +163,16 @@ export class ProjectGraphBuilder {
       const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
       for (const targetProject of fileDeps) {
         if (!alreadySetTargetProjects.has(targetProject)) {
-          this.graph.dependencies[sourceProject].push({
-            source: sourceProject,
-            target: targetProject,
-            type: DependencyType.static,
-          });
+          if (
+            !this.removedEdges[sourceProject] ||
+            !this.removedEdges[sourceProject].has(targetProject)
+          ) {
+            this.graph.dependencies[sourceProject].push({
+              source: sourceProject,
+              target: targetProject,
+              type: DependencyType.static,
+            });
+          }
         }
       }
     }
@@ -164,8 +195,11 @@ export class ProjectGraphBuilder {
 
   private calculateAlreadySetTargetDeps(sourceProject: string) {
     const alreadySetTargetProjects = new Map<string, ProjectGraphDependency>();
+    const removed = this.removedEdges[sourceProject];
     for (const d of this.graph.dependencies[sourceProject]) {
-      alreadySetTargetProjects.set(d.target, d);
+      if (!removed || !removed.has(d.target)) {
+        alreadySetTargetProjects.set(d.target, d);
+      }
     }
     return alreadySetTargetProjects;
   }

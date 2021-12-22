@@ -113,4 +113,29 @@ describe('ProjectGraphBuilder', () => {
       target: [],
     });
   });
+
+  it(`remove dependency`, () => {
+    builder.addNode({
+      name: 'target2',
+      type: 'lib',
+      data: {},
+    });
+    builder.addImplicitDependency('source', 'target');
+    builder.addExplicitDependency('source', 'source/index.ts', 'target');
+    builder.addImplicitDependency('source', 'target2');
+    builder.removeDependency('source', 'target');
+
+    const graph = builder.getUpdatedProjectGraph();
+    expect(graph.dependencies).toEqual({
+      source: [
+        {
+          source: 'source',
+          target: 'target2',
+          type: 'implicit',
+        },
+      ],
+      target: [],
+      target2: [],
+    });
+  });
 });
