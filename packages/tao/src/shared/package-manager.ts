@@ -42,8 +42,8 @@ export function getPackageManagerCommand(
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => ({
       install: 'yarn',
-      add: 'yarn add',
-      addDev: 'yarn add -D',
+      add: 'yarn add -W',
+      addDev: 'yarn add -D -W',
       rm: 'yarn remove',
       exec: 'yarn',
       run: (script: string, args: string) => `yarn ${script} ${args}`,
