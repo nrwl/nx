@@ -21,7 +21,6 @@ import {
   writeJsonFile,
 } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
-import { existsSync } from 'fs';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -39,11 +38,14 @@ export async function format(
 
   switch (command) {
     case 'write':
-      updateWorkspaceJsonToMatchFormatVersion();
-      sortWorkspaceJson();
+      const workspaceJsonPath = workspaceConfigName(appRootPath);
+      if (workspaceJsonPath) {
+        updateWorkspaceJsonToMatchFormatVersion(workspaceJsonPath);
+        sortWorkspaceJson(workspaceJsonPath);
+        movePropertiesToNewLocations(workspaceJsonPath);
+      }
       sortTsConfig();
-      movePropertiesToNewLocations();
-      addRootConfigFiles(chunkList, nxArgs);
+      addRootConfigFiles(chunkList, nxArgs, workspaceJsonPath);
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
@@ -99,7 +101,11 @@ async function getPatternsFromApps(
   );
 }
 
-function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
+function addRootConfigFiles(
+  chunkList: string[][],
+  nxArgs: NxArgs,
+  workspaceJsonPath: string | null
+): void {
   if (nxArgs.all) {
     return;
   }
@@ -109,8 +115,7 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
       chunk.push(file);
     }
   };
-  const workspaceJsonPath = workspaceConfigName(appRootPath);
-  if (existsSync(workspaceJsonPath)) {
+  if (workspaceJsonPath) {
     addToChunkIfNeeded(workspaceJsonPath);
   }
   ['nx.json', 'tsconfig.base.json'].forEach(addToChunkIfNeeded);
@@ -159,22 +164,20 @@ function check(patterns: string[]) {
   }
 }
 
-function updateWorkspaceJsonToMatchFormatVersion() {
-  const workspaceConfigPath = workspaceConfigName(appRootPath);
+function updateWorkspaceJsonToMatchFormatVersion(workspaceJsonPath: string) {
   try {
-    const workspaceJson = readJsonFile(workspaceConfigPath);
+    const workspaceJson = readJsonFile(workspaceJsonPath);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      writeJsonFile(workspaceConfigPath, reformatted);
+      writeJsonFile(workspaceJsonPath, reformatted);
     }
   } catch (e) {
-    console.error(`Failed to format workspace config: ${workspaceConfigPath}`);
+    console.error(`Failed to format workspace config: ${workspaceJsonPath}`);
     console.error(e);
   }
 }
 
-function sortWorkspaceJson() {
-  const workspaceJsonPath = workspaceConfigName(appRootPath);
+function sortWorkspaceJson(workspaceJsonPath: string) {
   try {
     const workspaceJson = readJsonFile(workspaceJsonPath);
     if (Object.entries(workspaceJson.projects).length !== 0) {
@@ -199,12 +202,11 @@ function sortTsConfig() {
   }
 }
 
-function movePropertiesToNewLocations() {
-  const workspaceConfig = workspaceConfigName(appRootPath);
+function movePropertiesToNewLocations(workspaceJsonPath: string) {
   try {
     const workspaceJson = readJsonFile<
       NxJsonConfiguration & WorkspaceJsonConfiguration
-    >(workspaceConfig);
+    >(workspaceJsonPath);
     const nxJson = readJsonFile<
       NxJsonConfiguration & WorkspaceJsonConfiguration
     >('nx.json');
@@ -222,12 +224,12 @@ function movePropertiesToNewLocations() {
       delete workspaceJson['generators'];
       delete workspaceJson['defaultProject'];
       moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(workspaceJson, nxJson);
-      writeJsonFile(workspaceConfig, workspaceJson);
+      writeJsonFile(workspaceJsonPath, workspaceJson);
       writeJsonFile('nx.json', nxJson);
     }
   } catch (e) {
     console.error(
-      `Error moving properties between Nx.Json + ${workspaceConfig}`
+      `Error moving properties between Nx.Json + ${workspaceJsonPath}`
     );
     console.error(e);
   }
