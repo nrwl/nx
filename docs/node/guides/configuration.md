@@ -436,21 +436,26 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-You can also add dependencies between projects in [project configuration](#project-json). For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
+You can also add dependencies between projects in [project configuration](#project-json). For instance, the example
+below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is
+affected as well.
 
 ```jsonc
 {
-  "projects": {
-    "myapp": {
-      //... other project config
-      "tags": []
-    },
-    "myapp-e2e": {
-      //... other project config
-      "tags": [],
-      "implicitDependencies": ["myapp"]
-    }
-  }
+  //... other project config
+  "tags": [],
+  "implicitDependencies": ["myapp"]
+}
+```
+
+Finally, you can remove dependencies between projects. The following say even though the project imports 'mylib', it's
+not a dependency Nx should be concerned with.
+
+```jsonc
+{
+  //... other project config
+  "tags": [],
+  "implicitDependencies": ["!mylib"]
 }
 ```
 
