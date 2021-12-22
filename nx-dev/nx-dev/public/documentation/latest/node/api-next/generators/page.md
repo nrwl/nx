@@ -32,7 +32,7 @@ nx g page ... --dry-run
 Generate a page in the my-app application:
 
 ```bash
-nx g page my-new-page --project=my-app
+nx nx g page my-new-page --project=my-app
 ```
 
 ## Options
