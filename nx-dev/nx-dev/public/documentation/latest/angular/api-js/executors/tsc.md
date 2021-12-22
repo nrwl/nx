@@ -34,3 +34,17 @@ The path to the Typescript configuration file.
 Type: `array`
 
 List of static assets.
+
+### transformers
+
+Type: `array`
+
+List of TypeScript Transformer Plugins.
+
+### watch
+
+Default: `false`
+
+Type: `boolean`
+
+Enable re-building when files change.

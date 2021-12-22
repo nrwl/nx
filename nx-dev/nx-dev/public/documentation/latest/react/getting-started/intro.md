@@ -33,9 +33,10 @@ up your productivity. Nx is similar. The core of Nx is generic, simple, and unob
 useful for many projects, are completely optional.
 
 Most examples on this site use Nx plugins. It's just easier to demonstrate many features Nx offers when Nx generates all
-the boilerplate. The vast majority of the features though will work the same way in a workspace with no plugins.
+the boilerplate. The vast majority of the features though will work the same way in a workspace with no plugins.  
+
 Check out [Using Nx Core Without Plugins](/{{framework}}/getting-started/nx-core) to see where Nx Core ends and Nx Plugins
-begin.
+begin. Check out [Nx and Typescript](/{{framework}}/getting-started/nx-and-typescript) to see how to build TypeScript packages with Nx.
 
 ## Features
 
