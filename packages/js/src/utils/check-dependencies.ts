@@ -1,4 +1,4 @@
-import { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import { ExecutorContext } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,

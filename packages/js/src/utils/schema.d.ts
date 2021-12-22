@@ -53,6 +53,7 @@ export interface SwcExecutorOptions extends ExecutorOptions {
 export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
   skipTypeCheck: boolean;
+  swcrcPath: string;
 }
 
 export interface ExecutorEvent {
