@@ -40,6 +40,7 @@ export function normalizeOptions(
 
   return {
     ...options,
+    swcrcPath: join(projectRoot, '.swcrc'),
     mainOutputPath: resolve(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
@@ -73,12 +74,10 @@ export async function* swcExecutor(
     normalizedOptions.tsConfig = tmpTsConfig;
   }
 
-  const postCompilationCallback = async () => {
-    await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
-  };
-
   return yield* eachValueFrom(
-    compileSwc(context, normalizedOptions, postCompilationCallback).pipe(
+    compileSwc(context, normalizedOptions, async () => {
+      await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
+    }).pipe(
       map(
         ({ success }) =>
           ({

@@ -1,7 +1,7 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
-import { Observable, zip } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { EMPTY, Observable, zip } from 'rxjs';
+import { concatMap, map, tap } from 'rxjs/operators';
 import { normalizeTsCompilationOptions } from '../normalize-ts-compilation-options';
 import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
@@ -14,7 +14,7 @@ import {
 export function compileSwc(
   context: ExecutorContext,
   normalizedOptions: NormalizedSwcExecutorOptions,
-  postCompilationCallback: () => void | Promise<void>
+  postCompilationCallback: () => Promise<void>
 ) {
   const tsOptions = {
     outputPath: normalizedOptions.outputPath,
@@ -32,14 +32,14 @@ export function compileSwc(
     `/${normalizedTsOptions.projectName}`,
     ''
   );
-  const swcrcPath = `${normalizedTsOptions.projectRoot}/.swcrc`;
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config-file=${swcrcPath}`;
+  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config-file=${normalizedOptions.swcrcPath}`;
 
   const postCompilationOperator = () =>
-    tap(({ success }) => {
+    concatMap(({ success }) => {
       if (success) {
-        void postCompilationCallback();
+        return postCompilationCallback().then(() => ({ success }));
       }
+      return EMPTY;
     });
 
   const compile$ = new Observable<{ success: boolean }>((subscriber) => {
