@@ -1,5 +1,8 @@
 # Nx and Yarn/Lerna (Workspaces for Publishing NPM Packages)
 
+> In our teams we see a shift away from Lerna and a strong preference to use Nx for managing JavaScript-based monorepos.
+> [Thoughtworks Technology Radar 2021](https://www.thoughtworks.com/en-ca/radar/tools/nx)
+
 Nx has more in common with the build tools used at Google or Facebook (just made a lot more easily accessible for other
 companies) than with tools like Yarn Workspaces or Lerna. When using the word "monorepo" in the context of say Google,
 we imagine a much richer dev experience, not simply collocating a few projects side-by-side.
