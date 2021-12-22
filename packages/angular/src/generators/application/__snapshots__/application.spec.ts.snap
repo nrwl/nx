@@ -4,7 +4,7 @@ exports[`app --mfe should add a remote application and add it to a specified hos
 "const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
 const mf = require(\\"@angular-architects/module-federation/webpack\\");
 const path = require(\\"path\\");
-
+const share = mf.share;
 
 /**
 * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
@@ -46,13 +46,14 @@ module.exports = {
     		\\"remote2\\": 'http://localhost:4202/remoteEntry.js',
       
       },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
+      shared: share({
+        \\"@angular/core\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"rxjs\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
         ...sharedMappings.getDescriptors(),
-      },
+      }),
       library: { 
         type: 'module' 
       },
@@ -67,7 +68,7 @@ exports[`app --mfe should add a remote application and add it to a specified hos
 "const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
 const mf = require(\\"@angular-architects/module-federation/webpack\\");
 const path = require(\\"path\\");
-
+const share = mf.share;
 
 /**
 * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
@@ -108,13 +109,14 @@ module.exports = {
     		\\"remote1\\": 'http://localhost:4200/remoteEntry.js',
       
       },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
+      shared: share({
+        \\"@angular/core\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"rxjs\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
         ...sharedMappings.getDescriptors(),
-      },
+      }),
       library: { 
         type: 'module' 
       },
@@ -129,7 +131,7 @@ exports[`app --mfe should generate a Module Federation correctly for a each app 
 "const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
 const mf = require(\\"@angular-architects/module-federation/webpack\\");
 const path = require(\\"path\\");
-
+const share = mf.share;
 
 /**
 * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
@@ -169,13 +171,14 @@ module.exports = {
       remotes: {
       
       },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
+      shared: share({
+        \\"@angular/core\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"rxjs\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
         ...sharedMappings.getDescriptors(),
-      },
+      }),
       library: { 
         type: 'module' 
       },
@@ -190,7 +193,7 @@ exports[`app --mfe should generate a Module Federation correctly for a each app 
 "const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
 const mf = require(\\"@angular-architects/module-federation/webpack\\");
 const path = require(\\"path\\");
-
+const share = mf.share;
 
 /**
 * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
@@ -232,13 +235,14 @@ module.exports = {
       exposes: {
         './Module': 'apps/my-app/src/app/remote-entry/entry.module.ts',
       },
-      shared: {
-        \\"@angular/core\\": { singleton: true, strictVersion: true },
-        \\"@angular/common\\": { singleton: true, strictVersion: true },
-        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
-        \\"@angular/router\\": { singleton: true, strictVersion: true },
+      shared: share({
+        \\"@angular/core\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
+        \\"rxjs\\": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },
         ...sharedMappings.getDescriptors(),
-      },
+      }),
       library: { 
         type: 'module' 
       },

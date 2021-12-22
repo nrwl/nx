@@ -12,6 +12,7 @@ const SHARED_SINGLETON_LIBRARIES = [
   '@angular/common',
   '@angular/common/http',
   '@angular/router',
+  'rxjs',
 ];
 
 export function generateWebpackConfig(
