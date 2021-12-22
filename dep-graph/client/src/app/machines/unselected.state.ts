@@ -1,9 +1,18 @@
 import { assign } from '@xstate/immer';
-import { send } from 'xstate';
+import { send, spawn } from 'xstate';
+import { routeListener } from './route-listener.actor';
 import { DepGraphStateNodeConfig } from './interfaces';
 
 export const unselectedStateConfig: DepGraphStateNodeConfig = {
-  entry: ['notifyGraphHideAllProjects'],
+  entry: [
+    'notifyGraphHideAllProjects',
+    assign((ctx, event) => {
+      if (ctx.routeListenerActor === null) {
+        ctx.routeListenerActor = spawn(routeListener, 'routeListener');
+      }
+    }),
+    'notifyRouteClearSelect',
+  ],
   on: {
     updateGraph: {
       target: 'customSelected',
@@ -34,7 +43,7 @@ export const unselectedStateConfig: DepGraphStateNodeConfig = {
             selectedProjects: ctx.selectedProjects,
           }),
           {
-            to: (context) => context.graph,
+            to: (context) => context.graphActor,
           }
         ),
       ],

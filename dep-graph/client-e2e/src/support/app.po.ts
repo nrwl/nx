@@ -11,9 +11,11 @@ export const getProjectItems = () => cy.get('[data-project]');
 export const getCheckedProjectItems = () => cy.get('[data-active="true"]');
 export const getUncheckedProjectItems = () => cy.get('[data-active="false"]');
 
-export const getGroupByfolderItems = () =>
+export const getGroupByFolderCheckbox = () =>
   cy.get('input[name=displayOptions][value=groupByFolder]');
 
+export const getSearchDepthCheckbox = () =>
+  cy.get('input[name=depthFilter][value=depthFilterActivated]');
 export const getTextFilterInput = () => cy.get('[data-cy=textFilterInput]');
 export const getTextFilterReset = () => cy.get('[data-cy=textFilterReset]');
 

@@ -10,7 +10,7 @@ import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { ProjectGraphProjectNode, writeJsonFile } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 import { workspaceLayout } from '../core/file-utils';
 import { defaultFileHasher } from '../core/hasher/file-hasher';
 import {
@@ -53,14 +53,11 @@ const mimeType = {
 
 function buildEnvironmentJs(
   exclude: string[],
-  focus: string,
-  groupByFolder: boolean,
   watchMode: boolean,
   localMode: 'build' | 'serve',
   depGraphClientResponse?: DepGraphClientResponse
 ) {
   let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
-  window.groupByFolder = ${!!groupByFolder};
   window.watch = ${!!watchMode};
   window.environment = 'release';
   window.localMode = '${localMode}';
@@ -84,10 +81,6 @@ function buildEnvironmentJs(
     )};`;
   } else {
     environmentJs += `window.projectGraphResponse = null;`;
-  }
-
-  if (!!focus) {
-    environmentJs += `window.focusedProject = '${focus}';`;
   }
 
   return environmentJs;
@@ -238,8 +231,6 @@ export async function generateGraph(
 
       const environmentJs = buildEnvironmentJs(
         args.exclude || [],
-        args.focus || null,
-        args.groupByFolder || false,
         args.watch,
         !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
         depGraphClientResponse
@@ -279,8 +270,6 @@ export async function generateGraph(
   } else {
     const environmentJs = buildEnvironmentJs(
       args.exclude || [],
-      args.focus || null,
-      args.groupByFolder || false,
       args.watch,
       !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
@@ -385,7 +374,18 @@ async function startServer(
   });
 
   if (openBrowser) {
-    open(`http://${host}:${port}`);
+    let url = `http://${host}:${port}`;
+    let params = new URLSearchParams();
+
+    if (focus) {
+      params.append('focus', focus);
+    }
+
+    if (groupByFolder) {
+      params.append('groupByFolder', 'true');
+    }
+
+    open(`${url}?${params.toString()}`);
   }
 }
 
