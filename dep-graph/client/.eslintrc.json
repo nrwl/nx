@@ -7,7 +7,12 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          { "paths": ["rxjs"], "patterns": ["rxjs/*"] }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
