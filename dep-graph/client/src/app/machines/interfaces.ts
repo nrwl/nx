@@ -1,13 +1,6 @@
 // nx-ignore-next-line
 import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
-import { Observable } from 'rxjs';
-import {
-  ActionObject,
-  ActorRef,
-  State,
-  StateNodeConfig,
-  StateValue,
-} from 'xstate';
+import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
 
 // The hierarchical (recursive) schema for the states
 export interface DepGraphSchema {
@@ -150,10 +143,6 @@ export type DepGraphStateNodeConfig = StateNodeConfig<
 export type DepGraphSend = (
   event: DepGraphUIEvents | DepGraphUIEvents[]
 ) => void;
-export type DepGraphStateObservable = Observable<{
-  value: StateValue;
-  context: DepGraphContext;
-}>;
 
 export type DepGraphState = State<
   DepGraphContext,
