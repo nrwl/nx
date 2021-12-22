@@ -1,7 +1,7 @@
 const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
 const mf = require("@angular-architects/module-federation/webpack");
 const path = require("path");
-
+const share = mf.share;
 
 /**
 * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
@@ -46,10 +46,10 @@ module.exports = {
       remotes: {
       <% remotes.forEach(function(remote) { %>"<%= remote.remoteName %>": "http://localhost:<%= remote.port %>/remoteEntry.js",<% }); %>
       },<% } %>
-      shared: {<% sharedLibraries.forEach(function (lib) { %>
-        "<%= lib %>": { singleton: true, strictVersion: true },<% }); %>
+      shared: share({<% sharedLibraries.forEach(function (lib) { %>
+        "<%= lib %>": { singleton: true, strictVersion: true, requiredVersion: 'auto', includeSecondaries: true },<% }); %>
         ...sharedMappings.getDescriptors(),
-      },
+      }),
       library: { 
         type: 'module' 
       },
