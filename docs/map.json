@@ -1297,6 +1297,11 @@
             "file": "shared/guides/turbo-and-nx"
           },
           {
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
+          },
+          {
             "name": "Using NgRx",
             "id": "misc-ngrx"
           },
@@ -2656,6 +2661,11 @@
             "file": "shared/guides/turbo-and-nx"
           },
           {
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
+          },
+          {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
             "file": "react/guides/adding-assets"
@@ -3975,6 +3985,11 @@
             "name": "Nx and Turborepo",
             "id": "turbo-and-nx",
             "file": "shared/guides/turbo-and-nx"
+          },
+          {
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
           },
           {
             "name": "Using Nx at Enterprises",
