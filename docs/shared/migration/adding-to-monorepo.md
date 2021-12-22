@@ -1,5 +1,8 @@
 # Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
 
+> In our teams we see a shift away from Lerna and a strong preference to use Nx for managing JavaScript-based monorepos.
+> [Thoughtworks Technology Radar 2021](https://www.thoughtworks.com/en-ca/radar/tools/nx)
+
 If you have a monorepo that is powered by Lerna, Yarn, PNPM, or NPM, you can transform it into an Nx workspace by
 running this command:
 
@@ -139,6 +142,10 @@ This tsconfig isn't used for building or testing. It's only used to teach Nx how
 import source code analysis. If the path mappings are deduced incorrectly, feel free to change them.
 
 ## Real world examples of using add-nx-to-monorepo
+
+### Speeding Up Facebook React Monorepo with Nx
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/XLP2RAOwfLQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ### Speeding Up Remotion Monorepo with Nx
 
