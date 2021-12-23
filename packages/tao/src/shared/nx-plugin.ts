@@ -64,16 +64,18 @@ export function mergePluginTargetsWithNxTargets(
 ): Record<string, TargetConfiguration> {
   let newTargets: Record<string, TargetConfiguration> = {};
   for (const plugin of plugins) {
+    if (!plugin.projectFilePatterns?.length || !plugin.registerProjectTargets) {
+      continue;
+    }
+
     const projectFiles = sync(`+(${plugin.projectFilePatterns.join('|')})`, {
       cwd: join(appRootPath, projectRoot),
     });
     for (const projectFile of projectFiles) {
-      if (plugin.registerProjectTargets) {
-        newTargets = {
-          ...newTargets,
-          ...plugin.registerProjectTargets(join(projectRoot, projectFile)),
-        };
-      }
+      newTargets = {
+        ...newTargets,
+        ...plugin.registerProjectTargets(join(projectRoot, projectFile)),
+      };
     }
   }
   return { ...newTargets, ...targets };
