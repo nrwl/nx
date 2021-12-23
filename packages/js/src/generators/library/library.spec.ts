@@ -692,6 +692,7 @@ describe('lib', () => {
             assets: ['libs/my-lib/*.md'],
             main: 'libs/my-lib/src/index.ts',
             outputPath: 'dist/libs/my-lib',
+            outputRoot: 'dist/libs',
             tsConfig: 'libs/my-lib/tsconfig.lib.json',
           },
           outputs: ['{options.outputPath}'],
