@@ -69,7 +69,9 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
   } else if (options.compiler === 'swc') {
-    devDeps['@swc/jest'] = swcJestVersion;
+    // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
+    // devDeps['@swc/jest'] = swcJestVersion;
+    devDeps['ts-jest'] = tsJestVersion;
   } else {
     devDeps['ts-jest'] = tsJestVersion;
   }
