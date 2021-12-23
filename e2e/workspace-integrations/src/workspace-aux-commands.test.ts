@@ -17,11 +17,13 @@ import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;
 
-beforeAll(() => {
-  proj = newProject();
-});
-
 describe('format', () => {
+  beforeAll(() => {
+    proj = newProject();
+  });
+
+  afterAll(() => cleanupProject());
+
   it('should check and reformat the code', async () => {
     if (isNotWindows()) {
       const myapp = uniq('myapp');
@@ -198,6 +200,8 @@ describe('dep-graph', () => {
       `import '@${proj}/${mylib2}';`
     );
   });
+
+  afterAll(() => cleanupProject());
 
   it('dep-graph should output json to file', () => {
     runCLI(`dep-graph --file=project-graph.json`);

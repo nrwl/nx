@@ -39,7 +39,7 @@ describe('Angular Package', () => {
         // therefore switch to yarn
         proj =
           getSelectedPackageManager() === 'pnpm' && testConfig !== 'publishable'
-            ? newProject({ packageManager: 'yarn' })
+            ? newProject({ packageManager: 'npm' })
             : newProject();
 
         if (testConfig === 'buildable') {

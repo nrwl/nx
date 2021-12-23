@@ -7,7 +7,6 @@ import {
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
-  cleanupProject,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -15,10 +14,7 @@ import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
-  let packageManager;
-
-  beforeEach(() => (packageManager = getSelectedPackageManager() || 'npm'));
-  afterAll(() => cleanupProject());
+  const packageManager = getSelectedPackageManager() || 'pnpm';
 
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
@@ -217,17 +213,17 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     process.env.YARN_REGISTRY = `http://localhost:4872`;
-    process.env.SELECTED_PM = 'yarn';
+    process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
       preset: 'react',
       style: 'css',
       appName,
-      packageManager: 'yarn',
+      packageManager: 'npm',
     });
 
-    checkFilesExist('yarn.lock');
-    checkFilesDoNotExist('package-lock.json');
+    checkFilesDoNotExist('yarn.lock');
+    checkFilesExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;
   });
 
@@ -236,20 +232,20 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     process.env.YARN_REGISTRY = `http://localhost:4872`;
-    process.env.SELECTED_PM = 'yarn';
+    process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
       preset: 'angular',
       appName,
       style: 'css',
-      packageManager: 'yarn',
+      packageManager: 'npm',
       cli: 'angular',
     });
 
     const nxJson = readJson('nx.json');
-    expect(nxJson.cli.packageManager).toEqual('yarn');
-    checkFilesExist('yarn.lock');
-    checkFilesDoNotExist('package-lock.json');
+    expect(nxJson.cli.packageManager).toEqual('npm');
+    checkFilesDoNotExist('yarn.lock');
+    checkFilesExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;
   });
 

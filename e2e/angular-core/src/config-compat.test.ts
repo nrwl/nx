@@ -12,10 +12,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Angular Package', () => {
+  beforeAll(() => newProject());
+  afterAll(() => cleanupProject());
   describe('config compat', () => {
-    beforeEach(() => newProject());
-    afterEach(() => cleanupProject());
-
     it('should work', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);

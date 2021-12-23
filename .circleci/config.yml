@@ -34,7 +34,7 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/node:14.17-browsers
+      - image: cimg/node:16.13-browsers
 
   macos:
     <<: *defaults
