@@ -229,7 +229,13 @@ export async function newGenerator(host: Tree, options: Schema) {
     installPackagesTask(host, false, options.directory, options.packageManager);
     await generatePreset(host, options);
     if (!options.skipGit) {
-      await initializeGitRepo(host, options.directory, options);
+      try {
+        await initializeGitRepo(host, options.directory, options);
+      } catch (e) {
+        console.error(
+          `Could not initialize git repository. Error: ${e.message}`
+        );
+      }
     }
   };
 }
