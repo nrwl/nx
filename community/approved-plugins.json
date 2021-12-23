@@ -115,6 +115,16 @@
     "url": "https://github.com/nxext/nx-extensions/tree/master/packages/stencil"
   },
   {
+    "name": "@nxext/vite",
+    "description": "Nx plugin to use ViteJS within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/vite"
+  },
+  {
+    "name": "@nxext/solid",
+    "description": "Nx plugin to use SolidJS within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/solid"
+  },
+  {
     "name": "@joelcode/gcp-function",
     "description": "Nx plugin to generate, test, lint, build, serve, & deploy Google Cloud Function",
     "url": "https://github.com/JoelCode/gcp-function"
