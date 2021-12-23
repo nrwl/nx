@@ -185,7 +185,10 @@ export async function getStaticProps({
     ) ?? defaultFlavor;
 
   // If we use the ID of version or flavor, redirect using the ALIAS instead (redirection is permanent)
-  if (params.segments[0] === version.id || params.segments[1] === flavor.id) {
+  if (
+    params.segments.join('/') !== 'js/node' && // Bug due to node flavour, not a problem when flavourless
+    (params.segments[0] === version.id || params.segments[1] === flavor.id)
+  ) {
     return {
       redirect: {
         destination: `/${version.alias}/${flavor.alias}/${params.segments
