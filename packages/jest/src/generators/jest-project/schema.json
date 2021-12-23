@@ -42,7 +42,7 @@
     },
     "compiler": {
       "type": "string",
-      "enum": ["tsc", "swc", "babel"],
+      "enum": ["tsc", "babel"],
       "description": "The compiler to use for source and tests",
       "default": "tsc"
     },

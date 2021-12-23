@@ -1,5 +1,5 @@
 export interface JestInitSchema {
-  compiler?: 'tsc' | 'swc' | 'babel';
+  compiler?: 'tsc' | 'babel';
   /**
    * @deprecated
    */
