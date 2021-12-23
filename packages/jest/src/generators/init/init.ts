@@ -66,12 +66,11 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     '@types/jest': jestTypesVersion,
   };
 
+  // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
+  // } else if (options.compiler === 'swc') {
+  //   devDeps['@swc/jest'] = swcJestVersion;
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
-  } else if (options.compiler === 'swc') {
-    // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
-    // devDeps['@swc/jest'] = swcJestVersion;
-    devDeps['ts-jest'] = tsJestVersion;
   } else {
     devDeps['ts-jest'] = tsJestVersion;
   }
