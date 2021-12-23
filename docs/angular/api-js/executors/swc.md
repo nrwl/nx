@@ -23,6 +23,12 @@ Type: `string`
 
 The output path of the generated files.
 
+### outputRoot (_**required**_)
+
+Type: `string`
+
+The output root of the generated files.
+
 ### tsConfig (_**required**_)
 
 Type: `string`

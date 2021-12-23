@@ -22,6 +22,7 @@ export function normalizeOptions(
   sourceRoot?: string,
   projectRoot?: string
 ): NormalizedSwcExecutorOptions {
+  const outputRoot = join(contextRoot, options.outputRoot);
   const outputPath = join(contextRoot, options.outputPath);
 
   if (options.skipTypeCheck == null) {
@@ -49,6 +50,7 @@ export function normalizeOptions(
     root: contextRoot,
     sourceRoot,
     projectRoot,
+    outputRoot,
     outputPath,
     tsConfig: join(contextRoot, options.tsConfig),
   } as NormalizedSwcExecutorOptions;

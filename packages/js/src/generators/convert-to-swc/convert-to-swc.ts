@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  getWorkspaceLayout,
   installPackagesTask,
   ProjectConfiguration,
   readJson,
@@ -52,6 +53,12 @@ function updateProjectBuildTargets(
     if (!targetConfiguration || targetConfiguration.executor !== '@nrwl/js:tsc')
       continue;
     targetConfiguration.executor = '@nrwl/js:swc';
+    if (!targetConfiguration.options['outputRoot']) {
+      const { appsDir, libsDir } = getWorkspaceLayout(tree);
+      const root =
+        projectConfiguration.projectType === 'library' ? libsDir : appsDir;
+      targetConfiguration.options['outputRoot'] = `dist/${root}`;
+    }
   }
 
   updateProjectConfiguration(tree, projectName, projectConfiguration);

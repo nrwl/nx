@@ -28,11 +28,7 @@ export function compileSwc(
   const normalizedTsOptions = normalizeTsCompilationOptions(tsOptions);
   logger.log(`Compiling with SWC for ${normalizedTsOptions.projectName}...`);
   const srcPath = normalizedTsOptions.projectRoot;
-  const destPath = normalizedTsOptions.outputPath.replace(
-    `/${normalizedTsOptions.projectName}`,
-    ''
-  );
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config-file=${normalizedOptions.swcrcPath}`;
+  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.outputRoot} --source-maps --config-file=${normalizedOptions.swcrcPath}`;
 
   const postCompilationOperator = () =>
     concatMap(({ success }) => {

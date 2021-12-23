@@ -47,11 +47,13 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
 }
 
 export interface SwcExecutorOptions extends ExecutorOptions {
+  outputRoot?: string;
   skipTypeCheck?: boolean;
 }
 
 export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
+  outputRoot: string;
   skipTypeCheck: boolean;
   swcrcPath: string;
 }

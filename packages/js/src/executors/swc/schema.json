@@ -9,6 +9,10 @@
       "type": "string",
       "description": "The name of the main entry-point file."
     },
+    "outputRoot": {
+      "type": "string",
+      "description": "The output root of the generated files."
+    },
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files."
@@ -36,7 +40,7 @@
       "default": false
     }
   },
-  "required": ["main", "outputPath", "tsConfig"],
+  "required": ["main", "outputRoot", "outputPath", "tsConfig"],
   "definitions": {
     "assetPattern": {
       "oneOf": [

@@ -95,8 +95,11 @@ function addProject(
       },
     };
 
-    if (options.compiler === 'swc' && options.skipTypeCheck) {
-      projectConfiguration.targets.build.options.skipTypeCheck = true;
+    if (options.compiler === 'swc') {
+      projectConfiguration.targets.build.options.outputRoot = `dist/${destinationDir}`;
+      if (options.skipTypeCheck) {
+        projectConfiguration.targets.build.options.skipTypeCheck = true;
+      }
     }
 
     if (projectType === 'application') {
