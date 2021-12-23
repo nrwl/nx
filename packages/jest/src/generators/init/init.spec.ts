@@ -61,7 +61,9 @@ describe('jest', () => {
     it('should support swc compiler', () => {
       jestInitGenerator(tree, { compiler: 'swc' });
       const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['@swc/jest']).toBeDefined();
+      // expect(packageJson.devDependencies['@swc/jest']).toBeDefined();
+      // TODO: change back to @swc/jest when we use @swc/jest
+      expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     });
   });
 
