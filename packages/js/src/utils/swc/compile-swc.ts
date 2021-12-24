@@ -1,8 +1,7 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
 import { EMPTY, Observable, zip } from 'rxjs';
-import { concatMap, map, tap } from 'rxjs/operators';
-import { normalizeTsCompilationOptions } from '../normalize-ts-compilation-options';
+import { concatMap, map } from 'rxjs/operators';
 import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import {
@@ -18,7 +17,7 @@ export function compileSwc(
 ) {
   logger.log(`Compiling with SWC for ${context.projectName}...`);
   const srcPath = `../${normalizedOptions.swcCliOptions.projectDir}`;
-  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.swcCliOptions.destPath} --source-maps`;
+  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.swcCliOptions.destPath} --source-maps --no-swcrc --config-file=${normalizedOptions.swcrcPath}`;
 
   const postCompilationOperator = () =>
     concatMap(({ success }) => {

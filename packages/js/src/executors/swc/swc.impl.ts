@@ -13,6 +13,7 @@ import {
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
+import { addTempSwcrc } from '../../utils/swc/add-temp-swcrc';
 import { compileSwc } from '../../utils/swc/compile-swc';
 import { updatePackageJson } from '../../utils/update-package-json';
 
@@ -40,8 +41,10 @@ export function normalizeOptions(
 
   const swcCliOptions = {
     projectDir: projectRoot.split('/').pop(),
-    destPath: `${relative(projectRoot, options.outputPath)}${sourceRoot.split(projectRoot).pop()}`
-  }
+    destPath: `${relative(projectRoot, options.outputPath)}${sourceRoot
+      .split(projectRoot)
+      .pop()}`,
+  };
 
   return {
     ...options,
@@ -71,6 +74,7 @@ export async function* swcExecutor(
     sourceRoot,
     root
   );
+  normalizedOptions.swcrcPath = addTempSwcrc(normalizedOptions);
   const { tmpTsConfig, projectRoot } = checkDependencies(
     context,
     options.tsConfig
