@@ -97,7 +97,7 @@
       "type": "string",
       "enum": ["tsc", "swc"],
       "default": "tsc",
-      "description": "The compiler used by the build and test targets"
+      "description": "The compiler used by the build and test targets (tsc is preferred, swc is experimental)"
     },
     "skipTypeCheck": {
       "type": "boolean",
