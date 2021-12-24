@@ -41,9 +41,8 @@ export function normalizeOptions(
 
   const swcCliOptions = {
     projectDir: projectRoot.split('/').pop(),
-    destPath: `${relative(projectRoot, options.outputPath)}${sourceRoot
-      .split(projectRoot)
-      .pop()}`,
+    // TODO: assume consumers put their code in `src`
+    destPath: `${relative(projectRoot, options.outputPath)}/src`,
   };
 
   return {
