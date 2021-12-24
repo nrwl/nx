@@ -50,10 +50,17 @@ export interface SwcExecutorOptions extends ExecutorOptions {
   skipTypeCheck?: boolean;
 }
 
+export interface SwcCliOptions {
+  projectDir: string;
+  destPath: string;
+}
+
+
 export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
   skipTypeCheck: boolean;
   swcrcPath: string;
+  swcCliOptions: SwcCliOptions;
 }
 
 export interface ExecutorEvent {

@@ -16,23 +16,9 @@ export function compileSwc(
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => Promise<void>
 ) {
-  const tsOptions = {
-    outputPath: normalizedOptions.outputPath,
-    projectName: context.projectName,
-    projectRoot: normalizedOptions.projectRoot,
-    tsConfig: normalizedOptions.tsConfig,
-    watch: normalizedOptions.watch,
-  };
-  const outDir = tsOptions.outputPath.replace(`/${tsOptions.projectRoot}`, '');
-
-  const normalizedTsOptions = normalizeTsCompilationOptions(tsOptions);
-  logger.log(`Compiling with SWC for ${normalizedTsOptions.projectName}...`);
-  const srcPath = normalizedTsOptions.projectRoot;
-  const destPath = normalizedTsOptions.outputPath.replace(
-    `/${normalizedTsOptions.projectName}`,
-    ''
-  );
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --config-file=${normalizedOptions.swcrcPath}`;
+  logger.log(`Compiling with SWC for ${context.projectName}...`);
+  const srcPath = `../${normalizedOptions.swcCliOptions.projectDir}`;
+  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.swcCliOptions.destPath} --source-maps`;
 
   const postCompilationOperator = () =>
     concatMap(({ success }) => {
@@ -45,9 +31,13 @@ export function compileSwc(
   const compile$ = new Observable<{ success: boolean }>((subscriber) => {
     if (normalizedOptions.watch) {
       swcCmd += ' --watch';
-      const watchProcess = createSwcWatchProcess(swcCmd, (success) => {
-        subscriber.next({ success });
-      });
+      const watchProcess = createSwcWatchProcess(
+        swcCmd,
+        normalizedOptions.projectRoot,
+        (success) => {
+          subscriber.next({ success });
+        }
+      );
 
       return () => {
         watchProcess.close();
@@ -55,7 +45,9 @@ export function compileSwc(
       };
     }
 
-    const swcCmdLog = execSync(swcCmd).toString();
+    const swcCmdLog = execSync(swcCmd, {
+      cwd: normalizedOptions.projectRoot,
+    }).toString();
     logger.log(swcCmdLog.replace(/\n/, ''));
     subscriber.next({ success: swcCmdLog.includes('Successfully compiled') });
 
@@ -68,6 +60,14 @@ export function compileSwc(
     return compile$.pipe(postCompilationOperator());
   }
 
+  const tsOptions = {
+    outputPath: normalizedOptions.outputPath,
+    projectName: context.projectName,
+    projectRoot: normalizedOptions.projectRoot,
+    tsConfig: normalizedOptions.tsConfig,
+    watch: normalizedOptions.watch,
+  };
+  const outDir = tsOptions.outputPath.replace(`/${tsOptions.projectRoot}`, '');
   const typeCheck$ = new Observable<{ success: boolean }>((subscriber) => {
     const typeCheckOptions: TypeCheckOptions = {
       mode: 'emitDeclarationOnly',
@@ -136,9 +136,10 @@ export function compileSwc(
 
 function createSwcWatchProcess(
   swcCmd: string,
+  cwd: string,
   callback: (success: boolean) => void
 ) {
-  const watchProcess = exec(swcCmd);
+  const watchProcess = exec(swcCmd, { cwd });
 
   watchProcess.stdout.on('data', (data) => {
     process.stdout.write(data);

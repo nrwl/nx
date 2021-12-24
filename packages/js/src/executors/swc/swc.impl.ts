@@ -4,7 +4,7 @@ import {
   copyAssetFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import { eachValueFrom } from 'rxjs-for-await';
 import { map } from 'rxjs/operators';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -38,6 +38,11 @@ export function normalizeOptions(
     outputPath
   );
 
+  const swcCliOptions = {
+    projectDir: projectRoot.split('/').pop(),
+    destPath: `${relative(projectRoot, options.outputPath)}${sourceRoot.split(projectRoot).pop()}`
+  }
+
   return {
     ...options,
     swcrcPath: join(projectRoot, '.swcrc'),
@@ -51,6 +56,7 @@ export function normalizeOptions(
     projectRoot,
     outputPath,
     tsConfig: join(contextRoot, options.tsConfig),
+    swcCliOptions,
   } as NormalizedSwcExecutorOptions;
 }
 
