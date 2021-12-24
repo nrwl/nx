@@ -145,7 +145,7 @@ export function getBaseWebpackPartial(
 
   if (options.compiler !== 'swc' && isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      sideEffects: false,
+      sideEffects: true,
       minimizer: [
         new TerserWebpackPlugin({
           parallel: true,
