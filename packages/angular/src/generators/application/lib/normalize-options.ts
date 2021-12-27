@@ -48,6 +48,7 @@ export function normalizeOptions(
     linter: Linter.EsLint,
     strict: true,
     ...options,
+    port: options.port ?? 4200,
     prefix: options.prefix ?? defaultPrefix,
     name: appProjectName,
     appProjectRoot,

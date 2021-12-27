@@ -926,6 +926,19 @@ describe('app', () => {
       const projectConfig = readProjectConfiguration(appTree, 'app1');
       expect(projectConfig.targets.serve.options.port).toBe(4205);
     });
+
+    it('should add a port to a mfe app', async () => {
+      // ACT
+      await generateApp(appTree, 'app1', { mfe: true, mfeType: 'remote' });
+      await generateApp(appTree, 'app2', { mfe: true, mfeType: 'remote', port: 4201 });
+
+      // ASSERT
+      const project1Config = readProjectConfiguration(appTree, 'app1');
+      expect(project1Config.targets.serve.options.port).toBe(4200);
+
+      const project2Config = readProjectConfiguration(appTree, 'app2');
+      expect(project2Config.targets.serve.options.port).toBe(4201);
+    });
   });
 });
 
