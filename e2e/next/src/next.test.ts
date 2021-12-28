@@ -289,7 +289,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 120000);
+  }, 300000);
 
   it('should support Stylus', async () => {
     const appName = uniq('app');
@@ -302,7 +302,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 120000);
+  }, 300000);
 
   it('should support --style=styled-components', async () => {
     const appName = uniq('app');
@@ -317,7 +317,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 120000);
+  }, 300000);
 
   it('should support --style=@emotion/styled', async () => {
     const appName = uniq('app');
@@ -332,7 +332,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 120000);
+  }, 300000);
 
   it('should build with public folder', async () => {
     const appName = uniq('app');
@@ -446,7 +446,7 @@ describe('Next.js Applications', () => {
     expect(() => runCLI(`build ${appName}`)).toThrowError(
       `Type 'number' is not assignable to type 'string'.`
     );
-  }, 120000);
+  }, 300000);
 
   it('should be able to consume a react lib written in JavaScript', async () => {
     const appName = uniq('app');
@@ -487,7 +487,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 120000);
+  }, 300000);
 
   it('should allow using a custom server implementation in TypeScript', async () => {
     const appName = uniq('app');
