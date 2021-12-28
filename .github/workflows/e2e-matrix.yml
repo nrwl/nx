@@ -171,6 +171,7 @@ jobs:
         YARN_REGISTRY: http://localhost:4872
         NX_VERBOSE_LOGGING: ${{ 'true' }}
         NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
+        NX_E2E_SKIP_DAEMON_CLEANUP: ${{ 'true' }}
         NX_CACHE_DIRECTORY: ${{ matrix.os-cache-dir }}
 
     - name: Setup tmate session
