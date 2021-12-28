@@ -2,6 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import { convertNxGenerator } from '@nrwl/devkit';
 import type {
   NestGeneratorWithLanguageOption,
+  NestGeneratorWithResourceOption,
   NestGeneratorWithTestOption,
   NormalizedOptions,
 } from '../utils';
@@ -12,7 +13,8 @@ import {
 } from '../utils';
 
 export type ResourceGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+  NestGeneratorWithTestOption &
+  NestGeneratorWithResourceOption;
 
 export function resourceGenerator(
   tree: Tree,
