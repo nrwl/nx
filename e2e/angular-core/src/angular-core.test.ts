@@ -14,6 +14,7 @@ import {
   runCypressTests,
   removeFile,
   checkFilesDoNotExist,
+  isNotWindows,
 } from '@nrwl/e2e/utils';
 
 import { names } from '@nrwl/devkit';
@@ -94,15 +95,19 @@ describe('Angular Package', () => {
     });
 
     it('should support workspaces w/o workspace config file', async () => {
-      removeFile('workspace.json');
-      const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
+      if (isNotWindows()) {
+        removeFile('workspace.json');
+        const myapp = uniq('myapp');
+        runCLI(
+          `generate @nrwl/angular:app ${myapp} --directory=myDir --routing`
+        );
 
-      runCLI(`build my-dir-${myapp} --aot`);
-      expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-      expect(() =>
-        checkFilesDoNotExist('workspace.json', 'angular.json')
-      ).not.toThrow();
+        runCLI(`build my-dir-${myapp} --aot`);
+        expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
+        expect(() =>
+          checkFilesDoNotExist('workspace.json', 'angular.json')
+        ).not.toThrow();
+      }
     }, 1000000);
   });
 });

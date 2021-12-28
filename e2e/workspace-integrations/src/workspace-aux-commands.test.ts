@@ -18,61 +18,63 @@ import { classify } from '@nrwl/workspace/src/utils/strings';
 let proj: string;
 
 describe('format', () => {
+  const myapp = uniq('myapp');
+  const mylib = uniq('mylib');
+
   beforeAll(() => {
     proj = newProject();
+    runCLI(`generate @nrwl/angular:app ${myapp}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
   });
 
   afterAll(() => cleanupProject());
 
-  it('should check and reformat the code', async () => {
+  beforeEach(() => {
+    updateFile(
+      `apps/${myapp}/src/main.ts`,
+      `
+       const x = 1111;
+  `
+    );
+
+    updateFile(
+      `apps/${myapp}/src/app/app.module.ts`,
+      `
+       const y = 1111;
+  `
+    );
+
+    updateFile(
+      `apps/${myapp}/src/app/app.component.ts`,
+      `
+       const z = 1111;
+  `
+    );
+
+    updateFile(
+      `libs/${mylib}/index.ts`,
+      `
+       const x = 1111;
+  `
+    );
+    updateFile(
+      `libs/${mylib}/src/${mylib}.module.ts`,
+      `
+       const y = 1111;
+  `
+    );
+
+    updateFile(
+      `README.md`,
+      `
+       my new readme;
+  `
+    );
+  });
+
+  it('should check libs and apps specific files', async () => {
     if (isNotWindows()) {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
-
-      runCLI(`generate @nrwl/angular:app ${myapp}`);
-      runCLI(`generate @nrwl/angular:lib ${mylib}`);
-      updateFile(
-        `apps/${myapp}/src/main.ts`,
-        `
-         const x = 1111;
-    `
-      );
-
-      updateFile(
-        `apps/${myapp}/src/app/app.module.ts`,
-        `
-         const y = 1111;
-    `
-      );
-
-      updateFile(
-        `apps/${myapp}/src/app/app.component.ts`,
-        `
-         const z = 1111;
-    `
-      );
-
-      updateFile(
-        `libs/${mylib}/index.ts`,
-        `
-         const x = 1111;
-    `
-      );
-      updateFile(
-        `libs/${mylib}/src/${mylib}.module.ts`,
-        `
-         const y = 1111;
-    `
-      );
-
-      updateFile(
-        `README.md`,
-        `
-         my new readme;
-    `
-      );
-
-      let stdout = runCLI(
+      const stdout = runCLI(
         `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
         { silenceError: true }
       );
@@ -81,17 +83,12 @@ describe('format', () => {
         path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
       );
       expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
+    }
+  }, 90000);
 
-      stdout = runCLI(`format:check --all`, { silenceError: true });
-      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-      expect(stdout).toContain(
-        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-      );
-      expect(stdout).toContain(
-        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-      );
-
-      stdout = runCLI(`format:check --projects=${myapp}`, {
+  it('should check spoecific project', async () => {
+    if (isNotWindows()) {
+      const stdout = runCLI(`format:check --projects=${myapp}`, {
         silenceError: true,
       });
       expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
@@ -106,8 +103,12 @@ describe('format', () => {
         path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
       );
       expect(stdout).not.toContain(path.normalize(`README.md`));
+    }
+  }, 90000);
 
-      stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
+  it('should check multiple projects', async () => {
+    if (isNotWindows()) {
+      const stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
         silenceError: true,
       });
       expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
@@ -122,7 +123,29 @@ describe('format', () => {
         path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
       );
       expect(stdout).not.toContain(path.normalize(`README.md`));
+    }
+  }, 90000);
 
+  it('should check all', async () => {
+    if (isNotWindows()) {
+      const stdout = runCLI(`format:check --all`, { silenceError: true });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+      expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).toContain(path.normalize(`README.md`));
+    }
+  }, 90000);
+
+  it('should throw error if passing both projects and --all param', async () => {
+    if (isNotWindows()) {
       const { stderr } = await runCLIAsync(
         `format:check --projects=${myapp},${mylib} --all`,
         {
@@ -132,12 +155,15 @@ describe('format', () => {
       expect(stderr).toContain(
         'Arguments all and projects are mutually exclusive'
       );
+    }
+  }, 90000);
 
+  it('should reformat the code', async () => {
+    if (isNotWindows()) {
       runCLI(
         `format:write --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
       );
-
-      stdout = runCLI('format:check --all', { silenceError: true });
+      const stdout = runCLI('format:check --all', { silenceError: true });
       expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
       expect(stdout).not.toContain(
         path.normalize(`apps/${myapp}/src/app/app.module.ts`)
@@ -151,7 +177,7 @@ describe('format', () => {
         path.normalize(`apps/${myapp}/src/main.ts`)
       );
     }
-  }, 90000);
+  }, 300000);
 });
 
 describe('dep-graph', () => {
