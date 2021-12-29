@@ -16,7 +16,6 @@ import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { checkPublicDirectory } from './lib/check-project';
 import { importConstants } from '../../utils/require-shim';
 import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
@@ -45,8 +44,6 @@ export default async function buildExecutor(
       context.configurationName
     );
     dependencies = result.dependencies;
-
-    assertDependentProjectsHaveBeenBuilt(dependencies, context);
   }
 
   const config = await prepareConfig(

@@ -1,6 +1,7 @@
 import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
+  cleanupProject,
   createFile,
   killPorts,
   newProject,
@@ -22,15 +23,33 @@ describe('Next.js Applications', () => {
 
   beforeAll(() => (proj = newProject()));
 
-  it('should compile when using a workspace and react lib written in TypeScript', async () => {
+  afterAll(() => cleanupProject());
+
+  it('should generate app + libs', async () => {
     const appName = uniq('app');
+    const reactLib = uniq('reactlib');
+    const jsLib = uniq('tslib');
 
-    const tsLibName = uniq('tslib');
-    const tsxLibName = uniq('tsxlib');
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/react:lib ${tsxLibName} --no-interactive`);
-    runCLI(`generate @nrwl/js:lib ${tsLibName} --no-interactive`);
+    // Create file in public that should be copied to dist
+    updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+
+    // Additional assets that should be copied to dist
+    const sharedLib = uniq('sharedLib');
+    updateProjectConfig(appName, (json) => {
+      json.targets.build.options.assets = [
+        {
+          glob: '**/*',
+          input: `libs/${sharedLib}/src/assets`,
+          output: 'shared/ui',
+        },
+      ];
+      return json;
+    });
+    updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 
     // create a css file in node_modules so that it can be imported in a lib
     // to test that it works as expected
@@ -40,7 +59,7 @@ describe('Next.js Applications', () => {
     );
 
     updateFile(
-      `libs/${tsLibName}/src/lib/${tsLibName}.ts`,
+      `libs/${jsLib}/src/lib/${jsLib}.ts`,
       `
           export function testFn(): string {
             return 'Hello Nx';
@@ -53,32 +72,13 @@ describe('Next.js Applications', () => {
           `
     );
 
-    updateFile(
-      `libs/${tsxLibName}/src/lib/${tsxLibName}.tsx`,
-      `
-          import '@nrwl/next/test-styles.css';
-
-          interface TestComponentProps {
-            text: string;
-          }
-
-          export const TestComponent = ({ text }: TestComponentProps) => {
-            // testing whether modern languages features like nullish coalescing work
-            const t = text ?? 'abc';
-            return <span>{t}</span>;
-          };
-
-          export default TestComponent;
-          `
-    );
-
     const mainPath = `apps/${appName}/pages/index.tsx`;
     const content = readFile(mainPath);
 
     updateFile(
       `apps/${appName}/pages/api/hello.ts`,
       `
-          import { testAsyncFn } from '@${proj}/${tsLibName}';
+          import { testAsyncFn } from '@${proj}/${jsLib}';
 
           export default async function handler(_, res) {
             const value = await testAsyncFn();
@@ -90,14 +90,21 @@ describe('Next.js Applications', () => {
     updateFile(
       mainPath,
       `
-          import { testFn } from '@${proj}/${tsLibName}';
-          import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
+          import { testFn } from '@${proj}/${jsLib}';
+          /* eslint-disable */
+          import dynamic from 'next/dynamic';
+          
+          const TestComponent = dynamic(
+              () => import('@${proj}/${reactLib}').then(d => d.${stringUtils.capitalize(
+        reactLib
+      )})
+            );
           ${content.replace(
             `</h2>`,
             `</h2>
                 <div>
                   {testFn()}
-                  <TestComponent text='Hello Next.JS' />
+                  <TestComponent />
                 </div>
               `
           )}`
@@ -122,9 +129,15 @@ describe('Next.js Applications', () => {
     await checkApp(appName, {
       checkUnitTest: true,
       checkLint: true,
-      checkE2E: false,
+      checkE2E: true,
       checkExport: false,
     });
+
+    // public and shared assets should both be copied to dist
+    checkFilesExist(
+      `dist/apps/${appName}/public/a/b.txt`,
+      `dist/apps/${appName}/public/shared/ui/hello.txt`
+    );
   }, 300000);
 
   it('should be able to serve with a proxy configuration', async () => {
@@ -194,65 +207,6 @@ describe('Next.js Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 300000);
-
-  it('should be able to dynamically load a lib', async () => {
-    const appName = uniq('app');
-    const libName = uniq('lib');
-
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none`);
-
-    const mainPath = `apps/${appName}/pages/index.tsx`;
-    updateFile(
-      mainPath,
-      `
-          /* eslint-disable */
-          import dynamic from 'next/dynamic';
-          const DynamicComponent = dynamic(
-              () => import('@${proj}/${libName}').then(d => d.${stringUtils.capitalize(
-        libName
-      )})
-            );
-        ${readFile(mainPath)}`
-    );
-
-    await checkApp(appName, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: true,
-      checkExport: false,
-    });
-  }, 300000);
-
-  it('should build with public folder', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
-    );
-    updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
-
-    // Shared assets
-    const sharedLib = uniq('sharedLib');
-    updateProjectConfig(appName, (json) => {
-      json.targets.build.options.assets = [
-        {
-          glob: '**/*',
-          input: `libs/${sharedLib}/src/assets`,
-          output: 'shared/ui',
-        },
-      ];
-      return json;
-    });
-    updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
-
-    runCLI(`build ${appName}`);
-
-    checkFilesExist(
-      `dist/apps/${appName}/public/a/b.txt`,
-      `dist/apps/${appName}/public/shared/ui/hello.txt`
-    );
   }, 300000);
 
   it('should build with a next.config.js file in the dist folder', async () => {
@@ -405,7 +359,6 @@ describe('Next.js Applications', () => {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      // expect(await killPorts(port)).toBeTruthy();
       await killPorts(port);
     } catch (err) {
       expect(err).toBeFalsy();
@@ -418,7 +371,7 @@ describe('Next.js Applications', () => {
     runCLI(`generate @nrwl/next:app ${lessApp} --no-interactive --style=less`);
 
     await checkApp(lessApp, {
-      checkUnitTest: true,
+      checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
       checkExport: false,
@@ -431,7 +384,7 @@ describe('Next.js Applications', () => {
     );
 
     await checkApp(stylusApp, {
-      checkUnitTest: true,
+      checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
       checkExport: false,
@@ -489,7 +442,7 @@ async function checkApp(
     checkExport: boolean;
   }
 ) {
-  const buildResult = runCLI(`build ${appName} --withDeps`);
+  const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
 
