@@ -18,7 +18,6 @@ import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 import { importConstants } from '../../utils/require-shim';
 import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 import nextTrace = require('next/dist/trace');
@@ -39,8 +38,6 @@ export default async function exportExecutor(
       context.configurationName
     );
     dependencies = result.dependencies;
-
-    assertDependentProjectsHaveBeenBuilt(dependencies, context);
   }
 
   const libsDir = join(context.root, workspaceLayout().libsDir);
