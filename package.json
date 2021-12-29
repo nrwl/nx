@@ -218,7 +218,7 @@
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.1",
-    "rollup-plugin-typescript2": "^0.30.0",
+    "rollup-plugin-typescript2": "^0.31.1",
     "rxjs": "6.6.7",
     "rxjs-for-await": "0.0.2",
     "sass": "^1.42.1",
