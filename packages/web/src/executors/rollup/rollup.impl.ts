@@ -33,7 +33,6 @@ import { validateTypes } from './lib/validate-types';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
-const typescript = require('rollup-plugin-typescript2');
 const image = require('@rollup/plugin-image');
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
@@ -201,7 +200,7 @@ export function createRollupOptions(
       }),
       image(),
       useBabel &&
-        typescript({
+        require('rollup-plugin-typescript2')({
           check: true,
           tsconfig: options.tsConfig,
           tsconfigOverride: {
