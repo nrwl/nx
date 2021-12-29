@@ -2,13 +2,14 @@
 
 [Layer0](https://www.layer0.co) is an all-in-one platform to develop, deploy, preview, experiment on, monitor, and run your headless frontend, focused on EdgeJS, predictive prefetching, and performance monitoring.
 
-1. In your hexo project directory, run:
+1. Install Layer0 CLI by the following:
 ```bash
 npm i -g @layer0/cli
 0 init
 ```
 
 2. Create a custom Layer0 connector:
+
 Since our Next.js app isn't located in the root of the project as the @layer0/next connector expects, we'll need to define our own custom connector. To do so:
 - Set connector: './layer0' in layer0.config.js
 - Copy the [layer0 directory from the example](https://github.com/layer0-docs/layer0-nx-example/tree/master/layer0) into the root of your monorepo.
