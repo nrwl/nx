@@ -2711,6 +2711,11 @@
             "file": "react/guides/deploy-nextjs-to-vercel"
           },
           {
+            "name": "Deploying Next.js applications to Layer0",
+            "id": "deploy-nextjs-to-layer0",
+            "file": "react/guides/deploy-nextjs-to-layer0"
+          },
+          {
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
