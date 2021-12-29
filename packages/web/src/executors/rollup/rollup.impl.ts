@@ -220,6 +220,11 @@ export function createRollupOptions(
         extract: options.extractCss,
         autoModules: true,
         plugins: [autoprefixer],
+        use: {
+          less: {
+            javascriptEnabled: options.javascriptEnabled,
+          },
+        },
       }),
       resolve({
         preferBuiltins: true,

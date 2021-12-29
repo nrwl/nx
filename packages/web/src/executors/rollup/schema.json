@@ -114,6 +114,11 @@
       "enum": ["babel", "swc"],
       "default": "babel",
       "description": "Which compiler to use."
+    },
+    "javascriptEnabled": {
+      "type": "boolean",
+      "description": "Sets `javascriptEnabled` option for less loader",
+      "default": false
     }
   },
   "required": ["tsConfig", "project", "entryFile", "outputPath"],

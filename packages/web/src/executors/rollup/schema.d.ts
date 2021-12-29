@@ -22,4 +22,5 @@ export interface WebRollupOptions {
   deleteOutputPath?: boolean;
   format: string[];
   compiler?: Compiler;
+  javascriptEnabled?: boolean;
 }
