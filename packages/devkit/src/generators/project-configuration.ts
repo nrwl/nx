@@ -145,6 +145,7 @@ export function updateWorkspaceConfiguration(
     workspaceLayout,
     tasksRunnerOptions,
     affected,
+    extends: ext,
   } = workspaceConfig;
 
   const nxJson: Required<NxJsonConfiguration> = {
@@ -158,6 +159,7 @@ export function updateWorkspaceConfiguration(
     cli,
     generators,
     defaultProject,
+    extends: ext,
   };
 
   if (tree.exists('nx.json')) {

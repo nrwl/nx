@@ -7,7 +7,7 @@ import { TaskGraph } from './tasks';
 import { logger } from './logger';
 import { sync as globSync } from 'fast-glob';
 import ignore, { Ignore } from 'ignore';
-import { basename, dirname, join, toNamespacedPath } from 'path';
+import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { loadNxPlugins } from './nx-plugin';
 
@@ -290,9 +290,7 @@ export class Workspaces {
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
     NxJsonConfiguration {
     const nxJsonPath = path.join(this.root, 'nx.json');
-    const nxJson = existsSync(nxJsonPath)
-      ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
-      : ({} as NxJsonConfiguration);
+    const nxJson = readOrExtendNxConfig(nxJsonPath);
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
       ? path.join(this.root, workspaceFile)
@@ -631,6 +629,32 @@ export function inlineProjectConfigurations(
 }
 
 /**
+ * Reads an nx.json file from a given path or extends a local nx.json config.
+ */
+export function readOrExtendNxConfig(
+  nxJson: string | NxJsonConfiguration
+): NxJsonConfiguration {
+  let nxJsonConfig: NxJsonConfiguration;
+  if (typeof nxJson === 'string') {
+    if (existsSync(nxJson)) {
+      nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
+    } else {
+      nxJsonConfig = {} as NxJsonConfiguration;
+    }
+  } else {
+    nxJsonConfig = { ...nxJson };
+  }
+  const extendNxJsonPath = nxJsonConfig.extends
+    ? join('node_modules', nxJsonConfig.extends)
+    : undefined;
+  if (extendNxJsonPath && existsSync(extendNxJsonPath)) {
+    const baseNxJson = readJsonFile<NxJsonConfiguration>(extendNxJsonPath);
+    return { ...baseNxJson, ...nxJsonConfig };
+  }
+  return nxJsonConfig;
+}
+
+/**
  * Pulled from toFileName in names from @nrwl/devkit.
  * Todo: Should refactor, not duplicate.
  */
@@ -768,6 +792,7 @@ export function buildWorkspaceConfigurationFromGlobs(
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
 ): WorkspaceJsonConfiguration {
   const projects: Record<string, ProjectConfiguration> = {};
+  nxJson = readOrExtendNxConfig(nxJson);
 
   for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');

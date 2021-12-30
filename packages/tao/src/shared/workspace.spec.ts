@@ -1,10 +1,13 @@
 import {
   buildWorkspaceConfigurationFromGlobs,
   inlineProjectConfigurations,
+  readOrExtendNxConfig,
   toProjectName,
 } from './workspace';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from './nx';
+
+const fs = require('fs');
 
 jest.mock('../utils/fileutils');
 jest.mock('fast-glob', () => ({
@@ -17,6 +20,7 @@ jest.mock('fast-glob', () => ({
     'libs/domain/lib4/package.json',
   ],
 }));
+jest.mock('fs');
 
 const libConfig = (name) => ({
   root: `libs/${name}`,
@@ -29,6 +33,10 @@ const packageLibConfig = (root) => ({
 });
 
 describe('workspace', () => {
+  beforeAll(() => {
+    fs.existsSync.mockReturnValue(true);
+  });
+
   it('should be able to inline project configurations', () => {
     const standaloneConfig = libConfig('lib1');
 
@@ -54,6 +62,31 @@ describe('workspace', () => {
         ...inlineConfig.projects,
         lib1: { ...standaloneConfig },
       },
+    });
+  });
+
+  it('should read and/or normalize an nx.json config (including any base config)', () => {
+    const defaultNxJson = {
+      extends: '@some-org/libs/shared/config/nx.json',
+    } as NxJsonConfiguration;
+    const npmWorkspaceLayout = {
+      workspaceLayout: { libsDir: 'packages' },
+    };
+
+    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
+      if (/node_modules/.test(path)) {
+        return { ...defaultNxJson, ...npmWorkspaceLayout };
+      } else if (path.endsWith('nx.json')) {
+        return defaultNxJson;
+      }
+      throw `${path} not in mock!`;
+    });
+
+    const localNxJson = readOrExtendNxConfig('nx.json');
+    expect(localNxJson).toEqual({ ...defaultNxJson, ...npmWorkspaceLayout });
+    expect(readOrExtendNxConfig(defaultNxJson)).toEqual({
+      ...defaultNxJson,
+      ...npmWorkspaceLayout,
     });
   });
 
