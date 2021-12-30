@@ -40,7 +40,7 @@
     "@nrwl/web": "*",
     "@nrwl/workspace": "*",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
-    "@svgr/webpack": "^5.5.0",
+    "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-jsx-a11y": "^6.4.1",

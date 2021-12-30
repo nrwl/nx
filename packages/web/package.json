@@ -111,7 +111,7 @@
     "webpack-subresource-integrity": "^1.5.2",
     "worker-plugin": "3.2.0",
     "webpack-dev-server": "^4.3.1",
-    "http-server": "0.12.3",
+    "http-server": "~14.0.0",
     "ignore": "^5.0.4"
   }
 }
