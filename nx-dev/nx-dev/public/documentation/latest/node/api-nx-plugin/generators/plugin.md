@@ -83,6 +83,14 @@ Type: `boolean`
 
 Skip formatting files
 
+### skipPreset
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add a preset generator for custom preset (e.g. create-nx-workspace --preset=my-plugin).
+
 ### skipTsConfig
 
 Default: `false`

@@ -6,7 +6,7 @@ import { <%= className %>PresetGeneratorSchema } from './schema';
 
 describe('<%= name %> generator', () => {
   let appTree: Tree;
-  const options: <%= className %>PresetGeneratorSchema = { name: 'test' };
+  const options: <%= className %>PresetGeneratorSchema = { message: 'test' };
 
   beforeEach(() => {
     appTree = createTreeWithEmptyWorkspace();
@@ -14,5 +14,7 @@ describe('<%= name %> generator', () => {
 
   it('should run successfully', async () => {
     await preset(appTree, options);
+
+    appTree.exists('message.txt');
   })
 });

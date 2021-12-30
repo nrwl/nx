@@ -28,42 +28,51 @@ After executing the above command, the following tree structure is created:
 my-org/
 ├── e2e/
 │   └── my-plugin-e2e/
-│       ├── jest.config.js
 │       ├── tests/
-│       │   └── my-plugin.test.ts
+│       │   └── my-plugin.spec.ts
+│       ├── jest.config.js
+│       ├── project.json
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
 ├── packages/
 │   └── my-plugin/
+│       ├── src/
+│       │   ├── executors/
+│       │   │   └── build/
+│       │   │       ├── executor.spec.ts
+│       │   │       ├── executor.ts
+│       │   │       ├── schema.d.ts
+│       │   │       └── schema.json
+│       │   ├── generators/
+│       │   │   ├── my-plugin/
+│       │   │   │   ├── files/
+│       │   │   │   │   └── src/
+│       │   │   │   │       └── index.ts__template__
+│       │   │   │   ├── generator.spec.ts
+│       │   │   │   ├── generator.ts
+│       │   │   │   ├── schema.d.ts
+│       │   │   │   └── schema.json
+│       │   │   └── preset/
+│       │   │       ├── preset.spec.ts
+│       │   │       ├── preset.ts
+│       │   │       ├── schema.d.ts
+│       │   │       └── schema.json
+│       │   └── index.ts
 │       ├── README.md
 │       ├── executors.json
 │       ├── generators.json
 │       ├── jest.config.js
 │       ├── package.json
-│       ├── src/
-│       │   ├── executors/
-│       │   │   └── my-plugin/
-│       │   │       ├── executor.spec.ts
-│       │   │       ├── executor.ts
-│       │   │       ├── schema.d.ts
-│       │   │       └── schema.json
-│       │   ├── index.ts
-│       │   └── generators/
-│       │       └── my-plugin/
-│       │           ├── files/
-│       │           │   └── src/
-│       │           │       └── index.ts.__template__
-│       │           ├── schema.d.ts
-│       │           ├── schema.json
-│       │           ├── generator.spec.ts
-│       │           └── generator.ts
+│       ├── project.json
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
-│       └── tsconfig.spec.json
-├── tools
+│     └── tsconfig.spec.json
+├── tools/
 │   ├── generators/
 │   └── tsconfig.tools.json
+├── README.md
 ├── jest.config.js
+├── jest.preset.js
 ├── nx.json
 ├── package.json
 ├── tsconfig.base.json
@@ -73,7 +82,7 @@ my-org/
 
 > If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
 
-A new plugin is created with a default generator, executor, and e2e app.
+A new plugin is created with a default generator, a custom preset generator, an executor, and an e2e app. The custom preset generator is used when invoking `npx create-nx-workspace --preset=@my-org/my-plugin`.
 
 ## Generator
 
@@ -84,7 +93,7 @@ The created generator contains boilerplate that will do the following:
 - Add the plugin's project to the `nx.json` file
 - Add files to the disk using templates
 
-There will be a exported default function that will be the main entry for the generator.
+There will be an exported default function that will be the main entry for the generator.
 
 ### Generator options
 

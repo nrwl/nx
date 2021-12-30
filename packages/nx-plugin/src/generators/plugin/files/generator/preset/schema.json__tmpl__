@@ -5,6 +5,10 @@
   "title": "",
   "type": "object",
   "properties": {
+    "message": {
+      "type: "string",
+      "description": "Message to generate with."
+    }
   },
   "required": [],
   "additionalProperties": true
