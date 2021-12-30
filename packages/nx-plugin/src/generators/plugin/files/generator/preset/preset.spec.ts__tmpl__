@@ -1,0 +1,18 @@
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nrwl/devkit';
+
+import preset from './preset';
+import { <%= className %>PresetGeneratorSchema } from './schema';
+
+describe('<%= name %> generator', () => {
+  let appTree: Tree;
+  const options: <%= className %>PresetGeneratorSchema = { name: 'test' };
+
+  beforeEach(() => {
+    appTree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should run successfully', async () => {
+    await preset(appTree, options);
+  })
+});

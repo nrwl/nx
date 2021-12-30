@@ -1,0 +1,26 @@
+import { addDependenciesToPackageJson, formatFiles } from "@nrwl/devkit";
+import type { GeneratorCallback, Tree } from "@nrwl/devkit";
+
+import { <%= className %>PresetGeneratorSchema } from './schema';
+
+// This is the generator that `create-nx-workspace` calls when the npm package is passed as `--preset=[package]`
+// e.g. npx create-nx-workspace --preset=@my-org/my-plugin
+export default async function (tree: Tree, _options: <%= className %>PresetGeneratorSchema): Promise<GeneratorCallback> {
+  const installTask = addDependenciesToPackageJson(tree, {
+    // Add dependencies to workspace
+  }, {
+    // Add dev dependencies to workspace
+  });
+
+  // You can create any files you want.
+  // See the `generateFiles` function from `@nrwl/devkit` for template files.
+  tree.write('message.txt', 'It works!');
+
+  await formatFiles(tree);
+
+  return async () => {
+    await installTask();
+
+    // Perform additional tasks...
+  }
+}

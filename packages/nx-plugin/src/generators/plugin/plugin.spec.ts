@@ -1,5 +1,5 @@
 import { pluginGenerator } from './plugin';
-import { Tree, readProjectConfiguration } from '@nrwl/devkit';
+import { Tree, readProjectConfiguration, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 describe('NxPlugin Plugin Generator', () => {
@@ -118,6 +118,52 @@ describe('NxPlugin Plugin Generator', () => {
           'libs/my-plugin/src/executors/build/executor.spec.ts',
         ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
       });
+    });
+  });
+
+  describe('--skipPreset', () => {
+    it('should generate a preset generator by default', async () => {
+      await pluginGenerator(tree, {
+        name: 'myPlugin',
+        skipPreset: false,
+      } as any);
+
+      const content = tree
+        .read('libs/my-plugin/src/generators/preset/preset.ts')
+        .toString();
+      expect(content).toMatch('MyPluginPreset');
+
+      [
+        'libs/my-plugin/src/generators/preset/schema.d.ts',
+        'libs/my-plugin/src/generators/preset/schema.json',
+        'libs/my-plugin/src/generators/preset/preset.spec.ts',
+      ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
+
+      const generatorsJson = readJson(tree, 'libs/my-plugin/generators.json');
+      expect(generatorsJson.generators).toMatchObject({
+        preset: {
+          factory: './src/generators/preset/preset',
+          schema: './src/generators/preset/schema.json',
+          description: expect.any(String),
+        },
+      });
+    });
+
+    it('should skipping the preset generator', async () => {
+      await pluginGenerator(tree, {
+        name: 'myPlugin',
+        skipPreset: true,
+      } as any);
+
+      [
+        'libs/my-plugin/src/generators/preset/preset.ts',
+        'libs/my-plugin/src/generators/preset/preset.spec.ts',
+        'libs/my-plugin/src/generators/preset/schema.d.ts',
+        'libs/my-plugin/src/generators/preset/schema.json',
+      ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
+
+      const generatorsJson = readJson(tree, 'libs/my-plugin/generators.json');
+      expect(generatorsJson.generators.preset).toBeFalsy();
     });
   });
 });

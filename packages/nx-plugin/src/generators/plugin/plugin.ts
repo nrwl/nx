@@ -10,6 +10,7 @@ import {
   names,
   normalizePath,
   readProjectConfiguration,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import type { Schema } from './schema';
@@ -24,6 +25,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
+  className: string;
   libsDir: string;
   projectRoot: string;
   projectDirectory: string;
@@ -51,6 +53,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   return {
     ...options,
     fileName,
+    className: names(projectName).className,
     npmScope,
     libsDir,
     name: projectName,
@@ -84,6 +87,19 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
     name: 'build',
     unitTestRunner: options.unitTestRunner,
   });
+
+  if (!options.skipPreset) {
+    generateFiles(
+      host,
+      path.join(__dirname, './files/generator'),
+      joinPathFragments(options.projectRoot, 'src/generators'),
+      {
+        ...options,
+        tmpl: '',
+      }
+    );
+    addPresetGenerator(host, options);
+  }
 }
 
 function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
@@ -120,6 +136,27 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
   }
 }
 
+function addPresetGenerator(host: Tree, options: NormalizedSchema) {
+  let generatorPath: string;
+  if (host.exists(path.join(options.projectRoot, 'generators.json'))) {
+    generatorPath = path.join(options.projectRoot, 'generators.json');
+  } else {
+    generatorPath = path.join(options.projectRoot, 'collection.json');
+  }
+
+  return updateJson(host, generatorPath, (json) => {
+    let generators = json.generators ?? json.schematics;
+    generators ??= {};
+    generators.preset = {
+      factory: `./src/generators/preset/preset`,
+      schema: `./src/generators/preset/schema.json`,
+      description: `Generate a new ${options.name} workspace`,
+    };
+    json.generators = generators;
+    return json;
+  });
+}
+
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
@@ -144,6 +181,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   tasks.push(installTask);
 
   await addFiles(host, options);
+
   updateWorkspaceJson(host, options);
 
   await e2eProjectGenerator(host, {

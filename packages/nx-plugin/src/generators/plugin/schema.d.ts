@@ -6,6 +6,7 @@ export interface Schema {
   importPath?: string;
   skipTsConfig: boolean;
   skipFormat: boolean;
+  skipPreset?: boolean;
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;

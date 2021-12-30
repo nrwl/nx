@@ -56,6 +56,11 @@
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
     },
+    "skipPreset": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add a preset generator for custom preset (e.g. create-nx-workspace --preset=my-plugin)."
+    },
     "standaloneConfig": {
       "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
       "type": "boolean"
