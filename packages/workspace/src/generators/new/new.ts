@@ -98,7 +98,7 @@ function generatePreset(host: Tree, opts: NormalizedSchema) {
     const thirdPartyPkgArgs = Object.entries(opts).reduce(
       (acc, [key, value]) => {
         if (value === true) {
-          acc.push(`${key}`);
+          acc.push(`--${key}`);
         } else if (value === false) {
           acc.push(`--no-${key}`);
           // nxWorkspaceRoot breaks Tao CLI if incorrectly set, so need to exclude it.
