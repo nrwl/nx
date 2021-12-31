@@ -37,6 +37,7 @@
           {
             "input": "packages/cypress",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {

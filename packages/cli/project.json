@@ -37,6 +37,7 @@
           {
             "input": "packages/cli",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {

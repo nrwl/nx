@@ -37,6 +37,7 @@
           {
             "input": "packages/nx-plugin",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {

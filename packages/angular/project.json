@@ -42,6 +42,7 @@
           {
             "input": "packages/angular",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {

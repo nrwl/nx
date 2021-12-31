@@ -42,6 +42,7 @@
           {
             "input": "packages/gatsby",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {

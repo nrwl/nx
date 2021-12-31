@@ -45,6 +45,7 @@
           {
             "input": "packages/workspace",
             "glob": "**/*.{js,css,html,svg}",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
