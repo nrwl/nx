@@ -26,6 +26,7 @@ import {
   CrossOriginValue,
   writeIndexHtml,
 } from '../../utils/webpack/write-index-html';
+import { tsNodeRegister } from '../../utils/webpack/tsNodeRegister';
 
 export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   index: string;
@@ -104,14 +105,32 @@ function getWebpackConfigs(
       : undefined,
   ]
     .filter(Boolean)
-    .map((config) =>
-      options.webpackConfig
-        ? require(options.webpackConfig)(config, {
-            options,
-            configuration: context.configurationName,
-          })
-        : config
-    );
+    .map((config) => {
+      if (options.webpackConfig) {
+        const customWebpack = resolveCustomWebpackConfig(
+          options.webpackConfig,
+          options.tsConfig
+        );
+
+        return customWebpack(config, {
+          options,
+          configuration: context.configurationName,
+        });
+      }
+      return config;
+    });
+}
+
+function resolveCustomWebpackConfig(path: string, tsConfig: string) {
+  tsNodeRegister(path, tsConfig);
+
+  const customWebpackConfig = require(path);
+  // If the user provides a configuration in TS file
+  // then there are 2 cases for exporing an object. The first one is:
+  // `module.exports = { ... }`. And the second one is:
+  // `export default { ... }`. The ESM format is compiled into:
+  // `{ default: { ... } }`
+  return customWebpackConfig.default || customWebpackConfig;
 }
 
 export async function* run(
