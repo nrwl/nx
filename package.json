@@ -195,7 +195,6 @@
     "ng-packagr": "~13.1.0",
     "ngrx-store-freeze": "0.2.4",
     "node-fetch": "^2.6.1",
-    "npm-run-all": "^4.1.5",
     "open": "^7.4.2",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",
