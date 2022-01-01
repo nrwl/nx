@@ -252,7 +252,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
         </div>
         <div className="mt-12 border-t border-gray-200 pt-6">
           <p className="text-base text-gray-400 xl:text-center">
-            &copy; 2021 made with{' '}
+            &copy; 2022 made with{' '}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="-mt-0.5 h-5 w-5 inline"
