@@ -19,10 +19,10 @@ import {
   VersionsAndFlavorsProvider,
 } from '@nrwl/nx-dev/feature-versions-and-flavors';
 import {
-  FlavorSelectionDialog,
   pathCleaner,
   useSelectedFlavor,
 } from '@nrwl/nx-dev/feature-flavor-selection';
+import FlavorsBanner from '../../feature-flavor-selection/src/lib/flavors-banner';
 
 const flavorList = documentsApi.getFlavors();
 const versionList = documentsApi.getVersions();
@@ -104,6 +104,11 @@ export function DocumentationPage({ document, menu }: DocumentationPageProps) {
         flavor={{ name: activeFlavor.name, value: activeFlavor.alias }}
       />
       <main>
+        <FlavorsBanner
+          version={activeVersion}
+          isSelected={flavorSelected}
+          onSelect={setSelectedFlavor}
+        />
         <DocViewer
           version={activeVersion}
           versionList={versions}
@@ -161,11 +166,6 @@ export function DocumentationPage({ document, menu }: DocumentationPageProps) {
         </button>
       </main>
       {!navIsOpen ? <Footer /> : null}
-      <FlavorSelectionDialog
-        open={!flavorSelected}
-        version={activeVersion}
-        onSelect={setSelectedFlavor}
-      />
     </>
   );
 }

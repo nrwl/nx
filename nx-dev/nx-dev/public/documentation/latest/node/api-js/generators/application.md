@@ -55,7 +55,7 @@ Type: `string`
 
 Possible values: `tsc`, `swc`
 
-The compiler used by the build and test targets
+The compiler used by the build and test targets (tsc is preferred, swc is experimental)
 
 ### config
 
