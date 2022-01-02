@@ -45,8 +45,7 @@
     "webpack-node-externals": "^3.0.0",
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "rxjs": "^6.5.4",
-    "tslib": "^2.3.0",
-    "yargs-parser": "20.0.0"
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "cypress": ">= 3 < 10"

@@ -32,7 +32,6 @@
     "enquirer": "~2.3.6",
     "fs-extra": "^9.1.0",
     "tmp": "~0.2.1",
-    "yargs": "15.4.1",
     "yargs-parser": "20.0.0"
   }
 }
