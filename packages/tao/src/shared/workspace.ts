@@ -498,10 +498,9 @@ function assertValidWorkspaceConfiguration(
 ) {
   // Assert valid workspace configuration
   if (nxJson.projects) {
-    logger.error(
+    logger.warn(
       'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
     );
-    process.exit(1);
   }
 }
 
