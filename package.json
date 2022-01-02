@@ -107,7 +107,7 @@
     "@types/jasminewd2": "~2.0.3",
     "@types/jest": "27.0.2",
     "@types/marked": "^2.0.0",
-    "@types/node": "14.14.37",
+    "@types/node": "16.11.7",
     "@types/prettier": "2.3.0",
     "@types/react": "17.0.3",
     "@types/react-dom": "17.0.3",
