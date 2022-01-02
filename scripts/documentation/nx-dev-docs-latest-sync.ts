@@ -1,9 +1,9 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 import { watch } from 'chokidar';
-import * as shell from 'shelljs';
 import { BehaviorSubject } from 'rxjs';
 import { debounceTime, filter, switchMapTo, tap } from 'rxjs/operators';
+import { execSync } from 'child_process';
 
 /**
  * Available colours
@@ -24,9 +24,8 @@ const argv = yargs
   }).argv;
 
 function sync(): void {
-  return shell.exec(
-    'rsync -avrR --delete ./docs/./ ./nx-dev/nx-dev/public/documentation',
-    { sync: true }
+  execSync(
+    'rsync -avrR --delete ./docs/./ ./nx-dev/nx-dev/public/documentation'
   );
 }
 
