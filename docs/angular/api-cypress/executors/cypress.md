@@ -21,7 +21,7 @@ The path of the Cypress configuration json file.
 
 Type: `string`
 
-Use this to pass directly the address of your distant server address with the port running your application
+The address (with the port) which your application is running on
 
 ### browser
 

@@ -119,6 +119,36 @@ describe('schematic:cypress-project', () => {
       });
     });
 
+    it('should add update `workspace.json` file (baseUrl)', async () => {
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        baseUrl: 'http://localhost:3000',
+        linter: Linter.TsLint,
+        standaloneConfig: false,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
+
+      expect(project.root).toEqual('apps/my-app-e2e');
+
+      expect(project.architect.lint).toEqual({
+        builder: '@angular-devkit/build-angular:tslint',
+        options: {
+          tsConfig: ['apps/my-app-e2e/tsconfig.json'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
+        },
+      });
+      expect(project.architect.e2e).toEqual({
+        builder: '@nrwl/cypress:cypress',
+        options: {
+          cypressConfig: 'apps/my-app-e2e/cypress.json',
+          baseUrl: 'http://localhost:3000',
+          tsConfig: 'apps/my-app-e2e/tsconfig.json',
+        },
+      });
+    });
+
     it('should add update `workspace.json` file for a project with a defaultConfiguration', async () => {
       const originalProject = readProjectConfiguration(tree, 'my-app');
       originalProject.targets.serve.defaultConfiguration = 'development';
@@ -321,6 +351,7 @@ describe('schematic:cypress-project', () => {
           await cypressProjectGenerator(tree, {
             ...defaultOptions,
             name: 'my-app-e2e',
+            baseUrl: 'http://localhost:7788',
           });
 
           const workspaceJson = readJson<WorkspaceJsonConfiguration>(

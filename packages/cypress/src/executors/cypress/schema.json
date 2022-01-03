@@ -54,7 +54,7 @@
     },
     "baseUrl": {
       "type": "string",
-      "description": "Use this to pass directly the address of your distant server address with the port running your application"
+      "description": "The address (with the port) which your application is running on"
     },
     "browser": {
       "type": "string",
