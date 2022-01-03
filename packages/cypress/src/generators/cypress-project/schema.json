@@ -12,6 +12,10 @@
         "$source": "projectName"
       }
     },
+    "baseUrl": {
+      "type": "string",
+      "description": "The address (with the port) which your application is running on"
+    },
     "name": {
       "type": "string",
       "description": "Name of the E2E Project",

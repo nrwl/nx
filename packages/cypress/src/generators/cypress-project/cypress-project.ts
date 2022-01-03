@@ -57,39 +57,64 @@ function createFiles(tree: Tree, options: CypressProjectSchema) {
 }
 
 function addProject(tree: Tree, options: CypressProjectSchema) {
-  let devServerTarget: string = `${options.project}:serve`;
-  if (options.project) {
-    const project = readProjectConfiguration(tree, options.project);
-    devServerTarget =
-      project.targets.serve && project.targets.serve.defaultConfiguration
-        ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
-        : devServerTarget;
-  }
-
-  const project: ProjectConfiguration = {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'application',
-    targets: {
-      e2e: {
-        executor: '@nrwl/cypress:cypress',
-        options: {
-          cypressConfig: joinPathFragments(options.projectRoot, 'cypress.json'),
-          devServerTarget,
-        },
-        configurations: {
-          production: {
-            devServerTarget: `${options.project}:serve:production`,
+  let e2eProjectConfig: ProjectConfiguration;
+  if (options.baseUrl) {
+    e2eProjectConfig = {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'application',
+      targets: {
+        e2e: {
+          executor: '@nrwl/cypress:cypress',
+          options: {
+            cypressConfig: joinPathFragments(
+              options.projectRoot,
+              'cypress.json'
+            ),
+            baseUrl: options.baseUrl,
           },
         },
       },
-    },
-    tags: [],
-    implicitDependencies: options.project ? [options.project] : undefined,
-  };
+      tags: [],
+      implicitDependencies: options.project ? [options.project] : undefined,
+    };
+  } else if (options.project) {
+    const project = readProjectConfiguration(tree, options.project);
+    const devServerTarget =
+      project.targets.serve && project.targets.serve.defaultConfiguration
+        ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
+        : `${options.project}:serve`;
+    e2eProjectConfig = {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'application',
+      targets: {
+        e2e: {
+          executor: '@nrwl/cypress:cypress',
+          options: {
+            cypressConfig: joinPathFragments(
+              options.projectRoot,
+              'cypress.json'
+            ),
+            devServerTarget,
+          },
+          configurations: {
+            production: {
+              devServerTarget: `${options.project}:serve:production`,
+            },
+          },
+        },
+      },
+      tags: [],
+      implicitDependencies: options.project ? [options.project] : undefined,
+    };
+  } else {
+    throw new Error(`Either project or baseUrl should be specified.`);
+  }
+
   const detectedCypressVersion = installedCypressVersion() ?? cypressVersion;
   if (detectedCypressVersion < 7) {
-    project.targets.e2e.options.tsConfig = joinPathFragments(
+    e2eProjectConfig.targets.e2e.options.tsConfig = joinPathFragments(
       options.projectRoot,
       'tsconfig.json'
     );
@@ -97,7 +122,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
   addProjectConfiguration(
     tree,
     options.projectName,
-    project,
+    e2eProjectConfig,
     options.standaloneConfig
   );
 }

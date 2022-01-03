@@ -35,6 +35,12 @@ Type: `string`
 
 Name of the E2E Project
 
+### baseUrl
+
+Type: `string`
+
+The address (with the port) which your application is running on
+
 ### directory
 
 Type: `string`
