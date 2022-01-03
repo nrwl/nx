@@ -6,11 +6,7 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import { AssetGlobPattern, BuildBuilderOptions } from './shared-models';
 import { getOutputHashFormat } from './hash-format';
-
-// Inlining tsconfig-paths-webpack-plugin with a patch
-// See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
-// TODO(jack): Remove once the patch lands in original package
-import { TsconfigPathsPlugin } from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
@@ -113,13 +109,11 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
-        // TODO  Remove the never type when module is updated
-        // PR opened for the proper typing here; https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/66
         new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }),
+        }) as never, // TODO: Remove never type when 'tsconfig-paths-webpack-plugin' types fixed
       ],
       mainFields,
     },

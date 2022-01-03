@@ -46,7 +46,7 @@
     "tree-kill": "1.2.2",
     "ts-loader": "^9.2.6",
     "tsconfig-paths": "^3.9.0",
-    "tsconfig-paths-webpack-plugin": "3.4.1",
+    "tsconfig-paths-webpack-plugin": "3.5.2",
     "tslib": "^2.3.0",
     "webpack": "^5.58.1",
     "webpack-merge": "^5.8.0",

@@ -5,7 +5,7 @@ import type { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import buildExecutor from './build.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 
-jest.mock('../../utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin');
+jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('../../utils/run-webpack', () => ({
   runWebpack: jest.fn(),
 }));

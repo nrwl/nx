@@ -2,16 +2,11 @@ import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
 import { importConstants } from './require-shim';
-// Inlining tsconfig-paths-webpack-plugin with a patch
-// See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
-// TODO(jack): Remove once the patch lands in original package
-import { TsconfigPathsPlugin } from '@nrwl/web/src/utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 const { PHASE_PRODUCTION_BUILD } = importConstants();
 
-jest.mock(
-  '@nrwl/web/src/utils/webpack/plugins/tsconfig-paths/tsconfig-paths.plugin'
-);
+jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/server/config', () => ({
   __esModule: true,
   default: () => ({
