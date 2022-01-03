@@ -2,11 +2,8 @@ import * as fs from 'fs';
 import type { Schema } from './schema';
 import type { ExecutorContext } from '@nrwl/devkit';
 
+jest.spyOn(fs, 'mkdirSync').mockImplementation();
 jest.spyOn(fs, 'writeFileSync').mockImplementation();
-let mockCreateDirectory = jest.fn();
-jest.mock('./utility/create-directory', () => ({
-  createDirectory: mockCreateDirectory,
-}));
 
 const formattedReports = ['formatted report 1'];
 const mockFormatter = {
@@ -552,7 +549,9 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       }),
       mockContext
     );
-    expect(mockCreateDirectory).toHaveBeenCalledWith('/root/a/b/c');
+    expect(fs.mkdirSync).toHaveBeenCalledWith('/root/a/b/c', {
+      recursive: true,
+    });
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       '/root/a/b/c/outputFile1',
       formattedReports
