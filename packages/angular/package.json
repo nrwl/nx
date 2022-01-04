@@ -20,7 +20,8 @@
   "exports": {
     "./generators": "./generators.js",
     "./tailwind": "./tailwind.js",
-    "./src/generators/utils": "./src/generators/utils/index.js"
+    "./src/generators/utils": "./src/generators/utils/index.js",
+    "./src/executors/*": "./src/executors/*.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
