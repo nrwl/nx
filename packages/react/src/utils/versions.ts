@@ -27,8 +27,8 @@ export const reactReduxVersion = '7.2.5';
 export const reactTestRendererVersion = '17.0.2';
 
 export const eslintPluginImportVersion = '2.25.2';
-export const eslintPluginJsxA11yVersion = '6.4.1';
-export const eslintPluginReactVersion = '7.26.1';
+export const eslintPluginJsxA11yVersion = '6.5.1';
+export const eslintPluginReactVersion = '7.27.0';
 export const eslintPluginReactHooksVersion = '4.2.0';
 
 export const babelPluginStyledComponentsVersion = '1.10.7';
