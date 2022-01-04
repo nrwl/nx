@@ -4,6 +4,8 @@ Nx is a VSCode of build tools. The core of Nx is project and task graph creation
 execution of tasks, computation caching, and code generation. The extended functionality of Nx is provided
 by [Nx plugins](#nx-plugins) built on top of the underlying [Nx Devkit](#nx-devkit).
 
+> Many organizations use Nx without any plugins. If you are mainly interested in making your workspace faster, enabling distributed task execution, then plugins aren't necessary.
+
 ## Nx plugins
 
 Nx plugins are npm packages that contain generators and executors to extend the capabilities of an Nx workspace.
@@ -31,14 +33,13 @@ Plugins have:
 - **Project Inference Extensions**
 
   - Plugins can provide an array of glob patterns, `projectFilePatterns` that are used to infer project information.
-  - Plugins can provide a function `registerProjectTargets` that takes in one of the matched project files, and returns an object containing inferred targets from the file.
-  - This allows plugins to add new projects to the workspace when it doesn't contain workspace.json, and infer extra targets without adding them into project configuration.
+  - Plugins can provide a function `registerProjectTargets` that takes in one of the matched project files, and
+    returns an object containing inferred targets from the file.
+  - This allows plugins to add new projects to the workspace when it doesn't contain workspace.json, and infer extra
+    targets without adding them into project configuration.
 
 All of the core plugins are written using Nx Devkit, and you can use the same utilities to write your own generators and
 executors.
-
-The [Workspace Plugin](/{{framework}}/workspace/nrwl-workspace-overview) contains executors and generators that are
-included in every Nx workspace for you to use, and are used with other plugins.
 
 The Nx team maintains a core set of plugins for many application and tooling frameworks. You can also extend an Nx
 workspace by writing your own plugins. The [Nx Plugin](/{{framework}}/nx-plugin/overview) plugin provides guidance on

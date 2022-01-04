@@ -13,7 +13,7 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-blue-500',
-    link: '/getting-started/console',
+    link: '/using-nx/console',
     title: 'Editor plugins',
     subTitle: 'Nx-aware autocompletion and refactoring.',
     svg: (
@@ -46,7 +46,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-pink-500',
-    link: '/getting-started/nx-cli#modifying-code',
+    link: '/using-nx/nx-cli#modifying-code',
     title: 'Powerful code generation',
     subTitle: 'Nx automates repeatable tasks and refactorings.',
     svg: (
@@ -119,7 +119,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '/core-concepts/nx-devkit',
+    link: '/getting-started/nx-devkit',
     title: 'Nx Devkit',
     subTitle:
       'Nx enables a custom dev experience to match the needs of your organization.',

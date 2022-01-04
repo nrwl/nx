@@ -60,7 +60,7 @@ There are a lot of options when creating your application. If you want to follow
 - [Angular](/{{framework}}/angular/application)
 - [React](/{{framework}}/react/application)
 
-You may also find it useful to use the [Nx Console](/{{framework}}/getting-started/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
+You may also find it useful to use the [Nx Console](/{{framework}}/using-nx/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
 ### Configuration files
 
@@ -174,7 +174,7 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 [Learn more about the `run-commands` builder](/{{framework}}/workspace/run-commands-executor)
 
-[Learn more about caching](/{{framework}}/core-extended/computation-caching)
+[Learn more about caching](/{{framework}}/using-nx/caching)
 
 [Learn more about community plugins](/community)
 

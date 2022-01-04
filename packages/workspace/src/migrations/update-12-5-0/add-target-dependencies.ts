@@ -33,7 +33,7 @@ export async function setTargetDependencies(host: Tree) {
         `Based on your configuration the migration has configured targetDependencies for the following targets: ${updatedStrictlyOrderedTargets.join(
           ', '
         )}.`,
-        `Read more here: https://nx.dev/core-concepts/configuration`,
+        `Read more here: https://nx.dev/configuration/projectjson`,
       ],
     });
   }

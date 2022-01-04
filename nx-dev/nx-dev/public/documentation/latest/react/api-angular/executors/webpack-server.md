@@ -7,7 +7,7 @@ description: 'Serves a browser application with support for a custom webpack con
 
 Serves a browser application with support for a custom webpack configuration.
 
-Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 
 ## Options
 

@@ -49,7 +49,8 @@ export function getBasicSection(items: MenuItem[]): MenuSection {
           m.id === 'getting-started' ||
           m.id === 'tutorial' ||
           m.id === 'migration' ||
-          m.id === 'core-concepts'
+          m.id === 'configuration' ||
+          m.id === 'using-nx'
       )
       .map((m) => {
         return {

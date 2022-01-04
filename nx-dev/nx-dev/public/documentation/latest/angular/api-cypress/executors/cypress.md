@@ -7,7 +7,7 @@ description: 'Run Cypress e2e tests'
 
 Run Cypress e2e tests
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
+Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 
 ## Options
 
@@ -21,7 +21,7 @@ The path of the Cypress configuration json file.
 
 Type: `string`
 
-Use this to pass directly the address of your distant server address with the port running your application
+The address (with the port) which your application is running on
 
 ### browser
 

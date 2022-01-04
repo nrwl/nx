@@ -18,7 +18,7 @@ In this guide we will look at setting up an Nx Workspaces for publishing NPM pac
 
 ## New Workspace
 
-Running `yarn create nx-workspace --preset=npm` creates an empty workspace set up to publish npm packages.
+Running `yarn create nx-workspace --preset=core` creates an empty workspace set up to publish npm packages.
 
 This is what is generated:
 
@@ -53,7 +53,7 @@ package.json
 
 ```json
 {
-  "extends": "@nrwl/workspace/presets/npm.json",
+  "extends": "@nrwl/workspace/presets/core.json",
   "npmScope": "myorg",
   "tasksRunnerOptions": {
     "default": {

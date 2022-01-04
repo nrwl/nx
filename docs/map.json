@@ -3,42 +3,6 @@
     "id": "angular",
     "itemList": [
       {
-        "name": "Getting Started",
-        "id": "getting-started",
-        "itemList": [
-          {
-            "name": "Intro to Nx",
-            "id": "intro",
-            "file": "angular/getting-started/intro"
-          },
-          {
-            "name": "Nx Setup",
-            "id": "nx-setup",
-            "file": "angular/getting-started/nx-setup"
-          },
-          {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "angular/getting-started/nx-cli"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
-          },
-          {
-            "name": "Nx and TypeScript",
-            "id": "nx-and-typescript",
-            "file": "shared/guides/nx-and-ts"
-          },
-          {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
-          }
-        ]
-      },
-      {
         "name": "Tutorial",
         "id": "tutorial",
         "itemList": [
@@ -93,28 +57,90 @@
         ]
       },
       {
-        "name": "Using Nx",
-        "id": "core-concepts",
+        "name": "Getting Started",
+        "id": "getting-started",
         "itemList": [
+          {
+            "name": "Intro to Nx",
+            "id": "intro",
+            "file": "angular/getting-started/intro"
+          },
+          {
+            "name": "Nx Setup",
+            "id": "nx-setup",
+            "file": "shared/getting-started/nx-setup"
+          },
+          {
+            "name": "Nx Without Plugins",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
+          },
+          {
+            "name": "Nx Plugins and Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit-and-nx-plugins"
+          }
+        ]
+      },
+      {
+        "name": "Configuration",
+        "id": "configuration",
+        "itemList": [
+          {
+            "name": "angular.json and nx.json",
+            "id": "angularjson",
+            "file": "shared/configuration/angularjson"
+          },
+          {
+            "name": "package.json and nx.json",
+            "id": "packagejson",
+            "file": "shared/configuration/packagejson"
+          },
+          {
+            "name": "project.json and nx.json",
+            "id": "projectjson",
+            "file": "shared/configuration/projectjson"
+          }
+        ]
+      },
+      {
+        "name": "Using Nx",
+        "id": "using-nx",
+        "itemList": [
+          {
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "shared/using-nx/nx-cli"
+          },
+          {
+            "name": "Nx Editor Plugins",
+            "id": "console",
+            "file": "shared/console"
+          },
           {
             "name": "Mental Model",
             "id": "mental-model",
             "file": "shared/mental-model"
           },
           {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "angular/guides/configuration"
+            "name": "Computation Caching",
+            "id": "caching",
+            "file": "shared/using-nx/caching"
           },
           {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
+            "name": "Distributed Task Execution",
+            "id": "dte",
+            "file": "shared/using-nx/dte"
           },
           {
-            "name": "Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
+            "name": "Affected",
+            "id": "affected",
+            "file": "shared/using-nx/affected"
           },
           {
             "name": "CI Setup",
@@ -1112,22 +1138,6 @@
         ]
       },
       {
-        "name": "Core",
-        "id": "core-extended",
-        "itemList": [
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          }
-        ]
-      },
-      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
@@ -1386,42 +1396,6 @@
     "id": "react",
     "itemList": [
       {
-        "name": "Getting Started",
-        "id": "getting-started",
-        "itemList": [
-          {
-            "name": "Intro to Nx",
-            "id": "intro",
-            "file": "react/getting-started/intro"
-          },
-          {
-            "name": "Nx Setup",
-            "id": "nx-setup",
-            "file": "react/getting-started/nx-setup"
-          },
-          {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "react/getting-started/nx-cli"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
-          },
-          {
-            "name": "Nx and TypeScript",
-            "id": "nx-and-typescript",
-            "file": "shared/guides/nx-and-ts"
-          },
-          {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
-          }
-        ]
-      },
-      {
         "name": "Tutorial",
         "id": "tutorial",
         "itemList": [
@@ -1476,28 +1450,85 @@
         ]
       },
       {
-        "name": "Using Nx",
-        "id": "core-concepts",
+        "name": "Getting Started",
+        "id": "getting-started",
         "itemList": [
+          {
+            "name": "Intro to Nx",
+            "id": "intro",
+            "file": "react/getting-started/intro"
+          },
+          {
+            "name": "Nx Setup",
+            "id": "nx-setup",
+            "file": "shared/getting-started/nx-setup"
+          },
+          {
+            "name": "Nx Without Plugins",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
+          },
+          {
+            "name": "Nx Plugins and Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit-and-nx-plugins"
+          }
+        ]
+      },
+      {
+        "name": "Configuration",
+        "id": "configuration",
+        "itemList": [
+          {
+            "name": "package.json and nx.json",
+            "id": "packagejson",
+            "file": "shared/configuration/packagejson"
+          },
+          {
+            "name": "project.json and nx.json",
+            "id": "projectjson",
+            "file": "shared/configuration/projectjson"
+          }
+        ]
+      },
+      {
+        "name": "Using Nx",
+        "id": "using-nx",
+        "itemList": [
+          {
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "shared/using-nx/nx-cli"
+          },
+          {
+            "name": "Nx Editor Plugins",
+            "id": "console",
+            "file": "shared/console"
+          },
           {
             "name": "Mental Model",
             "id": "mental-model",
             "file": "shared/mental-model"
           },
           {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "react/guides/configuration"
+            "name": "Computation Caching",
+            "id": "caching",
+            "file": "shared/using-nx/caching"
           },
           {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
+            "name": "Distributed Task Execution",
+            "id": "dte",
+            "file": "shared/using-nx/dte"
           },
           {
-            "name": "Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
+            "name": "Affected",
+            "id": "affected",
+            "file": "shared/using-nx/affected"
           },
           {
             "name": "CI Setup",
@@ -1536,6 +1567,7 @@
           }
         ]
       },
+
       {
         "name": "CLI",
         "id": "cli",
@@ -2497,22 +2529,6 @@
         ]
       },
       {
-        "name": "Core",
-        "id": "core-extended",
-        "itemList": [
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          }
-        ]
-      },
-      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
@@ -2666,6 +2682,11 @@
             "file": "shared/guides/turbo-and-nx"
           },
           {
+            "name": "Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
             "file": "react/guides/adding-assets"
@@ -2749,42 +2770,6 @@
     "id": "node",
     "itemList": [
       {
-        "name": "Getting Started",
-        "id": "getting-started",
-        "itemList": [
-          {
-            "name": "Intro to Nx",
-            "id": "intro",
-            "file": "node/getting-started/intro"
-          },
-          {
-            "name": "Nx Setup",
-            "id": "nx-setup",
-            "file": "node/getting-started/nx-setup"
-          },
-          {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "node/getting-started/nx-cli"
-          },
-          {
-            "name": "Nx Core",
-            "id": "nx-core",
-            "file": "shared/nx-core"
-          },
-          {
-            "name": "Nx and TypeScript",
-            "id": "nx-and-typescript",
-            "file": "shared/guides/nx-and-ts"
-          },
-          {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
-          }
-        ]
-      },
-      {
         "name": "Tutorial",
         "id": "tutorial",
         "itemList": [
@@ -2823,28 +2808,85 @@
         ]
       },
       {
-        "name": "Using Nx",
-        "id": "core-concepts",
+        "name": "Getting Started",
+        "id": "getting-started",
         "itemList": [
+          {
+            "name": "Intro to Nx",
+            "id": "intro",
+            "file": "node/getting-started/intro"
+          },
+          {
+            "name": "Nx Setup",
+            "id": "nx-setup",
+            "file": "shared/getting-started/nx-setup"
+          },
+          {
+            "name": "Nx Without Plugins",
+            "id": "nx-core",
+            "file": "shared/nx-core"
+          },
+          {
+            "name": "Nx and TypeScript",
+            "id": "nx-and-typescript",
+            "file": "shared/guides/nx-and-ts"
+          },
+          {
+            "name": "Nx Plugins and Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit-and-nx-plugins"
+          }
+        ]
+      },
+      {
+        "name": "Configuration",
+        "id": "configuration",
+        "itemList": [
+          {
+            "name": "package.json and nx.json",
+            "id": "packagejson",
+            "file": "shared/configuration/packagejson"
+          },
+          {
+            "name": "project.json and nx.json",
+            "id": "projectjson",
+            "file": "shared/configuration/projectjson"
+          }
+        ]
+      },
+      {
+        "name": "Using Nx",
+        "id": "using-nx",
+        "itemList": [
+          {
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "shared/using-nx/nx-cli"
+          },
+          {
+            "name": "Nx Editor Plugins",
+            "id": "console",
+            "file": "shared/console"
+          },
           {
             "name": "Mental Model",
             "id": "mental-model",
             "file": "shared/mental-model"
           },
           {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "node/guides/configuration"
+            "name": "Computation Caching",
+            "id": "caching",
+            "file": "shared/using-nx/caching"
           },
           {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
+            "name": "Distributed Task Execution",
+            "id": "dte",
+            "file": "shared/using-nx/dte"
           },
           {
-            "name": "Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
+            "name": "Affected",
+            "id": "affected",
+            "file": "shared/using-nx/affected"
           },
           {
             "name": "CI Setup",
@@ -3819,22 +3861,6 @@
             "name": "Ng CLI Adapter",
             "searchResultsName": "Ng CLI Adapter",
             "file": "node/api-nx-devkit/ngcli_adapter"
-          }
-        ]
-      },
-      {
-        "name": "Core",
-        "id": "core-extended",
-        "itemList": [
-          {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
           }
         ]
       },

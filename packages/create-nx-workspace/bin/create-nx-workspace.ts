@@ -671,11 +671,18 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.NPM:
     case Preset.Apps:
     case Preset.Core:
-    case Preset.TS:
       output.addVerticalSeparator();
       output.note({
         title,
         bodyLines: [`https://nx.dev/getting-started/nx-core`],
+      });
+      break;
+
+    case Preset.TS:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [`https://nx.dev/getting-started/nx-and-typescript`],
       });
       break;
 

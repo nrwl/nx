@@ -17,7 +17,7 @@ export async function setDefaultBaseIfNotSet(host: Tree) {
       bodyLines: [
         `Nx is moving to "main" as the default branch.`,
         `To avoid your current defaults changing, defaultBase has been set to "master" in nx.json`,
-        `Read more here: https://nx.dev/core-concepts/configuration`,
+        `Read more here: https://nx.dev/using-nx/affected`,
       ],
     });
   }

@@ -7,7 +7,7 @@ description: '**[DEPRECATED]**: Please use the eslint builder instead, an automa
 
 **[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
+Options can be configured in `angular.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 
 ## Options
 
