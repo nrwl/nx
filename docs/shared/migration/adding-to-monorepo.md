@@ -17,8 +17,7 @@ See it in action (3-minute video):
 `npx add-nx-to-monorepo` does the following:
 
 1. Add Nx to your package.json.
-2. Create `nx.json`, containing all the necessary configuration for Nx (
-   see [Configuration](/{{framework}}/core-concepts/configuration#nx-json)).
+2. Create `nx.json`, containing all the necessary configuration for Nx.
 3. Set up a `tsconfig` file mapping if needed.
 4. Set up Nx Cloud (if you chose "yes").
 
@@ -64,7 +63,7 @@ Note that this happens transparently. If an agent needs the output of `lib1` to 
 
 As agents complete tasks, the main job where you invoked nx affected `--build` will start receiving created files and terminal outputs. After nx affected `--build` completes, the machine will have the build files and all the terminal outputs as if it ran it locally.
 
-[Learn more about configuring CI.](/{{framework}}/core-concepts/ci-overview)
+[Learn more about configuring CI.](/{{framework}}/using-nx/ci-overview)
 
 ### Affected Commands
 
@@ -103,12 +102,6 @@ many more. All the plugins are designed to work together and create a cohesive a
 
 In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in
 doing caching unless you can do that), enforcing best practices, building design systems.
-
-If you want to explore what it feels like to develop with Nx, check
-out:
-
-- [Getting Started](/{{framework}}/getting-started/intro)
-- [Configuration](/{{framework}}/core-concepts/configuration)
 
 ## Troubleshooting
 

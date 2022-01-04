@@ -88,7 +88,7 @@ description: "${executor.description}"
 # ${executor.collectionName}:${executor.name}
 ${executor.description}
 
-Options can be configured in \`${filename}\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
+Options can be configured in \`${filename}\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 \n`;
 
   if (executor.examplesFileFullPath) {

@@ -10,7 +10,7 @@ of Nx are completely generic and can be used with any technology or tool.
 
 ### Creating a New Workspace
 
-Running `yarn create nx-workspace --preset=npm` creates an empty workspace.
+Running `yarn create nx-workspace --preset=core` creates an empty workspace.
 
 This is what is generated:
 
@@ -45,7 +45,7 @@ package.json
 
 ```json
 {
-  "extends": "@nrwl/workspace/presets/npm.json",
+  "extends": "@nrwl/workspace/presets/core.json",
   "npmScope": "myorg",
   "tasksRunnerOptions": {
     "default": {

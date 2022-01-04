@@ -804,7 +804,7 @@ export function buildWorkspaceConfigurationFromGlobs(
           projects[name] = config;
         } else {
           logger.warn(
-            `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects. See here https://nx.dev/core-concepts/configuration#ignoring-a-project on how to tell Nx to ignore this package.json.`
+            `Skipping project found at ${directory} since project ${name} already exists at ${projects[name].root}! Specify a unique name for the project to allow Nx to differentiate between the two projects.`
           );
         }
       } else {

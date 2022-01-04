@@ -500,7 +500,7 @@ function ensureTargetDependenciesBackwardCompatibility(
     logger.warn(
       stripIndent(`
         DEPRECATION WARNING: --with-deps is deprecated and it will be removed in v14.
-        Configure target dependencies instead: https://nx.dev/latest/angular/core-concepts/configuration#target-dependencies.
+        Configure target dependencies instead: https://nx.dev/configuration/projectjson
       `)
     );
 

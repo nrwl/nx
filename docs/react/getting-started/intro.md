@@ -21,7 +21,7 @@ this foundation.
 Nx becomes more valuable as you scale, solving problems that are frustrating for small teams, but paralyzing for large
 teams.
 
-Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monorepos). Each new app added to a monorepo
+Nx works especially well for monorepos. Each new app added to a monorepo
 provides more opportunities to share code and tooling but that often comes at the cost of a compounding slowdown in the
 CI pipeline. Nx ensures that adding another app to the repo does not increase the existing app’s test or build time.
 
@@ -42,22 +42,22 @@ begin. Check out [Nx and Typescript](/{{framework}}/getting-started/nx-and-types
 
 **Best-in-Class Support for Monorepos**
 
-- [Smart rebuilds of affected projects](/{{framework}}/core-concepts/mental-model)
-- [Distributed task execution & computation caching](/{{framework}}/core-concepts/mental-model)
+- [Smart rebuilds of affected projects](/{{framework}}/using-nx/affected)
+- [Computation caching](/{{framework}}/using-nx/caching)
+- [Distributed task execution](/{{framework}}/using-nx/dte)
 - [Code sharing and ownership management](/{{framework}}/structure/monorepo-tags)
 
 **Integrated Development Experience**
 
-- [High-quality editor plugins](/{{framework}}/getting-started/console)
-  & [GitHub apps](https://github.com/apps/nx-cloud)
+- [High-quality editor plugins](/{{framework}}/using-nx/console) & [GitHub apps](https://github.com/apps/nx-cloud)
 - [Powerful code generators](/{{framework}}/generators/using-schematics)
 - [Workspace visualizations](/{{framework}}/structure/dependency-graph)
 
 **Supports Your Ecosystem**
 
-- [Rich plugin ecosystem](/{{framework}}/core-concepts/nx-devkit) from Nrwl and the [community](/community)
+- [Rich plugin ecosystem](/{{framework}}/getting-started/nx-devkit) from Nrwl and the [community](/community)
 - Consistent dev experience for any framework
-- [Automatic upgrade to the latest versions of all frameworks and tools](/{{framework}}/core-concepts/updating-nx)
+- [Automatic upgrade to the latest versions of all frameworks and tools](/{{framework}}/using-nx/updating-nx)
 
 ## Learn Nx Fundamentals
 
@@ -65,6 +65,6 @@ begin. Check out [Nx and Typescript](/{{framework}}/getting-started/nx-and-types
 
 - [Free Nx Course on Egghead: Scale React Development with Nx](https://egghead.io/playlists/scale-react-development-with-nx-4038)
 - [45-Minute Walkthrough](https://www.youtube.com/watch?v=jCf92IyR-GE)
-- [Nx CLI](/{{framework}}/getting-started/nx-cli)
-- [Configuration Files](/{{framework}}/core-concepts/configuration)
-- [Mental Model](/{{framework}}/core-concepts/mental-model)
+- [Nx CLI](/{{framework}}/using-nx/nx-cli)
+- Configuration Files: [package.json](/{{framework}}/configuration/packagejson) and [project.json](/{{framework}}/configuration/projectjson)
+- [Mental Model](/{{framework}}/using-nx/mental-model)

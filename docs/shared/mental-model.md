@@ -25,107 +25,6 @@ Nx provides an updated graph after each analysis is done.
 Everything in Nx comes with metadata to enable toolability. The default values, validations, autocompletion work, and
 more are all defined in a schema, instead of in code.
 
-The following sample schema shows inputs, prompts, and validations for adding a new application.
-
-```json
-{
-  "$schema": "http://json-schema.org/schema",
-  "cli": "nx",
-  "$id": "NxNextApp",
-  "title": "Create an Application for Nx",
-  "type": "object",
-  "properties": {
-    "name": {
-      "description": "The name of the application.",
-      "type": "string",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$"
-    },
-    "directory": {
-      "description": "The directory of the new application.",
-      "type": "string",
-      "alias": "d"
-    },
-    "style": {
-      "description": "The file extension to be used for style files.",
-      "type": "string",
-      "default": "css",
-      "alias": "s",
-      "x-prompt": {
-        "message": "Which stylesheet format would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "css",
-            "label": "CSS"
-          },
-          {
-            "value": "scss",
-            "label": "SASS(.scss)       [ http://sass-lang.com          ]"
-          },
-          {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS              [ http://lesscss.org            ]"
-          }
-        ]
-      }
-    },
-    "linter": {
-      "description": "The tool to use for running lint checks.",
-      "type": "string",
-      "enum": ["eslint", "tslint"],
-      "default": "eslint"
-    },
-    "skipFormat": {
-      "description": "Skip formatting files",
-      "type": "boolean",
-      "default": false
-    },
-    "skipWorkspaceJson": {
-      "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style)",
-      "type": "boolean",
-      "default": false
-    },
-    "unitTestRunner": {
-      "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests",
-      "default": "jest"
-    },
-    "e2eTestRunner": {
-      "type": "string",
-      "enum": ["cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests",
-      "default": "cypress"
-    },
-    "tags": {
-      "type": "string",
-      "description": "Add tags to the application (used for linting)",
-      "alias": "t"
-    },
-    "js": {
-      "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
-    },
-    "setParserOptionsProject": {
-      "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
-      "default": false
-    }
-  },
-  "required": []
-}
-```
-
 This metadata is used by Nx itself, by VSCode and WebStorm integrations, by GitHub integration, and by third-party
 tools.
 
@@ -182,8 +81,7 @@ This often makes more sense for builds, where to build app1, you want to build l
 relationships between targets of the same project, including a test target that depends on the build.
 
 A task graph can contain different targets, and those can run in parallel. For instance, as Nx is building `app2`, it
-can be testing `app1` at the same time. Learn more about configuring targets in
-the [configuration guide](/{{framework}}/core-concepts/configuration)
+can be testing `app1` at the same time.
 
 ![task-graph-execution](/shared/mental-model/task-graph-execution.png)
 
@@ -264,17 +162,11 @@ work happens. The rest is either left as is or restored from the cache.
 ## Distributed task execution
 
 Nx supports running commands across multiple machines. You can either set it up by hand (
-see [here](/ci/distributed-builds)) or use Nx
-CLoud. [Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
+see [here](/ci/distributed-builds)) or use Nx Cloud. [Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
 
-Nx Cloud is a cloud companion for Nx (which is free and MIT-licensed). Most features of Nx Cloud are free, but some are
-paid. One of them is the distributed computation cache, which allows you to share cache with your team members and CI
-agents.
+When using the distributed task execution, Nx is able to run any task graph on many agents instead of locally.
 
-Another one is config-free distributed task execution (DTE). When using the distributed task execution, Nx is able to
-run any task graph on many agents instead of locally.
-
-When using this, `nx affected --build`, won't run the build locally (which can take hours for large workspaces). Instead,
+For instance, `nx affected --build` won't run the build locally (which can take hours for large workspaces). Instead,
 it will send the Task Graph to Nx Cloud. Nx Cloud Agents will then pick up the tasks they can run and execute them.
 
 Note that this happens transparently. If an agent builds `app1`, it will fetch the outputs for `lib` if it doesn't have them
@@ -295,8 +187,3 @@ it locally.
 - Nx is able to perform code-change analysis to create the smallest task graph for your PR.
 - Nx supports computation caching to never execute the same computation twice. This computation cache is pluggable and
   can be distributed.
-
-## Learn more:
-
-- [Using Generators](/{{framework}}/generators/using-schematics)
-- [Using Executors](/{{framework}}/executors/using-builders)

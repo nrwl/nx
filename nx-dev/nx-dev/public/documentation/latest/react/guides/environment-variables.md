@@ -61,7 +61,7 @@ For example:
 2. `workspaceRoot/apps/my-app/.env` contains `AUTH_URL=https://prod-url.com/auth`
 3. Nx will first load the variables from `apps/my-app/.env.local` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `AUTH_URL` already exists, so it will ignore it.
 
-We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](/{{framework}}/core-extended/computation-caching#distributed-computation-caching)).
+We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](/{{framework}}/using-nx/caching#distributed-computation-caching)).
 
 ### Pointing to custom env files
 

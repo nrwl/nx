@@ -16,23 +16,21 @@ Run the `nx help` command to see a full list of commands in the Nx CLI.
 
 ## Acting on Code
 
-Each project can be configured with **targets** that can be executed on the source code of the project.
-
 The [`nx run` command](/{{framework}}/cli/run) executes a target on a single project. For convenience, you can also
 run `nx [target] [project]` which is an alias to `nx run [project]:[target]`.
 
 ```bash
-nx run my-react-app:build
-nx build my-react-app
+nx run my-js-app:build
+nx build my-js-app
 ```
 
 > Nx also automatically caches the output of running targets so re-running the same target on the same project source code will be instant.
 
 However, `nx build` is only an abstraction over what it means to "build" projects rather than tied to a certain
-implementation. Each target's has an **[executor](/{{framework}}/executors/using-builders)** which actually defines how
-to execute target on a project. You can change the executor or write an entirely custom one to fit your needs. If you
-don't specify an executor for the build target, `nx build my-react-app` will invoke the build npm script in the
-project's folder.
+implementation. For instance, if you have a `project.json` file defining `build` using
+a **[executor](/{{framework}}/executors/using-builders)**, that executor will be invoked. If you don't specify an
+executor for the build target, `nx build my-react-app` will invoke the `build` npm script in the project's folder. Every
+argument you pass into `run` will be forwarded to the executor or the npm script.
 
 Along with running a target on a single project, Nx provides some commands to run the same target across multiple
 projects.
@@ -56,7 +54,7 @@ nx affected --target=build
 The [`nx generate` command](/{{framework}}/cli/generate) generates and modifies code.
 
 ```bash
-nx generate app my-react-app
+nx generate @nrwl/js:lib my-lib
 nx generate @nrwl/react:lib shared-button
 nx generate @nrwl/react:storybook-configuration shared-button # Configures storybook for a UI library
 ```
@@ -77,7 +75,7 @@ nx workspace-generator my-generator
 Upgrading a package is not always as simple as bumping the version in `package.json`.
 The [`nx migrate` command](/{{framework}}/cli/migrate) facilitates not only managing package versions but also runs
 migrations specified by package maintainers. See
-the [full guide to updating Nx](/{{framework}}/core-concepts/updating-nx).
+the [full guide to updating Nx](/{{framework}}/using-nx/updating-nx).
 
 ```bash
 nx migrate latest # Updates the version of Nx in `package.json` and schedules migrations to be run

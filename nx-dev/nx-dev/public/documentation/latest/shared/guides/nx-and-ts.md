@@ -16,7 +16,7 @@ The `@nrwl/js` package ships with corresponding generators and executors that be
 To get started with TypeScript packages in Nx, either add the `@nrwl/js` package to an existing Nx workspace or generate a new Nx workspace using the `--preset=ts` preset.
 
 ```bash
-create-nx-workspace happynrwl -–preset=ts
+npx create-nx-workspace happynrwl -–preset=ts
 ```
 
 Generating a new workspace creates a lightweight setup with a `packages` and `tools` folder. The `tools` folder is where you can add monorepo specific scripts and custom Nx generators, the `packages` folder is where all our TS based libs will live.
@@ -147,7 +147,7 @@ Nx is still able to pick those up natively, so you can still run `nx build mylib
 
 Nx doesn’t provide an out of the box process for the publishing itself and leaves it to the developer to invoke the final command. The reason is that the actual publishing process can be very specific to your project and target you deploy to and might have a lot of custom pre-deployment setup (e.g. generating changelogs, determining semver etc.). Make sure to check out our [community page](/community) as there are a lot of community provided packages integrating into the publishing process.
 
-However, integrating your custom publishing process with Nx can be pretty straightforward, especially with the help of Nx [run-commands](/{{framework}}/executors/run-commands-builder) and [“Target Dependencies”](/{{framework}}/core-concepts/configuration#target-dependencies).
+However, integrating your custom publishing process with Nx can be pretty straightforward, especially with the help of Nx [run-commands](/{{framework}}/executors/run-commands-builder) and [“Target Dependencies”](/{{framework}}/configuration/projectjson#dependson).
 
 To add a new run-command to our project, we can leverage the `run-command` generator:
 
@@ -204,4 +204,4 @@ We can however even automate this further by leveraging the `targetDependencies`
 }
 ```
 
-Now, just running `nx publish hello-tsc` will automatically run the `nx build hello-tsc` command first. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/{{framework}}/core-extended/computation-caching).
+Now, just running `nx publish hello-tsc` will automatically run the `nx build hello-tsc` command first. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/{{framework}}/using-nx/caching).

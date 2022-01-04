@@ -18,7 +18,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 
    Then `my-app` depends on `awesome-library`
 
-2. Manually created `implicitDependencies` in the `nx.json` file. [Full `implicitDependencies` documentation](/{{framework}}/core-concepts/configuration#implicit-dependencies)
+2. Manually created `implicitDependencies` in the `nx.json` file.
 
    If your `nx.json` has this content:
 

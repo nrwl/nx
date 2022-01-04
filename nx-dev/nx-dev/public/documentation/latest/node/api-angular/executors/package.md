@@ -7,7 +7,7 @@ description: 'Builds and packages an Angular library to be distributed as an NPM
 
 Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
 
-Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/core-concepts/configuration#targets.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 
 ## Options
 

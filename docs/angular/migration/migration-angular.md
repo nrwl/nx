@@ -92,8 +92,8 @@ Learn more about the advantages of Nx in the following guides:
 
 - [Using Cypress for e2e tests](/{{framework}}/cypress/overview)
 - [Using Jest for unit tests](/{{framework}}/jest/overview)
-- [Computation Caching](/{{framework}}/core-extended/computation-caching)
-- [Rebuilding and Retesting What is Affected](/{{framework}}/core-extended/affected)
+- [Computation Caching](/{{framework}}/using-nx/caching)
+- [Rebuilding and Retesting What is Affected](/{{framework}}/using-nx/affected)
 
 ## Transitioning Manually
 
@@ -376,4 +376,4 @@ Learn more about the advantages of Nx in the following guides:
 
 [Using Cypress for e2e tests](/{{framework}}/cypress/overview) \
 [Using Jest for unit tests](/{{framework}}/jest/overview) \
-[Rebuilding and Retesting What is Affected](/{{framework}}/core-extended/affected)
+[Rebuilding and Retesting What is Affected](/{{framework}}/using-nx/affected)

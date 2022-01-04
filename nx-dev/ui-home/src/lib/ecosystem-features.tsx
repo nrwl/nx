@@ -13,7 +13,7 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-green-nx-base',
-    link: '/core-concepts/nx-devkit',
+    link: '/getting-started/nx-devkit',
     title: 'Plugins for everything',
     subTitle:
       'React, React Native, Angular, NativeScript, Cypress, Nest.js, Storybook, Ionic, Go among others.',
@@ -36,7 +36,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-pink-500',
-    link: '/getting-started/nx-cli',
+    link: '/using-nx/nx-cli',
     title: 'Consistent DX',
     subTitle: 'Nx improves dev mobility, experimentation and collaboration.',
     svg: (
@@ -58,7 +58,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '/core-concepts/updating-nx',
+    link: '/using-nx/updating-nx',
     title: 'Automatic upgrades.',
     subTitle:
       'Nx updates your source code to work with the newest versions of popular tools.',
@@ -81,7 +81,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '/core-concepts/updating-nx',
+    link: '/using-nx/updating-nx',
     title: 'Repeatable migrations',
     subTitle: 'Nx enables large scale refactorings.',
     svg: (
