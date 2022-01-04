@@ -111,7 +111,7 @@ and [Library Types](/{{version}}/{{framework}}/structure/library-types).
 To generate a new library run:
 
 ```bash
-npx nx g @nrwl/react:lib shared-ui-components
+npx nx g @nrwl/react:lib shared-ui-layout
 ```
 
 And you will see the following:
