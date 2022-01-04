@@ -33,6 +33,7 @@ const runAffected: string[] = [
   'files',
   'plain',
   'select',
+  'tags',
 ];
 
 export interface RawNxArgs extends NxArgs {
@@ -66,6 +67,7 @@ export interface NxArgs {
   'hide-cached-output'?: boolean;
   hideCachedOutput?: boolean;
   scan?: boolean;
+  tags?: string[];
 }
 
 const ignoreArgs = ['$0', '_'];
@@ -183,6 +185,10 @@ export function splitArgsIntoNxArgsAndOverrides(
           )} --head=${output.bold('HEAD')}`,
         });
       }
+    }
+
+    if (!nxArgs.tags) {
+      nxArgs.tags = [];
     }
   }
 

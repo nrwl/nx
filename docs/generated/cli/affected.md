@@ -105,6 +105,12 @@ Default: `false`
 
 Rerun the tasks even when the results are available in the cache
 
+### tags
+
+Default: ``
+
+Filter affected projects by tags using glob patterns
+
 ### target
 
 Task to run for affected projects

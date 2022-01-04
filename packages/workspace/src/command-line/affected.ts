@@ -22,6 +22,7 @@ import type { NxArgs, RawNxArgs } from './utils';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { performance } from 'perf_hooks';
 import type { Environment } from '../core/shared-interfaces';
+import * as minimatch from 'minimatch';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
@@ -40,7 +41,8 @@ export async function affected(
 
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
-  const projectsNotExcluded = applyExclude(projects, nxArgs);
+  const projectsMatchingTags = matchTags(projects, nxArgs);
+  const projectsNotExcluded = applyExclude(projectsMatchingTags, nxArgs);
   const env = readEnvironment();
   const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 
@@ -130,6 +132,26 @@ export async function affected(
     printError(e, parsedArgs.verbose);
     process.exit(1);
   }
+}
+
+function matchTags(projects: Record<string, ProjectGraphNode>, nxArgs: NxArgs) {
+  // We do not want to filter projects if there are no tags passed in to match on
+  if (!nxArgs.tags || nxArgs.tags.length === 0) {
+    return projects;
+  }
+
+  const tagGlobs = nxArgs.tags;
+
+  return Object.entries(projects)
+    .filter(([, project]) => {
+      const tags: string[] = project.data.tags;
+
+      /*
+       * Ensure that each tag passed in (in glob format) exists in the projects tag array
+       */
+      return tagGlobs.every((glob) => tags.some((tag) => minimatch(tag, glob)));
+    })
+    .reduce((prev, [key, project]) => ({ ...prev, [key]: project }), {});
 }
 
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
