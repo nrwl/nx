@@ -17,11 +17,33 @@ module.exports = {
     if (rootMain.webpackFinal) {
       config = await rootMain.webpackFinal(config, { configType });
     }
-    
+
     <% if (existsRootWebpackConfig) { %>// for backwards compatibility call the `rootWebpackConfig`
       // this can be removed once that one is migrated fully to
       // use the `webpackFinal` property in the `main.js` file
       config = rootWebpackConfig({ config });
+    <% } %>
+
+    <% if (uiFramework === '@storybook/angular') { %>
+      /**
+       * Remove html raw loader that breaks Jit compilation as suggested here https://github.com/storybookjs/storybook/issues/16977#issuecomment-1004059631.
+       * The issue references:
+       * - https://github.com/storybookjs/storybook/issues/16977#issuecomment-1003399336
+       * - https://github.com/storybookjs/storybook/issues/16977#issuecomment-1004180729
+       * Here's what should be removed:
+       * {
+       *   test: /\.html$/,
+       *   loader: './node_modules/raw-loader/dist/cjs.js',
+       *   exclude: /\.async\.html$/
+       * },
+       */
+      const rules = (config.module.rules ?? []).filter(
+        (rule) =>
+          rule.test !== /\.html$/ &&
+          rule.exclude !== /\.async\.html$/ &&
+          !rule.loader?.includes('raw-loader')
+      );
+      config.module.rules = [...rules];
     <% } %>
 
     // add your own webpack tweaks if needed
