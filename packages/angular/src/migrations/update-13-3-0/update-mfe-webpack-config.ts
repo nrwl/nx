@@ -20,7 +20,7 @@ export default async function (tree: Tree) {
     (opts, projectName) => {
       // Update the webpack config
       const webpackPath = opts[CUSTOM_WEBPACK_OPTION]?.path;
-      if (!tree.exists(webpackPath)) {
+      if (!webpackPath || !tree.exists(webpackPath)) {
         logger.warn(
           `Webpack config file for project: ${projectName} does not exist. Skipping project.`
         );
