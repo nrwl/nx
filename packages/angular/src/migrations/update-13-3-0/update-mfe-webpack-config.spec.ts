@@ -7,6 +7,61 @@ import updateMfeConfig, { removeRemoteName } from './update-mfe-webpack-config';
 
 describe('update-mfe-webpack-config', () => {
   describe('run the migration', () => {
+    it('should skip the migration when there is no MFE config', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace(2);
+      addProjectConfiguration(tree, 'app', {
+        root: 'apps/testing',
+        targets: {
+          build: {
+            executor: '@nrwl/angular:webpack-browser',
+            options: {},
+          },
+          serve: {
+            executor: '@nrwl/angular:webpack-server',
+            options: {
+              port: 4201,
+            },
+          },
+        },
+      });
+
+      // ACT
+      let error = undefined;
+      try {
+        await updateMfeConfig(tree);
+      } catch (err) {
+        error = err;
+      }
+
+      // ASSERT
+      expect(error).toBeUndefined();
+    });
+
+    it('should skip the migration when using a different executor', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace(2);
+      addProjectConfiguration(tree, 'app', {
+        root: 'apps/testing',
+        targets: {
+          build: {
+            executor: '@angular-devkit/build-angular',
+          },
+        },
+      });
+
+      // ACT
+      let error = undefined;
+      try {
+        await updateMfeConfig(tree);
+      } catch (err) {
+        error = err;
+      }
+
+      // ASSERT
+      expect(error).toBeUndefined();
+    });
+
     it('shouldnt run for non mfe configs', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace(2);
