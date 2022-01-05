@@ -158,6 +158,54 @@ describe('js e2e', () => {
   // expect(runCommand(`serve ${app} --watch=false`)).toContain(`Running ${lib}`)
   // }, 120000);
 
+  it('should create/build/test js:swc lib', async () => {
+    const lib = uniq('lib');
+    runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=swc`);
+
+    const libPackageJson = readJson(`libs/${lib}/package.json`);
+    expect(libPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+      'Ran all test suites'
+    );
+    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+      'match the cache'
+    );
+
+    expect(runCLI(`build ${lib}`)).toContain(
+      'Successfully compiled: 2 files with swc'
+    );
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/src/index.js`,
+      `dist/libs/${lib}/src/lib/${lib}.js`
+    );
+  });
+
+  it('should create/build/test js:swc lib with nested directories', async () => {
+    const lib = uniq('lib');
+    runCLI(
+      `generate @nrwl/js:lib ${lib} --directory=dir --buildable --compiler=swc`
+    );
+
+    const libPackageJson = readJson(`libs/dir/${lib}/package.json`);
+    expect(libPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test dir-${lib}`)).combinedOutput).toContain(
+      'Ran all test suites'
+    );
+    expect((await runCLIAsync(`test dir-${lib}`)).combinedOutput).toContain(
+      'match the cache'
+    );
+
+    expect(runCLI(`build dir-${lib}`)).toContain(
+      'Successfully compiled: 2 files with swc'
+    );
+    checkFilesExist(
+      `dist/libs/dir/${lib}/package.json`,
+      `dist/libs/dir/${lib}/src/index.js`,
+      `dist/libs/dir/${lib}/src/lib/dir-${lib}.js`
+    );
+  });
+
   describe('convert js:tsc to js:swc', () => {
     it('should convert apps', async () => {
       const app = uniq('app');
