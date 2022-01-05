@@ -2,28 +2,13 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
-interface HeaderPropsWithoutFlavorAndVersion {
-  showSearch: false;
-  useDarkBackground?: boolean;
-}
-
-interface HeaderPropsWithFlavorAndVersion {
+export interface HeaderProps {
   showSearch: boolean;
   useDarkBackground?: boolean;
-  flavor: { name: string; value: string };
-  version: { name: string; value: string };
 }
-
-export type HeaderProps =
-  | HeaderPropsWithFlavorAndVersion
-  | HeaderPropsWithoutFlavorAndVersion;
 
 export function Header(props: HeaderProps) {
   const showSearch = props.showSearch;
-  const version =
-    'version' in props ? props.version : { name: 'Latest', value: 'l' };
-  const flavor =
-    'flavor' in props ? props.flavor : { name: 'React', value: 'r' };
   return (
     <header
       className={cx(
@@ -71,9 +56,7 @@ export function Header(props: HeaderProps) {
         </div>
         {/*SEARCH*/}
         <div className="inline">
-          {!!showSearch ? (
-            <AlgoliaSearch flavorId={flavor.value} versionId={version.value} />
-          ) : null}
+          {!!showSearch ? <AlgoliaSearch flavorId="r" versionId="l" /> : null}
         </div>
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">

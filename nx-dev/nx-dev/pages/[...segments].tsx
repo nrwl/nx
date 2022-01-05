@@ -1,42 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import Router, { useRouter } from 'next/router';
+import Router from 'next/router';
 import cx from 'classnames';
-import { NextSeo } from 'next-seo';
-import type {
-  DocumentData,
-  FlavorMetadata,
-  Menu,
-  VersionMetadata,
-} from '@nrwl/nx-dev/data-access-documents';
+import type { DocumentData, Menu } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { documentsApi, menuApi } from '../lib/api';
-import {
-  useActiveFlavor,
-  useActiveVersion,
-  useFlavors,
-  useVersions,
-  VersionsAndFlavorsProvider,
-} from '@nrwl/nx-dev/feature-versions-and-flavors';
-import {
-  pathCleaner,
-  useSelectedFlavor,
-} from '@nrwl/nx-dev/feature-flavor-selection';
-import FlavorsBanner from '../../feature-flavor-selection/src/lib/flavors-banner';
-
-const flavorList = documentsApi.getFlavors();
-const versionList = documentsApi.getVersions();
-const defaultVersion = versionList.find((v) => v.default) as VersionMetadata;
-const defaultFlavor = flavorList.find((f) => f.default) as FlavorMetadata;
 
 interface DocumentationPageProps {
-  version: VersionMetadata;
-  flavor: FlavorMetadata;
-  flavors: FlavorMetadata[];
-  versions: VersionMetadata[];
   menu: Menu;
   document: DocumentData;
-  isFallback: boolean;
 }
 
 // We may want to extract this to another lib.
@@ -61,59 +33,17 @@ function useNavToggle() {
   return { navIsOpen, toggleNav };
 }
 
-// This wrapper is needed to provide the version and flavor value to the context.
-// Child components will be able to use hooks to get these values (e.g. `useActiveFlavor()`).
-export default function DocumentationPageWrapper(
-  props: DocumentationPageProps
-) {
-  return (
-    <VersionsAndFlavorsProvider
-      value={{
-        flavors: props.flavors,
-        versions: props.versions,
-        isFallbackActiveFlavor: props.isFallback,
-        activeFlavor: props.flavor,
-        activeVersion: props.version,
-      }}
-    >
-      <DocumentationPage {...props} />
-    </VersionsAndFlavorsProvider>
-  );
-}
-
-export function DocumentationPage({ document, menu }: DocumentationPageProps) {
-  const router = useRouter();
-  const versions = useVersions();
-  const flavors = useFlavors();
-  const activeFlavor = useActiveFlavor();
-  const activeVersion = useActiveVersion();
-  const { flavorSelected, setSelectedFlavor } = useSelectedFlavor();
+export default function DocumentationPage({
+  document,
+  menu,
+}: DocumentationPageProps) {
   const { toggleNav, navIsOpen } = useNavToggle();
-  const cleanPath = pathCleaner(versions, flavors);
 
   return (
     <>
-      <NextSeo
-        canonical={`/${activeVersion.alias}/${activeFlavor.alias}`.concat(
-          cleanPath(router.asPath)
-        )}
-      />
-      <Header
-        showSearch={true}
-        version={{ name: activeVersion.name, value: activeVersion.alias }}
-        flavor={{ name: activeFlavor.name, value: activeFlavor.alias }}
-      />
+      <Header showSearch={true} />
       <main>
-        <FlavorsBanner
-          version={activeVersion}
-          isSelected={flavorSelected}
-          onSelect={setSelectedFlavor}
-        />
         <DocViewer
-          version={activeVersion}
-          versionList={versions}
-          flavor={activeFlavor}
-          flavorList={flavors}
           document={document}
           menu={menu}
           toc={null}
@@ -175,53 +105,26 @@ export async function getStaticProps({
 }: {
   params: { segments: string[] };
 }) {
-  const version =
-    versionList.find((item) =>
-      [item.id, item.alias].includes(params.segments[0])
-    ) ?? defaultVersion;
-  const flavor =
-    flavorList.find((item) =>
-      [item.id, item.alias].includes(params.segments[1])
-    ) ?? defaultFlavor;
-
-  // If we use the ID of version or flavor, redirect using the ALIAS instead (redirection is permanent)
-  if (
-    params.segments.join('/') !== 'js/node' && // Bug due to node flavour, not a problem when flavourless
-    (params.segments[0] === version.id || params.segments[1] === flavor.id)
-  ) {
-    return {
-      redirect: {
-        destination: `/${version.alias}/${flavor.alias}/${params.segments
-          .splice(2)
-          .join('/')}`,
-        permanent: true,
-      },
-    };
+  const menu = menuApi.getMenu();
+  let document: DocumentData | undefined;
+  try {
+    document = documentsApi.getDocument(params.segments);
+  } catch (e) {
+    // Do nothing
   }
-
-  const { document, menu, isFallback } = findDocumentAndMenu(
-    version,
-    flavor,
-    params.segments
-  );
 
   if (document) {
     return {
       props: {
-        version,
-        flavor,
-        versions: versionList,
-        flavors: flavorList,
         document,
         menu,
-        isFallback: isFallback,
       },
     };
   } else {
     return {
       redirect: {
         // If the menu is found, go to the first document, else go to homepage
-        destination: menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
+        destination: menu?.sections[0].itemList?.[0].itemList?.[0].url ?? '/',
         permanent: false,
       },
     };
@@ -229,37 +132,8 @@ export async function getStaticProps({
 }
 
 export async function getStaticPaths() {
-  const allPaths = versionList.flatMap((v) =>
-    flavorList.flatMap((f) => documentsApi.getStaticDocumentPaths(v, f))
-  );
-
   return {
-    paths: allPaths,
+    paths: documentsApi.getStaticDocumentPaths(),
     fallback: 'blocking',
   };
-}
-
-function findDocumentAndMenu(
-  version: VersionMetadata,
-  flavor: FlavorMetadata,
-  segments: string[]
-): {
-  menu: undefined | Menu;
-  document: undefined | DocumentData;
-  isFallback?: boolean;
-} {
-  const isFallback =
-    segments[0] !== version.alias || segments[1] !== flavor.alias;
-  const path = isFallback ? segments : segments.slice(2);
-
-  let menu: undefined | Menu = undefined;
-  let document: undefined | DocumentData = undefined;
-
-  try {
-    menu = menuApi.getMenu(version, flavor);
-    document = documentsApi.getDocument(version, flavor, path);
-  } catch {
-    // nothing
-  }
-  return { document, menu, isFallback };
 }

@@ -4,7 +4,7 @@
 
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 
-> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/{{framework}}/getting-started/nx-core).
+> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
 
 ## Create a new workspace
 
@@ -130,7 +130,7 @@ Internally, the Nx CLI delegates to the Angular CLI when running commands or gen
 produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI
 supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only
 works when using the Nx CLI. In other words, using `nx` instead `ng` results in the same output, but often performs
-a lot better. [Read more about Nx CLI and Angular CLI.](/{{framework}}/using-nx/nx-cli)
+a lot better. [Read more about Nx CLI and Angular CLI.](/using-nx/nx-cli)
 
 ## What's Next
 

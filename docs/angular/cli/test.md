@@ -9,7 +9,7 @@ Runs unit tests in a project using the configured unit test runner.
 
 ## Usage
 
-The `test` command is a built-in alias to the [run command](/{{framework}}/cli/run).
+The `test` command is a built-in alias to the [run command](/cli/run).
 
 These two commands are equivalent:
 

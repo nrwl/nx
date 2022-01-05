@@ -77,7 +77,7 @@ If you want to learn more, check out our article on [Distributing CI - Binning a
 
 All the available Nx commands can be executed via the command line. But as your monorepo grows, with multiple teams and hundreds of projects, even just finding the project to run a command against can sometimes be difficult. Having a high quality IDE integration can be a time saver there.
 
-- Nx has [VSCode](https://nx.dev/l/r/using-nx/console) and WebStorm/Intellij plugins.
+- Nx has [VSCode](https://nx.dev/using-nx/console) and WebStorm/Intellij plugins.
 - Turborepo doesn’t have any plugins, and the maintainer has indicated there's no intention to provide editor support.
 
 Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascript-generate-new-projects-for-nx-with-nx-console).
@@ -125,7 +125,7 @@ At this point, Turborepo doesn’t do any of that. So for a monorepo of any non-
 Nx is like the **VSCode of build tools**. In VSCode you can get started with the plain, core VSCode setup and it would be fine. But if you want to enhance your experience, there's the option to add extensions for managing Git, Docker, Mongo etc. Similarly, **you don’t have to use all the Nx plugins or, say, the Nx Cloud GitHub integration.**  
 Nx doesn’t replace any of your tools, and it’s not “all in”. You can start without any Nx plugins and Nx Cloud affordances, as with Turborepo. Or you can add them in as you go, both natively supported plugins by Nx as well as our growing [set of community plugins](https://nx.dev/community). **Turborepo isn’t pluggable**, so if you use the same analogy, you would have to use different tools (GitTower, DataGrip, Mongo Compass) to meet the same needs.
 
-Read [this guide](https://nx.dev/l/r/getting-started/nx-core) to learn more about how to only use Nx Core.
+Read [this guide](https://nx.dev/getting-started/nx-core) to learn more about how to only use Nx Core.
 
 ## Tech and Performance
 

@@ -6,24 +6,19 @@ import {
   getBasicSection,
   getDeepDiveSection,
 } from './menu.utils';
-import { FlavorMetadata, VersionMetadata } from './documents.models';
 
 export class MenuApi {
-  private readonly menuCache = new Map<string, Menu>();
+  private menuCache: Menu | null = null;
 
   constructor(private readonly documentsApi: DocumentsApi) {}
 
-  getMenu(version: VersionMetadata, flavor: FlavorMetadata): Menu {
-    const key = `${version.id}-${flavor.id}`;
-    let menu = this.menuCache.get(key);
+  getMenu(): Menu {
+    let menu = this.menuCache;
 
     if (!menu) {
-      const root = this.documentsApi.getDocuments(version.id);
-      const items = createMenuItems(version, flavor, root);
+      const items = createMenuItems(this.documentsApi.getDocuments());
       if (items) {
         menu = {
-          version: version,
-          flavor: flavor,
           sections: [
             getBasicSection(items),
             getDeepDiveSection(items),
@@ -31,9 +26,9 @@ export class MenuApi {
           ],
         };
       } else {
-        throw new Error(`Cannot find documents for flavor id: "${flavor.id}"`);
+        throw new Error(`Cannot find any documents`);
       }
-      this.menuCache.set(key, menu);
+      this.menuCache = menu;
     }
 
     return menu;

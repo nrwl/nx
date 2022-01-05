@@ -3,9 +3,9 @@
 > In our teams we see a shift away from Lerna and a strong preference to use Nx for managing JavaScript-based monorepos.
 > [Thoughtworks Technology Radar 2021](https://www.thoughtworks.com/en-ca/radar/tools/nx)
 
-- Want to know how to create a **new** Nx workspace and use Lerna/Yarn with it, check out [Using Nx Core Without Plugins](/{{framework}}/getting-started/nx-core).
-- Want to add Nx to an existing Lerna/Yarn/PNPM mononorepo, check out [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/{{framework}}/migration/adding-to-monorepo).
-- Want to build a publishable TS/JS library, checkout [Nx and TypeScript](/{{framework}}/getting-started/nx-and-typescript).
+- Want to know how to create a **new** Nx workspace and use Lerna/Yarn with it, check out [Using Nx Core Without Plugins](/getting-started/nx-core).
+- Want to add Nx to an existing Lerna/Yarn/PNPM mononorepo, check out [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/migration/adding-to-monorepo).
+- Want to build a publishable TS/JS library, checkout [Nx and TypeScript](/getting-started/nx-and-typescript).
 
 This guide clarifies some misconceptions about how Nx and Lerna/Yarn relate.
 
@@ -60,7 +60,7 @@ published to NPM.
 
 ### Misconception: Nx is "all-in"
 
-While Nx does have many plugins, each of them is optional. If you check out [Using Nx Core Without Plugins](/{{framework}}/getting-started/nx-core), you will see that Nx at its core is very minimal. Much like VS Code, Nx is very minimal but can easily be extended by adding plugins. Saying this is akin to saying that VS Code is "all in". The fullness and richness of the experience depends on how many plugins you choose to use. You could install a lot of Nx Plugins that will do a lot of the heavy lifting in, for instance, connecting your Next.js, Storybook and Cypress. You could but you don't have to.
+While Nx does have many plugins, each of them is optional. If you check out [Using Nx Core Without Plugins](/getting-started/nx-core), you will see that Nx at its core is very minimal. Much like VS Code, Nx is very minimal but can easily be extended by adding plugins. Saying this is akin to saying that VS Code is "all in". The fullness and richness of the experience depends on how many plugins you choose to use. You could install a lot of Nx Plugins that will do a lot of the heavy lifting in, for instance, connecting your Next.js, Storybook and Cypress. You could but you don't have to.
 
 ### Misconception: Nx is configuration over convention
 

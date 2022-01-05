@@ -9,7 +9,7 @@ Builds and serves an app, then runs end-to-end tests using the configured E2E te
 
 ## Usage
 
-The `e2e` command is a built-in alias to the [run command](/{{framework}}/cli/run).
+The `e2e` command is a built-in alias to the [run command](/cli/run).
 
 These two commands are equivalent:
 

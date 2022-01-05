@@ -8,40 +8,13 @@ function readJsonFile(f) {
 
 export function createDocumentApiOptions() {
   return {
-    versions: readJsonFile(
+    documents: readJsonFile(
       join(
         join(__dirname, '../../../nx-dev/public/documentation'),
-        'versions.json'
-      )
-    ),
-    flavors: readJsonFile(
-      join(
-        join(__dirname, '../../../nx-dev/public/documentation'),
-        'flavors.json'
-      )
-    ),
-    documentsMap: new Map<string, DocumentMetadata[]>([
-      [
         'latest',
-        readJsonFile(
-          join(
-            join(__dirname, '../../../nx-dev/public/documentation'),
-            'latest',
-            'map.json'
-          )
-        ),
-      ],
-      [
-        'previous',
-        readJsonFile(
-          join(
-            join(__dirname, '../../../nx-dev/public/documentation'),
-            'previous',
-            'map.json'
-          )
-        ),
-      ],
-    ]),
+        'map.json'
+      )
+    ).find((x) => x.id === 'default') as DocumentMetadata,
     publicDocsRoot: join(__dirname, '../../../nx-dev/public/documentation'),
   };
 }

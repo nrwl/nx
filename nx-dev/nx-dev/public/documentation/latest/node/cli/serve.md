@@ -9,7 +9,7 @@ Builds and serves an application, rebuilding on file changes.
 
 ## Usage
 
-The `serve` command is a built-in alias to the [run command](/{{framework}}/cli/run).
+The `serve` command is a built-in alias to the [run command](/cli/run).
 
 These two commands are equivalent:
 

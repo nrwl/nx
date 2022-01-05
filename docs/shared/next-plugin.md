@@ -6,4 +6,4 @@ The Nx Plugin for Next.js contains executors and generators for managing Next.js
 - Integration with building, serving, and exporting a Next.js application.
 - Integration with React libraries within the workspace.
 
-See the [Next.js guide](/{{version}}/react/guides/nextjs) for information about using Next.js and Nx.
+See the [Next.js guide](/guides/nextjs) for information about using Next.js and Nx.

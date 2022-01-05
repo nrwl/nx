@@ -16,7 +16,7 @@ The `nx dep-graph` command generates a graph of how apps and libraries depend on
 
 ### 3. Enforcing Constraints
 
-You can enforce constraints on how different types of libraries depend on each other [using tags](/{{framework}}/structure/monorepo-tags). Following pre-determined conventions on what kind of code can go in different types of libraries allows your tagging system to enforce good architectural patterns.
+You can enforce constraints on how different types of libraries depend on each other [using tags](/structure/monorepo-tags). Following pre-determined conventions on what kind of code can go in different types of libraries allows your tagging system to enforce good architectural patterns.
 
 Also, each library defines its own API, which allows for encapsulating logic that other parts of codebase can not access. You can even use a [CODEOWNERS file](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners) to assign ownership of a certain library to a user or team.
 

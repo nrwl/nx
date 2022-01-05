@@ -9,7 +9,7 @@ Compiles an application into an output directory named dist/ at the given output
 
 ## Usage
 
-The `build` command is a built-in alias to the [run command](/{{framework}}/cli/run).
+The `build` command is a built-in alias to the [run command](/cli/run).
 
 These two commands are equivalent:
 

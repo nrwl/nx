@@ -3,23 +3,14 @@ import ReactMarkdown from 'react-markdown';
 import autolinkHeadings from 'rehype-autolink-headings';
 import gfm from 'remark-gfm';
 import slug from 'rehype-slug';
-import {
-  DocumentData,
-  FlavorMetadata,
-  VersionMetadata,
-} from '@nrwl/nx-dev/data-access-documents';
+import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
-import { transformLinkPath } from './renderers/transform-link-path';
 import { transformImagePath } from './renderers/transform-image-path';
 import { renderIframes } from './renderers/render-iframe';
 import { CodeBlock } from './code-block';
 
 export interface ContentProps {
   document: DocumentData;
-  flavor: FlavorMetadata;
-  flavorList: FlavorMetadata[];
-  version: VersionMetadata;
-  versionList: VersionMetadata[];
 }
 
 interface ComponentsConfig {
@@ -52,7 +43,7 @@ const components: any = (config: ComponentsConfig) => ({
 
 export function Content(props: ContentProps) {
   return (
-    <div className="min-w-0 flex-auto px-4 sm:px-6 xl:px-8 pt-10 pb-24 lg:pb-16">
+    <div className="min-w-0 flex-auto px-4 sm:px-6 xl:px-8 pt-8 pb-24 lg:pb-16">
       <ReactMarkdown
         remarkPlugins={[gfm]}
         rehypePlugins={[
@@ -67,14 +58,7 @@ export function Content(props: ContentProps) {
           renderIframes,
         ]}
         children={props.document.content}
-        transformLinkUri={transformLinkPath({
-          framework: props.flavor,
-          frameworkList: props.flavorList,
-          version: props.version,
-          versionList: props.versionList,
-        })}
         transformImageUri={transformImagePath({
-          version: props.version,
           document: props.document,
         })}
         className="prose max-w-none"
@@ -93,7 +77,7 @@ export function Content(props: ContentProps) {
   );
 }
 
-function createAnchorContent(node) {
+function createAnchorContent(node: any) {
   node.properties.className = ['group'];
   return {
     type: 'element',

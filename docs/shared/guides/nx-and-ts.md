@@ -147,7 +147,7 @@ Nx is still able to pick those up natively, so you can still run `nx build mylib
 
 Nx doesn’t provide an out of the box process for the publishing itself and leaves it to the developer to invoke the final command. The reason is that the actual publishing process can be very specific to your project and target you deploy to and might have a lot of custom pre-deployment setup (e.g. generating changelogs, determining semver etc.). Make sure to check out our [community page](/community) as there are a lot of community provided packages integrating into the publishing process.
 
-However, integrating your custom publishing process with Nx can be pretty straightforward, especially with the help of Nx [run-commands](/{{framework}}/executors/run-commands-builder) and [“Target Dependencies”](/{{framework}}/configuration/projectjson#dependson).
+However, integrating your custom publishing process with Nx can be pretty straightforward, especially with the help of Nx [run-commands](/executors/run-commands-builder) and [“Target Dependencies”](/configuration/projectjson#dependson).
 
 To add a new run-command to our project, we can leverage the `run-command` generator:
 
@@ -204,4 +204,4 @@ We can however even automate this further by leveraging the `targetDependencies`
 }
 ```
 
-Now, just running `nx publish hello-tsc` will automatically run the `nx build hello-tsc` command first. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/{{framework}}/using-nx/caching).
+Now, just running `nx publish hello-tsc` will automatically run the `nx build hello-tsc` command first. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/using-nx/caching).

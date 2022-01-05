@@ -73,7 +73,7 @@ myorg/
 
 `/libs/` contains the library projects. There are many kinds of libraries, and each library defines its own external API so that boundaries between libraries remain clear.
 
-`/tools/` contains scripts that act on your code base. This could be database scripts, [custom executors](/{{framework}}/executors/creating-custom-builders), or [workspace generators](/{{framework}}/generators/workspace-generators).
+`/tools/` contains scripts that act on your code base. This could be database scripts, [custom executors](/executors/creating-custom-builders), or [workspace generators](/generators/workspace-generators).
 
 `/workspace.json` lists every project in your workspace. (this file optional)
 

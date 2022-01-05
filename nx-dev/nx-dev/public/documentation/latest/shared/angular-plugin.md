@@ -101,34 +101,34 @@ myorg/
 
 ## See Also
 
-- [Using DataPersistence](/{{version}}/angular/guides/misc-data-persistence)
-- [Using NgRx](/{{version}}/angular/guides/misc-ngrx)
-- [Upgrading an AngularJS application to Angular](/{{version}}/angular/guides/misc-upgrade)
+- [Using DataPersistence](/guides/misc-data-persistence)
+- [Using NgRx](/guides/misc-ngrx)
+- [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)
 
 ## Executors / Builders
 
-- [delegate-build](/{{framework}}/angular/delegate-build) - Delegates the build to a different target while supporting incremental builds.
-- [ng-packagr-lite](/{{framework}}/angular/ng-packagr-lite) - Builds a library with support for incremental builds.
-- [package](/{{framework}}/angular/package) - Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
-- [webpack-browser](/{{framework}}/angular/webpack-browser) - Builds a browser application with support for incremental builds and custom webpack configuration.
+- [delegate-build](/angular/delegate-build) - Delegates the build to a different target while supporting incremental builds.
+- [ng-packagr-lite](/angular/ng-packagr-lite) - Builds a library with support for incremental builds.
+- [package](/angular/package) - Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
+- [webpack-browser](/angular/webpack-browser) - Builds a browser application with support for incremental builds and custom webpack configuration.
 
 ## Generators
 
-- [application](/{{framework}}/angular/application) - Creates an Angular application.
-- [convert-tslint-to-eslint](/{{framework}}/angular/convert-tslint-to-eslint) - Converts a project from TSLint to ESLint.
-- [downgrade-module](/{{framework}}/angular/downgrade-module) - Sets up a Downgrade Module.
-- [karma](/{{framework}}/angular/karma) - Adds Karma configuration to a workspace.
-- [karma-project](/{{framework}}/angular/karma-project) - Adds Karma configuration to a project.
-- [library](/{{framework}}/angular/library) - Creates an Angular library.
-- [move](/{{framework}}/angular/move) - Moves an Angular application or library to another folder within the workspace and updates the project configuration.
-- [ngrx](/{{framework}}/angular/ngrx) - Adds NgRx support to an application or library.
-- [setup-mfe](/{{framework}}/angular/setup-mfe) - Generate a Module Federation configuration for a given Angular application.
-- [stories](/{{framework}}/angular/stories) - Creates stories/specs for all components declared in a project.
-- [storybook-configuration](/{{framework}}/angular/storybook-configuration) - Adds Storybook configuration to a project.
-- [storybook-migrate-defaults-5-to-6](/{{framework}}/angular/storybook-migrate-defaults-5-to-6) - Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
-- [storybook-migrate-stories-to-6-2](/{{framework}}/angular/storybook-migrate-stories-to-6-2) - Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.
-- [upgrade-module](/{{framework}}/angular/upgrade-module) - Sets up an Upgrade Module.
-- [web-worker](/{{framework}}/angular/web-worker) - Creates a Web Worker.
+- [application](/angular/application) - Creates an Angular application.
+- [convert-tslint-to-eslint](/angular/convert-tslint-to-eslint) - Converts a project from TSLint to ESLint.
+- [downgrade-module](/angular/downgrade-module) - Sets up a Downgrade Module.
+- [karma](/angular/karma) - Adds Karma configuration to a workspace.
+- [karma-project](/angular/karma-project) - Adds Karma configuration to a project.
+- [library](/angular/library) - Creates an Angular library.
+- [move](/angular/move) - Moves an Angular application or library to another folder within the workspace and updates the project configuration.
+- [ngrx](/angular/ngrx) - Adds NgRx support to an application or library.
+- [setup-mfe](/angular/setup-mfe) - Generate a Module Federation configuration for a given Angular application.
+- [stories](/angular/stories) - Creates stories/specs for all components declared in a project.
+- [storybook-configuration](/angular/storybook-configuration) - Adds Storybook configuration to a project.
+- [storybook-migrate-defaults-5-to-6](/angular/storybook-migrate-defaults-5-to-6) - Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
+- [storybook-migrate-stories-to-6-2](/angular/storybook-migrate-stories-to-6-2) - Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.
+- [upgrade-module](/angular/upgrade-module) - Sets up an Upgrade Module.
+- [web-worker](/angular/web-worker) - Creates a Web Worker.
 
 ## Public API
 

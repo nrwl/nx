@@ -8,9 +8,10 @@ import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
 
+// TODO@ben: remove replace pattern when Algolia is updated
 function Hit({ hit, children }) {
   return (
-    <Link href={hit.url}>
+    <Link href={hit.url.replace(/\/(p|l)\/(a|r|n)/, '')}>
       <a>{children}</a>
     </Link>
   );
@@ -21,9 +22,6 @@ export interface AlgoliaSearchProps {
   versionId: string;
 }
 export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
-  const frameworkFilter = `framework:${flavorId}`;
-  const versionFilter = `version:${versionId}`;
-
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -68,8 +66,6 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
   return (
     <>
       <Head>
-        <meta name="docsearch:version" content={versionId} />
-        <meta name="docsearch:framework" content={flavorId} />
         <link
           rel="preconnect"
           href="https://BH4D9OD16A-dsn.algolia.net"
@@ -114,10 +110,6 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
           <DocSearchModal
             initialQuery={initialQuery}
             initialScrollY={window.scrollY}
-            searchParameters={{
-              facetFilters: [frameworkFilter, versionFilter],
-              distinct: 1,
-            }}
             onClose={handleClose}
             indexName="nx"
             apiKey="0c9c3fb22624056e7475eddcbcbfbe91"

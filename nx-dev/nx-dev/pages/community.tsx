@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui-common';
-import { useStorage } from '@nrwl/nx-dev/feature-storage';
 
 declare const fetch: any;
 
@@ -29,8 +28,6 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
 
 export function Community(props: CommunityProps) {
   const router = useRouter();
-  const { value: selectedFlavor } = useStorage('flavor');
-  const { value: storedVersion } = useStorage('version');
 
   return (
     <>
@@ -55,18 +52,7 @@ export function Community(props: CommunityProps) {
           type: 'website',
         }}
       />
-      <Header
-        useDarkBackground={false}
-        showSearch={false}
-        flavor={{
-          name: selectedFlavor || 'react',
-          value: selectedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Header useDarkBackground={false} showSearch={false} />
       <main>
         <div className="w-full">
           {/*Intro component*/}

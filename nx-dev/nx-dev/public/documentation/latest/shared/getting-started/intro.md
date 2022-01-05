@@ -18,10 +18,10 @@ the boilerplate. The vast majority of the features though will work the same way
 
 These guides will help you get started:
 
-- [Installing Nx CLI & creating a new Nx Workspace](/{{framework}}/getting-started/nx-setup)
-- [Adding Nx to an existing monorepo](/{{framework}}/migration/adding-to-monorepo)
-- [Using Nx without plugins](/{{framework}}/getting-started/nx-core)
-- [Nx and TypeScript](/{{framework}}/getting-started/nx-and-typescript)
+- [Installing Nx CLI & creating a new Nx Workspace](/getting-started/nx-setup)
+- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
+- [Using Nx without plugins](/getting-started/nx-core)
+- [Nx and TypeScript](/getting-started/nx-and-typescript)
 - [Nx and React](/default/getting-started/nx-and-react)
 - [Nx and Angular](/default/getting-started/nx-and-angular)
 
@@ -29,27 +29,27 @@ These guides will help you get started:
 
 **Best-in-Class Support for Monorepos**
 
-- [Smart rebuilds of affected projects](/{{framework}}/using-nx/affected)
-- [Computation caching](/{{framework}}/using-nx/caching)
-- [Distributed task execution](/{{framework}}/using-nx/dte)
-- [Code sharing and ownership management](/{{framework}}/structure/monorepo-tags)
+- [Smart rebuilds of affected projects](/using-nx/affected)
+- [Computation caching](/using-nx/caching)
+- [Distributed task execution](/using-nx/dte)
+- [Code sharing and ownership management](/structure/monorepo-tags)
 
 **Integrated Development Experience**
 
-- [High-quality editor plugins](/{{framework}}/using-nx/console) & [GitHub apps](https://github.com/apps/nx-cloud)
-- [Powerful code generators](/{{framework}}/generators/using-schematics)
-- [Workspace visualizations](/{{framework}}/structure/dependency-graph)
+- [High-quality editor plugins](/using-nx/console) & [GitHub apps](https://github.com/apps/nx-cloud)
+- [Powerful code generators](/generators/using-schematics)
+- [Workspace visualizations](/structure/dependency-graph)
 
 **Supports Your Ecosystem**
 
-- [Rich plugin ecosystem](/{{framework}}/getting-started/nx-devkit) from Nrwl and the [community](/community)
+- [Rich plugin ecosystem](/getting-started/nx-devkit) from Nrwl and the [community](/community)
 - Consistent dev experience for any framework
-- [Automatic upgrade to the latest versions of all frameworks and tools](/{{framework}}/using-nx/updating-nx)
+- [Automatic upgrade to the latest versions of all frameworks and tools](/using-nx/updating-nx)
 
 ## Learn While Doing
 
-- [Using Nx without plugins](/{{framework}}/getting-started/nx-core)
-- [Nx and TypeScript](/{{framework}}/getting-started/nx-and-typescript)
+- [Using Nx without plugins](/getting-started/nx-core)
+- [Nx and TypeScript](/getting-started/nx-and-typescript)
 - [React: Interactive Nx Tutorial (with videos)](/default/react-tutorial/01-create-application)
 - [Node: Interactive Nx Tutorial (with videos)](/default/node-tutorial/01-create-application)
 - [Angular: Interactive Nx Tutorial (with videos)](/default/angular-tutorial/01-create-application)

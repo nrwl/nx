@@ -1,12 +1,6 @@
-import {
-  DocumentMetadata,
-  FlavorMetadata,
-  VersionMetadata,
-} from './documents.models';
+import { DocumentMetadata, VersionMetadata } from './documents.models';
 
 export interface Menu {
-  version: VersionMetadata;
-  flavor: FlavorMetadata;
   sections: MenuSection[];
 }
 

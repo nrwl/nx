@@ -115,7 +115,7 @@ If a file hasn't changed since the last invocation, it doesn't need to be reanal
 
 ## Visualizing the Project Graph
 
-You can then visualize the project graph as described [here](/{{framework}}/structure/dependency-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+You can then visualize the project graph as described [here](/structure/dependency-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
 
 ## Example Project Graph Plugin
 

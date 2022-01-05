@@ -9,7 +9,7 @@ Runs linting tools on application code in a given project folder using the confi
 
 ## Usage
 
-The `lint` command is a built-in alias to the [run command](/{{framework}}/cli/run).
+The `lint` command is a built-in alias to the [run command](/cli/run).
 
 These two commands are equivalent:
 

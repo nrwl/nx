@@ -48,7 +48,6 @@
     "nx-dev-feature-analytics": "nx-dev/feature-analytics",
     "nx-dev-feature-conf": "nx-dev/feature-conf",
     "nx-dev-feature-doc-viewer": "nx-dev/feature-doc-viewer",
-    "nx-dev-feature-flavor-selection": "nx-dev/feature-flavor-selection",
     "nx-dev-feature-search": "nx-dev/feature-search",
     "nx-dev-feature-storage": "nx-dev/feature-storage",
     "nx-dev-feature-versions-and-flavors": "nx-dev/feature-versions-and-flavors",

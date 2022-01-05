@@ -1,6 +1,6 @@
 # Distributed Task Execution
 
-> Before reading this guide, check out the [mental model guide](/{{framework}}/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
+> Before reading this guide, check out the [mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
 
 ## Overview
 

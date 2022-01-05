@@ -136,7 +136,7 @@ For a large organization it's crucial to establish how projects can depend on ea
 - Libraries with a broader scope (e.g., `shared/ui`) should not depend on the libraries with narrower scope (e.g., `happynrwlapp/search/utils-testing`).
 - Component libraries should only depend on other component libraries and utility libraries, but should not depend feature libraries.
 
-Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/{{framework}}/structure/monorepo-tags).
+Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/structure/monorepo-tags).
 
 ## Code Ownership
 
@@ -188,7 +188,7 @@ Note `all the projects affected by a PR/commit`. This is very important. Monorep
 - The performance of CI checks will degrade over time. The time it takes to run the CI checks should be proportional to the impact of the change, not the size of the repo.
 - We will be affected by the code your change didn’t touch
 
-We should utilize `affected:*` commands to build and test projects. Read more about them [here](/{{framework}}/cli/affected).
+We should utilize `affected:*` commands to build and test projects. Read more about them [here](/cli/affected).
 
 ### Trunk-based development
 

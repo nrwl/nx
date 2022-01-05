@@ -68,15 +68,15 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/cypress/overview)
-- [Using Jest](/{{framework}}/cypress/overview)
+- [Using Cypress](/cypress/overview)
+- [Using Jest](/cypress/overview)
 
 ## Executors / Builders
 
-- [build](/{{framework}}/web/build) - Builds a web components application
-- [dev-server](/{{framework}}/web/dev-server) - Builds and serves a web application
-- [package](/{{framework}}/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/web/build) - Builds a web components application
+- [dev-server](/web/dev-server) - Builds and serves a web application
+- [package](/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Generators
 
-- [application](/{{framework}}/web/application) - Create an Web Components application
+- [application](/web/application) - Create an Web Components application
