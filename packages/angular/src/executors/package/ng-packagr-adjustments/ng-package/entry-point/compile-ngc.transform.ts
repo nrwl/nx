@@ -14,13 +14,13 @@ import {
   isEntryPoint,
   isEntryPointInProgress,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { compileSourceFiles } from 'ng-packagr/lib/ngc/compile-source-files';
 import { NgccProcessor } from 'ng-packagr/lib/ngc/ngcc-processor';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import { ngccCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import * as ora from 'ora';
 import * as path from 'path';
 import * as ts from 'typescript';
+import { compileSourceFiles } from '../../ngc/compile-source-files';
 import { StylesheetProcessor as StylesheetProcessorClass } from '../../styles/stylesheet-processor';
 import { NgPackagrOptions } from '../options.di';
 
@@ -85,7 +85,7 @@ export const compileNgcTransformFactory = (
           declaration: true,
           target: ts.ScriptTarget.ES2020,
         },
-        entryPoint.cache.stylesheetProcessor,
+        entryPoint.cache.stylesheetProcessor as any,
         ngccProcessor,
         options.watch
       );

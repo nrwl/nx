@@ -58,7 +58,7 @@ export const nxCompileNgcTransformFactory = (
           declaration: true,
           target: ts.ScriptTarget.ES2020,
         },
-        entryPoint.cache.stylesheetProcessor,
+        entryPoint.cache.stylesheetProcessor as any,
         null,
         options.watch
       );

@@ -2,7 +2,6 @@
  * Adapted from the original ng-packagr source.
  *
  * Changes made:
- * - Made sure ngccProcessor is optional.
  * - Use custom cacheCompilerHost instead of the one provided by ng-packagr.
  */
 
@@ -18,13 +17,15 @@ import {
   PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { NgccProcessor } from 'ng-packagr/lib/ngc/ngcc-processor';
-import { augmentProgramWithVersioning } from 'ng-packagr/lib/ts/cache-compiler-host';
 import { ngccTransformCompilerHost } from 'ng-packagr/lib/ts/ngcc-transform-compiler-host';
 import * as log from 'ng-packagr/lib/utils/log';
 import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import * as ts from 'typescript';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
-import { cacheCompilerHost } from '../ts/cache-compiler-host';
+import {
+  augmentProgramWithVersioning,
+  cacheCompilerHost,
+} from '../ts/cache-compiler-host';
 
 export async function compileSourceFiles(
   graph: BuildGraph,
@@ -45,23 +46,19 @@ export async function compileSourceFiles(
   const ngPackageNode: PackageNode = graph.find(isPackage);
   const inlineStyleLanguage = ngPackageNode.data.inlineStyleLanguage;
 
-  let tsCompilerHost = cacheCompilerHost(
-    graph,
-    entryPoint,
-    tsConfigOptions,
-    moduleResolutionCache,
-    stylesheetProcessor,
-    inlineStyleLanguage
-  );
-
-  if (ngccProcessor) {
-    tsCompilerHost = ngccTransformCompilerHost(
-      tsCompilerHost,
+  const tsCompilerHost = ngccTransformCompilerHost(
+    cacheCompilerHost(
+      graph,
+      entryPoint,
       tsConfigOptions,
-      ngccProcessor,
-      moduleResolutionCache
-    );
-  }
+      moduleResolutionCache,
+      stylesheetProcessor,
+      inlineStyleLanguage
+    ),
+    tsConfigOptions,
+    ngccProcessor,
+    moduleResolutionCache
+  );
 
   const cache = entryPoint.cache;
   const sourceFileCache = cache.sourcesFileCache;
