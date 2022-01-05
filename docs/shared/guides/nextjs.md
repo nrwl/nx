@@ -2,7 +2,7 @@
 
 ![](/shared/nextjs-logo.png)
 
-Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Cypress](/{{version}}/{{framework}}/cypress/overview), Storybook, Jest, and more.
+Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Cypress](/cypress/overview), Storybook, Jest, and more.
 
 In this guide we will show you how to develop [Next.js](https://nextjs.org/) applications with Nx.
 
@@ -105,8 +105,8 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 - Publish a package to be used outside the monorepo
 - Better visualize the architecture using `npx nx dep-graph`
 
-For more information on Nx libraries, see our documentation on [Creating Libraries](/{{version}}/{{framework}}/structure/creating-libraries)
-and [Library Types](/{{version}}/{{framework}}/structure/library-types).
+For more information on Nx libraries, see our documentation on [Creating Libraries](/structure/creating-libraries)
+and [Library Types](/structure/library-types).
 
 To generate a new library run:
 

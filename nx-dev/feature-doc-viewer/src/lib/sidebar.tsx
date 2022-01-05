@@ -7,37 +7,13 @@ import {
   MenuSection,
 } from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
-import { Selector } from '@nrwl/nx-dev/ui-common';
-import { useSelectedFlavor } from '@nrwl/nx-dev/feature-flavor-selection';
-import {
-  useActiveFlavor,
-  useActiveVersion,
-  useFlavors,
-  useVersions,
-} from '@nrwl/nx-dev/feature-versions-and-flavors';
 
 export interface SidebarProps {
   menu: Menu;
   navIsOpen?: boolean;
 }
 
-// Exported for testing
-export function createNextPath(
-  version: string,
-  flavor: string,
-  currentPath: string
-): string {
-  const genericPath = currentPath.split('/').slice(3).join('/');
-  return `/${version}/${flavor}/${genericPath}`;
-}
-
 export function Sidebar({ menu, navIsOpen }: SidebarProps) {
-  const version = useActiveVersion();
-  const flavor = useActiveFlavor();
-  const { setSelectedFlavor } = useSelectedFlavor();
-  const flavorList = useFlavors();
-  const versionList = useVersions();
-  const router = useRouter();
   return (
     <div
       data-testid="sidebar"
@@ -52,42 +28,11 @@ export function Sidebar({ menu, navIsOpen }: SidebarProps) {
         className="h-full overflow-y-auto scrolling-touch lg:h-auto lg:block lg:relative lg:sticky lg:bg-transparent overflow-auto lg:top-18 bg-white mr-24 lg:mr-0 px-2 sm:pr-4 xl:pr-6"
       >
         <div className="hidden lg:block h-12 pointer-events-none absolute inset-x-0 z-10 bg-gradient-to-b from-white" />
-        <div className="px-1 pt-6 sm:px-3 xl:px-5 lg:pt-10">
-          <Selector
-            items={versionList.map((version) => ({
-              label: version.name,
-              value: version.alias,
-            }))}
-            selected={{ label: version.name, value: version.alias }}
-            onChange={(item) =>
-              router.push(
-                createNextPath(item.value, flavor.alias, router.asPath)
-              )
-            }
-          />
-        </div>
-        <div className="px-1 pt-3 sm:px-3 xl:px-5">
-          <Selector
-            items={flavorList.map((flavor) => ({
-              label: flavor.name,
-              value: flavor.alias,
-              data: flavor,
-            }))}
-            selected={{ label: flavor.name, value: flavor.alias }}
-            onChange={(item) =>
-              !!router.push(
-                createNextPath(version.alias, item.value, router.asPath)
-              ) &&
-              item.data &&
-              setSelectedFlavor(item.data)
-            }
-          />
-        </div>
-        <div className="px-1 py-6 sm:px-3 xl:px-5 h-1 w-full border-b border-gray-50" />
+
         <nav
           id="nav"
           data-testid="navigation"
-          className="px-1 pt-1 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
+          className="px-1 pt-16 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
         >
           {menu.sections.map((section, index) => (
             <SidebarSection key={section.id + '-' + index} section={section} />

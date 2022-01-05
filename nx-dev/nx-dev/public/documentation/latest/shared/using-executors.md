@@ -59,7 +59,7 @@ Each executor definition has an `executor` property and, optionally, an `options
 
 ## Running executors
 
-The [`nx run`](/{{framework}}/cli/run) cli command (or the shorthand versions) can be used to run executors.
+The [`nx run`](/cli/run) cli command (or the shorthand versions) can be used to run executors.
 
 ```bash
 nx run [project]:[command]
@@ -245,7 +245,7 @@ The `runExecutor` utility will find the target in the configuration, find the ex
 - `readTargetOptions` -- Reads and combines options for a given target.
 - `runExecutor` -- Constructs options and invokes an executor.
 
-See more helper functions in the [Devkit API Docs](/{{framework}}/nx-devkit/index#functions)
+See more helper functions in the [Devkit API Docs](/nx-devkit/index#functions)
 
 ## Using RxJS observables
 
@@ -274,5 +274,5 @@ export default async function (opts) {
 
 ## See Also
 
-- [`nx affected`](/{{framework}}/cli/affected)
-- [`nx run-many`](/{{framework}}/cli/run-many)
+- [`nx affected`](/cli/affected)
+- [`nx run-many`](/cli/run-many)

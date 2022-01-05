@@ -2,7 +2,7 @@
 
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
 
-> If you are familiar with Lerna or Yarn workspaces, check out [this guide](/{{framework}}/guides/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
+> If you are familiar with Lerna or Yarn workspaces, check out [this guide](/guides/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
 
 ## What are the benefits of a monorepo?
 
@@ -36,7 +36,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 - **Consistent Code Generation** - Generators allow you to customize and standardize organizational conventions and structure, removing the need to perform the same manual setup tasks repetitively.
 
-- **Affected Commands** - [Nx’s affected commands](/{{framework}}/cli/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
+- **Affected Commands** - [Nx’s affected commands](/cli/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
 
 - **Distributed Caching** - Nx provides local caching and support for distributed caching of command executions. With distributed caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
 

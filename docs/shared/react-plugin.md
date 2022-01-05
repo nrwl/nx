@@ -69,22 +69,22 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/cypress/overview)
-- [Using Jest](/{{framework}}/jest/overview)
+- [Using Cypress](/cypress/overview)
+- [Using Jest](/jest/overview)
 - [Using Storybook](/default/storybook/overview-react)
 
 ## Executors / Builders
 
 React applications are built using the executors from the `@nrwl/web` plugin.
 
-- [build](/{{framework}}/web/build) - Builds a web components application
-- [dev-server](/{{framework}}/web/package) - Builds and serves a web application
-- [package](/{{framework}}/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/web/build) - Builds a web components application
+- [dev-server](/web/package) - Builds and serves a web application
+- [package](/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Generators
 
-- [application](/{{framework}}/react/application) - Create an React application
-- [component](/{{framework}}/react/component) - Create an React component
-- [library](/{{framework}}/react/library) - Create an React library
-- [redux](/{{framework}}/react/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/react/storybook-configuration) - Set up Storybook for a react library
+- [application](/react/application) - Create an React application
+- [component](/react/component) - Create an React component
+- [library](/react/library) - Create an React library
+- [redux](/react/redux) - Generate a Redux slice for a project
+- [storybook-configuration](/react/storybook-configuration) - Set up Storybook for a react library

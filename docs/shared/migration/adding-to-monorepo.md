@@ -21,7 +21,7 @@ Watch this 3-min video to see how the command works and what next steps are:
 3. Set up a `tsconfig` file mapping if needed.
 4. Set up Nx Cloud (if you chose "yes").
 
-> If you are familiar with Turborepo, check out [this guide](/{{framework}}/guides/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
+> If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
 
 ## What You Get Right Away
 
@@ -58,7 +58,7 @@ commands you run. They don't preserve animations and colors. We instrument Node.
 as is. When running, say, an npm script via Nx, the output will not be modified. The same is true when Nx restores the
 output from cache.
 
-[Learn about computation caching.](/{{framework}}/using-nx/caching)
+[Learn about computation caching.](/using-nx/caching)
 
 ### Distributed Task Execution
 
@@ -79,7 +79,7 @@ outputs as if it ran it locally.
 **Using Distributed Task Execution you can keep your CI fast, with practically no effort, regardless of the size of your
 workspace.**
 
-[Learn more distributed task execution.](/{{framework}}/using-nx/dte)
+[Learn more distributed task execution.](/using-nx/dte)
 
 ### Affected Commands
 
@@ -87,7 +87,7 @@ Nx automatically analyzes your workspace to know what projects are affected by y
 run: `nx affected --target=test` to see it in action. Often, Nx is able to do a better job detecting affected than other
 tools because it looks not just at the changed files but also at the nature of the changes.
 
-[Learn more "affected".](/{{framework}}/using-nx/affected)
+[Learn more "affected".](/using-nx/affected)
 
 ### Workspace Visualization
 
@@ -153,7 +153,7 @@ Nx + Lerna:
 }
 ```
 
-[Learn more about Nx CLI.](/{{framework}}/using-nx/nx-cli)
+[Learn more about Nx CLI.](/using-nx/nx-cli)
 
 ## Next Steps
 

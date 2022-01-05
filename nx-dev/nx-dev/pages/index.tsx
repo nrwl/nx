@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
 import {
   Footer,
@@ -26,8 +25,6 @@ import {
 } from '@nrwl/nx-dev/ui-home';
 
 export function Index() {
-  const router = useRouter();
-
   return (
     <>
       <NextSeo
@@ -86,7 +83,7 @@ export function Index() {
                     </a>
                   </Link>
 
-                  <Link href="/l/r/migration/adding-to-monorepo">
+                  <Link href="/migration/adding-to-monorepo">
                     <a className="mt-4 md:mt-0 w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
                       Add Nx to Monorepo
                     </a>
@@ -126,6 +123,7 @@ export function Index() {
               className="w-full"
               src="/images/background/hero-bg-large-3.svg"
               alt="separator"
+              aria-hidden="true"
             />
           </div>
 
@@ -216,6 +214,7 @@ export function Index() {
               className="w-full"
               src="/images/background/hero-bg-large-2.svg"
               alt="separator"
+              aria-hidden="true"
             />
           </div>
 

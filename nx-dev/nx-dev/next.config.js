@@ -20,22 +20,48 @@ module.exports = withNx({
   },
   async redirects() {
     const rules = [];
+
+    // Landing pages
+    rules.push({
+      source: '/(angular|react|node)',
+      destination: '/',
+      permanent: true,
+    });
+
+    // Tutorials
+    rules.push({
+      source: '/latest/react/tutorial/01-create-application',
+      destination: '/react-tutorial/01-create-application',
+      permanent: true,
+    });
+    rules.push({
+      source: '/latest/angular/tutorial/01-create-application',
+      destination: '/angular-tutorial/01-create-application',
+      permanent: true,
+    });
+    rules.push({
+      source: '/latest/node/tutorial/01-create-application',
+      destination: '/node-tutorial/01-create-application',
+      permanent: true,
+    });
+
+    // Customs
     for (let s of Object.keys(redirects)) {
       rules.push({
         source: `/l/n${s}`,
-        destination: `/l/n${redirects[s]}`,
+        destination: redirects[s],
         permanent: true,
       });
 
       rules.push({
         source: `/l/r${s}`,
-        destination: `/l/r${redirects[s]}`,
+        destination: redirects[s],
         permanent: true,
       });
 
       rules.push({
         source: `/l/a${s}`,
-        destination: `/l/a${redirects[s]}`,
+        destination: redirects[s],
         permanent: true,
       });
 
@@ -45,6 +71,13 @@ module.exports = withNx({
         permanent: true,
       });
     }
+
+    // Generic, catch-all
+    rules.push({
+      source: '/(l|p)/(a|r|n)/:path*',
+      destination: '/:path*',
+      permanent: true,
+    });
     return rules;
   },
 });

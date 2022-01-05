@@ -126,7 +126,7 @@ import { AppService } from './app.service';
 export class AppModule {}
 ```
 
-We recommend using the [Nest](/{{framework}}/nest/overview) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
+We recommend using the [Nest](/nest/overview) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
 
 In this case you have an application that registers a service and a controller. Services in Nest are responsible for the business logic, and controllers are responsible for implementing Http endpoints.
 

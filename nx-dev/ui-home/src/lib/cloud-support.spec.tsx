@@ -1,4 +1,3 @@
-import { render } from '@testing-library/react';
 import CloudSupport from './cloud-support';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 

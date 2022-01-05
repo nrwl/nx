@@ -4,7 +4,7 @@ Libraries should be grouped by _scope_. A library's scope is either application 
 
 ## Move Generator
 
-Don't be too anxious about choosing the exact right folder structure from the beginning. Libraries can be moved or renamed using the [`@nrwl/workspace:move` generator](/{{framework}}/workspace/move).
+Don't be too anxious about choosing the exact right folder structure from the beginning. Libraries can be moved or renamed using the [`@nrwl/workspace:move` generator](/workspace/move).
 
 For instance, if a library under the `booking` folder is now being shared by multiple apps, you can move it to the shared folder like this:
 
@@ -14,7 +14,7 @@ nx g move --project booking-some-library shared/some-library
 
 ## Remove Generator
 
-Similarly, if you no longer need a library, you can remove it with the [`@nrwl/workspace:remove` generator](/{{framework}}/workspace/remove).
+Similarly, if you no longer need a library, you can remove it with the [`@nrwl/workspace:remove` generator](/workspace/remove).
 
 ```bash
 nx g remove booking-some-library

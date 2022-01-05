@@ -1,22 +1,12 @@
 import React from 'react';
 import cx from 'classnames';
 import { useRouter } from 'next/router';
-import { BreadcrumbJsonLd, NextSeo } from 'next-seo';
-import {
-  DocumentData,
-  FlavorMetadata,
-  Menu,
-  MenuItem,
-  VersionMetadata,
-} from '@nrwl/nx-dev/data-access-documents';
+import { NextSeo } from 'next-seo';
+import { DocumentData, Menu } from '@nrwl/nx-dev/data-access-documents';
 import Content from './content';
 import Sidebar from './sidebar';
 
 export interface DocumentationFeatureDocViewerProps {
-  version: VersionMetadata;
-  flavor: FlavorMetadata;
-  flavorList: FlavorMetadata[];
-  versionList: VersionMetadata[];
   menu: Menu;
   document: DocumentData;
   toc: any;
@@ -25,11 +15,7 @@ export interface DocumentationFeatureDocViewerProps {
 
 export function DocViewer({
   document,
-  version,
-  versionList,
   menu,
-  flavor,
-  flavorList,
   navIsOpen,
 }: DocumentationFeatureDocViewerProps) {
   const router = useRouter();
@@ -37,7 +23,6 @@ export function DocViewer({
   return (
     <>
       <NextSeo
-        noindex={version.id === 'previous'}
         title={document.data.title + ' | Nx'}
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
@@ -69,13 +54,7 @@ export function DocViewer({
               navIsOpen && 'overflow-hidden max-h-screen fixed'
             )}
           >
-            <Content
-              document={document}
-              flavor={flavor}
-              flavorList={flavorList}
-              version={version}
-              versionList={versionList}
-            />
+            <Content document={document} />
           </div>
         </div>
       </div>

@@ -90,10 +90,10 @@ Your workspace is now powered by Nx! You can verify out that your application st
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/{{framework}}/cypress/overview)
-- [Using Jest for unit tests](/{{framework}}/jest/overview)
-- [Computation Caching](/{{framework}}/using-nx/caching)
-- [Rebuilding and Retesting What is Affected](/{{framework}}/using-nx/affected)
+- [Using Cypress for e2e tests](/cypress/overview)
+- [Using Jest for unit tests](/jest/overview)
+- [Computation Caching](/using-nx/caching)
+- [Rebuilding and Retesting What is Affected](/using-nx/affected)
 
 ## Transitioning Manually
 
@@ -374,6 +374,6 @@ yarn lint
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/{{framework}}/cypress/overview) \
-[Using Jest for unit tests](/{{framework}}/jest/overview) \
-[Rebuilding and Retesting What is Affected](/{{framework}}/using-nx/affected)
+[Using Cypress for e2e tests](/cypress/overview) \
+[Using Jest for unit tests](/jest/overview) \
+[Rebuilding and Retesting What is Affected](/using-nx/affected)

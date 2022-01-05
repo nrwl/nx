@@ -66,11 +66,11 @@ myorg/
 
 ## Executors / Builders
 
-- [build](/{{framework}}/gatsby/build) - Builds a Gatsby application
-- [server](/{{framework}}/gatsby/server) - Builds and serves a Gatsby application
+- [build](/gatsby/build) - Builds a Gatsby application
+- [server](/gatsby/server) - Builds and serves a Gatsby application
 
 ## Generators
 
-- [application](/{{framework}}/gatsby/application) - Create a Gatsby application
-- [component](/{{framework}}/gatsby/component) - Create a Gatsby component
-- [page](/{{framework}}/gatsby/page) - Create a Gatsby page
+- [application](/gatsby/application) - Create a Gatsby application
+- [component](/gatsby/component) - Create a Gatsby component
+- [page](/gatsby/page) - Create a Gatsby page

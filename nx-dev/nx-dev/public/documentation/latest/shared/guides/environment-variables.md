@@ -61,14 +61,14 @@ For example:
 2. `workspaceRoot/apps/my-app/.env` contains `AUTH_URL=https://prod-url.com/auth`
 3. Nx will first load the variables from `apps/my-app/.env.local` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `AUTH_URL` already exists, so it will ignore it.
 
-We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](/{{framework}}/using-nx/caching#distributed-computation-caching)).
+We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](/using-nx/caching#distributed-computation-caching)).
 
 ### Pointing to custom env files
 
 If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
-2. Use the `envFile` option of the [run-commands](/{{framework}}/workspace/run-commands-executor#envfile) builder and execute your command inside of the builder
+2. Use the `envFile` option of the [run-commands](/workspace/run-commands-executor#envfile) builder and execute your command inside of the builder
 
 ## Using Environment Variables in index.html
 

@@ -1,6 +1,6 @@
 # Nx Devkit and Angular Devkit
 
-> Note: this document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/{{framework}}/getting-started/nx-devkit) guide for more in-depth details about Nx Devkit.
+> Note: this document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/getting-started/nx-devkit) guide for more in-depth details about Nx Devkit.
 
 Nx comes with a devkit to write generators and executors, but you can also use Angular devkit (schematics and builders). In other words, you can use an Angular schematic to implement a generator, and you can use an Angular builder to implement an executor.
 
@@ -183,7 +183,7 @@ export default createBuilder<NextBuildBuilderOptions>(run);
 
 ### Notable Differences
 
-- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable. See [Using Rxjs Observables](/{{framework}}/executors/using-builders#using-rxjs-observables)
+- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable. See [Using Rxjs Observables](/executors/using-builders#using-rxjs-observables)
 - Nx Devkit executors do not have to be wrapped using `createBuilder`.
 
 The schema files for both Nx Devkit executors and Angular Builders are the same. Nx can run both of them in the same way.

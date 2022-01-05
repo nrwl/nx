@@ -371,7 +371,7 @@ But migrating AngularJS code means we need to switch some of our tools to a more
 npm install -D @nrwl/web babel-plugin-angularjs-annotate
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](/{{version}}/{{framework}}/executors/using-builders) we need to use to build and serve the application with webpack and
+Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](/executors/using-builders) we need to use to build and serve the application with webpack and
 `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:

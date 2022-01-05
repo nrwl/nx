@@ -156,7 +156,7 @@ Finally, run `yarn`.
 The example uses Yarn to connect the two packages. Most of the time, however, there are better ways to do it. The React,
 Node, Angular plugins for Nx allow different projects in your workspace to import each other without having to maintain
 cumbersome `package.json` files. Instead, they use Webpack, Rollup and Jest plugins to enable this use case in a more
-elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/{{framework}}/guides/lerna-and-nx).
+elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/guides/lerna-and-nx).
 
 ## What Nx Core Provides
 

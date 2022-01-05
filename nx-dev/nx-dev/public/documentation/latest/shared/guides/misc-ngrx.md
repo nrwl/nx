@@ -35,7 +35,7 @@ The most common additional options are:
 - `syntax` - NgRx introduced new creator functions for actions, reducers, and effects that provide the same type-safety with less code than action classes.
 - `facade` - Optional. If you prefer to further encapsulate NgRx from your components, add an injectable facade. See the blog [Better State Management with Facades](https://blog.nrwl.io/nrwl-nx-6-2-angular-6-1-and-better-state-management-e139da2cd074#cb93) for details.
 
-See the [API Docs](/{{framework}}/angular/ngrx) for detailed descriptions of all the available options. Also visit the [NgRx](https://ngrx.io) website for more guides and documentation about the libraries.
+See the [API Docs](/angular/ngrx) for detailed descriptions of all the available options. Also visit the [NgRx](https://ngrx.io) website for more guides and documentation about the libraries.
 
 ---
 

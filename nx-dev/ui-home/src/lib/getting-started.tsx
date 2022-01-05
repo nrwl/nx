@@ -147,7 +147,7 @@ function AngularPane(): ReactComponentElement<any> {
               </svg>
               <h3 className="mt-2 font-semibold">
                 Angular{' '}
-                <Link href="/l/a/tutorial/01-create-application">
+                <Link href="/angular-tutorial/01-create-application">
                   <a className="italic font-normal text-sm text-gray-600 hover:underline">
                     (follow our Angular tutorial)
                   </a>
@@ -176,7 +176,7 @@ function AngularPane(): ReactComponentElement<any> {
               </svg>
               <h3 className="mt-2 font-semibold">
                 Full-stack app built with Angular and Nest.js{' '}
-                <Link href="/l/a/tutorial/01-create-application">
+                <Link href="/angular-tutorial/01-create-application">
                   <a className="italic font-normal text-sm text-gray-600 hover:underline">
                     (follow our Angular tutorial)
                   </a>
@@ -213,7 +213,7 @@ function AngularPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/a/migration/migration-angular">
+                    <Link href="/migration/migration-angular">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -266,7 +266,7 @@ function AngularPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/a/migration/migration-angularjs">
+                    <Link href="/migration/migration-angularjs">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -384,7 +384,7 @@ function NodeJsPane(): ReactComponentElement<any> {
               </svg>
               <h3 className="mt-2 font-semibold">
                 NestJS{' '}
-                <Link href="/l/n/tutorial/01-create-application">
+                <Link href="/node-tutorial/01-create-application">
                   <a className="italic font-normal text-sm text-gray-600 hover:underline">
                     (follow our Nest tutorial)
                   </a>
@@ -443,7 +443,7 @@ function NodeJsPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/n/migration/adding-to-monorepo">
+                    <Link href="/migration/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -480,7 +480,9 @@ function NodeJsPane(): ReactComponentElement<any> {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">migration/lerna-yarn-pnpm</p>
+                  <p className="text-xs font-bold">
+                    migration/lerna-yarn-pnpm-npm
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -556,7 +558,7 @@ function ReactPane(): ReactComponentElement<any> {
               </svg>
               <h3 className="mt-2 font-semibold">
                 React{' '}
-                <Link href="/l/r/tutorial/01-create-application">
+                <Link href="/react-tutorial/01-create-application">
                   <a className="italic font-normal text-sm text-gray-600 hover:underline">
                     (follow our React tutorial)
                   </a>
@@ -609,7 +611,7 @@ function ReactPane(): ReactComponentElement<any> {
               </svg>
               <h3 className="mt-2 font-semibold">
                 Next.js{' '}
-                <Link href="/l/r/guides/nextjs">
+                <Link href="/guides/nextjs">
                   <a className="italic font-normal text-sm text-gray-600 hover:underline">
                     (follow our Next.js guide)
                   </a>
@@ -646,7 +648,7 @@ function ReactPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/r/migration/migration-cra">
+                    <Link href="/migration/migration-cra">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -695,7 +697,7 @@ function ReactPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/r/migration/adding-to-monorepo">
+                    <Link href="/migration/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -732,7 +734,9 @@ function ReactPane(): ReactComponentElement<any> {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">migration/lerna-yarn-pnpm</p>
+                  <p className="text-xs font-bold">
+                    migration/lerna-yarn-pnpm-npm
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -845,7 +849,7 @@ function TypescriptPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/r/getting-started/nx-and-typescript">
+                    <Link href="/getting-started/nx-and-typescript">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -899,7 +903,7 @@ function TypescriptPane(): ReactComponentElement<any> {
               >
                 <div className="px-4 py-3 flex w-full">
                   <div className="flex-1 min-w-0">
-                    <Link href="/l/r/migration/adding-to-monorepo">
+                    <Link href="/migration/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="mb-0.5 text-md font-bold text-gray-600">
@@ -936,7 +940,9 @@ function TypescriptPane(): ReactComponentElement<any> {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">migration/lerna-yarn-pnpm</p>
+                  <p className="text-xs font-bold">
+                    migration/lerna-yarn-pnpm-npm
+                  </p>
                 </div>
               </motion.div>
             </div>

@@ -42,7 +42,7 @@ For each project for which you want to enable `make`, add a target in `workspace
 }
 ```
 
-For more information, see the [run-commands api doc](/{{framework}}/workspace/run-commands-executor).
+For more information, see the [run-commands api doc](/workspace/run-commands-executor).
 
 ##### 3. Trigger the executor from the terminal
 
@@ -58,4 +58,4 @@ To run the executor for all affected projects:
 nx affected --target=make
 ```
 
-For more information, see the [nx affected](/{{framework}}/cli/affected).
+For more information, see the [nx affected](/cli/affected).

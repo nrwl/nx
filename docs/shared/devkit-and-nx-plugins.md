@@ -42,7 +42,7 @@ All of the core plugins are written using Nx Devkit, and you can use the same ut
 executors.
 
 The Nx team maintains a core set of plugins for many application and tooling frameworks. You can also extend an Nx
-workspace by writing your own plugins. The [Nx Plugin](/{{framework}}/nx-plugin/overview) plugin provides guidance on
+workspace by writing your own plugins. The [Nx Plugin](/nx-plugin/overview) plugin provides guidance on
 how you can build your own custom plugins.
 
 ### Listing Nx plugins
@@ -63,15 +63,15 @@ Trees(ASTs), and more.
 ### Pay as you go
 
 As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable
-objects (the tree being the only exception). See [Simplest Generator](/{{framework}}/generators/creating-files)
-and [Simplest Executor](/{{framework}}/executors/using-builders#simplest-executor) for examples on creating generators
-and executors. The [Using Executors](/{{framework}}/executors/using-builders)
-and [Using Generators](/{{framework}}/generators/using-schematics) guides also have additional information on executors
+objects (the tree being the only exception). See [Simplest Generator](/generators/creating-files)
+and [Simplest Executor](/executors/using-builders#simplest-executor) for examples on creating generators
+and executors. The [Using Executors](/executors/using-builders)
+and [Using Generators](/generators/using-schematics) guides also have additional information on executors
 and generators.
 
 ## Learn more
 
-- [Using Nx Core Without Plugins](/{{framework}}/getting-started/nx-core)
-- [Workspace generators](/{{framework}}/generators/workspace-generators)
-- [Workspace executors](/{{framework}}/executors/creating-custom-builders)
+- [Using Nx Core Without Plugins](/getting-started/nx-core)
+- [Workspace generators](/generators/workspace-generators)
+- [Workspace executors](/executors/creating-custom-builders)
 - [Nx Community Plugins](/community)

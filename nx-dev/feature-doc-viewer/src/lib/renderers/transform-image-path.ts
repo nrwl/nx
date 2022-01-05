@@ -6,10 +6,8 @@ import {
 import { join } from 'path';
 
 export function transformImagePath({
-  version,
   document,
 }: {
-  version: VersionMetadata;
   document: DocumentData;
 }): (src: string) => string {
   return (src) => {
@@ -25,6 +23,6 @@ export function transformImagePath({
       );
     }
 
-    return uriTransformer(`/documentation/${version.id}`.concat(src));
+    return uriTransformer(`/documentation`.concat(src));
   };
 }

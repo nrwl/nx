@@ -13,6 +13,6 @@ In this tutorial you:
 
 **Dive Deep:**
 
-- [Nx CLI](/{{framework}}/using-nx/nx-cli)
-- [Computation Caching](/{{framework}}/using-nx/caching)
-- [Rebuilding What is Affected](/{{framework}}/using-nx/affected)
+- [Nx CLI](/using-nx/nx-cli)
+- [Computation Caching](/using-nx/caching)
+- [Rebuilding What is Affected](/using-nx/affected)
