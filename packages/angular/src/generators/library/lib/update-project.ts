@@ -54,9 +54,10 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
   if (options.name !== options.fileName) {
     host.delete(path.join(libRoot, `${options.name}.module.ts`));
   }
-  host.write(
-    path.join(libRoot, `${options.fileName}.module.ts`),
-    `
+  if (!options.skipModule) {
+    host.write(
+      path.join(libRoot, `${options.fileName}.module.ts`),
+      `
         import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
         
@@ -67,12 +68,12 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
         })
         export class ${options.moduleName} { }
         `
-  );
+    );
 
-  if (options.unitTestRunner !== 'none' && options.addModuleSpec) {
-    host.write(
-      path.join(libRoot, `${options.fileName}.module.spec.ts`),
-      `
+    if (options.unitTestRunner !== 'none' && options.addModuleSpec) {
+      host.write(
+        path.join(libRoot, `${options.fileName}.module.spec.ts`),
+        `
     import { async, TestBed } from '@angular/core/testing';
     import { ${options.moduleName} } from './${options.fileName}.module';
     
@@ -93,12 +94,17 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
       });
     });
           `
-    );
+      );
+    }
+  } else {
+    host.delete(joinPathFragments(libRoot, `${options.fileName}.module.ts`));
   }
 
   host.write(
     `${options.projectRoot}/src/index.ts`,
-    `
+    options.skipModule
+      ? ``
+      : `
         export * from './lib/${options.fileName}.module';
         `
   );

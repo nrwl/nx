@@ -22,6 +22,7 @@ export function normalizeOptions(
     compilationMode: schema.publishable
       ? 'partial'
       : schema.compilationMode ?? 'full',
+    skipModule: schema.skipModule ?? false,
     ...schema,
   };
 
