@@ -87,19 +87,6 @@ The generated `simple/package.json`:
 }
 ```
 
-And `workspace.json` gets updated to:
-
-```json
-{
-  "version": 2,
-  "projects": {
-    "simple": {
-      "root": "packages/simple"
-    }
-  }
-}
-```
-
 With this you can invoke any script defined in `simple/package.json` via Nx. For instance, you can invoke the `test`
 script by running `yarn nx test simple`. And if you invoke this command a second time, the results are retrieved from
 cache.
@@ -164,32 +151,6 @@ Finally, run `yarn`.
 
 `yarn nx test complex` works now.
 
-## Non-JS Projects
-
-In this example both projects use JavaScript, but we could have created, say, a Rust project instead. The only thing we
-would have to do is to manually define targets.
-
-This is an example of manually defining a target ([read more about it](/{{framework}}/workspace/run-commands-executor)):
-
-```json
-{
-  "version": 2,
-  "projects": {
-    "simple": {
-      "root": "packages/simple",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "command": "npm run test"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
 ## Using Yarn/PNPM/Lerna
 
 The example uses Yarn to connect the two packages. Most of the time, however, there are better ways to do it. The React,
@@ -209,9 +170,9 @@ that adding a `require()` creates a dependency and that some dependencies cannot
 
 ### Nx Orchestrates Tasks
 
-Running `yarn nx run-many --target=test --all --parallel=5` will test all projects in parallel.
+Running `yarn nx run-many --target=test --all` will test all projects in parallel.
 
-Running `yarn nx run-many --target=build --projects=app1,app2 --parallel=5` will build `proj1` and `proj2` and their
+Running `yarn nx run-many --target=build --projects=app1,app2` will build `proj1` and `proj2` and their
 dependencies in parallel. Note that if `app1` depends on the output of its dependency (e.g., `shared-components`), Nx
 will build `shared-components` first and only then will build the app.
 
