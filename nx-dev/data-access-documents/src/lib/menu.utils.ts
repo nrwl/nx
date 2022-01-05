@@ -50,12 +50,15 @@ export function getBasicSection(items: MenuItem[]): MenuSection {
           m.id === 'tutorial' ||
           m.id === 'migration' ||
           m.id === 'configuration' ||
-          m.id === 'using-nx'
+          m.id === 'using-nx' ||
+          m.id === 'react-tutorial' ||
+          m.id === 'angular-tutorial' ||
+          m.id === 'node-tutorial'
       )
       .map((m) => {
         return {
           ...m,
-          disableCollapsible: m.id !== 'tutorial',
+          disableCollapsible: !m.id.endsWith('tutorial'),
         };
       }),
   };

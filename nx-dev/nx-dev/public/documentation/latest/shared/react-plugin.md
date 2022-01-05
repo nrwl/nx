@@ -71,7 +71,7 @@ myorg/
 
 - [Using Cypress](/{{framework}}/cypress/overview)
 - [Using Jest](/{{framework}}/jest/overview)
-- [Using Storybook](/{{framework}}/storybook/overview)
+- [Using Storybook](/default/storybook/overview-react)
 
 ## Executors / Builders
 

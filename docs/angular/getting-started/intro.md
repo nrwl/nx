@@ -4,7 +4,7 @@ Nx is a smart, fast and extensible build system. It comes with first class monor
 
 Nx helps you develop [Angular](/{{framework}}/angular/overview) applications with fully integrated support for
 modern tools and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview),
-[ESLint](/{{framework}}/linter/eslint), [Storybook](/{{framework}}/storybook/overview), [NgRx](/angular/guides/misc-ngrx) and more.
+[ESLint](/{{framework}}/linter/eslint), Storybook, [NgRx](/angular/guides/misc-ngrx) and more.
 
 ## 10-Minute Nx Overview
 
@@ -41,7 +41,7 @@ Nx works especially well for monorepos. Each new app added to a monorepo provide
 
 ## Learn Nx Fundamentals
 
-- [Interactive Nx Tutorial (with videos)](/{{framework}}/tutorial/01-create-application)
+- [Interactive Nx Tutorial (with videos)](/default/angular-tutorial/01-create-application)
 - [Using Nx Core Without Plugins](/{{framework}}/getting-started/nx-core)
 - [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
 - [45-Minute Walkthrough on YouTube](https://www.youtube.com/watch?v=h5FIGDn5YM0)

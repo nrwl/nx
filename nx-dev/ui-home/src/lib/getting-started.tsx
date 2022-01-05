@@ -201,7 +201,7 @@ function AngularPane(): ReactComponentElement<any> {
               className="max-w-screen-sm"
               width="100%"
               height="315"
-              src="https://www.youtube.com/embed/i37yJKK8qGI"
+              src="https://www.youtube.com/embed/cXOkmOy-8dk"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
@@ -431,7 +431,7 @@ function NodeJsPane(): ReactComponentElement<any> {
               className="max-w-screen-sm"
               width="100%"
               height="315"
-              src="https://www.youtube.com/embed/UcBSBQYNlhE"
+              src="https://www.youtube.com/embed/iIh5h_G52kI"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
@@ -634,7 +634,7 @@ function ReactPane(): ReactComponentElement<any> {
               className="max-w-screen-sm"
               width="100%"
               height="315"
-              src="https://www.youtube.com/embed/HcQE5R6ucng"
+              src="https://www.youtube.com/embed/sNz-4PUM0k8"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
