@@ -4,7 +4,7 @@ Nx is a smart, fast and extensible build system with first class monorepo suppor
 
 Nx helps you develop [React](/{{framework}}/react/overview) applications with fully integrated support for modern tools
 and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview),
-[Storybook](/{{framework}}/storybook/overview), [ESLint](/{{framework}}/linter/eslint), and more. Nx also supports React
+Storybook, [ESLint](/{{framework}}/linter/eslint), and more. Nx also supports React
 frameworks like [Gatsby](/{{version}}/react/gatsby/overview) and [Next.js](/{{version}}/react/guides/nextjs).
 
 ## 10-Minute Nx Overview
@@ -61,7 +61,7 @@ begin. Check out [Nx and Typescript](/{{framework}}/getting-started/nx-and-types
 
 ## Learn Nx Fundamentals
 
-- [Interactive Nx Tutorial (with videos)](/{{framework}}/tutorial/01-create-application)
+- [Interactive Nx Tutorial (with videos)](/default/react-tutorial/01-create-application)
 
 - [Free Nx Course on Egghead: Scale React Development with Nx](https://egghead.io/playlists/scale-react-development-with-nx-4038)
 - [45-Minute Walkthrough](https://www.youtube.com/watch?v=jCf92IyR-GE)

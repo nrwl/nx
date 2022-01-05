@@ -70,6 +70,7 @@ function expandFrameworks(linkPaths: string[]): string[] {
       acc.push(link.replace(FRAMEWORK_SYMBOL, 'angular'));
       acc.push(link.replace(FRAMEWORK_SYMBOL, 'react'));
       acc.push(link.replace(FRAMEWORK_SYMBOL, 'node'));
+      acc.push(link.replace(FRAMEWORK_SYMBOL, 'default'));
     } else {
       acc.push(link);
     }
