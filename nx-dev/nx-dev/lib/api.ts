@@ -6,13 +6,11 @@ import {
 
 // Imports JSON directly so they can be bundled into the app and functions.
 // Also provides some test safety.
-import latestDocuments from '../public/documentation/latest/map.json';
+import documents from '../public/documentation/map.json';
 
 export const documentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
-  documents: latestDocuments.find(
-    (x) => x.id === 'default'
-  ) as DocumentMetadata,
+  documents: documents.find((x) => x.id === 'default') as DocumentMetadata,
 });
 
 export const menuApi = new MenuApi(documentsApi);

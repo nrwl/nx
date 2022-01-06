@@ -20,7 +20,6 @@ export function transformImagePath({
       );
     }
 
-    // TODO@ben remove `latest` when flattening docs' architecture
-    return uriTransformer(`/documentation/latest`.concat(src));
+    return uriTransformer(`/documentation`.concat(src));
   };
 }

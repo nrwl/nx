@@ -11,13 +11,10 @@ import { debounceTime, filter, switchMapTo, tap } from 'rxjs/operators';
 const { bgGreen, white } = chalk;
 
 const argv = yargs
-  .command(
-    'Usage: $0',
-    'Sync the public latest folder with the /docs folder one time'
-  )
+  .command('Usage: $0', 'Sync the public folder with the /docs folder one time')
   .example(
     '$0 --watch',
-    'Sync the public latest folder with the /docs folder whenever changes are done'
+    'Sync the public folder with the /docs folder whenever changes are done'
   )
   .option('watch', {
     alias: 'w',
@@ -28,7 +25,7 @@ const argv = yargs
 
 function sync(): void {
   return shell.exec(
-    'rsync -avrR --delete ./docs/./ ./nx-dev/nx-dev/public/documentation/latest',
+    'rsync -avrR --delete ./docs/./ ./nx-dev/nx-dev/public/documentation',
     { sync: true }
   );
 }
