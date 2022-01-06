@@ -56,9 +56,7 @@ export function Header(props: HeaderProps) {
           </a>
         </div>
         {/*SEARCH*/}
-        <div className="inline">
-          {!!showSearch ? <AlgoliaSearch flavorId="r" versionId="l" /> : null}
-        </div>
+        <div className="inline">{!!showSearch ? <AlgoliaSearch /> : null}</div>
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
