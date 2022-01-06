@@ -48,7 +48,7 @@ export function Index() {
           type: 'website',
         }}
       />
-      <Header showSearch={false} useDarkBackground={false} />
+      <Header showSearch={true} useDarkBackground={false} />
       <main>
         <div className="w-full">
           {/*INTRO COMPONENT*/}
