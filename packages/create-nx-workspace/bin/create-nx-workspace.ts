@@ -694,7 +694,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/latest/react/tutorial/01-create-application`,
+          `https://nx.dev/react-tutorial/01-create-application`,
           ...pointToFreeCourseOnEgghead(),
         ],
       });
@@ -705,7 +705,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/latest/angular/tutorial/01-create-application`,
+          `https://nx.dev/angular-tutorial/01-create-application`,
           ...pointToFreeCourseOnYoutube(),
         ],
       });
@@ -715,7 +715,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/latest/node/tutorial/01-create-application`,
+          `https://nx.dev/node-tutorial/01-create-application`,
           ...pointToFreeCourseOnYoutube(),
         ],
       });

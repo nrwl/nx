@@ -281,7 +281,7 @@ The following is an expanded version showing all options. Your `nx.json` will li
   },
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "@nrwl/workspace/tasks-runners",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
       }
@@ -412,7 +412,7 @@ named "default" is used by default. Specify a different one like
 this `nx run-many --target=build --all --runner=another`.
 
 Tasks runners can accept different options. The following are the options supported
-by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
+by `"@nrwl/workspace/tasks-runners"` and `"@nrwl/nx-cloud"`.
 
 - `cacheableOperations` defines the list of targets/operations that are cached by Nx.
 - `parallel` defines the max number of targets ran in parallel (in older versions of Nx you had to
@@ -434,7 +434,7 @@ by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "@nrwl/workspace/tasks-runners",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"],
         "runtimeCacheInputs": ["node -v"]

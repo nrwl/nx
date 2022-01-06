@@ -22,8 +22,9 @@ These guides will help you get started:
 - [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
 - [Using Nx without plugins](/getting-started/nx-core)
 - [Nx and TypeScript](/getting-started/nx-and-typescript)
-- [Nx and React](/default/getting-started/nx-and-react)
-- [Nx and Angular](/default/getting-started/nx-and-angular)
+- [Nx and React](/getting-started/nx-and-react)
+- [Nx and Angular](/getting-started/nx-and-angular)
+- [CI Overview](/using-nx/ci-overview)
 
 ## Features
 
@@ -50,6 +51,6 @@ These guides will help you get started:
 
 - [Using Nx without plugins](/getting-started/nx-core)
 - [Nx and TypeScript](/getting-started/nx-and-typescript)
-- [React: Interactive Nx Tutorial (with videos)](/default/react-tutorial/01-create-application)
-- [Node: Interactive Nx Tutorial (with videos)](/default/node-tutorial/01-create-application)
-- [Angular: Interactive Nx Tutorial (with videos)](/default/angular-tutorial/01-create-application)
+- [React: Interactive Nx Tutorial (with videos)](/react-tutorial/01-create-application)
+- [Node: Interactive Nx Tutorial (with videos)](/node-tutorial/01-create-application)
+- [Angular: Interactive Nx Tutorial (with videos)](/angular-tutorial/01-create-application)

@@ -1560,6 +1560,16 @@
             "name": "Using Apollo GraphQL",
             "id": "apollo-react",
             "file": "shared/examples/apollo-react"
+          },
+          {
+            "name": "Large Repo and Caching",
+            "id": "caching",
+            "file": "shared/examples/caching"
+          },
+          {
+            "name": "Large Repo and DTE",
+            "id": "dte",
+            "file": "shared/examples/dte"
           }
         ]
       }

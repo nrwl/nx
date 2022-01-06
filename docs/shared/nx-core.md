@@ -49,7 +49,7 @@ package.json
   "npmScope": "myorg",
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "@nrwl/workspace/tasks-runners",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
       }

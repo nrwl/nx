@@ -44,7 +44,7 @@ If you have an existing Create React App project, you can gain the benefits of N
 npx cra-to-nx
 ```
 
-For more information on adding Nx to an existing repository see the [migration guide](/default/migration/migration-cra)
+For more information on adding Nx to an existing repository see the [migration guide](/migration/migration-cra)
 
 ## Install Nx CLI
 
