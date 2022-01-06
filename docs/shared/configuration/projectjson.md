@@ -450,7 +450,7 @@ a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Change
 ## Validating the configuration
 
 If at any point in time you want to check if your configuration is in sync, you can use
-the [workspace-lint]({{framework}}/cli/workspace-lint) executor:
+the [workspace-lint](/cli/workspace-lint) executor:
 
 ```bash
 nx workspace-lint

@@ -58,4 +58,4 @@ export class AppComponent {
 
 ## What's Next
 
-- Continue to [Step 5: Add Node Application Implementing an API](/latest/angular/tutorial/05-add-node-app)
+- Continue to [Step 5: Add Node Application Implementing an API](/angular-tutorial/05-add-node-app)

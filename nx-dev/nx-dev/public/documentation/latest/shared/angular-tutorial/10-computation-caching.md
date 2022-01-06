@@ -69,4 +69,4 @@ Nx built `api` and retrieved `todos` from its computation cache. Read more about
 
 ## What's Next
 
-- Continue to [Step 11: Test Affected Projects](/latest/angular/tutorial/11-test-affected-projects)
+- Continue to [Step 11: Test Affected Projects](/angular-tutorial/11-test-affected-projects)

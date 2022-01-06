@@ -188,4 +188,4 @@ The API starts running on port `3333`.
 
 ## What's Next
 
-- Continue to [Step 6: Proxy](/latest/angular/tutorial/06-proxy)
+- Continue to [Step 6: Proxy](/angular-tutorial/06-proxy)
