@@ -171,23 +171,10 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run:
-          name: Check repository
-          command: |
-            pids=()
-
-            yarn check-imports &
-            pids+=($!)
-            yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-            yarn check-commit &
-            pids+=($!)
-            yarn depcheck &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+      - run: yarn check-imports
+      - run: yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+      - run: yarn check-commit
+      - run: yarn depcheck
       - run:
           name: Check Documentation
           command: yarn documentation

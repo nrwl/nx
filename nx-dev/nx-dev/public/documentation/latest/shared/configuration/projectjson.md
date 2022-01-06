@@ -7,6 +7,8 @@ Projects can be configured in `package.json` (if you use npm scripts and not Nx 
 use Nx executors). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration. This guide covers the `project.json` case.
 
+> Angular developers can also configure projects in angular.json. Read [this guide](/getting-started/nx-and-angular#angularjson) for more information.
+
 ## Project Configuration
 
 The `project.json` file contains configuration specific to its project. This file is often created when you use Nx

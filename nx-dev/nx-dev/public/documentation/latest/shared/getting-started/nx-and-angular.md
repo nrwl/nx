@@ -45,17 +45,19 @@ Nx integrates well with the Angular CLI:
 
 This works so well that often folks don't even know they use Nx.
 
-## Angular CLI, however, has some limitations, and Nx addresses them.
+## Angular CLI has some limitations, and Nx addresses them.
 
-### angular.json is too long
+### angular.json
 
-Nx allows you to split `angular.json` into multiple configuration files (one for each project). This is a big deal for large workspaces where `angular.json` can be thousands of lines long.
+Nx supports using `angular.json` to configure projects and their targets, but it comes with a few limitations. For instance, `angular.json` can be many thousands of lines long for large workspaces.
 
-This is how you do it:
+What we recommend instead is to split `angular.json` into multiple `project.json` files (one for each project). This is how you do it:
 
 - Change the version number in `angular.json` to `2`
 - Run `nx format`
 - Run `nx generate @nrwl/workspace:convert-to-nx-project --all=true`
+
+**But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` or `workspace.json` applies to `angular.json` in the same way. For instance, everything in [project.json and nx.json](/configuration/projectjson) applies to `angular.json` in the same way.**
 
 Note that even though the configuration is split, everything works the same way. All migrations and schematics that expect a single `angular.json` file, will receive a single file. Nx is smart, so it merges all the files in memory to make those migrations and schematics work.
 

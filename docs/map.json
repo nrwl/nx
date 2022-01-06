@@ -45,7 +45,7 @@
         ]
       },
       {
-        "name": "Configuration",
+        "name": "Configuration Choices",
         "id": "configuration",
         "itemList": [
           {
@@ -57,11 +57,6 @@
             "name": "project.json and nx.json",
             "id": "projectjson",
             "file": "shared/configuration/projectjson"
-          },
-          {
-            "name": "angular.json and nx.json",
-            "id": "angularjson",
-            "file": "shared/configuration/angularjson"
           }
         ]
       },
@@ -1667,11 +1662,6 @@
         "name": "Configuration",
         "id": "configuration",
         "itemList": [
-          {
-            "name": "angular.json and nx.json",
-            "id": "angularjson",
-            "file": "shared/configuration/angularjson"
-          },
           {
             "name": "package.json and nx.json",
             "id": "packagejson",
