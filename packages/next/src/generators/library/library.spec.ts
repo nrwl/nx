@@ -5,7 +5,7 @@ import { readJson } from '@nrwl/devkit';
 import { Schema } from './schema';
 
 describe('next library', () => {
-  it('should use "next/babel" preset in babelrc', async () => {
+  it('should use "@nrwl/next/babel" preset in babelrc', async () => {
     const baseOptions: Schema = {
       name: '',
       linter: Linter.EsLint,
@@ -39,15 +39,16 @@ describe('next library', () => {
     });
 
     expect(readJson(appTree, 'libs/my-lib/.babelrc')).toEqual({
-      presets: ['next/babel'],
+      presets: ['@nrwl/next/babel'],
       plugins: [],
     });
     expect(readJson(appTree, 'libs/my-lib2/.babelrc')).toEqual({
       presets: [
         [
-          'next/babel',
+          '@nrwl/next/babel',
           {
             'preset-react': {
+              runtime: 'automatic',
               importSource: '@emotion/react',
             },
           },
@@ -56,11 +57,11 @@ describe('next library', () => {
       plugins: ['@emotion/babel-plugin'],
     });
     expect(readJson(appTree, 'libs/my-lib-styled-jsx/.babelrc')).toEqual({
-      presets: ['next/babel'],
+      presets: ['@nrwl/next/babel'],
       plugins: [],
     });
     expect(readJson(appTree, 'libs/my-dir/my-lib3/.babelrc')).toEqual({
-      presets: ['next/babel'],
+      presets: ['@nrwl/next/babel'],
       plugins: [],
     });
   });
