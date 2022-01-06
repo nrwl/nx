@@ -2,6 +2,13 @@ import type { Task } from '@nrwl/devkit';
 import { TaskStatus } from './tasks-runner';
 import { TaskCacheStatus } from '../utilities/output';
 
+export interface TaskResult {
+  task: Task;
+  status: TaskStatus;
+  code: number;
+  terminalOutput?: string;
+}
+
 export interface TaskMetadata {
   groupId: number;
 }
@@ -29,10 +36,7 @@ export interface LifeCycle {
 
   startTasks?(task: Task[], metadata: TaskMetadata): void;
 
-  endTasks?(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
-    metadata: TaskMetadata
-  ): void;
+  endTasks?(taskResults: TaskResult[], metadata: TaskMetadata): void;
 
   printTaskTerminalOutput?(
     task: Task,
@@ -94,10 +98,7 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
-    metadata: TaskMetadata
-  ): void {
+  endTasks(taskResults: TaskResult[], metadata: TaskMetadata): void {
     for (let l of this.lifeCycles) {
       if (l.endTasks) {
         l.endTasks(taskResults, metadata);
