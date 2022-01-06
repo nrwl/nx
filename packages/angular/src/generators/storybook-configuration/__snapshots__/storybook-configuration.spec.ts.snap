@@ -20,7 +20,18 @@ module.exports = {
     if (rootMain.webpackFinal) {
       config = await rootMain.webpackFinal(config, { configType });
     }
+
     
+
+    
+      // remove html raw-loader that breaks Jit compilation
+      const rules = (config.module.rules ?? []).filter(
+        (rule) =>
+          rule.test !== /\\\\.html$/ &&
+          rule.exclude !== /\\\\.async\\\\.html$/ &&
+          !rule.loader?.includes('raw-loader')
+      );
+      config.module.rules = [...rules];
     
 
     // add your own webpack tweaks if needed
