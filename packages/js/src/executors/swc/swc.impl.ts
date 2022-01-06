@@ -4,7 +4,7 @@ import {
   copyAssetFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import { eachValueFrom } from 'rxjs-for-await';
 import { map } from 'rxjs/operators';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -13,6 +13,7 @@ import {
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
+import { addTempSwcrc } from '../../utils/swc/add-temp-swcrc';
 import { compileSwc } from '../../utils/swc/compile-swc';
 import { updatePackageJson } from '../../utils/update-package-json';
 
@@ -38,6 +39,12 @@ export function normalizeOptions(
     outputPath
   );
 
+  const swcCliOptions = {
+    projectDir: projectRoot.split('/').pop(),
+    // TODO: assume consumers put their code in `src`
+    destPath: `${relative(projectRoot, options.outputPath)}/src`,
+  };
+
   return {
     ...options,
     swcrcPath: join(projectRoot, '.swcrc'),
@@ -51,6 +58,7 @@ export function normalizeOptions(
     projectRoot,
     outputPath,
     tsConfig: join(contextRoot, options.tsConfig),
+    swcCliOptions,
   } as NormalizedSwcExecutorOptions;
 }
 
@@ -65,6 +73,7 @@ export async function* swcExecutor(
     sourceRoot,
     root
   );
+  normalizedOptions.swcrcPath = addTempSwcrc(normalizedOptions);
   const { tmpTsConfig, projectRoot } = checkDependencies(
     context,
     options.tsConfig

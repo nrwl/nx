@@ -34,6 +34,11 @@
       "type": "boolean",
       "description": "Whether to skip TypeScript type checking.",
       "default": false
+    },
+    "swcExclude": {
+      "type": "array",
+      "description": "List of SWC Glob/Regex to be excluded from compilation (https://swc.rs/docs/configuration/compilation#exclude)",
+      "default": ["./src/**/.*.spec.ts$", "./**/.*.js$"]
     }
   },
   "required": ["main", "outputPath", "tsConfig"],

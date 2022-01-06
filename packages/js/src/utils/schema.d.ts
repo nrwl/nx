@@ -48,12 +48,20 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
 
 export interface SwcExecutorOptions extends ExecutorOptions {
   skipTypeCheck?: boolean;
+  swcExclude?: string[];
+}
+
+export interface SwcCliOptions {
+  projectDir: string;
+  destPath: string;
 }
 
 export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
+  swcExclude: string[];
   skipTypeCheck: boolean;
   swcrcPath: string;
+  swcCliOptions: SwcCliOptions;
 }
 
 export interface ExecutorEvent {
