@@ -26,13 +26,15 @@ import { RunManyTerminalOutputLifeCycle } from './run-many-terminal-output-life-
 import { EmptyTerminalOutputLifeCycle } from './empty-terminal-output-life-cycle';
 import { RunOneTerminalOutputLifeCycle } from './run-one-terminal-output-life-cycle';
 import { TaskTimingsLifeCycle } from './task-timings-life-cycle';
+import { RunManyNeoTerminalOutputLifeCycle } from './neo-output/life-cycle';
+import { render } from './neo-output/render';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
 function getTerminalOutputLifeCycle(
   initiatingProject: string,
   terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
-  projectsToRun: ProjectGraphNode[],
+  projectNames: string[],
   tasks: Task[],
   nxArgs: NxArgs,
   overrides: any
@@ -40,15 +42,19 @@ function getTerminalOutputLifeCycle(
   if (terminalOutputStrategy === 'run-one') {
     return new RunOneTerminalOutputLifeCycle(
       initiatingProject,
-      projectsToRun.map((t) => t.name),
+      projectNames,
       tasks,
       nxArgs
     );
   } else if (terminalOutputStrategy === 'hide-cached-output') {
     return new EmptyTerminalOutputLifeCycle();
   } else {
+    if (process.env.NX_TASKS_RUNNER_NEO_OUTPUT === 'true') {
+      return new RunManyNeoTerminalOutputLifeCycle(projectNames, tasks, nxArgs);
+    }
+
     return new RunManyTerminalOutputLifeCycle(
-      projectsToRun.map((t) => t.name),
+      projectNames,
       tasks,
       nxArgs,
       overrides
@@ -56,10 +62,10 @@ function getTerminalOutputLifeCycle(
   }
 }
 
-export async function runCommand<T extends RunArgs>(
+export async function runCommand(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
-  { nxJson, workspaceResults }: Environment,
+  { nxJson }: Environment,
   nxArgs: NxArgs,
   overrides: any,
   terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
@@ -88,21 +94,31 @@ export async function runCommand<T extends RunArgs>(
     defaultDependencyConfigs
   );
 
-  const lifeCycles = [
-    getTerminalOutputLifeCycle(
-      initiatingProject,
-      terminalOutputStrategy,
-      projectsToRun,
-      tasks,
-      nxArgs,
-      overrides
-    ),
-  ] as LifeCycle[];
+  const projectNames = projectsToRun.map((t) => t.name);
+  const terminalOutputLifeCycle = getTerminalOutputLifeCycle(
+    initiatingProject,
+    terminalOutputStrategy,
+    projectNames,
+    tasks,
+    nxArgs,
+    overrides
+  );
+  const lifeCycles = [terminalOutputLifeCycle] as LifeCycle[];
 
   if (process.env.NX_PERF_LOGGING) {
     lifeCycles.push(new TaskTimingsLifeCycle(process.env.NX_PERF_LOGGING));
   }
   const lifeCycle = new CompositeLifeCycle(lifeCycles);
+
+  let isRenderComplete: Promise<void> | undefined;
+  if (process.env.NX_TASKS_RUNNER_NEO_OUTPUT === 'true') {
+    isRenderComplete = render({
+      lifeCycle: terminalOutputLifeCycle as RunManyNeoTerminalOutputLifeCycle,
+      projectNames,
+      tasks,
+      args: nxArgs,
+    });
+  }
 
   const promiseOrObservable = tasksRunner(
     tasks,
@@ -121,6 +137,10 @@ export async function runCommand<T extends RunArgs>(
   } else {
     // simply await the promise
     anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
+  }
+
+  if (isRenderComplete) {
+    await isRenderComplete;
   }
 
   // fix for https://github.com/nrwl/nx/issues/1666

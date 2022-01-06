@@ -4,7 +4,12 @@ import type { NxJsonConfiguration, ProjectGraph, Task } from '@nrwl/devkit';
 // Exported for backwards compatibility
 export type { Task } from '@nrwl/devkit';
 
-export type TaskStatus = 'success' | 'failure' | 'skipped' | 'cache';
+export type TaskStatus =
+  | 'success'
+  | 'failure'
+  | 'skipped'
+  | 'cache'
+  | 'remote-cache';
 
 /**
  * @deprecated Return Promise<{[id: string]: TaskStatus}> from the tasks runner
