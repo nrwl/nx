@@ -50,7 +50,7 @@ describe('Add react-native-svg to dev dependencies', () => {
 
     const tsconfig = readJson(tree, 'apps/products/tsconfig.json');
     expect(tsconfig.files).toEqual([
-      '../../node_modules/@nrwl/react/typings/image.d.ts',
+      '../../node_modules/@nrwl/react-native/typings/svg.d.ts',
     ]);
 
     const packageJson = readJson(tree, 'apps/products/package.json');
