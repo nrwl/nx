@@ -13,7 +13,7 @@ EXPERIMENTAL: Nx DaemonThe Nx Daemon is a local server which runs in the backgro
 nx daemon
 ```
 
-[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ## Options
 

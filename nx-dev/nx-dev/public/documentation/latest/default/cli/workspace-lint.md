@@ -13,7 +13,7 @@ Lint workspace or list of files. Note: To exclude files from this lint rule, you
 nx workspace-lint
 ```
 
-[Install `nx` globally]({{framework}}/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ## Options
 
