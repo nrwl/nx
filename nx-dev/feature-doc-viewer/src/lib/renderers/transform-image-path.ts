@@ -1,8 +1,5 @@
 import { uriTransformer } from 'react-markdown';
-import {
-  DocumentData,
-  VersionMetadata,
-} from '@nrwl/nx-dev/data-access-documents';
+import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
 import { join } from 'path';
 
 export function transformImagePath({
@@ -23,6 +20,7 @@ export function transformImagePath({
       );
     }
 
-    return uriTransformer(`/documentation`.concat(src));
+    // TODO@ben remove `latest` when flattening docs' architecture
+    return uriTransformer(`/documentation/latest`.concat(src));
   };
 }

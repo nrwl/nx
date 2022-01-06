@@ -45,7 +45,7 @@ describe('transformImagePath', () => {
     const transform = transformImagePath(opts);
 
     expect(transform('/shared/test.png')).toEqual(
-      '/documentation/shared/test.png'
+      '/documentation/latest/shared/test.png'
     );
   });
 });
