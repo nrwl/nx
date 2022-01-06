@@ -33,7 +33,6 @@ function log(environmentVariableName: LoggingKey, toLog: any) {
 }
 
 const BASE_PATH = 'docs';
-const FRAMEWORK_SYMBOL = '{{framework}}';
 const DIRECT_INTERNAL_LINK_SYMBOL = 'https://nx.dev';
 
 function readFileContents(path: string): string {
@@ -64,20 +63,6 @@ function containsAnchor(linkPath: string): boolean {
   return linkPath.includes('#');
 }
 
-function expandFrameworks(linkPaths: string[]): string[] {
-  return linkPaths.reduce((acc, link) => {
-    if (link.includes(FRAMEWORK_SYMBOL)) {
-      acc.push(link.replace(FRAMEWORK_SYMBOL, 'angular'));
-      acc.push(link.replace(FRAMEWORK_SYMBOL, 'react'));
-      acc.push(link.replace(FRAMEWORK_SYMBOL, 'node'));
-      acc.push(link.replace(FRAMEWORK_SYMBOL, 'default'));
-    } else {
-      acc.push(link);
-    }
-    return acc;
-  }, []);
-}
-
 function extractAllInternalLinks(): Record<string, string[]> {
   return glob.sync(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
@@ -93,13 +78,9 @@ function extractAllInternalLinks(): Record<string, string[]> {
       .filter(isNotAsset)
       .filter(isNotImage)
       .filter(isNotNxCommunityLink)
-      // `/latest/{{framework}}/...` are valid links too but we need to strip the version
-      .map((x) => x.replace(/^\/latest/, ''))
-      // `/{{ version }}/...` are valid links as well
-      .map((x) => x.replace(/^\/{{version}}/, ''))
       .map(removeAnchors);
     if (links.length) {
-      acc[path] = expandFrameworks(links);
+      acc[path] = links;
     }
     return acc;
   }, {});
@@ -113,7 +94,7 @@ function extractAllInternalLinksWithAnchors(): Record<string, string[]> {
       .filter(isNotImage)
       .filter(containsAnchor);
     if (links.length) {
-      acc[path] = expandFrameworks(links);
+      acc[path] = links;
     }
     return acc;
   }, {});
@@ -199,9 +180,7 @@ function determineErroneousInternalLinks(
   let erroneousInternalLinks: Record<string, string[]> | undefined;
   for (const [docPath, links] of Object.entries(internalLinks)) {
     const erroneousLinks = links.filter(
-      (link) =>
-        !validInternalLinksMap[`${link.slice(1)}`] &&
-        !validInternalLinksMap[`angular/${link.slice(1)}`]
+      (link) => !validInternalLinksMap[`${link.slice(1)}`]
     );
     if (erroneousLinks.length) {
       if (!erroneousInternalLinks) {

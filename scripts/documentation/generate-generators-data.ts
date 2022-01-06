@@ -18,7 +18,6 @@ import {
   Configuration,
   getPackageConfigurations,
 } from './get-package-configurations';
-import { Framework } from './frameworks';
 import { parseJsonSchemaToOptions } from './json-parser';
 import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 
@@ -63,12 +62,9 @@ function generateSchematicList(
   });
 }
 
-function generateTemplate(
-  framework: Framework,
-  schematic
-): { name: string; template: string } {
+function generateTemplate(schematic): { name: string; template: string } {
   const cliCommand = 'nx';
-  const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
+  const filename = 'workspace.json';
   let template = dedent`
 ---
 title: "${schematic.collectionName}:${schematic.name} generator"
@@ -179,60 +175,75 @@ ${cliCommand} generate ${schematic.name} ...
 export async function generateGeneratorsDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Generators\n`);
 
+  const { configs } = getPackageConfigurations();
   await Promise.all(
-    getPackageConfigurations().map(({ framework, configs }) => {
-      return Promise.all(
-        configs
-          .filter((item) => item.hasSchematics)
-          .map(async (config) => {
-            const schematicList = await Promise.all(
-              generateSchematicList(config, flattener)
-            );
+    configs
+      .filter((item) => item.hasSchematics)
+      .map(async (config) => {
+        const schematicList = await Promise.all(
+          generateSchematicList(config, flattener)
+        );
 
-            const markdownList = schematicList
-              .filter((s) => s != null && !s['hidden'])
-              .map((s_1) => generateTemplate(framework, s_1));
+        const markdownList = schematicList
+          .filter((s) => s != null && !s['hidden'])
+          .map((s_1) => generateTemplate(s_1));
 
-            await Promise.all(
-              markdownList.map((template) =>
-                generateMarkdownFile(config.schematicOutput, template)
-              )
-            );
+        await Promise.all(
+          markdownList.map((template) =>
+            generateMarkdownFile(config.schematicOutput, template)
+          )
+        );
 
-            console.log(
-              ` - ${chalk.blue(
-                config.framework
-              )} Documentation for ${chalk.magenta(
-                path.relative(process.cwd(), config.root)
-              )} generated at ${chalk.grey(
-                path.relative(process.cwd(), config.schematicOutput)
-              )}`
-            );
-          })
-      );
-    })
-  );
-
-  console.log();
-  await Promise.all(
-    getPackageConfigurations().map(({ framework, configs }) => {
-      const schematics = configs
-        .filter((item) => item.hasSchematics)
-        .map((item) => item.name);
-      return generateJsonFile(
-        path.join(__dirname, '../../docs', framework, 'generators.json'),
-        schematics
-      ).then(() => {
         console.log(
-          `${chalk.green('✓')} Generated ${chalk.blue(
-            framework
-          )} generators.json at ${chalk.grey(
-            `docs/${framework}/generators.json`
+          ` - Documentation for ${chalk.magenta(
+            path.relative(process.cwd(), config.root)
+          )} generated at ${chalk.grey(
+            path.relative(process.cwd(), config.schematicOutput)
           )}`
         );
-      });
-    })
+      })
   );
+  await Promise.all(
+    configs
+      .filter((item) => item.hasSchematics)
+      .map(async (config) => {
+        const schematicList = await Promise.all(
+          generateSchematicList(config, flattener)
+        );
+
+        const markdownList = schematicList
+          .filter((s) => s != null && !s['hidden'])
+          .map((s_1) => generateTemplate(s_1));
+
+        await Promise.all(
+          markdownList.map((template) =>
+            generateMarkdownFile(config.schematicOutput, template)
+          )
+        );
+
+        console.log(
+          ` - Documentation for ${chalk.magenta(
+            path.relative(process.cwd(), config.root)
+          )} generated at ${chalk.grey(
+            path.relative(process.cwd(), config.schematicOutput)
+          )}`
+        );
+      })
+  );
+
+  const schematics = configs
+    .filter((item) => item.hasSchematics)
+    .map((item) => item.name);
+  await generateJsonFile(
+    path.join(__dirname, '../../docs', 'default', 'generators.json'),
+    schematics
+  ).then(() => {
+    console.log(
+      `${chalk.green('✓')} Generated generators.json at ${chalk.grey(
+        `docs/default/generators.json`
+      )}`
+    );
+  });
 
   console.log(`\n${chalk.green('✓')} Generated Documentation for Generators`);
 }

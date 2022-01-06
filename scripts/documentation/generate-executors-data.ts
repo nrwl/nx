@@ -19,7 +19,6 @@ import {
   Configuration,
   getPackageConfigurations,
 } from './get-package-configurations';
-import { Framework } from './frameworks';
 import * as chalk from 'chalk';
 import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 
@@ -73,11 +72,8 @@ function generateSchematicList(
   });
 }
 
-function generateTemplate(
-  framework: Framework,
-  executor
-): { name: string; template: string } {
-  const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
+function generateTemplate(executor): { name: string; template: string } {
+  const filename = 'workspace.json';
   const cliCommand = 'nx';
 
   let template = dedent`
@@ -167,58 +163,51 @@ Options can be configured in \`${filename}\` when defining the executor, or when
 export async function generateExecutorsDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Executors\n`);
 
+  const { configs } = getPackageConfigurations();
+
   await Promise.all(
-    getPackageConfigurations().map(({ framework, configs }) => {
-      return Promise.all(
-        configs
-          .filter((item) => item.hasBuilders)
-          .map(async (config) => {
-            const buildersList = await Promise.all(
-              generateSchematicList(config, flattener)
-            );
+    configs
+      .filter((item) => item.hasBuilders)
+      .map(async (config) => {
+        const buildersList = await Promise.all(
+          generateSchematicList(config, flattener)
+        );
 
-            const markdownList = buildersList
-              .filter((b) => b != null && !b['hidden'])
-              .map((b) => generateTemplate(framework, b));
+        const markdownList = buildersList
+          .filter((b) => b != null && !b['hidden'])
+          .map((b) => generateTemplate(b));
 
-            await Promise.all(
-              markdownList.map((template) =>
-                generateMarkdownFile(config.builderOutput, template)
-              )
-            );
+        await Promise.all(
+          markdownList.map((template) =>
+            generateMarkdownFile(config.builderOutput, template)
+          )
+        );
 
-            console.log(
-              ` - ${chalk.blue(
-                config.framework
-              )} Documentation for ${chalk.magenta(
-                relative(process.cwd(), config.root)
-              )} generated at ${chalk.grey(
-                relative(process.cwd(), config.builderOutput)
-              )}`
-            );
-          })
-      );
-    })
+        console.log(
+          ` - Documentation for ${chalk.magenta(
+            relative(process.cwd(), config.root)
+          )} generated at ${chalk.grey(
+            relative(process.cwd(), config.builderOutput)
+          )}`
+        );
+      })
   );
 
   console.log();
-  await Promise.all(
-    getPackageConfigurations().map(async ({ framework, configs }) => {
-      const builders = configs
-        .filter((item) => item.hasBuilders)
-        .map((item) => item.name);
 
-      await generateJsonFile(
-        join(__dirname, '../../docs', framework, 'executors.json'),
-        builders
-      );
+  const builders = configs
+    .filter((item) => item.hasBuilders)
+    .map((item) => item.name);
 
-      console.log(
-        `${chalk.green('✓')} Generated ${chalk.blue(
-          framework
-        )} executors.json at ${chalk.grey(`docs/${framework}/executors.json`)}`
-      );
-    })
+  await generateJsonFile(
+    join(__dirname, '../../docs', 'default', 'executors.json'),
+    builders
+  );
+
+  console.log(
+    `${chalk.green('✓')} Generated executors.json at ${chalk.grey(
+      `docs/default/executors.json`
+    )}`
   );
 
   console.log(`\n${chalk.green('✓')} Generated Documentation for Executors`);

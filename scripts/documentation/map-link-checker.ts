@@ -78,7 +78,7 @@ if (!!mapMissList.length) {
   console.log(
     `\n${chalk.red(
       'ERROR'
-    )} The \'map.json\' file is linking documenation files that do not exist.`
+    )} The \'map.json\' file is linking documentation files that do not exist.`
   );
   scriptError = true;
 } else {
