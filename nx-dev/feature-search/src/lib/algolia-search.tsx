@@ -17,11 +17,7 @@ function Hit({ hit, children }) {
   );
 }
 
-export interface AlgoliaSearchProps {
-  flavorId: string;
-  versionId: string;
-}
-export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
+export function AlgoliaSearch() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
