@@ -4,6 +4,7 @@ import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
 export interface HeaderProps {
   showSearch: boolean;
+  isDocViewer?: boolean;
   useDarkBackground?: boolean;
 }
 
@@ -62,7 +63,12 @@ export function Header(props: HeaderProps) {
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
             <Link href="/getting-started/intro">
-              <a className="font-bold px-3 py-2 text-white leading-tight">
+              <a
+                className={cx(
+                  'px-3 py-2 text-white leading-tight',
+                  !!props.isDocViewer ? 'font-bold' : ''
+                )}
+              >
                 Docs
               </a>
             </Link>
