@@ -9,6 +9,8 @@ export const reactNativeCommunityCli = '6.3.1';
 export const reactNativeCommunityCliIos = '6.2.0';
 export const reactNativeCommunityCliAndroid = '6.3.0';
 
+export const reactNativeConfigVersion = '1.4.5';
+
 export const metroReactNativeBabelPresetVersion = '0.66.2';
 
 export const testingLibraryReactNativeVersion = '9.0.0';

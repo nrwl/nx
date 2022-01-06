@@ -17,6 +17,7 @@ import {
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
+  reactNativeConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
@@ -82,6 +83,7 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
+      'react-native-config': reactNativeConfigVersion,
       ...(isPnpm
         ? {
             'metro-config': metroVersion, // metro-config is used by metro.config.js

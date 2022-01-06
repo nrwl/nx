@@ -256,6 +256,22 @@ dist/libs/shared-ui-layout/
 
 This dist folder is ready to be published to a registry.
 
+## Environment Variables
+
+The workspace should install[react-native-config](https://github.com/luggit/react-native-config) by default. To use environment variable, create a new `.env` file in the `happynrwl/apps/mobile` folder:
+
+```
+NX_BUILD_NUMBER=123
+```
+
+Then access variables defined there from your app:
+
+```
+import Config from 'react-native-config';
+
+Config.NX_BUILD_NUMBER; // '123'
+```
+
 ## Code Sharing
 
 Without Nx, creating a new shared library can take from several hours to even weeks: a new repo needs to be provisioned, CI needs to be set up, etc... In an Nx Workspace, it only takes minutes.
