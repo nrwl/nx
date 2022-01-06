@@ -41,7 +41,7 @@ export default function DocumentationPage({
 
   return (
     <>
-      <Header showSearch={true} />
+      <Header showSearch={true} isDocViewer={true} />
       <main>
         <DocViewer
           document={document}
