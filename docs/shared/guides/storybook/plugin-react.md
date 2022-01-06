@@ -199,5 +199,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Upgrading to Storybook 6](/default/storybook/upgrade-storybook-v6-react)
-- [Migrate to the Nrwl React Storybook Preset](/default/storybook/migrate-webpack-final-react)
+- [Upgrading to Storybook 6](/storybook/upgrade-storybook-v6-react)
+- [Migrate to the Nrwl React Storybook Preset](/storybook/migrate-webpack-final-react)

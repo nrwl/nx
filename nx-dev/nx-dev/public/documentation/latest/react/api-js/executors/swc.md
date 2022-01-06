@@ -43,6 +43,12 @@ Type: `boolean`
 
 Whether to skip TypeScript type checking.
 
+### swcExclude
+
+Type: `array`
+
+List of SWC Glob/Regex to be excluded from compilation (https://swc.rs/docs/configuration/compilation#exclude)
+
 ### watch
 
 Default: `false`

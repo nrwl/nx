@@ -155,6 +155,14 @@ Type: `boolean`
 
 Skip formatting files.
 
+### skipModule
+
+Default: `false`
+
+Type: `boolean`
+
+Whether to skip the creation of a default module when generating the library.
+
 ### skipPackageJson
 
 Default: `false`
