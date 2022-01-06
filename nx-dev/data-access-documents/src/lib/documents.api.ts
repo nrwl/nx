@@ -89,6 +89,6 @@ export class DocumentsApi {
       }
     }
     const file = found.file ?? ['default', ...path].join('/');
-    return join(this.options.publicDocsRoot, 'latest', `${file}.md`);
+    return join(this.options.publicDocsRoot, `${file}.md`);
   }
 }

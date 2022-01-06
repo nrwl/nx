@@ -9,11 +9,7 @@ function readJsonFile(f) {
 export function createDocumentApiOptions() {
   return {
     documents: readJsonFile(
-      join(
-        join(__dirname, '../../../nx-dev/public/documentation'),
-        'latest',
-        'map.json'
-      )
+      join(join(__dirname, '../../../nx-dev/public/documentation'), 'map.json')
     ).find((x) => x.id === 'default') as DocumentMetadata,
     publicDocsRoot: join(__dirname, '../../../nx-dev/public/documentation'),
   };
