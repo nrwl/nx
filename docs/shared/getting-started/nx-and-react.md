@@ -8,20 +8,20 @@ If you're only interested in improving the performance of your monorepo by using
 
 Check out the following guides to get started:
 
-- [Installing Nx CLI & creating a new Nx Workspace](/{{framework}}/getting-started/nx-setup)
-- [Adding Nx to an existing monorepo](/{{framework}}/migration/adding-to-monorepo)
-- [Migrating from CRA](/{{framework}}/migration/migration-cra)
-- [Using Nx without plugins](/{{framework}}/getting-started/nx-core)
+- [Installing Nx CLI & creating a new Nx Workspace](//getting-started/nx-setup)
+- [Adding Nx to an existing monorepo](//migration/adding-to-monorepo)
+- [Migrating from CRA](//migration/migration-cra)
+- [Using Nx without plugins](//getting-started/nx-core)
 - [CI Overview](/using-nx/ci-overview)
 
 It is also a good idea to read the [mental model guide](/using-nx/mental-model) to understand how Nx works.
 
 ## Nx and React Plugins
 
-Nx plugins help you develop [React](/{{framework}}/react/overview) applications with fully integrated support for modern tools
-and libraries like [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview),
-Storybook, [ESLint](/{{framework}}/linter/eslint), and more. Nx also supports React
-frameworks like [Gatsby](/{{version}}/react/gatsby/overview), [Next.js](/{{version}}/react/guides/nextjs), Remix, and has great support for React Native.
+Nx plugins help you develop [React](//react/overview) applications with fully integrated support for modern tools
+and libraries like [Jest](//jest/overview), [Cypress](//cypress/overview),
+Storybook, [ESLint](//linter/eslint), and more. Nx also supports React
+frameworks like [Gatsby](///gatsby/overview), [Next.js](///guides/nextjs), Remix, and has great support for React Native.
 
 ### 10-min Video Overview
 

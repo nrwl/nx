@@ -42,4 +42,4 @@ This configuration tells `nx serve` to forward all requests starting with `/api`
 
 ## What's Next
 
-- Continue to [Step 7: Share Code](/latest/angular/tutorial/07-share-code)
+- Continue to [Step 7: Share Code](/angular-tutorial/07-share-code)

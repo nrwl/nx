@@ -82,4 +82,4 @@ npx nx affected:build
 
 ## What's Next
 
-- Continue to [Step 12: Summary](/latest/angular/tutorial/12-summary)
+- Continue to [Step 12: Summary](/angular-tutorial/12-summary)

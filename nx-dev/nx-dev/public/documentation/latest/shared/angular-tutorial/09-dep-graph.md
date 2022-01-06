@@ -16,4 +16,4 @@ npx nx dep-graph
 
 ## What's Next
 
-- Continue to [Step 10: Using Computation Caching](/latest/angular/tutorial/10-computation-caching)
+- Continue to [Step 10: Using Computation Caching](/angular-tutorial/10-computation-caching)

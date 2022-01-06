@@ -134,4 +134,4 @@ a lot better. [Read more about Nx CLI and Angular CLI.](/using-nx/nx-cli)
 
 ## What's Next
 
-- Continue to [Step 2: Add E2E Tests](/latest/angular/tutorial/02-add-e2e-test)
+- Continue to [Step 2: Add E2E Tests](/angular-tutorial/02-add-e2e-test)

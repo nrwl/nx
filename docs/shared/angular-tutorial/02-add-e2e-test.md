@@ -39,4 +39,4 @@ As you progress through the tutorial, you work on making these E2E tests pass.
 
 ## What's Next
 
-- Continue to [Step 3: Display Todos](/latest/angular/tutorial/03-display-todos)
+- Continue to [Step 3: Display Todos](/angular-tutorial/03-display-todos)

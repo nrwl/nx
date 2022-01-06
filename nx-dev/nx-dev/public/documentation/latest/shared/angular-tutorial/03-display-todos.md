@@ -82,4 +82,4 @@ The tests should pass now.
 
 ## What's Next
 
-- Continue to [Step 4: Connect to an API](/latest/angular/tutorial/04-connect-to-api)
+- Continue to [Step 4: Connect to an API](/angular-tutorial/04-connect-to-api)

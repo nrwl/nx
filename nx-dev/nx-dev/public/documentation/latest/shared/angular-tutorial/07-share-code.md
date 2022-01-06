@@ -121,4 +121,4 @@ And you should see the application running.
 
 ## What's Next
 
-- Continue to [Step 8: Create Libraries](/latest/angular/tutorial/08-create-libs)
+- Continue to [Step 8: Create Libraries](/angular-tutorial/08-create-libs)
