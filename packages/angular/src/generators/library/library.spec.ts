@@ -177,6 +177,21 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
+    it('should not generate a module file and index.ts should be empty', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        skipModule: true,
+      });
+
+      // ASSERT
+      const moduleFileExists = tree.exists(
+        'libs/my-lib/src/lib/my-lib.module.ts'
+      );
+      expect(moduleFileExists).toBeFalsy();
+      const indexApi = tree.read('libs/my-lib/src/index.ts', 'utf-8');
+      expect(indexApi).toEqual(``);
+    });
+
     it('should remove "build" target from workspace.json when a library is not publishable', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({

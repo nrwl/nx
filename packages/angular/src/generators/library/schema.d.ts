@@ -28,4 +28,5 @@ export interface Schema {
   unitTestRunner?: UnitTestRunner;
   compilationMode?: 'full' | 'partial';
   setParserOptionsProject?: boolean;
+  skipModule?: boolean;
 }
