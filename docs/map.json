@@ -1502,7 +1502,7 @@
           },
           {
             "name": "React Native with Nx",
-            "id": "nextjs",
+            "id": "react-native",
             "file": "shared/guides/react-native"
           },
           {
