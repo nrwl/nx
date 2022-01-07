@@ -1501,6 +1501,11 @@
             "file": "shared/guides/nextjs"
           },
           {
+            "name": "React Native with Nx",
+            "id": "nextjs",
+            "file": "shared/guides/react-native"
+          },
+          {
             "name": "Deploying Next.js applications to Vercel",
             "id": "deploy-nextjs-to-vercel",
             "file": "shared/guides/deploy-nextjs-to-vercel"
