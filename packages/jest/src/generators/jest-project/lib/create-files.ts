@@ -1,4 +1,3 @@
-import { JestProjectSchema } from '../schema';
 import {
   generateFiles,
   offsetFromRoot,
@@ -6,6 +5,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { join } from 'path';
+import { JestProjectSchema } from '../schema';
 
 export function createFiles(tree: Tree, options: JestProjectSchema) {
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -13,11 +13,11 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
   const filesFolder =
     options.setupFile === 'angular' ? '../files-angular' : '../files';
 
-  // } else if (options.compiler === 'swc') {
-  //   transformer = '@swc/jest';
   let transformer: string;
   if (options.compiler === 'babel' || options.babelJest) {
     transformer = 'babel-jest';
+  } else if (options.compiler === 'swc') {
+    transformer = '@swc/jest';
   } else {
     transformer = 'ts-jest';
   }

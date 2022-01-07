@@ -6,10 +6,10 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { jestConfigObject } from '../../utils/config/functions';
 
 import { jestProjectGenerator } from './jest-project';
 import { JestProjectSchema } from './schema.d';
-import { jestConfigObject } from '../../utils/config/functions';
 
 describe('jestProject', () => {
   let tree: Tree;
@@ -300,14 +300,14 @@ describe('jestProject', () => {
       expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
     });
 
-    // it('should generate proper jest.transform when --compiler=swc and supportTsx is true', async () => {
-    //   await jestProjectGenerator(tree, {
-    //     ...defaultOptions,
-    //     project: 'lib1',
-    //     compiler: 'swc',
-    //     supportTsx: true,
-    //   } as JestProjectSchema);
-    //   expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
-    // });
+    it('should generate proper jest.transform when --compiler=swc and supportTsx is true', async () => {
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+        compiler: 'swc',
+        supportTsx: true,
+      } as JestProjectSchema);
+      expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
+    });
   });
 });

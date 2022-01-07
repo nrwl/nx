@@ -1,6 +1,6 @@
+import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
 import { getProjects, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -398,26 +398,26 @@ describe('app', () => {
       `);
     });
 
-    // it('should support swc compiler', async () => {
-    //   await applicationGenerator(tree, {
-    //     name: 'myApp',
-    //     compiler: 'swc',
-    //   } as Schema);
-    //
-    //   expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
-    //     .toMatchInlineSnapshot(`
-    //     "module.exports = {
-    //       displayName: 'my-app',
-    //       preset: '../../jest.preset.js',
-    //       setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-    //       transform: {
-    //         '^.+\\\\\\\\.[tj]s$': '@swc/jest'
-    //       },
-    //       moduleFileExtensions: ['ts', 'js', 'html'],
-    //       coverageDirectory: '../../coverage/apps/my-app'
-    //     };
-    //     "
-    //   `);
-    // });
+    it('should support swc compiler', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        compiler: 'swc',
+      } as Schema);
+
+      expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-app',
+          preset: '../../jest.preset.js',
+          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          transform: {
+            '^.+\\\\\\\\.[tj]s$': '@swc/jest'
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-app'
+        };
+        "
+      `);
+    });
   });
 });
