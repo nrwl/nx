@@ -1,8 +1,6 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { ReporterArgs } from './reporter';
-import * as yargs from 'yargs';
 import type {
   NxJsonConfiguration,
   ProjectGraph,
@@ -20,45 +18,57 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
-import { getDependencyConfigs } from './utils';
+import { getDependencyConfigs, shouldForwardOutput } from './utils';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
 import { RunManyTerminalOutputLifeCycle } from './run-many-terminal-output-life-cycle';
 import { EmptyTerminalOutputLifeCycle } from './empty-terminal-output-life-cycle';
 import { RunOneTerminalOutputLifeCycle } from './run-one-terminal-output-life-cycle';
 import { TaskTimingsLifeCycle } from './task-timings-life-cycle';
-import { RunManyNeoTerminalOutputLifeCycle } from './neo-output/life-cycle';
-import { render } from './neo-output/render';
+import { createOutputRenderer } from './neo-output/render';
 
-type RunArgs = yargs.Arguments & ReporterArgs;
-
-function getTerminalOutputLifeCycle(
+async function getTerminalOutputLifeCycle(
   initiatingProject: string,
   terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
   projectNames: string[],
   tasks: Task[],
   nxArgs: NxArgs,
-  overrides: any
-) {
+  overrides: any,
+  runnerOptions: any
+): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   if (terminalOutputStrategy === 'run-one') {
-    return new RunOneTerminalOutputLifeCycle(
-      initiatingProject,
-      projectNames,
-      tasks,
-      nxArgs
-    );
+    return {
+      lifeCycle: new RunOneTerminalOutputLifeCycle(
+        initiatingProject,
+        projectNames,
+        tasks,
+        nxArgs
+      ),
+      renderIsDone: Promise.resolve(),
+    };
   } else if (terminalOutputStrategy === 'hide-cached-output') {
-    return new EmptyTerminalOutputLifeCycle();
-  } else {
-    if (process.env.NX_TASKS_RUNNER_NEO_OUTPUT === 'true') {
-      return new RunManyNeoTerminalOutputLifeCycle(projectNames, tasks, nxArgs);
-    }
-
-    return new RunManyTerminalOutputLifeCycle(
+    return {
+      lifeCycle: new EmptyTerminalOutputLifeCycle(),
+      renderIsDone: Promise.resolve(),
+    };
+  } else if (
+    shouldUseNeoLifeCycle(tasks, runnerOptions) &&
+    process.env.NX_TASKS_RUNNER_NEO_OUTPUT === 'true'
+  ) {
+    return await createOutputRenderer({
       projectNames,
       tasks,
-      nxArgs,
-      overrides
-    );
+      args: nxArgs,
+    });
+  } else {
+    return {
+      lifeCycle: new RunManyTerminalOutputLifeCycle(
+        projectNames,
+        tasks,
+        nxArgs,
+        overrides
+      ),
+      renderIsDone: Promise.resolve(),
+    };
   }
 }
 
@@ -95,34 +105,24 @@ export async function runCommand(
   );
 
   const projectNames = projectsToRun.map((t) => t.name);
-  const terminalOutputLifeCycle = getTerminalOutputLifeCycle(
+  const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
     initiatingProject,
     terminalOutputStrategy,
     projectNames,
     tasks,
     nxArgs,
-    overrides
+    overrides,
+    runnerOptions
   );
-  const lifeCycles = [terminalOutputLifeCycle] as LifeCycle[];
+  const lifeCycles = [lifeCycle] as LifeCycle[];
 
   if (process.env.NX_PERF_LOGGING) {
     lifeCycles.push(new TaskTimingsLifeCycle(process.env.NX_PERF_LOGGING));
   }
-  const lifeCycle = new CompositeLifeCycle(lifeCycles);
-
-  let isRenderComplete: Promise<void> | undefined;
-  if (process.env.NX_TASKS_RUNNER_NEO_OUTPUT === 'true') {
-    isRenderComplete = render({
-      lifeCycle: terminalOutputLifeCycle as RunManyNeoTerminalOutputLifeCycle,
-      projectNames,
-      tasks,
-      args: nxArgs,
-    });
-  }
 
   const promiseOrObservable = tasksRunner(
     tasks,
-    { ...runnerOptions, lifeCycle },
+    { ...runnerOptions, lifeCycle: new CompositeLifeCycle(lifeCycles) },
     {
       initiatingProject,
       target: nxArgs.target,
@@ -132,15 +132,20 @@ export async function runCommand(
   );
 
   let anyFailures;
-  if ((promiseOrObservable as any).subscribe) {
-    anyFailures = await anyFailuresInObservable(promiseOrObservable);
-  } else {
-    // simply await the promise
-    anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
-  }
-
-  if (isRenderComplete) {
-    await isRenderComplete;
+  try {
+    if ((promiseOrObservable as any).subscribe) {
+      anyFailures = await anyFailuresInObservable(promiseOrObservable);
+    } else {
+      // simply await the promise
+      anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
+    }
+    await renderIsDone;
+  } catch (e) {
+    output.error({
+      title: 'Unhandled error in task executor',
+    });
+    console.error(e);
+    process.exit(1);
   }
 
   // fix for https://github.com/nrwl/nx/issues/1666
@@ -214,6 +219,14 @@ export function createTasksForProjectToRun(
     );
   }
   return Array.from(tasksMap.values());
+}
+
+function shouldUseNeoLifeCycle(tasks: Task[], options: any) {
+  const isTTY = !!process.stdout.isTTY && process.env['CI'] !== 'true';
+  const noForwarding = !tasks.find((t) =>
+    shouldForwardOutput(t, null, options)
+  );
+  return isTTY && noForwarding;
 }
 
 function addTasksForProjectTarget(

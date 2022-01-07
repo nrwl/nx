@@ -3,8 +3,8 @@ import { dots } from 'cli-spinners';
 import { EOL } from 'os';
 import * as readline from 'readline';
 import type { Task, TaskStatus } from '../tasks-runner';
-import { RunManyNeoTerminalOutputLifeCycle } from './life-cycle';
 import { prettyTime } from './pretty-time';
+import { LifeCycle } from '@nrwl/workspace/src/tasks-runner/life-cycle';
 
 const X_PADDING = ' ';
 
@@ -43,24 +43,22 @@ function writeCommandOutputBlock(output: string) {
   );
 }
 
-interface RenderConfig {
-  lifeCycle: RunManyNeoTerminalOutputLifeCycle;
-  projectNames: string[];
-  tasks: Task[];
-  args: { target?: string; configuration?: string };
-}
-
-export async function render({
-  lifeCycle,
+export async function createOutputRenderer({
   projectNames,
   tasks,
   args,
-}: RenderConfig): Promise<void> {
+}: {
+  projectNames: string[];
+  tasks: Task[];
+  args: { target?: string; configuration?: string };
+}): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
+  const lifeCycle = {} as any;
+
   const start = process.hrtime();
   const figures = await import('figures');
 
   let resolveIsRenderCompletePromise: (value: void) => void;
-  const isRenderCompletePromise = new Promise<void>(
+  const renderIsDone = new Promise<void>(
     (resolve) => (resolveIsRenderCompletePromise = resolve)
   );
 
@@ -129,7 +127,7 @@ export async function render({
             chalk.dim.white('  nx run ') +
             chalk.white(task.id) +
             '  ' +
-            chalk.gray('[from local cache]')
+            chalk.gray('[from cache]')
         );
         break;
       case 'remote-cache':
@@ -234,7 +232,7 @@ export async function render({
     }
   };
 
-  lifeCycle.callbacks.onStartCommand = (params) => {
+  lifeCycle.startCommand = (params) => {
     if (totalProjects <= 0) {
       let description = `with target "${targetName}"`;
       if (params.args.configuration) {
@@ -250,7 +248,7 @@ export async function render({
     renderPinnedFooter([]);
   };
 
-  lifeCycle.callbacks.onStartTasks = (tasks) => {
+  lifeCycle.startTasks = (tasks) => {
     for (const projectRow of projectRows) {
       const matchedTask = tasks.find(
         (t) => t.target.project === projectRow.projectName
@@ -265,15 +263,11 @@ export async function render({
     }
   };
 
-  lifeCycle.callbacks.onPrintTaskTerminalOutput = (
-    task,
-    _cacheStatus,
-    output
-  ) => {
+  lifeCycle.printTaskTerminalOutput = (task, _cacheStatus, output) => {
     tasksToTerminalOutputs[task.id] = output;
   };
 
-  lifeCycle.callbacks.onEndTasks = (taskResults) => {
+  lifeCycle.endTasks = (taskResults) => {
     totalCompletedTasks++;
 
     for (let t of taskResults) {
@@ -357,5 +351,5 @@ export async function render({
     }
   };
 
-  return isRenderCompletePromise;
+  return { lifeCycle, renderIsDone };
 }

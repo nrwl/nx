@@ -12,10 +12,12 @@ import {
   calculateReverseDeps,
   getExecutorForTask,
   getOutputs,
+  isCacheableTask,
   removeTasksFromTaskGraph,
+  shouldForwardOutput,
 } from './utils';
 import { Batch, TasksSchedule } from './tasks-schedule';
-import { TaskMetadata } from '@nrwl/workspace/src/tasks-runner/life-cycle';
+import { TaskMetadata } from './life-cycle';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
@@ -112,7 +114,9 @@ export class TaskOrchestrator {
   private async applyCachedResults(
     tasks: Task[]
   ): Promise<{ task: Task; status: 'cache' }[]> {
-    const cacheableTasks = tasks.filter((t) => this.isCacheableTask(t));
+    const cacheableTasks = tasks.filter((t) =>
+      isCacheableTask(t, this.options)
+    );
     const res = await Promise.all(
       cacheableTasks.map((t) => this.applyCachedResult(t))
     );
@@ -264,7 +268,11 @@ export class TaskOrchestrator {
     try {
       // obtain metadata
       const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-      const forwardOutput = this.shouldForwardOutput(task);
+      const forwardOutput = shouldForwardOutput(
+        task,
+        this.initiatingProject,
+        this.options
+      );
       const pipeOutput = this.pipeOutputCapture(task);
 
       // execution
@@ -395,30 +403,9 @@ export class TaskOrchestrator {
 
   private shouldCacheTaskResult(task: Task, code: number) {
     return (
-      this.isCacheableTask(task) &&
+      isCacheableTask(task, this.options) &&
       (process.env.NX_CACHE_FAILURES == 'true' ? true : code === 0)
     );
-  }
-
-  private shouldForwardOutput(task: Task) {
-    if (!this.isCacheableTask(task)) return true;
-    if (process.env.NX_FORWARD_OUTPUT === 'true') return true;
-    if (task.target.project === this.initiatingProject) return true;
-    return false;
-  }
-
-  private isCacheableTask(task: Task) {
-    const cacheable =
-      this.options.cacheableOperations || this.options.cacheableTargets;
-    return (
-      cacheable &&
-      cacheable.indexOf(task.target.target) > -1 &&
-      !this.longRunningTask(task)
-    );
-  }
-
-  private longRunningTask(task: Task) {
-    return !!task.overrides['watch'];
   }
 
   private closeGroup() {
