@@ -87,15 +87,15 @@ The generated `simple/package.json`:
 }
 ```
 
-With this you can invoke any script defined in `simple/package.json` via Nx. For instance, you can invoke the `test`
+With this you can invoke any script defined in `packages/simple/package.json` via Nx. For instance, you can invoke the `test`
 script by running `yarn nx test simple`. And if you invoke this command a second time, the results are retrieved from
 cache.
 
-In this example, we used a generator to create the package, but you could also have created it by hand or have copied it
+In this example, we used a generator to create the package, but you could have also created it by hand or copied it
 from another project.
 
 The change in `workspace.json` is the only thing required to make Nx aware of the `simple` package. As long as you
-include the project into `workspace.json`, Nx will include that project source into its graph computation and source
+include the project in `workspace.json`, Nx will include that project source in its graph computation and source
 code analysis. It will, for instance, analyze the project's source code, and it will know when it can reuse the
 computation from the cache and when it has to recompute it from scratch.
 
@@ -124,7 +124,7 @@ This is expected. Nx analyzes your source to enable computation caching, it know
 but it **does not** change how your npm scripts run. Whatever tools you use in your npm scripts will run exactly as they
 would without Nx. **Nx Core doesn't replace your tools and doesn't change how they work.**
 
-To make it work add a dependency from `complex` to `simple` in `package.json`:
+To make it work, add a dependency from `complex` to `simple` in `packages/complex/package.json`:
 
 ```json
 {
@@ -153,14 +153,14 @@ Finally, run `yarn`.
 
 ## Using Yarn/PNPM/Lerna
 
-The example uses Yarn to connect the two packages. Most of the time, however, there are better ways to do it. The React,
-Node, Angular plugins for Nx allow different projects in your workspace to import each other without having to maintain
+This example uses Yarn to connect the two packages. Most of the time, however, there are better ways to do it. The React,
+Node and Angular plugins for Nx allow different projects in your workspace to import each other without having to maintain
 cumbersome `package.json` files. Instead, they use Webpack, Rollup and Jest plugins to enable this use case in a more
 elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/guides/lerna-and-nx).
 
 ## What Nx Core Provides
 
-### Nx Understands How Your Workspace is Structured
+### Nx Understands How Your Workspace Is Structured
 
 If you run `yarn nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
 invalidate the computation cache for `complex`, but changes to `complex` won't invalidate the cache for `simple`.
@@ -176,7 +176,7 @@ Running `yarn nx run-many --target=build --projects=app1,app2` will build `proj1
 dependencies in parallel. Note that if `app1` depends on the output of its dependency (e.g., `shared-components`), Nx
 will build `shared-components` first and only then will build the app.
 
-### Nx Know What is Affected
+### Nx Knows What Is Affected
 
 Running `yarn nx affected --target=test` will test all the projects affected by the current PR.
 
@@ -193,6 +193,6 @@ what `build` means. It can be an npm script, a custom Nx executor, a Gradle task
 ## Adding Plugins
 
 As you can see, the core of Nx is generic, simple, and unobtrusive. Nx Plugins are completely optional, but they can
-really level up your developer experience. Watch this video to see the plugins in actions.
+really level up your developer experience. Watch this video to see the plugins in action.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>

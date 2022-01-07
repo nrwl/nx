@@ -56,7 +56,7 @@ npm install -g nx
 
 ## Folder Structure
 
-Nx can be added to any workspace, so there is no fixed folder structure. However, if you use of the existing presets, you will likely see something like this:
+Nx can be added to any workspace, so there is no fixed folder structure. However, if you use one of the existing presets, you will likely see something like this:
 
 ```treeview
 myorg/
@@ -75,7 +75,7 @@ myorg/
 
 `/tools/` contains scripts that act on your code base. This could be database scripts, [custom executors](/executors/creating-custom-builders), or [workspace generators](/generators/workspace-generators).
 
-`/workspace.json` lists every project in your workspace. (this file optional)
+`/workspace.json` lists every project in your workspace. (this file is optional)
 
 `/nx.json` configures the Nx CLI itself. It tells Nx what needs to be cached, how to run tasks etc.
 

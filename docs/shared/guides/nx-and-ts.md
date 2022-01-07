@@ -10,7 +10,7 @@ The `@nrwl/js` package ships with corresponding generators and executors that be
 
 `@nrwl/js` is particularly useful if you want to
 
-- Create framework agnostic, just plain TypeScript libraries within an existing Nx workspace (say to use in your React, Node or Angular app)
+- Create framework agnostic TypeScript libraries within an existing Nx workspace (say to use in your React, Node or Angular app)
 - Publish TypeScript packages to NPM
 
 To get started with TypeScript packages in Nx, either add the `@nrwl/js` package to an existing Nx workspace or generate a new Nx workspace using the `--preset=ts` preset.
@@ -31,7 +31,7 @@ happynrwl/
 └── tsconfig.base.json
 ```
 
-As with most of Nx plugins, `@nrwl/js` comes with a set of generators to quickly scaffold new TypeScript libraries as well as TypeScript applications. Let’s have a look at an example.
+As with most Nx plugins, `@nrwl/js` comes with a set of generators to quickly scaffold new TypeScript libraries as well as TypeScript applications. Let’s have a look at an example.
 
 ## Create a new TypeScript based library
 
@@ -41,7 +41,7 @@ We can use Nx Console and choose the `@nrwl/js:library` generator or directly us
 nx generate @nrwl/js:library --name=hello-tsc --buildable
 ```
 
-This creates a new library in the `packages/hello-tsc` folder that already comes with both, ESLint and Jest set up and ready to use.
+This creates a new library in the `packages/hello-tsc` folder that already comes with both ESLint and Jest set up and ready to use.
 
 You can run `nx lint hello-tsc` to run linting or `nx test hello-tsc` to run Jest tests.
 
@@ -51,19 +51,19 @@ Note, by passing the `--buildable` flag, our library can be built.
 nx build hello-tsc
 ```
 
-The output is placed into the `dist/packages/hello-tsc` by default.
+The output of the build step is placed into the `dist/packages/hello-tsc` by default.
 
 ## Create a TypeScript based application
 
 Apart from setting up TypeScript libraries, you can also setup a plain TypeScript application that is framework agnostic and consists of an entry point script that can be easily run with Node, to develop a CLI or framework agnostic backend application.
 
-To generate a new, framework agnostic TS application, run
+To generate a new framework agnostic TS application, run
 
 ```bash
 nx generate @nrwl/js:app demoapp
 ```
 
-Applications also come with a “serve” target, that allow to run the app in watch mode:
+Applications also come with a “serve” target, that allow you to run the app in watch mode:
 
 ```bash
 nx serve demoapp
@@ -71,7 +71,7 @@ nx serve demoapp
 
 ## Importing Libraries
 
-All the libraries generated within the Nx workspace are configured with corresponding TypeScript path mappings in the root-level `tsconfig.base.json`:
+All the libraries generated within the Nx workspace are configured with corresponding TypeScript path mappings in the root-level `tsconfig.base.json` file:
 
 ```json
 {
@@ -86,9 +86,9 @@ All the libraries generated within the Nx workspace are configured with correspo
 }
 ```
 
-This allows to easily import from libraries, by using the corresponding TypeScript path mapping. The following shows an example of importing the `helloTsc` function from the `hello-tsc` library into the `tsapp` application (same works between libraries as well):
+This allows you to easily import from libraries, by using the corresponding TypeScript path mapping. The following shows an example of importing the `helloTsc` function from the `hello-tsc` library into the `tsapp` application (the same method works between libraries as well):
 
-```
+```typescript
 // file: packages/tsapp/src/index.ts
 
 // importing from hello-tsc
@@ -110,7 +110,7 @@ Here's an example of generating a new library:
 nx generate @nrwl/js:library --name=hello-tsc --buildable --compiler=swc
 ```
 
-Alternatively, if you have already an existing tsc based library/application, you can run the `@nrwl/js:convert-to-swc` generator to migrate the package from TSC to SWC.
+Alternatively, if you already have an existing tsc based library/application, you can run the `@nrwl/js:convert-to-swc` generator to migrate the package from TSC to SWC.
 
 The following command converts the `hello-tsc` library to SWC:
 
@@ -126,7 +126,7 @@ If you want to use NPM scripts rather than Nx executors, you can use the `--conf
 nx g @nrwl/js:lib mylib --config=npm-scripts
 ```
 
-That way the Nx generator creates according NPM scripts in generated library's `package.json` (rather than in the `project.json`):
+The Nx generator then creates NPM scripts in the generated library's `package.json` (rather than in the `project.json`):
 
 ```json
 // packages/mylib/package.json
@@ -141,13 +141,13 @@ That way the Nx generator creates according NPM scripts in generated library's `
 }
 ```
 
-Nx is still able to pick those up natively, so you can still run `nx build mylib` or `nx test mylib` and it would trigger the npm scripts.
+To run these scripts with Nx, use the same syntax as Nx executors. `nx build mylib` or `nx test mylib` will build or test your library, respectively.
 
 ## Publish your TypeScript packages to NPM
 
-Nx doesn’t provide an out of the box process for the publishing itself and leaves it to the developer to invoke the final command. The reason is that the actual publishing process can be very specific to your project and target you deploy to and might have a lot of custom pre-deployment setup (e.g. generating changelogs, determining semver etc.). Make sure to check out our [community page](/community) as there are a lot of community provided packages integrating into the publishing process.
+Nx doesn’t provide an out of the box process for publishing and leaves it to the developer to invoke the final command. The reason for this is that the actual publishing process can be very specific to your project and target you deploy to and might have a lot of custom pre-deployment setup (e.g. generating changelogs, determining semver etc.). Make sure to check out our [community page](/community) as there are a lot of community provided packages integrating into the publishing process.
 
-However, integrating your custom publishing process with Nx can be pretty straightforward, especially with the help of Nx [run-commands](/executors/run-commands-builder) and [“Target Dependencies”](/configuration/projectjson#dependson).
+However, integrating your own custom publishing process with Nx can be very straightforward, especially with the help of Nx [run-commands](/executors/run-commands-builder) and [“Target Dependencies”](/configuration/projectjson#dependson).
 
 To add a new run-command to our project, we can leverage the `run-command` generator:
 
@@ -155,7 +155,7 @@ To add a new run-command to our project, we can leverage the `run-command` gener
 nx g @nrwl/workspace:run-commands publish --project hello-tsc --command 'npm publish --tag=latest --access public'
 ```
 
-This adds a new target `publish` to our existing `project.json` configuration of the `hello-tsc` project. Let's also make sure to adjust the `cwd` of our command, which should be in the output folder of the `hello-tsc` package.
+This adds a new `publish` target to our existing `project.json` configuration of the `hello-tsc` project. Let's also make sure to adjust the `cwd` (current working directory) of our command, which should be the output folder of the `hello-tsc` package.
 
 ```json
 {
@@ -179,14 +179,14 @@ This adds a new target `publish` to our existing `project.json` configuration of
 }
 ```
 
-With that, we're already set up. By running the following commands we can publish our package to NPM.
+With that, we're all set up. By running the following commands we can publish our package to NPM.
 
 ```bash
 nx build hello-tsc
 nx publish hello-tsc
 ```
 
-We can however even automate this further by leveraging the `targetDependencies` feature. There's clearly a dependency from `publish -> build`, in that we want to make sure the `build` happens before the `publish` command, since the latter depends on the output of the former. We can define such relationship in the `nx.json`:
+We can automate this even further by leveraging the `targetDependencies` feature. There's clearly a dependency between `build` and `publish`, in that we want to make sure the `build` happens before the `publish` command. We can define this relationship in the `nx.json` file:
 
 ```json
 {
