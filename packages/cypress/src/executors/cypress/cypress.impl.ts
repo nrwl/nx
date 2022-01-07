@@ -37,6 +37,7 @@ export interface CypressExecutorOptions extends Json {
   reporterOptions?: string;
   skipServe?: boolean;
   testingType?: 'component' | 'e2e';
+  tag?: string;
 }
 
 export default async function cypressExecutor(
@@ -185,6 +186,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
     options.spec = opts.spec;
   }
 
+  options.tag = opts.tag;
   options.exit = opts.exit;
   options.headed = opts.headed;
   options.headless = opts.headless;

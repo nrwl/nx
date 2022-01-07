@@ -103,6 +103,11 @@
       "description": "Specify the type of tests to execute",
       "enum": ["component", "e2e"],
       "default": "e2e"
+    },
+    "tag": {
+      "type": "string",
+      "description": "A comma delimited list to identify a run with",
+      "aliases": ["t"]
     }
   },
   "additionalProperties": true,
