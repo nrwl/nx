@@ -111,7 +111,7 @@ and [Library Types](/structure/library-types).
 To generate a new library run:
 
 ```bash
-npx nx g @nrwl/react:lib shared-ui-components
+npx nx g @nrwl/react:lib shared-ui-layout
 ```
 
 And you will see the following:
@@ -173,7 +173,7 @@ That's it! There is no need to build the library prior to using it. When you upd
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```bash
-npx nx g @nrwl/react:lib shared-ui-components --publishable --importPath=@happynrwl/ui-components
+npx nx g @nrwl/react:lib shared-ui-layout --publishable --importPath=@happynrwl/ui-components
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:
