@@ -1,19 +1,14 @@
 import { logger, ProjectGraph } from '@nrwl/devkit';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
-import { existsSync, openSync, readFileSync } from 'fs';
+import { openSync, readFileSync } from 'fs';
 import { connect } from 'net';
 import { performance } from 'perf_hooks';
 import {
   safelyCleanUpExistingProcess,
   writeDaemonJsonProcessCache,
 } from '../cache';
-import {
-  deserializeResult,
-  FULL_OS_SOCKET_PATH,
-  killSocketOrPath,
-} from '../socket-utils';
+import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
 import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
-import { output } from '../../../../utilities/output';
 
 export async function startInBackground(): Promise<ChildProcess['pid']> {
   await safelyCleanUpExistingProcess();
@@ -172,29 +167,41 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
       socket.on('end', () => {
         try {
           performance.mark('json-parse-start');
-          const projectGraphResult = deserializeResult(
-            serializedProjectGraphResult
-          );
+          const projectGraphResult = JSON.parse(serializedProjectGraphResult);
           performance.mark('json-parse-end');
           performance.measure(
             'deserialize graph result on the client',
             'json-parse-start',
             'json-parse-end'
           );
-
           if (projectGraphResult.error) {
-            return reject(projectGraphResult.error);
+            reject(projectGraphResult.error);
+          } else {
+            performance.measure(
+              'total for getProjectGraphFromServer()',
+              'getProjectGraphFromServer-start',
+              'json-parse-end'
+            );
+            return resolve(projectGraphResult.projectGraph);
           }
-
-          performance.measure(
-            'total for getProjectGraphFromServer()',
-            'getProjectGraphFromServer-start',
-            'json-parse-end'
-          );
-          return resolve(projectGraphResult.projectGraph);
         } catch (e) {
-          return reject(
-            new Error(`Could not deserialize the ProjectGraph.\n${e.message}`)
+          const endOfGraph =
+            serializedProjectGraphResult.length > 300
+              ? serializedProjectGraphResult.substring(
+                  serializedProjectGraphResult.length - 300
+                )
+              : serializedProjectGraphResult;
+          reject(
+            daemonProcessException(
+              [
+                'Could not deserialize project graph.',
+                `Message: ${e.message}`,
+                '\n',
+                `Received:`,
+                endOfGraph,
+                '\n',
+              ].join('\n')
+            )
           );
         }
       });

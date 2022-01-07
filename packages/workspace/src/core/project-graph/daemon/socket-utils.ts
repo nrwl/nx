@@ -45,24 +45,3 @@ export function serializeResult(
     error
   )}, "projectGraph": ${serializedProjectGraph} }`;
 }
-
-// Interpret a string sent over IPC from the server to the client as a project graph result
-export function deserializeResult(
-  serializedResult: string
-): ProjectGraphServerResult {
-  try {
-    const result = JSON.parse(serializedResult);
-    if (result.error) {
-      const err = new Error();
-      err.message = result.error.message;
-      err.stack = result.error.stack;
-      result.error = err;
-    }
-    return result;
-  } catch {
-    return {
-      error: new Error('Could not deserialized project graph result'),
-      projectGraph: null,
-    };
-  }
-}
