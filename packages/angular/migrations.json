@@ -132,6 +132,12 @@
       "version": "13.3.0-beta.0",
       "description": "In Angular version 13, the ESM became a first class citizen. This means the webpack config generated must be modified to support modules.",
       "factory": "./src/migrations/update-13-3-0/update-mfe-webpack-config"
+    },
+    "fix-incorrect-mfe-setups": {
+      "cli": "nx",
+      "version": "13.5.0-beta.0",
+      "description": "A lot of changes to how MFEs operate were discovered and merged without appropriate migrations. This should cover migrating existing MFEs to the latest, using ESM and optmized production bundles.",
+      "factory": "./src/migrations/update-13-5-0/update-mfe-configs"
     }
   },
   "packageJsonUpdates": {
