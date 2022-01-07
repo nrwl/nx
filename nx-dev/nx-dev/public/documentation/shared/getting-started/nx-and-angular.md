@@ -74,7 +74,7 @@ If you haven't used Nx before and used the Angular CLI, you probably ran `ng upd
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
 
-And, in general, it is lot more reliable for non-trivial workspaces. Why?
+And, in general, it is a lot more reliable for non-trivial workspaces. Why?
 
 `ng update` tries to perform migration in a single go, automatically. This doesn't work for most non-trivial workspaces.
 

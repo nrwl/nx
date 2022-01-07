@@ -12,7 +12,7 @@ Nx is similar. The core of Nx is generic, simple, and unobtrusive. Nx plugins, a
 are completely optional.
 
 Most examples on this site use Nx plugins. It's just easier to demonstrate many features Nx offers when Nx generates all
-the boilerplate. The vast majority of the features though will work the same way in a workspace with no plugins.
+the boilerplate. However, the vast majority of the features will work the same way in a workspace with no plugins.
 
 ## Getting Started
 
