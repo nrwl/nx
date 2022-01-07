@@ -55,6 +55,15 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/tsconfig.spec.json')).toBeTruthy();
   });
 
+  it('should generate files w/babel-jest', async () => {
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      babelJest: true,
+    } as JestProjectSchema);
+    expect(tree.exists('babel.config.json')).toBeTruthy();
+  });
+
   it('should alter workspace.json', async () => {
     await jestProjectGenerator(tree, {
       ...defaultOptions,

@@ -64,15 +64,19 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
     '@types/jest': jestTypesVersion,
+    // because the default jest-preset uses ts-jest,
+    // jest will throw an error if it's not installed
+    // even if not using it in overriding transformers
+    'ts-jest': tsJestVersion,
   };
 
-  // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
-  // } else if (options.compiler === 'swc') {
-  //   devDeps['@swc/jest'] = swcJestVersion;
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
-  } else {
-    devDeps['ts-jest'] = tsJestVersion;
+    // in some cases @nrwl/web will not already be present i.e. node only projects
+    devDeps['@nrwl/web'] = nxVersion;
+    // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
+    // } else if (options.compiler === 'swc') {
+    //   devDeps['@swc/jest'] = swcJestVersion;
   }
 
   return addDependenciesToPackageJson(tree, dependencies, devDeps);

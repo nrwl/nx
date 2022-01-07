@@ -95,6 +95,12 @@
       "cli": "nx",
       "description": "Support .test. file names in tsconfigs",
       "factory": "./src/migrations/update-13-1-2/update-tsconfigs-for-tests"
+    },
+    "add-missing-root-babel-config": {
+      "version": "13.4.4-beta.0",
+      "cli": "nx",
+      "description": "Create a root babel config file if it doesn't exist and using babel-jest in jest.config.js and add @nrwl/web as needed",
+      "factory": "./src/migrations/update-13-4-4/add-missing-root-babel-config"
     }
   },
   "packageJsonUpdates": {
