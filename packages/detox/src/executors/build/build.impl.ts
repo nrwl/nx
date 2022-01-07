@@ -27,7 +27,7 @@ export default async function* detoxBuildExecutor(
   }
 }
 
-function runCliBuild(
+export function runCliBuild(
   workspaceRoot: string,
   projectRoot: string,
   options: DetoxBuildOptions

@@ -27,4 +27,5 @@ export interface DetoxTestOptions {
   useCutsomeLogger: boolean;
   forceAdbInstall: boolean;
   inspectBrk: boolean;
+  buildTarget: string;
 }

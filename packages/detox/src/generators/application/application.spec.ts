@@ -14,6 +14,7 @@ describe('detox application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    tree.write('.gitignore', '');
   });
 
   describe('app at root', () => {

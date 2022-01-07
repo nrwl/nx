@@ -35,10 +35,12 @@ function getTargets(options: NormalizedSchema) {
     executor: '@nrwl/detox:test',
     options: {
       detoxConfiguration: 'ios.sim.debug',
+      buildTarget: `${options.name}:build-ios`,
     },
     configurations: {
       production: {
         detoxConfiguration: 'ios.sim.release',
+        buildTarget: `${options.name}:build-ios:prod`,
       },
     },
   };
@@ -59,10 +61,12 @@ function getTargets(options: NormalizedSchema) {
     executor: '@nrwl/detox:test',
     options: {
       detoxConfiguration: 'android.emu.debug',
+      buildTarget: `${options.name}:build-android`,
     },
     configurations: {
       production: {
         detoxConfiguration: 'android.emu.release',
+        buildTarget: `${options.name}:build-android:prod`,
       },
     },
   };

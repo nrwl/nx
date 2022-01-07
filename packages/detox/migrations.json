@@ -1,4 +1,12 @@
 {
+  "schematics": {
+    "add-build-target-test-13-5-0": {
+      "version": "13.5.0-beta.0",
+      "cli": "nx",
+      "description": "buildTarget to test-ios and test-android for detox app",
+      "factory": "./src/migrations/update-13-5-0/add-build-target-test-13-5-0"
+    }
+  },
   "packageJsonUpdates": {
     "12.8.0": {
       "version": "12.8.0-beta.0",

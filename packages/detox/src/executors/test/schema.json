@@ -9,6 +9,10 @@
       "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it",
       "alias": "C"
     },
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application"
+    },
     "configPath": {
       "type": "string",
       "description": "Specify Detox config file path. If not supplied, detox searches for .detoxrc[.js] or \"detox\" section in package.json",
@@ -116,5 +120,5 @@
       "description": "Uses node's --inspect-brk flag to let users debug the jest/mocha test runner"
     }
   },
-  "required": []
+  "required": ["detoxConfiguration"]
 }
