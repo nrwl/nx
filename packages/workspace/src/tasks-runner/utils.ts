@@ -248,3 +248,36 @@ export function getCommandArgsForTask(task: Task) {
 
   return ['run', `${task.target.project}:${target}${config}`, ...args];
 }
+
+export function shouldForwardOutput(
+  task: Task,
+  initiatingProject: string | null,
+  options: {
+    cacheableOperations?: string[] | null;
+    cacheableTargets?: string[] | null;
+  }
+): boolean {
+  if (process.env.NX_FORWARD_OUTPUT === 'true') return true;
+  if (!isCacheableTask(task, options)) return true;
+  if (task.target.project === initiatingProject) return true;
+  return false;
+}
+
+export function isCacheableTask(
+  task: Task,
+  options: {
+    cacheableOperations?: string[] | null;
+    cacheableTargets?: string[] | null;
+  }
+): boolean {
+  const cacheable = options.cacheableOperations || options.cacheableTargets;
+  return (
+    cacheable &&
+    cacheable.indexOf(task.target.target) > -1 &&
+    !longRunningTask(task)
+  );
+}
+
+function longRunningTask(task: Task) {
+  return !!task.overrides['watch'];
+}
