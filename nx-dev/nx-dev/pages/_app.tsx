@@ -95,6 +95,20 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
           defer
           src="https://js.hs-scripts.com/2757427.js"
         />
+        {/* Hotjar Analytics */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          (function(h,o,t,j,a,r){
+          h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+          h._hjSettings={hjid:2774127,hjsv:6};
+          a=o.getElementsByTagName('head')[0];
+          r=o.createElement('script');r.async=1;
+          r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+          a.appendChild(r);
+        })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`,
+          }}
+        />
       </Head>
       <div className="documentation-app text-gray-700 antialiased bg-white">
         <Component {...pageProps} />
