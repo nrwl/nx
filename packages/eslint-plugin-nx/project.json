@@ -37,6 +37,7 @@
           {
             "input": "packages/eslint-plugin-nx",
             "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
