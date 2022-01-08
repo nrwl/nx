@@ -63,7 +63,7 @@ Again, like `nx run`, `nx generate` is only an abstraction over generating code.
 want via **generators**. **[Generators](/generators/using-schematics)** can be installed as part of a
 plugin or developed locally within an Nx workspace to fit the needs of your organization.
 
-A [Workspace Generator](/generators/workspace-generators) is custom generator for your
+A [Workspace Generator](/generators/workspace-generators) is a custom generator for your
 workspace. `nx generate workspace-generator my-generator` generates a workspace generator which can be run with
 the [`nx workspace-generator` command](/cli/workspace-generator). This can be useful to allow your
 organization to consistently generate projects according to your own standards.
@@ -86,7 +86,7 @@ nx migrate --run-migrations # Runs the migrations scheduled by the previous comm
 
 Nx creates and maintains a dependency graph between projects based on import statements in your code and uses that
 information to run executors only on the [affected](/cli/affected) projects in a codebase. A visual
-version of the [dependency graph](/structure/dependency-graph) is also available to help developers
+version of the [project dependency graph](/structure/dependency-graph) is also available to help developers
 understand the architecture of the codebase.
 
 The [`nx dep-graph` command](/cli/dep-graph) displays this dependency graph in a web browser for you to
