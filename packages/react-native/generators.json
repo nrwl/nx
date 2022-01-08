@@ -14,19 +14,19 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create a React Native application"
     },
     "library": {
       "factory": "./src/generators/library/library#reactNativeLibrarySchematic",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a React Native library"
     },
     "component": {
       "factory": "./src/generators/component/component#reactNativeComponentSchematic",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a component",
+      "description": "Create a React Native component",
       "aliases": ["c"]
     }
   },
@@ -42,19 +42,19 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create a React Native application"
     },
     "library": {
       "factory": "./src/generators/library/library#reactNativeLibraryGenerator",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a React Native library"
     },
     "component": {
       "factory": "./src/generators/component/component#reactNativeComponentGenerator",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a component",
+      "description": "Create a React Native component",
       "aliases": ["c"]
     }
   }

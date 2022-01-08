@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react-native:bundle executor'
-description: 'Builds the JS bundle.'
+description: 'Builds the JavaScript bundle for offline use.'
 ---
 
 # @nrwl/react-native:bundle
 
-Builds the JS bundle.
+Builds the JavaScript bundle for offline use.
 
 Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 

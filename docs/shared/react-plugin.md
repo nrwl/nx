@@ -1,4 +1,6 @@
-# Nx Plugin for React
+# React Plugin
+
+![React Logo](/shared/react-logo.png)
 
 The Nx Plugin for React contains generators for managing React applications and libraries within an Nx workspace. It provides:
 
@@ -83,8 +85,8 @@ React applications are built using the executors from the `@nrwl/web` plugin.
 
 ## Generators
 
-- [application](/react/application) - Create an React application
-- [component](/react/component) - Create an React component
-- [library](/react/library) - Create an React library
+- [application](/react/application) - Create a React application
+- [component](/react/component) - Create a React component
+- [library](/react/library) - Create a React library
 - [redux](/react/redux) - Generate a Redux slice for a project
 - [storybook-configuration](/react/storybook-configuration) - Set up Storybook for a react library

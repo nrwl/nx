@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react-native:component generator'
-description: 'Create a component'
+description: 'Create a React Native component'
 ---
 
 # @nrwl/react-native:component
 
-Create a component
+Create a React Native component
 
 ## Usage
 
