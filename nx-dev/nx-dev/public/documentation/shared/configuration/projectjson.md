@@ -3,7 +3,7 @@
 There are two main types of configuration in every Nx workspace: [project configuration](#project-configuration)
 and [the global Nx CLI configuration](#cli-configuration).
 
-Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (when you
+Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
 use Nx executors). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration. This guide covers the `project.json` case.
 
@@ -149,7 +149,7 @@ The `configurations` property provides extra sets of values that will be merged 
 You can select a configuration like this: `nx build mylib --configuration=production`
 or `nx run mylib:build:configuration=production`.
 
-The following show how the executor options get constructed:
+The following code snippet shows how the executor options get constructed:
 
 ```javascript
 require(`@nrwl/jest`).executors['jest']({ ...options, ...selectedConfiguration, ...commandLineArgs }
@@ -172,20 +172,27 @@ Targets can depend on other targets.
 A common scenario is having to build dependencies of a project first before building the project. This is what
 the `dependsOn` property of the `build` target configures. It tells Nx that before it can build `mylib` it needs to make
 sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is going to rerun those builds. If the right
-artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but there are available
-in cache, Nx will retrieve them from the cache.
+artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
+in the cache, Nx will retrieve them from the cache.
 
 Another common scenario is for a target to depend on another target of the same project. For instance, `dependsOn` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-This configuration is actually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
+This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
 
 ### tags
 
-Nx uses tags for linting to, for instance, ensure that private libraries aren't depended on by the team who don't own
-them.
+You can annotate your projects with `tags` as follows:
+
+```jsonc
+{
+  "tags": ["scope:myteam"]
+}
+```
+
+You can [configure lint rules using these tags](/structure/monorepo-tags) to, for instance, ensure that libraries belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
@@ -204,8 +211,7 @@ statically, so you can set them manually like this:
 
 ### workspace json
 
-The `workspace.json` is optional. It's used if you want to list the projects in your workspace explicitly instead of Nx
-scanning the file tree for all `project.json` and `package.json` files.
+The `workspace.json` file in the root directory is optional. It's used if you want to list the projects in your workspace explicitly instead of Nx scanning the file tree for all `project.json` and `package.json` files.
 
 ```json
 {
