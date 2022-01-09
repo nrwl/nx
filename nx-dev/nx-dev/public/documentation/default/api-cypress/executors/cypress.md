@@ -131,6 +131,14 @@ Type: `string`
 
 A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**
 
+### tag
+
+Alias(es): t
+
+Type: `string`
+
+A comma delimited list to identify a run with
+
 ### testingType
 
 Default: `e2e`
