@@ -110,7 +110,7 @@ export function detectInvokedPackageManager(): PackageManager {
     return detectedPackageManager;
   }
 
-  for (const pkgManager of ['pnpm', 'yarn', 'npm'] as const) {
+  for (const pkgManager of packageManagerList) {
     if (invoker.path.includes(pkgManager)) {
       detectedPackageManager = pkgManager;
       break;
