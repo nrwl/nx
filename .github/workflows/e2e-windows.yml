@@ -92,7 +92,7 @@ jobs:
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
-      uses: mxschmitt/action-tmate@v3
+      uses: mxschmitt/action-tmate@v3.8
       with:
         sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
