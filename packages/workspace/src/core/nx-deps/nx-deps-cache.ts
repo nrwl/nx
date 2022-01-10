@@ -10,15 +10,11 @@ import type {
 } from '@nrwl/devkit';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { existsSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { directoryExists, fileExists } from '../../utilities/fileutils';
 import { performance } from 'perf_hooks';
-import {
-  cacheDirectory,
-  readCacheDirectoryProperty,
-} from '../../utilities/cache-directory';
+import { cacheDir } from '../../utilities/cache-directory';
 
 export interface ProjectGraphCache {
   version: string;
@@ -33,16 +29,12 @@ export interface ProjectGraphCache {
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
-export const nxDepsDir = cacheDirectory(
-  appRootPath,
-  readCacheDirectoryProperty(appRootPath)
-);
-export const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
+export const nxDepsPath = join(cacheDir, 'nxdeps.json');
 
 export function ensureCacheDirectory(): void {
   try {
-    if (!existsSync(nxDepsDir)) {
-      ensureDirSync(nxDepsDir);
+    if (!existsSync(cacheDir)) {
+      ensureDirSync(cacheDir);
     }
   } catch (e) {
     /*
@@ -55,8 +47,8 @@ export function ensureCacheDirectory(): void {
      * In this case, we're creating the directory. If the operation failed, we ensure that the directory
      * exists before continuing (or raise an exception).
      */
-    if (!directoryExists(nxDepsDir)) {
-      throw new Error(`Failed to create directory: ${nxDepsDir}`);
+    if (!directoryExists(cacheDir)) {
+      throw new Error(`Failed to create directory: ${cacheDir}`);
     }
   }
 }

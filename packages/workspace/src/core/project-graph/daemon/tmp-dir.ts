@@ -5,10 +5,9 @@
  */
 import { normalizePath } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { ensureDirSync, ensureFileSync } from 'fs-extra';
-import { tmpdir } from 'os';
 import { join } from 'path';
 import { createHash } from 'crypto';
+import { cacheDir } from '../../../utilities/cache-directory';
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
 function escapeRegExp(string) {
@@ -48,22 +47,16 @@ const subDirForCurrentWorkspace = createHash('sha1')
   .digest('hex')
   .slice(0, 32);
 
-/**
- * E.g. on a mac the value for this will be something like:
- * /var/folders/zk/9ff5snsj71j2r07qht44w_nr0000gn/T/nx-daemon/{{subDirForCurrentWorkspace}}
- */
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
-  tmpdir(),
+  cacheDir,
   'nx-daemon',
   subDirForCurrentWorkspace
 );
-ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
 
 export const DAEMON_OUTPUT_LOG_FILE = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   'server.log'
 );
-ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
 export const DAEMON_SOCKET_PATH = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
