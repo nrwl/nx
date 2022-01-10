@@ -30,18 +30,30 @@ module.exports = withNx({
 
     // Tutorials
     rules.push({
-      source: '/latest/react/tutorial/01-create-application',
+      source: '/(l|latest)/(r|react)/tutorial/01-create-application',
       destination: '/react-tutorial/01-create-application',
       permanent: true,
     });
     rules.push({
-      source: '/latest/angular/tutorial/01-create-application',
+      source: '/(l|latest)/(a|angular)/tutorial/01-create-application',
       destination: '/angular-tutorial/01-create-application',
       permanent: true,
     });
     rules.push({
-      source: '/latest/node/tutorial/01-create-application',
+      source: '/(l|latest)/(n|node)/tutorial/01-create-application',
       destination: '/node-tutorial/01-create-application',
+      permanent: true,
+    });
+
+    // Storybook
+    rules.push({
+      source: '/(l|latest)/(r|react)/storybook/overview',
+      destination: '/storybook/overview-react',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(l|latest)/(a|angular)/storybook/overview',
+      destination: '/storybook/overview-angular',
       permanent: true,
     });
 
