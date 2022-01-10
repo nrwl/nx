@@ -4,6 +4,7 @@
  * should be copied here if necessary.
  */
 import * as chalk from 'chalk';
+import { isCI } from './is_ci';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -34,7 +35,7 @@ export interface CLISuccessMessageConfig {
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
-if (process.env.CI === 'true') {
+if (isCI()) {
   (chalk as any).Level = 0;
 }
 

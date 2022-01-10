@@ -1,4 +1,5 @@
 import * as chalk from 'chalk';
+import { isCI } from './is_ci';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -31,7 +32,7 @@ export enum TaskCacheStatus {
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
-if (process.env.CI === 'true') {
+if (isCI()) {
   (chalk as any).level = 0;
 }
 

@@ -35,7 +35,7 @@ describe('js e2e', () => {
     });
   }, 120000);
 
-  it('xxxshould create libs and apps with js executors (--compiler=tsc)', async () => {
+  it('should create libs and apps with js executors (--compiler=tsc)', async () => {
     const scope = newProject();
     const lib = uniq('lib');
     runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=tsc`);
