@@ -3,6 +3,9 @@ name: E2E matrix (Windows)
 on:
   schedule:
     - cron: "0 0 * * *"
+  push:
+    paths:
+      - '.github/workflows/e2e-windows.yml'
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -95,6 +98,24 @@ jobs:
       uses: mxschmitt/action-tmate@v3.8
       with:
         sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
+
+  report-success:
+    if: ${{ github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
+    needs: e2e
+    runs-on: ubuntu-latest
+    name: Report success
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ needs.e2e.result }}
+          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
+          notification_title: '{workflow} has {status_message}'
+          footer: '<{run_url}|View Run>'
+          mention_users: 'U01UELKLYF2,U9NPA6C90'
+          mention_users_when: 'failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
