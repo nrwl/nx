@@ -163,10 +163,7 @@ function runWithErrorHandling<T extends Array<unknown>, A, R>(
 function mapActionAndState<T extends Array<unknown>, A>() {
   return (source: Observable<ActionOrActionWithStates<T, A>>) => {
     return source.pipe(
-      map((value) => {
-        const [action, ...store] = normalizeActionAndState(value);
-        return [action, ...store] as [A, ...T];
-      })
+      map((value) => normalizeActionAndState(value) as [A, ...T])
     );
   };
 }
@@ -183,6 +180,7 @@ function normalizeActionAndState<T extends Array<unknown>, A>(
   if (args instanceof Array) {
     [action, ...slices] = args;
   } else {
+    slices = [] as T;
     action = args;
   }
 
