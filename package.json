@@ -157,7 +157,7 @@
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "fs-extra": "^9.1.0",
     "html-webpack-plugin": "^3.2.0",
-    "http-server": "~14.0.0",
+    "http-server": "14.1.0",
     "husky": "^6.0.0",
     "identity-obj-proxy": "3.0.0",
     "ignore": "^5.0.4",
