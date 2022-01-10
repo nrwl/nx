@@ -1,6 +1,7 @@
 import { logger, ProjectGraph } from '@nrwl/devkit';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
+import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { performance } from 'perf_hooks';
 import {
@@ -8,10 +9,15 @@ import {
   writeDaemonJsonProcessCache,
 } from '../cache';
 import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
-import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
+import {
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
+  DAEMON_OUTPUT_LOG_FILE,
+} from '../tmp-dir';
 
 export async function startInBackground(): Promise<ChildProcess['pid']> {
   await safelyCleanUpExistingProcess();
+  ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+  ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
   try {
     const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');

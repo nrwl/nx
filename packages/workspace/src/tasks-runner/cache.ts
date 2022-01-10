@@ -14,7 +14,7 @@ import {
 import { dirname, join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn, exec } from 'child_process';
-import { cacheDirectory } from '../utilities/cache-directory';
+import { cacheDir } from '../utilities/cache-directory';
 
 const util = require('util');
 
@@ -320,9 +320,8 @@ export class Cache {
   }
 
   private createCacheDir() {
-    const dir = cacheDirectory(this.root, this.options.cacheDirectory);
-    ensureDirSync(dir);
-    return dir;
+    ensureDirSync(cacheDir);
+    return cacheDir;
   }
 
   private createTerminalOutputsDir() {
