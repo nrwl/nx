@@ -212,7 +212,7 @@ function createProcess(
 function createSyncProcess(command: string, color: boolean, cwd: string) {
   execSync(command, {
     env: processEnv(color),
-    stdio: [0, 1, 2],
+    stdio: ['inherit', 'inherit', 'inherit'],
     maxBuffer: LARGE_BUFFER,
     cwd,
   });
