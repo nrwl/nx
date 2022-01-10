@@ -11,9 +11,9 @@ import type { AsyncSubscription, Event } from '@parcel/watcher';
 import { readFileSync } from 'fs';
 import { join, relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
-import { serverLogger } from '@nrwl/workspace/src/core/project-graph/daemon/server/logger';
 import { handleServerProcessTermination } from '@nrwl/workspace/src/core/project-graph/daemon/server/shutdown-utils';
 import { Server } from 'net';
+import ignore from 'ignore';
 
 /**
  * This configures the files and directories which we always want to ignore as part of file watching
@@ -59,6 +59,17 @@ export type SubscribeToWorkspaceChangesCallback = (
   changeEvents: Event[] | null
 ) => Promise<void>;
 
+function configureIgnoreObject() {
+  const ig = ignore();
+  try {
+    ig.add(readFileSync(`${appRootPath}/.gitignore`, 'utf-8'));
+  } catch {}
+  try {
+    ig.add(readFileSync(`${appRootPath}/.nxignore`, 'utf-8'));
+  } catch {}
+  return ig;
+}
+
 export async function subscribeToWorkspaceChanges(
   server: Server,
   cb: SubscribeToWorkspaceChangesCallback
@@ -69,6 +80,7 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
+  const ignoreObj = configureIgnoreObject();
 
   const subscription = await watcher.subscribe(
     appRootPath,
@@ -105,7 +117,13 @@ export async function subscribeToWorkspaceChanges(
         });
       }
 
-      cb(null, workspaceRelativeEvents);
+      const nonIgnoredEvents = workspaceRelativeEvents
+        .filter(({ path }) => !!path)
+        .filter(({ path }) => !ignoreObj.ignores(path));
+
+      if (nonIgnoredEvents && nonIgnoredEvents.length > 0) {
+        cb(null, nonIgnoredEvents);
+      }
     },
     {
       ignore: getIgnoredGlobs(),

@@ -13,7 +13,7 @@ import {
 } from 'fs-extra';
 import { dirname, join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
 
 const util = require('util');
@@ -35,6 +35,7 @@ export class Cache {
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
   latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
+  useFsExtraToCopyAndRemove = false;
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -89,7 +90,7 @@ export class Cache {
 
       // might be left overs from partially-completed cache invocations
       await remove(tdCommit);
-      await remove(td);
+      await this.remove(td);
 
       await mkdir(td);
       await writeFile(
@@ -103,12 +104,9 @@ export class Cache {
           const src = join(this.root, f);
           if (await existsAsync(src)) {
             const cached = join(td, 'outputs', f);
-            // Ensure parent directory is created if src is a file
-            const isFile = (await lstatAsync(src)).isFile();
-            const directory = isFile ? resolve(cached, '..') : cached;
+            const directory = resolve(cached, '..');
             await ensureDir(directory);
-
-            await copy(src, cached);
+            await this.copy(src, directory);
           }
         })
       );
@@ -143,14 +141,11 @@ export class Cache {
         outputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
           if (await existsAsync(cached)) {
-            const isFile = (await lstatAsync(cached)).isFile();
             const src = join(this.root, f);
-            await remove(src);
-
-            // Ensure parent directory is created if src is a file
-            const directory = isFile ? resolve(src, '..') : src;
+            await this.remove(src);
+            const directory = resolve(src, '..');
             await ensureDir(directory);
-            await copy(cached, src);
+            await this.copy(cached, directory);
           }
         })
       );
@@ -185,6 +180,40 @@ export class Cache {
         outputs
       ))
     );
+  }
+
+  private copy(src: string, directory: string) {
+    if (this.useFsExtraToCopyAndRemove) {
+      return copy(src, directory);
+    }
+
+    return new Promise((res, rej) => {
+      exec(`cp -a "${src}" "${directory}"`, (error) => {
+        if (!error) {
+          res(null);
+        } else {
+          this.useFsExtraToCopyAndRemove = true;
+          copy(src, directory).then(res, rej);
+        }
+      });
+    });
+  }
+
+  private remove(folder: string) {
+    if (this.useFsExtraToCopyAndRemove) {
+      return remove(folder);
+    }
+
+    return new Promise((res, rej) => {
+      exec(`rm -rf "${folder}"`, (error) => {
+        if (!error) {
+          res(null);
+        } else {
+          this.useFsExtraToCopyAndRemove = true;
+          remove(folder).then(res, rej);
+        }
+      });
+    });
   }
 
   private async recordOutputsHash(

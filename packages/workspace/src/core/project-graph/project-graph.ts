@@ -3,6 +3,7 @@ import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
 import { readNxJson, workspaceFileName } from '../file-utils';
 import { output } from '../../utilities/output';
+import { isCI } from '../../utilities/is_ci';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -59,8 +60,9 @@ export async function createProjectGraphAsync(
   // option=true,env=false => no daemon
   // option=false,env=undefined => no daemon
   // option=false,env=false => no daemon
+  // option=true,env=undefined,ci => no daemon
 
-  // option=true,env=undefined => daemon
+  // option=true,env=undefined,!ci => daemon
   // option=true,env=true => daemon
   // option=false,env=true => daemon
   try {
@@ -68,7 +70,8 @@ export async function createProjectGraphAsync(
       (useDaemonProcessOption === undefined && env === undefined) ||
       (useDaemonProcessOption === true && env === 'false') ||
       (useDaemonProcessOption === false && env === undefined) ||
-      (useDaemonProcessOption === false && env === 'false')
+      (useDaemonProcessOption === false && env === 'false') ||
+      (useDaemonProcessOption === true && env === undefined && isCI())
     ) {
       return projectGraphAdapter(
         '5.0',
