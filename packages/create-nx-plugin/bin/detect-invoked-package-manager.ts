@@ -1,4 +1,6 @@
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+const packageManagerList = ['npm', 'pnpm', 'yarn'] as const;
+
+export type PackageManager = typeof packageManagerList[number];
 
 /**
  * Detects which package manager was used to invoke create-nx-{plugin|workspace} command
@@ -19,7 +21,7 @@ export function detectInvokedPackageManager(): PackageManager {
     return detectedPackageManager;
   }
 
-  for (const pkgManager of ['pnpm', 'yarn', 'npm'] as const) {
+  for (const pkgManager of packageManagerList) {
     if (invoker.path.includes(pkgManager)) {
       detectedPackageManager = pkgManager;
       break;
