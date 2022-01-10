@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  isNotWindows,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -93,7 +94,7 @@ describe('Next.js Applications', () => {
           import { testFn } from '@${proj}/${jsLib}';
           /* eslint-disable */
           import dynamic from 'next/dynamic';
-          
+
           const TestComponent = dynamic(
               () => import('@${proj}/${reactLib}').then(d => d.${stringUtils.capitalize(
         reactLib
@@ -129,7 +130,7 @@ describe('Next.js Applications', () => {
     await checkApp(appName, {
       checkUnitTest: true,
       checkLint: true,
-      checkE2E: true,
+      checkE2E: isNotWindows(),
       checkExport: false,
     });
 
