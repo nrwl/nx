@@ -5,7 +5,7 @@
 Cypress is an e2e test runner built for modern web. It has a lot of great features:
 
 - Time travel
-- Real time reloads
+- Real-time reloads
 - Automatic waiting
 - Spies, stubs, and clocks
 - Network traffic control
@@ -56,6 +56,12 @@ You can create a new Cypress E2E project for an existing project.
 If the `@nrwl/cypress` package is not installed, install the version that matches your `@nrwl/workspace` version.
 
 ```sh
+#yarn
+yarn add --dev @nrwl/cypress
+```
+
+```sh
+#npm
 npm install --save-dev @nrwl/cypress
 ```
 

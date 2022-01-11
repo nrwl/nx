@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react:library generator'
-description: 'Create a library'
+description: 'Create a React library'
 ---
 
 # @nrwl/react:library
 
-Create a library
+Create a React library
 
 ## Usage
 

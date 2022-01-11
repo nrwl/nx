@@ -27,31 +27,31 @@ Once the command completes, the workspace will look as follows:
 
 ```treeview
 happynrwl/
-├── apps
-│   ├── tuskdesk
+├── apps/
+│   ├── tuskdesk/
 │   │   ├── index.d.ts
 │   │   ├── jest.config.js
 │   │   ├── next-env.d.ts
 │   │   ├── next.config.js
-│   │   ├── pages
+│   │   ├── pages/
 │   │   │   ├── _app.tsx
 │   │   │   ├── index.module.css
 │   │   │   ├── index.tsx
 │   │   │   └── styles.css
-│   │   ├── public
+│   │   ├── public/
 │   │   │   ├── nx-logo-white.svg
 │   │   │   └── star.svg
-│   │   ├── specs
+│   │   ├── specs/
 │   │   │   └── index.spec.tsx
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.spec.json
-│   └── tuskdesk-e2e
+│   └── tuskdesk-e2e/
 │       ├── cypress.json
-│       ├── src
-│       │   ├── fixtures
-│       │   ├── integration
-│       │   ├── plugins
-│       │   └── support
+│       ├── src/
+│       │   ├── fixtures/
+│       │   ├── integration/
+│       │   ├── plugins/
+│       │   └── support/
 │       ├── tsconfig.e2e.json
 │       └── tsconfig.json
 ├── babel.config.json
@@ -61,7 +61,7 @@ happynrwl/
 ├── nx.json
 ├── package-lock.json
 ├── package.json
-├── tools
+├── tools/
 │   ├── generators
 │   └── tsconfig.tools.json
 ├── tsconfig.base.json
@@ -83,10 +83,10 @@ When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cyp
 For existing Nx workspaces, install the `@nrwl/next` package to add Next.js capabilities to it.
 
 ```bash
-npm install @nrwl/next
+npm install @nrwl/next --save-dev
 
 # Or with yarn
-yarn add @nrwl/next
+yarn add @nrwl/next --dev
 ```
 
 ## Generating an Application
@@ -118,26 +118,26 @@ And you will see the following:
 
 ```treeview
 happynrwl/
-├── apps
-│   └── tuskdesk
-│   └── tuskdesk-e2e
+├── apps/
+│   └── tuskdesk/
+│   └── tuskdesk-e2e/
 ├── babel.config.json
 ├── jest.config.js
 ├── jest.preset.js
-├── libs
-│   └── shared-ui-layout
+├── libs/
+│   └── shared-ui-layout/
 │       ├── README.md
 │       ├── jest.config.js
-│       ├── src
+│       ├── src/
 │       │   ├── index.ts
 │       │   └── lib
-│       ├── tsconfig.json
+│       ├── tsconfig.json/
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── nx.json
 ├── package-lock.json
 ├── package.json
-├── tools
+├── tools/
 ├── tsconfig.base.json
 └── workspace.json
 ```
@@ -232,7 +232,7 @@ Run the tests again for the application: `npx nx test tuskdesk`.
 
 ## Code Sharing
 
-Without Nx, creating a new shared library can take from several hours or even weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace, it only takes minutes.
+Without Nx, creating a new shared library can take from several hours to even weeks: a new repo needs to be provisioned, CI needs to be set up, etc... In an Nx Workspace, it only takes minutes.
 
 You can share React components between multiple Next.js applications. You can also share web components between Next.js and plain React applications. You can even share code between the backend and the frontend. All can be done without any unnecessary ceremony.
 
