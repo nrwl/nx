@@ -47,6 +47,28 @@ const createTmpJestConfig = (
   `;
 };
 
+/**
+ * Attempt to find the compiled index.js to use as the entry point for this library
+ *
+ * Built in library schematics are as follows for the package.json index file:
+ *
+ * Nest: 'main'
+ * Angular: 'esm2020', 'es2020', 'module' (No order, as of Angular 13 all three point to the same artifacts)
+ * Node: 'main'
+ * React: 'main', 'module' (Cannot use `module` as Jest does not support it yet)
+ * TS (@nrwl/js): 'main'
+ * Web: 'main'
+ *
+ * @param distPackageJson
+ */
+export function findIndexFile(distPackageJson: any): string | undefined {
+  if (distPackageJson['main']) {
+    return distPackageJson['main'];
+  }
+
+  return distPackageJson['esm2020'];
+}
+
 export function createJestOverrides(
   root: string,
   context: ExecutorContext,
@@ -68,7 +90,7 @@ export function createJestOverrides(
         path.join(context.cwd, 'dist', node.data.root, 'package.json')
       );
 
-      const indexFile = distPackageJson['main'] ?? distPackageJson['esm2015'];
+      const indexFile = findIndexFile(distPackageJson);
 
       if (!indexFile) {
         return prev;
