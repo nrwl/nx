@@ -30,7 +30,9 @@ Next, adjust the `postcss.config.js` as follows:
 ```js
 module.exports = {
   plugins: {
-    tailwindcss: { config: './apps/{your app here}/tailwind.config.js' },
+    tailwindcss: {
+      config: 'apps/{your app here}/tailwind.config.js',
+    },
     autoprefixer: {},
   },
 };
@@ -38,7 +40,7 @@ module.exports = {
 
 ### Introducing Nx Utility for Better Tailwind Purging
 
-In a typical `tailwind.config.js` file, the `purge` property of the tailwind config would be an array that includes all files that could mention tailwind class names (you can find more details on tailwind's [official documentation](https://tailwindcss.com/docs/optimizing-for-production#basic-usage)).
+In a typical `tailwind.config.js` file, the `content` property of the tailwind config would be an array that includes all files that could mention tailwind class names (you can find more details on tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration)).
 
 Nx has a utility function for determining the glob representation of all files the application depends on (based on the Nx Dependency Graph), which should be used when setting this purge property. This eliminates additional manual maintenance as your workspace progresses.
 
@@ -46,12 +48,11 @@ Nx has a utility function for determining the glob representation of all files t
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 
 module.exports = {
-  purge: createGlobPatternsForDependencies(__dirname),
-  darkMode: false, // or 'media' or 'class'
+  content: [
+    'apps/{your app here}/src/**/*.{js,jsx,ts,tsx}',
+    ...createGlobPatternsForDependencies(__dirname),
+  ],
   theme: {
-    extend: {},
-  },
-  variants: {
     extend: {},
   },
   plugins: [],
@@ -65,7 +66,7 @@ _NOTE:_ To ensure proper purging for custom configurations, be sure that the `NO
 Next, import tailwind styles to the application's base `styles.css` or `styles.scss` file. This can be done by adding the following lines:
 
 ```css
-@tailwind components;
 @tailwind base;
+@tailwind components;
 @tailwind utilities;
 ```
