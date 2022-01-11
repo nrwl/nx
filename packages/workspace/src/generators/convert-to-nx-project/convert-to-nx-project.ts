@@ -76,7 +76,9 @@ To upgrade change the version number at the top of ${getWorkspacePath(
     });
   }
 
-  await formatFiles(host);
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default convertToNxProjectGenerator;
