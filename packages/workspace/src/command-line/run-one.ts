@@ -28,9 +28,9 @@ export async function runOne(opts: {
 
   const projectGraph = await createProjectGraphAsync();
   const { projects, projectsMap } = getProjects(projectGraph, opts.project);
-  const env = readEnvironment(opts.target, projectsMap);
+  const env = readEnvironment();
 
-  runCommand(
+  await runCommand(
     projects,
     projectGraph,
     env,

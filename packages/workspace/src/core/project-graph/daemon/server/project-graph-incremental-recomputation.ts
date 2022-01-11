@@ -1,16 +1,10 @@
 import { FileData, ProjectFileMap } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
-import {
-  createProjectFileMap,
-  readWorkspaceJson,
-  updateProjectFileMap,
-} from '../../../file-utils';
+import { readWorkspaceJson } from '../../../file-utils';
 import { defaultFileHasher } from '../../../hasher/file-hasher';
-import { getGitHashForFiles } from '../../../hasher/git-hasher';
 import { serverLogger } from './logger';
 import { buildProjectGraphUsingProjectFileMap } from '../../build-project-graph';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 import {
   nxDepsPath,
   ProjectGraphCache,
@@ -18,6 +12,10 @@ import {
 } from '../../../nx-deps/nx-deps-cache';
 import { fileExists } from '../../../../utilities/fileutils';
 import { HashingImpl } from '../../../hasher/hashing-impl';
+import {
+  createProjectFileMap,
+  updateProjectFileMap,
+} from '../../../file-map-utils';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -90,13 +88,12 @@ function computeWorkspaceConfigHash(workspaceJson: any) {
   return new HashingImpl().hashArray([JSON.stringify(workspaceJson)]);
 }
 
-function processCollectedUpdatedAndDeletedFiles() {
+async function processCollectedUpdatedAndDeletedFiles() {
   try {
     performance.mark('hash-watched-changes-start');
-    const updatedFiles = getGitHashForFiles(
-      [...collectedUpdatedFiles.values()],
-      appRootPath
-    );
+    const updatedFiles = await defaultFileHasher.hashFiles([
+      ...collectedUpdatedFiles.values(),
+    ]);
     const deletedFiles = [...collectedDeletedFiles.values()];
     performance.mark('hash-watched-changes-end');
     performance.measure(
@@ -113,7 +110,10 @@ function processCollectedUpdatedAndDeletedFiles() {
     // when workspace config changes we cannot incrementally update project file map
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
-      projectFileMapWithFiles = createProjectFileMap(workspaceJson);
+      projectFileMapWithFiles = createProjectFileMap(
+        workspaceJson,
+        defaultFileHasher.allFileData()
+      );
     } else {
       projectFileMapWithFiles = projectFileMapWithFiles
         ? updateProjectFileMap(
@@ -123,7 +123,7 @@ function processCollectedUpdatedAndDeletedFiles() {
             updatedFiles,
             deletedFiles
           )
-        : createProjectFileMap(workspaceJson);
+        : createProjectFileMap(workspaceJson, defaultFileHasher.allFileData());
     }
 
     collectedUpdatedFiles.clear();
@@ -143,8 +143,8 @@ function processCollectedUpdatedAndDeletedFiles() {
   }
 }
 
-function processFilesAndCreateAndSerializeProjectGraph() {
-  const err = processCollectedUpdatedAndDeletedFiles();
+async function processFilesAndCreateAndSerializeProjectGraph() {
+  const err = await processCollectedUpdatedAndDeletedFiles();
   if (err) {
     return Promise.resolve({
       error: err,

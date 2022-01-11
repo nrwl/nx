@@ -1,4 +1,4 @@
-import { createProjectFileMap } from '@nrwl/workspace/src/core/file-utils';
+import { createProjectFileMap } from '@nrwl/workspace/src/core/file-map-utils';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -12,6 +12,7 @@ import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
+import { defaultFileHasher } from '../../hasher/file-hasher';
 
 describe('explicit project dependencies', () => {
   let ctx: ProjectGraphProcessorContext;
@@ -106,12 +107,17 @@ describe('explicit project dependencies', () => {
     };
     vol.fromJSON(fsJson, '/root');
 
+    defaultFileHasher.init();
+
     ctx = {
       workspace: {
         ...workspaceJson,
         ...nxJson,
       } as any,
-      filesToProcess: createProjectFileMap(workspaceJson).projectFileMap,
+      filesToProcess: createProjectFileMap(
+        workspaceJson,
+        defaultFileHasher.allFileData()
+      ).projectFileMap,
     } as any;
 
     projects = {

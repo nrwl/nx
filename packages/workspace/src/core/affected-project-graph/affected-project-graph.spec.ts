@@ -8,6 +8,7 @@ import type {
   NxJsonConfiguration,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
+import { defaultFileHasher } from '../hasher/file-hasher';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -116,6 +117,7 @@ describe('project graph', () => {
       './tsconfig.base.json': JSON.stringify(tsConfigJson),
     };
     vol.fromJSON(filesJson, '/root');
+    defaultFileHasher.init();
   });
 
   afterEach(() => [delete process.env.NX_CACHE_PROJECT_GRAPH]);

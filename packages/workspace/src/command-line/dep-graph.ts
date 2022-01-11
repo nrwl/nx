@@ -468,8 +468,7 @@ function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
 
 async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
   performance.mark('dep graph watch calculation:start');
-  defaultFileHasher.clear();
-  defaultFileHasher.init();
+  await defaultFileHasher.init();
 
   let graph = pruneExternalNodes(await createProjectGraphAsync());
   performance.mark('dep graph watch calculation:end');

@@ -261,13 +261,6 @@ workflows:
           name: 'agent10'
           pm: 'npm'
           os: 'macos'
-      # - agent:
-      #     name: 'agent10'
-      #     pm: 'npm'
-      #     os: 'android'
-      # -------------------------
-      #     Pull request logic
-      # -------------------------
       - main-linux
       - mainmacos:
           name: main-macos-e2e

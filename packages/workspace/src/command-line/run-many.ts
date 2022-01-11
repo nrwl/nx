@@ -23,10 +23,10 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
-  const env = readEnvironment(nxArgs.target, projectsNotExcluded);
+  const env = readEnvironment();
   const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 
-  runCommand(
+  await runCommand(
     filteredProjects,
     projectGraph,
     env,

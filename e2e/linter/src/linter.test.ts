@@ -58,35 +58,6 @@ describe('Linter', () => {
         const out = runCLI(`lint ${myapp}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
       }, 1000000);
-
-      it('linting should error when an invalid linter is specified', () => {
-        // This test is only relevant for the deprecated lint builder,
-        // so we need to patch the workspace.json to use it
-        let configCopy;
-        updateProjectConfig(myapp, (config) => {
-          configCopy = JSON.parse(JSON.stringify(config, null, 2));
-          config.targets.lint = {
-            executor: '@nrwl/linter:lint',
-            options: {
-              linter: 'eslint',
-              tsConfig: [
-                `apps/${myapp}/tsconfig.app.json`,
-                `apps/${myapp}/tsconfig.spec.json`,
-              ],
-              exclude: ['**/node_modules/**', `!apps/${myapp}/**/*`],
-            },
-          };
-          return config;
-        });
-        expect(() => runCLI(`lint ${myapp} --linter=tslint`)).toThrow(
-          /"@nrwl\/linter:lint" was deprecated in v10 and is no longer supported\. Update your project configuration to use "@nrwl\/linter:eslint" builder instead\./
-        );
-        expect(() => runCLI(`lint ${myapp} --linter=random`)).toThrow(
-          /'random' should be one of eslint,tslint/
-        );
-        // revert change
-        updateProjectConfig(myapp, () => configCopy);
-      }, 1000000);
     });
   });
 
@@ -165,29 +136,6 @@ describe('Linter', () => {
     );
   }, 1000000);
 
-  it('linting should cache the output file if defined in outputs', () => {
-    const myapp = uniq('myapp');
-    const outputFile = 'a/b/c/lint-output.json';
-    newProject();
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-
-    updateProjectConfig(myapp, (config) => {
-      config.targets.lint.outputs = ['{options.outputFile}'];
-      return config;
-    });
-
-    expect(() => checkFilesExist(outputFile)).toThrow();
-    runCLI(`lint ${myapp} --output-file="${outputFile}" --format=json`, {
-      silenceError: true,
-    });
-    expect(() => checkFilesExist(outputFile)).not.toThrow();
-    removeFile(outputFile);
-    runCLI(`lint ${myapp} --output-file="${outputFile}" --format=json`, {
-      silenceError: true,
-    });
-    expect(() => checkFilesExist(outputFile)).not.toThrow();
-  }, 1000000);
-
   describe('workspace lint rules', () => {
     it('should supporting creating, testing and using workspace lint rules', () => {
       newProject();
@@ -229,72 +177,6 @@ describe('Linter', () => {
       expect(lintOutput).toContain(knownLintErrorMessage);
     }, 1000000);
   });
-
-  it('lint plugin should ensure module boundaries', () => {
-    const proj = newProject();
-    const myapp = uniq('myapp');
-    const myapp2 = uniq('myapp2');
-    const mylib = uniq('mylib');
-    const lazylib = uniq('lazylib');
-    const invalidtaglib = uniq('invalidtaglib');
-    const validtaglib = uniq('validtaglib');
-
-    runCLI(`generate @nrwl/angular:app ${myapp} --tags=validtag`);
-    runCLI(`generate @nrwl/angular:app ${myapp2}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    runCLI(`generate @nrwl/angular:lib ${lazylib}`);
-    runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
-    runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
-
-    const eslint = readJson('.eslintrc.json');
-    eslint.overrides[0].rules[
-      '@nrwl/nx/enforce-module-boundaries'
-    ][1].depConstraints = [
-      { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-      ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
-        .depConstraints,
-    ];
-    updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
-
-    const tsConfig = readJson('tsconfig.base.json');
-
-    /**
-     * apps do not add themselves to the tsconfig file.
-     *
-     * Let's add it so that we can trigger the lint failure
-     */
-    tsConfig.compilerOptions.paths[`@${proj}/${myapp2}`] = [
-      `apps/${myapp2}/src/main.ts`,
-    ];
-
-    tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
-      tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
-    delete tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
-    updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
-
-    updateFile(
-      `apps/${myapp}/src/main.ts`,
-      `
-      import '../../../libs/${mylib}';
-      import '@secondScope/${lazylib}';
-      import '@${proj}/${myapp2}';
-      import '@${proj}/${invalidtaglib}';
-      import '@${proj}/${validtaglib}';
-
-      const s = {loadChildren: '@${proj}/${lazylib}'};
-    `
-    );
-
-    const out = runCLI(`lint ${myapp}`, { silenceError: true });
-    expect(out).toContain(
-      'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
-    );
-    // expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
-    expect(out).toContain('Imports of apps are forbidden');
-    expect(out).toContain(
-      'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
-    );
-  }, 1000000);
 });
 
 /**

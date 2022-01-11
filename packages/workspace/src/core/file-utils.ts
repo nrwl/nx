@@ -39,6 +39,17 @@ export function isWholeFileChange(change: Change): change is WholeFileChange {
   return change.type === 'WholeFileChange';
 }
 
+export function readFileIfExisting(path: string) {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
+}
+
+function getIgnoredGlobs() {
+  const ig = ignore();
+  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
+  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
+  return ig;
+}
+
 export function calculateFileChanges(
   files: string[],
   nxArgs?: NxArgs,
@@ -48,9 +59,7 @@ export function calculateFileChanges(
   ) => string = defaultReadFileAtRevision,
   ignore = getIgnoredGlobs()
 ): FileChange[] {
-  if (ignore) {
-    files = files.filter((f) => !ignore.ignores(f));
-  }
+  files = files.filter((f) => !ignore.ignores(f));
 
   return files.map((f) => {
     const ext = extname(f);
@@ -110,56 +119,6 @@ function defaultReadFileAtRevision(
   } catch {
     return '';
   }
-}
-
-function getFileData(filePath: string): FileData {
-  const file = relative(appRootPath, filePath).split(sep).join('/');
-  return {
-    file,
-    hash: defaultFileHasher.hashFile(filePath),
-  };
-}
-
-function allFilesInDir(
-  dirName: string,
-  recurse: boolean = true,
-  ignoredGlobs: any
-): FileData[] {
-  const relDirName = relative(appRootPath, dirName);
-  if (relDirName && ignoredGlobs.ignores(relDirName)) {
-    return [];
-  }
-
-  let res = [];
-  try {
-    readdirSync(dirName).forEach((c) => {
-      const child = join(dirName, c);
-      if (ignoredGlobs.ignores(relative(appRootPath, child))) {
-        return;
-      }
-      try {
-        const s = statSync(child);
-        if (!s.isDirectory()) {
-          // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push(getFileData(child));
-        } else if (s.isDirectory() && recurse) {
-          res = [...res, ...allFilesInDir(child, true, ignoredGlobs)];
-        }
-      } catch (e) {}
-    });
-  } catch (e) {}
-  return res;
-}
-
-function getIgnoredGlobs() {
-  const ig = ignore();
-  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
-  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
-  return ig;
-}
-
-export function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 export function readWorkspaceJson(): WorkspaceJsonConfiguration {
@@ -242,159 +201,15 @@ export function rootWorkspaceFileNames(): string[] {
 }
 
 export function rootWorkspaceFileData(): FileData[] {
-  return rootWorkspaceFileNames().map((f) =>
-    getFileData(`${appRootPath}/${f}`)
-  );
-}
-
-function readWorkspaceFiles(): FileData[] {
-  defaultFileHasher.ensureInitialized();
-  performance.mark('read workspace files:start');
-
-  if (defaultFileHasher.usesGitForHashing) {
-    const ignoredGlobs = getIgnoredGlobs();
-    const r = Array.from(defaultFileHasher.workspaceFiles)
-      .filter((f) => !ignoredGlobs.ignores(f))
-      .map((f) => getFileData(`${appRootPath}/${f}`));
-    performance.mark('read workspace files:end');
-    performance.measure(
-      'read workspace files',
-      'read workspace files:start',
-      'read workspace files:end'
-    );
-    r.sort((x, y) => x.file.localeCompare(y.file));
-    return r;
-  } else {
-    const r = [];
-    const ignoredGlobs = getIgnoredGlobs();
-    ignoredGlobs.add(stripIndents`
-      node_modules
-      tmp
-      dist
-      build    
-    `);
-    appendArray(r, allFilesInDir(appRootPath, true, ignoredGlobs));
-    performance.mark('read workspace files:end');
-    performance.measure(
-      'read workspace files',
-      'read workspace files:start',
-      'read workspace files:end'
-    );
-    r.sort((x, y) => x.file.localeCompare(y.file));
-    return r;
-  }
-}
-
-function sortProjects(workspaceJson: any) {
-  // Sorting here so `apps/client-e2e` comes before `apps/client` and has
-  // a chance to match prefix first.
-  return Object.keys(workspaceJson.projects).sort((a, b) => {
-    const projectA = workspaceJson.projects[a];
-    const projectB = workspaceJson.projects[b];
-    if (!projectA.root) return -1;
-    if (!projectB.root) return -1;
-    return projectA.root.length > projectB.root.length ? -1 : 1;
+  return rootWorkspaceFileNames().map((f) => {
+    return {
+      file: f,
+      hash: defaultFileHasher.hashFile(f),
+    };
   });
 }
 
-export function createProjectFileMap(
-  workspaceJson: any,
-  allWorkspaceFiles?: FileData[]
-): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
-  allWorkspaceFiles = allWorkspaceFiles || readWorkspaceFiles();
-  const projectFileMap: ProjectFileMap = {};
-  const sortedProjects = sortProjects(workspaceJson);
-  const seen = new Set();
-
-  for (const projectName of sortedProjects) {
-    projectFileMap[projectName] = [];
-  }
-  for (const f of allWorkspaceFiles) {
-    if (seen.has(f.file)) continue;
-    seen.add(f.file);
-    for (const projectName of sortedProjects) {
-      const p = workspaceJson.projects[projectName];
-      if (f.file.startsWith(p.root || p.sourceRoot)) {
-        projectFileMap[projectName].push(f);
-        break;
-      }
-    }
-  }
-  return { projectFileMap, allWorkspaceFiles };
-}
-
-export function updateProjectFileMap(
-  workspaceJson: any,
-  projectFileMap: ProjectFileMap,
-  allWorkspaceFiles: FileData[],
-  updatedFiles: Map<string, string>,
-  deletedFiles: string[]
-): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
-  const ignore = getIgnoredGlobs();
-  const sortedProjects = sortProjects(workspaceJson);
-  for (let projectName of sortedProjects) {
-    if (!projectFileMap[projectName]) {
-      projectFileMap[projectName] = [];
-    }
-  }
-
-  for (const f of updatedFiles.keys()) {
-    if (ignore.ignores(f)) continue;
-    for (const projectName of sortedProjects) {
-      const p = workspaceJson.projects[projectName];
-      if (f.startsWith(p.root || p.sourceRoot)) {
-        const fileData: FileData = projectFileMap[projectName].find(
-          (t) => t.file === f
-        );
-        if (fileData) {
-          fileData.hash = updatedFiles.get(f);
-        } else {
-          projectFileMap[projectName].push({
-            file: f,
-            hash: updatedFiles.get(f),
-          });
-        }
-        break;
-      }
-    }
-
-    const fileData: FileData = allWorkspaceFiles.find((t) => t.file === f);
-    if (fileData) {
-      fileData.hash = updatedFiles.get(f);
-    } else {
-      allWorkspaceFiles.push({
-        file: f,
-        hash: updatedFiles.get(f),
-      });
-    }
-  }
-
-  for (const f of deletedFiles) {
-    if (ignore.ignores(f)) continue;
-    for (const projectName of sortedProjects) {
-      const p = workspaceJson.projects[projectName];
-      if (f.startsWith(p.root || p.sourceRoot)) {
-        const index = projectFileMap[projectName].findIndex(
-          (t) => t.file === f
-        );
-        if (index > -1) {
-          projectFileMap[projectName].splice(index, 1);
-        }
-        break;
-      }
-    }
-    const index = allWorkspaceFiles.findIndex((t) => t.file === f);
-    if (index > -1) {
-      allWorkspaceFiles.splice(index, 1);
-    }
-  }
-  return { projectFileMap, allWorkspaceFiles };
-}
-
-export function readEnvironment(
-  target: string,
-  projects: Record<string, ProjectGraphNode>
-): Environment {
+export function readEnvironment(): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readWorkspaceJson();
   return { nxJson, workspaceJson, workspaceResults: null } as any;
