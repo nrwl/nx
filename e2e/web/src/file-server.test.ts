@@ -9,8 +9,7 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('file-server', () => {
-  // todo(coly010): re-enable when http-server is fixed
-  xit('should serve folder of files', async () => {
+  it('should serve folder of files', async () => {
     newProject({ name: uniq('fileserver') });
     const appName = uniq('app');
     const port = 4301;

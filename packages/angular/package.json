@@ -36,13 +36,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~13.2.0-next.1",
+    "@angular-devkit/schematics": "~13.2.0-next.2",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
-    "@schematics/angular": "~13.2.0-next.1",
+    "@schematics/angular": "~13.2.0-next.2",
     "@phenomnomnominal/tsquery": "4.1.1",
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
