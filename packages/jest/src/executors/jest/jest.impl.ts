@@ -127,7 +127,7 @@ export async function jestExecutor(
 ): Promise<{ success: boolean }> {
   const config = await jestConfigParser(options, context);
 
-  const { results } = await runCLI(config, [options.jestConfig]);
+  const { results } = await runCLI(config, [config.config]);
 
   return { success: results.success };
 }
@@ -261,7 +261,11 @@ export async function jestConfigParser(
       'utf8'
     );
 
-    config.config = path.join(`tmp/${projectRoot}`, 'jest.config.js');
+    config.config = path.join(
+      process.cwd(),
+      `tmp/${projectRoot}`,
+      'jest.config.js'
+    );
   }
 
   return config;

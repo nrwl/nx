@@ -20,6 +20,66 @@ describe('Jest', () => {
     );
   }, 500000);
 
+  it.only('should run tests from compiled artifacts', async () => {
+    const testLib = uniq('testlib');
+    const buildLib = uniq('buildlib');
+
+    runCLI(`generate @nrwl/node:lib ${testLib} --unit-test-runner jest`);
+    runCLI(
+      `generate @nrwl/node:lib ${buildLib} --unit-test-runner jest --buildable`
+    );
+
+    runCLI(`build ${buildLib}`);
+
+    // Update the test library to call and return the function from buildLib
+    updateFile(
+      `libs/${testLib}/src/lib/${testLib}.ts`,
+      `
+      import { ${buildLib} } from '@proj/${buildLib}';
+      
+      export function ${testLib}(): string {
+        return ${buildLib}();
+      }
+    `
+    );
+
+    // Update the test libraries test to expect the output from the built lib
+    updateFile(
+      `libs/${testLib}/src/lib/${testLib}.spec.ts`,
+      `
+      import { ${testLib} } from './${testLib}';
+
+      describe('${testLib}', () => {
+        it('should work', () => {
+          expect(${testLib}()).toEqual('compiledbuildoutput');
+        });
+      });
+      `
+    );
+
+    // Overwrite the compiled buildLib output, so we know artifacts are being used
+    updateFile(
+      `dist/libs/${buildLib}/src/lib/${buildLib}.js`,
+      `
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+      exports.${buildLib} = void 0;
+      function ${buildLib}() {
+          return 'compiledbuildoutput';
+      }
+      exports.${buildLib} = ${buildLib};
+      //# sourceMappingURL=${buildLib}.js.map
+      `
+    );
+
+    const appResult = await runCLIAsync(
+      `test ${testLib} --no-watch --testFromSource false`
+    );
+    expect(appResult.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+  }, 500000);
+
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
