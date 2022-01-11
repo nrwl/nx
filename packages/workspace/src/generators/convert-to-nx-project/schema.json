@@ -22,6 +22,11 @@
     "all": {
       "description": "Should every project be converted?",
       "type": "boolean"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
     }
   }
 }

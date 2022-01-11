@@ -96,6 +96,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     await convertToNxProjectGenerator(host, {
       project: options.name,
       all: false,
+      skipFormat: options.skipFormat,
     });
   }
 

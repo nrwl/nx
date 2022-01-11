@@ -6,6 +6,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import enquirer = require('enquirer');
 import { libraryGenerator } from '../library/library';
+import * as devkit from '@nrwl/devkit';
 
 import convertToNxProject, {
   SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE,
@@ -160,5 +161,53 @@ describe('convert-to-nx-project', () => {
       expect(ex).toBeDefined();
     }
     expect.assertions(1);
+  });
+
+  it('should format files by default', async () => {
+    jest.spyOn(devkit, 'formatFiles');
+
+    const tree = createTreeWithEmptyWorkspace(2);
+
+    await libraryGenerator(tree, {
+      name: 'lib',
+      standaloneConfig: false,
+      skipFormat: true,
+    });
+
+    await convertToNxProject(tree, { project: 'lib' });
+
+    expect(devkit.formatFiles).toHaveBeenCalledTimes(1);
+  });
+
+  it('should format files when passing skipFormat false', async () => {
+    jest.spyOn(devkit, 'formatFiles');
+
+    const tree = createTreeWithEmptyWorkspace(2);
+
+    await libraryGenerator(tree, {
+      name: 'lib',
+      standaloneConfig: false,
+      skipFormat: true,
+    });
+
+    await convertToNxProject(tree, { project: 'lib', skipFormat: false });
+
+    expect(devkit.formatFiles).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not format files when passing skipFormat true ', async () => {
+    jest.spyOn(devkit, 'formatFiles');
+
+    const tree = createTreeWithEmptyWorkspace(2);
+
+    await libraryGenerator(tree, {
+      name: 'lib',
+      standaloneConfig: false,
+      skipFormat: true,
+    });
+
+    convertToNxProject(tree, { project: 'lib', skipFormat: true });
+
+    expect(devkit.formatFiles).toHaveBeenCalledTimes(0);
   });
 });
