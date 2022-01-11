@@ -75,7 +75,7 @@ const App = () => {
             </View>
           </View>
           <View style={styles.section}>
-            <View style={[styles.middleContent, styles.shadowBox]}>
+            <View style={[styles.shadowBox]}>
               <Text style={[styles.marginBottomMd, styles.textLg]}>
                 Learning materials
               </Text>
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   monospace: {
     color: '#ffffff',
-    fontFamily: 'Courier',
+    fontFamily: 'Courier New',
     marginVertical: 4,
   },
   comment: {

@@ -51,7 +51,7 @@ function addReactNativeSvgToTsconfig(
   const offset = offsetFromRoot(project.root);
   updateJson(host, tsconfigPath, (json) => {
     const files = json.files || [];
-    files.push(`${offset}node_modules/@nrwl/react/typings/image.d.ts`);
+    files.push(`${offset}node_modules/@nrwl/react-native/typings/svg.d.ts`);
     json.files = files;
     return json;
   });
