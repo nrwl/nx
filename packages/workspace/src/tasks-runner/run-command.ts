@@ -25,6 +25,7 @@ import { EmptyTerminalOutputLifeCycle } from './empty-terminal-output-life-cycle
 import { RunOneTerminalOutputLifeCycle } from './run-one-terminal-output-life-cycle';
 import { TaskTimingsLifeCycle } from './task-timings-life-cycle';
 import { createOutputRenderer } from './neo-output/render';
+import { TaskProfilingLifeCycle } from '@nrwl/workspace/src/tasks-runner/task-profiling-life-cycle';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -117,7 +118,11 @@ export async function runCommand(
   const lifeCycles = [lifeCycle] as LifeCycle[];
 
   if (process.env.NX_PERF_LOGGING) {
-    lifeCycles.push(new TaskTimingsLifeCycle(process.env.NX_PERF_LOGGING));
+    lifeCycles.push(new TaskTimingsLifeCycle());
+  }
+
+  if (process.env.NX_PROFILE) {
+    lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
 
   const promiseOrObservable = tasksRunner(

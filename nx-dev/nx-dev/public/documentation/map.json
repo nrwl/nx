@@ -1488,6 +1488,11 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
+            "name": "Profiling Build Performance",
+            "id": "performance-profiling",
+            "file": "shared/guides/performance-profiling"
+          },
+          {
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
             "file": "shared/eslint"
