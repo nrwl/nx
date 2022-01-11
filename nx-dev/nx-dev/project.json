@@ -65,6 +65,14 @@
         }
       }
     },
+    "deploy-build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["nx-dev/nx-dev/public/documentation"],
+      "options": {
+        "commands": ["nx run nx-dev:sync-documentation", "nx run nx-dev:build"],
+        "parallel": false
+      }
+    },
     "export": {
       "executor": "@nrwl/next:export",
       "options": {
