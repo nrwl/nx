@@ -4,6 +4,7 @@ import { buildProjectGraph } from './build-project-graph';
 import { readNxJson, workspaceFileName } from '../file-utils';
 import { output } from '../../utilities/output';
 import { isCI } from '../../utilities/is_ci';
+import { defaultFileHasher } from '../hasher/file-hasher';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -73,6 +74,7 @@ export async function createProjectGraphAsync(
       (useDaemonProcessOption === false && env === 'false') ||
       (useDaemonProcessOption === true && env === undefined && isCI())
     ) {
+      await defaultFileHasher.ensureInitialized();
       return projectGraphAdapter(
         '5.0',
         projectGraphVersion,

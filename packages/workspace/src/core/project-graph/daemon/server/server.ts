@@ -27,6 +27,7 @@ import {
 } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
 import { HashingImpl } from '../../../hasher/hashing-impl';
+import { defaultFileHasher } from '@nrwl/workspace/src/core/hasher/file-hasher';
 
 function respondToClient(socket: Socket, message: string) {
   return new Promise((res) => {
@@ -268,6 +269,7 @@ export async function startServer(): Promise<Server> {
   if (!isWindows) {
     killSocketOrPath();
   }
+  await defaultFileHasher.ensureInitialized();
   return new Promise((resolve, reject) => {
     try {
       server.listen(FULL_OS_SOCKET_PATH, async () => {

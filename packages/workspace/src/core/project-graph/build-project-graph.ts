@@ -16,11 +16,7 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
-import {
-  createProjectFileMap,
-  readNxJson,
-  readWorkspaceJson,
-} from '../file-utils';
+import { readNxJson, readWorkspaceJson } from '../file-utils';
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
   createCache,
@@ -39,11 +35,15 @@ import { existsSync } from 'fs';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 import { loadNxPlugins } from '@nrwl/tao/src/shared/nx-plugin';
+import { defaultFileHasher } from '../hasher/file-hasher';
+import { createProjectFileMap } from '../file-map-utils';
 
 export async function buildProjectGraph() {
   const workspaceJson = readWorkspaceJson();
-  const { projectFileMap, allWorkspaceFiles } =
-    createProjectFileMap(workspaceJson);
+  const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
+    workspaceJson,
+    defaultFileHasher.allFileData()
+  );
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   let cache = cacheEnabled ? readCache() : null;

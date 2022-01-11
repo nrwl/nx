@@ -21,6 +21,7 @@ describe('project graph', () => {
   let filesJson: any;
 
   beforeEach(() => {
+    defaultFileHasher.ensureInitialized();
     packageJson = {
       name: '@nrwl/workspace-src',
       dependencies: {
@@ -214,8 +215,6 @@ describe('project graph', () => {
     });
     workspaceJson.projects.renamed = workspaceJson.projects.demo;
     fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
-
-    defaultFileHasher.init();
 
     graph = await buildProjectGraph();
     expect(graph.nodes).toMatchObject({

@@ -1,11 +1,12 @@
-import { buildExplicitPackageJsonDependencies } from '@nrwl/workspace/src/core/project-graph/build-dependencies/explicit-package-json-dependencies';
+import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { vol } from 'memfs';
 import { ProjectGraphNode } from '../project-graph-models';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
-import { createProjectFileMap } from '../../file-utils';
+import { createProjectFileMap } from '../../file-map-utils';
+import { defaultFileHasher } from '@nrwl/workspace/src/core/hasher/file-hasher';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -56,6 +57,8 @@ describe('explicit package json dependencies', () => {
     };
     vol.fromJSON(fsJson, '/root');
 
+    defaultFileHasher.init();
+
     ctx = {
       workspace: {
         projects: {
@@ -69,7 +72,10 @@ describe('explicit package json dependencies', () => {
         workspaceJson,
         nxJson,
       },
-      filesToProcess: createProjectFileMap(workspaceJson).projectFileMap,
+      filesToProcess: createProjectFileMap(
+        workspaceJson,
+        defaultFileHasher.allFileData()
+      ).projectFileMap,
     } as any;
 
     projects = {

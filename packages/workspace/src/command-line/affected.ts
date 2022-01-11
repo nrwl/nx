@@ -41,7 +41,7 @@ export async function affected(
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
-  const env = readEnvironment(nxArgs.target, projectsNotExcluded);
+  const env = readEnvironment();
   const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 
   try {
@@ -89,7 +89,7 @@ export async function affected(
             filteredProjects,
             nxArgs
           );
-          printAffected(
+          await printAffected(
             projectsWithTarget,
             filteredProjects,
             projectGraph,
@@ -98,7 +98,7 @@ export async function affected(
             overrides
           );
         } else {
-          printAffected(
+          await printAffected(
             [],
             filteredProjects,
             projectGraph,
@@ -114,7 +114,7 @@ export async function affected(
           filteredProjects,
           nxArgs
         );
-        runCommand(
+        await runCommand(
           projectsWithTarget,
           projectGraph,
           env,

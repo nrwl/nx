@@ -22,146 +22,151 @@ describe('git-hasher', () => {
     removeSync(dir);
   });
 
-  it('should work', () => {
+  it('should work', async () => {
     run(`echo AAA > a.txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    const hashes = getFileHashes(dir).allFiles;
-    expect([...hashes.keys()]).toEqual([`${dir}/a.txt`]);
-    expect(hashes.get(`${dir}/a.txt`)).toBeDefined();
+    const hashes = (await getFileHashes(dir)).allFiles;
+    expect([...hashes.keys()]).toEqual([`a.txt`]);
+    expect(hashes.get(`a.txt`)).toBeDefined();
 
     // should handle additions
     run(`echo BBB > b.txt`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a.txt`,
-      `${dir}/b.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a.txt`,
+      `b.txt`,
     ]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a.txt`,
-      `${dir}/b.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a.txt`,
+      `b.txt`,
     ]);
 
     run(`git commit  -am second`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a.txt`,
-      `${dir}/b.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a.txt`,
+      `b.txt`,
     ]);
 
     // should handle removals
+    // removal unstaged
     run(`rm b.txt`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/a.txt`]);
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([`a.txt`]);
 
+    // removal staged
     run(`git add .`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/a.txt`]);
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([`a.txt`]);
 
+    // removed committed
     run(`git commit  -am third`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/a.txt`]);
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([`a.txt`]);
 
     // should handle moves
     run(`mv a.txt newa.txt`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/newa.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `newa.txt`,
     ]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/newa.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `newa.txt`,
     ]);
 
     run(`echo AAAA > a.txt`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a.txt`,
-      `${dir}/newa.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `newa.txt`,
+      `a.txt`,
     ]);
 
     run(`git add .`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a.txt`,
-      `${dir}/newa.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a.txt`,
+      `newa.txt`,
     ]);
   });
 
-  it('should handle spaces in filenames', () => {
+  it('should handle spaces in filenames', async () => {
     run(`echo AAA > "a b".txt`);
     run(`git add .`);
     run(`git commit -am init`);
     run(`touch "x y z.txt"`); // unstaged
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a b.txt`,
-      `${dir}/x y z.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a b.txt`,
+      `x y z.txt`,
     ]);
     run(`git add .`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a b.txt`,
-      `${dir}/x y z.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a b.txt`,
+      `x y z.txt`,
     ]);
     run(`mv "a b.txt" "a b moved.txt"`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/x y z.txt`,
-      `${dir}/a b moved.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `x y z.txt`,
+      `a b moved.txt`,
     ]);
     run(`git add .`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a b moved.txt`,
-      `${dir}/x y z.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a b moved.txt`,
+      `x y z.txt`,
     ]);
     run(`rm "x y z.txt"`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a b moved.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a b moved.txt`,
     ]);
   });
 
-  it('should handle renames and modifications', () => {
+  it('should handle renames and modifications', async () => {
     run(`echo AAA > "a".txt`);
     run(`git add .`);
     run(`git commit -am init`);
     run(`mv a.txt moda.txt`);
     run(`git add .`);
     run(`echo modified >> moda.txt`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/moda.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `moda.txt`,
     ]);
   });
 
-  it('should handle special characters in filenames', () => {
+  it('should handle special characters in filenames', async () => {
     run(`echo AAA > "a-ū".txt`);
     run(`echo BBB > "b-ū".txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/a-ū.txt`,
-      `${dir}/b-ū.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `a-ū.txt`,
+      `b-ū.txt`,
     ]);
 
     run(`mv a-ū.txt moda-ū.txt`);
     run(`git add .`);
     run(`echo modified >> moda-ū.txt`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([
-      `${dir}/b-ū.txt`,
-      `${dir}/moda-ū.txt`,
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `b-ū.txt`,
+      `moda-ū.txt`,
     ]);
 
     run(`rm "moda-ū.txt"`);
-    expect([...getFileHashes(dir).allFiles.keys()]).toEqual([`${dir}/b-ū.txt`]);
+    expect([...(await getFileHashes(dir)).allFiles.keys()]).toEqual([
+      `b-ū.txt`,
+    ]);
   });
 
-  it('should work with sub-directories', () => {
+  it('should work with sub-directories', async () => {
     const subDir = `${dir}/sub`;
     mkdirSync(subDir);
     run(`echo AAA > a.txt`);
     run(`echo BBB > sub/b.txt`);
     run(`git add --all`);
     run(`git commit -am init`);
-    expect([...getFileHashes(subDir).allFiles.keys()]).toEqual([
-      `${subDir}/b.txt`,
+    expect([...(await getFileHashes(subDir)).allFiles.keys()]).toEqual([
+      `b.txt`,
     ]);
 
     run(`echo CCC > sub/c.txt`);
-    expect([...getFileHashes(subDir).allFiles.keys()]).toEqual([
-      `${subDir}/b.txt`,
-      `${subDir}/c.txt`,
+    expect([...(await getFileHashes(subDir)).allFiles.keys()]).toEqual([
+      `b.txt`,
+      `c.txt`,
     ]);
   });
 
