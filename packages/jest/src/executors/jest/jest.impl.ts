@@ -127,7 +127,13 @@ export async function jestExecutor(
 ): Promise<{ success: boolean }> {
   const config = await jestConfigParser(options, context);
 
-  const { results } = await runCLI(config, [config.config]);
+  /*
+   * If config.config exists that means we are running tests using artifacts
+   * `testFromSource: false` otherwise default to the projects jest config
+   */
+  const { results } = await runCLI(config, [
+    config.config ?? options.jestConfig,
+  ]);
 
   return { success: results.success };
 }
