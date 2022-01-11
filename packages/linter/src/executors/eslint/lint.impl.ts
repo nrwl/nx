@@ -1,12 +1,11 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { ESLint } from 'eslint';
 
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 import type { Schema } from './schema';
 import { lint, loadESLint } from './utility/eslint-utils';
-import { createDirectory } from './utility/create-directory';
 
 export default async function run(
   options: Schema,
@@ -125,7 +124,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   if (options.outputFile) {
     const pathToOutputFile = join(context.root, options.outputFile);
-    createDirectory(dirname(pathToOutputFile));
+    mkdirSync(dirname(pathToOutputFile), { recursive: true });
     writeFileSync(pathToOutputFile, formattedResults);
   } else {
     console.info(formattedResults);
