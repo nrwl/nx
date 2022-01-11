@@ -1,9 +1,4 @@
 {
-  <% if(cli === 'angular') { %>
-  "version": 1,
-  <% } %>
-  <% if(cli === 'nx') { %>
   "version": 2,
-  <% } %>
   "projects": {}
 }
