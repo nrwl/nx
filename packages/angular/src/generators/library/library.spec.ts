@@ -1370,9 +1370,6 @@ describe('lib', () => {
           theme: {
             extend: {},
           },
-          variants: {
-            extend: {},
-          },
           plugins: [],
         };
         "

@@ -62,7 +62,6 @@ describe('Tailwind support', () => {
           lg: '${spacing.root.lg}',
         },
       },
-      variants: { extend: {} },
       plugins: [],
     };
     `;
@@ -91,7 +90,6 @@ describe('Tailwind support', () => {
           lg: '${libSpacing.lg}',
         },
       },
-      variants: { extend: {} },
       plugins: [],
     };
     `;
