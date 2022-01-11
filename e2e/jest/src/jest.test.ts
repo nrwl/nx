@@ -20,7 +20,7 @@ describe('Jest', () => {
     );
   }, 500000);
 
-  it.only('should run tests from compiled artifacts', async () => {
+  it('should run tests from compiled artifacts', async () => {
     const testLib = uniq('testlib');
     const buildLib = uniq('buildlib');
 
