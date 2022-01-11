@@ -7,7 +7,7 @@ import { watch } from 'chokidar';
 import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
 function getHttpServerArgs(options: Schema) {
-  const args = [] as any[];
+  const args = ['-c-1'];
   if (options.port) {
     args.push(`-p ${options.port}`);
   }
