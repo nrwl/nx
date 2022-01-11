@@ -11,6 +11,7 @@ export function isCI() {
     process.env.GITLAB_CI ||
     process.env.HEROKU_TEST_RUN_ID ||
     process.env.BUILD_ID ||
+    process.env.BUILD_BUILDID ||
     process.env.TEAMCITY_VERSION ||
     process.env.TRAVIS === 'true'
   );
