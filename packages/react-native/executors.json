@@ -13,7 +13,7 @@
     "bundle": {
       "implementation": "./src/executors/bundle/bundle.impl",
       "schema": "./src/executors/bundle/schema.json",
-      "description": "Builds the JS bundle."
+      "description": "Builds the JavaScript bundle for offline use."
     },
     "build-android": {
       "implementation": "./src/executors/build-android/build-android.impl",
@@ -23,7 +23,7 @@
     "start": {
       "implementation": "./src/executors/start/start.impl",
       "schema": "./src/executors/start/schema.json",
-      "description": "Starts the dev server for JS bundle."
+      "description": "Starts the Javascript server that communicates with connected devices."
     },
     "sync-deps": {
       "implementation": "./src/executors/sync-deps/sync-deps.impl",
@@ -50,7 +50,7 @@
     "bundle": {
       "implementation": "./src/executors/bundle/compat",
       "schema": "./src/executors/bundle/schema.json",
-      "description": "Builds the JS bundle."
+      "description": "Builds the JavaScript bundle for offline use."
     },
     "build-android": {
       "implementation": "./src/executors/build-android/compat",
@@ -60,7 +60,7 @@
     "start": {
       "implementation": "./src/executors/start/compat",
       "schema": "./src/executors/start/schema.json",
-      "description": "Starts the dev server for JS bundle."
+      "description": "Starts the Javascript server that communicates with connected devices."
     },
     "sync-deps": {
       "implementation": "./src/executors/sync-deps/compat",

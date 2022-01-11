@@ -16,7 +16,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create a React application"
     },
 
     "library": {
@@ -24,13 +24,13 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a React library"
     },
 
     "component": {
       "factory": "./src/generators/component/component#componentSchematic",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a component",
+      "description": "Create a React component",
       "aliases": "c"
     },
 
@@ -97,7 +97,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create a React application"
     },
 
     "library": {
@@ -105,13 +105,13 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a React library"
     },
 
     "component": {
       "factory": "./src/generators/component/component#componentGenerator",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a component",
+      "description": "Create a React component",
       "aliases": "c"
     },
 

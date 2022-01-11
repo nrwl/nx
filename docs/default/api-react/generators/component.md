@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react:component generator'
-description: 'Create a component'
+description: 'Create a React component'
 ---
 
 # @nrwl/react:component
 
-Create a component
+Create a React component
 
 ## Usage
 
