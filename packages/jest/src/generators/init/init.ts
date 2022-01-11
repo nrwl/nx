@@ -1,4 +1,11 @@
 import {
+  addDependenciesToPackageJson,
+  convertNxGenerator,
+  stripIndents,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+import {
   babelJestVersion,
   jestTypesVersion,
   jestVersion,
@@ -8,13 +15,6 @@ import {
   tslibVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
-import {
-  addDependenciesToPackageJson,
-  convertNxGenerator,
-  stripIndents,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
@@ -74,9 +74,8 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     devDeps['babel-jest'] = babelJestVersion;
     // in some cases @nrwl/web will not already be present i.e. node only projects
     devDeps['@nrwl/web'] = nxVersion;
-    // TODO: revert to @swc/jest when https://github.com/swc-project/cli/issues/20 is addressed
-    // } else if (options.compiler === 'swc') {
-    //   devDeps['@swc/jest'] = swcJestVersion;
+  } else if (options.compiler === 'swc') {
+    devDeps['@swc/jest'] = swcJestVersion;
   }
 
   return addDependenciesToPackageJson(tree, dependencies, devDeps);

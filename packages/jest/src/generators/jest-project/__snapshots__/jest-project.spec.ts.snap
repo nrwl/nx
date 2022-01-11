@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
+"module.exports = {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  transform: {
+    '^.+\\\\\\\\.[tj]sx?$': ['@swc/jest', { jsc: { transform: { react: { runtime: 'automatic' } } } }]
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib1'
+};
+"
+`;
+
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
 "module.exports = {
   displayName: 'lib1',

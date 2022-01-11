@@ -225,7 +225,7 @@ async function addJest(
     skipSerializers: true,
     testEnvironment: options.testEnvironment,
     skipFormat: true,
-    compiler: 'tsc',
+    compiler: options.compiler,
   });
 }
 

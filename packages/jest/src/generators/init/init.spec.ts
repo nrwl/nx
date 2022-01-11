@@ -58,11 +58,11 @@ describe('jest', () => {
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
     });
 
-    // it('should support swc compiler', () => {
-    //   jestInitGenerator(tree, { compiler: 'swc' });
-    //   const packageJson = readJson(tree, 'package.json');
-    //   expect(packageJson.devDependencies['@swc/jest']).toBeDefined()
-    // });
+    it('should support swc compiler', () => {
+      jestInitGenerator(tree, { compiler: 'swc' });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc/jest']).toBeDefined();
+    });
   });
 
   describe('adds jest extension', () => {

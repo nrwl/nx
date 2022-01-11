@@ -12,6 +12,6 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     supportTsx: true,
     skipSerializers: true,
     setupFile: 'none',
-    compiler: options.compiler as 'tsc',
+    compiler: options.compiler,
   });
 }

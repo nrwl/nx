@@ -1,3 +1,4 @@
+import { cypressProjectGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -15,19 +16,18 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { jestProjectGenerator } from '@nrwl/jest';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { join } from 'path';
 
-import { webInitGenerator } from '../init/init';
-import { cypressProjectGenerator } from '@nrwl/cypress';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
-
 import { WebWebpackExecutorOptions } from '../../executors/webpack/webpack.impl';
-import { Schema } from './schema';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion } from '../../utils/versions';
+
+import { webInitGenerator } from '../init/init';
+import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -221,7 +221,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',
-      compiler: options.compiler as 'tsc',
+      compiler: options.compiler,
     });
     tasks.push(jestTask);
   }

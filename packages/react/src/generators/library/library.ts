@@ -1,22 +1,3 @@
-import * as ts from 'typescript';
-import { assertValidStyle } from '../../utils/assertion';
-import {
-  addBrowserRouter,
-  addInitialRoutes,
-  addRoute,
-  findComponentImportPath,
-} from '../../utils/ast-utils';
-import {
-  createReactEslintJson,
-  extraEslintDependencies,
-} from '../../utils/lint';
-import {
-  reactDomVersion,
-  reactRouterDomVersion,
-  reactVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
-import { Schema } from './schema';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -35,12 +16,31 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import init from '../init/init';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
-import componentGenerator from '../component/component';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import * as ts from 'typescript';
+import { assertValidStyle } from '../../utils/assertion';
+import {
+  addBrowserRouter,
+  addInitialRoutes,
+  addRoute,
+  findComponentImportPath,
+} from '../../utils/ast-utils';
+import {
+  createReactEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
+import {
+  reactDomVersion,
+  reactRouterDomVersion,
+  reactVersion,
+  typesReactRouterDomVersion,
+} from '../../utils/versions';
+import componentGenerator from '../component/component';
+import init from '../init/init';
+import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -90,7 +90,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       setupFile: 'none',
       supportTsx: true,
       skipSerializers: true,
-      compiler: options.compiler as 'tsc',
+      compiler: options.compiler,
     });
     tasks.push(jestTask);
   }
