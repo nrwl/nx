@@ -230,6 +230,7 @@ export class Migrator {
           '@nrwl/express',
           '@nrwl/gatsby',
           '@nrwl/jest',
+          '@nrwl/js',
           '@nrwl/linter',
           '@nrwl/nest',
           '@nrwl/next',
