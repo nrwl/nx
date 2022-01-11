@@ -13,7 +13,6 @@
     "jasmine-marbles",
     "rxjs-for-await",
     "webpack-merge",
-    "find-parent-dir",
     "ts-node",
     "tsconfig-paths",
     "semver"
