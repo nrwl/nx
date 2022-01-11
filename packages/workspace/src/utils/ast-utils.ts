@@ -24,7 +24,6 @@ import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import type {
   NxJsonConfiguration,
-  ProjectGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
