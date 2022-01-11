@@ -3,7 +3,7 @@ import { spawnProcess } from './spawn-process';
 
 describe('spawnProcess()', () => {
   let spy: jest.SpyInstance<
-    childProcess.SpawnSyncReturns<Buffer>,
+    childProcess.SpawnSyncReturns<string | Buffer>,
     [
       command: string,
       args?: readonly string[],

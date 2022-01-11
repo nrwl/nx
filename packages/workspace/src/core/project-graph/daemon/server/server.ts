@@ -69,7 +69,7 @@ const server = createServer(async (socket) => {
       const entry = list.getEntries()[0];
       serverLogger.log(`Time taken for '${entry.name}'`, `${entry.duration}ms`);
     });
-    performanceObserver.observe({ entryTypes: ['measure'], buffered: false });
+    performanceObserver.observe({ entryTypes: ['measure'] });
   }
 
   socket.on('data', async (data) => {

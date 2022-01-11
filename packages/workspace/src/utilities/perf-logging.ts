@@ -5,5 +5,5 @@ if (process.env.NX_PERF_LOGGING) {
     const entry = list.getEntries()[0];
     console.log(`Time for '${entry.name}'`, entry.duration);
   });
-  obs.observe({ entryTypes: ['measure'], buffered: false });
+  obs.observe({ entryTypes: ['measure'] });
 }
