@@ -54,3 +54,11 @@ Should every project be converted?
 Type: `string`
 
 Project name
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

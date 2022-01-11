@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react-native:application generator'
-description: 'Create an application'
+description: 'Create a React Native application'
 ---
 
 # @nrwl/react-native:application
 
-Create an application
+Create a React Native application
 
 ## Usage
 

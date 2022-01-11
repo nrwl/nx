@@ -1170,6 +1170,12 @@
         "id": "detox",
         "itemList": [
           {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/detox Overview",
+            "file": "shared/detox-plugin"
+          },
+          {
             "name": "application generator",
             "id": "application",
             "file": "default/api-detox/generators/application"
@@ -1190,6 +1196,12 @@
         "name": "react native",
         "id": "react-native",
         "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/react-native Overview",
+            "file": "shared/react-native-plugin"
+          },
           {
             "name": "application generator",
             "id": "application",

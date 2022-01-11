@@ -1,8 +1,8 @@
 # React Native with Nx
 
-![](/shared/react-logo.png)
+![React Logo](/shared/react-logo.png)
 
-Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/{{version}}/{{framework}}/detox/overview), Storybook, Jest, and more.
+Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/detox/overview), Storybook, Jest, and more.
 
 In this guide we will show you how to develop [React Native](https://reactnative.dev/) applications with Nx.
 
@@ -26,26 +26,26 @@ Once the command completes, the workspace will look as follows:
 
 ```treeview
 happynrwl/
-├── apps
-│   ├── mobile
+├── apps/
+│   ├── mobile/
 │   │   ├── app.json
 │   │   ├── metro.config.js
-│   │   ├── android
-│   │   │   ├── app
-│   │   │   ├── gradle
+│   │   ├── android/
+│   │   │   ├── app/
+│   │   │   ├── gradle/
 │   │   │   ├── build.gradle
 │   │   │   ├── gradle.properties
 │   │   │   ├── gradlew
 │   │   │   ├── settings.gradle
-│   │   ├── ios
-│   │   │   ├── Mobile
-│   │   │   ├── Mobile.xcodeproj
-│   │   │   ├── Mobile.xcworkspace
-│   │   │   ├── Prodfile
-│   │   │   ├── Prodfile.lock
-│   │   ├── src
+│   │   ├── ios/
+│   │   │   ├── Mobile/
+│   │   │   ├── Mobile.xcodeproj/
+│   │   │   ├── Mobile.xcworkspace/
+│   │   │   ├── Podfile
+│   │   │   ├── Podfile.lock
+│   │   ├── src/
 │   │   │   ├── main.tsx
-│   │   │   └── app
+│   │   │   └── app/
 │   │   │       ├── App.tsx
 │   │   │       └── App.spec.tsx
 │   │   ├── .babelrc
@@ -56,17 +56,18 @@ happynrwl/
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.app.json
 │   │   └── tsconfig.spec.json
-│   └── mobile-e2e
+│   └── mobile-e2e/
 │       ├── .detoxrc.json
-│       ├── src
+│       ├── src/
 │       │   └── app.spec.ts
 │       ├── .babelrc
 │       ├── jest.config.json
 │       ├── project.json
 │       ├── tsconfig.e2e.json
 │       └── tsconfig.json
-├── libs
-├── tools
+├── libs/
+├── tools/
+├── babel.config.json
 ├── jest.config.js
 ├── jest.preset.js
 ├── nx.json
@@ -140,8 +141,8 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 - Publish a package to be used outside the monorepo
 - Better visualize the architecture using `npx nx dep-graph`
 
-For more information on Nx libraries, see our documentation on [Creating Libraries](/{{version}}/{{framework}}/structure/creating-libraries)
-and [Library Types](/{{version}}/{{framework}}/structure/library-types).
+For more information on Nx libraries, see our documentation on [Creating Libraries](/structure/creating-libraries)
+and [Library Types](/structure/library-types).
 
 To generate a new library run:
 
@@ -153,12 +154,12 @@ And you will see the following:
 
 ```treeview
 happynrwl/
-├── apps
-│   └── mobile
-│   └── mobile-e2e
-├── libs
-│   └── shared-ui-layout
-│       ├── src
+├── apps/
+│   └── mobile/
+│   └── mobile-e2e/
+├── libs/
+│   └── shared-ui-layout/
+│       ├── src/
 │       │   └── index.ts
 │       ├── .babelrc
 │       ├── jest.config.js
@@ -168,7 +169,8 @@ happynrwl/
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
-├── tools
+├── tools/
+├── babel.config.json
 ├── jest.config.js
 ├── jest.preset.js
 ├── nx.json
@@ -193,12 +195,12 @@ And you will see the following updated for `shared-ui-layout`:
 
 ```treeview
 happynrwl/
-└── libs
-    └── shared-ui-layout
-        └── src
+└── libs/
+    └── shared-ui-layout/
+        └── src/
             ├── index.ts
-            └── lib
-                 └── layout
+            └── lib/
+                 └── layout/
                      ├── layout.tsx
                      └── layout.spec.tsx
 ```
@@ -256,9 +258,9 @@ This dist folder is ready to be published to a registry.
 
 ## Code Sharing
 
-Without Nx, creating a new shared library can take from several hours or even weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace, it only takes minutes.
+Without Nx, creating a new shared library can take from several hours to even weeks: a new repo needs to be provisioned, CI needs to be set up, etc... In an Nx Workspace, it only takes minutes.
 
-You can share React Native components between multiple React Native applications. You can also share business logic code between React Native mobile applications and plain React webapplications. You can even share code between the backend and the frontend. All can be done without any unnecessary ceremony.
+You can share React Native components between multiple React Native applications, share business logic code between React Native mobile applications and plain React web applications. You can even share code between the backend and the frontend. All of these can be done without any unnecessary ceremony.
 
 ## Resources
 
