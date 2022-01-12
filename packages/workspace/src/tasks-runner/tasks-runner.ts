@@ -8,7 +8,7 @@ export type TaskStatus =
   | 'success'
   | 'failure'
   | 'skipped'
-  | 'cache'
+  | 'local-cache'
   | 'remote-cache';
 
 /**

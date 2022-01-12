@@ -121,7 +121,7 @@ export async function createOutputRenderer({
     hasTaskOutput = true;
 
     switch (status) {
-      case 'cache':
+      case 'local-cache':
         writeLine(
           chalk.green(figures.tick) +
             chalk.dim.white('  nx run ') +
@@ -280,7 +280,7 @@ export async function createOutputRenderer({
 
       switch (t.status) {
         case 'remote-cache':
-        case 'cache':
+        case 'local-cache':
           totalCachedTasks++;
         case 'success':
           totalSuccessfulTasks++;
