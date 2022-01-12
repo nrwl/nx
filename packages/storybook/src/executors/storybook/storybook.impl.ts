@@ -32,7 +32,11 @@ export default async function* storybookExecutor(
   // print warnings
   runStorybookSetupCheck(options);
 
-  await runInstance(option);
+  await runInstance(
+    option,
+    context.projectName,
+    !!context?.workspace?.projects?.[context.projectName]?.targets?.build
+  );
 
   yield { success: true };
 
@@ -40,7 +44,11 @@ export default async function* storybookExecutor(
   await new Promise<{ success: boolean }>(() => {});
 }
 
-function runInstance(options: StorybookExecutorOptions) {
+function runInstance(
+  options: StorybookExecutorOptions,
+  projectName: string,
+  buildable: boolean
+) {
   const env = process.env.NODE_ENV ?? 'development';
   process.env.NODE_ENV = env;
   return buildDevStandalone({
@@ -78,6 +86,19 @@ function runInstance(options: StorybookExecutorOptions) {
           Broken build, fix the error above.
           You may need to refresh the browser.
         `
+    );
+
+    logger.warn(
+      `
+      If you are experiencing compilation issues (eg. files missing from your compilation), 
+      try running Storybook for your project using the following command:
+
+      nx storybook ${
+        projectName ? projectName : '<YOUR-PROJECT-NAME>'
+      } --projectBuildConfig=${
+        projectName ? projectName : '<YOUR-PROJECT-NAME>'
+      }${buildable ? '' : ':build-storybook'}
+      `
     );
 
     process.exit(1);
