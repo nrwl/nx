@@ -56,4 +56,35 @@ describe('init', () => {
       expect(cli.defaultCollection).toEqual('@nrwl/react');
     });
   });
+
+  describe('babel config', () => {
+    it('should create babel config if not present', async () => {
+      await reactNativeInitGenerator(tree, {
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      expect(tree.exists('babel.config.json')).toBe(true);
+    });
+
+    it('should not overwrite existing babel config', async () => {
+      tree.write('babel.config.json', '{ "preset": ["preset-awesome"] }');
+
+      await reactNativeInitGenerator(tree, {
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+
+      const existing = readJson(tree, 'babel.config.json');
+      expect(existing).toEqual({ preset: ['preset-awesome'] });
+    });
+
+    it('should not overwrite existing babel config (.js)', async () => {
+      tree.write('/babel.config.js', 'module.exports = () => {};');
+      await reactNativeInitGenerator(tree, {
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      expect(tree.exists('babel.config.json')).toBe(false);
+    });
+  });
 });

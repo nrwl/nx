@@ -8,6 +8,14 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { jestInitGenerator } from '@nrwl/jest';
+import { detoxInitGenerator } from '@nrwl/detox';
+import {
+  reactVersion,
+  typesReactVersion,
+} from '@nrwl/react/src/utils/versions';
+
 import {
   babelRuntimeVersion,
   jestReactNativeVersion,
@@ -25,18 +33,14 @@ import {
   testingLibraryReactNativeVersion,
   typesReactNativeVersion,
 } from '../../utils/versions';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import {
-  reactVersion,
-  typesReactVersion,
-} from '@nrwl/react/src/utils/versions';
+import { initRootBabelConfig } from './lib/init-root-babel-config';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   setDefaultCollection(host, '@nrwl/react-native');
   addGitIgnoreEntry(host);
+  initRootBabelConfig(host);
 
   const tasks = [moveDependency(host), updateDependencies(host)];
 

@@ -17,6 +17,12 @@
       "cli": "nx",
       "description": "Update typing for svg in react native",
       "factory": "./src/migrations/update-13-5-0/update-react-native-typing-svg-13-5-0"
+    },
+    "add-babel-config-root-13-5-0": {
+      "version": "13.5.0-beta.0",
+      "cli": "nx",
+      "description": "Add babel.config.json at root for react native workspace if it does not exist",
+      "factory": "./src/migrations/update-13-5-0/add-babel-config-root-13-5-0"
     }
   },
   "packageJsonUpdates": {
