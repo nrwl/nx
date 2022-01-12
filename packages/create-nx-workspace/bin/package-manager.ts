@@ -7,7 +7,9 @@ import { join } from 'path';
  * we duplicate the helper functions from @nrwl/workspace in this file.
  */
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
+
+export type PackageManager = typeof packageManagerList[number];
 
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
@@ -108,7 +110,7 @@ export function detectInvokedPackageManager(): PackageManager {
     return detectedPackageManager;
   }
 
-  for (const pkgManager of ['pnpm', 'yarn', 'npm'] as const) {
+  for (const pkgManager of packageManagerList) {
     if (invoker.path.includes(pkgManager)) {
       detectedPackageManager = pkgManager;
       break;
