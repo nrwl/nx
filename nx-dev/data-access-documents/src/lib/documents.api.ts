@@ -88,7 +88,7 @@ export class DocumentsApi {
         throw new Error(`Document not found`);
       }
     }
-    const file = found.file ?? ['default', ...path].join('/');
+    const file = found.file ?? ['generated', ...path].join('/');
     return join(this.options.publicDocsRoot, `${file}.md`);
   }
 }
