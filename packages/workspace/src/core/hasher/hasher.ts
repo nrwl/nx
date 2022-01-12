@@ -239,6 +239,7 @@ export class Hasher {
           })
           .filter((file) => existsSync(file))
           .map((file) => {
+            // we should use default file hasher here
             const hash = this.hashing.hashFile(file);
             return { file, hash };
           }),

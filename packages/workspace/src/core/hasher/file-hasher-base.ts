@@ -59,6 +59,9 @@ export abstract class FileHasherBase {
   }
 
   hashFile(path: string): string {
+    if (!this.fileHashes) {
+      throw new Error('FileHasher is invoked before being initialized');
+    }
     const relativePath = path.startsWith(appRootPath)
       ? path.substr(appRootPath.length + 1)
       : path;

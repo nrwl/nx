@@ -139,7 +139,11 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
     ? projectGraph
     : filterAffected(
         projectGraph,
-        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
+        calculateFileChanges(
+          parseFiles(nxArgs).files,
+          projectGraph.allWorkspaceFiles,
+          nxArgs
+        )
       );
   if (nxArgs.withDeps) {
     affectedGraph = withDeps(
