@@ -978,9 +978,6 @@ describe('app', () => {
           theme: {
             extend: {},
           },
-          variants: {
-            extend: {},
-          },
           plugins: [],
         };
         "

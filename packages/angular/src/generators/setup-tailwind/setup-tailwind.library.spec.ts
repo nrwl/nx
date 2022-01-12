@@ -201,9 +201,6 @@ describe('setupTailwind generator', () => {
           theme: {
             extend: {},
           },
-          variants: {
-            extend: {},
-          },
           plugins: [],
         };
         "
@@ -227,9 +224,6 @@ describe('setupTailwind generator', () => {
         .toMatchInlineSnapshot(`
         "module.exports = {
           theme: {
-            extend: {},
-          },
-          variants: {
             extend: {},
           },
           plugins: [],

@@ -339,9 +339,6 @@ describe('setupTailwind generator', () => {
           theme: {
             extend: {},
           },
-          variants: {
-            extend: {},
-          },
           plugins: [],
         };
         "
@@ -369,9 +366,6 @@ describe('setupTailwind generator', () => {
             ...createGlobPatternsForDependencies(__dirname),
           ],
           theme: {
-            extend: {},
-          },
-          variants: {
             extend: {},
           },
           plugins: [],
