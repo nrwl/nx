@@ -17,22 +17,11 @@ module.exports = {
     if (rootMain.webpackFinal) {
       config = await rootMain.webpackFinal(config, { configType });
     }
-
+    
     <% if (existsRootWebpackConfig) { %>// for backwards compatibility call the `rootWebpackConfig`
       // this can be removed once that one is migrated fully to
       // use the `webpackFinal` property in the `main.js` file
       config = rootWebpackConfig({ config });
-    <% } %>
-
-    <% if (uiFramework === '@storybook/angular') { %>
-      // remove html raw-loader that breaks Jit compilation
-      const rules = (config.module.rules ?? []).filter(
-        (rule) =>
-          rule.test !== /\.html$/ &&
-          rule.exclude !== /\.async\.html$/ &&
-          !rule.loader?.includes('raw-loader')
-      );
-      config.module.rules = [...rules];
     <% } %>
 
     // add your own webpack tweaks if needed
