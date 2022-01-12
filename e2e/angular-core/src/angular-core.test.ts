@@ -23,9 +23,10 @@ describe('Angular Package', () => {
   describe('core', () => {
     let proj: string;
 
-    beforeEach(() => (proj = newProject()));
+    beforeAll(() => (proj = newProject()));
+    afterAll(() => cleanupProject());
 
-    it('should work', async () => {
+    it('should generate an app, a lib, link them, build and test both correctly', async () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
       runCLI(
@@ -91,7 +92,9 @@ describe('Angular Package', () => {
       runCLI(`generate @nrwl/angular:app ${myapp}`);
       runCLI(`generate @nrwl/angular:app ${myapp2}`);
 
-      runCLI('run-many --target build --all --parallel');
+      runCLI(
+        `run-many --target build --projects=${myapp},${myapp2} --parallel`
+      );
     });
 
     it('should support workspaces w/o workspace config file', async () => {
