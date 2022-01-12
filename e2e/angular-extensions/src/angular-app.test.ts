@@ -12,6 +12,8 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  readProjectConfig,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 import { ChildProcess } from 'child_process';
@@ -66,10 +68,10 @@ describe('Angular Package', () => {
       );
 
       // update the angular.json
-      const workspaceJson = readJson(`angular.json`);
-      workspaceJson.projects[app].architect.build.builder =
-        '@nrwl/angular:webpack-browser';
-      updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
+      updateProjectConfig(app, (config) => {
+        config.targets.build.executor = '@nrwl/angular:webpack-browser';
+        return config;
+      });
     });
 
     afterEach(() => cleanupProject());
