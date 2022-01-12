@@ -15,10 +15,10 @@ npx nx affected:apps --plain --base HEAD~1 --head HEAD | grep $APP -q
 
 STATUS=$?
 
-if [ $STATUS -eq 1 ]; then
-  echo "🛑 - Build cancelled"
-  exit 0
-elif [ $STATUS -eq 0 ]; then
+#if [ $STATUS -eq 1 ]; then
+#  echo "🛑 - Build cancelled"
+#  exit 0
+#elif [ $STATUS -eq 0 ]; then
   echo "✅ - Build can proceed"
   exit 1
-fi
+#fi
