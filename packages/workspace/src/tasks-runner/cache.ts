@@ -27,6 +27,7 @@ export type CachedResult = {
   terminalOutput: string;
   outputsPath: string;
   code: number;
+  remote: boolean;
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
@@ -64,17 +65,20 @@ export class Cache {
     }
   }
 
-  async get(task: Task): Promise<CachedResult> {
+  async get(task: Task): Promise<CachedResult | null> {
     const res = await this.getFromLocalDir(task);
 
-    // didn't find it locally but we have a remote cache
-    if (!res && this.options.remoteCache) {
+    if (res) {
+      return { ...res, remote: false };
+    } else if (this.options.remoteCache) {
+      // didn't find it locally but we have a remote cache
       // attempt remote cache
       await this.options.remoteCache.retrieve(task.hash, this.cachePath);
       // try again from local cache
-      return this.getFromLocalDir(task);
+      const res2 = await this.getFromLocalDir(task);
+      return res2 ? { ...res2, remote: true } : null;
     } else {
-      return res;
+      return null;
     }
   }
 

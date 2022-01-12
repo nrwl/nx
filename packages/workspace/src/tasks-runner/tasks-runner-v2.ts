@@ -51,7 +51,10 @@ function convertCompletedTasksToOutputFormat(completedTasks: {
   return Object.keys(completedTasks).map((taskId): any => {
     const taskStatus = completedTasks[taskId];
     return {
-      success: taskStatus === 'success' || taskStatus === 'cache',
+      success:
+        taskStatus === 'success' ||
+        taskStatus === 'local-cache' ||
+        taskStatus === 'remote-cache',
     };
   });
 }

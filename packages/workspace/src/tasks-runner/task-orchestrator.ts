@@ -38,6 +38,7 @@ export class TaskOrchestrator {
   private waitingForTasks: Function[] = [];
 
   private groups = [];
+
   // endregion internal state
 
   constructor(
@@ -113,19 +114,19 @@ export class TaskOrchestrator {
   // region Applying Cache
   private async applyCachedResults(
     tasks: Task[]
-  ): Promise<{ task: Task; status: 'cache' }[]> {
+  ): Promise<{ task: Task; status: 'local-cache' | 'remote-cache' }[]> {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
     const res = await Promise.all(
       cacheableTasks.map((t) => this.applyCachedResult(t))
     );
-    return res
-      .filter((r) => r !== null)
-      .map((task) => ({ task, status: 'cache' }));
+    return res.filter((r) => r !== null);
   }
 
-  private async applyCachedResult(task: Task) {
+  private async applyCachedResult(
+    task: Task
+  ): Promise<{ task: Task; status: 'local-cache' | 'remote-cache' }> {
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -146,7 +147,12 @@ export class TaskOrchestrator {
         : TaskCacheStatus.MatchedExistingOutput,
       cachedResult.terminalOutput
     );
-    return task;
+    return {
+      task,
+      status: (cachedResult.remote ? 'remote-cache' : 'local-cache') as
+        | 'local-cache'
+        | 'remote-cache',
+    };
   }
 
   // endregion Applying Cache
@@ -321,11 +327,20 @@ export class TaskOrchestrator {
     // cache the results
     await Promise.all(
       results
-        .filter(({ status }) => status !== 'cache' && status !== 'skipped')
+        .filter(
+          ({ status }) =>
+            status !== 'local-cache' &&
+            status !== 'remote-cache' &&
+            status !== 'skipped'
+        )
         .map((result) => ({
           ...result,
           code:
-            result.status === 'cache' || result.status === 'success' ? 0 : 1,
+            result.status === 'local-cache' ||
+            result.status === 'remote-cache' ||
+            result.status === 'success'
+              ? 0
+              : 1,
           outputs: getOutputs(this.projectGraph.nodes, result.task),
         }))
         .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
@@ -338,7 +353,11 @@ export class TaskOrchestrator {
     this.options.lifeCycle.endTasks(
       results.map((result) => {
         const code =
-          result.status === 'success' || result.status === 'cache' ? 0 : 1;
+          result.status === 'success' ||
+          result.status === 'local-cache' ||
+          result.status === 'remote-cache'
+            ? 0
+            : 1;
         return {
           task: result.task,
           status: result.status,
@@ -420,5 +439,6 @@ export class TaskOrchestrator {
   private openGroup(id: number) {
     this.groups[id] = false;
   }
+
   // endregion utils
 }

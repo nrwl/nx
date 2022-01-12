@@ -113,7 +113,9 @@ export class RunManyTerminalOutputLifeCycle implements LifeCycle {
         this.failedTasks.push(t.task);
       } else if (t.status === 'skipped') {
         this.skippedTasks.push(t.task);
-      } else if (t.status === 'cache') {
+      } else if (t.status === 'local-cache') {
+        this.cachedTasks.push(t.task);
+      } else if (t.status === 'remote-cache') {
         this.cachedTasks.push(t.task);
       }
     }
