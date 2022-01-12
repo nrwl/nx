@@ -12,7 +12,6 @@ export default {
 } as Meta<<%=componentName%>>;
 
 const Template: Story<<%=componentName%>> = (args: <%=componentName%>) => ({
-  component: <%=componentName%>,
   props: args,
 });
 
