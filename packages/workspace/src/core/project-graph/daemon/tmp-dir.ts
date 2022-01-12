@@ -3,16 +3,8 @@
  * location within the OS's tmp directory where we write log files for background processes
  * and where we create the actual unix socket/named pipe for the daemon.
  */
-import { normalizePath } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { join } from 'path';
-import { createHash } from 'crypto';
 import { cacheDir } from '../../../utilities/cache-directory';
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(cacheDir, 'nx-daemon');
 
