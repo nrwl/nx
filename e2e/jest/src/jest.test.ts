@@ -8,7 +8,10 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {
-  beforeEach(() => newProject());
+  let proj: string;
+  beforeEach(() => {
+    proj = newProject();
+  });
 
   it('should be able test projects using jest', async () => {
     const mylib = uniq('mylib');
@@ -35,7 +38,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${testLib}/src/lib/${testLib}.ts`,
       `
-      import { ${buildLib} } from '@proj/${buildLib}';
+      import { ${buildLib} } from '@${proj}/${buildLib}';
       
       export function ${testLib}(): string {
         return ${buildLib}();
