@@ -7,7 +7,7 @@ import { join } from 'path';
  * we duplicate the helper functions from @nrwl/workspace in this file.
  */
 
-const packageManagerList = ['npm', 'pnpm', 'yarn'] as const;
+const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
 
 export type PackageManager = typeof packageManagerList[number];
 

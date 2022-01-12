@@ -1,4 +1,4 @@
-const packageManagerList = ['npm', 'pnpm', 'yarn'] as const;
+const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
 
 export type PackageManager = typeof packageManagerList[number];
 
