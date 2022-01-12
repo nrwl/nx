@@ -52,6 +52,7 @@ function getIgnoredGlobs() {
 
 export function calculateFileChanges(
   files: string[],
+  allWorkspaceFiles: FileData[],
   nxArgs?: NxArgs,
   readFileAtRevision: (
     f: string,
@@ -63,7 +64,8 @@ export function calculateFileChanges(
 
   return files.map((f) => {
     const ext = extname(f);
-    const hash = defaultFileHasher.hashFile(f);
+    const file = allWorkspaceFiles.find((fileData) => fileData.file == f);
+    const hash = file?.hash;
 
     return {
       file: f,
@@ -193,20 +195,6 @@ export function workspaceLayout(): { appsDir: string; libsDir: string } {
     appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',
     libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
   };
-}
-
-// TODO: Make this list extensible
-export function rootWorkspaceFileNames(): string[] {
-  return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
-}
-
-export function rootWorkspaceFileData(): FileData[] {
-  return rootWorkspaceFileNames().map((f) => {
-    return {
-      file: f,
-      hash: defaultFileHasher.hashFile(f),
-    };
-  });
 }
 
 export function readEnvironment(): Environment {

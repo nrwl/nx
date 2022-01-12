@@ -4,7 +4,7 @@ import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utilities/fileutils';
 import { createProjectGraphAsync } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
-import { calculateFileChanges } from '../core/file-utils';
+import { calculateFileChanges, FileData } from '../core/file-utils';
 import * as yargs from 'yargs';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
@@ -57,6 +57,7 @@ export async function format(
 async function getPatterns(
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
+  const graph = await createProjectGraphAsync();
   const supportedExtensions = prettier
     .getSupportInfo()
     .languages.flatMap((language) => language.extensions)
@@ -79,7 +80,11 @@ async function getPatterns(
     );
 
     return args.libsAndApps
-      ? await getPatternsFromApps(patterns, matchAllPattern)
+      ? await getPatternsFromApps(
+          patterns,
+          matchAllPattern,
+          graph.allWorkspaceFiles
+        )
       : patterns;
   } catch {
     return allFilesPattern;
@@ -88,12 +93,13 @@ async function getPatterns(
 
 async function getPatternsFromApps(
   affectedFiles: string[],
-  matchAllPattern: string
+  matchAllPattern: string,
+  allWorkspaceFiles: FileData[]
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
   const affectedGraph = filterAffected(
     graph,
-    calculateFileChanges(affectedFiles)
+    calculateFileChanges(affectedFiles, allWorkspaceFiles)
   );
   return getPatternsFromProjects(
     Object.keys(affectedGraph.nodes),
