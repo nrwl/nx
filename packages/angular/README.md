@@ -28,7 +28,7 @@ yarn add @nrwl/angular
 npm install @nrwl/angular
 ```
 
-For more information about the `@nrwl/angular` package take a look at the [Angular Plugin Overview](https://nx.dev/l/a/angular/overview).
+For more information about the `@nrwl/angular` package take a look at the [Angular Plugin Overview](https://nx.dev/angular/overview).
 
 {{what-is-nx}}
 
