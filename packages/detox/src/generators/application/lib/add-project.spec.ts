@@ -51,6 +51,24 @@ describe('Add Project', () => {
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-app']);
     });
+
+    it('should update targets', () => {
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
+      expect(project.targets).toMatchObject({
+        'build-ios': {
+          executor: '@nrwl/detox:build',
+        },
+        'test-ios': {
+          executor: '@nrwl/detox:test',
+        },
+        'build-android': {
+          executor: '@nrwl/detox:build',
+        },
+        'test-android': {
+          executor: '@nrwl/detox:test',
+        },
+      });
+    });
   });
 
   describe('app with directory', () => {
@@ -78,6 +96,24 @@ describe('Add Project', () => {
 
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
+    });
+
+    it('should update targets', () => {
+      const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
+      expect(project.targets).toMatchObject({
+        'build-ios': {
+          executor: '@nrwl/detox:build',
+        },
+        'test-ios': {
+          executor: '@nrwl/detox:test',
+        },
+        'build-android': {
+          executor: '@nrwl/detox:build',
+        },
+        'test-android': {
+          executor: '@nrwl/detox:test',
+        },
+      });
     });
   });
 });
