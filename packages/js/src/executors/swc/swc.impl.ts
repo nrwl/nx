@@ -1,12 +1,12 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
-  copyAssetFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
 import { join, relative, resolve } from 'path';
 import { eachValueFrom } from 'rxjs-for-await';
 import { map } from 'rxjs/operators';
+
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
   ExecutorEvent,
@@ -15,7 +15,9 @@ import {
 } from '../../utils/schema';
 import { addTempSwcrc } from '../../utils/swc/add-temp-swcrc';
 import { compileSwc } from '../../utils/swc/compile-swc';
+import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import { updatePackageJson } from '../../utils/update-package-json';
+import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
 export function normalizeOptions(
   options: SwcExecutorOptions,
@@ -63,51 +65,70 @@ export function normalizeOptions(
 }
 
 export async function* swcExecutor(
-  options: SwcExecutorOptions,
+  _options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
-  const normalizedOptions = normalizeOptions(
-    options,
-    context.root,
-    sourceRoot,
-    root
-  );
-  normalizedOptions.swcrcPath = addTempSwcrc(normalizedOptions);
+  const options = normalizeOptions(_options, context.root, sourceRoot, root);
+  options.swcrcPath = addTempSwcrc(options);
   const { tmpTsConfig, projectRoot } = checkDependencies(
     context,
     options.tsConfig
   );
 
   if (tmpTsConfig) {
-    normalizedOptions.tsConfig = tmpTsConfig;
+    options.tsConfig = tmpTsConfig;
+  }
+
+  const assetHandler = new CopyAssetsHandler({
+    projectDir: projectRoot,
+    rootDir: context.root,
+    outputDir: options.outputPath,
+    assets: options.assets,
+  });
+
+  if (options.watch) {
+    const disposeWatchAssetChanges =
+      await assetHandler.watchAndProcessOnAssetChange();
+    const disposePackageJsonChanges = await watchForSingleFileChanges(
+      join(context.root, projectRoot),
+      'package.json',
+      () =>
+        updatePackageJson(
+          options.main,
+          options.outputPath,
+          projectRoot,
+          !options.skipTypeCheck
+        )
+    );
+    process.on('exit', async () => {
+      await disposeWatchAssetChanges();
+      await disposePackageJsonChanges();
+    });
+    process.on('SIGTERM', async () => {
+      await disposeWatchAssetChanges();
+      await disposePackageJsonChanges();
+    });
   }
 
   return yield* eachValueFrom(
-    compileSwc(context, normalizedOptions, async () => {
-      await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
+    compileSwc(context, options, async () => {
+      await assetHandler.processAllAssetsOnce();
+      updatePackageJson(
+        options.main,
+        options.outputPath,
+        projectRoot,
+        !options.skipTypeCheck
+      );
     }).pipe(
       map(
         ({ success }) =>
           ({
             success,
-            outfile: normalizedOptions.mainOutputPath,
+            outfile: options.mainOutputPath,
           } as ExecutorEvent)
       )
     )
-  );
-}
-
-async function updatePackageAndCopyAssets(
-  options: NormalizedSwcExecutorOptions,
-  projectRoot: string
-) {
-  await copyAssetFiles(options.files);
-  updatePackageJson(
-    options.main,
-    options.outputPath,
-    projectRoot,
-    !options.skipTypeCheck
   );
 }
 

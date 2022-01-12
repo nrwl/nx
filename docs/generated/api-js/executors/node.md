@@ -58,3 +58,11 @@ Extra args passed to the node process
 Type: `array`
 
 The targets to run to before starting the node app
+
+### watch
+
+Default: `true`
+
+Type: `boolean`
+
+Enable re-building when files change.
