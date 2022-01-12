@@ -25,6 +25,29 @@ describe('Angular Library Package', () => {
 
   afterAll(() => cleanupProject());
 
+  it('should build successfully', () => {
+    // ARRANGE
+    const lib = uniq('lib');
+    const entryPoint = uniq('entrypoint');
+
+    runCLI(
+      `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${project}/${lib} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
+    );
+
+    // ACT
+    const buildOutput = runCLI(`build ${lib}`);
+
+    // ASSERT
+    expect(buildOutput).toContain(`Building entry point '@${project}/${lib}'`);
+    expect(buildOutput).toContain(
+      `Building entry point '@${project}/${lib}/${entryPoint}'`
+    );
+    expect(buildOutput).toContain('Running target "build" succeeded');
+  });
+
   ['publishable', 'buildable'].forEach((testConfig) => {
     describe(`library builder - ${testConfig}`, () => {
       /**
@@ -165,31 +188,6 @@ describe('Angular Library Package', () => {
         expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
         expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
       });
-    });
-
-    it('should build successfully', () => {
-      // ARRANGE
-      const lib = uniq('lib');
-      const entryPoint = uniq('entrypoint');
-
-      runCLI(
-        `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${project}/${lib} --no-interactive`
-      );
-      runCLI(
-        `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
-      );
-
-      // ACT
-      const buildOutput = runCLI(`build ${lib}`);
-
-      // ASSERT
-      expect(buildOutput).toContain(
-        `Building entry point '@${project}/${lib}'`
-      );
-      expect(buildOutput).toContain(
-        `Building entry point '@${project}/${lib}/${entryPoint}'`
-      );
-      expect(buildOutput).toContain('Running target "build" succeeded');
     });
   });
 });
