@@ -29,7 +29,7 @@ describe('Angular Library Package', () => {
     it('should build publishable libs successfully', () => {
       // ARRANGE
       const lib = uniq('lib');
-      const childLib = uniq('childLib');
+      const childLib = uniq('child');
       const entryPoint = uniq('entrypoint');
 
       runCLI(
