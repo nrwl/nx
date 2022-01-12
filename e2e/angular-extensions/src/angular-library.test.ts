@@ -12,7 +12,19 @@ import {
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
-describe('Angular Package', () => {
+describe('Angular Library Package', () => {
+  let project: string;
+  beforeAll(() => {
+    // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
+    // therefore switch to yarn
+    project =
+      getSelectedPackageManager() === 'pnpm'
+        ? newProject({ packageManager: 'npm' })
+        : newProject();
+  });
+
+  afterAll(() => cleanupProject());
+
   ['publishable', 'buildable'].forEach((testConfig) => {
     describe(`library builder - ${testConfig}`, () => {
       /**
@@ -28,19 +40,11 @@ describe('Angular Package', () => {
       let parentLib: string;
       let childLib: string;
       let childLib2: string;
-      let proj: string;
 
       beforeEach(() => {
         parentLib = uniq('parentlib');
         childLib = uniq('childlib');
         childLib2 = uniq('childlib2');
-
-        // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
-        // therefore switch to yarn
-        proj =
-          getSelectedPackageManager() === 'pnpm' && testConfig !== 'publishable'
-            ? newProject({ packageManager: 'npm' })
-            : newProject();
 
         if (testConfig === 'buildable') {
           runCLI(
@@ -54,13 +58,13 @@ describe('Angular Package', () => {
           );
         } else {
           runCLI(
-            `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@${proj}/${parentLib} --no-interactive`
+            `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@${project}/${parentLib} --no-interactive`
           );
           runCLI(
-            `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
+            `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${project}/${childLib} --no-interactive`
           );
           runCLI(
-            `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@${proj}/${childLib2} --no-interactive`
+            `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@${project}/${childLib2} --no-interactive`
           );
 
           // create secondary entrypoint
@@ -94,9 +98,9 @@ describe('Angular Package', () => {
 
           updateFile(`tsconfig.base.json`, (s) => {
             return s.replace(
-              `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
-              `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],
-      "@${proj}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
+              `"@${project}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
+              `"@${project}/${childLib}": ["libs/${childLib}/src/index.ts"],
+      "@${project}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
         `
             );
           });
@@ -112,14 +116,14 @@ describe('Angular Package', () => {
                   (entry) =>
                     `import { ${
                       names(entry).className
-                    }Module } from '@${proj}/${entry}';`
+                    }Module } from '@${project}/${entry}';`
                 )
                 .join('\n')}
             `;
 
           if (testConfig === 'publishable') {
             moduleContent += `
-              import { SubModule } from '@${proj}/${childLib}/sub';
+              import { SubModule } from '@${project}/${childLib}/sub';
 
               @NgModule({
                 imports: [CommonModule, ${children
@@ -138,8 +142,6 @@ describe('Angular Package', () => {
         createDep(parentLib, [childLib, childLib2]);
       });
 
-      afterEach(() => cleanupProject());
-
       it('should build properly and update the parent package.json with the dependencies', () => {
         runCLI(`build ${childLib}`);
         runCLI(`build ${childLib2}`);
@@ -154,25 +156,21 @@ describe('Angular Package', () => {
         const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
 
         expect(jsonFile.dependencies['tslib']).toMatch(/\^2\.\d+\.\d+/); // match any ^2.x.x
-        expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
         expect(
-          jsonFile.peerDependencies[`@${proj}/${childLib2}`]
+          jsonFile.peerDependencies[`@${project}/${childLib}`]
+        ).toBeDefined();
+        expect(
+          jsonFile.peerDependencies[`@${project}/${childLib2}`]
         ).toBeDefined();
         expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
         expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
       });
     });
-  });
 
-  describe('Publishable library secondary entry point', () => {
-    let project: string;
-    let lib: string;
-    let entryPoint: string;
-
-    beforeEach(() => {
-      project = newProject();
-      lib = uniq('lib');
-      entryPoint = uniq('entrypoint');
+    it('should build successfully', () => {
+      // ARRANGE
+      const lib = uniq('lib');
+      const entryPoint = uniq('entrypoint');
 
       runCLI(
         `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${project}/${lib} --no-interactive`
@@ -180,11 +178,11 @@ describe('Angular Package', () => {
       runCLI(
         `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
       );
-    });
 
-    it('should build successfully', () => {
+      // ACT
       const buildOutput = runCLI(`build ${lib}`);
 
+      // ASSERT
       expect(buildOutput).toContain(
         `Building entry point '@${project}/${lib}'`
       );
