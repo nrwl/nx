@@ -15,7 +15,6 @@ export default {
 } as Meta<TestButtonComponent>;
 
 const Template: Story<TestButtonComponent> = (args: TestButtonComponent) => ({
-  component: TestButtonComponent,
   props: args,
 });
 
