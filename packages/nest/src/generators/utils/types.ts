@@ -16,6 +16,12 @@ export type NestSchematic =
   | 'resolver'
   | 'resource'
   | 'service';
+export type TransportLayer =
+  | 'rest'
+  | 'graphql-code-first'
+  | 'graphql-schema-first'
+  | 'microservice'
+  | 'ws';
 
 export type NestGeneratorOptions = {
   name: string;
@@ -31,6 +37,11 @@ export type NestGeneratorWithLanguageOption = NestGeneratorOptions & {
 
 export type NestGeneratorWithTestOption = NestGeneratorOptions & {
   unitTestRunner?: UnitTestRunner;
+};
+
+export type NestGeneratorWithResourceOption = NestGeneratorOptions & {
+  type?: TransportLayer;
+  crud?: boolean;
 };
 
 export type NormalizedOptions = {
