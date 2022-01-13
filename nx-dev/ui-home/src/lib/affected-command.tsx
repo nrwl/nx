@@ -34,7 +34,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
   }, [controls, inView]);
 
   return (
-    <div id="nx-affected" className="mt-16 md:mt-32">
+    <article id="nx-affected" className="mt-16 md:mt-32">
       <motion.div
         ref={ref}
         animate={controls}
@@ -57,12 +57,12 @@ export function AffectedCommand(): ReactComponentElement<any> {
         <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
           <div>
             <div className="mt-6">
-              <motion.h2
+              <motion.h1
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
                 Build and Test Only What is Affected
-              </motion.h2>
+              </motion.h1>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
@@ -74,7 +74,10 @@ export function AffectedCommand(): ReactComponentElement<any> {
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="/using-nx/affected">
-                  <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition">
+                  <a
+                    title="Nx allows you to see what is affected by your changes"
+                    className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
+                  >
                     Learn about "nx affected"
                   </a>
                 </Link>
@@ -82,7 +85,10 @@ export function AffectedCommand(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1">
+        <div
+          className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1"
+          aria-hidden="true"
+        >
           <div className="relative px-4 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
             <motion.div
               variants={opacityTranslateXVariant}
@@ -152,7 +158,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
           </div>
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

@@ -34,7 +34,7 @@ export function VscodePlugin(): ReactComponentElement<any> {
   }, [controls, inView]);
 
   return (
-    <div id="vscode-plugin" className="mt-16 md:mt-32">
+    <article id="vscode-plugin" className="mt-16 md:mt-32">
       <motion.div
         ref={ref}
         animate={controls}
@@ -57,12 +57,12 @@ export function VscodePlugin(): ReactComponentElement<any> {
         <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
           <div>
             <div className="mt-6">
-              <motion.h2
+              <motion.h1
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
                 Visual Studio Code Plugin
-              </motion.h2>
+              </motion.h1>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
@@ -73,7 +73,10 @@ export function VscodePlugin(): ReactComponentElement<any> {
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="/using-nx/console">
-                  <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition">
+                  <a
+                    title="Get a better monorepo experience with Nx Console"
+                    className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
+                  >
                     Install Nx Console
                   </a>
                 </Link>
@@ -81,7 +84,10 @@ export function VscodePlugin(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1">
+        <div
+          aria-hidden="true"
+          className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1"
+        >
           <div className="relative px-4 lg:px-0 lg:h-full">
             <motion.div
               variants={opacityTranslateXVariant}
@@ -98,7 +104,7 @@ export function VscodePlugin(): ReactComponentElement<any> {
           </div>
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

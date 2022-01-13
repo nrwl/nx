@@ -285,7 +285,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                 <span className="rounded-lg inline-flex">{project.icon}</span>
               </div>
               <div className="sm:mt-2">
-                <h3 className="text-lg font-medium">
+                <p className="text-lg font-medium">
                   <Link href={project.href}>
                     <a
                       target="_blank"
@@ -297,7 +297,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                       {project.title}
                     </a>
                   </Link>
-                </h3>
+                </p>
                 <p className="mt-2 hidden sm:block text-sm text-gray-400">
                   {project.description}
                 </p>

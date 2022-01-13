@@ -48,11 +48,12 @@ export function Index() {
           type: 'website',
         }}
       />
+      <h1 className="sr-only">Next generation monorepo tool</h1>
       <Header showSearch={true} useDarkBackground={false} />
-      <main>
+      <main role="main">
         <div className="w-full">
           {/*INTRO COMPONENT*/}
-          <div
+          <header
             id="animated-background"
             className="bg-blue-nx-base text-white transform-gpu lg:bg-contain bg-clip-border bg-origin-border bg-right bg-no-repeat"
             style={{
@@ -73,25 +74,34 @@ export function Index() {
                     support and powerful integrations.
                   </h2>
                 </div>
-                <div className="max-w-2xl mx-auto hidden sm:flex w-full flex-col justify-between items-center lg:pb-0 pb-10 mt-8 lg:mt-0">
+                <div
+                  aria-hidden="true"
+                  className="max-w-2xl mx-auto hidden sm:flex w-full flex-col justify-between items-center lg:pb-0 pb-10 mt-8 lg:mt-0"
+                >
                   <NpxCreateNxWorkspace />
                 </div>
                 <div className="my-14 flex flex-wrap sm:space-x-4 text-center">
                   <Link href="#getting-started">
-                    <a className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
+                    <a
+                      title="Start using Nx by creating a workspace"
+                      className="w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition"
+                    >
                       Create Nx Workspace
                     </a>
                   </Link>
 
                   <Link href="/migration/adding-to-monorepo">
-                    <a className="mt-4 md:mt-0 w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition">
+                    <a
+                      title="Add Nx to existing Monorepo"
+                      className="mt-4 md:mt-0 w-full sm:w-auto flex-none bg-white text-blue-nx-base hover:text-blue-nx-dark hover:bg-gray-100 text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-offset-white transition"
+                    >
                       Add Nx to Monorepo
                     </a>
                   </Link>
                 </div>
               </div>
             </div>
-          </div>
+          </header>
 
           <div className="hidden md:block bg-gray-50 border-b border-gray-100">
             {/*COMPANIES*/}
@@ -122,21 +132,22 @@ export function Index() {
             <img
               className="w-full"
               src="/images/background/hero-bg-large-3.svg"
+              loading="lazy"
               alt="separator"
               aria-hidden="true"
             />
           </div>
 
           {/*NX FEATURE DETAILS*/}
-          <div
+          <article
             id="features-in-depth"
             className="relative bg-gray-50 pb-32 overflow-hidden"
           >
-            <div className="max-w-prose mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+            <header className="max-w-prose mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
               <div className="text-center">
-                <h2 className="text-base font-semibold text-blue-nx-base tracking-wide uppercase">
+                <h1 className="text-base font-semibold text-blue-nx-base tracking-wide uppercase">
                   Monorepo done right
-                </h2>
+                </h1>
                 <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
                   Works for Projects of Any Size
                 </p>
@@ -145,7 +156,7 @@ export function Index() {
                   your CI fast and your workspace maintainable.
                 </p>
               </div>
-            </div>
+            </header>
             {/*NX AFFECTED*/}
             <AffectedCommand />
             {/*DEP-GRAPH*/}
@@ -158,18 +169,18 @@ export function Index() {
             <Performance />
             {/*OPEN PLATFORM*/}
             <OpenPlatform />
-          </div>
+          </article>
 
           {/*GETTING STARTED*/}
-          <div
+          <article
             id="getting-started"
             className="relative bg-white pt-16 sm:pt-24 lg:pt-32"
           >
-            <div className="mx-auto max-w-prose px-4 text-center sm:px-6 sm:max-w-3xl lg:px-8">
+            <header className="mx-auto max-w-prose px-4 text-center sm:px-6 sm:max-w-3xl lg:px-8">
               <div>
-                <h2 className="text-base font-semibold tracking-wider text-blue-nx-base uppercase">
-                  Getting Started
-                </h2>
+                <h1 className="text-base font-semibold tracking-wider text-blue-nx-base uppercase">
+                  Getting Started <span className="sr-only">With Nx</span>
+                </h1>
                 <p className="mt-2 text-4xl font-extrabold text-gray-800 tracking-tight sm:text-6xl">
                   TypeScript, React, Angular, Node and more
                 </p>
@@ -178,10 +189,10 @@ export function Index() {
                   technologies, so its documentation comes in multiple flavours.
                 </p>
               </div>
-            </div>
+            </header>
 
             <GettingStarted />
-          </div>
+          </article>
 
           <div
             id="learning-materials"
@@ -212,6 +223,7 @@ export function Index() {
           <div className="bg-white relative transform-gpu">
             <img
               className="w-full"
+              loading="lazy"
               src="/images/background/hero-bg-large-2.svg"
               alt="separator"
               aria-hidden="true"
@@ -219,12 +231,12 @@ export function Index() {
           </div>
 
           {/*COMMUNITY*/}
-          <div id="community" className="bg-white">
+          <article id="community" className="bg-white">
             <div className="max-w-prose mx-auto py-16 px-4 sm:py-18 sm:px-6 lg:px-8">
               <div className="text-center">
-                <h2 className="text-base font-semibold text-gray-600 tracking-wide uppercase">
+                <h1 className="text-base font-semibold text-gray-600 tracking-wide uppercase">
                   Community
-                </h2>
+                </h1>
                 <p className="mt-1 text-4xl font-extrabold text-gray-800 sm:text-5xl sm:tracking-tight lg:text-6xl">
                   Used by Popular Open Source Projects
                 </p>
@@ -259,7 +271,7 @@ export function Index() {
             <div className="my-12">
               <NxUsersShowcase />
             </div>
-          </div>
+          </article>
         </div>
       </main>
       <Footer useDarkBackground={false} />
