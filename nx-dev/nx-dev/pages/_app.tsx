@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { DefaultSeo } from 'next-seo';
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import '../styles/main.css';
+import Script from 'next/script';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -71,12 +72,12 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Global Site Tag (gtag.js) - Google Analytics */}
-        <script
-          async
-          defer
+        <Script
+          strategy="lazyOnload"
           src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
         />
-        <script
+        <Script
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
             window.dataLayer = window.dataLayer || [];
@@ -89,14 +90,14 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
           }}
         />
         {/* HubSpot Analytics */}
-        <script
+        <Script
           id="hs-script-loader"
-          async
-          defer
+          strategy="lazyOnload"
           src="https://js.hs-scripts.com/2757427.js"
         />
         {/* Hotjar Analytics */}
-        <script
+        <Script
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
           (function(h,o,t,j,a,r){
