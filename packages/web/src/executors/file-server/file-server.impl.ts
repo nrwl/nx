@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { execFile, execFileSync } from 'child_process';
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
@@ -40,7 +40,7 @@ function getBuildTargetCommand(options: Schema) {
   if (options.maxParallel) {
     cmd.push(`--maxParallel=${options.maxParallel}`);
   }
-  return cmd.join(' ');
+  return cmd;
 }
 
 function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
@@ -109,7 +109,8 @@ export default async function* fileServerExecutor(
     if (!running) {
       running = true;
       try {
-        execSync(getBuildTargetCommand(options), {
+        const [cmd, ...args] = getBuildTargetCommand(options);
+        execFileSync(cmd, args, {
           stdio: [0, 1, 2],
         });
       } catch {}
@@ -125,7 +126,7 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
 
-  const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
+  const serve = execFile('npx', ['http-server', outputPath, ...args], {
     cwd: context.root,
   });
   const processExitListener = () => {
