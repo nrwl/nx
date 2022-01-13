@@ -433,6 +433,7 @@ function NodeJsPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"
@@ -638,6 +639,7 @@ function ReactPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"
@@ -839,6 +841,7 @@ function TypescriptPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"
