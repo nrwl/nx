@@ -12,10 +12,6 @@
 @import './constellation-wobble.animation.css';
 /*! purgecss end ignore */
 
-html {
-  scroll-behavior: smooth;
-}
-
 svg {
   shape-rendering: auto;
   text-rendering: optimizeLegibility;

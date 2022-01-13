@@ -3,11 +3,10 @@ const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
 
 module.exports = {
   mode: 'jit',
-  purge: [
+  content: [
     path.join(__dirname, 'pages/**/*.{js,ts,jsx,tsx}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
-  darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
@@ -42,9 +41,6 @@ module.exports = {
         },
       },
     },
-  },
-  variants: {
-    extend: {},
   },
   plugins: [
     require('@tailwindcss/aspect-ratio'),
