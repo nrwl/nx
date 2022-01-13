@@ -7,7 +7,7 @@
       "factory": "./src/generators/init/init#initGenerator",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/express plugin",
-      "alias": ["ng-add"],
+      "aliases": ["ng-add"],
       "hidden": true
     },
 
@@ -24,7 +24,7 @@
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/express plugin",
-      "alias": ["ng-add"],
+      "aliases": ["ng-add"],
       "hidden": true
     },
 
