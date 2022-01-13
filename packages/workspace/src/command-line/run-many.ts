@@ -50,8 +50,10 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
     checkForInvalidProjects(nxArgs, allProjects);
 
     // TODO: use groupBy
-    const globPatterns = nxArgs.projects.filter((p) => p.endsWith('*'));
-    const actuallProjectNames = nxArgs.projects.filter((p) => !p.endsWith('*'));
+    const globPatterns = nxArgs.projects.filter((p) => p.endsWith('-*'));
+    const actuallProjectNames = nxArgs.projects.filter(
+      (p) => !p.endsWith('-*')
+    );
 
     const shouldGlobProjects = globPatterns.length;
 
@@ -121,7 +123,7 @@ function checkForInvalidProjects(
   allProjects: ProjectGraphNode[]
 ) {
   const invalid = nxArgs.projects.filter(
-    (name) => !(allProjects.find((p) => p.name === name) && name.endsWith('*'))
+    (name) => !(allProjects.find((p) => p.name === name) && name.endsWith('-*'))
   );
 
   if (invalid.length !== 0) {
