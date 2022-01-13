@@ -44,17 +44,17 @@
             "output": "/"
           },
           {
-            "input": "./packages/react-native/src",
+            "input": "packages/react-native/src",
             "glob": "**/*.!(ts)",
             "output": "/src"
           },
           {
-            "input": "./packages/react-native",
+            "input": "packages/react-native",
             "glob": "*.rb",
             "output": "/"
           },
           {
-            "input": "./packages/react-native",
+            "input": "packages/react-native",
             "glob": "**/*.json",
             "ignore": ["**/tsconfig*.json"],
             "output": "/"

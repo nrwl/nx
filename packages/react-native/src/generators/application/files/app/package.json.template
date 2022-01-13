@@ -7,6 +7,7 @@
     "@testing-library/react-native": "*",
     "react": "*",
     "react-native": "*",
+    "react-native-config": "*",
     "react-native-svg": "*"
   }
 }
