@@ -133,6 +133,12 @@
       "description": "In Angular version 13, the ESM became a first class citizen. This means the webpack config generated must be modified to support modules.",
       "factory": "./src/migrations/update-13-3-0/update-mfe-webpack-config"
     },
+    "remove-library-generator-style-default": {
+      "cli": "nx",
+      "version": "13.4.5-beta.7",
+      "description": "Remove the default for the invalid 'style' option for the library generator if configured.",
+      "factory": "./src/migrations/update-13-5-0/remove-library-generator-style-default"
+    },
     "fix-incorrect-mfe-setups": {
       "cli": "nx",
       "version": "13.5.0-beta.0",
