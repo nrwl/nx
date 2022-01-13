@@ -35,7 +35,10 @@ export function CodeBlock({
           callback(text);
         }}
       >
-        <button className="flex absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          className="flex absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5"
