@@ -52,6 +52,7 @@ function Tabs({
             </h2>
             {tabs.map((tab, tabIdx) => (
               <button
+                type="button"
                 key={tab.name}
                 onClick={() => setActiveTab(tab.id)}
                 className={cx(
