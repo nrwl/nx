@@ -242,6 +242,7 @@ export function Community(props: CommunityProps) {
                     Get started with building your own plugin!
                   </p>
                   <iframe
+                    loading="lazy"
                     width="560"
                     height="315"
                     title="YouTube video player"

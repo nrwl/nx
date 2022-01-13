@@ -103,13 +103,13 @@ No CLI support yet. Run in the Xcode project. See: https://reactnative.dev/docs/
 **Android:**
 
 ```sh
-npx nx e2e-android mobile-e2e
+npx nx test-android mobile-e2e
 ```
 
 **iOS:** (Mac only)
 
 ```sh
-npx nx e2e-ios mobile-e2e
+npx nx test-ios mobile-e2e
 ```
 
 When using React Native in Nx, you get the out-of-the-box support for TypeScript, Detox, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
@@ -244,8 +244,8 @@ Run `npx nx build shared-ui-layout` to build the library. It will generate the f
 dist/libs/shared-ui-layout/
 ├── README.md
 ├── index.d.ts
-├── lib
-│   └── layout
+├── lib/
+│   └── layout/
 │       └── layout.d.ts
 ├── package.json
 ├── shared-ui-layout.esm.css

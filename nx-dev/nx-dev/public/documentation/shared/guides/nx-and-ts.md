@@ -6,7 +6,7 @@ The `@nrwl/js` package ships with corresponding generators and executors that be
 
 > Note, you can also opt-out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/-OmQ-PaSY5M" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/-OmQ-PaSY5M" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 `@nrwl/js` is particularly useful if you want to
 
