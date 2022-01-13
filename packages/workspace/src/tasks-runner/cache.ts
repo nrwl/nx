@@ -14,7 +14,7 @@ import {
 } from 'fs-extra';
 import { dirname, join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { spawn, exec } from 'child_process';
+import { spawn, execFile } from 'child_process';
 import { cacheDir } from '../utilities/cache-directory';
 import { platform } from 'os';
 
@@ -190,7 +190,7 @@ export class Cache {
     }
 
     return new Promise((res, rej) => {
-      exec(`cp -a "${src}" "${dirname(directory)}"`, (error) => {
+      execFile('cp', ['-a', src, dirname(directory)], (error) => {
         if (!error) {
           res();
         } else {
@@ -207,7 +207,7 @@ export class Cache {
     }
 
     return new Promise<void>((res, rej) => {
-      exec(`rm -rf "${folder}"`, (error) => {
+      execFile('rm', ['-rf', folder], (error) => {
         if (!error) {
           res();
         } else {
