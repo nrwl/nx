@@ -1,7 +1,31 @@
 {
   "name": "@nrwl/js",
   "version": "0.0.1",
+  "description": "JavaScript Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/js"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Node",
+    "Swc",
+    "Tsc",
+    "CLI"
+  ],
   "main": "src/index.js",
+  "typings": "src/index.d.ts",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
   "generators": "./generators.json",
   "schematics": "./generators.json",
   "executors": "./executors.json",
