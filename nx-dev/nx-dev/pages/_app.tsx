@@ -72,12 +72,10 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Global Site Tag (gtag.js) - Google Analytics */}
-        <Script
-          strategy="lazyOnload"
+        <script
           src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
         />
-        <Script
-          strategy="lazyOnload"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
             window.dataLayer = window.dataLayer || [];
