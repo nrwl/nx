@@ -150,27 +150,9 @@ export class Hasher {
           : [];
       if (inputs.length > 0) {
         try {
-          const values = (await Promise.all(
-            inputs.map(
-              (input) =>
-                new Promise((res, rej) => {
-                  exec(input, (err, stdout, stderr) => {
-                    if (err) {
-                      rej(err);
-                    } else {
-                      res({ input, value: `${stdout}${stderr}`.trim() });
-                    }
-                  });
-                })
-            )
-          )) as any;
-
-          const value = this.hashing.hashArray(values.map((v) => v.value));
-          const runtime = values.reduce(
-            (m, c) => ((m[c.input] = c.value), m),
-            {}
+          const { value, runtime } = await this.hashing.hashRuntimeInputs(
+            inputs
           );
-
           performance.mark('hasher:runtime inputs hash:end');
           performance.measure(
             'hasher:runtime inputs hash',
@@ -338,6 +320,16 @@ class ProjectHasher {
     });
   }
 
+  async hashProjectsRuntimeInputs(
+    runtimeCacheInputs?: string[]
+  ): Promise<RuntimeHashResult | undefined> {
+    if (!runtimeCacheInputs || runtimeCacheInputs.length) {
+      return undefined;
+    }
+
+    return this.hashing.hashRuntimeInputs(runtimeCacheInputs);
+  }
+
   async hashProjectNodeSource(projectName: string) {
     if (!this.sourceHashes[projectName]) {
       this.sourceHashes[projectName] = new Promise(async (res) => {
@@ -364,12 +356,17 @@ class ProjectHasher {
           tsConfig = JSON.stringify(this.tsConfigJson);
         }
 
+        const runtimeHashInputs = await this.hashProjectsRuntimeInputs(
+          p.data.runtimeCacheInputs
+        );
+
         res(
           this.hashing.hashArray([
             ...fileNames,
             ...values,
             workspaceJson,
             tsConfig,
+            ...(runtimeHashInputs ? [runtimeHashInputs.value] : []),
           ])
         );
       });

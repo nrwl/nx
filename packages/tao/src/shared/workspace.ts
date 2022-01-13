@@ -97,6 +97,11 @@ export interface ProjectConfiguration {
   implicitDependencies?: string[];
 
   /**
+   * Runtime cache inputs for the project
+   */
+  runtimeCacheInputs?: string[];
+
+  /**
    * List of tags used by nx-enforce-module-boundaries / dep-graph
    */
   tags?: string[];

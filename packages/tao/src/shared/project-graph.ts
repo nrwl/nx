@@ -86,6 +86,10 @@ export interface ProjectGraphProjectNode<T = any> {
      */
     implicitDependencies?: string[];
     /**
+     * Runtime cache inputs for the project
+     */
+    runtimeCacheInputs?: string[];
+    /**
      * Files associated to the project
      */
     files: FileData[];
