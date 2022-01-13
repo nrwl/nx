@@ -200,13 +200,13 @@ export async function generateExecutorsDocumentation() {
     .map((item) => item.name);
 
   await generateJsonFile(
-    join(__dirname, '../../docs', 'default', 'executors.json'),
+    join(__dirname, '../../docs', 'generated', 'executors.json'),
     builders
   );
 
   console.log(
     `${chalk.green('✓')} Generated executors.json at ${chalk.grey(
-      `docs/default/executors.json`
+      `docs/generated/executors.json`
     )}`
   );
 

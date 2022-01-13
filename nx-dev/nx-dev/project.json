@@ -69,7 +69,12 @@
       "executor": "@nrwl/workspace:run-commands",
       "outputs": ["nx-dev/nx-dev/public/documentation"],
       "options": {
-        "commands": ["nx run nx-dev:sync-documentation", "nx run nx-dev:build"],
+        "commands": [
+          "rm -r nx-dev/nx-dev/public/documentation",
+          "cp -R docs nx-dev/nx-dev/public/",
+          "mv nx-dev/nx-dev/public/docs nx-dev/nx-dev/public/documentation",
+          "nx run nx-dev:build"
+        ],
         "parallel": false
       }
     },

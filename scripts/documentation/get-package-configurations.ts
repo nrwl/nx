@@ -38,7 +38,7 @@ export function getPackageConfigurations(
         .map((item) => item.split(folderPath + '/')[1]);
       const output = path.join(
         documentationDir,
-        'default',
+        'generated',
         `api-${folderName}`
       );
       return {

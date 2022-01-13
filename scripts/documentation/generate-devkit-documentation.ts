@@ -12,19 +12,19 @@ export function generateDevkitDocumentation() {
   execSync('nx build typedoc-theme', execSyncOptions);
 
   execSync(
-    `rm -rf docs/default/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/default/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../default/nx-devkit/ --theme dist/typedoc-theme/src/lib --readme none`,
+    `rm -rf docs/generated/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/generated/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../generated/nx-devkit/ --theme dist/typedoc-theme/src/lib --readme none`,
     execSyncOptions
   );
   execSync(
-    `rm -rf docs/default/api-nx-devkit/modules.md docs/default/api-nx-devkit/.nojekyll`,
+    `rm -rf docs/generated/api-nx-devkit/modules.md docs/generated/api-nx-devkit/.nojekyll`,
     execSyncOptions
   );
   execSync(
-    `rm -rf docs/default/api-nx-devkit/modules.md docs/default/api-nx-devkit/README.md`,
+    `rm -rf docs/generated/api-nx-devkit/modules.md docs/generated/api-nx-devkit/README.md`,
     execSyncOptions
   );
   execSync(
-    `npx prettier docs/default/api-nx-devkit --write --config ${join(
+    `npx prettier docs/generated/api-nx-devkit --write --config ${join(
       __dirname,
       '..',
       '..',

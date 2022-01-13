@@ -328,142 +328,142 @@
           {
             "name": "generate",
             "id": "generate",
-            "file": "default/cli/generate"
+            "file": "generated/cli/generate"
           },
           {
             "name": "serve",
             "id": "serve",
-            "file": "default/cli/serve"
+            "file": "generated/cli/serve"
           },
           {
             "name": "build",
             "id": "build",
-            "file": "default/cli/build"
+            "file": "generated/cli/build"
           },
           {
             "name": "test",
             "id": "test",
-            "file": "default/cli/test"
+            "file": "generated/cli/test"
           },
           {
             "name": "lint",
             "id": "lint",
-            "file": "default/cli/lint"
+            "file": "generated/cli/lint"
           },
           {
             "name": "e2e",
             "id": "e2e",
-            "file": "default/cli/e2e"
+            "file": "generated/cli/e2e"
           },
           {
             "name": "run",
             "id": "run",
-            "file": "default/cli/run"
+            "file": "generated/cli/run"
           },
           {
             "name": "daemon",
             "id": "daemon",
-            "file": "default/cli/daemon"
+            "file": "generated/cli/daemon"
           },
           {
             "name": "dep-graph",
             "id": "dep-graph",
-            "file": "default/cli/dep-graph"
+            "file": "generated/cli/dep-graph"
           },
           {
             "name": "run-many",
             "id": "run-many",
-            "file": "default/cli/run-many"
+            "file": "generated/cli/run-many"
           },
           {
             "name": "affected",
             "id": "affected",
-            "file": "default/cli/affected"
+            "file": "generated/cli/affected"
           },
           {
             "name": "affected:build",
             "id": "affected-build",
-            "file": "default/cli/affected-build"
+            "file": "generated/cli/affected-build"
           },
           {
             "name": "affected:test",
             "id": "affected-test",
-            "file": "default/cli/affected-test"
+            "file": "generated/cli/affected-test"
           },
           {
             "name": "affected:lint",
             "id": "affected-lint",
-            "file": "default/cli/affected-lint"
+            "file": "generated/cli/affected-lint"
           },
           {
             "name": "affected:e2e",
             "id": "affected-e2e",
-            "file": "default/cli/affected-e2e"
+            "file": "generated/cli/affected-e2e"
           },
           {
             "name": "affected:dep-graph",
             "id": "affected-dep-graph",
-            "file": "default/cli/affected-dep-graph"
+            "file": "generated/cli/affected-dep-graph"
           },
           {
             "name": "affected:apps",
             "id": "affected-apps",
-            "file": "default/cli/affected-apps"
+            "file": "generated/cli/affected-apps"
           },
           {
             "name": "affected:libs",
             "id": "affected-libs",
-            "file": "default/cli/affected-libs"
+            "file": "generated/cli/affected-libs"
           },
           {
             "name": "print-affected",
             "id": "print-affected",
-            "file": "default/cli/print-affected"
+            "file": "generated/cli/print-affected"
           },
           {
             "name": "format:check",
             "id": "format-check",
-            "file": "default/cli/format-check"
+            "file": "generated/cli/format-check"
           },
           {
             "name": "format:write",
             "id": "format-write",
-            "file": "default/cli/format-write"
+            "file": "generated/cli/format-write"
           },
           {
             "name": "migrate",
             "id": "migrate",
-            "file": "default/cli/migrate"
+            "file": "generated/cli/migrate"
           },
           {
             "name": "report",
             "id": "report",
-            "file": "default/cli/report"
+            "file": "generated/cli/report"
           },
           {
             "name": "list",
             "id": "list",
-            "file": "default/cli/list"
+            "file": "generated/cli/list"
           },
           {
             "name": "workspace-lint",
             "id": "workspace-lint",
-            "file": "default/cli/workspace-lint"
+            "file": "generated/cli/workspace-lint"
           },
           {
             "name": "workspace-generator",
             "id": "workspace-generator",
-            "file": "default/cli/workspace-generator"
+            "file": "generated/cli/workspace-generator"
           },
           {
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
-            "file": "default/cli/connect-to-nx-cloud"
+            "file": "generated/cli/connect-to-nx-cloud"
           },
           {
             "name": "reset",
             "id": "reset",
-            "file": "default/cli/reset"
+            "file": "generated/cli/reset"
           }
         ]
       },
@@ -480,47 +480,47 @@
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-workspace/generators/library"
+            "file": "generated/api-workspace/generators/library"
           },
           {
             "name": "npm-package generator",
             "id": "npm-package",
-            "file": "default/api-workspace/generators/npm-package"
+            "file": "generated/api-workspace/generators/npm-package"
           },
           {
             "name": "move generator",
             "id": "move",
-            "file": "default/api-workspace/generators/move"
+            "file": "generated/api-workspace/generators/move"
           },
           {
             "name": "remove generator",
             "id": "remove",
-            "file": "default/api-workspace/generators/remove"
+            "file": "generated/api-workspace/generators/remove"
           },
           {
             "name": "run-commands generator",
             "id": "run-commands-generator",
-            "file": "default/api-workspace/generators/run-commands"
+            "file": "generated/api-workspace/generators/run-commands"
           },
           {
             "name": "workspace-generator generator",
             "id": "workspace-generator",
-            "file": "default/api-workspace/generators/workspace-generator"
+            "file": "generated/api-workspace/generators/workspace-generator"
           },
           {
             "name": "convert-to-nx-project generator",
             "id": "convert-to-nx-project-generator",
-            "file": "default/api-workspace/generators/convert-to-nx-project"
+            "file": "generated/api-workspace/generators/convert-to-nx-project"
           },
           {
             "name": "run-commands executor",
             "id": "run-commands-executor",
-            "file": "default/api-workspace/executors/run-commands"
+            "file": "generated/api-workspace/executors/run-commands"
           },
           {
             "name": "run-script executor",
             "id": "run-script",
-            "file": "default/api-workspace/executors/run-script"
+            "file": "generated/api-workspace/executors/run-script"
           }
         ]
       },
@@ -531,32 +531,32 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-js/generators/application"
+            "file": "generated/api-js/generators/application"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-js/generators/library"
+            "file": "generated/api-js/generators/library"
           },
           {
             "name": "convert-to-swc generator",
             "id": "library",
-            "file": "default/api-js/generators/convert-to-swc"
+            "file": "generated/api-js/generators/convert-to-swc"
           },
           {
             "name": "node executor",
             "id": "node",
-            "file": "default/api-js/executors/node"
+            "file": "generated/api-js/executors/node"
           },
           {
             "name": "tsc executor",
             "id": "tsc",
-            "file": "default/api-js/executors/tsc"
+            "file": "generated/api-js/executors/tsc"
           },
           {
             "name": "swc executor",
             "id": "swc",
-            "file": "default/api-js/executors/swc"
+            "file": "generated/api-js/executors/swc"
           }
         ]
       },
@@ -573,27 +573,27 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-web/generators/application"
+            "file": "generated/api-web/generators/application"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "default/api-web/executors/webpack"
+            "file": "generated/api-web/executors/webpack"
           },
           {
             "name": "dev-server executor",
             "id": "dev-server",
-            "file": "default/api-web/executors/dev-server"
+            "file": "generated/api-web/executors/dev-server"
           },
           {
             "name": "file-server executor",
             "id": "file-server",
-            "file": "default/api-web/executors/file-server"
+            "file": "generated/api-web/executors/file-server"
           },
           {
             "name": "package executor",
             "id": "package",
-            "file": "default/api-web/executors/rollup"
+            "file": "generated/api-web/executors/rollup"
           }
         ]
       },
@@ -610,127 +610,127 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-angular/generators/application"
+            "file": "generated/api-angular/generators/application"
           },
           {
             "name": "convert-tslint-to-eslint",
             "id": "convert-tslint-to-eslint",
-            "file": "default/api-angular/generators/convert-tslint-to-eslint"
+            "file": "generated/api-angular/generators/convert-tslint-to-eslint"
           },
           {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
-            "file": "default/api-angular/generators/downgrade-module"
+            "file": "generated/api-angular/generators/downgrade-module"
           },
           {
             "name": "karma generator",
             "id": "karma",
-            "file": "default/api-angular/generators/karma"
+            "file": "generated/api-angular/generators/karma"
           },
           {
             "name": "karma-project generator",
             "id": "karma-project",
-            "file": "default/api-angular/generators/karma-project"
+            "file": "generated/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-angular/generators/library"
+            "file": "generated/api-angular/generators/library"
           },
           {
             "name": "library-secondary-entry-point generator",
             "id": "library",
-            "file": "default/api-angular/generators/library-secondary-entry-point"
+            "file": "generated/api-angular/generators/library-secondary-entry-point"
           },
           {
             "name": "move generator",
             "id": "move",
-            "file": "default/api-angular/generators/move"
+            "file": "generated/api-angular/generators/move"
           },
           {
             "name": "ngrx generator",
             "id": "ngrx",
-            "file": "default/api-angular/generators/ngrx"
+            "file": "generated/api-angular/generators/ngrx"
           },
           {
             "name": "scam generator",
             "id": "scam",
-            "file": "default/api-angular/generators/scam"
+            "file": "generated/api-angular/generators/scam"
           },
           {
             "name": "scam-directive generator",
             "id": "scam-directive",
-            "file": "default/api-angular/generators/scam-directive"
+            "file": "generated/api-angular/generators/scam-directive"
           },
           {
             "name": "scam-pipe generator",
             "id": "scam-pipe",
-            "file": "default/api-angular/generators/scam-pipe"
+            "file": "generated/api-angular/generators/scam-pipe"
           },
           {
             "name": "setup-mfe generator",
             "id": "setup-mfe",
-            "file": "default/api-angular/generators/setup-mfe"
+            "file": "generated/api-angular/generators/setup-mfe"
           },
           {
             "name": "setup-tailwind generator",
             "id": "setup-tailwind",
-            "file": "default/api-angular/generators/setup-tailwind"
+            "file": "generated/api-angular/generators/setup-tailwind"
           },
           {
             "name": "stories generator",
             "id": "stories",
-            "file": "default/api-angular/generators/stories"
+            "file": "generated/api-angular/generators/stories"
           },
           {
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
-            "file": "default/api-angular/generators/storybook-configuration"
+            "file": "generated/api-angular/generators/storybook-configuration"
           },
           {
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
-            "file": "default/api-angular/generators/storybook-migrate-defaults-5-to-6"
+            "file": "generated/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
             "name": "storybook-migrate-stories-to-6-2 generator",
             "id": "storybook-migrate-stories-to-6-2",
-            "file": "default/api-angular/generators/storybook-migrate-stories-to-6-2"
+            "file": "generated/api-angular/generators/storybook-migrate-stories-to-6-2"
           },
           {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
-            "file": "default/api-angular/generators/upgrade-module"
+            "file": "generated/api-angular/generators/upgrade-module"
           },
           {
             "name": "web-worker generator",
             "id": "web-worker",
-            "file": "default/api-angular/generators/web-worker"
+            "file": "generated/api-angular/generators/web-worker"
           },
           {
             "name": "delegate-build executor",
             "id": "delegate-build",
-            "file": "default/api-angular/executors/delegate-build"
+            "file": "generated/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
             "id": "ng-packagr-lite",
-            "file": "default/api-angular/executors/ng-packagr-lite"
+            "file": "generated/api-angular/executors/ng-packagr-lite"
           },
           {
             "name": "package executor",
             "id": "package",
-            "file": "default/api-angular/executors/package"
+            "file": "generated/api-angular/executors/package"
           },
           {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
-            "file": "default/api-angular/executors/webpack-browser"
+            "file": "generated/api-angular/executors/webpack-browser"
           },
           {
             "name": "webpack-server executor",
             "id": "webpack-server",
-            "file": "default/api-angular/executors/webpack-server"
+            "file": "generated/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -747,52 +747,52 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-react/generators/application"
+            "file": "generated/api-react/generators/application"
           },
           {
             "name": "component generator",
             "id": "component",
-            "file": "default/api-react/generators/component"
+            "file": "generated/api-react/generators/component"
           },
           {
             "name": "component-cypress-spec generator",
             "id": "component-cypress-spec",
-            "file": "default/api-react/generators/component-cypress-spec"
+            "file": "generated/api-react/generators/component-cypress-spec"
           },
           {
             "name": "component-story generator",
             "id": "component-story",
-            "file": "default/api-react/generators/component-story"
+            "file": "generated/api-react/generators/component-story"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-react/generators/library"
+            "file": "generated/api-react/generators/library"
           },
           {
             "name": "redux generator",
             "id": "redux",
-            "file": "default/api-react/generators/redux"
+            "file": "generated/api-react/generators/redux"
           },
           {
             "name": "stories generator",
             "id": "stories",
-            "file": "default/api-react/generators/stories"
+            "file": "generated/api-react/generators/stories"
           },
           {
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
-            "file": "default/api-react/generators/storybook-configuration"
+            "file": "generated/api-react/generators/storybook-configuration"
           },
           {
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
-            "file": "default/api-react/generators/storybook-migrate-defaults-5-to-6"
+            "file": "generated/api-react/generators/storybook-migrate-defaults-5-to-6"
           },
           {
             "name": "hook generator",
             "id": "hook",
-            "file": "default/api-react/generators/hook"
+            "file": "generated/api-react/generators/hook"
           }
         ]
       },
@@ -809,7 +809,7 @@
           {
             "name": "jest executor",
             "id": "jest",
-            "file": "default/api-jest/executors/jest"
+            "file": "generated/api-jest/executors/jest"
           }
         ]
       },
@@ -826,12 +826,12 @@
           {
             "name": "cypress executor",
             "id": "cypress",
-            "file": "default/api-cypress/executors/cypress"
+            "file": "generated/api-cypress/executors/cypress"
           },
           {
             "name": "cypress-project generator",
             "id": "cypress-project",
-            "file": "default/api-cypress/generators/cypress-project"
+            "file": "generated/api-cypress/generators/cypress-project"
           }
         ]
       },
@@ -874,22 +874,22 @@
           {
             "name": "configuration generator",
             "id": "configuration",
-            "file": "default/api-storybook/generators/configuration"
+            "file": "generated/api-storybook/generators/configuration"
           },
           {
             "name": "cypress-project generator",
             "id": "cypress-project",
-            "file": "default/api-storybook/generators/cypress-project"
+            "file": "generated/api-storybook/generators/cypress-project"
           },
           {
             "name": "migrate-defaults-5-to-6 generator",
             "id": "migrate-defaults-5-to-6",
-            "file": "default/api-storybook/generators/migrate-defaults-5-to-6"
+            "file": "generated/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "name": "migrate-stories-to-6-2 generator",
             "id": "migrate-stories-to-6-2",
-            "file": "default/api-storybook/generators/migrate-stories-to-6-2"
+            "file": "generated/api-storybook/generators/migrate-stories-to-6-2"
           },
           {
             "id": "executors",
@@ -898,12 +898,12 @@
               {
                 "name": "build",
                 "id": "build",
-                "file": "default/api-storybook/executors/build"
+                "file": "generated/api-storybook/executors/build"
               },
               {
                 "name": "storybook",
                 "id": "storybook",
-                "file": "default/api-storybook/executors/storybook"
+                "file": "generated/api-storybook/executors/storybook"
               }
             ]
           }
@@ -916,17 +916,17 @@
           {
             "name": "eslint executor",
             "id": "eslint",
-            "file": "default/api-linter/executors/eslint"
+            "file": "generated/api-linter/executors/eslint"
           },
           {
             "name": "lint executor",
             "id": "lint",
-            "file": "default/api-linter/executors/lint"
+            "file": "generated/api-linter/executors/lint"
           },
           {
             "name": "workspace-rule generator",
             "id": "workspace-rule",
-            "file": "default/api-linter/generators/workspace-rule"
+            "file": "generated/api-linter/generators/workspace-rule"
           }
         ]
       },
@@ -943,27 +943,27 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-node/generators/application"
+            "file": "generated/api-node/generators/application"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-node/generators/library"
+            "file": "generated/api-node/generators/library"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "default/api-node/executors/build"
+            "file": "generated/api-node/executors/build"
           },
           {
             "name": "execute executor",
             "id": "execute",
-            "file": "default/api-node/executors/execute"
+            "file": "generated/api-node/executors/execute"
           },
           {
             "name": "package executor",
             "id": "package",
-            "file": "default/api-node/executors/package"
+            "file": "generated/api-node/executors/package"
           }
         ]
       },
@@ -980,7 +980,7 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-express/generators/application"
+            "file": "generated/api-express/generators/application"
           }
         ]
       },
@@ -997,92 +997,92 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-nest/generators/application"
+            "file": "generated/api-nest/generators/application"
           },
           {
             "name": "class generator",
             "id": "class",
-            "file": "default/api-nest/generators/class"
+            "file": "generated/api-nest/generators/class"
           },
           {
             "name": "controller generator",
             "id": "controller",
-            "file": "default/api-nest/generators/controller"
+            "file": "generated/api-nest/generators/controller"
           },
           {
             "name": "decorator generator",
             "id": "decorator",
-            "file": "default/api-nest/generators/decorator"
+            "file": "generated/api-nest/generators/decorator"
           },
           {
             "name": "filter generator",
             "id": "filter",
-            "file": "default/api-nest/generators/filter"
+            "file": "generated/api-nest/generators/filter"
           },
           {
             "name": "gateway generator",
             "id": "gateway",
-            "file": "default/api-nest/generators/gateway"
+            "file": "generated/api-nest/generators/gateway"
           },
           {
             "name": "guard generator",
             "id": "guard",
-            "file": "default/api-nest/generators/guard"
+            "file": "generated/api-nest/generators/guard"
           },
           {
             "name": "interceptor generator",
             "id": "interceptor",
-            "file": "default/api-nest/generators/interceptor"
+            "file": "generated/api-nest/generators/interceptor"
           },
           {
             "name": "interface generator",
             "id": "interface",
-            "file": "default/api-nest/generators/interface"
+            "file": "generated/api-nest/generators/interface"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-nest/generators/library"
+            "file": "generated/api-nest/generators/library"
           },
           {
             "name": "middleware generator",
             "id": "middleware",
-            "file": "default/api-nest/generators/middleware"
+            "file": "generated/api-nest/generators/middleware"
           },
           {
             "name": "module generator",
             "id": "module",
-            "file": "default/api-nest/generators/module"
+            "file": "generated/api-nest/generators/module"
           },
           {
             "name": "pipe generator",
             "id": "pipe",
-            "file": "default/api-nest/generators/pipe"
+            "file": "generated/api-nest/generators/pipe"
           },
           {
             "name": "provider generator",
             "id": "provider",
-            "file": "default/api-nest/generators/provider"
+            "file": "generated/api-nest/generators/provider"
           },
           {
             "name": "resolver generator",
             "id": "resolver",
-            "file": "default/api-nest/generators/resolver"
+            "file": "generated/api-nest/generators/resolver"
           },
           {
             "name": "resource generator",
             "id": "resource",
-            "file": "default/api-nest/generators/resource"
+            "file": "generated/api-nest/generators/resource"
           },
           {
             "name": "service generator",
             "id": "service",
-            "file": "default/api-nest/generators/service"
+            "file": "generated/api-nest/generators/service"
           },
           {
             "name": "convert-tslint-to-eslint",
             "id": "convert-tslint-to-eslint",
-            "file": "default/api-nest/generators/convert-tslint-to-eslint"
+            "file": "generated/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -1099,32 +1099,32 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-next/generators/application"
+            "file": "generated/api-next/generators/application"
           },
           {
             "name": "component generator",
             "id": "component",
-            "file": "default/api-next/generators/component"
+            "file": "generated/api-next/generators/component"
           },
           {
             "name": "page generator",
             "id": "page",
-            "file": "default/api-next/generators/page"
+            "file": "generated/api-next/generators/page"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "default/api-next/executors/build"
+            "file": "generated/api-next/executors/build"
           },
           {
             "name": "server executor",
             "id": "server",
-            "file": "default/api-next/executors/server"
+            "file": "generated/api-next/executors/server"
           },
           {
             "name": "export executor",
             "id": "export",
-            "file": "default/api-next/executors/export"
+            "file": "generated/api-next/executors/export"
           }
         ]
       },
@@ -1141,27 +1141,27 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-gatsby/generators/application"
+            "file": "generated/api-gatsby/generators/application"
           },
           {
             "name": "component generator",
             "id": "component",
-            "file": "default/api-gatsby/generators/component"
+            "file": "generated/api-gatsby/generators/component"
           },
           {
             "name": "page generator",
             "id": "page",
-            "file": "default/api-gatsby/generators/page"
+            "file": "generated/api-gatsby/generators/page"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "default/api-gatsby/executors/build"
+            "file": "generated/api-gatsby/executors/build"
           },
           {
             "name": "server executor",
             "id": "server",
-            "file": "default/api-gatsby/executors/server"
+            "file": "generated/api-gatsby/executors/server"
           }
         ]
       },
@@ -1178,17 +1178,17 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-detox/generators/application"
+            "file": "generated/api-detox/generators/application"
           },
           {
             "name": "build executor",
             "id": "build",
-            "file": "default/api-detox/executors/build"
+            "file": "generated/api-detox/executors/build"
           },
           {
             "name": "test executor",
             "id": "test",
-            "file": "default/api-detox/executors/test"
+            "file": "generated/api-detox/executors/test"
           }
         ]
       },
@@ -1205,52 +1205,52 @@
           {
             "name": "application generator",
             "id": "application",
-            "file": "default/api-react-native/generators/application"
+            "file": "generated/api-react-native/generators/application"
           },
           {
             "name": "component generator",
             "id": "component",
-            "file": "default/api-react-native/generators/component"
+            "file": "generated/api-react-native/generators/component"
           },
           {
             "name": "library generator",
             "id": "library",
-            "file": "default/api-react-native/generators/library"
+            "file": "generated/api-react-native/generators/library"
           },
           {
             "name": "build android executor",
             "id": "build-android",
-            "file": "default/api-react-native/executors/build-android"
+            "file": "generated/api-react-native/executors/build-android"
           },
           {
             "name": "bundle executor",
             "id": "bundle",
-            "file": "default/api-react-native/executors/bundle"
+            "file": "generated/api-react-native/executors/bundle"
           },
           {
             "name": "ensure symlink executor",
             "id": "ensure-symlink",
-            "file": "default/api-react-native/executors/ensure-symlink"
+            "file": "generated/api-react-native/executors/ensure-symlink"
           },
           {
             "name": "run android executor",
             "id": "run-android",
-            "file": "default/api-react-native/executors/run-android"
+            "file": "generated/api-react-native/executors/run-android"
           },
           {
             "name": "run ios executor",
             "id": "run-ios",
-            "file": "default/api-react-native/executors/run-ios"
+            "file": "generated/api-react-native/executors/run-ios"
           },
           {
             "name": "start executor",
             "id": "start",
-            "file": "default/api-react-native/executors/start"
+            "file": "generated/api-react-native/executors/start"
           },
           {
             "name": "sync deps executor",
             "id": "sync-deps",
-            "file": "default/api-react-native/executors/sync-deps"
+            "file": "generated/api-react-native/executors/sync-deps"
           }
         ]
       },
@@ -1267,27 +1267,27 @@
           {
             "name": "executor generator",
             "id": "executor",
-            "file": "default/api-nx-plugin/generators/executor"
+            "file": "generated/api-nx-plugin/generators/executor"
           },
           {
             "name": "migration generator",
             "id": "migration",
-            "file": "default/api-nx-plugin/generators/migration"
+            "file": "generated/api-nx-plugin/generators/migration"
           },
           {
             "name": "plugin generator",
             "id": "plugin",
-            "file": "default/api-nx-plugin/generators/plugin"
+            "file": "generated/api-nx-plugin/generators/plugin"
           },
           {
             "name": "generator generator",
             "id": "schematic",
-            "file": "default/api-nx-plugin/generators/generator"
+            "file": "generated/api-nx-plugin/generators/generator"
           },
           {
             "name": "e2e executor",
             "id": "e2e",
-            "file": "default/api-nx-plugin/executors/e2e"
+            "file": "generated/api-nx-plugin/executors/e2e"
           }
         ]
       },
@@ -1299,13 +1299,13 @@
             "id": "index",
             "name": "Overview",
             "searchResultsName": "Nx Devkit",
-            "file": "default/api-nx-devkit/index"
+            "file": "generated/api-nx-devkit/index"
           },
           {
             "id": "ngcli_adapter",
             "name": "Ng CLI Adapter",
             "searchResultsName": "Ng CLI Adapter",
-            "file": "default/api-nx-devkit/ngcli_adapter"
+            "file": "generated/api-nx-devkit/ngcli_adapter"
           }
         ]
       },
