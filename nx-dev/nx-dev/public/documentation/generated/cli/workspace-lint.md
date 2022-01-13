@@ -1,11 +1,11 @@
 ---
 title: 'workspace-lint - CLI command'
-description: 'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the `.nxignore` file'
+description: 'Lint nx specific workspace files (nx.json, workspace.json) and check existence of the configured packages and apps.  Note: To exclude files from this lint rule, you can add them to the `.nxignore` file'
 ---
 
 # workspace-lint
 
-Lint workspace or list of files. Note: To exclude files from this lint rule, you can add them to the `.nxignore` file
+Lint nx specific workspace files (nx.json, workspace.json) and check existence of the configured packages and apps. Note: To exclude files from this lint rule, you can add them to the `.nxignore` file
 
 ## Usage
 
