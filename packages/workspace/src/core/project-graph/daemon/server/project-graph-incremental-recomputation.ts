@@ -1,5 +1,4 @@
 import { FileData, ProjectFileMap } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { readWorkspaceJson } from '../../../file-utils';
 import { defaultFileHasher } from '../../../hasher/file-hasher';
@@ -42,7 +41,7 @@ export async function getCachedSerializedProjectGraphPromise() {
 
     // reset the wait time
     waitPeriod = 100;
-    resetInternalStateIfNxDepsMissing();
+    await resetInternalStateIfNxDepsMissing();
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
@@ -212,22 +211,23 @@ async function createAndSerializeProjectGraph() {
   }
 }
 
-export function resetInternalState() {
+async function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
   projectFileMapWithFiles = undefined;
   currentProjectGraphCache = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
   defaultFileHasher.clear();
+  await defaultFileHasher.ensureInitialized();
   waitPeriod = 100;
 }
 
-function resetInternalStateIfNxDepsMissing() {
+async function resetInternalStateIfNxDepsMissing() {
   try {
-    if (!fileExists(nxDepsPath)) {
-      resetInternalState();
+    if (!fileExists(nxDepsPath) && cachedSerializedProjectGraphPromise) {
+      await resetInternalState();
     }
   } catch (e) {
-    resetInternalState();
+    await resetInternalState();
   }
 }
