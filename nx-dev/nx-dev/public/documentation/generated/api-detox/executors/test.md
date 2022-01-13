@@ -11,6 +11,14 @@ Options can be configured in `workspace.json` when defining the executor, or whe
 
 ## Options
 
+### detoxConfiguration (_**required**_)
+
+Alias(es): C
+
+Type: `string`
+
+Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it
+
 ### appLaunchArgs
 
 Type: `number`
@@ -24,6 +32,12 @@ Alias(es): a
 Type: `string`
 
 Artifacts (logs, screenshots, etc) root directory.
+
+### buildTarget
+
+Type: `string`
+
+Target which builds the application
 
 ### captureViewHierarchy
 
@@ -52,14 +66,6 @@ Alias(es): d
 Type: `string`
 
 Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete.
-
-### detoxConfiguration
-
-Alias(es): C
-
-Type: `string`
-
-Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it
 
 ### deviceLaunchArgs
 

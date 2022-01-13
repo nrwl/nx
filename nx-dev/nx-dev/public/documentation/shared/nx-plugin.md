@@ -6,7 +6,7 @@ Nx plugins are npm packages that contain generators and executors to extend a Nx
 > A list of custom plugins created by the community is found in the [Community](/community) section.
 > Plugins are written using Nx Devkit. **Read [Nx Devkit](/getting-started/nx-devkit) for more information.**
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 ## Generating a Plugin
 
