@@ -27,6 +27,7 @@ svg {
   font-family: 'InputMono';
   font-style: normal;
   font-weight: normal;
+  font-display: swap;
 }
 .font-input-mono {
   font-family: 'InputMono', monospace;
