@@ -66,7 +66,7 @@ export function Performance(): ReactComponentElement<any> {
   }, [controls, inView, progress]);
 
   return (
-    <div id="performance" className="mt-80">
+    <article id="performance" className="mt-80">
       <motion.div
         ref={ref}
         animate={controls}
@@ -89,12 +89,12 @@ export function Performance(): ReactComponentElement<any> {
         <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
           <div>
             <div className="mt-6">
-              <motion.h2
+              <motion.h1
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
                 Nx is Fast
-              </motion.h2>
+              </motion.h1>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
@@ -109,48 +109,64 @@ export function Performance(): ReactComponentElement<any> {
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:col-start-1">
           <div className="p-8 lg:pt-0 lg:pl-0 lg:pb-8 lg:pr-8 col-span-1 flex flex-col justify-center border-r border-b border-gray-100">
             <div className="text-lg text-gray-600">Up to</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
+            <div
+              aria-hidden="true"
+              className="my-2 text-7xl font-bold text-gray-800"
+            >
               <Counter from={0} to={3} round={0} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">x</span>
             </div>
             <div className="text-md font-medium text-gray-600">
+              <span className="sr-only">3 times </span>
               reduction in CI time for mid-size projects with standard CI setups
             </div>
           </div>
           <div className="p-8 lg:pr-0 lg:pt-0 lg:pb-8 lg:pl-8 col-span-1 flex flex-col justify-center border-l border-b border-gray-100">
             <div className="text-lg text-gray-600">Up to</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
+            <div
+              aria-hidden="true"
+              className="my-2 text-7xl font-bold text-gray-800"
+            >
               <Counter from={0} to={14} round={0} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">x</span>
             </div>
             <div className="text-md font-medium text-gray-600">
+              <span className="sr-only">14 times </span>
               reduction in CI time for large projects with standard CI setups
             </div>
           </div>
           <div className="p-8 lg:pb-0 lg:pl-0 lg:pt-8 lg:pr-8 col-span-1 flex flex-col justify-center border-r border-t border-gray-100">
             <div className="text-lg text-gray-600">Up to</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
+            <div
+              aria-hidden="true"
+              className="my-2 text-7xl font-bold text-gray-800"
+            >
               <Counter from={0} to={50} round={0} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">%</span>
             </div>
             <div className="text-md font-medium text-gray-600">
+              <span className="sr-only">50 times </span>
               reduction in CI time for large projects with highly-optimized
               distributed CI setups
             </div>
           </div>
           <div className="p-8 lg:pb-0 lg:pr-0 lg:pt-8 lg:pl-8 col-span-1 flex flex-col justify-center border-l border-t border-gray-100">
             <div className="text-lg text-gray-600">Average</div>
-            <div className="my-2 text-7xl font-bold text-gray-800">
+            <div
+              aria-hidden="true"
+              className="my-2 text-7xl font-bold text-gray-800"
+            >
               <Counter from={0} to={2.5} round={1} progress={progress} />{' '}
               <span className="-ml-3 text-3xl">x</span>
             </div>
             <div className="text-md font-medium text-gray-600">
+              <span className="sr-only">2,5 times </span>
               reduction in computation time
             </div>
           </div>
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

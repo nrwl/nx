@@ -172,7 +172,7 @@ export function ExperienceFeatures(): ReactComponentElement<any> {
   }, [controls, inView]);
 
   return (
-    <div id="integrated-development-experience" className="relative">
+    <article id="integrated-development-experience" className="relative">
       <motion.div
         ref={ref}
         animate={controls}
@@ -195,12 +195,12 @@ export function ExperienceFeatures(): ReactComponentElement<any> {
         <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
           <div>
             <div className="mt-6">
-              <motion.h2
+              <motion.h1
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
                 Integrated Development Experience
-              </motion.h2>
+              </motion.h1>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
@@ -249,7 +249,7 @@ export function ExperienceFeatures(): ReactComponentElement<any> {
           </div>
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

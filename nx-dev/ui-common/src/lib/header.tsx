@@ -11,7 +11,7 @@ export interface HeaderProps {
 export function Header(props: HeaderProps) {
   const showSearch = props.showSearch;
   return (
-    <header
+    <div
       className={cx(
         'h-16 px-5 py-5 flex items-center justify-between print:hidden',
         props.useDarkBackground ? 'bg-blue-nx-dark' : 'bg-blue-nx-base'
@@ -60,8 +60,10 @@ export function Header(props: HeaderProps) {
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
+            <h2 className="sr-only">Main navigation</h2>
             <Link href="/getting-started/intro">
               <a
+                title="Check Nx documentation"
                 className={cx(
                   'px-3 py-2 text-white leading-tight',
                   !!props.isDocViewer ? 'font-bold' : ''
@@ -71,22 +73,32 @@ export function Header(props: HeaderProps) {
               </a>
             </Link>
             <Link href="/getting-started/nx-devkit">
-              <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
+              <a
+                title="Check Nx available plugins"
+                className="px-3 py-2 hidden md:inline-flex text-white leading-tight"
+              >
                 Plugins
               </a>
             </Link>
             <Link href="/community">
-              <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
+              <a
+                title="Check Nx community"
+                className="px-3 py-2 hidden md:inline-flex text-white leading-tight"
+              >
                 Community
               </a>
             </Link>
             <Link href="/conf">
-              <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
+              <a
+                title="Check Nx conference"
+                className="px-3 py-2 hidden md:inline-flex text-white leading-tight"
+              >
                 Nx Conf
               </a>
             </Link>
 
             <a
+              title="Check Nx Cloud next generation tool for monorepo"
               href="https://nx.app/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
@@ -95,6 +107,7 @@ export function Header(props: HeaderProps) {
               Nx Cloud
             </a>
             <a
+              title="Check Nx consluting with Nrwl"
               href="https://nrwl.io/services/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
@@ -103,6 +116,7 @@ export function Header(props: HeaderProps) {
               Nx Consulting
             </a>
             <a
+              title="Nx is open source, check the code on Github"
               href="https://github.com/nrwl/nx"
               target="_blank"
               rel="noreferrer"
@@ -124,7 +138,7 @@ export function Header(props: HeaderProps) {
           </nav>
         </div>
       </div>
-    </header>
+    </div>
   );
 }
 
