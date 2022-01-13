@@ -4,11 +4,13 @@ import type { NxArgs, RawNxArgs } from './utils';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { createProjectGraphAsync } from '../core/project-graph';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { readEnvironment } from '../core/file-utils';
+import { readEnvironment, workspaceLayout } from '../core/file-utils';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
+import * as path from 'path';
+import { sync as globSync } from 'glob';
 import type { Environment } from '../core/shared-interfaces';
 
 export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
@@ -46,9 +48,45 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
     );
   } else {
     checkForInvalidProjects(nxArgs, allProjects);
-    let selectedProjects = nxArgs.projects.map((name) =>
+
+    // TODO: use groupBy
+    const globPatterns = nxArgs.projects.filter((p) => p.endsWith('*'));
+    const actuallProjectNames = nxArgs.projects.filter((p) => !p.endsWith('*'));
+
+    const shouldGlobProjects = globPatterns.length;
+
+    const { appsDir, libsDir } = workspaceLayout();
+
+    const globbedAppProjects = shouldGlobProjects
+      ? globPatterns
+          .map((pattern) =>
+            globSync(pattern, {
+              cwd: path.resolve(appsDir),
+            })
+          )
+          .flat()
+      : [];
+
+    const globbedLibProjects = shouldGlobProjects
+      ? globPatterns
+          .map((pattern) =>
+            globSync(pattern, {
+              cwd: path.resolve(libsDir),
+            })
+          )
+          .flat()
+      : [];
+
+    let selectedProjectNames = Array.from(
+      new Set(
+        actuallProjectNames.concat(globbedAppProjects, globbedLibProjects)
+      )
+    );
+
+    let selectedProjects = selectedProjectNames.map((name) =>
       allProjects.find((project) => project.name === name)
     );
+
     return runnableForTarget(selectedProjects, nxArgs.target, true).reduce(
       (m, c) => ((m[c.name] = c), m),
       {}
@@ -83,8 +121,9 @@ function checkForInvalidProjects(
   allProjects: ProjectGraphNode[]
 ) {
   const invalid = nxArgs.projects.filter(
-    (name) => !allProjects.find((p) => p.name === name)
+    (name) => !(allProjects.find((p) => p.name === name) && name.endsWith('*'))
   );
+
   if (invalid.length !== 0) {
     throw new Error(`Invalid projects: ${invalid.join(', ')}`);
   }
