@@ -71,6 +71,9 @@ function calculateResolveMappings(
     parsed.configuration
   );
   return dependencies.reduce((m, c) => {
+    if (!c.outputs[0] && c.node.type === 'npm') {
+      c.outputs[0] = `node_modules/${c.node.data.packageName}`;
+    }
     m[c.name] = joinPathFragments(context.root, c.outputs[0]);
     return m;
   }, {});
