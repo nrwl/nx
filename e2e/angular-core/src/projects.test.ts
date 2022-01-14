@@ -18,13 +18,13 @@ import { ChildProcess } from 'child_process';
 
 import { names } from '@nrwl/devkit';
 
-describe('Angular Projects ', () => {
+describe('Angular Projects', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));
   afterAll(() => cleanupProject());
 
-  it('should generate an app, a lib, link them, build, sevre and test both correctly', async () => {
+  it('should generate an app, a lib, link them, build, serve and test both correctly', async () => {
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     const mylib = uniq('mylib');
@@ -84,8 +84,8 @@ describe('Angular Projects ', () => {
     }
 
     const process = await runCommandUntil(
-      `serve my-dir-${myapp} -- --port=${4207}`,
-      (output) => output.includes(`listening on localhost:${4207}`)
+      `serve my-dir-${myapp} -- --port=4207`,
+      (output) => output.includes(`listening on localhost:4207`)
     );
 
     // port and process cleanup
@@ -159,9 +159,7 @@ describe('Angular Projects ', () => {
     });
 
     // ACT
-    const libOutput = runCLI(
-      `build ${app} --with-deps --configuration=development`
-    );
+    const libOutput = runCLI(`build ${app} --configuration=development`);
 
     // ASSERT
     expect(libOutput).toContain(

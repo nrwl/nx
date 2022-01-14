@@ -12,7 +12,7 @@ import {
   readJson,
 } from '@nrwl/e2e/utils';
 
-describe('Angular Config Test', () => {
+describe('Angular Config', () => {
   beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
