@@ -58,12 +58,7 @@ async function getPatterns(
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
-  const supportedExtensions = prettier
-    .getSupportInfo()
-    .languages.flatMap((language) => language.extensions)
-    .filter((extension) => !!extension);
-  const matchAllPattern = `**/*{${supportedExtensions.join(',')}}`;
-  const allFilesPattern = [matchAllPattern];
+  const allFilesPattern = ['.'];
 
   if (args.all) {
     return allFilesPattern;
@@ -71,20 +66,20 @@ async function getPatterns(
 
   try {
     if (args.projects && args.projects.length > 0) {
-      return getPatternsFromProjects(args.projects, matchAllPattern);
+      return getPatternsFromProjects(args.projects);
     }
 
     const p = parseFiles(args);
+    const supportedExtensions = prettier
+      .getSupportInfo()
+      .languages.flatMap((language) => language.extensions)
+      .filter((extension) => !!extension);
     const patterns = p.files.filter(
       (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
     );
 
     return args.libsAndApps
-      ? await getPatternsFromApps(
-          patterns,
-          matchAllPattern,
-          graph.allWorkspaceFiles
-        )
+      ? await getPatternsFromApps(patterns, graph.allWorkspaceFiles)
       : patterns;
   } catch {
     return allFilesPattern;
@@ -93,7 +88,6 @@ async function getPatterns(
 
 async function getPatternsFromApps(
   affectedFiles: string[],
-  matchAllPattern: string,
   allWorkspaceFiles: FileData[]
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
@@ -101,10 +95,7 @@ async function getPatternsFromApps(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)
   );
-  return getPatternsFromProjects(
-    Object.keys(affectedGraph.nodes),
-    matchAllPattern
-  );
+  return getPatternsFromProjects(Object.keys(affectedGraph.nodes));
 }
 
 function addRootConfigFiles(
@@ -131,12 +122,8 @@ function addRootConfigFiles(
   }
 }
 
-function getPatternsFromProjects(
-  projects: string[],
-  matchAllPattern: string
-): string[] {
-  const roots = getProjectRoots(projects);
-  return roots.map((root) => `${root}/${matchAllPattern}`);
+function getPatternsFromProjects(projects: string[]): string[] {
+  return getProjectRoots(projects);
 }
 
 function chunkify(target: string[], size: number): string[][] {
