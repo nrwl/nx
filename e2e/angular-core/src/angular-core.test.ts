@@ -23,13 +23,18 @@ describe('Angular Package', () => {
   describe('core', () => {
     let proj: string;
 
-    beforeEach(() => (proj = newProject()));
+    beforeAll(() => (proj = newProject()));
+    afterAll(() => cleanupProject());
 
-    it('should work', async () => {
+    it('should generate an app, a lib, link them, build and test both correctly', async () => {
       const myapp = uniq('myapp');
+      const myapp2 = uniq('myapp2');
       const mylib = uniq('mylib');
       runCLI(
         `generate @nrwl/angular:app ${myapp} --directory=myDir --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/angular:app ${myapp2} --directory=myDir --no-interactive`
       );
       runCLI(
         `generate @nrwl/angular:lib ${mylib} --directory=myDir --add-module-spec --no-interactive`
@@ -54,7 +59,9 @@ describe('Angular Package', () => {
         export class AppModule {}
       `
       );
-      runCLI(`build my-dir-${myapp} --prod --output-hashing none`);
+      runCLI(
+        `run-many --target build --projects=my-dir-${myapp},my-dir-${myapp2} --parallel --prod --output-hashing none`
+      );
 
       checkFilesExist(`dist/apps/my-dir/${myapp}/main.js`);
 
@@ -68,11 +75,9 @@ describe('Angular Package', () => {
       );
       expect(es2015BundleSize).toBeLessThanOrEqual(160000);
 
-      // running tests for the app
-      expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-
-      // running tests for the lib
-      expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
+      runCLI(
+        `run-many --target test --projects=my-dir-${myapp},my-dir-${mylib} --parallel`
+      );
 
       if (runCypressTests()) {
         const e2eResults = runCLI(`e2e my-dir-${myapp}-e2e --no-watch`);
@@ -80,19 +85,6 @@ describe('Angular Package', () => {
         expect(await killPorts()).toBeTruthy();
       }
     }, 1000000);
-
-    it('should support building in parallel', () => {
-      if (getSelectedPackageManager() === 'pnpm') {
-        // TODO: This tests fails with pnpm but we should still enable this for other package managers
-        return;
-      }
-      const myapp = uniq('myapp');
-      const myapp2 = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp}`);
-      runCLI(`generate @nrwl/angular:app ${myapp2}`);
-
-      runCLI('run-many --target build --all --parallel');
-    });
 
     it('should support workspaces w/o workspace config file', async () => {
       if (isNotWindows()) {

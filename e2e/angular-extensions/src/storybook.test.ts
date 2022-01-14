@@ -18,7 +18,7 @@ describe('Angular Package', () => {
   describe('storybook schematics', () => {
     let proj: string;
 
-    beforeEach(() => (proj = newProject()));
+    beforeAll(() => (proj = newProject()));
     afterAll(() => cleanupProject());
 
     it('should not overwrite global storybook config files', () => {

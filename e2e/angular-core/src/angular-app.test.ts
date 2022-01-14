@@ -20,34 +20,36 @@ import { ChildProcess } from 'child_process';
 
 // TODO: Check why this fails on yarn and npm
 describe('Angular Package', () => {
-  describe('app builder', () => {
-    let app;
-    let buildableLib;
-    let proj: string;
+  let proj: string;
 
-    beforeEach(() => {
-      app = uniq('app');
-      buildableLib = uniq('buildlib1');
+  beforeAll(() => {
+    // This fails with pnpm due to incompatibilities with ngcc.
+    // Since this suite has a single test, we wrap everything to avoid the hooks to run and
+    // waste time.
+    // therefore switch to yarn
 
-      // This fails with pnpm due to incompatibilities with ngcc.
-      // Since this suite has a single test, we wrap everything to avoid the hooks to run and
-      // waste time.
-      // therefore switch to yarn
+    proj =
+      getSelectedPackageManager() === 'pnpm'
+        ? newProject({ packageManager: 'npm' })
+        : newProject();
+  });
 
-      proj =
-        getSelectedPackageManager() === 'pnpm'
-          ? newProject({ packageManager: 'npm' })
-          : newProject();
+  afterAll(() => cleanupProject());
 
-      runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);
-      runCLI(
-        `generate @nrwl/angular:library ${buildableLib} --buildable=true --no-interactive`
-      );
+  it('should build the dependent buildable lib as well as the app', () => {
+    // ARRANGE
+    const app = uniq('app');
+    const buildableLib = uniq('buildlib1');
 
-      // update the app module to include a ref to the buildable lib
-      updateFile(
-        `apps/${app}/src/app/app.module.ts`,
-        `
+    runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);
+    runCLI(
+      `generate @nrwl/angular:library ${buildableLib} --buildable=true --no-interactive`
+    );
+
+    // update the app module to include a ref to the buildable lib
+    updateFile(
+      `apps/${app}/src/app/app.module.ts`,
+      `
         import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
         import {${
@@ -65,47 +67,37 @@ describe('Angular Package', () => {
         })
         export class AppModule {}
     `
-      );
+    );
 
-      // update the angular.json
-      updateProjectConfig(app, (config) => {
-        config.targets.build.executor = '@nrwl/angular:webpack-browser';
-        return config;
-      });
+    // update the angular.json
+    updateProjectConfig(app, (config) => {
+      config.targets.build.executor = '@nrwl/angular:webpack-browser';
+      return config;
     });
 
-    afterEach(() => cleanupProject());
+    // ACT
+    const libOutput = runCLI(
+      `build ${app} --with-deps --configuration=development`
+    );
 
-    it('should build the dependent buildable lib as well as the app', () => {
-      const libOutput = runCLI(
-        `build ${app} --with-deps --configuration=development`
-      );
-      expect(libOutput).toContain(
-        `Building entry point '@${proj}/${buildableLib}'`
-      );
-      expect(libOutput).toContain(`nx run ${app}:build:development`);
+    // ASSERT
+    expect(libOutput).toContain(
+      `Building entry point '@${proj}/${buildableLib}'`
+    );
+    expect(libOutput).toContain(`nx run ${app}:build:development`);
 
-      // to proof it has been built from source the "main.js" should actually contain
-      // the path to dist
-      const mainBundle = readFile(`dist/apps/${app}/main.js`);
-      expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
-    });
+    // to proof it has been built from source the "main.js" should actually contain
+    // the path to dist
+    const mainBundle = readFile(`dist/apps/${app}/main.js`);
+    expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
   });
-});
 
-describe('Angular MFE App Serve', () => {
-  let hostApp;
-  let remoteApp1;
-  let proj: string;
-
-  const port1 = 4205;
-  const port2 = 4206;
-
-  beforeEach(() => {
-    hostApp = uniq('app');
-    remoteApp1 = uniq('remote');
-
-    proj = newProject();
+  it('MFE - should serve the host and remote apps successfully', async () => {
+    // ACT + ASSERT
+    const port1 = 4205;
+    const port2 = 4206;
+    const hostApp = uniq('app');
+    const remoteApp1 = uniq('remote');
 
     // generate host app
     runCLI(
@@ -116,14 +108,6 @@ describe('Angular MFE App Serve', () => {
     runCLI(
       `generate @nrwl/angular:app ${remoteApp1} -- --mfe --mfeType=remote --host=${hostApp} --port=${port2} --routing --style=css --no-interactive`
     );
-  });
-
-  afterEach(() => {
-    cleanupProject();
-  });
-
-  it('should serve the host and remote apps successfully', async () => {
-    // ACT + ASSERT
     let process: ChildProcess;
 
     try {
@@ -148,26 +132,15 @@ describe('Angular MFE App Serve', () => {
       expect(err).toBeFalsy();
     }
   }, 300000);
-});
 
-describe('Angular App Build and Serve Ops', () => {
-  let app;
-  let proj: string;
-
-  beforeEach(() => {
-    app = uniq('app');
-
-    proj = newProject();
-
+  it('should build the app successfully', () => {
+    // ARRANGE
+    const app = uniq('app');
     // generate app
     runCLI(
       `generate @nrwl/angular:app ${app} --routing --style=css --no-interactive`
     );
-  });
 
-  afterEach(() => cleanupProject());
-
-  it('should build the app successfully', () => {
     // ACT
     const serveOutput = runCLI(`build ${app}`);
 
@@ -176,6 +149,12 @@ describe('Angular App Build and Serve Ops', () => {
   }, 1000000);
 
   it('should serve the app successfully', async () => {
+    // ARRANGE
+    const app = uniq('app');
+    // generate app
+    runCLI(
+      `generate @nrwl/angular:app ${app} --routing --style=css --no-interactive`
+    );
     // ACT
     const port = 4201;
 

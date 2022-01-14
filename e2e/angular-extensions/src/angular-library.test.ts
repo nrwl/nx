@@ -12,167 +12,25 @@ import {
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
-describe('Angular Package', () => {
-  ['publishable', 'buildable'].forEach((testConfig) => {
-    describe(`library builder - ${testConfig}`, () => {
-      /**
-       * Graph:
-       *
-       *                 childLib
-       *               /
-       * parentLib =>
-       *               \
-       *                 childLib2
-       *
-       */
-      let parentLib: string;
-      let childLib: string;
-      let childLib2: string;
-      let proj: string;
-
-      beforeEach(() => {
-        parentLib = uniq('parentlib');
-        childLib = uniq('childlib');
-        childLib2 = uniq('childlib2');
-
-        // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
-        // therefore switch to yarn
-        proj =
-          getSelectedPackageManager() === 'pnpm' && testConfig !== 'publishable'
-            ? newProject({ packageManager: 'npm' })
-            : newProject();
-
-        if (testConfig === 'buildable') {
-          runCLI(
-            `generate @nrwl/angular:library ${parentLib} --buildable=true --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib} --buildable=true --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib2} --buildable=true --no-interactive`
-          );
-        } else {
-          runCLI(
-            `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@${proj}/${parentLib} --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@${proj}/${childLib2} --no-interactive`
-          );
-
-          // create secondary entrypoint
-          updateFile(
-            `libs/${childLib}/sub/package.json`,
-            `
-          {
-            "ngPackage": {}
-          }
-        `
-          );
-          updateFile(
-            `libs/${childLib}/sub/src/lib/sub.module.ts`,
-            `
-          import { NgModule } from '@angular/core';
-          import { CommonModule } from '@angular/common';
-          @NgModule({ imports: [CommonModule] })
-          export class SubModule {}
-        `
-          );
-
-          updateFile(
-            `libs/${childLib}/sub/src/public_api.ts`,
-            `export * from './lib/sub.module';`
-          );
-
-          updateFile(
-            `libs/${childLib}/sub/src/index.ts`,
-            `export * from './public_api';`
-          );
-
-          updateFile(`tsconfig.base.json`, (s) => {
-            return s.replace(
-              `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
-              `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],
-      "@${proj}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
-        `
-            );
-          });
-        }
-
-        // create dependencies by importing
-        const createDep = (parent, children: string[]) => {
-          let moduleContent = `
-              import { NgModule } from '@angular/core';
-              import { CommonModule } from '@angular/common';
-              ${children
-                .map(
-                  (entry) =>
-                    `import { ${
-                      names(entry).className
-                    }Module } from '@${proj}/${entry}';`
-                )
-                .join('\n')}
-            `;
-
-          if (testConfig === 'publishable') {
-            moduleContent += `
-              import { SubModule } from '@${proj}/${childLib}/sub';
-
-              @NgModule({
-                imports: [CommonModule, ${children
-                  .map((entry) => `${names(entry).className}Module`)
-                  .join(',')}, SubModule]
-              })
-              export class ${names(parent).className}Module {}`;
-          }
-
-          updateFile(
-            `libs/${parent}/src/lib/${parent}.module.ts`,
-            moduleContent
-          );
-        };
-
-        createDep(parentLib, [childLib, childLib2]);
-      });
-
-      afterEach(() => cleanupProject());
-
-      it('should build properly and update the parent package.json with the dependencies', () => {
-        runCLI(`build ${childLib}`);
-        runCLI(`build ${childLib2}`);
-        runCLI(`build ${parentLib}`);
-
-        checkFilesExist(
-          `dist/libs/${childLib}/package.json`,
-          `dist/libs/${childLib2}/package.json`,
-          `dist/libs/${parentLib}/package.json`
-        );
-
-        const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-
-        expect(jsonFile.dependencies['tslib']).toMatch(/\^2\.\d+\.\d+/); // match any ^2.x.x
-        expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
-        expect(
-          jsonFile.peerDependencies[`@${proj}/${childLib2}`]
-        ).toBeDefined();
-        expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
-        expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
-      });
-    });
+describe('Angular Library Package', () => {
+  let project: string;
+  beforeAll(() => {
+    // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
+    // therefore switch to yarn
+    project =
+      getSelectedPackageManager() === 'pnpm'
+        ? newProject({ packageManager: 'npm' })
+        : newProject();
   });
 
-  describe('Publishable library secondary entry point', () => {
-    let project: string;
-    let lib: string;
-    let entryPoint: string;
+  afterAll(() => cleanupProject());
 
-    beforeEach(() => {
-      project = newProject();
-      lib = uniq('lib');
-      entryPoint = uniq('entrypoint');
+  describe(`library builder - publishable`, () => {
+    it('should build publishable libs successfully', () => {
+      // ARRANGE
+      const lib = uniq('lib');
+      const childLib = uniq('child');
+      const entryPoint = uniq('entrypoint');
 
       runCLI(
         `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${project}/${lib} --no-interactive`
@@ -180,11 +38,67 @@ describe('Angular Package', () => {
       runCLI(
         `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
       );
-    });
 
-    it('should build successfully', () => {
+      runCLI(
+        `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${project}/${childLib} --no-interactive`
+      );
+
+      // create secondary entrypoint
+      updateFile(
+        `libs/${childLib}/sub/package.json`,
+        `
+    {
+      "ngPackage": {}
+    }
+  `
+      );
+      updateFile(
+        `libs/${childLib}/sub/src/lib/sub.module.ts`,
+        `
+    import { NgModule } from '@angular/core';
+    import { CommonModule } from '@angular/common';
+    @NgModule({ imports: [CommonModule] })
+    export class SubModule {}
+  `
+      );
+
+      updateFile(
+        `libs/${childLib}/sub/src/public_api.ts`,
+        `export * from './lib/sub.module';`
+      );
+
+      updateFile(
+        `libs/${childLib}/sub/src/index.ts`,
+        `export * from './public_api';`
+      );
+
+      updateFile(`tsconfig.base.json`, (s) => {
+        return s.replace(
+          `"@${project}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
+          `"@${project}/${childLib}": ["libs/${childLib}/src/index.ts"],
+"@${project}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
+  `
+        );
+      });
+
+      const moduleContent = `
+      import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+            import { ${
+              names(childLib).className
+            }Module } from '@${project}/${childLib}';
+      import { SubModule } from '@${project}/${childLib}/sub';
+      @NgModule({
+        imports: [CommonModule, ${names(childLib).className}Module, SubModule]
+      })
+      export class ${names(lib).className}Module {}`;
+
+      updateFile(`libs/${lib}/src/lib/${lib}.module.ts`, moduleContent);
+
+      // ACT
       const buildOutput = runCLI(`build ${lib}`);
 
+      // ASSERT
       expect(buildOutput).toContain(
         `Building entry point '@${project}/${lib}'`
       );
@@ -192,6 +106,55 @@ describe('Angular Package', () => {
         `Building entry point '@${project}/${lib}/${entryPoint}'`
       );
       expect(buildOutput).toContain('Running target "build" succeeded');
+    });
+  });
+
+  describe(`library builder - buildable`, () => {
+    it('should build properly and update the parent package.json with the dependencies', () => {
+      // ARRANGE
+      const parentLib = uniq('parentlib');
+      const childLib = uniq('childlib');
+
+      runCLI(
+        `generate @nrwl/angular:library ${parentLib} --buildable=true --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/angular:library ${childLib} --buildable=true --no-interactive`
+      );
+
+      // create dependencies by importing
+      const moduleContent = `
+      import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+      import { ${
+        names(childLib).className
+      }Module } from '@${project}/${childLib}';`;
+
+      updateFile(
+        `libs/${parentLib}/src/lib/${parentLib}.module.ts`,
+        moduleContent
+      );
+
+      // ACT
+
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${parentLib}`);
+
+      // ASSERT
+
+      checkFilesExist(
+        `dist/libs/${childLib}/package.json`,
+        `dist/libs/${parentLib}/package.json`
+      );
+
+      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+
+      expect(jsonFile.dependencies['tslib']).toMatch(/\^2\.\d+\.\d+/); // match any ^2.x.x
+      expect(
+        jsonFile.peerDependencies[`@${project}/${childLib}`]
+      ).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
     });
   });
 });
