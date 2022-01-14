@@ -43,9 +43,9 @@ describe('Hasher', () => {
     'workspace.json': 'workspace.json.hash',
     global1: 'global1.hash',
     global2: 'global2.hash',
-    'echo runtime123': 'runtime123',
-    'echo runtime456': 'runtime456',
-    'echo runtime789': 'runtime789',
+    'echo runtime123': 'runtime123value',
+    'echo runtime456': 'runtime456value',
+    'echo runtime789': 'runtime789value',
   };
 
   function createHashing(): any {
@@ -94,6 +94,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
+              runtimeCacheInputs: ['echo runtime789'],
               files: [{ file: '/file', ext: '.ts', hash: 'file.hash' }],
             },
           },
@@ -120,13 +121,13 @@ describe('Hasher', () => {
     expect(hash.value).toContain('prop-value'); //overrides
     expect(hash.value).toContain('parent'); //project
     expect(hash.value).toContain('build'); //target
-    expect(hash.value).toContain('runtime123'); //target
-    expect(hash.value).toContain('runtime456'); //target
-    expect(hash.value).toContain('runtime789'); //target
+    expect(hash.value).toContain('runtime123value'); //target
+    expect(hash.value).toContain('runtime456value'); //target
+    expect(hash.value).toContain('runtime789value'); //target
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      parent: `/file|file.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}`,
+      parent: `/file|file.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}|runtime789value`,
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -135,8 +136,8 @@ describe('Hasher', () => {
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     });
     expect(hash.details.runtime).toEqual({
-      'echo runtime123': 'runtime123',
-      'echo runtime456': 'runtime456',
+      'echo runtime123': 'runtime123value',
+      'echo runtime456': 'runtime456value',
     });
   });
 
@@ -192,8 +193,8 @@ describe('Hasher', () => {
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     });
     expect(hash.details.runtime).toEqual({
-      'echo runtime123': 'runtime123',
-      'echo runtime456': 'runtime456',
+      'echo runtime123': 'runtime123value',
+      'echo runtime456': 'runtime456value',
     });
   });
 

@@ -323,7 +323,7 @@ class ProjectHasher {
   async hashProjectsRuntimeInputs(
     runtimeCacheInputs?: string[]
   ): Promise<RuntimeHashResult | undefined> {
-    if (!runtimeCacheInputs || runtimeCacheInputs.length) {
+    if (!runtimeCacheInputs || runtimeCacheInputs.length === 0) {
       return undefined;
     }
 
