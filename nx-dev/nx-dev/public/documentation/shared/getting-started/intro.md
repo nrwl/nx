@@ -4,53 +4,25 @@ Nx is a smart, fast and extensible build system with first class monorepo suppor
 
 ## Philosophy
 
-Nx has a similar design philosophy to Visual Studio Code. Code is a powerful text editor, and you can be very productive
-with it even if you don't install any extensions. The ecosystem of VSCode's extensions though is what can really level
-up your productivity.
+Nx shares the design philosophy with Visual Studio Code. Code is a powerful text editor, and you can be very productive
+with it even if you don't install any extensions. The ecosystem of VSCode's extensions is what levels up your productivity.
 
-Nx is similar. The core of Nx is generic, simple, and unobtrusive. Nx plugins, although very useful for many projects,
-are completely optional.
+Similarly, the core of Nx is generic, simple, and unobtrusive. Nx plugins, although very useful, are completely optional.
+(Placeholder)
+Because Nx generates the boilerplate for you, most examples use Nx plugins making it easier to demonstrate the features of Nx. The vast majority of features work without the need of plugins.
 
-Most examples on this site use Nx plugins. It's just easier to demonstrate many features Nx offers when Nx generates all
-the boilerplate. However, the vast majority of the features will work the same way in a workspace with no plugins.
+## (PlaceHolder) Why should someone care about nx? What does nx bring to the table?
 
-## Getting Started
+> is this where we talk about this?
 
-These guides will help you get started:
+- think (ESBuild)[https://esbuild.github.io/] time to build graph. straight to the point of "this is what we do and
+- solve"
+- why do people care about monorepo tooling?
+- my code is not in a monorepo, so why should I care?
+- or can I even use this outside of a monorepo
 
-- [Installing Nx CLI & creating a new Nx Workspace](/getting-started/nx-setup)
-- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
-- [Using Nx without plugins](/getting-started/nx-core)
-- [Nx and TypeScript](/getting-started/nx-and-typescript)
-- [Nx and React](/getting-started/nx-and-react)
-- [Nx and Angular](/getting-started/nx-and-angular)
-- [CI Overview](/using-nx/ci-overview)
+## Next Steps
 
-## Features
+(placeholder) we should just give the "make new repo with nx" option as the next link. bc odds are people see "add to existing repo" and might run into edge cases/stuff we didn't expect initially. Also goal of keeping # of clicks down and getting people lost in the docs on what page they were on when learning would be a good idea
 
-**Best-in-Class Support for Monorepos**
-
-- [Smart rebuilds of affected projects](/using-nx/affected)
-- [Computation caching](/using-nx/caching)
-- [Distributed task execution](/using-nx/dte)
-- [Code sharing and ownership management](/structure/monorepo-tags)
-
-**Integrated Development Experience**
-
-- [High-quality editor plugins](/using-nx/console) & [GitHub apps](https://github.com/apps/nx-cloud)
-- [Powerful code generators](/generators/using-schematics)
-- [Workspace visualizations](/structure/dependency-graph)
-
-**Supports Your Ecosystem**
-
-- [Rich plugin ecosystem](/getting-started/nx-devkit) from Nrwl and the [community](/community)
-- Consistent dev experience for any framework
-- [Automatic upgrade to the latest versions of all frameworks and tools](/using-nx/updating-nx)
-
-## Learn While Doing
-
-- [Using Nx without plugins](/getting-started/nx-core)
-- [Nx and TypeScript](/getting-started/nx-and-typescript)
-- [React: Interactive Nx Tutorial (with videos)](/react-tutorial/01-create-application)
-- [Node: Interactive Nx Tutorial (with videos)](/node-tutorial/01-create-application)
-- [Angular: Interactive Nx Tutorial (with videos)](/angular-tutorial/01-create-application)
+[Start using Nx](/getting-started/nx-setup)
