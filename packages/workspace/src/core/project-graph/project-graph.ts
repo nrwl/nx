@@ -3,7 +3,7 @@ import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
 import { readNxJson, workspaceFileName } from '../file-utils';
 import { output } from '../../utilities/output';
-import { isCI } from '../../utilities/is_ci';
+import * as isCI from 'is-ci';
 import { defaultFileHasher } from '../hasher/file-hasher';
 
 /**
@@ -72,7 +72,7 @@ export async function createProjectGraphAsync(
       (useDaemonProcessOption === true && env === 'false') ||
       (useDaemonProcessOption === false && env === undefined) ||
       (useDaemonProcessOption === false && env === 'false') ||
-      (useDaemonProcessOption === true && env === undefined && isCI())
+      (useDaemonProcessOption === true && env === undefined && isCI)
     ) {
       await defaultFileHasher.ensureInitialized();
       return projectGraphAdapter(

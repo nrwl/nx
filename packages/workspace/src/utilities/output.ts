@@ -1,5 +1,5 @@
-import * as chalk from 'chalk';
-import { isCI } from './is_ci';
+import { Instance as Chalk } from 'chalk';
+import * as isCI from 'is-ci';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -30,11 +30,9 @@ export enum TaskCacheStatus {
 }
 
 /**
- * Automatically disable styling applied by chalk if CI=true
+ * Automatically disable styling applied by chalk if on CI
  */
-if (isCI()) {
-  (chalk as any).level = 0;
-}
+const chalk = new Chalk({ level: isCI ? 0 : undefined });
 
 class CLIOutput {
   private readonly NX_PREFIX = `${chalk.cyan(

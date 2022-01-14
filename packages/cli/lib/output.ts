@@ -3,8 +3,8 @@
  * Consider that file to be the golden source. Changes (which should be few)
  * should be copied here if necessary.
  */
-import * as chalk from 'chalk';
-import { isCI } from './is_ci';
+import { Instance as Chalk } from 'chalk';
+import * as isCI from 'is-ci';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -33,11 +33,9 @@ export interface CLISuccessMessageConfig {
 }
 
 /**
- * Automatically disable styling applied by chalk if CI=true
+ * Automatically disable styling applied by chalk if on CI
  */
-if (isCI()) {
-  (chalk as any).Level = 0;
-}
+const chalk = new Chalk({ level: isCI ? 0 : undefined });
 
 class CLIOutput {
   private readonly NX_PREFIX = `${chalk.cyan(

@@ -1,6 +1,7 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as chalk from 'chalk';
 import { ProjectType } from '../core/project-graph';
+import * as isCI from 'is-ci';
 
 describe('WorkspaceIntegrityChecks', () => {
   describe('workspace.json is in sync with the filesystem', () => {
@@ -63,9 +64,9 @@ describe('WorkspaceIntegrityChecks', () => {
       expect(errors).toEqual([
         {
           bodyLines: [
-            `${chalk.grey(
-              '-'
-            )} Cannot find project 'project1' in 'libs/project1'`,
+            `${
+              isCI ? '-' : chalk.grey('-')
+            } Cannot find project 'project1' in 'libs/project1'`,
           ],
           title: 'The workspace.json file is out of sync',
         },
@@ -96,7 +97,9 @@ describe('WorkspaceIntegrityChecks', () => {
       const errors = c.run();
       expect(errors).toEqual([
         {
-          bodyLines: [`${chalk.grey('-')} libs/project2/src/index.ts`],
+          bodyLines: [
+            `${isCI ? '-' : chalk.grey('-')} libs/project2/src/index.ts`,
+          ],
           title: 'The following file(s) do not belong to any projects:',
         },
       ]);
