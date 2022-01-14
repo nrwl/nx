@@ -109,7 +109,6 @@
     "webpack-merge": "^5.8.0",
     "webpack-sources": "^3.0.2",
     "webpack-subresource-integrity": "^1.5.2",
-    "worker-plugin": "3.2.0",
     "webpack-dev-server": "^4.3.1",
     "http-server": "14.1.0",
     "ignore": "^5.0.4"

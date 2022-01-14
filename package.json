@@ -252,7 +252,6 @@
     "webpack-node-externals": "^3.0.0",
     "webpack-sources": "^3.0.2",
     "webpack-subresource-integrity": "^1.5.2",
-    "worker-plugin": "3.2.0",
     "xstate": "^4.25.0",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
