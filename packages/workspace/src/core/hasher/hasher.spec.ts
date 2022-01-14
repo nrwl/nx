@@ -20,7 +20,7 @@ describe('Hasher', () => {
 
   const workSpaceJson = {
     projects: {
-      parent: { root: 'libs/parent' },
+      parent: { root: 'libs/parent', runtimeCacheInputs: ['echo runtime789'] },
       child: { root: 'libs/child' },
     },
   };
@@ -43,12 +43,29 @@ describe('Hasher', () => {
     'workspace.json': 'workspace.json.hash',
     global1: 'global1.hash',
     global2: 'global2.hash',
+    'echo runtime123': 'runtime123',
+    'echo runtime456': 'runtime456',
+    'echo runtime789': 'runtime789',
   };
 
   function createHashing(): any {
     return {
       hashArray: (values: string[]) => values.join('|'),
       hashFile: (path: string) => hashes[path],
+      hashRuntimeInputs: async (runtimeInputs: string[]) => {
+        if (runtimeInputs.includes('boom')) {
+          throw new Error('command not found: boom');
+        }
+        return runtimeInputs
+          ? {
+              value: runtimeInputs.map((input) => hashes[input]).join('|'),
+              runtime: runtimeInputs.reduce(
+                (m, c) => ({ ...m, [c]: hashes[c] }),
+                {}
+              ),
+            }
+          : undefined;
+      },
     };
   }
 
@@ -105,11 +122,11 @@ describe('Hasher', () => {
     expect(hash.value).toContain('build'); //target
     expect(hash.value).toContain('runtime123'); //target
     expect(hash.value).toContain('runtime456'); //target
+    expect(hash.value).toContain('runtime789'); //target
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      parent:
-        '/file|file.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      parent: `/file|file.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}`,
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -166,7 +183,7 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       parent:
-        '/file.ts|file.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
+        '/file.ts|file.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
       'nx.json': '{"npmScope":"nrwl"}',
@@ -265,7 +282,7 @@ describe('Hasher', () => {
       child:
         '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
@@ -368,7 +385,7 @@ describe('Hasher', () => {
       child:
         '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
 
     const hashb = await hasher.hashTaskWithDepsAndContext({
@@ -387,7 +404,7 @@ describe('Hasher', () => {
       child:
         '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
-        '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/filea.ts|a.hash|{"root":"libs/parent","runtimeCacheInputs":["echo runtime789"]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
