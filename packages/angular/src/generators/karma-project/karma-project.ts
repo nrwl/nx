@@ -14,7 +14,9 @@ export async function karmaProjectGenerator(
   generateKarmaProjectFiles(tree, options.project);
   updateTsConfigs(tree, options.project);
   updateWorkspaceConfig(tree, options.project);
-  await formatFiles(tree);
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 export default karmaProjectGenerator;
