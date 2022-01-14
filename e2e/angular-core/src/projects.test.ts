@@ -1,20 +1,14 @@
 import {
   checkFilesExist,
-  expectTestsPass,
-  getSelectedPackageManager,
   getSize,
   killPorts,
   newProject,
   cleanupProject,
   runCLI,
-  runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
   runCypressTests,
-  removeFile,
-  checkFilesDoNotExist,
-  isNotWindows,
   updateProjectConfig,
   readFile,
   runCommandUntil,
@@ -157,6 +151,86 @@ describe('Angular Projects ', () => {
     // the path to dist
     const mainBundle = readFile(`dist/apps/${app}/main.js`);
     expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
+  });
+
+  it('should build publishable libs successfully', () => {
+    // ARRANGE
+    const lib = uniq('lib');
+    const childLib = uniq('child');
+    const entryPoint = uniq('entrypoint');
+
+    runCLI(
+      `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
+    );
+
+    runCLI(
+      `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
+    );
+
+    // create secondary entrypoint
+    updateFile(
+      `libs/${childLib}/sub/package.json`,
+      `
+  {
+    "ngPackage": {}
+  }
+`
+    );
+    updateFile(
+      `libs/${childLib}/sub/src/lib/sub.module.ts`,
+      `
+  import { NgModule } from '@angular/core';
+  import { CommonModule } from '@angular/common';
+  @NgModule({ imports: [CommonModule] })
+  export class SubModule {}
+`
+    );
+
+    updateFile(
+      `libs/${childLib}/sub/src/public_api.ts`,
+      `export * from './lib/sub.module';`
+    );
+
+    updateFile(
+      `libs/${childLib}/sub/src/index.ts`,
+      `export * from './public_api';`
+    );
+
+    updateFile(`tsconfig.base.json`, (s) => {
+      return s.replace(
+        `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
+        `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],
+"@${proj}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
+`
+      );
+    });
+
+    const moduleContent = `
+    import { NgModule } from '@angular/core';
+    import { CommonModule } from '@angular/common';
+          import { ${
+            names(childLib).className
+          }Module } from '@${proj}/${childLib}';
+    import { SubModule } from '@${proj}/${childLib}/sub';
+    @NgModule({
+      imports: [CommonModule, ${names(childLib).className}Module, SubModule]
+    })
+    export class ${names(lib).className}Module {}`;
+
+    updateFile(`libs/${lib}/src/lib/${lib}.module.ts`, moduleContent);
+
+    // ACT
+    const buildOutput = runCLI(`build ${lib}`);
+
+    // ASSERT
+    expect(buildOutput).toContain(`Building entry point '@${proj}/${lib}'`);
+    expect(buildOutput).toContain(
+      `Building entry point '@${proj}/${lib}/${entryPoint}'`
+    );
+    expect(buildOutput).toContain('Running target "build" succeeded');
   });
 
   it('MFE - should serve the host and remote apps successfully', async () => {
