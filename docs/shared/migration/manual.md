@@ -168,7 +168,7 @@ nx format:write
 
 Nx offers built-in tasks for the most common needs: `serve`, `build`, `test`, `e2e`, and `lint`. You likely have additional tasks that are needed to manage or deploy your codebase. These tasks might include deployment, i18n workflows, or uploading assets to CDNs. These tasks can be set up as scripts that you run manually with node, ts-node, or npm scripts. You can migrate those tasks over as-is, to begin with.
 
-You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` builder](/executors/run-commands-builder) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the dependency graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
+You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` builder](/executors/run-commands-builder) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 
@@ -194,7 +194,7 @@ For React libraries:
 nx generate @nrwl/react:library
 ```
 
-It’s important to remember: don’t just drop your code anywhere! Always generate an app or a library for that code before migration. Without the project configuration, you’ll miss out on key functionalities of Nx provided by the dependency graph generation and affected code detection.
+It’s important to remember: don’t just drop your code anywhere! Always generate an app or a library for that code before migration. Without the project configuration, you’ll miss out on key functionalities of Nx provided by the project graph generation and affected code detection.
 
 ### Establishing code boundaries
 

@@ -1,4 +1,4 @@
-# Angular Nx Tutorial - Step 9: Using the Depedency Graph
+# Angular Nx Tutorial - Step 9: Using the Project Graph
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/8fr2RukmfW0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
@@ -8,10 +8,10 @@ Previously, some senior architect would create an ad-hoc dependency diagram and 
 
 With Nx, you can do better than that.
 
-Run the command to see the dependency graph for your workspace.
+Run the command to see the project graph for your workspace.
 
 ```sh
-npx nx dep-graph
+npx nx graph
 ```
 
 ## What's Next

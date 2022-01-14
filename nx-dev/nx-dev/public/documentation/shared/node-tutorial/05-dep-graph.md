@@ -1,4 +1,4 @@
-# Node Nx Tutorial - Step 5: Dep Graph
+# Node Nx Tutorial - Step 5: Project Graph
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/l9MjZ9IPdu4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 

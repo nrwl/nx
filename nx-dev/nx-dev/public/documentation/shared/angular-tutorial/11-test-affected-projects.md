@@ -2,7 +2,7 @@
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/5t77CPl-bbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
-Because Nx understands the dependency graph of your workspace, Nx is efficient at retesting and rebuilding your projects.
+Because Nx understands the project graph of your workspace, Nx is efficient at retesting and rebuilding your projects.
 
 **Commit all the changes in the repo**:
 
@@ -26,7 +26,7 @@ Run the command to see affected apps.
 npx nx affected:apps
 ```
 
-You should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
+You should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the project graph to figure out which apps can be affected by this change.
 
 Run the command to see affected libraries
 

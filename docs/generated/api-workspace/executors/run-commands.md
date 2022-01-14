@@ -135,7 +135,7 @@ The above commands will finish immediately, instead of waiting for 5 seconds.
 
 ##### Nx Affected
 
-The true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your dependency graph. So you can run **custom commands** only for the projects that have been affected by a change.
+The true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your project graph. So you can run **custom commands** only for the projects that have been affected by a change.
 
 We can create some configurations to generate docs, and if run using `nx affected`, it will only generate documentation for the projects that have been changed:
 

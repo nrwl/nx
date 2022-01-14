@@ -26,12 +26,12 @@ depend on `lib`, so it will invoke `nx run-many --target=test --projects=app1,ap
 Nx analyzes the nature of the changes. For example, if you change the version of Next.js in the package.json, Nx knows
 that `app2` cannot be affected by it, so it only retests `app1`.
 
-## Dep Graph
+## Project Graph
 
 To visualise what is affected, run:
 
 ```bash
-nx affected:dep-graph
+nx affected:graph
 ```
 
 ## CI

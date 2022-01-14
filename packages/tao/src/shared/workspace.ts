@@ -97,7 +97,7 @@ export interface ProjectConfiguration {
   implicitDependencies?: string[];
 
   /**
-   * List of tags used by nx-enforce-module-boundaries / dep-graph
+   * List of tags used by nx-enforce-module-boundaries / project graph
    */
   tags?: string[];
 }

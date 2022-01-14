@@ -1,56 +1,56 @@
 ---
-title: 'affected:dep-graph - CLI command'
+title: 'affected:graph - CLI command'
 description: 'Graph dependencies affected by changes'
 ---
 
-# affected:dep-graph
+# affected:graph
 
 Graph dependencies affected by changes
 
 ## Usage
 
 ```bash
-nx affected:dep-graph
+nx affected:graph
 ```
 
 [Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
-Open the dep graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file:
+Open the project graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file:
 
 ```bash
-nx affected:dep-graph --files=libs/mylib/src/index.ts
+nx affected:graph --files=libs/mylib/src/index.ts
 ```
 
-Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
+Open the project graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:dep-graph --base=main --head=HEAD
+nx affected:graph --base=main --head=HEAD
 ```
 
-Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
+Save the project graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:dep-graph --base=main --head=HEAD --file=output.json
+nx affected:graph --base=main --head=HEAD --file=output.json
 ```
 
-Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR):
+Generate a static website with project graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR):
 
 ```bash
-nx affected:dep-graph --base=main --head=HEAD --file=output.html
+nx affected:graph --base=main --head=HEAD --file=output.html
 ```
 
-Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on main:
+Open the project graph of the workspace in the browser, and highlight the projects affected by the last commit on main:
 
 ```bash
-nx affected:dep-graph --base=main~1 --head=main
+nx affected:graph --base=main~1 --head=main
 ```
 
-Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
+Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
 
 ```bash
-nx affected:dep-graph --exclude=project-one,project-two
+nx affected:graph --exclude=project-one,project-two
 ```
 
 ## Options
@@ -75,7 +75,7 @@ Exclude certain projects from being processed
 
 ### file
 
-Output file (e.g. --file=output.json or --file=dep-graph.html)
+Output file (e.g. --file=output.json or --file=graph.html)
 
 ### files
 
@@ -83,11 +83,11 @@ Change the way Nx is calculating the affected command by providing directly chan
 
 ### focus
 
-Use to show the dependency graph for a particular project and every node that is either an ancestor or a descendant.
+Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.
 
 ### groupByFolder
 
-Group projects by folder in the dependency graph
+Group projects by folder in the project graph
 
 ### head
 
@@ -99,7 +99,7 @@ Show help
 
 ### host
 
-Bind the dependency graph server to a specific ip address.
+Bind the project graph server to a specific ip address.
 
 ### only-failed
 
@@ -111,11 +111,11 @@ Isolate projects which previously failed
 
 Default: `true`
 
-Open the dependency graph in the browser.
+Open the project graph in the browser.
 
 ### port
 
-Bind the dependency graph server to a specific port.
+Bind the project graph server to a specific port.
 
 ### runner
 
@@ -147,4 +147,4 @@ Show version number
 
 Default: `false`
 
-Watch for changes to dependency graph and update in-browser
+Watch for changes to project graph and update in-browser
