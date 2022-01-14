@@ -46,6 +46,7 @@ describe('@nrwl/workspace:npm-package', () => {
       .toMatchInlineSnapshot(`
       "{
         \\"name\\": \\"@proj/my-package\\",
+        \\"version\\": \\"0.0.0\\",
         \\"scripts\\": {
           \\"test\\": \\"node index.js\\"
         }
