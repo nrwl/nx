@@ -33,7 +33,7 @@
     "chalk": "4.1.0",
     "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.0.0",
     "ignore": "^5.0.4",
     "jsonc-parser": "3.0.0",
     "rxjs-for-await": "0.0.2",
