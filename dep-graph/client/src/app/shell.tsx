@@ -50,20 +50,6 @@ export function Shell() {
         affectedProjects: project.affected,
         workspaceLayout: workspaceLayout,
       });
-
-      if (environment.focusedProject) {
-        depGraphService.send({
-          type: 'focusProject',
-          projectName: environment.focusedProject,
-        });
-      }
-
-      if (environment.groupByFolder) {
-        depGraphService.send({
-          type: 'setGroupByFolder',
-          groupByFolder: true,
-        });
-      }
     };
     fetchProjectGraph();
   }, [selectedProjectId, environment, depGraphService, projectGraphService]);

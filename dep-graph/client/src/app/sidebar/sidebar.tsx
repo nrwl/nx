@@ -3,6 +3,7 @@ import { useDepGraphService } from '../hooks/use-dep-graph';
 import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
 import {
   focusedProjectNameSelector,
+  groupByFolderSelector,
   hasAffectedProjectsSelector,
   includePathSelector,
   searchDepthSelector,
@@ -22,6 +23,7 @@ export function Sidebar() {
   const includePath = useDepGraphSelector(includePathSelector);
   const textFilter = useDepGraphSelector(textFilterSelector);
   const hasAffectedProjects = useDepGraphSelector(hasAffectedProjectsSelector);
+  const groupByFolder = useDepGraphSelector(groupByFolderSelector);
 
   function resetFocus() {
     depGraphService.send({ type: 'unfocusProject' });
@@ -161,6 +163,7 @@ export function Sidebar() {
         ></ShowHideProjects>
 
         <GroupByFolderPanel
+          groupByFolder={groupByFolder}
           groupByFolderChanged={groupByFolderChanged}
         ></GroupByFolderPanel>
 

@@ -5,8 +5,6 @@ import { AppConfig } from './app/models';
 export declare global {
   export interface Window {
     exclude: string[];
-    focusedProject: string;
-    groupByFolder: boolean;
     watch: boolean;
     localMode: 'serve' | 'build';
     projectGraphResponse?: DepGraphClientResponse;

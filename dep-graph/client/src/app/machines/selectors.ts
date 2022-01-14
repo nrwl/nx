@@ -36,6 +36,9 @@ export const searchDepthSelector: DepGraphSelector<{
 export const includePathSelector: DepGraphSelector<boolean> = (state) =>
   state.context.includePath;
 
+export const groupByFolderSelector: DepGraphSelector<boolean> = (state) =>
+  state.context.groupByFolder;
+
 export const textFilterSelector: DepGraphSelector<string> = (state) =>
   state.context.textFilter;
 

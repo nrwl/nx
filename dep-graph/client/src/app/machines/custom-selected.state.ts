@@ -1,8 +1,14 @@
 import { assign } from '@xstate/immer';
-import { send } from 'xstate';
+import { send, actions } from 'xstate';
 import { DepGraphStateNodeConfig } from './interfaces';
 
 export const customSelectedStateConfig: DepGraphStateNodeConfig = {
+  entry: actions.choose([
+    {
+      cond: 'selectActionCannotBePersistedToRoute',
+      actions: ['notifyRouteClearSelect'],
+    },
+  ]),
   on: {
     updateGraph: {
       target: 'customSelected',
@@ -32,7 +38,7 @@ export const customSelectedStateConfig: DepGraphStateNodeConfig = {
             selectedProjects: ctx.selectedProjects,
           }),
           {
-            to: (context) => context.graph,
+            to: (context) => context.graphActor,
           }
         ),
       ],

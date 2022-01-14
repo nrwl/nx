@@ -1,11 +1,12 @@
 import { memo } from 'react';
 
 export interface DisplayOptionsPanelProps {
+  groupByFolder: boolean;
   groupByFolderChanged: (checked: boolean) => void;
 }
 
 export const GroupByFolderPanel = memo(
-  ({ groupByFolderChanged }: DisplayOptionsPanelProps) => {
+  ({ groupByFolder, groupByFolderChanged }: DisplayOptionsPanelProps) => {
     return (
       <div className="mt-8 px-4">
         <div className="flex items-start">
@@ -17,6 +18,7 @@ export const GroupByFolderPanel = memo(
               type="checkbox"
               className="h-4 w-4 border-gray-300 rounded"
               onChange={(event) => groupByFolderChanged(event.target.checked)}
+              checked={groupByFolder}
             ></input>
           </div>
           <div className="ml-3 text-sm">

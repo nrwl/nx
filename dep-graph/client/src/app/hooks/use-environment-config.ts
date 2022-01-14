@@ -5,8 +5,6 @@ import { AppConfig } from '../interfaces';
 
 export function useEnvironmentConfig(): {
   exclude: string[];
-  focusedProject: string;
-  groupByFolder: boolean;
   watch: boolean;
   localMode: 'serve' | 'build';
   projectGraphResponse?: DepGraphClientResponse;
@@ -16,8 +14,6 @@ export function useEnvironmentConfig(): {
 } {
   const environmentConfig = useRef({
     exclude: window.exclude,
-    focusedProject: window.focusedProject,
-    groupByFolder: window.groupByFolder,
     watch: window.watch,
     localMode: window.localMode,
     projectGraphResponse: window.projectGraphResponse,

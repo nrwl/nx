@@ -36,6 +36,7 @@ export type DepGraphUIEvents =
   | { type: 'incrementSearchDepth' }
   | { type: 'decrementSearchDepth' }
   | { type: 'setSearchDepthEnabled'; searchDepthEnabled: boolean }
+  | { type: 'setSearchDepth'; searchDepth: number }
   | { type: 'focusProject'; projectName: string }
   | { type: 'unfocusProject' }
   | { type: 'filterByText'; search: string }
@@ -111,7 +112,32 @@ export type GraphRenderEvents =
       searchDepth: number;
     };
 
-export type AllEvents = DepGraphUIEvents | GraphRenderEvents;
+export type RouteEvents =
+  | {
+      type: 'notifyRouteFocusProject';
+      focusedProject: string;
+    }
+  | {
+      type: 'notifyRouteGroupByFolder';
+      groupByFolder: boolean;
+    }
+  | {
+      type: 'notifyRouteSearchDepth';
+      searchDepthEnabled: boolean;
+      searchDepth: number;
+    }
+  | {
+      type: 'notifyRouteUnfocusProject';
+    }
+  | {
+      type: 'notifyRouteSelectAll';
+    }
+  | {
+      type: 'notifyRouteSelectAffected';
+    }
+  | { type: 'notifyRouteClearSelect' };
+
+export type AllEvents = DepGraphUIEvents | GraphRenderEvents | RouteEvents;
 
 // The context (extended state) of the machine
 export interface DepGraphContext {
@@ -129,7 +155,9 @@ export interface DepGraphContext {
     libsDir: string;
     appsDir: string;
   };
-  graph: ActorRef<GraphRenderEvents>;
+  graphActor: ActorRef<GraphRenderEvents>;
+  routeSetterActor: ActorRef<RouteEvents>;
+  routeListenerActor: ActorRef<DepGraphUIEvents>;
   lastPerfReport: GraphPerfReport;
 }
 
