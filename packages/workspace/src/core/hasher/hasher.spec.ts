@@ -43,8 +43,8 @@ describe('Hasher', () => {
     'workspace.json': 'workspace.json.hash',
     global1: 'global1.hash',
     global2: 'global2.hash',
-    'echo runtime123': 'runtime123value',
-    'echo runtime456': 'runtime456value',
+    'echo runtime123': 'runtime123',
+    'echo runtime456': 'runtime456',
     'echo runtime789': 'runtime789value',
   };
 
@@ -121,8 +121,8 @@ describe('Hasher', () => {
     expect(hash.value).toContain('prop-value'); //overrides
     expect(hash.value).toContain('parent'); //project
     expect(hash.value).toContain('build'); //target
-    expect(hash.value).toContain('runtime123value'); //target
-    expect(hash.value).toContain('runtime456value'); //target
+    expect(hash.value).toContain('runtime123'); //target
+    expect(hash.value).toContain('runtime456'); //target
     expect(hash.value).toContain('runtime789value'); //target
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
@@ -136,8 +136,8 @@ describe('Hasher', () => {
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     });
     expect(hash.details.runtime).toEqual({
-      'echo runtime123': 'runtime123value',
-      'echo runtime456': 'runtime456value',
+      'echo runtime123': 'runtime123',
+      'echo runtime456': 'runtime456',
     });
   });
 
@@ -193,8 +193,8 @@ describe('Hasher', () => {
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     });
     expect(hash.details.runtime).toEqual({
-      'echo runtime123': 'runtime123value',
-      'echo runtime456': 'runtime456value',
+      'echo runtime123': 'runtime123',
+      'echo runtime456': 'runtime456',
     });
   });
 
