@@ -97,14 +97,18 @@ describe('Angular Projects ', () => {
     }
   }, 1000000);
 
-  it('should build the dependent buildable lib as well as the app', () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', () => {
     // ARRANGE
     const app = uniq('app');
     const buildableLib = uniq('buildlib1');
+    const buildableChildLib = uniq('buildlib2');
 
     runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);
     runCLI(
       `generate @nrwl/angular:library ${buildableLib} --buildable=true --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:library ${buildableChildLib} --buildable=true --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -128,6 +132,24 @@ describe('Angular Projects ', () => {
         })
         export class AppModule {}
     `
+    );
+
+    // update the buildable lib module to include a ref to the buildable child lib
+    updateFile(
+      `libs/${buildableLib}/src/lib/${names(buildableLib).fileName}.module.ts`,
+      `
+        import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { ${
+          names(buildableChildLib).className
+        }Module } from '@${proj}/${buildableChildLib}';
+        
+        @NgModule({
+          imports: [CommonModule, ${names(buildableChildLib).className}Module],
+        })
+        export class ${names(buildableLib).className}Module {}
+        
+      `
     );
 
     // update the angular.json
