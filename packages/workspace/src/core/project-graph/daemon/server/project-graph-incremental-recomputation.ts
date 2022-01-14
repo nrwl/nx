@@ -129,7 +129,8 @@ async function processCollectedUpdatedAndDeletedFiles() {
     collectedDeletedFiles.clear();
   } catch (e) {
     // this is expected
-    // for instance, workspace.json can be incorrect etc
+    // for instance, workspace.json can be incorrect or a file we are trying to has
+    // has been deleted
     // we are resetting internal state to start from scratch next time a file changes
     // given the user the opportunity to fix the error
     // if Nx requests the project graph prior to the error being fixed,
