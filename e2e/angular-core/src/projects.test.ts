@@ -1,40 +1,107 @@
-process.env.SELECTED_CLI = 'angular';
-
 import {
+  checkFilesExist,
+  expectTestsPass,
   getSelectedPackageManager,
+  getSize,
   killPorts,
   newProject,
-  promisifiedTreeKill,
-  readFile,
-  readJson,
   cleanupProject,
   runCLI,
-  runCommandUntil,
+  runCLIAsync,
+  tmpProjPath,
   uniq,
   updateFile,
-  readProjectConfig,
+  runCypressTests,
+  removeFile,
+  checkFilesDoNotExist,
+  isNotWindows,
   updateProjectConfig,
+  readFile,
+  runCommandUntil,
+  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
-import { names } from '@nrwl/devkit';
 import { ChildProcess } from 'child_process';
 
-// TODO: Check why this fails on yarn and npm
-describe('Angular Package', () => {
+import { names } from '@nrwl/devkit';
+
+describe('Angular Projects ', () => {
   let proj: string;
 
-  beforeAll(() => {
-    // This fails with pnpm due to incompatibilities with ngcc.
-    // Since this suite has a single test, we wrap everything to avoid the hooks to run and
-    // waste time.
-    // therefore switch to yarn
-
-    proj =
-      getSelectedPackageManager() === 'pnpm'
-        ? newProject({ packageManager: 'npm' })
-        : newProject();
-  });
-
+  beforeAll(() => (proj = newProject()));
   afterAll(() => cleanupProject());
+
+  it('should generate an app, a lib, link them, build, sevre and test both correctly', async () => {
+    const myapp = uniq('myapp');
+    const myapp2 = uniq('myapp2');
+    const mylib = uniq('mylib');
+    runCLI(
+      `generate @nrwl/angular:app ${myapp} --directory=myDir --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:app ${myapp2} --directory=myDir --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:lib ${mylib} --directory=myDir --add-module-spec --no-interactive`
+    );
+
+    updateFile(
+      `apps/my-dir/${myapp}/src/app/app.module.ts`,
+      `
+          import { NgModule } from '@angular/core';
+          import { BrowserModule } from '@angular/platform-browser';
+          import { MyDir${
+            names(mylib).className
+          }Module } from '@${proj}/my-dir/${mylib}';
+          import { AppComponent } from './app.component';
+          import { NxWelcomeComponent } from './nx-welcome.component';
+  
+          @NgModule({
+            imports: [BrowserModule, MyDir${names(mylib).className}Module],
+            declarations: [AppComponent, NxWelcomeComponent],
+            bootstrap: [AppComponent]
+          })
+          export class AppModule {}
+        `
+    );
+    runCLI(
+      `run-many --target build --projects=my-dir-${myapp},my-dir-${myapp2} --parallel --prod --output-hashing none`
+    );
+
+    checkFilesExist(`dist/apps/my-dir/${myapp}/main.js`);
+
+    // This is a loose requirement because there are a lot of
+    // influences external from this project that affect this.
+    const es2015BundleSize = getSize(
+      tmpProjPath(`dist/apps/my-dir/${myapp}/main.js`)
+    );
+    console.log(
+      `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
+    );
+    expect(es2015BundleSize).toBeLessThanOrEqual(160000);
+
+    runCLI(
+      `run-many --target test --projects=my-dir-${myapp},my-dir-${mylib} --parallel`
+    );
+
+    if (runCypressTests()) {
+      const e2eResults = runCLI(`e2e my-dir-${myapp}-e2e --no-watch`);
+      expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
+    }
+
+    const process = await runCommandUntil(
+      `serve my-dir-${myapp} -- --port=${4207}`,
+      (output) => output.includes(`listening on localhost:${4207}`)
+    );
+
+    // port and process cleanup
+    try {
+      await promisifiedTreeKill(process.pid, 'SIGKILL');
+      await killPorts(4207);
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 1000000);
 
   it('should build the dependent buildable lib as well as the app', () => {
     // ARRANGE
@@ -132,44 +199,4 @@ describe('Angular Package', () => {
       expect(err).toBeFalsy();
     }
   }, 300000);
-
-  it('should build the app successfully', () => {
-    // ARRANGE
-    const app = uniq('app');
-    // generate app
-    runCLI(
-      `generate @nrwl/angular:app ${app} --routing --style=css --no-interactive`
-    );
-
-    // ACT
-    const serveOutput = runCLI(`build ${app}`);
-
-    // ASSERT
-    expect(serveOutput).toContain('Running target "build" succeeded');
-  }, 1000000);
-
-  it('should serve the app successfully', async () => {
-    // ARRANGE
-    const app = uniq('app');
-    // generate app
-    runCLI(
-      `generate @nrwl/angular:app ${app} --routing --style=css --no-interactive`
-    );
-    // ACT
-    const port = 4201;
-
-    // ASSERT
-    const process = await runCommandUntil(
-      `serve ${app} -- --port=${port}`,
-      (output) => output.includes(`listening on localhost:${port}`)
-    );
-
-    // port and process cleanup
-    try {
-      await promisifiedTreeKill(process.pid, 'SIGKILL');
-      await killPorts(port);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
-  }, 3000000);
 });
