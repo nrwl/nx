@@ -88,7 +88,7 @@ information to run executors only on the [affected](/cli/affected) projects in a
 version of the [project project graph](/structure/dependency-graph) is also available to help developers
 understand the architecture of the codebase.
 
-The [`nx dgraph` command](/cli/dep-graph) displays this project graph in a web browser for you to
+The [`nx graph` command](/cli/dep-graph) displays this project graph in a web browser for you to
 explore.
 
 ```bash

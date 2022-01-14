@@ -368,7 +368,7 @@
           {
             "name": "graph",
             "id": "dep-graph",
-            "file": "generated/cli/dep-graph"
+            "file": "generated/cli/graph"
           },
           {
             "name": "run-many",
@@ -403,7 +403,7 @@
           {
             "name": "affected:graph",
             "id": "affected-dep-graph",
-            "file": "generated/cli/affected-dep-graph"
+            "file": "generated/cli/affected-graph"
           },
           {
             "name": "affected:apps",

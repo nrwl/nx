@@ -1,11 +1,11 @@
 ---
 title: 'affected:graph - CLI command'
-description: 'Graph dependencies affected by changes'
+description: 'Graph dependencies affected by changes. Alias: affected:dep-graph'
 ---
 
 # affected:graph
 
-Graph dependencies affected by changes
+Graph dependencies affected by changes. Alias: affected:dep-graph
 
 ## Usage
 
@@ -75,7 +75,7 @@ Exclude certain projects from being processed
 
 ### file
 
-Output file (e.g. --file=output.json or --file=graph.html)
+Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### files
 

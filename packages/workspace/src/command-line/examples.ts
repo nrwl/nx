@@ -196,7 +196,7 @@ export const examples: Record<string, Example[]> = {
   ],
   'format:write': [],
   'format:check': [],
-  'dep-graph': [
+  graph: [
     {
       command: 'graph',
       description: 'Open the project graph of the workspace in the browser',
@@ -234,7 +234,7 @@ export const examples: Record<string, Example[]> = {
       description: 'Watch for changes to project graph and update in-browser',
     },
   ],
-  'affected:dep-graph': [
+  'affected:graph': [
     {
       command: 'affected:graph --files=libs/mylib/src/index.ts',
       description:

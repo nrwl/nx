@@ -91,6 +91,8 @@ understand the architecture of the codebase.
 The [`nx graph` command](/cli/dep-graph) displays this project graph in a web browser for you to
 explore.
 
+Note: In older versions of Nx, the project graph was launched with `nx dep-graph`. For backward compatibility, that command is aliased to `nx graph`.
+
 ```bash
 nx graph
 nx graph --watch # Updates the browser as code is changed

@@ -1,11 +1,11 @@
 ---
 title: 'graph - CLI command'
-description: 'Graph dependencies within workspace'
+description: 'Graph dependencies within workspace. Alias: dep-graph'
 ---
 
 # graph
 
-Graph dependencies within workspace
+Graph dependencies within workspace. Alias: dep-graph
 
 ## Usage
 
@@ -73,7 +73,7 @@ List of projects delimited by commas to exclude from the project graph.
 
 ### file
 
-Output file (e.g. --file=output.json or --file=graph.html)
+Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### focus
 

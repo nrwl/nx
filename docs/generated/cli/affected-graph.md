@@ -1,16 +1,16 @@
 ---
-title: 'affected:dep-graph - CLI command'
-description: 'Graph dependencies affected by changes'
+title: 'affected:graph - CLI command'
+description: 'Graph dependencies affected by changes. Alias: affected:dep-graph'
 ---
 
-# affected:dep-graph
+# affected:graph
 
-Graph dependencies affected by changes
+Graph dependencies affected by changes. Alias: affected:dep-graph
 
 ## Usage
 
 ```bash
-nx affected:dep-graph
+nx affected:graph
 ```
 
 [Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.

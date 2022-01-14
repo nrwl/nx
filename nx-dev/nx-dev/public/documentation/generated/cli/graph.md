@@ -1,16 +1,16 @@
 ---
-title: 'dep-graph - CLI command'
-description: 'Graph dependencies within workspace'
+title: 'graph - CLI command'
+description: 'Graph dependencies within workspace. Alias: dep-graph'
 ---
 
-# dep-graph
+# graph
 
-Graph dependencies within workspace
+Graph dependencies within workspace. Alias: dep-graph
 
 ## Usage
 
 ```bash
-nx dep-graph
+nx graph
 ```
 
 [Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.

@@ -151,13 +151,15 @@ ${daemonHelpOutput}
       })
   )
   .command({
-    command: 'affected:dep-graph',
-    describe: chalk.bold('Graph dependencies affected by changes'),
-    aliases: ['affected:graph'],
+    command: 'affected:graph',
+    describe: chalk.bold(
+      'Graph dependencies affected by changes. Alias: affected:dep-graph'
+    ),
+    aliases: ['affected:dep-graph'],
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withDepGraphOptions(yargs)),
-        'affected:dep-graph'
+        'affected:graph'
       ),
     handler: async (args) =>
       (await import('./affected')).affected('graph', {
@@ -209,9 +211,11 @@ npx nx daemon
   )
 
   .command({
-    command: 'dep-graph',
-    describe: chalk.bold('Graph dependencies within workspace'),
-    aliases: ['graph'],
+    command: 'graph',
+    describe: chalk.bold(
+      'Graph dependencies within workspace. Alias: dep-graph'
+    ),
+    aliases: ['dep-graph'],
     builder: (yargs) =>
       linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
     handler: async (args) =>
