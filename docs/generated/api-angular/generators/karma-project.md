@@ -34,3 +34,11 @@ nx g karma-project ... --dry-run
 Type: `string`
 
 The name of the project.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

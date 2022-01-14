@@ -17,6 +17,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
   } else if (options.unitTestRunner === UnitTestRunner.Karma) {
     await karmaProjectGenerator(host, {
       project: options.name,
+      skipFormat: true,
     });
   }
 }

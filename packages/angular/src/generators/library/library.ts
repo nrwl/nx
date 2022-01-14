@@ -96,7 +96,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     await convertToNxProjectGenerator(host, {
       project: options.name,
       all: false,
-      skipFormat: options.skipFormat,
+      skipFormat: true,
     });
   }
 
@@ -116,10 +116,12 @@ async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       setupFile: 'angular',
       supportTsx: false,
       skipSerializers: false,
+      skipFormat: true,
     });
   } else if (options.unitTestRunner === 'karma') {
     await karmaProjectGenerator(host, {
       project: options.name,
+      skipFormat: true,
     });
   }
 }
@@ -150,6 +152,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     projectRoot: options.projectRoot,
     prefix: options.prefix,
     setParserOptionsProject: options.setParserOptionsProject,
+    skipFormat: true,
   });
 }
 
