@@ -75,15 +75,17 @@ export class TargetProjectLocator {
       return npmProject;
     }
 
-    // TODO(meeroslav): this block is probably obsolete
-    // and existed only because of the incomplete `paths` matching
-    // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
-    const resolvedProject = this.resolveImportWithTypescript(
-      normalizedImportExpr,
-      filePath
-    );
-    if (resolvedProject) {
-      return resolvedProject;
+    if (this.tsConfig.config) {
+      // TODO(meeroslav): this block is probably obsolete
+      // and existed only because of the incomplete `paths` matching
+      // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
+      const resolvedProject = this.resolveImportWithTypescript(
+        normalizedImportExpr,
+        filePath
+      );
+      if (resolvedProject) {
+        return resolvedProject;
+      }
     }
 
     // TODO(meeroslav): this block should be removed as it's going around typescript paths
@@ -191,6 +193,13 @@ export class TargetProjectLocator {
       path = 'tsconfig.json';
       absolutePath = this.getAbsolutePath(path);
       content = readFileIfExisting(absolutePath);
+    }
+    if (!content) {
+      return {
+        path: null,
+        absolutePath: null,
+        config: null,
+      };
     }
     return { path, absolutePath, config: parseJson(content) };
   }
