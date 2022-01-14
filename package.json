@@ -187,7 +187,7 @@
     "memfs": "^3.0.1",
     "metro-resolver": "^0.66.2",
     "mime": "2.4.4",
-    "mini-css-extract-plugin": "^2.1.0",
+    "mini-css-extract-plugin": "~2.4.7",
     "minimatch": "3.0.4",
     "next": "12.0.7",
     "next-sitemap": "^1.6.108",
