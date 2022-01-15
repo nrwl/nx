@@ -14,6 +14,6 @@ Executors and generators adding Cypress tests for frontend applications.
 
 ## How to Use
 
-This package is used by the `@nrwl/web`, `@nrwl/react`, and `@nrwl/angular`. See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more information.
+This package is used by `@nrwl/web`, `@nrwl/react`, and `@nrwl/angular`. See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more information.
 
 {{resources}}
