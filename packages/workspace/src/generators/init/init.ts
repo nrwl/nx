@@ -495,7 +495,12 @@ function checkCanConvertToWorkspace(host: Tree) {
     }
     const e2eKey = getE2eKey(host);
     const e2eApp = getE2eProject(host);
-    if (e2eApp && !host.exists(e2eApp.targets.e2e.options.protractorConfig)) {
+    if (
+      e2eApp &&
+      e2eApp.targets.e2e.executor ===
+        '@angular-devkit/build-angular:protractor' &&
+      !host.exists(e2eApp.targets.e2e.options.protractorConfig)
+    ) {
       console.info(
         `Make sure the ${e2eKey}.architect.e2e.options.protractorConfig is valid or the ${e2eKey} project is removed from angular.json.`
       );
@@ -589,6 +594,7 @@ function addFiles(host: Tree) {
   if (!host.exists('.prettierignore')) {
     generateFiles(host, joinPathFragments(__dirname, './files/prettier'), '.', {
       tmpl: '',
+      dot: '.',
     });
   }
 }
