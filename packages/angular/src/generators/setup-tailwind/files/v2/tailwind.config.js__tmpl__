@@ -1,4 +1,4 @@
-<% if (projectType === 'application') { %>const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 
 module.exports = {
@@ -6,7 +6,7 @@ module.exports = {
   purge: [
     join(__dirname, '<%= relativeSourceRoot %>/**/*.{html,ts}'),
     ...createGlobPatternsForDependencies(__dirname),
-  ],<% } else { %>module.exports = {<% } %>
+  ],
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},

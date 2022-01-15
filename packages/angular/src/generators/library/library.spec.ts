@@ -1366,7 +1366,14 @@ describe('lib', () => {
       // ASSERT
       expect(tree.read('libs/my-lib/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          content: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
           theme: {
             extend: {},
           },
