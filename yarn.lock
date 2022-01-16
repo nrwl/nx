@@ -18826,6 +18826,11 @@ postcss@^8.1.10, postcss@^8.2.15, postcss@^8.2.4, postcss@^8.2.9, postcss@^8.3.5
     picocolors "^1.0.0"
     source-map-js "^0.6.2"
 
+preact@10.6.4:
+  version "10.6.4"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.6.4.tgz#ad12c409ff1b4316158486e0a7b8d43636f7ced8"
+  integrity sha512-WyosM7pxGcndU8hY0OQlLd54tOU+qmG45QXj2dAYrL11HoyU/EzOSTlpJsirbBr1QW7lICxSsVJJmcmUglovHQ==
+
 precise-commits@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/precise-commits/-/precise-commits-1.0.2.tgz#4659be01a9c3310f50ce51ddf913fead1d7cc940"
