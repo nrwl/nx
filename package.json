@@ -118,6 +118,7 @@
     "@xstate/immer": "^0.2.0",
     "@xstate/inspect": "^0.5.1",
     "@xstate/react": "^1.6.3",
+    "@yarnpkg/plugin-dlx": "^3.1.1",
     "angular": "1.8.0",
     "autoprefixer": "^10.2.5",
     "babel-jest": "27.2.3",
@@ -297,7 +298,11 @@
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
-    "**/xmlhttprequest-ssl": "~1.6.2",
     "immer": "~9.0.6"
-  }
+  },
+  "engines": {
+    "npm": "please-use-yarn",
+    "yarn": ">=1.22.17"
+  },
+  "packageManager": "yarn@3.2.0-rc.6"
 }

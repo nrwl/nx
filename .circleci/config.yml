@@ -11,13 +11,13 @@ orbs:
 # -------------------------
 machine:
   pre:
-    - mkdir ~/.cache/yarn
+    - mkdir ~/.yarn/cache/
     - mkdir ~/Library/Caches/Homebrew
     - mkdir /usr/local/Homebrew
 
 dependencies:
   cache_directories:
-    - ~/.cache/yarn
+    - ~/.yarn/cache/
     - /usr/local/Homebrew
     - ~/Library/Caches/Homebrew
   override:
@@ -66,13 +66,13 @@ commands:
             - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
-          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+          command: yarn install --prefer-offline --non-interactive --immutable
       - save_cache:
           name: Save Yarn Package Cache
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-            - ~/.cache/yarn
+            - ~/.yarn/cache/
 
   install-pnpm:
     steps:

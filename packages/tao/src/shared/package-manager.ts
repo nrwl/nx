@@ -41,7 +41,7 @@ export function getPackageManagerCommand(
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => ({
-      install: 'yarn',
+      install: 'yarn dlx touch yarn.lock && yarn install',
       add: 'yarn add -W',
       addDev: 'yarn add -D -W',
       rm: 'yarn remove',

@@ -12,10 +12,17 @@ import { cleanup } from './utils';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
   const localTmpDir = dirname(tmpProjPath());
+
+  // will be better written if using detectPackageManager() from @nrwl/devkit
+  // amends the value to a string, even if its undefined or null etc
+  const packageManager =
+    '' + process.env.npm_config_user_agent.toString().split('/')[0];
+  // console.log(packageManager);
+
   return execSync(
     `node ${require.resolve(
       '@nrwl/tao'
-    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
+    )} new proj --nx-workspace-root=${localTmpDir} --packageManager=${packageManager} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
       args || ''
     }`,
     {
