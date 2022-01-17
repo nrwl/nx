@@ -21,7 +21,7 @@ import {
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { joinPathFragments, normalizePath } from '@nrwl/devkit';
+import { normalizePath } from '@nrwl/devkit';
 import {
   ProjectType,
   readCachedProjectGraph,
@@ -33,7 +33,7 @@ import {
   findFilesInCircularPath,
 } from '@nrwl/workspace/src/utils/graph-utils';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
-import { existsSync } from 'fs';
+import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
 
 type Options = [
   {
@@ -234,17 +234,11 @@ export default createESLintRule<Options, MessageIds>({
       if (sourceProject === targetProject) {
         // we only allow relative paths within the same project
         // and if it's not a secondary entrypoint in an angular lib
-        const ngPackageExistsForSecondaryEntry = sourceFilePath.endsWith(
-          'src/index.ts'
-        )
-          ? existsSync(
-              joinPathFragments(sourceFilePath, '../../', 'ng-package.json')
-            )
-          : false;
+
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !ngPackageExistsForSecondaryEntry
+          !isAngularSecondaryEntrypoint(sourceFilePath)
         ) {
           context.report({
             node,
