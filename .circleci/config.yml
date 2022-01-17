@@ -66,7 +66,7 @@ commands:
             - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
-          command: yarn install --prefer-offline --non-interactive --immutable
+          command: yarn install --immutable
       - save_cache:
           name: Save Yarn Package Cache
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}

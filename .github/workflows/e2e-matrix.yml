@@ -113,7 +113,7 @@ jobs:
 
     - name: Yarn cache directory path
       id: yarn-cache-dir-path
-      run: echo "::set-output name=dir::$(yarn cache dir)"
+      run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
 
     - name: Cache yarn
       uses: actions/cache@v2
@@ -124,7 +124,7 @@ jobs:
           ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
 
     - name: Install packages
-      run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+      run: yarn install --immutable
 
     - name: Cleanup
       if: ${{ matrix.os == 'ubuntu-latest' }}

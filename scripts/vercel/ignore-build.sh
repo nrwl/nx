@@ -7,7 +7,7 @@ APP=$1
 NX_VERSION=$(node -e "console.log(require('./package.json').devDependencies['@nrwl/workspace'])")
 
 # Need the workspace in order to run affected
-yarn add -D @nrwl/workspace@$NX_VERSION --prefer-offline
+yarn add -D @nrwl/workspace@$NX_VERSION --cached
 
 # We don't have a good way to check from base due to Vercel's shallow clone
 # TODO: Fix this once we figure out a better solution
