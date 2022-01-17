@@ -72,6 +72,12 @@
       "cli": "nx",
       "description": "Adjust Storybook tsconfig to add styled-jsx typings",
       "factory": "./src/migrations/update-12-8-0/update-storybook-styled-jsx-typings"
+    },
+    "update-13.4.6": {
+      "version": "13.4.6-beta.1",
+      "cli": "nx",
+      "description": "Add projectBuildConfig option to project's Storybook config.",
+      "factory": "./src/migrations/update-13-4-6/set-project-build-config"
     }
   },
   "packageJsonUpdates": {

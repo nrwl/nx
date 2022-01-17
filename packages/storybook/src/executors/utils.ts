@@ -5,7 +5,10 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import {
+  TargetConfiguration,
+  Workspaces,
+} from '@nrwl/tao/src/shared/workspace';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
@@ -205,31 +208,36 @@ export function resolveCommonStorybookOptionMapper(
 
       storybookOptions.angularBrowserTarget = targetString;
     } else {
-      // to preserve the backwards compatibility for our users Nx resolves the
-      // default project just as Storybook used to before
+      const { storybookBuildTarget, storybookTarget, buildTarget } =
+        findStorybookAndBuildTargets(
+          context?.workspace?.projects?.[context.projectName]?.targets
+        );
 
-      const ws = new Workspaces(context.root);
-      const defaultProjectName = ws.calculateDefaultProjectName(
-        context.cwd,
-        context.workspace
-      );
+      throw new Error(
+        `
+        No projectBuildConfig was provided.
+        
+        To fix this, you can try one of the following options:
+        
+        1. You can run the ${
+          context.targetName ? context.targetName : storybookTarget
+        } executor by providing the projectBuildConfig flag as follows:
+               
+        nx ${context.targetName ? context.targetName : storybookTarget} ${
+          context.projectName
+        } --projectBuildConfig=${context.projectName}${
+          !buildTarget && storybookBuildTarget ? `:${storybookBuildTarget}` : ''
+        }
 
-      buildProjectName = defaultProjectName;
-
-      targetOptions = readTargetOptions(
-        {
-          project: defaultProjectName,
-          target: targetName,
-          configuration: '',
-        },
-        context
-      );
-
-      storybookOptions.angularBrowserTarget = normalizeTargetString(
-        defaultProjectName,
-        targetName
+        2. In your project configuration, under the "${
+          context.targetName ? context.targetName : storybookTarget
+        }" target options, you can
+        set the "projectBuildConfig" property to the name of the project of which you want to use
+        the build configuration for Storybook.
+        `
       );
     }
+
     const project = context.workspace.projects[buildProjectName];
 
     const angularDevkitCompatibleLogger = {
@@ -279,4 +287,33 @@ function isStorybookGTE6_4() {
     checkAndCleanWithSemver('@storybook/core', storybookVersion),
     '6.4.0-rc.1'
   );
+}
+
+export function findStorybookAndBuildTargets(targets: {
+  [targetName: string]: TargetConfiguration;
+}): {
+  storybookBuildTarget?: string;
+  storybookTarget?: string;
+  buildTarget?: string;
+} {
+  const returnObject: {
+    storybookBuildTarget?: string;
+    storybookTarget?: string;
+    buildTarget?: string;
+  } = {};
+  Object.entries(targets).forEach(([target, targetConfig]) => {
+    if (targetConfig.executor === '@nrwl/storybook:storybook') {
+      returnObject.storybookTarget = target;
+    }
+    if (targetConfig.executor === '@nrwl/storybook:build') {
+      returnObject.storybookBuildTarget = target;
+    }
+    if (
+      targetConfig.executor === '@angular-devkit/build-angular:browser' ||
+      targetConfig.executor === '@nrwl/angular:ng-packagr-lite'
+    ) {
+      returnObject.buildTarget = target;
+    }
+  });
+  return returnObject;
 }
