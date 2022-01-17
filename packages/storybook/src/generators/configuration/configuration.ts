@@ -26,10 +26,10 @@ import {
 } from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
-import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
+import { findStorybookAndBuildTargets } from '../../executors/utils';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -41,7 +41,9 @@ export async function configurationGenerator(
 
   const workspaceStorybookVersion = getCurrentWorkspaceStorybookVersion(tree);
 
-  const { projectType } = readProjectConfiguration(tree, schema.name);
+  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
+
+  const { buildTarget } = findStorybookAndBuildTargets(targets);
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
@@ -59,7 +61,7 @@ export async function configurationGenerator(
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
-  addStorybookTask(tree, schema.name, schema.uiFramework);
+  addStorybookTask(tree, schema.name, schema.uiFramework, buildTarget);
   if (schema.configureCypress) {
     if (projectType !== 'application') {
       const cypressTask = await cypressProjectGenerator(tree, {
@@ -300,7 +302,8 @@ function dedupe(arr: string[]) {
 function addStorybookTask(
   tree: Tree,
   projectName: string,
-  uiFramework: string
+  uiFramework: string,
+  buildTargetForAngularProjects: string
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
@@ -311,6 +314,12 @@ function addStorybookTask(
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },
+      projectBuildConfig:
+        uiFramework === '@storybook/angular'
+          ? buildTargetForAngularProjects
+            ? projectName
+            : `${projectName}:build-storybook`
+          : undefined,
     },
     configurations: {
       ci: {
@@ -327,6 +336,12 @@ function addStorybookTask(
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },
+      projectBuildConfig:
+        uiFramework === '@storybook/angular'
+          ? buildTargetForAngularProjects
+            ? projectName
+            : `${projectName}:build-storybook`
+          : undefined,
     },
     configurations: {
       ci: {
