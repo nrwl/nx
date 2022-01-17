@@ -53,6 +53,7 @@ describe('getNodePartial', () => {
       });
 
       expect(result.optimization.minimize).toEqual(true);
+      expect(result.optimization.minimizer).toBeDefined();
     });
 
     it('should concatenate modules', () => {
