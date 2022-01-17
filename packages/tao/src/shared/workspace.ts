@@ -137,7 +137,7 @@ export interface TargetConfiguration {
   /**
    * This describes other targets that a target depends on.
    */
-  dependsOn?: [TargetDependencyConfig];
+  dependsOn?: TargetDependencyConfig[];
 
   /**
    * Target's options. They are passed in to the executor.
