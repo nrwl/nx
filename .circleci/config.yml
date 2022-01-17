@@ -72,7 +72,7 @@ commands:
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-            - ~/.yarn/cache/
+            - ~/.yarn/ # might need to be ~/.yarn/cache/
 
   install-pnpm:
     steps:
