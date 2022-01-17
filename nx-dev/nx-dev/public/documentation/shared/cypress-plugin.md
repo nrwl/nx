@@ -11,7 +11,7 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 - Network traffic control
 - Screenshots and videos
 
-## How to Use Cypress
+## Setting Up Cypress
 
 ### Generating Applications
 
@@ -19,34 +19,6 @@ By default, when creating a new frontend application, Nx will use Cypress to cre
 
 ```bash
 nx g @nrwl/web:app frontend
-```
-
-```treeview
-<workspace name>/
-├── apps/
-│   ├── frontend/
-│   └── frontend-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
-├── libs/
-├── tools/
-├── nx.json
-├── package.json
-├── README.md
-├── workspace.json
-└── tsconfig.base.json
 ```
 
 ### Creating a Cypress E2E project for an existing project
@@ -72,6 +44,8 @@ nx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name
 ```
 
 Replace `your-app-name` with the app's name as defined in your `workspace.json` file.
+
+## Using Cypress
 
 ### Testing Applications
 
@@ -114,3 +88,15 @@ nx e2e frontend-e2e --baseUrl=https://frontend.com
 ### Using cypress.json
 
 If you need to fine tune your Cypress setup, you can do so by modifying `cypress.json` in the e2e project. For instance, you can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete configuration is documented on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
+
+## More Documentation
+
+React Nx Tutorial
+
+- [Step 2: Add E2E Tests](/react-tutorial/02-add-e2e-test)
+- [Step 3: Display Todso](/react-tutorial/03-display-todos)
+
+Angular Nx Tutorial
+
+- [Step 2: Add E2E Tests](/angular-tutorial/02-add-e2e-test)
+- [Step 3: Display Todso](/angular-tutorial/03-display-todos)
