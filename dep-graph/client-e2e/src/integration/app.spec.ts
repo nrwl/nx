@@ -192,7 +192,7 @@ describe('dep-graph-client', () => {
     });
   });
 
-  describe.only('setting url params', () => {
+  describe('setting url params', () => {
     it('should set focused project', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
       cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });

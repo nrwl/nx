@@ -28,7 +28,8 @@
             "maximumWarning": "2mb",
             "maximumError": "5mb"
           }
-        ]
+        ],
+        "webpackConfig": "dep-graph/client/webpack.config.js"
       },
       "configurations": {
         "dev": {
