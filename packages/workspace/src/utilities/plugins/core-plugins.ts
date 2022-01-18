@@ -61,15 +61,11 @@ export function fetchCorePlugins() {
 }
 
 export function listCorePlugins(
-  installedPlugins: PluginCapabilities[],
+  installedPlugins: Map<string, PluginCapabilities>,
   corePlugins: CorePlugin[]
 ): void {
-  const installedPluginsMap: Set<string> = new Set<string>(
-    installedPlugins.map((p) => p.name)
-  );
-
   const alsoAvailable = corePlugins.filter(
-    (p) => !installedPluginsMap.has(p.name)
+    (p) => !installedPlugins.has(p.name)
   );
 
   if (alsoAvailable.length) {

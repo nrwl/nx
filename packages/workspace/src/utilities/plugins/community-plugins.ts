@@ -32,17 +32,13 @@ export async function fetchCommunityPlugins(): Promise<CommunityPlugin[]> {
 }
 
 export function listCommunityPlugins(
-  installedPlugins: PluginCapabilities[],
+  installedPlugins: Map<string, PluginCapabilities>,
   communityPlugins?: CommunityPlugin[]
 ): void {
   if (!communityPlugins) return;
 
-  const installedPluginsMap: Set<string> = new Set<string>(
-    installedPlugins.map((p) => p.name)
-  );
-
   const availableCommunityPlugins = communityPlugins.filter(
-    (p) => !installedPluginsMap.has(p.name)
+    (p) => !installedPlugins.has(p.name)
   );
 
   output.log({

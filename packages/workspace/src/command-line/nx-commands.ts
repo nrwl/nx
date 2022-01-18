@@ -11,6 +11,7 @@ import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/ge
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import type { ListArgs } from './list';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -291,7 +292,17 @@ npx nx daemon
     }
   )
   .command(require('./report').report)
-  .command(require('./list').list)
+  .command<ListArgs>({
+    command: 'list [plugin]',
+    describe:
+      'Lists installed plugins, capabilities of installed plugins and other available plugins.',
+    builder: (yargs) =>
+      yargs.positional('plugin', {
+        type: 'string',
+        description: 'The name of an installed plugin to query',
+      }),
+    handler: async (args) => (await import('./list')).listHandler(args),
+  })
   .command({
     command: 'reset',
     describe:
