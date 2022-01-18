@@ -7,6 +7,9 @@ labels: "type: feature"
 <!-- Please do your best to fill out all of the sections below! -->
 <!-- Use this issue type for concrete suggestions, otherwise, open a discussion type issue instead. -->
 
+- [ ] I'd be willing to implement this feature ([contributing guide](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md))
+
+
 ## Description
 <!-- What is the behavior that you would like to see introduced? -->
 
