@@ -16,41 +16,12 @@ the boilerplate. However, the vast majority of the features will work the same w
 
 ## Getting Started
 
-These guides will help you get started:
+- [Using Nx without plugins](/getting-started/nx-core) will help you understand the core of Nx.
+- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo) will show how to add Nx to an existing monorepo.
+- [Mental model](/using-nx/mental-model) is a good starting point for those who like to understand things theoretically first.
 
-- [Installing Nx CLI & creating a new Nx Workspace](/getting-started/nx-setup)
-- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
-- [Using Nx without plugins](/getting-started/nx-core)
+If you want to use Nx plugins to really level up your productivity, pick one of the following guides:
+
 - [Nx and TypeScript](/getting-started/nx-and-typescript)
 - [Nx and React](/getting-started/nx-and-react)
 - [Nx and Angular](/getting-started/nx-and-angular)
-- [CI Overview](/using-nx/ci-overview)
-
-## Features
-
-**Best-in-Class Support for Monorepos**
-
-- [Smart rebuilds of affected projects](/using-nx/affected)
-- [Computation caching](/using-nx/caching)
-- [Distributed task execution](/using-nx/dte)
-- [Code sharing and ownership management](/structure/monorepo-tags)
-
-**Integrated Development Experience**
-
-- [High-quality editor plugins](/using-nx/console) & [GitHub apps](https://github.com/apps/nx-cloud)
-- [Powerful code generators](/generators/using-schematics)
-- [Workspace visualizations](/structure/dependency-graph)
-
-**Supports Your Ecosystem**
-
-- [Rich plugin ecosystem](/getting-started/nx-devkit) from Nrwl and the [community](/community)
-- Consistent dev experience for any framework
-- [Automatic upgrade to the latest versions of all frameworks and tools](/using-nx/updating-nx)
-
-## Learn While Doing
-
-- [Using Nx without plugins](/getting-started/nx-core)
-- [Nx and TypeScript](/getting-started/nx-and-typescript)
-- [React: Interactive Nx Tutorial (with videos)](/react-tutorial/01-create-application)
-- [Node: Interactive Nx Tutorial (with videos)](/node-tutorial/01-create-application)
-- [Angular: Interactive Nx Tutorial (with videos)](/angular-tutorial/01-create-application)
