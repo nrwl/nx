@@ -30,8 +30,8 @@ import {
 import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect } from '@angular-devkit/architect';
-import { Observable, of, merge, forkJoin, NEVER, from } from 'rxjs';
-import { catchError, map, switchMap, toArray } from 'rxjs/operators';
+import { Observable, of, merge, forkJoin, NEVER } from 'rxjs';
+import { catchError, map, switchMap, toArray, tap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
@@ -74,7 +74,17 @@ export async function scheduleTarget(
     { logger }
   );
 
-  return run.output;
+  let lastOutputError: string;
+  return run.output.pipe(
+    tap(
+      (output) =>
+        (lastOutputError = !output.success ? output.error : undefined),
+      (error) => {}, // do nothing, this could be an intentional error
+      () => {
+        lastOutputError ? logger.error(lastOutputError) : 0;
+      }
+    )
+  );
 }
 
 function createWorkflow(
