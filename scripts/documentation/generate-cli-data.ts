@@ -59,7 +59,7 @@ export async function generateCLIDocumentation() {
   const commandsOutputDirectory = join(
     __dirname,
     '../../docs/',
-    'default',
+    'generated',
     'cli'
   );
   removeSync(commandsOutputDirectory);
@@ -181,7 +181,7 @@ nx ${command.name}
       const sharedCommandsOutputDirectory = join(
         __dirname,
         '../../docs/',
-        'default',
+        'generated',
         'cli'
       );
       const templateObject = {

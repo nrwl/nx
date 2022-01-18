@@ -1,6 +1,4 @@
 window.exclude = [];
-window.focusedProject = null;
-window.groupByFolder = false;
 window.watch = true;
 window.environment = 'watch';
 window.useXstateInspect = false;

@@ -1,9 +1,11 @@
 import {
   getCheckedProjectItems,
   getDeselectAllButton,
+  getGroupByFolderCheckbox,
   getImageDownloadButton,
   getIncludeProjectsInPathButton,
   getProjectItems,
+  getSearchDepthCheckbox,
   getSelectAffectedButton,
   getSelectAllButton,
   getSelectProjectsMessage,
@@ -28,7 +30,7 @@ describe('dep-graph-client', () => {
       getSelectProjectsMessage().should('be.visible');
     });
 
-    it('should hide  when a project is selected', () => {
+    it('should hide when a project is selected', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
       cy.get('[data-project="nx-dev"]').should('be.visible');
       cy.get('[data-project="nx-dev"]').click({ force: true });
@@ -145,7 +147,7 @@ describe('dep-graph-client', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
       cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
 
-      cy.get('[data-project="nx-dev"]').should('have.data', 'active', true);
+      getCheckedProjectItems().should('have.length', 10);
     });
   });
 
@@ -188,5 +190,79 @@ describe('dep-graph-client', () => {
       getDeselectAllButton().click();
       getImageDownloadButton().should('have.class', 'opacity-0');
     });
+  });
+
+  describe('setting url params', () => {
+    it('should set focused project', () => {
+      cy.contains('nx-dev').scrollIntoView().should('be.visible');
+      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+
+      cy.url().should('contain', 'focus=nx-dev');
+    });
+
+    it('should set group by folder', () => {
+      getGroupByFolderCheckbox().click();
+
+      cy.url().should('contain', 'groupByFolder=true');
+    });
+
+    it('should set search depth', () => {
+      getSearchDepthCheckbox().click();
+
+      cy.url().should('contain', 'searchDepth=1');
+    });
+
+    it('should set select to all', () => {
+      getSelectAllButton().click();
+
+      cy.url().should('contain', 'select=all');
+    });
+  });
+});
+
+describe('loading dep-graph client with url params', () => {
+  it('should focus projects', () => {
+    cy.intercept('/assets/graphs/*').as('getGraph');
+
+    cy.visit('/?focus=nx-dev');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
+
+    getCheckedProjectItems().should('have.length', 10);
+  });
+
+  it('should focus projects with search depth', () => {
+    cy.intercept('/assets/graphs/*').as('getGraph');
+
+    cy.visit('/?focus=nx-dev&searchDepth=1');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
+
+    getCheckedProjectItems().should('have.length', 8);
+    getSearchDepthCheckbox().should('exist');
+  });
+
+  it('should set group by folder', () => {
+    cy.intercept('/assets/graphs/*').as('getGraph');
+
+    cy.visit('/?focus=nx-dev&searchDepth=1&groupByFolder=true');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
+
+    getGroupByFolderCheckbox().should('be.checked');
+  });
+
+  it('should select all projects', () => {
+    cy.intercept('/assets/graphs/*').as('getGraph');
+
+    cy.visit('/?select=all');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
+
+    getCheckedProjectItems().should('have.length', 55);
   });
 });

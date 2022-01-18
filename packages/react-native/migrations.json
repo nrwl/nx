@@ -326,6 +326,11 @@
         "@babel/runtime": {
           "version": "7.16.7",
           "alwaysAddToPackageJson": false
+        },
+        "react-native-config": {
+          "version": "1.4.5",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
         }
       }
     }

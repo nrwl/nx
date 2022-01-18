@@ -1,13 +1,14 @@
 import { assign } from '@xstate/immer';
 import { Machine, send, spawn } from 'xstate';
-import { getGraphService } from './graph.service';
 import { customSelectedStateConfig } from './custom-selected.state';
 import { focusedStateConfig } from './focused.state';
+import { graphActor } from './graph.actor';
 import {
   DepGraphContext,
-  DepGraphUIEvents,
   DepGraphSchema,
+  DepGraphUIEvents,
 } from './interfaces';
+import { createRouteMachine } from './route-setter.machine';
 import { textFilteredStateConfig } from './text-filtered.state';
 import { unselectedStateConfig } from './unselected.state';
 
@@ -26,25 +27,14 @@ export const initialContext: DepGraphContext = {
     libsDir: '',
     appsDir: '',
   },
-  graph: null,
+  graphActor: null,
+  routeSetterActor: null,
+  routeListenerActor: null,
   lastPerfReport: {
     numEdges: 0,
     numNodes: 0,
     renderTime: 0,
   },
-};
-
-const graphActor = (callback, receive) => {
-  const graphService = getGraphService();
-
-  receive((e) => {
-    const { selectedProjectNames, perfReport } = graphService.handleEvent(e);
-    callback({
-      type: 'setSelectedProjectsFromGraph',
-      selectedProjectNames,
-      perfReport,
-    });
-  });
 };
 
 export const depGraphMachine = Machine<
@@ -78,16 +68,18 @@ export const depGraphMachine = Machine<
               groupByFolder: ctx.groupByFolder,
             }),
             {
-              to: (context) => context.graph,
+              to: (context) => context.graphActor,
             }
           ),
         ],
       },
       setSelectedProjectsFromGraph: {
-        actions: assign((ctx, event) => {
-          ctx.selectedProjects = event.selectedProjectNames;
-          ctx.lastPerfReport = event.perfReport;
-        }),
+        actions: [
+          assign((ctx, event) => {
+            ctx.selectedProjects = event.selectedProjectNames;
+            ctx.lastPerfReport = event.perfReport;
+          }),
+        ],
       },
       selectProject: {
         target: 'customSelected',
@@ -95,11 +87,14 @@ export const depGraphMachine = Machine<
       },
       selectAll: {
         target: 'customSelected',
-        actions: ['notifyGraphShowAllProjects'],
+        actions: ['notifyGraphShowAllProjects', 'notifyRouteSelectAll'],
       },
       selectAffected: {
         target: 'customSelected',
-        actions: ['notifyGraphShowAffectedProjects'],
+        actions: [
+          'notifyGraphShowAffectedProjects',
+          'notifyRouteSelectAffected',
+        ],
       },
       deselectProject: [
         {
@@ -131,7 +126,20 @@ export const depGraphMachine = Machine<
               selectedProjects: ctx.selectedProjects,
             }),
             {
-              to: (context) => context.graph,
+              to: (context) => context.graphActor,
+            }
+          ),
+          send(
+            (ctx, event) => {
+              if (event.type !== 'setGroupByFolder') return;
+
+              return {
+                type: 'notifyRouteGroupByFolder',
+                groupByFolder: event.groupByFolder,
+              };
+            },
+            {
+              to: (context) => context.routeSetterActor,
             }
           ),
         ],
@@ -144,13 +152,16 @@ export const depGraphMachine = Machine<
         ],
       },
       incrementSearchDepth: {
-        actions: ['incrementSearchDepth'],
+        actions: ['incrementSearchDepth', 'notifyRouteSearchDepth'],
       },
       decrementSearchDepth: {
-        actions: ['decrementSearchDepth'],
+        actions: ['decrementSearchDepth', 'notifyRouteSearchDepth'],
       },
       setSearchDepthEnabled: {
-        actions: ['setSearchDepthEnabled'],
+        actions: ['setSearchDepthEnabled', 'notifyRouteSearchDepth'],
+      },
+      setSearchDepth: {
+        actions: ['setSearchDepth', 'notifyRouteSearchDepth'],
       },
       filterByText: {
         target: 'textFiltered',
@@ -161,6 +172,9 @@ export const depGraphMachine = Machine<
     guards: {
       deselectLastProject: (ctx) => {
         return ctx.selectedProjects.length <= 1;
+      },
+      selectActionCannotBePersistedToRoute: (ctx, event) => {
+        return event.type !== 'selectAffected' && event.type !== 'selectAll';
       },
     },
     actions: {
@@ -177,6 +191,11 @@ export const depGraphMachine = Machine<
         ctx.searchDepthEnabled = true;
         ctx.searchDepth = ctx.searchDepth > 1 ? ctx.searchDepth - 1 : 1;
       }),
+      setSearchDepth: assign((ctx, event) => {
+        if (event.type !== 'setSearchDepth') return;
+        ctx.searchDepthEnabled = true;
+        ctx.searchDepth = event.searchDepth > 1 ? event.searchDepth : 1;
+      }),
       setSearchDepthEnabled: assign((ctx, event) => {
         if (event.type !== 'setSearchDepthEnabled') return;
 
@@ -192,7 +211,10 @@ export const depGraphMachine = Machine<
 
         ctx.projects = event.projects;
         ctx.dependencies = event.dependencies;
-        ctx.graph = spawn(graphActor, 'graphActor');
+        ctx.graphActor = spawn(graphActor, 'graphActor');
+        ctx.routeSetterActor = spawn(createRouteMachine(), {
+          name: 'route',
+        });
 
         if (event.type === 'initGraph') {
           ctx.workspaceLayout = event.workspaceLayout;
@@ -209,7 +231,7 @@ export const depGraphMachine = Machine<
           };
         },
         {
-          to: (context) => context.graph,
+          to: (context) => context.graphActor,
         }
       ),
       notifyGraphHideProject: send(
@@ -222,7 +244,7 @@ export const depGraphMachine = Machine<
           };
         },
         {
-          to: (context) => context.graph,
+          to: (context) => context.graphActor,
         }
       ),
       notifyGraphShowAllProjects: send(
@@ -230,7 +252,7 @@ export const depGraphMachine = Machine<
           type: 'notifyGraphShowAllProjects',
         }),
         {
-          to: (context) => context.graph,
+          to: (context) => context.graphActor,
         }
       ),
       notifyGraphHideAllProjects: send(
@@ -238,7 +260,7 @@ export const depGraphMachine = Machine<
           type: 'notifyGraphHideAllProjects',
         }),
         {
-          to: (context) => context.graph,
+          to: (context) => context.graphActor,
         }
       ),
       notifyGraphShowAffectedProjects: send(
@@ -246,7 +268,7 @@ export const depGraphMachine = Machine<
           type: 'notifyGraphShowAffectedProjects',
         },
         {
-          to: (ctx) => ctx.graph,
+          to: (ctx) => ctx.graphActor,
         }
       ),
       notifyGraphFocusProject: send(
@@ -256,7 +278,50 @@ export const depGraphMachine = Machine<
           searchDepth: context.searchDepthEnabled ? context.searchDepth : -1,
         }),
         {
-          to: (context) => context.graph,
+          to: (context) => context.graphActor,
+        }
+      ),
+      notifyRouteUnfocusProject: send(
+        () => ({
+          type: 'notifyRouteUnfocusProject',
+        }),
+        {
+          to: (ctx) => ctx.routeSetterActor,
+        }
+      ),
+      notifyRouteSelectAll: send(
+        () => ({
+          type: 'notifyRouteSelectAll',
+        }),
+        {
+          to: (ctx) => ctx.routeSetterActor,
+        }
+      ),
+      notifyRouteSelectAffected: send(
+        () => ({
+          type: 'notifyRouteSelectAffected',
+        }),
+        {
+          to: (ctx) => ctx.routeSetterActor,
+        }
+      ),
+      notifyRouteClearSelect: send(
+        () => ({
+          type: 'notifyRouteClearSelect',
+        }),
+        {
+          to: (ctx) => ctx.routeSetterActor,
+        }
+      ),
+      notifyRouteSearchDepth: send(
+        (ctx, event) => ({
+          type: 'notifyRouteSearchDepth',
+          searchDepth: ctx.searchDepth,
+          searchDepthEnabled: ctx.searchDepthEnabled,
+        }),
+
+        {
+          to: (ctx) => ctx.routeSetterActor,
         }
       ),
       notifyGraphFilterProjectsByText: send(
@@ -267,7 +332,7 @@ export const depGraphMachine = Machine<
           searchDepth: context.searchDepthEnabled ? context.searchDepth : -1,
         }),
         {
-          to: (context) => context.graph,
+          to: (context) => context.graphActor,
         }
       ),
     },

@@ -178,7 +178,7 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
   }, [controls, inView]);
 
   return (
-    <div id="monorepo-support" className="relative">
+    <article id="monorepo-support" className="relative">
       <motion.div
         ref={ref}
         animate={controls}
@@ -201,12 +201,12 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
         <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0">
           <div>
             <div className="mt-6">
-              <motion.h2
+              <motion.h1
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
                 Best-in-Class Support for Monorepos
-              </motion.h2>
+              </motion.h1>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
@@ -261,7 +261,7 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
           </div>
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

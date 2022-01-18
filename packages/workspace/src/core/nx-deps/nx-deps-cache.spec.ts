@@ -288,6 +288,17 @@ describe('nx deps utils', () => {
         {}
       );
     });
+
+    it('should work with no tsconfig', () => {
+      const result = _createCache(
+        createNxJson({}),
+        createPackageJsonDeps({}),
+        createCache({}),
+        undefined
+      );
+
+      expect(result).toBeDefined();
+    });
   });
 
   function createCache(p: Partial<ProjectGraphCache>): ProjectGraphCache {

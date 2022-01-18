@@ -87,30 +87,22 @@ In addition, you need to follow [instructions at Detox](https://github.com/wix/D
 
 ### Testing Applications
 
-- Run `nx e2e-ios frontend-e2e` to build the iOS app and execute e2e tests with Detox for iOS (Mac only)
-- Run `nx e2e-android frontend-e2e` to build the Android app and execute e2e tests with Detox for Android
+- Run `nx test-ios frontend-e2e` to build the iOS app and execute e2e tests with Detox for iOS (Mac only)
+- Run `nx test-android frontend-e2e` to build the Android app and execute e2e tests with Detox for Android
 
-You can also run below commands:
+You can run below commands:
 
 - `nx build-ios frontend-e2e`: build the iOS app (Mac only)
-- `nx test-ios frontend-e2e`: run e2e tests on the built iOS app (Mac only)
 - `nx build-android frontend-e2e`: build the Android app
-- `nx test-android frontend-e2e`: run e2e tests on the built Android app
-
-`e2e-ios` is a shorthand command for running `build-ios` and `test-ios` sequentailly.
-`android-ios` is a shorthand command for running `build-android` and `test-android` sequentailly.
 
 ### Testing against Prod Build
 
 You can run your e2e test against a production build:
 
-- `nx e2e-ios frontend-e2e --prod` for iOS
-- `nx e2e-android frontend-e2e --prod` for Android
-
-- `nx build-ios frontend-e2e --prod`: build the iOS app using Release configuration
-- `nx test-ios frontend-e2e --prod`: run e2e tests on the built iOS app with Release configuration (Mac only)
+- `nx test-ios frontend-e2e --prod`: to build the iOS app and execute e2e tests with Detox for iOS with Release configuration (Mac only)
+- `nx test-android frontend-e2e`: rto build the Android app and execute e2e tests with Detox for Android with release build type
+- `nx build-ios frontend-e2e --prod`: build the iOS app using Release configuration (Mac only)
 - `nx build-android frontend-e2e --prod`: build the Android app using release build type
-- `nx test-android frontend-e2e`: run e2e tests on the built Android app with release build type
 
 ### Using .detoxrc.json
 
@@ -125,8 +117,6 @@ For Android, in terminal, run `emulator -list-avds` to view a list of emulators 
 In additon, to override the device name specified in a configuration, you could use `--device-name` option: `nx test-ios <app-name-e2e> --device-name "iPhone 11"`. The `device-name` property provides you the ability to test an application run on specific device.
 
 ```bash
-nx e2e-ios frontend-e2e --device-name "iPhone 11"
-nx e2e-android frontend-e2e --device-name "Pixel_4a_API_30"
 nx test-ios frontend-e2e --device-name "iPhone 11"
 nx test-android frontend-e2e --device-name "Pixel_4a_API_30"
 ```

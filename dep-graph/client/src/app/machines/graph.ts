@@ -61,7 +61,11 @@ export class GraphService {
           event.dependencies,
           event.affectedProjects
         );
-        this.setShownProjects(event.selectedProjects);
+        this.setShownProjects(
+          event.selectedProjects.length > 0
+            ? event.selectedProjects
+            : this.renderGraph.nodes(':childless').map((node) => node.id())
+        );
         break;
 
       case 'notifyGraphFocusProject':

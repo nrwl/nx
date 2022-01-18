@@ -1,6 +1,4 @@
 window.exclude = [];
-window.focusedProject = null;
-window.groupByFolder = false;
 window.watch = false;
 window.environment = 'dev';
 window.useXstateInspect = false;

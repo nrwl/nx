@@ -43,6 +43,7 @@ describe('Build storybook', () => {
     options = {
       uiFramework,
       outputPath,
+      projectBuildConfig: 'proj',
       config,
     };
 

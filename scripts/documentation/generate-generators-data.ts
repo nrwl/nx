@@ -235,12 +235,12 @@ export async function generateGeneratorsDocumentation() {
     .filter((item) => item.hasSchematics)
     .map((item) => item.name);
   await generateJsonFile(
-    path.join(__dirname, '../../docs', 'default', 'generators.json'),
+    path.join(__dirname, '../../docs', 'generated', 'generators.json'),
     schematics
   ).then(() => {
     console.log(
       `${chalk.green('✓')} Generated generators.json at ${chalk.grey(
-        `docs/default/generators.json`
+        `docs/generated/generators.json`
       )}`
     );
   });

@@ -248,5 +248,10 @@
     "name": "@nxtensions/astro",
     "description": "Nx plugin adding first class support for Astro (https://astro.build).",
     "url": "https://github.com/nxtensions/nxtensions/tree/main/packages/astro"
+  },
+  {
+    "name": "@nxrs/cargo",
+    "description": "Nx plugin adding first-class support for Rust applications and libraries.",
+    "url": "https://github.com/nxrs/cargo/tree/main/packages/cargo"
   }
 ]

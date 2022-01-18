@@ -45,7 +45,7 @@ export const textFilteredStateConfig: DepGraphStateNodeConfig = {
             selectedProjects: ctx.selectedProjects,
           }),
           {
-            to: (context) => context.graph,
+            to: (context) => context.graphActor,
           }
         ),
         'notifyGraphFilterProjectsByText',

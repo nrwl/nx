@@ -12,7 +12,7 @@ npx add-nx-to-monorepo
 
 Watch this 3-min video to see how the command works and what next steps are:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Dq2ftPf3sn4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/Dq2ftPf3sn4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 `npx add-nx-to-monorepo` does the following:
 
@@ -94,7 +94,7 @@ tools because it looks not just at the changed files but also at the nature of t
 Run `nx dep-graph` to see a visualization of your workspace. `nx affected:dep-graph` shows what is affected by your
 commit. `nx dep-graph --watch` watches your workspace for changes and updates the visualization.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/v87Y8NgAYLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/v87Y8NgAYLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
 ### GitHub integration
 
@@ -215,12 +215,12 @@ If you want to disable the source code analysis, to make Nx match Lerna, add the
 
 ### Speeding Up Facebook React Monorepo with Nx
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/XLP2RAOwfLQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/XLP2RAOwfLQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ### Speeding Up Remotion Monorepo with Nx
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/TXySu4dZLp0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/TXySu4dZLp0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
 ### Speeding Up Storybook Monorepo with Nx
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/3o8w6jbDr4A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/3o8w6jbDr4A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>

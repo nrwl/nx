@@ -228,7 +228,7 @@ npx nx daemon
   .command(
     'workspace-lint [files..]',
     chalk.bold(
-      'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the `.nxignore` file'
+      'Lint nx specific workspace files (nx.json, workspace.json) and check existence of the configured packages and apps.  Note: To exclude files from this lint rule, you can add them to the `.nxignore` file'
     ),
     noop,
     async (_) => (await import('./lint')).workspaceLint()

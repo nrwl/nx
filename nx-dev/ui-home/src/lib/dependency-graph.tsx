@@ -33,7 +33,7 @@ export function DependencyGraph(): ReactComponentElement<any> {
   }, [controls, inView]);
 
   return (
-    <div id="dependency-graph" className="mt-16 md:mt-32">
+    <article id="dependency-graph" className="mt-16 md:mt-32">
       <motion.div
         ref={ref}
         animate={controls}
@@ -56,12 +56,12 @@ export function DependencyGraph(): ReactComponentElement<any> {
         <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
           <div>
             <div className="mt-6">
-              <motion.h2
+              <motion.h1
                 variants={opacityVariant}
                 className="text-3xl font-extrabold tracking-tight text-gray-900"
               >
                 Explore Visually
-              </motion.h2>
+              </motion.h1>
               <motion.p
                 variants={opacityVariant}
                 className="mt-4 text-lg text-gray-500"
@@ -71,7 +71,10 @@ export function DependencyGraph(): ReactComponentElement<any> {
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="/structure/dependency-graph">
-                  <a className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition">
+                  <a
+                    title="Nx dep-graph tool to visally interact with monorepo dependencies"
+                    className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
+                  >
                     Learn about "nx dep-graph"
                   </a>
                 </Link>
@@ -79,12 +82,16 @@ export function DependencyGraph(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-2">
+        <div
+          aria-hidden="true"
+          className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-2"
+        >
           <motion.div
             variants={opacityTranslateXVariant}
             className="relative px-4 lg:px-0 lg:h-full"
           >
             <video
+              preload="true"
               className="-mt-8 mx-auto w-full max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:left-16 lg:h-full lg:w-auto lg:max-w-none"
               autoPlay={true}
               loop
@@ -97,7 +104,7 @@ export function DependencyGraph(): ReactComponentElement<any> {
           </motion.div>
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

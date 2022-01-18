@@ -82,7 +82,7 @@ export function OpenPlatform(): ReactComponentElement<any> {
   }, [controls, inView]);
 
   return (
-    <div
+    <article
       id="open-platform"
       className="mt-32 max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8"
     >
@@ -107,12 +107,12 @@ export function OpenPlatform(): ReactComponentElement<any> {
       >
         <div>
           <div className="mt-6">
-            <motion.h2
+            <motion.h1
               variants={opacityVariant}
               className="text-3xl font-extrabold tracking-tight text-gray-900"
             >
               Open Platform
-            </motion.h2>
+            </motion.h1>
             <motion.p
               variants={opacityVariant}
               className="mt-4 text-lg text-gray-500"
@@ -127,7 +127,10 @@ export function OpenPlatform(): ReactComponentElement<any> {
             </motion.p>
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-3 gap-1 text-gray-500 lg:col-start-2">
+        <div
+          aria-hidden="true"
+          className="mt-8 grid grid-cols-3 gap-1 text-gray-500 lg:col-start-2"
+        >
           {featureItems.map((svg, index: number) => (
             <motion.div
               key={'open-platform-' + index}
@@ -139,7 +142,7 @@ export function OpenPlatform(): ReactComponentElement<any> {
           ))}
         </div>
       </motion.div>
-    </div>
+    </article>
   );
 }
 

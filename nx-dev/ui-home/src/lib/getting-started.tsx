@@ -26,7 +26,7 @@ function Tabs({
       <div>
         <div className="px-4 sm:hidden">
           <label htmlFor="getting-started-tabs" className="sr-only">
-            Select a tab
+            Select a technology
           </label>
           <select
             id="getting-started-tabs"
@@ -47,8 +47,12 @@ function Tabs({
             className="relative z-0 rounded-lg shadow flex divide-x divide-gray-200"
             aria-label="Tabs"
           >
+            <h2 className="sr-only">
+              Nx has first class support for Javascript & Typescript
+            </h2>
             {tabs.map((tab, tabIdx) => (
               <button
+                type="button"
                 key={tab.name}
                 onClick={() => setActiveTab(tab.id)}
                 className={cx(
@@ -198,6 +202,7 @@ function AngularPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"
@@ -428,6 +433,7 @@ function NodeJsPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"
@@ -633,6 +639,7 @@ function ReactPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"
@@ -834,6 +841,7 @@ function TypescriptPane(): ReactComponentElement<any> {
         <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
           <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
             <iframe
+              loading="lazy"
               className="max-w-screen-sm"
               width="100%"
               height="315"

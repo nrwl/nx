@@ -578,6 +578,7 @@ export function NpxCreateNxWorkspaceAnimation({
           animate={restartButton}
         >
           <button
+            type="button"
             onClick={() => restartFunction() && sequence()}
             className="w-full sm:w-auto flex-none bg-gray-800 text-green-nx-base hover:bg-gray-700 text-xs font-normal py-1 px-3 border border-gray-700 rounded-md transition"
           >
