@@ -73,7 +73,7 @@ function updateImports(host: Tree) {
         const nodeText = statement.moduleSpecifier.getText(sourceFile);
         const modulePath = statement.moduleSpecifier
           .getText(sourceFile)
-          .substr(1, nodeText.length - 2);
+          .substring(1, nodeText.length - 2);
         if (modulePath === 'type-graphql') {
           changes.push(
             new ReplaceChange(

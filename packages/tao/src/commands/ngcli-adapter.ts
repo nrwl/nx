@@ -122,7 +122,7 @@ async function createRecorder(
   const actualConfigName = await host.workspaceConfigName();
   return (event: import('@angular-devkit/schematics').DryRunEvent) => {
     let eventPath = event.path.startsWith('/')
-      ? event.path.substr(1)
+      ? event.path.substring(1)
       : event.path;
 
     if (eventPath === 'workspace.json' || eventPath === 'angular.json') {
@@ -1093,7 +1093,7 @@ export function wrapAngularDevkitSchematic(
       event: import('@angular-devkit/schematics').DryRunEvent
     ) => {
       let eventPath = event.path.startsWith('/')
-        ? event.path.substr(1)
+        ? event.path.substring(1)
         : event.path;
 
       const r = convertEventTypeToHandleMultipleConfigNames(
@@ -1198,14 +1198,14 @@ const loggerColors: Partial<Record<logging.LogLevel, (s: string) => string>> = {
   warn: (s) => chalk.bold(chalk.yellow(s)),
   error: (s) => {
     if (s.startsWith('NX ')) {
-      return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`;
+      return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substring(3)))}\n`;
     }
 
     return chalk.bold(chalk.red(s));
   },
   info: (s) => {
     if (s.startsWith('NX ')) {
-      return `\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`;
+      return `\n${NX_PREFIX} ${chalk.bold(s.substring(3))}\n`;
     }
 
     return chalk.white(s);

@@ -5,7 +5,7 @@ export function buildServePath(browserOptions: WebWebpackExecutorOptions) {
     _findDefaultServePath(browserOptions.baseHref, browserOptions.deployUrl) ||
     '/';
   if (servePath.endsWith('/')) {
-    servePath = servePath.substr(0, servePath.length - 1);
+    servePath = servePath.substring(0, servePath.length - 1);
   }
   if (!servePath.startsWith('/')) {
     servePath = `/${servePath}`;

@@ -38,7 +38,7 @@ ${chalk.bold('Smart, Fast and Extensible Build System')}` +
         ? `
 
 ${daemonHelpOutput}
-  `.trimRight()
+  `.trimEnd()
         : '')
   )
   .command(
@@ -195,13 +195,13 @@ ${daemonHelpOutput}
     'daemon',
     `${chalk.bold('EXPERIMENTAL: Nx Daemon')}` +
       (daemonHelpOutput
-        ? stripIndents`${daemonHelpOutput}`.trimRight()
+        ? stripIndents`${daemonHelpOutput}`.trimEnd()
         : `
 
 The Daemon is not currently running you can start it manually by running the following command:
 
 npx nx daemon
-`.trimRight()),
+`.trimEnd()),
     (yargs) => linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon'),
     async (args) => (await import('./daemon')).daemonHandler(args)
   )

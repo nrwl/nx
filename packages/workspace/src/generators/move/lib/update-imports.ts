@@ -50,7 +50,7 @@ export function updateImports(
     from:
       fromPath ||
       normalizeSlashes(
-        `@${npmScope}/${project.root.substr(libsDir.length + 1)}`
+        `@${npmScope}/${project.root.substring(libsDir.length + 1)}`
       ),
     to: schema.importPath,
   };
@@ -76,7 +76,7 @@ export function updateImports(
   }
 
   const projectRoot = {
-    from: project.root.substr(libsDir.length + 1),
+    from: project.root.substring(libsDir.length + 1),
     to: schema.destination,
   };
 

@@ -39,7 +39,8 @@ export function getStylesConfig(
       plugins: [
         postcssImports({
           addModulesDirectories: includePaths,
-          resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
+          resolve: (url: string) =>
+            url.startsWith('~') ? url.substring(1) : url,
           load: (filename: string) => {
             return new Promise<string>((resolve, reject) => {
               loader.fs.readFile(filename, (err: Error, data: Buffer) => {

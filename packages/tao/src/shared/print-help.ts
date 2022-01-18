@@ -3,7 +3,7 @@ import * as chalk from 'chalk';
 import { logger, stripIndent } from '../shared/logger';
 
 function formatOption(name: string, description: string) {
-  return `  --${`${name}                     `.substr(0, 22)}${chalk.grey(
+  return `  --${`${name}                     `.substring(0, 22)}${chalk.grey(
     description
   )}`;
 }

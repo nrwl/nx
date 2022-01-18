@@ -8,7 +8,7 @@ export function addGitIgnoreEntry(host: Tree) {
     return;
   }
 
-  let content = host.read('.gitignore')?.toString('utf-8').trimRight();
+  let content = host.read('.gitignore')?.toString('utf-8').trimEnd();
 
   const ig = ignore();
   ig.add(host.read('.gitignore').toString());

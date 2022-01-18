@@ -5,7 +5,7 @@ export function decorateCli() {
   const angularCLIInit = readFileSync(path, 'utf-8');
   const start = angularCLIInit.indexOf(`(options) {`) + 11;
 
-  const newContent = `${angularCLIInit.substr(0, start)}
+  const newContent = `${angularCLIInit.substring(0, start)}
   if (!process.env['NX_CLI_SET']) {
     require('@nrwl/cli/bin/nx');
     return new Promise(function(res, rej) {});

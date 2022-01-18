@@ -84,10 +84,10 @@ export function applyChangesToString(
   for (const change of sortedChanges) {
     const index = getChangeIndex(change) + offset;
     if (isStringInsertion(change)) {
-      text = text.substr(0, index) + change.text + text.substr(index);
+      text = text.substring(0, index) + change.text + text.substring(index);
       offset += change.text.length;
     } else {
-      text = text.substr(0, index) + text.substr(index + change.length);
+      text = text.substring(0, index) + text.substring(index + change.length);
       offset -= change.length;
     }
   }

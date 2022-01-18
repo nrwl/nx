@@ -10,7 +10,7 @@ export const logger = {
   warn: (s) => console.warn(chalk.bold(chalk.yellow(s))),
   error: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
-      console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`);
+      console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.substring(3)))}\n`);
     } else if (s instanceof Error && s.stack) {
       console.error(chalk.bold(chalk.red(s.stack)));
     } else {
@@ -19,7 +19,7 @@ export const logger = {
   },
   info: (s) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
-      console.info(`\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`);
+      console.info(`\n${NX_PREFIX} ${chalk.bold(s.substring(3))}\n`);
     } else {
       console.info(chalk.white(s));
     }

@@ -63,7 +63,7 @@ export abstract class FileHasherBase {
       throw new Error('FileHasher is invoked before being initialized');
     }
     const relativePath = path.startsWith(appRootPath)
-      ? path.substr(appRootPath.length + 1)
+      ? path.substring(appRootPath.length + 1)
       : path;
     if (this.fileHashes[relativePath]) {
       return this.fileHashes[relativePath];

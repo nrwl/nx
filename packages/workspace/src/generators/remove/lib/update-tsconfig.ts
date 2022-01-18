@@ -22,7 +22,7 @@ export function updateTsconfig(
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (json) => {
       delete json.compilerOptions.paths[
-        `@${npmScope}/${project.root.substr(
+        `@${npmScope}/${project.root.substring(
           project.projectType === 'application'
             ? appsDir.length + 1
             : libsDir.length + 1

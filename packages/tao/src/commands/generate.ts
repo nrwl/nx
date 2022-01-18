@@ -72,8 +72,8 @@ function parseGenerateOpts(
     const separatorIndex = generatorDescriptor.lastIndexOf(':');
 
     if (separatorIndex > 0) {
-      collectionName = generatorDescriptor.substr(0, separatorIndex);
-      generatorName = generatorDescriptor.substr(separatorIndex + 1);
+      collectionName = generatorDescriptor.substring(0, separatorIndex);
+      generatorName = generatorDescriptor.substring(separatorIndex + 1);
     } else {
       collectionName = defaultCollection;
       generatorName = generatorDescriptor;
