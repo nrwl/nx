@@ -24,8 +24,9 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
 
 ```
 ? What to create in the new workspace (Use arrow keys)
-❯ empty             [an empty workspace with a layout that works best for building apps]
-  npm               [an empty workspace set up to publish npm packages (similar to and compatible with yarn workspaces)]
+❯ apps              [an empty workspace with no plugins with a layout that works best for building apps]
+  core              [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]
+  ts                [an empty workspace with the JS/TS plugin preinstalled]
   react             [a workspace with a single React application]
   angular           [a workspace with a single Angular application]
   next.js           [a workspace with a single Next.js application]
@@ -33,8 +34,16 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
   nest              [a workspace with a single Nest application]
   express           [a workspace with a single Express application]
   web components    [a workspace with a single app built using web components]
+  react-native      [a workspace with a single React Native application]
   react-express     [a workspace with a full stack application (React + Express)]
-  angular-nest      [a workspace with a full stack application (Angular + Nest)]
 ```
 
 Select the preset that works best for you.
+
+### Adding Nx to an Existing Monorepo
+
+Run:
+
+```bash
+npx add-nx-to-monorepo@latest
+```

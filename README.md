@@ -15,73 +15,25 @@ width="100%" alt="Nx - Smart, Fast and Extensible Build System"></p>
 
 <hr>
 
-# What is Nx?
+# Smart, Fast and Extensible Build System
 
-🔎 **Smart, Fast and Extensible Build System**
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-Nx is a smart, fast and extensible build system. It comes with first class monorepo support and powerful integrations.
+A few links to help you get started:
 
-### Best-in-Class Support for Monorepos
-
-<strong>Nx</strong> provides distributed graph-based task execution and computation caching.
-
-<strong>Nx</strong> is smart. It analyzes your workspace and figures out what can be affected by every code change.
-That's why Nx doesn't rebuild and retest everything on every commit--<strong>it only rebuilds what is necessary</strong>
-.
-
-<strong>Nx</strong> partitions commands into a graph of smaller tasks. Nx then runs those tasks in parallel,
-and <strong>it can even distribute them across multiple machines without any configuration</strong>.
-
-<strong>Nx also uses a distributed computation cache.</strong> If someone has already built or tested similar code, Nx
-will use their results to speed up the command for everyone else.
-
-### Holistic Dev Experience Powered by an Advanced CLI and Editor Plugins
-
-<strong>Nx</strong> helps scale your development from one team building one application to many teams building multiple
-frontend and backend applications all in the same workspace. <strong >When using Nx, developers have a holistic dev
-experience powered by an advanced CLI</strong > (with editor plugins), capabilities for controlled code sharing and
-consistent code generation.
-
-### Rich Plugin Ecosystem
-
-<strong>Nx</strong> is an open platform with plugins for many modern tools and frameworks. It has support for
-TypeScript, React, Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a
-consistent dev experience regardless of the tools used.
-
-# Documentation & Resources
-
-Even though Nx isn't technology specific, we provide 3 separate flavours of the documentation site to it make it easier
-for you to get up and running. For every link below, you will be able to select whether you want your examples to be
-written in React, Node or Angular.
-
-- [Nx Documentation and Guides](https://nx.dev)
-- [Intro into Nx](https://nx.dev/getting-started/intro)
-- [Interactive Tutorial with Videos](https://nx.dev/tutorial/01-create-application)
-
-### Quick Start Videos
-
-- [Scale Your React Development with Nx](https://www.youtube.com/watch?v=sNz-4PUM0k8)
-- [Scale your Node Development with Nx](https://www.youtube.com/watch?v=iIh5h_G52kI)
-- [Modern Angular with Nx Dev Tools](https://www.youtube.com/watch?v=cXOkmOy-8dk)
-
-### Videos, Blogs, Books, Examples
+- [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
+- [Tutorial: Adding Nx to an Existing Monorepo](https://nx.dev/migration/adding-to-monorepo)
+- [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
+- [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank"><img src="./images/nx-courses-and-videos.svg" 
 width="100%" alt="Nx - Smart, Fast and Extensible Build System"></a></p>
 
-- [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
-- [Scale React Development with Nx (Free Egghead course)](https://egghead.io/playlists/scale-react-development-with-nx-4038)
-- [Official NxPlaybook video courses](https://nxplaybook.com)
-- [Nx Dev Tools for Monorepos, In-Depth Explainer (React)](https://www.youtube.com/watch?v=jCf92IyR-GE)
-- [Nx Dev Tools for Monorepos, In-Depth Explainer (Angular)](https://youtu.be/h5FIGDn5YM0)
-- [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
-- [Angular Enterprise Monorepo Patterns Book (free)](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
-- [Nx Examples Repo](https://github.com/nrwl/nx-examples)
-
 # Engage with the Core Team and the Community
 
-- [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's
-  a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
+- [Nx.Dev Community Page: Community Slack Channel, Newsletter, etc.](https://nx.dev/community)
+- [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
+  regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
 - [Follow Nx on Twitter](https://twitter.com/NxDevTools)
 
 ## Want to help?
