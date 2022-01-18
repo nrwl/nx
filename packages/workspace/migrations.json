@@ -934,6 +934,15 @@
           "version": "~10.0.0"
         }
       }
+    },
+    "13.5.0": {
+      "version": "13.5.0",
+      "packages": {
+        "prettier": {
+          "version": "^2.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
