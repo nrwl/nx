@@ -5,8 +5,6 @@ import {
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 
-const ignore = require('ignore');
-
 export default function update(): Rule {
   return chain([
     updateWorkspaceInTree(updateBuilderWebpackOption),

@@ -1,7 +1,5 @@
 import { createProjectFileMap, updateProjectFileMap } from './file-map-utils';
 
-const ignore = require('ignore');
-
 describe('fileMapUtils', () => {
   describe('createFileMap', () => {
     it('should map files to projects', () => {

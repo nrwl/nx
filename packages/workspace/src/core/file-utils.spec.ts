@@ -1,8 +1,7 @@
 import { calculateFileChanges, WholeFileChange } from './file-utils';
-import { DiffType, JsonChange, jsonDiff } from '../utilities/json-diff';
+import { DiffType } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
-
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 describe('calculateFileChanges', () => {
   beforeEach(() => {

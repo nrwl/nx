@@ -21,8 +21,7 @@ import {
 import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { relative } from 'path';
 import { testingLibraryReactVersion } from '../../utils/versions';
-
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 export default function update(): Rule {
   return chain([

@@ -1,8 +1,6 @@
 import type { FileData } from '@nrwl/devkit';
 import { ProjectFileMap } from '@nrwl/devkit';
 
-const ignore = require('ignore');
-
 function sortProjects(workspaceJson: any) {
   // Sorting here so `apps/client-e2e` comes before `apps/client` and has
   // a chance to match prefix first.

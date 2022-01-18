@@ -18,7 +18,7 @@ import {
   isStringLiteral,
   ScriptTarget,
 } from 'typescript';
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 export default function update(): Rule {
   return chain([

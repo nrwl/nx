@@ -18,8 +18,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import * as path from 'path';
 import { relative } from 'path';
 import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
-
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 export default function update(): Rule {
   return chain([
