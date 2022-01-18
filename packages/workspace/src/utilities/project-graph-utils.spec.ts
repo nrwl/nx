@@ -1,5 +1,5 @@
 import { PackageJson } from '@nrwl/tao/src/shared/package-json';
-import { ProjectGraph } from '../core/project-graph';
+import { DependencyType, ProjectGraph } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
@@ -52,17 +52,17 @@ describe('project graph utils', () => {
       dependencies: {
         'demo-app': [
           {
-            type: 'static',
+            type: DependencyType.static,
             source: 'demo-app',
             target: 'ui',
           },
           {
-            type: 'static',
+            type: DependencyType.static,
             source: 'demo-app',
             target: 'npm:chalk',
           },
           {
-            type: 'static',
+            type: DependencyType.static,
             source: 'demo-app',
             target: 'core',
           },

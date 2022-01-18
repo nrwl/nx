@@ -3,8 +3,7 @@ import { TypeScriptImportLocator } from './typescript-import-locator';
 import { TargetProjectLocator } from '../../target-project-locator';
 import {
   ProjectFileMap,
-  ProjectGraphBuilder,
-  ProjectGraphProcessorContext,
+  ProjectGraphBuilderExplicitDependency,
   Workspace,
 } from '@nrwl/devkit';
 
@@ -12,13 +11,13 @@ export function buildExplicitTypeScriptDependencies(
   workspace: Workspace,
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
-) {
+): ProjectGraphBuilderExplicitDependency[] {
   const importLocator = new TypeScriptImportLocator();
   const targetProjectLocator = new TargetProjectLocator(
     graph.nodes,
     graph.externalNodes
   );
-  const res = [] as any;
+  const res: ProjectGraphBuilderExplicitDependency[] = [];
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
       importLocator.fromFile(
@@ -34,6 +33,7 @@ export function buildExplicitTypeScriptDependencies(
               sourceProjectName: source,
               targetProjectName: target,
               sourceProjectFile: f.file,
+              dependencyType: type,
             });
           }
         }

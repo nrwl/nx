@@ -1,4 +1,5 @@
 import type {
+  FileData,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphExternalNode,
@@ -110,7 +111,8 @@ export class ProjectGraphBuilder {
   addExplicitDependency(
     sourceProjectName: string,
     sourceProjectFile: string,
-    targetProjectName: string
+    targetProjectName: string,
+    dependencyType: DependencyType = DependencyType.static // TODO: Make this argument required
   ): void {
     if (sourceProjectName === targetProjectName) {
       return;
@@ -127,9 +129,8 @@ export class ProjectGraphBuilder {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
 
-    const fileData = source.data.files.find(
-      (f) => f.file === sourceProjectFile
-    );
+    const files = source.data.files as FileData[];
+    const fileData = files.find((f) => f.file === sourceProjectFile);
     if (!fileData) {
       throw new Error(
         `Source project ${sourceProjectName} does not have a file: ${sourceProjectFile}`
@@ -140,8 +141,19 @@ export class ProjectGraphBuilder {
       fileData.deps = [];
     }
 
-    if (!fileData.deps.find((t) => t === targetProjectName)) {
-      fileData.deps.push(targetProjectName);
+    const existingFileDep = fileData.deps.find(
+      (t) => t.projectName === targetProjectName
+    );
+    if (existingFileDep) {
+      existingFileDep.dependencyType = this.getHigherPriorityDepType(
+        existingFileDep.dependencyType,
+        dependencyType
+      );
+    } else {
+      fileData.deps.push({
+        projectName: targetProjectName,
+        dependencyType,
+      });
     }
   }
 
@@ -153,54 +165,76 @@ export class ProjectGraphBuilder {
   }
 
   getUpdatedProjectGraph(): ProjectGraph {
+    const isRemoved = (sourceProject: string, targetProject: string) =>
+      this.removedEdges[sourceProject] &&
+      this.removedEdges[sourceProject].has(targetProject);
     for (const sourceProject of Object.keys(this.graph.nodes)) {
-      const alreadySetTargetProjects =
-        this.calculateAlreadySetTargetDeps(sourceProject);
-      this.graph.dependencies[sourceProject] = [
-        ...alreadySetTargetProjects.values(),
-      ];
+      const sourceProjectDepMap = new Map<string, ProjectGraphDependency>(
+        this.graph.dependencies[sourceProject]
+          .map((dep) => [dep.target, dep] as const)
+          .filter(([targetProject]) => !isRemoved(sourceProject, targetProject))
+      );
 
       const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
-      for (const targetProject of fileDeps) {
-        if (!alreadySetTargetProjects.has(targetProject)) {
-          if (
-            !this.removedEdges[sourceProject] ||
-            !this.removedEdges[sourceProject].has(targetProject)
-          ) {
-            this.graph.dependencies[sourceProject].push({
-              source: sourceProject,
-              target: targetProject,
-              type: DependencyType.static,
-            });
-          }
+      for (const [targetProject, targetProjectDepType] of fileDeps) {
+        if (sourceProjectDepMap.has(targetProject)) {
+          const existingDep = sourceProjectDepMap.get(targetProject);
+          existingDep.type = this.getHigherPriorityDepType(
+            existingDep.type,
+            targetProjectDepType
+          );
+        } else if (!isRemoved(sourceProject, targetProject)) {
+          sourceProjectDepMap.set(targetProject, {
+            source: sourceProject,
+            target: targetProject,
+            type: targetProjectDepType,
+          });
         }
       }
+
+      this.graph.dependencies[sourceProject] = [
+        ...sourceProjectDepMap.values(),
+      ];
     }
     return this.graph;
   }
 
   private calculateTargetDepsFromFiles(sourceProject: string) {
-    const fileDeps = new Set<string>();
-    const files = this.graph.nodes[sourceProject].data.files;
+    const fileDeps = new Map<string, DependencyType>();
+    const files: FileData[] = this.graph.nodes[sourceProject].data.files;
     if (!files) return fileDeps;
     for (let f of files) {
       if (f.deps) {
         for (let p of f.deps) {
-          fileDeps.add(p);
+          if (fileDeps.has(p.projectName)) {
+            const existingDepType = fileDeps.get(p.projectName);
+            const priorityDepType = this.getHigherPriorityDepType(
+              p.dependencyType,
+              existingDepType
+            );
+            fileDeps.set(p.projectName, priorityDepType);
+          } else {
+            fileDeps.set(p.projectName, p.dependencyType);
+          }
         }
       }
     }
     return fileDeps;
   }
 
-  private calculateAlreadySetTargetDeps(sourceProject: string) {
-    const alreadySetTargetProjects = new Map<string, ProjectGraphDependency>();
-    const removed = this.removedEdges[sourceProject];
-    for (const d of this.graph.dependencies[sourceProject]) {
-      if (!removed || !removed.has(d.target)) {
-        alreadySetTargetProjects.set(d.target, d);
+  private getHigherPriorityDepType(
+    depTypeA: DependencyType,
+    depTypeB: DependencyType
+  ): DependencyType {
+    for (const priorityDepType of [
+      DependencyType.implicit,
+      DependencyType.static,
+      DependencyType.dynamic,
+      DependencyType.typeOnly,
+    ]) {
+      if (depTypeA === priorityDepType || depTypeB === priorityDepType) {
+        return priorityDepType;
       }
     }
-    return alreadySetTargetProjects;
   }
 }

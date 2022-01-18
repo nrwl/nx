@@ -9,6 +9,7 @@ import { vol } from 'memfs';
 import { ProjectGraphNode } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import {
+  DependencyType,
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
@@ -201,21 +202,25 @@ describe('explicit project dependencies', () => {
         sourceProjectFile: 'libs/proj1234/index.ts',
         sourceProjectName: 'proj1234',
         targetProjectName: 'proj1234-child',
+        dependencyType: DependencyType.static,
       },
       {
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj2',
+        dependencyType: DependencyType.static,
       },
       {
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj3a',
+        dependencyType: DependencyType.dynamic,
       },
       {
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj4ab',
+        dependencyType: DependencyType.dynamic,
       },
     ]);
   });

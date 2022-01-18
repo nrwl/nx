@@ -116,17 +116,19 @@ export function checkCircularPath(
 export function findFilesInCircularPath(
   circularPath: ProjectGraphNode[]
 ): Array<string[]> {
-  const filePathChain = [];
+  const filePathChain: string[][] = [];
 
   for (let i = 0; i < circularPath.length - 1; i++) {
     const next = circularPath[i + 1].name;
-    const files: FileData[] = circularPath[i].data.files;
+    const files: Record<string, FileData> = circularPath[i].data.files;
     filePathChain.push(
       Object.keys(files)
         .filter(
-          (key) => files[key].deps && files[key].deps.indexOf(next) !== -1
+          (key) =>
+            files[key].deps &&
+            files[key].deps.some((dep) => dep.projectName === next)
         )
-        .map((key) => files[key].file)
+        .map((key) => (files[key] as FileData).file)
     );
   }
 
