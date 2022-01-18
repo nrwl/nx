@@ -160,6 +160,10 @@ async function iteratorToProcessStatusCode(
         ? current.value.success
         : prev.value.success;
 
+    if (!success && prev.value.error) {
+      logger.log(prev.value.error);
+    }
+
     return success ? 0 : 1;
   } finally {
     clearInterval(keepProcessAliveInterval);
