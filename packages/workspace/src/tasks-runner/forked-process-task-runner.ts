@@ -42,6 +42,7 @@ export class ForkedProcessTaskRunner {
           const commandLine = `nx ${args.join(' ')}`;
 
           output.logCommand(commandLine);
+          output.addNewline();
         }
 
         const p = fork(workerPath, {
@@ -101,6 +102,7 @@ export class ForkedProcessTaskRunner {
 
         if (forwardOutput) {
           output.logCommand(commandLine);
+          output.addNewline();
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
@@ -167,6 +169,7 @@ export class ForkedProcessTaskRunner {
 
         if (forwardOutput) {
           output.logCommand(commandLine);
+          output.addNewline();
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],

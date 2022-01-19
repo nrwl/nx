@@ -1,6 +1,6 @@
 import type { Task } from '@nrwl/devkit';
-import { TaskStatus } from './tasks-runner';
-import { TaskCacheStatus } from '../utilities/output';
+import { TaskStatus } from '../tasks-runner';
+import { TaskCacheStatus } from '../../utilities/output';
 
 export interface TaskResult {
   task: Task;

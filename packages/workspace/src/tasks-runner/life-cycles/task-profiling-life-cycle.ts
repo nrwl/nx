@@ -1,6 +1,6 @@
 import { LifeCycle, TaskMetadata } from './life-cycle';
 import { Task, writeJsonFile } from '@nrwl/devkit';
-import { TaskStatus } from './tasks-runner';
+import { TaskStatus } from '../tasks-runner';
 
 import { performance } from 'perf_hooks';
 import { join } from 'path';

@@ -49,7 +49,7 @@ Based on the state of the source code and the environment, Nx figured out that i
 **Now, run `npx nx run-many --target=build --projects=todos,api` to rebuild the two applications:**
 
 ```bash
-Nx read the output from cache instead of running the command for 1 out of 2 projects.
+Nx read the output from the cache instead of running the command for 1 out of 2 projects.
 ```
 
 Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/using-nx/caching).

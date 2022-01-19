@@ -19,13 +19,13 @@ import {
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { getDependencyConfigs, shouldForwardOutput } from './utils';
-import { CompositeLifeCycle, LifeCycle } from './life-cycle';
-import { RunManyTerminalOutputLifeCycle } from './run-many-terminal-output-life-cycle';
-import { EmptyTerminalOutputLifeCycle } from './empty-terminal-output-life-cycle';
-import { RunOneTerminalOutputLifeCycle } from './run-one-terminal-output-life-cycle';
-import { TaskTimingsLifeCycle } from './task-timings-life-cycle';
-import { createOutputRenderer } from './neo-output/render';
-import { TaskProfilingLifeCycle } from '@nrwl/workspace/src/tasks-runner/task-profiling-life-cycle';
+import { CompositeLifeCycle, LifeCycle } from './life-cycles/life-cycle';
+import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
+import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
+import { EmptyTerminalOutputLifeCycle } from './life-cycles/empty-terminal-output-life-cycle';
+import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
+import { createDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
+import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -33,12 +33,12 @@ async function getTerminalOutputLifeCycle(
   projectNames: string[],
   tasks: Task[],
   nxArgs: NxArgs,
-  overrides: any,
+  overrides: Record<string, unknown>,
   runnerOptions: any
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   if (terminalOutputStrategy === 'run-one') {
     return {
-      lifeCycle: new RunOneTerminalOutputLifeCycle(
+      lifeCycle: new StaticRunOneTerminalOutputLifeCycle(
         initiatingProject,
         projectNames,
         tasks,
@@ -52,17 +52,18 @@ async function getTerminalOutputLifeCycle(
       renderIsDone: Promise.resolve(),
     };
   } else if (
-    shouldUseNeoLifeCycle(tasks, runnerOptions) &&
-    process.env.NX_TASKS_RUNNER_NEO_OUTPUT === 'true'
+    shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
+    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'true'
   ) {
-    return await createOutputRenderer({
+    return await createDynamicOutputRenderer({
       projectNames,
       tasks,
       args: nxArgs,
+      overrides,
     });
   } else {
     return {
-      lifeCycle: new RunManyTerminalOutputLifeCycle(
+      lifeCycle: new StaticRunManyTerminalOutputLifeCycle(
         projectNames,
         tasks,
         nxArgs,
@@ -226,7 +227,7 @@ export function createTasksForProjectToRun(
   return Array.from(tasksMap.values());
 }
 
-function shouldUseNeoLifeCycle(tasks: Task[], options: any) {
+function shouldUseDynamicLifeCycle(tasks: Task[], options: any) {
   const isTTY = !!process.stdout.isTTY && process.env['CI'] !== 'true';
   const noForwarding = !tasks.find((t) =>
     shouldForwardOutput(t, null, options)

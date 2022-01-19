@@ -60,7 +60,7 @@ npx nx run-many --target=build --projects=todos,api
 And notice the output:
 
 ```bash
-Nx read the output from cache instead of running the command for 1 out of 2 projects.
+Nx read the output from the cache instead of running the command for 1 out of 2 projects.
 ```
 
 Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache here [here](/using-nx/caching).

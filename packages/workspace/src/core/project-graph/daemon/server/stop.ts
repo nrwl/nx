@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { output } from '../../../../utilities/output';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { stopServer } from './server';
 
@@ -7,6 +7,10 @@ import { stopServer } from './server';
     await stopServer();
     await safelyCleanUpExistingProcess();
   } catch (err) {
-    logger.error(err);
+    output.error({
+      title:
+        err?.message ||
+        'Something unexpected went wrong when stopping the server',
+    });
   }
 })();
