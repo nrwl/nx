@@ -7,7 +7,10 @@ import {
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
+  runCLI,
   runCreateWorkspace,
+  updateJson,
+  updateFile,
   uniq,
 } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
@@ -47,6 +50,25 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+
+    const parent = uniq('parent');
+    const child = uniq('child');
+    runCLI(`generate npm-package ${parent}`);
+    runCLI(`generate npm-package ${child}`);
+
+    updateJson(`packages/${parent}/package.json`, (json) => {
+      json.dependencies = {
+        [`@${wsName}/${child}`]: '*',
+      };
+      return json;
+    });
+    updateFile(
+      `packages/${parent}/src/index.js`,
+      `require('@${wsName}/${child}');`
+    );
+
+    runCLI(`test ${parent}`);
+    runCLI(`test ${child}`);
   });
 
   it('should be able to create an empty workspace with ts/js capabilities', () => {

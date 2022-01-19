@@ -1,4 +1,5 @@
 import { Preset } from '../utils/presets';
+import { PackageManager } from '@nrwl/devkit';
 
 export interface Schema {
   name: string;
@@ -8,4 +9,5 @@ export interface Schema {
   linter?: string;
   preset: Preset;
   standaloneConfig?: boolean;
+  packageManager?: PackageManager;
 }
