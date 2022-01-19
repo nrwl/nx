@@ -359,7 +359,11 @@ function parseTargetPackageAndVersion(args: string) {
       return { targetPackage, targetVersion };
     }
   } else {
-    if (args.match(/[0-9]/) || args === 'latest' || args === 'next') {
+    if (
+      args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/) ||
+      args === 'latest' ||
+      args === 'next'
+    ) {
       return {
         targetPackage: '@nrwl/workspace',
         targetVersion: normalizeVersionWithTagCheck(args),
