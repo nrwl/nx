@@ -5,8 +5,7 @@ import { join, relative } from 'path';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
 import { stripIndents } from '@nrwl/devkit';
-
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 export class NodeBasedFileHasher extends FileHasherBase {
   ignoredGlobs = getIgnoredGlobs();

@@ -8,10 +8,10 @@ export function addGitIgnoreEntry(host: Tree) {
     return;
   }
 
-  let content = host.read('.gitignore')?.toString('utf-8').trimRight();
+  let content = host.read('.gitignore', 'utf-8').trimEnd();
 
   const ig = ignore();
-  ig.add(host.read('.gitignore').toString());
+  ig.add(host.read('.gitignore', 'utf-8'));
 
   if (!ig.ignores('apps/example/ios/Pods/Folly')) {
     content = `${content}\n${gitIgnoreEntriesForReactNative}/\n`;

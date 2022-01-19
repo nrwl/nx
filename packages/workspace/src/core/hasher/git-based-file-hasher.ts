@@ -3,8 +3,7 @@ import { performance } from 'perf_hooks';
 import { getFileHashes, getGitHashForFiles } from './git-hasher';
 import { existsSync, readFileSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
-
-const ignore = require('ignore');
+import ignore from 'ignore';
 
 export class GitBasedFileHasher extends FileHasherBase {
   /**

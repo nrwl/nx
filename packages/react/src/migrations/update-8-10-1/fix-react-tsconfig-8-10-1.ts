@@ -2,8 +2,6 @@ import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
 import { formatFiles, readWorkspace, updateJsonInTree } from '@nrwl/workspace';
 import * as path from 'path';
 
-const ignore = require('ignore');
-
 export default function update(): Rule {
   return (host: Tree) => {
     const workspace = readWorkspace(host);

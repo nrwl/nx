@@ -16,8 +16,6 @@ import * as path from 'path';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { offsetFromRoot } from '@nrwl/devkit';
 
-const ignore = require('ignore');
-
 export default function update(): Rule {
   return chain([
     displayInformation,
