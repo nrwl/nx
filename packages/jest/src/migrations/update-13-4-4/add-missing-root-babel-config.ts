@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { jestConfigObject } from '../../utils/config/functions';
 import { nxVersion } from '../../utils/versions';
 
@@ -33,12 +33,14 @@ function checkIfProjectNeedsUpdate(tree: Tree): boolean {
 
       const config = jestConfigObject(tree, jestConfigPath);
 
-      for (const transformer of Object.values(config.transform)) {
-        if (
-          (typeof transformer === 'string' && transformer === 'babel-jest') ||
-          (Array.isArray(transformer) && transformer[0] === 'babel-jest')
-        ) {
-          shouldUpdate = true;
+      if (config.transform) {
+        for (const transformer of Object.values(config.transform)) {
+          if (
+            (typeof transformer === 'string' && transformer === 'babel-jest') ||
+            (Array.isArray(transformer) && transformer[0] === 'babel-jest')
+          ) {
+            shouldUpdate = true;
+          }
         }
       }
     }
