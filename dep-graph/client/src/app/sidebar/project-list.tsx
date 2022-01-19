@@ -88,7 +88,7 @@ function ProjectListItem({
         <label
           className="font-mono font-normal ml-3 p-2 transition hover:bg-gray-50 cursor-pointer block rounded-md truncate w-full"
           data-project={project.projectGraphNode.name}
-          data-active={project.isSelected}
+          data-active={project.isSelected.toString()}
           onClick={() =>
             toggleProject(project.projectGraphNode.name, project.isSelected)
           }

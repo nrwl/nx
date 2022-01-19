@@ -12,8 +12,7 @@ files to get each project's configuration. This guide covers the `project.json` 
 ## Project Configuration
 
 The `project.json` file contains configuration specific to its project. This file is often created when you use Nx
-Plugins. Everything you can configure in `package.json` you can also configure in `project.json`. In addition, you can
-configure custom executors, which are used instead of npm scripts. Custom executors are typed, toolable and provide a
+Plugins. It configures custom executors, which are used instead of npm scripts. Custom executors are typed, toolable and provide a
 lot more flexibility for running long-live processes. They are also more composable.
 
 If you satisfied with npm scripts though, you will never see a `project.json` file in your workspace. But we encourage
@@ -209,6 +208,18 @@ statically, so you can set them manually like this:
 }
 ```
 
+You can also remove a dependency as follows:
+
+```jsonc
+{
+  "root": "libs/mylib/",
+  "sourceRoot": "libs/mylib/src",
+  "projectType": "library",
+  "targets": {},
+  "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+}
+```
+
 ### workspace json
 
 The `workspace.json` file in the root directory is optional. It's used if you want to list the projects in your workspace explicitly instead of Nx scanning the file tree for all `project.json` and `package.json` files.
@@ -234,7 +245,7 @@ run `nx format`.
 
 ## CLI Configuration
 
-The `nx.json` file contains extra configuration options mostly related to the project graph.
+The `nx.json` file configures the Nx CLI and project defaults.
 
 The following is an expanded version showing all options. Your `nx.json` will likely be much shorter.
 

@@ -28,11 +28,6 @@
             "file": "shared/guides/nx-and-ts"
           },
           {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
-          },
-          {
             "name": "Nx and React",
             "id": "nx-and-react",
             "file": "shared/getting-started/nx-and-react"
@@ -93,6 +88,11 @@
             "name": "Affected",
             "id": "affected",
             "file": "shared/using-nx/affected"
+          },
+          {
+            "name": "Nx Plugins and Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit-and-nx-plugins"
           },
           {
             "name": "CI Setup",

@@ -1,0 +1,403 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Set the projectBuildConfig option in the Storybook configuration for Angular projects for all types of angular projects - non-buildable and buildable libs/apps should set the projectBuildConfig in the Storybook config according to the type of project 1`] = `
+Object {
+  "projects": Object {
+    "main-app": Object {
+      "prefix": "katst",
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "targets": Object {
+        "build": Object {
+          "executor": "@angular-devkit/build-angular:browser",
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "build-storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "apps/main-app/.storybook",
+            },
+            "outputPath": "dist/storybook/main-app",
+            "projectBuildConfig": "main-app",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "apps/main-app/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "main-app",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+      },
+    },
+    "ui-one": Object {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": Object {
+        "build-storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/one/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/one",
+            "projectBuildConfig": "ui-one:build-storybook",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "storybook": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/one/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "ui-one:build-storybook",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+      },
+    },
+    "ui-three": Object {
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
+      "targets": Object {
+        "build-storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/three/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/three",
+            "projectBuildConfig": "ui-three:build-storybook",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "storybook": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/three/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "ui-three:build-storybook",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+      },
+    },
+    "ui-two": Object {
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
+      "targets": Object {
+        "build-storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/two/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/two",
+            "projectBuildConfig": "ui-two:build-storybook",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "storybook": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/two/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "ui-two:build-storybook",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+      },
+    },
+  },
+  "version": 1,
+}
+`;
+
+exports[`Set the projectBuildConfig option in the Storybook configuration for Angular projects for all types of angular projects - non-buildable and buildable libs/apps should still set the projectBuildConfig even if target names are not the default 1`] = `
+Object {
+  "projects": Object {
+    "main-app": Object {
+      "prefix": "katst",
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "targets": Object {
+        "lmfkcn": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "apps/main-app/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "main-app",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+        "njdfvndfjnv": Object {
+          "executor": "@angular-devkit/build-angular:browser",
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "odmwjbc": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "apps/main-app/.storybook",
+            },
+            "outputPath": "dist/storybook/main-app",
+            "projectBuildConfig": "main-app",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+      },
+    },
+    "ui-one": Object {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": Object {
+        "asdgsdfg": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/one/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/one",
+            "projectBuildConfig": "ui-one:asdgsdfg",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "trthrngb": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/one/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "ui-one:asdgsdfg",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+      },
+    },
+    "ui-three": Object {
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
+      "targets": Object {
+        "aaaa": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/three/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/three",
+            "projectBuildConfig": "ui-three:aaaa",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "nmkgd": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/three/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "ui-three:aaaa",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+      },
+    },
+    "ui-two": Object {
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
+      "targets": Object {
+        "sdft": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/two/.storybook",
+            },
+            "port": 4400,
+            "projectBuildConfig": "ui-two:thjkkb",
+            "uiFramework": "@storybook/angular",
+          },
+        },
+        "thjkkb": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/two/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/two",
+            "projectBuildConfig": "ui-two:thjkkb",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+      },
+    },
+  },
+  "version": 1,
+}
+`;
+
+exports[`Set the projectBuildConfig option in the Storybook configuration for Angular projects for non-angular projects should not change their Storybook configuration 1`] = `
+Object {
+  "projects": Object {
+    "main-app": Object {
+      "prefix": "katst",
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "targets": Object {
+        "storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "apps/main-app/.storybook",
+            },
+            "port": 4400,
+            "uiFramework": "@storybook/react",
+          },
+        },
+      },
+    },
+    "ui-one": Object {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": Object {
+        "build-storybook": Object {
+          "configurations": Object {
+            "ci": Object {
+              "quiet": true,
+            },
+          },
+          "executor": "@nrwl/storybook:build",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/one/.storybook",
+            },
+            "outputPath": "dist/storybook/ui/one",
+            "uiFramework": "@storybook/angular",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        },
+        "storybook": Object {
+          "executor": "@nrwl/storybook:storybook",
+          "options": Object {
+            "config": Object {
+              "configFolder": "libs/ui/one/.storybook",
+            },
+            "port": 4400,
+            "uiFramework": "@storybook/react",
+          },
+        },
+      },
+    },
+  },
+  "version": undefined,
+}
+`;

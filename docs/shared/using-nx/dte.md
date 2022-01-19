@@ -27,4 +27,8 @@ it locally.
 
 ## Example
 
-- [This is an example repo](https://github.com/vsavkin/interstellar) showing how easy it is to set up distributed task execution, showing the performance gains, and comparing to sharding/binnig.
+[This is an example repo](https://github.com/vsavkin/interstellar) showing how easy it is to set up distributed task execution, showing the performance gains, and comparing to sharding/binnig.
+
+These are the savings you get by enabling Distributed Task Execution in your CI config:
+
+![DTE](/shared/using-nx/dte.png)

@@ -33,7 +33,7 @@ export class MockProjectGraphService implements ProjectGraphService {
         {
           source: 'existing-app-1',
           target: 'existing-lib-1',
-          type: 'statis',
+          type: 'static' as any,
         },
       ],
       'existing-lib-1': [],
@@ -82,7 +82,7 @@ export class MockProjectGraphService implements ProjectGraphService {
       {
         source: newProject.name,
         target: targetDependency.name,
-        type: 'static',
+        type: 'static' as any,
       },
     ];
 

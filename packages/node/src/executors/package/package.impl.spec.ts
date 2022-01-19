@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { DependencyType, ExecutorContext } from '@nrwl/devkit';
 import { join } from 'path';
 import { mocked } from 'ts-jest/utils';
 
@@ -309,7 +309,7 @@ describe('NodePackageBuilder', () => {
             dependencies: {
               nodelib: [
                 {
-                  type: ProjectType.lib,
+                  type: DependencyType.static,
                   target: 'nodelib-child',
                   source: null,
                 },

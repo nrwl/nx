@@ -35,6 +35,7 @@ describe('@nrwl/storybook:storybook', () => {
     options = {
       uiFramework: '@storybook/angular',
       port: 4400,
+      projectBuildConfig: 'proj',
       config: {
         configFolder: storybookPath,
       },

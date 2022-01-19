@@ -10,7 +10,7 @@ of Nx are completely generic and can be used with any technology or tool.
 
 ### Creating a New Workspace
 
-Running `yarn create nx-workspace --preset=core` creates an empty workspace.
+Running `npx create-nx-workspace@latest --preset=core` creates an empty workspace.
 
 This is what is generated:
 
@@ -58,8 +58,6 @@ package.json
 }
 ```
 
-Finally, `workspace.json` lists the workspace projects, and since we have none, it is empty.
-
 ### Creating an NPM Package
 
 Running `nx g npm-package simple` results in:
@@ -88,16 +86,11 @@ The generated `simple/package.json`:
 ```
 
 With this you can invoke any script defined in `packages/simple/package.json` via Nx. For instance, you can invoke the `test`
-script by running `yarn nx test simple`. And if you invoke this command a second time, the results are retrieved from
+script by running `nx test simple`. And if you invoke this command a second time, the results are retrieved from
 cache.
 
 In this example, we used a generator to create the package, but you could have also created it by hand or copied it
 from another project.
-
-The change in `workspace.json` is the only thing required to make Nx aware of the `simple` package. As long as you
-include the project in `workspace.json`, Nx will include that project source in its graph computation and source
-code analysis. It will, for instance, analyze the project's source code, and it will know when it can reuse the
-computation from the cache and when it has to recompute it from scratch.
 
 ### Creating Second NPM Package and Enabling Yarn Workspaces
 
@@ -117,7 +110,7 @@ tsconfig.base.json
 package.json
 ```
 
-Now let's modify `packages/complex/index.js` to include `require('@myorg/simple')`. If you run `yarn nx test complex`,
+Now let's modify `packages/complex/index.js` to include `require('@myorg/simple')`. If you run `nx test complex`,
 you will see an error saying that `@myorg/simple` cannot be resolved.
 
 This is expected. Nx analyzes your source to enable computation caching, it knows what projects are affected by your PR,
@@ -139,17 +132,9 @@ To make it work, add a dependency from `complex` to `simple` in `packages/comple
 }
 ```
 
-Then add the following to the root `package.json` (which enables Yarn Workspaces).
-
-```json
-{
-  "workspaces": ["packages/*"]
-}
-```
-
 Finally, run `yarn`.
 
-`yarn nx test complex` works now.
+`nx test complex` works now.
 
 ## Using Yarn/PNPM/Lerna
 
@@ -162,7 +147,7 @@ elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/guide
 
 ### Nx Understands How Your Workspace Is Structured
 
-If you run `yarn nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
+If you run `nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
 invalidate the computation cache for `complex`, but changes to `complex` won't invalidate the cache for `simple`.
 
 In contrast to more basic monorepo tools, Nx doesn't just analyze `package.json` files. It does much more. Nx also knows
@@ -170,19 +155,19 @@ that adding a `require()` creates a dependency and that some dependencies cannot
 
 ### Nx Orchestrates Tasks
 
-Running `yarn nx run-many --target=test --all` will test all projects in parallel.
+Running `nx run-many --target=test --all` will test all projects in parallel.
 
-Running `yarn nx run-many --target=build --projects=app1,app2` will build `proj1` and `proj2` and their
-dependencies in parallel. Note that if `app1` depends on the output of its dependency (e.g., `shared-components`), Nx
-will build `shared-components` first and only then will build the app.
+Often, tests for different projects can run independently, but builds can't. If you, say, have two applications `app1` and `app2` depending on the `shared-components` library, it's possible that the library has to be built first before the two applications can be built. And that's what `nx run-many --target=build --projects=app1,app2` will do.
+
+With Nx, you never have to worry about preparing your workspace before running a particular command. Nx will do it for you.
 
 ### Nx Knows What Is Affected
 
-Running `yarn nx affected --target=test` will test all the projects affected by the current PR.
+Running `nx affected --target=test` will test all the projects affected by the current PR.
 
 ### Nx Caches and Distributes Tasks
 
-Running `yarn nx build app1` will cache the file artifacts and the terminal output, so if you run it again the command
+Running `nx run-many --target=build --all` will cache the file artifacts and the terminal output, so if you run it again the command
 will execute instantly because the results will be retrieved from cache. If you use `Nx Cloud` the cache will be shared
 between you, your teammates, and the CI agents. Nx can also distribute tasks across multiple machines while preserving
 the developer experience of running it on a single machine.

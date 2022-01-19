@@ -111,6 +111,17 @@ statically, so you can set them manually like this:
 }
 ```
 
+You can also remove a dependency as follows:
+
+```jsonc
+{
+  "name": "mylib",
+  "nx": {
+    "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+  }
+}
+```
+
 ### Ignoring a project
 
 Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
@@ -127,7 +138,7 @@ project, add the following to its `package.json`:
 
 ### workspace json
 
-The `workspace.json` file in the root directory is optional. It's used if you want to list the projects in your workspace explicitly instead of Nx scanning the file tree for all `project.json` and `package.json` files.
+The `workspace.json` file in the root directory is optional. It's used if you want to list the projects in your workspace explicitly instead of Nx scanning the file tree for all `project.json` and `package.json` files that match the globs specified in the `workspaces` property of the root `package.json`.
 
 ```json
 {
@@ -143,7 +154,7 @@ The `workspace.json` file in the root directory is optional. It's used if you wa
 
 ## CLI Configuration
 
-The `nx.json` file contains extra configuration options mostly related to the project graph.
+The `nx.json` file configures the Nx CLI and project defaults.
 
 The following is an expanded version showing all options. Your `nx.json` will likely be much shorter.
 

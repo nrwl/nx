@@ -10,7 +10,7 @@ The `@nrwl/js` package ships with corresponding generators and executors that be
 
 `@nrwl/js` is particularly useful if you want to
 
-- Create framework agnostic TypeScript libraries within an existing Nx workspace (say to use in your React, Node or Angular app)
+- Create framework-agnostic TypeScript libraries within an existing Nx workspace (say to use in your React, Node or Angular app)
 - Publish TypeScript packages to NPM
 
 To get started with TypeScript packages in Nx, either add the `@nrwl/js` package to an existing Nx workspace or generate a new Nx workspace using the `--preset=ts` preset.

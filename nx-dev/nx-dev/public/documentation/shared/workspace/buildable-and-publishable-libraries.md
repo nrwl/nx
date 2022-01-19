@@ -31,4 +31,6 @@ Buildable libraries are similar to "publishable libraries" described above. Thei
 
 Buildable libraries are mostly used for producing some pre-compiled output that can be directly referenced from an Nx workspace application without the need to again compile it. A typical scenario is to leverage Nx’s [incremental building](/ci/incremental-builds) capabilities.
 
+> Note: In order for a buildable library to be pre-compiled, it can only depend on other buildable libraries. This allows you to take full advantage of incremental builds.
+
 For more details on the mechanics, remember that Nx is an open source project, so you can see the actual impact of the generator by looking at the source code (the best starting point is probably `packages/<framework>/src/generators/library/library.ts`).

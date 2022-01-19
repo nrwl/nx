@@ -246,7 +246,9 @@ describe('Hasher', () => {
           },
         },
         dependencies: {
-          parent: [{ source: 'parent', target: 'child', type: 'static' }],
+          parent: [
+            { source: 'parent', target: 'child', type: DependencyType.static },
+          ],
         },
       },
       {} as any,
@@ -343,8 +345,12 @@ describe('Hasher', () => {
           },
         },
         dependencies: {
-          parent: [{ source: 'parent', target: 'child', type: 'static' }],
-          child: [{ source: 'child', target: 'parent', type: 'static' }],
+          parent: [
+            { source: 'parent', target: 'child', type: DependencyType.static },
+          ],
+          child: [
+            { source: 'child', target: 'parent', type: DependencyType.static },
+          ],
         },
       },
       {} as any,

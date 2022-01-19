@@ -8,12 +8,10 @@ If you're only interested in improving the performance of your monorepo by using
 
 Check out the following guides to get started:
 
-- [Installing Nx CLI & creating a new Nx Workspace](/getting-started/nx-setup)
+- [Using Nx without plugins](/getting-started/nx-core)
 - [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
 - [Adding Nx to an Angular CLI project](/migration/migration-angular)
 - [Migrating from AngularJS](/migration/migration-angularjs)
-- [Using Nx without plugins](/getting-started/nx-core)
-- [CI Overview](/using-nx/ci-overview)
 
 It is also a good idea to read the [mental model guide](/using-nx/mental-model) to understand how Nx works.
 
@@ -22,8 +20,6 @@ It is also a good idea to read the [mental model guide](/using-nx/mental-model) 
 Nx plugins helps you develop [Angular](/angular/overview) applications with fully integrated support for
 modern tools and libraries like [Jest](/jest/overview), [Cypress](/cypress/overview),
 [ESLint](/linter/eslint), Storybook, [NgRx](/angular/guides/misc-ngrx) and more.
-
-### 10-min Video Overview
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/sNz-4PUM0k8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 

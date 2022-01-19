@@ -273,7 +273,7 @@ describe('dep-graph', () => {
             target: mylib,
             type: 'static',
           },
-          { source: myapp, target: mylib2, type: 'static' },
+          { source: myapp, target: mylib2, type: 'dynamic' },
         ],
         [myappE2e]: [
           {
