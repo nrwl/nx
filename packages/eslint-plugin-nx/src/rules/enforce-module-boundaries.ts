@@ -33,6 +33,7 @@ import {
   findFilesInCircularPath,
 } from '@nrwl/workspace/src/utils/graph-utils';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
+import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
 
 type Options = [
   {
@@ -232,7 +233,13 @@ export default createESLintRule<Options, MessageIds>({
       // same project => allow
       if (sourceProject === targetProject) {
         // we only allow relative paths within the same project
-        if (!allowCircularSelfDependency && !isRelativePath(imp)) {
+        // and if it's not a secondary entrypoint in an angular lib
+
+        if (
+          !allowCircularSelfDependency &&
+          !isRelativePath(imp) &&
+          !isAngularSecondaryEntrypoint(sourceFilePath)
+        ) {
           context.report({
             node,
             messageId: 'noSelfCircularDependencies',
