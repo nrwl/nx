@@ -916,8 +916,12 @@ describe('cache', () => {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
     lines.forEach((s) => {
-      if (s.startsWith(`> nx run`)) {
-        const projectName = s.split(`> nx run `)[1].split(':')[0].trim();
+      if (s.trimStart().startsWith(`> nx run`)) {
+        const projectName = s
+          .trimStart()
+          .split(`> nx run `)[1]
+          .split(':')[0]
+          .trim();
         if (s.indexOf(cacheStatus) > -1) {
           matchingProjects.push(projectName);
         }
