@@ -117,7 +117,18 @@ This is expected. Nx analyzes your source to enable computation caching, it know
 but it **does not** change how your npm scripts run. Whatever tools you use in your npm scripts will run exactly as they
 would without Nx. **Nx Core doesn't replace your tools and doesn't change how they work.**
 
-To make it work, add a dependency from `complex` to `simple` in `packages/complex/package.json`:
+In this simple setup, Nx doesn't do any automated path mapping as it usually does, but rather fully relies on a corresponding `yarn` or `npm` workspaces setup. As such, at the root-level `package.json` you should have something like:
+
+```json
+{
+  ...
+  workspaces: [
+    "packages/*"
+  ]
+}
+```
+
+Moreover, a dependency from `complex` to `simple` in `packages/complex/package.json` needs to be added:
 
 ```json
 {
@@ -132,9 +143,9 @@ To make it work, add a dependency from `complex` to `simple` in `packages/comple
 }
 ```
 
-Finally, run `yarn`.
+Finally, run `yarn install` or `npm install` to make the package available in the yarn/npm workspace.
 
-`nx test complex` works now.
+Running `nx test complex` should work now.
 
 ## Using Yarn/PNPM/Lerna
 
