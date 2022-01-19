@@ -415,7 +415,7 @@ function addTasksForProjectDependencyConfig(
         target: dependencyConfig.target,
         configuration,
         overrides,
-        errorIfCannotFindConfiguration: true,
+        errorIfCannotFindConfiguration: false,
       },
       defaultDependencyConfigs,
       projectGraph,
