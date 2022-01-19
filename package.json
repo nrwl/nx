@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "13.4.5-beta.6",
+  "version": "13.4.6",
   "description": "Smart, Fast and Extensible Build System",
   "homepage": "https://nx.dev",
   "private": true,
