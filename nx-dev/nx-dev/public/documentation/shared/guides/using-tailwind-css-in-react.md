@@ -36,17 +36,22 @@ module.exports = {
 };
 ```
 
-### Introducing Nx Utility for Better Tailwind Purging
+### Introducing Nx Utility for Tailwind 
 
-In a typical `tailwind.config.js` file, the `purge` property of the tailwind config would be an array that includes all files that could mention tailwind class names (you can find more details on tailwind's [official documentation](https://tailwindcss.com/docs/optimizing-for-production#basic-usage)).
+The new Tailwind Just-in-Time engine has replaced the classic engine in Tailwind CSS v3.0. The new engine generates the styles you need for your project on-demand, and might necessitate some small changes to your project depending on how you have Tailwind configured.
 
-Nx has a utility function for determining the glob representation of all files the application depends on (based on the Nx Dependency Graph), which should be used when setting this purge property. This eliminates additional manual maintenance as your workspace progresses.
+In a typical `tailwind.config.js` file, the `content` property of the tailwind config would be an array that includes all files that could mention tailwind class names (you can find more details on tailwind's [official documentation](https://tailwindcss.com/docs/optimizing-for-production#basic-usage)).
+
+Nx has a utility function for determining the glob representation of all files the application depends on (based on the Nx Dependency Graph), which should be used when setting this content property. This eliminates additional manual maintenance as your workspace progresses.
 
 ```js
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 
 module.exports = {
-  purge: createGlobPatternsForDependencies(__dirname),
+  content: [
+    path.join(__dirname, 'pages/**/*.{js,ts,jsx,tsx}'),
+    ...createGlobPatternsForDependencies(__dirname),
+    ],
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},
@@ -57,8 +62,6 @@ module.exports = {
   plugins: [],
 };
 ```
-
-_NOTE:_ To ensure proper purging for custom configurations, be sure that the `NODE_ENV` environment variable is set to `production`. By default, Nx only purges on prod build (for example: `nx build --prod`).
 
 ## Step 3: Import TailwindCss Styles
 
