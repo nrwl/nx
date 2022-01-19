@@ -8,6 +8,7 @@ import { join, resolve } from 'path';
 import { eachValueFrom } from 'rxjs-for-await';
 import { map } from 'rxjs/operators';
 import { checkDependencies } from '../../utils/check-dependencies';
+import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import {
   ExecutorEvent,
   ExecutorOptions,
@@ -15,6 +16,7 @@ import {
 } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { updatePackageJson } from '../../utils/update-package-json';
+import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
 export function normalizeOptions(
   options: ExecutorOptions,
@@ -50,35 +52,55 @@ export function normalizeOptions(
 }
 
 export async function* tscExecutor(
-  options: ExecutorOptions,
+  _options: ExecutorOptions,
   context: ExecutorContext
 ) {
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
-  const normalizedOptions = normalizeOptions(
-    options,
-    context.root,
-    sourceRoot,
-    root
-  );
+  const options = normalizeOptions(_options, context.root, sourceRoot, root);
 
   const { projectRoot, tmpTsConfig } = checkDependencies(
     context,
-    options.tsConfig
+    _options.tsConfig
   );
 
   if (tmpTsConfig) {
-    normalizedOptions.tsConfig = tmpTsConfig;
+    options.tsConfig = tmpTsConfig;
+  }
+
+  const assetHandler = new CopyAssetsHandler({
+    projectDir: projectRoot,
+    rootDir: context.root,
+    outputDir: _options.outputPath,
+    assets: _options.assets,
+  });
+
+  if (options.watch) {
+    const disposeWatchAssetChanges =
+      await assetHandler.watchAndProcessOnAssetChange();
+    const disposePackageJsonChanged = await watchForSingleFileChanges(
+      join(context.root, projectRoot),
+      'package.json',
+      () => updatePackageJson(options.main, options.outputPath, projectRoot)
+    );
+    process.on('exit', async () => {
+      await disposeWatchAssetChanges();
+      await disposePackageJsonChanged();
+    });
+    process.on('SIGTERM', async () => {
+      await disposeWatchAssetChanges();
+      await disposePackageJsonChanged();
+    });
   }
 
   return yield* eachValueFrom(
-    compileTypeScriptFiles(normalizedOptions, context, async () => {
-      await updatePackageAndCopyAssets(normalizedOptions, projectRoot);
+    compileTypeScriptFiles(options, context, async () => {
+      await updatePackageAndCopyAssets(options, projectRoot);
     }).pipe(
       map(
         ({ success }) =>
           ({
             success,
-            outfile: normalizedOptions.mainOutputPath,
+            outfile: options.mainOutputPath,
           } as ExecutorEvent)
       )
     )

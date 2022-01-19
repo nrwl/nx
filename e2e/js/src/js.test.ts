@@ -1,14 +1,16 @@
-import { execSync } from 'child_process';
 import {
   checkFilesExist,
   newProject,
+  readFile,
   readJson,
-  readProjectConfig,
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
+  waitUntil,
 } from '../../utils';
 
 describe('js e2e', () => {
@@ -51,10 +53,48 @@ describe('js e2e', () => {
 
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
     checkFilesExist(
+      `dist/libs/${lib}/README.md`,
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/src/index.js`,
       `dist/libs/${lib}/src/lib/${lib}.js`
     );
+
+    updateJson(`libs/${lib}/project.json`, (json) => {
+      json.targets.build.options.assets.push({
+        input: `libs/${lib}/docs`,
+        glob: '**/*.md',
+        output: 'docs',
+      });
+      return json;
+    });
+    const libBuildProcess = await runCommandUntil(
+      `build ${lib} --watch`,
+      (output) => output.includes(`Watching for file changes`)
+    );
+    updateFile(`libs/${lib}/README.md`, `Hello, World!`);
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      json.version = '999.9.9';
+      return json;
+    });
+    updateFile(`libs/${lib}/docs/a/b/nested.md`, 'Nested File');
+    await expect(
+      waitUntil(() =>
+        readFile(`dist/libs/${lib}/README.md`).includes(`Hello, World!`)
+      )
+    ).resolves.not.toThrow();
+    await expect(
+      waitUntil(() =>
+        readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(`Nested File`)
+      )
+    ).resolves.not.toThrow();
+    await expect(
+      waitUntil(() =>
+        readFile(`dist/libs/${lib}/package.json`).includes(
+          `"version": "999.9.9"`
+        )
+      )
+    ).resolves.not.toThrow();
+    libBuildProcess.kill();
 
     const app = uniq('app');
     runCLI(`generate @nrwl/js:app ${app} --buildable --compiler=tsc`);
@@ -94,7 +134,7 @@ describe('js e2e', () => {
     expect(output).toContain('1 task(s) that it depends on');
     expect(output).toContain('Done compiling TypeScript files');
 
-    // expect(runCommand(`serve ${app} --watch=false`)).toContain(`Running ${lib}`)
+    expect(runCLI(`serve ${app} --no-watch`)).toContain(`Running ${lib}`);
   }, 120000);
 
   // reenable when once ci runs on node 16

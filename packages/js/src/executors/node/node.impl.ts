@@ -19,9 +19,6 @@ export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
-  // for now we only run the executor in the watch mode
-  options.watch = true;
-
   process.on('SIGTERM', async () => {
     await killProcess();
     process.exit(128 + 15);
