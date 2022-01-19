@@ -1,4 +1,9 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
 
 import { initGenerator } from './init';
@@ -40,6 +45,7 @@ describe('workspace', () => {
                   },
                 },
                 e2e: {
+                  builder: '@angular-devkit/build-angular:protractor',
                   options: {
                     protractorConfig: 'e2e/protractor.conf.js',
                   },
@@ -88,6 +94,16 @@ describe('workspace', () => {
             'An e2e project was specified but e2e/protractor.conf.js could not be found.'
           );
         }
+      });
+
+      it('should not error if project does not use protractor', async () => {
+        tree.delete('/e2e/protractor.conf.js');
+
+        const proj = readProjectConfiguration(tree, 'myApp');
+        proj.targets.e2e.executor = '@nrwl/cypress';
+        updateProjectConfiguration(tree, 'myApp', proj);
+
+        await initGenerator(tree, { name: 'myApp' });
       });
 
       it('should error if no angular.json is present', async () => {
