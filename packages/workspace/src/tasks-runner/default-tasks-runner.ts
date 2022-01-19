@@ -4,7 +4,7 @@ import { TaskOrchestrator } from './task-orchestrator';
 import { performance } from 'perf_hooks';
 import { TaskGraphCreator } from './task-graph-creator';
 import { Hasher } from '../core/hasher/hasher';
-import { LifeCycle } from './life-cycles/life-cycle';
+import { LifeCycle } from './life-cycle';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;

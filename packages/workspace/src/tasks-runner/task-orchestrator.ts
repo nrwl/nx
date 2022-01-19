@@ -17,7 +17,7 @@ import {
   shouldForwardOutput,
 } from './utils';
 import { Batch, TasksSchedule } from './tasks-schedule';
-import { TaskMetadata } from './life-cycles/life-cycle';
+import { TaskMetadata } from './life-cycle';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);

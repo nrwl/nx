@@ -2,7 +2,7 @@ import type { Task } from '@nrwl/devkit';
 import { output, TaskCacheStatus } from '../../utilities/output';
 import { TaskStatus } from '../tasks-runner';
 import { getCommandArgsForTask } from '../utils';
-import type { LifeCycle } from './life-cycle';
+import type { LifeCycle } from '../life-cycle';
 
 /**
  * The following life cycle's outputs are static, meaning no previous content

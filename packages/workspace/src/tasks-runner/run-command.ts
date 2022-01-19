@@ -19,7 +19,7 @@ import {
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { getDependencyConfigs, shouldForwardOutput } from './utils';
-import { CompositeLifeCycle, LifeCycle } from './life-cycles/life-cycle';
+import { CompositeLifeCycle, LifeCycle } from './life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { EmptyTerminalOutputLifeCycle } from './life-cycles/empty-terminal-output-life-cycle';

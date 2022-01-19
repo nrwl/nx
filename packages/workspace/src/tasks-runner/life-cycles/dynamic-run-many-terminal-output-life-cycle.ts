@@ -3,7 +3,7 @@ import { EOL } from 'os';
 import * as readline from 'readline';
 import { output } from '../../utilities/output';
 import type { Task, TaskStatus } from '../tasks-runner';
-import type { LifeCycle } from './life-cycle';
+import type { LifeCycle } from '../life-cycle';
 import { prettyTime } from './pretty-time';
 
 /**

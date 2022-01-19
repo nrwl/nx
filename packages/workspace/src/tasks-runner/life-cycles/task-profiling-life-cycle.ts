@@ -1,4 +1,4 @@
-import { LifeCycle, TaskMetadata } from './life-cycle';
+import { LifeCycle, TaskMetadata } from '../life-cycle';
 import { Task, writeJsonFile } from '@nrwl/devkit';
 import { TaskStatus } from '../tasks-runner';
 
