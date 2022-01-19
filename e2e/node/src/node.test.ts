@@ -770,7 +770,7 @@ describe('with dependencies', () => {
     const buildWithDeps = runCLI(
       `build ${app} --with-deps --buildLibsFromSource=false`
     );
-    expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+    expect(buildWithDeps).toContain('Successfully ran target build');
     checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 
     // we remove all path mappings from the root tsconfig, so when trying to build

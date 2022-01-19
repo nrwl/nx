@@ -50,7 +50,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
 
     let title = `Running target ${output.bold(
       this.args.target
-    )} for ${output.bold(this.projectNames.length)} projects`;
+    )} for ${output.bold(this.projectNames.length)} project(s)`;
     const dependentTasksCount = this.tasks.length - this.projectNames.length;
     if (dependentTasksCount > 0) {
       title += ` and ${output.bold(

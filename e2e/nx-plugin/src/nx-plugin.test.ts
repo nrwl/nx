@@ -62,7 +62,7 @@ describe('Nx Plugin', () => {
 
     if (isNotWindows()) {
       const e2eResults = runCLI(`e2e ${plugin}-e2e`);
-      expect(e2eResults).toContain('Running target "e2e" succeeded');
+      expect(e2eResults).toContain('Successfully ran target e2e');
       expect(await killPorts()).toBeTruthy();
     }
   }, 250000);

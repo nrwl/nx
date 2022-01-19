@@ -234,7 +234,7 @@ export async function h() { return 'c'; }
       const buildFromSource = runCLI(
         `build ${app} --buildLibsFromSource=false`
       );
-      expect(buildFromSource).toContain(`Running target "build" succeeded`);
+      expect(buildFromSource).toContain('Successfully ran target build');
       checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 
       // we remove all path mappings from the root tsconfig, so when trying to build

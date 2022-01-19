@@ -250,7 +250,7 @@ describe('Angular Projects', () => {
     expect(buildOutput).toContain(
       `Building entry point '@${proj}/${lib}/${entryPoint}'`
     );
-    expect(buildOutput).toContain('Running target "build" succeeded');
+    expect(buildOutput).toContain('Successfully ran target build');
   });
 
   it('MFE - should serve the host and remote apps successfully', async () => {

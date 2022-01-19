@@ -91,7 +91,7 @@ describe('run-one', () => {
       env: { ...process.env, NX_DAEMON: 'true' },
     });
 
-    expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
+    expect(buildWithDaemon).toContain('Successfully ran target build');
   }, 10000);
 
   it('should build the project when within the project root', () => {
@@ -135,7 +135,7 @@ describe('run-one', () => {
     it('should include deps', () => {
       const output = runCLI(`test ${myapp} --with-deps`);
       expect(output).toContain(
-        `NX  Running target test for project ${myapp} and 2 task(s) that it depends on.`
+        `NX   Running target test for project ${myapp} and 2 task(s) it depends on`
       );
       expect(output).toContain(myapp);
       expect(output).toContain(mylib1);
@@ -144,7 +144,7 @@ describe('run-one', () => {
 
     it('should include deps without the configuration if it does not exist', () => {
       const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
-      expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+      expect(buildWithDeps).toContain('Successfully ran target build');
       expect(buildWithDeps).toContain(`nx run ${myapp}:build:production`);
       expect(buildWithDeps).toContain(`nx run ${mylib1}:build`);
       expect(buildWithDeps).toContain(`nx run ${mylib2}:build`);
@@ -188,7 +188,7 @@ describe('run-one', () => {
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
-        `NX  Running target build for project ${myapp} and 2 task(s) that it depends on.`
+        `NX   Running target build for project ${myapp} and 2 task(s) it depends on`
       );
       expect(output).toContain(myapp);
       expect(output).toContain(mylib1);
@@ -217,7 +217,7 @@ describe('run-one', () => {
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
-        `NX  Running target build for project ${myapp} and 2 task(s) that it depends on.`
+        `NX   Running target build for project ${myapp} and 2 task(s) it depends on`
       );
       expect(output).toContain(myapp);
       expect(output).toContain(mylib1);
@@ -271,7 +271,7 @@ describe('run-many', () => {
     expect(buildParallel).toContain(`- ${libB}`);
     expect(buildParallel).toContain(`- ${libC}`);
     expect(buildParallel).not.toContain(`- ${libD}`);
-    expect(buildParallel).toContain('Running target "build" succeeded');
+    expect(buildParallel).toContain('Successfully ran target build');
 
     // testing run many --all starting
     const buildAllParallel = runCLI(`run-many --target=build --all`);
@@ -283,7 +283,7 @@ describe('run-many', () => {
     expect(buildAllParallel).toContain(`- ${libB}`);
     expect(buildAllParallel).toContain(`- ${libC}`);
     expect(buildAllParallel).not.toContain(`- ${libD}`);
-    expect(buildAllParallel).toContain('Running target "build" succeeded');
+    expect(buildAllParallel).toContain('Successfully ran target build');
 
     // testing run many --with-deps
     const buildWithDeps = runCLI(
@@ -296,7 +296,7 @@ describe('run-many', () => {
     expect(buildWithDeps).toContain(`${libC}`); // build should include libC as dependency
     expect(buildWithDeps).not.toContain(`- ${libB}`);
     expect(buildWithDeps).not.toContain(`- ${libD}`);
-    expect(buildWithDeps).toContain('Running target "build" succeeded');
+    expect(buildWithDeps).toContain('Successfully ran target build');
 
     // testing run many --configuration
     const buildConfig = runCLI(
@@ -308,7 +308,7 @@ describe('run-many', () => {
     expect(buildConfig).toContain(`run ${appA}:build:production`);
     expect(buildConfig).toContain(`run ${libA}:build`);
     expect(buildConfig).toContain(`run ${libC}:build`);
-    expect(buildConfig).toContain('Running target "build" succeeded');
+    expect(buildConfig).toContain('Successfully ran target build');
 
     // testing run many with daemon enabled
     const buildWithDaemon = runCLI(`run-many --target=build --all`, {
@@ -422,7 +422,7 @@ describe('affected:*', () => {
     expect(build).toContain(`- ${myapp}`);
     expect(build).toContain(`- ${mypublishablelib}`);
     expect(build).not.toContain('is not registered with the build command');
-    expect(build).toContain('Running target "build" succeeded');
+    expect(build).toContain('Successfully ran target build');
 
     const buildExcluded = runCLI(
       `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
@@ -722,14 +722,14 @@ describe('cache', () => {
     const filesApp2 = listFiles(`dist/apps/${myapp2}`);
     // now the data is in cache
     expect(outputThatPutsDataIntoCache).not.toContain(
-      'read the output from cache'
+      'read the output from the cache'
     );
 
     rmDist();
 
     const outputWithBothBuildTasksCached = runCLI(`affected:build ${files}`);
     expect(outputWithBothBuildTasksCached).toContain(
-      'read the output from cache'
+      'read the output from the cache'
     );
     expectCached(outputWithBothBuildTasksCached, [myapp1, myapp2]);
     expect(listFiles(`dist/apps/${myapp1}`)).toEqual(filesApp1);
@@ -740,7 +740,7 @@ describe('cache', () => {
       `affected:build ${files} --skip-nx-cache`
     );
     expect(outputWithBothBuildTasksCachedButSkipped).not.toContain(
-      `read the output from cache`
+      `read the output from the cache`
     );
 
     // touch myapp1
@@ -749,7 +749,9 @@ describe('cache', () => {
       return `${c}\n//some comment`;
     });
     const outputWithBuildApp2Cached = runCLI(`affected:build ${files}`);
-    expect(outputWithBuildApp2Cached).toContain('read the output from cache');
+    expect(outputWithBuildApp2Cached).toContain(
+      'read the output from the cache'
+    );
     expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
@@ -760,7 +762,9 @@ describe('cache', () => {
       return JSON.stringify(r);
     });
     const outputWithNoBuildCached = runCLI(`affected:build ${files}`);
-    expect(outputWithNoBuildCached).not.toContain('read the output from cache');
+    expect(outputWithNoBuildCached).not.toContain(
+      'read the output from the cache'
+    );
 
     // build individual project with caching
     const individualBuildWithCache = runCLI(`build ${myapp1}`);
@@ -779,11 +783,13 @@ describe('cache', () => {
     // run lint with caching
     // --------------------------------------------
     const outputWithNoLintCached = runCLI(`affected:lint ${files}`);
-    expect(outputWithNoLintCached).not.toContain('read the output from cache');
+    expect(outputWithNoLintCached).not.toContain(
+      'read the output from the cache'
+    );
 
     const outputWithBothLintTasksCached = runCLI(`affected:lint ${files}`);
     expect(outputWithBothLintTasksCached).toContain(
-      'read the output from cache'
+      'read the output from the cache'
     );
     expectCached(outputWithBothLintTasksCached, [
       myapp1,
@@ -836,12 +842,12 @@ describe('cache', () => {
     const outputWithoutCachingEnabled1 = runCLI(`affected:build ${files}`);
 
     expect(outputWithoutCachingEnabled1).not.toContain(
-      'read the output from cache'
+      'read the output from the cache'
     );
 
     const outputWithoutCachingEnabled2 = runCLI(`affected:build ${files}`);
     expect(outputWithoutCachingEnabled2).not.toContain(
-      'read the output from cache'
+      'read the output from the cache'
     );
   }, 120000);
 

@@ -11,7 +11,10 @@ export class EmptyTerminalOutputLifeCycle implements LifeCycle {
   ) {
     if (cacheStatus === TaskCacheStatus.NoCache) {
       const args = getCommandArgsForTask(task);
-      output.logCommand(`nx ${args.join(' ')}`, cacheStatus);
+      output.logCommand(
+        `${args.filter((a) => a !== 'run').join(' ')}`,
+        cacheStatus
+      );
       process.stdout.write(terminalOutput);
     }
   }

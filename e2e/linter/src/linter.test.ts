@@ -148,7 +148,7 @@ describe('Linter', () => {
 
       // Ensure that the unit tests for the new rule are runnable
       const unitTestsOutput = runCLI(`test eslint-rules`);
-      expect(unitTestsOutput).toContain('Running target "test" succeeded');
+      expect(unitTestsOutput).toContain('Successfully ran target test');
 
       // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
       const knownLintErrorMessage = 'e2e test known error message';
