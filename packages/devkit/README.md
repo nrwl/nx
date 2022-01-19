@@ -4,10 +4,10 @@
 
 <hr>
 
-# Nx Devkit
+# Nx: Smart, Fast and Extensible Build System
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-{{getting-started}}
+This package contains a set of utilities for creating Nx plugins.
 
-{{resources}}
+{{content}

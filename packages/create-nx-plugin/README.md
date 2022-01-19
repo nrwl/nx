@@ -6,7 +6,7 @@
 
 # `> npx create-nx-plugin`
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
 ## What is It?
 

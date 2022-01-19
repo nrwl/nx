@@ -1,5 +1,3 @@
-import { join } from 'path';
-
 import { WholeFileChange } from '../../file-utils';
 import {
   DiffType,
@@ -7,8 +5,7 @@ import {
   JsonChange,
 } from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { getSortedProjectNodes, ProjectGraphNode } from '../../project-graph';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { ProjectGraphNode } from '../../project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
@@ -20,8 +17,6 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   if (!tsConfigJsonChanges) {
     return [];
   }
-
-  const sortedNodes = getSortedProjectNodes(graph.nodes);
 
   const changes = tsConfigJsonChanges.getChanges();
 
@@ -41,7 +36,9 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
     if (change.type === DiffType.Deleted) {
       return Object.keys(graph.nodes);
     }
-    touched.push(...getProjectsAffectedByPaths(change, sortedNodes));
+    touched.push(
+      ...getProjectsAffectedByPaths(change, Object.values(graph.nodes))
+    );
   }
   return touched;
 };
@@ -57,17 +54,19 @@ function allChangesArePathChanges(
  */
 function getProjectsAffectedByPaths(
   change: JsonChange,
-  sortedNodes: ProjectGraphNode[]
+  nodes: ProjectGraphNode[]
 ) {
   const result = [];
-
   const paths: string[] = [change.value.lhs, change.value.rhs];
   paths.forEach((path) => {
-    sortedNodes.forEach((project) => {
+    nodes.forEach((project) => {
+      const normalizedPath =
+        path && path.startsWith('./') ? path.substring(2) : path;
+      const r = project.data.root;
+      const root = r && r.endsWith('/') ? r.substring(0, r.length - 1) : r;
       if (
-        path &&
-        project.data.root &&
-        join(appRootPath, path).startsWith(join(appRootPath, project.data.root))
+        (normalizedPath && root && normalizedPath.startsWith(root)) ||
+        normalizedPath == root
       ) {
         result.push(project.name);
       }
