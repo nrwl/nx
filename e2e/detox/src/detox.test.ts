@@ -36,14 +36,14 @@ describe('Detox', () => {
         );
 
         expect(runCLI(`build-ios ${appName}-e2e --prod`)).toContain(
-          'Running target "build-ios" succeeded'
+          'Successfully ran target build-ios'
         );
 
         expect(
           runCLI(
             `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`
           )
-        ).toContain('Running target "test-ios" succeeded');
+        ).toContain('Successfully ran target test-ios');
 
         await killPorts(8081); // kill the port for the serve command
       }, 3000000);

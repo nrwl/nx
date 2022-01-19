@@ -1,4 +1,5 @@
 import * as chalk from 'chalk';
+import { EOL } from 'os';
 import { isCI } from './is_ci';
 
 export interface CLIErrorMessageConfig {
@@ -37,15 +38,23 @@ if (isCI()) {
 }
 
 class CLIOutput {
-  private readonly NX_PREFIX = `${chalk.cyan(
-    '>'
-  )} ${chalk.reset.inverse.bold.cyan(' NX ')}`;
+  readonly X_PADDING = ' ';
+
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character
    */
-  private readonly VERTICAL_SEPARATOR =
-    '———————————————————————————————————————————————';
+  private get VERTICAL_SEPARATOR() {
+    let divider = '';
+    for (
+      let i = 0;
+      i < process.stdout.columns - this.X_PADDING.length * 2;
+      i++
+    ) {
+      divider += '\u2014';
+    }
+    return divider;
+  }
 
   /**
    * Expose some color and other utility functions so that other parts of the codebase that need
@@ -54,28 +63,27 @@ class CLIOutput {
    */
   colors = {
     gray: chalk.gray,
+    green: chalk.green,
+    red: chalk.red,
+    cyan: chalk.cyan,
+    white: chalk.white,
   };
   bold = chalk.bold;
   underline = chalk.underline;
+  dim = chalk.dim;
 
   private writeToStdOut(str: string) {
     process.stdout.write(str);
   }
 
   private writeOutputTitle({
-    label,
+    color,
     title,
   }: {
-    label?: string;
+    color: string;
     title: string;
   }): void {
-    let outputTitle: string;
-    if (label) {
-      outputTitle = `${this.NX_PREFIX} ${label} ${title}\n`;
-    } else {
-      outputTitle = `${this.NX_PREFIX} ${title}\n`;
-    }
-    this.writeToStdOut(outputTitle);
+    this.writeToStdOut(` ${this.applyNxPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -83,27 +91,45 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`  ${bodyLine}\n`));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
+  }
+
+  applyNxPrefix(color = 'cyan', text: string): string {
+    let nxPrefix = '';
+    if (chalk[color]) {
+      nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
+        ' NX '
+      )}`;
+    } else {
+      nxPrefix = `${chalk.keyword(color)(
+        '>'
+      )} ${chalk.reset.inverse.bold.keyword(color)(' NX ')}`;
+    }
+    return `${nxPrefix}  ${text}`;
   }
 
   addNewline() {
-    this.writeToStdOut('\n');
+    this.writeToStdOut(EOL);
   }
 
-  addVerticalSeparator() {
-    this.writeToStdOut(`\n${chalk.gray(this.VERTICAL_SEPARATOR)}\n\n`);
+  addVerticalSeparator(color = 'gray') {
+    this.addNewline();
+    this.addVerticalSeparatorWithoutNewLines(color);
+    this.addNewline();
   }
 
-  addVerticalSeparatorWithoutNewLines() {
-    this.writeToStdOut(`${chalk.gray(this.VERTICAL_SEPARATOR)}\n`);
+  addVerticalSeparatorWithoutNewLines(color = 'gray') {
+    this.writeToStdOut(
+      `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
+    );
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.red(' ERROR '),
-      title: chalk.bold.red(title),
+      color: 'red',
+      title: chalk.red(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -116,7 +142,7 @@ class CLIOutput {
       this.writeToStdOut(
         `${chalk.grey(
           '  Learn more about this error: '
-        )}https://errors.nx.dev/${slug}\n`
+        )}https://errors.nx.dev/${slug}${EOL}`
       );
     }
 
@@ -127,8 +153,8 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.yellow(' WARNING '),
-      title: chalk.bold.yellow(title),
+      color: 'yellow',
+      title: chalk.yellow(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -152,8 +178,8 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.keyword('orange')(' NOTE '),
-      title: chalk.bold.keyword('orange')(title),
+      color: 'orange',
+      title: chalk.keyword('orange')(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -165,8 +191,8 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      label: chalk.reset.inverse.bold.green(' SUCCESS '),
-      title: chalk.bold.green(title),
+      color: 'green',
+      title: chalk.green(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -178,6 +204,7 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
+      color: 'gray',
       title: message,
     });
 
@@ -190,20 +217,23 @@ class CLIOutput {
   ) {
     this.addNewline();
 
-    this.writeToStdOut(chalk.bold(`> ${message} `));
-
+    let commandOutput = `    ${chalk.dim('> nx run')} ${message}`;
     if (cacheStatus !== TaskCacheStatus.NoCache) {
-      this.writeToStdOut(chalk.bold.grey(cacheStatus));
+      commandOutput += `  ${chalk.grey(cacheStatus)}`;
     }
+    this.writeToStdOut(commandOutput);
 
     this.addNewline();
   }
 
-  log({ title, bodyLines }: CLIWarnMessageConfig) {
+  log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
+    color = color || 'white';
+
     this.writeOutputTitle({
-      title: chalk.white(title),
+      color: 'cyan',
+      title: chalk[color](title),
     });
 
     this.writeOptionalOutputBody(bodyLines);

@@ -1,7 +1,7 @@
 import type { Task } from '@nrwl/devkit';
-import { output, TaskCacheStatus } from '../utilities/output';
-import { LifeCycle } from './life-cycle';
-import { getCommandArgsForTask } from './utils';
+import { output, TaskCacheStatus } from '../../utilities/output';
+import { getCommandArgsForTask } from '../utils';
+import type { LifeCycle } from './life-cycle';
 
 export class EmptyTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(
@@ -11,7 +11,10 @@ export class EmptyTerminalOutputLifeCycle implements LifeCycle {
   ) {
     if (cacheStatus === TaskCacheStatus.NoCache) {
       const args = getCommandArgsForTask(task);
-      output.logCommand(`nx ${args.join(' ')}`, cacheStatus);
+      output.logCommand(
+        `${args.filter((a) => a !== 'run').join(' ')}`,
+        cacheStatus
+      );
       process.stdout.write(terminalOutput);
     }
   }

@@ -1,9 +1,10 @@
-import { logger, ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph } from '@nrwl/devkit';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { performance } from 'perf_hooks';
+import { output } from '../../../../utilities/output';
 import {
   safelyCleanUpExistingProcess,
   writeDaemonJsonProcessCache,
@@ -82,7 +83,9 @@ function daemonProcessException(message: string) {
 }
 
 export function startInCurrentProcess(): void {
-  logger.info(`NX Daemon Server - Starting in the current process...`);
+  output.log({
+    title: `Daemon Server - Starting in the current process...`,
+  });
 
   spawnSync(process.execPath, ['../server/start.js'], {
     cwd: __dirname,
@@ -96,7 +99,7 @@ export function stop(): void {
     stdio: 'inherit',
   });
 
-  logger.info('NX Daemon Server - Stopped');
+  output.log({ title: 'Daemon Server - Stopped' });
 }
 
 /**

@@ -131,7 +131,7 @@ describe('js e2e', () => {
     });
 
     const output = runCLI(`build ${app}`);
-    expect(output).toContain('1 task(s) that it depends on');
+    expect(output).toContain('1 task(s) it depends on');
     expect(output).toContain('Done compiling TypeScript files');
 
     expect(runCLI(`serve ${app} --no-watch`)).toContain(`Running ${lib}`);
@@ -193,7 +193,7 @@ describe('js e2e', () => {
   //   });
   //
   //   const output = runCLI(`build ${app}`);
-  //   expect(output).toContain('1 task(s) that it depends on');
+  //   expect(output).toContain('1 task(s) it depends on');
   //   expect(output).toContain('Successfully compiled: 2 files with swc');
   //
   // expect(runCommand(`serve ${app} --watch=false`)).toContain(`Running ${lib}`)

@@ -104,7 +104,7 @@ describe('list', () => {
   it(`should work`, async () => {
     let listOutput = runCLI('list');
 
-    expect(listOutput).toContain('NX  Installed plugins');
+    expect(listOutput).toContain('NX   Installed plugins');
 
     // just check for some, not all
     expect(listOutput).toContain('@nrwl/angular');
@@ -116,7 +116,7 @@ describe('list', () => {
     );
 
     listOutput = runCLI('list');
-    expect(listOutput).toContain('NX  Also available');
+    expect(listOutput).toContain('NX   Also available');
 
     // look for specific plugin
     listOutput = runCLI('list @nrwl/workspace');
@@ -135,14 +135,14 @@ describe('list', () => {
     listOutput = runCLI('list @nrwl/angular');
 
     expect(listOutput).toContain(
-      'NX   NOTE  @nrwl/angular is not currently installed'
+      'NX   @nrwl/angular is not currently installed'
     );
 
     // look for an unknown plugin
     listOutput = runCLI('list @wibble/fish');
 
     expect(listOutput).toContain(
-      'NX   NOTE  @wibble/fish is not currently installed'
+      'NX   @wibble/fish is not currently installed'
     );
 
     // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
