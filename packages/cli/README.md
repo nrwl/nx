@@ -4,16 +4,8 @@
 
 <hr>
 
-# Nx CLI
+# Nx: Smart, Fast and Extensible Build System
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-{{getting-started}}
-
-### Serving Application
-
-- Run `nx serve myapp` to serve the newly generated application!
-- Run `nx test myapp` to test it.
-- Run `nx e2e myapp-e2e` to run e2e tests for it.
-
-{{resources}}
+{{content}

@@ -4,16 +4,10 @@
 
 <hr>
 
-# Cypress Plugin for Nx
+# Nx: Smart, Fast and Extensible Build System
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-## What is It?
+This package is a [Cypress plugin for Nx](https://nx.dev/cypress/overview).
 
-Executors and generators adding Cypress tests for frontend applications.
-
-## How to Use
-
-This package is used by the `@nrwl/web`, `@nrwl/react`, and `@nrwl/angular`. See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more information.
-
-{{resources}}
+{{content}

@@ -4,12 +4,10 @@
 
 <hr>
 
-# ESLint Plugin for Nx
+# Nx: Smart, Fast and Extensible Build System
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-## How to Use
+This package is an ESLint plugin for Nx.
 
-This package is used by the `@nrwl/web`, `@nrwl/react`, `@nrwl/angular`, and `@nrwl/node`. See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more information.
-
-{{resources}}
+{{content}

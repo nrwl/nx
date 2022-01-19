@@ -81,12 +81,6 @@ export function isNpmProject(
   return project?.type === 'npm';
 }
 
-export function getSortedProjectNodes(nodes: Record<string, ProjectGraphNode>) {
-  return Object.values(nodes).sort((nodeA, nodeB) => {
-    return nodeA.data.root.length > nodeB.data.root.length ? -1 : 1;
-  });
-}
-
 /**
  * @deprecated will be removed in v14. All projects in ProjectGraph's `nodes` are workspace projects. Use {@link pruneExternalNodes}
  */

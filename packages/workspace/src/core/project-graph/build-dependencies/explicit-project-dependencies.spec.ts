@@ -55,6 +55,7 @@ describe('explicit project dependencies', () => {
           '@proj/proj123': ['libs/proj123/index.ts'],
           '@proj/proj1234': ['libs/proj1234/index.ts'],
           '@proj/proj1234-child': ['libs/proj1234-child/index.ts'],
+          '@proj/proj4ab': ['libs/proj4ab/index.ts'],
         },
       },
     };
@@ -199,28 +200,28 @@ describe('explicit project dependencies', () => {
 
     expect(res).toEqual([
       {
-        sourceProjectFile: 'libs/proj1234/index.ts',
-        sourceProjectName: 'proj1234',
-        targetProjectName: 'proj1234-child',
-        dependencyType: DependencyType.static,
-      },
-      {
+        dependencyType: 'static',
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj2',
-        dependencyType: DependencyType.static,
       },
       {
+        dependencyType: 'dynamic',
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj3a',
-        dependencyType: DependencyType.dynamic,
       },
       {
+        dependencyType: 'dynamic',
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj4ab',
-        dependencyType: DependencyType.dynamic,
+      },
+      {
+        dependencyType: 'static',
+        sourceProjectFile: 'libs/proj1234/index.ts',
+        sourceProjectName: 'proj1234',
+        targetProjectName: 'proj1234-child',
       },
     ]);
   });

@@ -1,25 +1,13 @@
 import { resolveModuleByImport } from '../utilities/typescript';
-import { normalizedProjectRoot, readFileIfExisting } from './file-utils';
+import { readFileIfExisting } from './file-utils';
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { parseJson, ProjectGraphExternalNode } from '@nrwl/devkit';
 import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { getSortedProjectNodes } from './project-graph';
 
 export class TargetProjectLocator {
-  private sortedProjects = getSortedProjectNodes(this.nodes);
-
-  private sortedWorkspaceProjects = this.sortedProjects.map(
-    (node) =>
-      ({
-        ...node,
-        data: {
-          ...node.data,
-          normalizedRoot: normalizedProjectRoot(node),
-        },
-      } as ProjectGraphNode)
-  );
+  private projectRootMappings = createProjectRootMappings(this.nodes);
   private npmProjects = this.externalNodes
     ? Object.values(this.externalNodes)
     : [];
@@ -50,7 +38,6 @@ export class TargetProjectLocator {
     npmScope: string
   ): string {
     const normalizedImportExpr = importExpr.split('#')[0];
-
     if (isRelativePath(normalizedImportExpr)) {
       const resolvedModule = posix.join(
         dirname(filePath),
@@ -86,19 +73,6 @@ export class TargetProjectLocator {
       if (resolvedProject) {
         return resolvedProject;
       }
-    }
-
-    // TODO(meeroslav): this block should be removed as it's going around typescript paths
-    // unless we want to support local JS projects
-    const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
-      return (
-        normalizedImportExpr === projectImport ||
-        normalizedImportExpr.startsWith(`${projectImport}/`)
-      );
-    });
-    if (importedProject) {
-      return importedProject.name;
     }
 
     // nothing found, cache for later
@@ -173,11 +147,12 @@ export class TargetProjectLocator {
   private findProjectOfResolvedModule(
     resolvedModule: string
   ): string | undefined {
-    const normalizedModulePath = this.getAbsolutePath(resolvedModule);
-    const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      return normalizedModulePath.startsWith(this.getAbsolutePath(p.data.root));
-    });
-
+    const normalizedResolvedModule = resolvedModule.startsWith('./')
+      ? resolvedModule.substring(2)
+      : resolvedModule;
+    const importedProject = this.findMatchingProjectFiles(
+      normalizedResolvedModule
+    );
     return importedProject ? importedProject.name : void 0;
   }
 
@@ -203,4 +178,30 @@ export class TargetProjectLocator {
     }
     return { path, absolutePath, config: parseJson(content) };
   }
+
+  private findMatchingProjectFiles(file: string) {
+    for (
+      let currentPath = file;
+      currentPath != dirname(currentPath);
+      currentPath = dirname(currentPath)
+    ) {
+      const p = this.projectRootMappings.get(currentPath);
+      if (p) {
+        return p;
+      }
+    }
+    return null;
+  }
+}
+
+function createProjectRootMappings(nodes: Record<string, ProjectGraphNode>) {
+  const projectRootMappings = new Map();
+  for (const projectName of Object.keys(nodes)) {
+    const root = nodes[projectName].data.root;
+    projectRootMappings.set(
+      root && root.endsWith('/') ? root.substring(0, root.length - 1) : root,
+      nodes[projectName]
+    );
+  }
+  return projectRootMappings;
 }
