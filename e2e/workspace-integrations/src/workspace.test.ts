@@ -314,7 +314,7 @@ describe('run-many', () => {
     const buildWithDaemon = runCLI(`run-many --target=build --all`, {
       env: { ...process.env, NX_DAEMON: 'true' },
     });
-    expect(buildWithDaemon).toContain(`Running target "build" succeeded`);
+    expect(buildWithDaemon).toContain(`Successfully ran target build`);
   }, 1000000);
 });
 
