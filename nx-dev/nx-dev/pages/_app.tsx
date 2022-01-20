@@ -71,13 +71,21 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="msapplication-TileColor" content="#da532c" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Global Site Tag (gtag.js) - Google Analytics */}
-        <script
-          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+      </Head>
+      <div className="documentation-app text-gray-700 antialiased bg-white">
+        <Component {...pageProps} />
+      </div>
+      {/* Global Site Tag (gtag.js) - Google Analytics */}
+      <Script
+        id="gtag-script-dependency"
+        strategy="afterInteractive"
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+      />
+      <Script
+        id="gtag-script-loader"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){ dataLayer.push(arguments); }
             gtag('js', new Date());
@@ -85,19 +93,20 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
               page_path: window.location.pathname,
             });
           `,
-          }}
-        />
-        {/* HubSpot Analytics */}
-        <Script
-          id="hs-script-loader"
-          strategy="lazyOnload"
-          src="https://js.hs-scripts.com/2757427.js"
-        />
-        {/* Hotjar Analytics */}
-        <Script
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
+        }}
+      />
+      {/* HubSpot Analytics */}
+      <Script
+        id="hs-script-loader"
+        strategy="lazyOnload"
+        src="https://js.hs-scripts.com/2757427.js"
+      />
+      {/* Hotjar Analytics */}
+      <Script
+        id="hotjar-script-loader"
+        strategy="lazyOnload"
+        dangerouslySetInnerHTML={{
+          __html: `
           (function(h,o,t,j,a,r){
           h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
           h._hjSettings={hjid:2774127,hjsv:6};
@@ -106,12 +115,8 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
           r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
           a.appendChild(r);
         })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`,
-          }}
-        />
-      </Head>
-      <div className="documentation-app text-gray-700 antialiased bg-white">
-        <Component {...pageProps} />
-      </div>
+        }}
+      />
     </>
   );
 }
