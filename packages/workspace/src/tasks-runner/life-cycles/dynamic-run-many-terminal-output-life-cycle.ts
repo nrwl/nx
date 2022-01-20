@@ -1,9 +1,10 @@
+import * as cliCursor from 'cli-cursor';
 import { dots } from 'cli-spinners';
 import { EOL } from 'os';
 import * as readline from 'readline';
 import { output } from '../../utilities/output';
-import type { Task, TaskStatus } from '../tasks-runner';
 import type { LifeCycle } from '../life-cycle';
+import type { Task, TaskStatus } from '../tasks-runner';
 import { prettyTime } from './pretty-time';
 
 /**
@@ -24,10 +25,14 @@ export async function createDynamicOutputRenderer({
   args: { target?: string; configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
+  cliCursor.hide();
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
     (resolve) => (resolveRenderIsDonePromise = resolve)
-  ).then(() => clearRenderInterval());
+  ).then(() => {
+    clearRenderInterval();
+    cliCursor.show();
+  });
 
   function clearRenderInterval() {
     if (renderProjectRowsIntervalId) {
@@ -37,6 +42,7 @@ export async function createDynamicOutputRenderer({
 
   function teardown() {
     clearRenderInterval();
+    cliCursor.show();
     if (resolveRenderIsDonePromise) {
       resolveRenderIsDonePromise();
     }
@@ -443,15 +449,17 @@ function writeLine(line: string) {
   process.stdout.write(output.X_PADDING + additionalXPadding + line + EOL);
 }
 
+/**
+ * There's not much we can do in order to "neaten up" the outputs of
+ * commands we do not control, but at the very least we can trim any
+ * leading whitespace and any _excess_ trailing newlines so that there
+ * isn't unncecessary vertical whitespace.
+ */
 function writeCommandOutputBlock(commandOutput: string) {
   commandOutput = commandOutput || '';
+  commandOutput = commandOutput.trimStart();
   const additionalXPadding = '      ';
   const lines = commandOutput.split(EOL);
-  /**
-   * There's not much we can do in order to "neaten up" the outputs of
-   * commands we do not control, but at the very least we can trim excess
-   * newlines so that there isn't unncecessary vertical whitespace.
-   */
   let totalTrailingEmptyLines = 0;
   for (let i = lines.length - 1; i >= 0; i--) {
     if (lines[i] !== '') {

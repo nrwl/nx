@@ -145,6 +145,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       `${args.filter((a) => a !== 'run').join(' ')}`,
       cacheStatus
     );
+    output.addNewline();
     process.stdout.write(terminalOutput);
   }
 }

@@ -122,6 +122,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
         `${args.filter((a) => a !== 'run').join(' ')}`,
         cacheStatus
       );
+      output.addNewline();
       process.stdout.write(terminalOutput);
     }
   }
