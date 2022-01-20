@@ -13,6 +13,7 @@ import {
   BatchMessageType,
   BatchResults,
 } from './batch/batch-messages';
+import { stripIndents } from '@nrwl/devkit';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -179,18 +180,30 @@ export class ForkedProcessTaskRunner {
           if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output
-          const terminalOutput = this.readTerminalOutput(temporaryOutputPath);
-          if (!forwardOutput) {
-            this.options.lifeCycle.printTaskTerminalOutput(
-              task,
-              TaskCacheStatus.NoCache,
-              terminalOutput
+          try {
+            const terminalOutput = this.readTerminalOutput(temporaryOutputPath);
+            if (!forwardOutput) {
+              this.options.lifeCycle.printTaskTerminalOutput(
+                task,
+                TaskCacheStatus.NoCache,
+                terminalOutput
+              );
+            }
+            res({
+              code,
+              terminalOutput,
+            });
+          } catch (e) {
+            rej(
+              new Error(stripIndents`
+              Unable to print terminal output for Task "${task.id}".
+              Task failed with Exit Code ${code} and Signal "${signal}".
+              
+              Received error message: 
+              ${e.message} 
+            `)
             );
           }
-          res({
-            code,
-            terminalOutput,
-          });
         });
       } catch (e) {
         console.error(e);
@@ -200,17 +213,11 @@ export class ForkedProcessTaskRunner {
   }
 
   private readTerminalOutput(outputPath: string) {
-    try {
-      return readFileSync(outputPath).toString();
-    } catch (e) {
-      return null;
-    }
+    return readFileSync(outputPath).toString();
   }
 
   private writeTerminalOutput(outputPath: string, content: string) {
-    try {
-      writeFileSync(outputPath, content);
-    } catch (e) {}
+    writeFileSync(outputPath, content);
   }
 
   // region Environment Variables
