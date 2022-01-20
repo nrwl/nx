@@ -189,15 +189,26 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   options.tag = opts.tag;
   options.exit = opts.exit;
   options.headed = opts.headed;
-  options.headless = opts.headless;
+
+  if (opts.headless) {
+    options.headless = opts.headless;
+  }
+
   options.record = opts.record;
   options.key = opts.key;
   options.parallel = opts.parallel;
   options.ciBuildId = opts.ciBuildId;
   options.group = opts.group;
   options.ignoreTestFiles = opts.ignoreTestFiles;
-  options.reporter = opts.reporter;
-  options.reporterOptions = opts.reporterOptions;
+
+  if (opts.reporter) {
+    options.reporter = opts.reporter;
+  }
+
+  if (opts.reporterOptions) {
+    options.reporterOptions = opts.reporterOptions;
+  }
+
   options.testingType = opts.testingType;
 
   const result = await (opts.watch
