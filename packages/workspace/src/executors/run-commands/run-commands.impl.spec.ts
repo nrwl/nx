@@ -88,7 +88,7 @@ describe('Command Runner Builder', () => {
     expect(exec).toHaveBeenCalledWith(
       `echo --a=123 --b="4 5 6" --c="4 \"5\" 6"`,
       {
-        stdio: [0, 1, 2],
+        stdio: ['inherit', 'inherit', 'inherit'],
         cwd: undefined,
         env: {
           ...process.env,
