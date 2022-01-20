@@ -21,10 +21,10 @@ There is also a [repo](https://github.com/nrwl/nx-migrate-angularjs-example) tha
 To start migrating the Real World app, create an Nx workspace:
 
 ```bash
-npx create-nx-workspace@latest nx-migrate-angularjs --cli=angular
+npx create-nx-workspace@latest nx-migrate-angularjs
 ```
 
-When prompted choose the `empty` preset. The other presets use certain recommended defaults for the workspace configuration. Because you have existing code with specific requirements for configuration, starting with a blank workspace avoids resetting these defaults. This will give you the ability to customize the workspace for the incoming code.
+When prompted choose the `apps` preset. The other presets use certain recommended defaults for the workspace configuration. Because you have existing code with specific requirements for configuration, starting with a blank workspace avoids resetting these defaults. This will give you the ability to customize the workspace for the incoming code.
 
 At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or not. By using Nx Cloud, you’ll be able to share the computation cache of operations like build, test or even your own commands with everyone working on the same project. Whether you choose to use it or not, the outcome of the migration won’t be affected and you can always change your choice later.
 
@@ -35,10 +35,10 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 ## Creating your app
 
-Your new workspace won’t have much in it because of the `empty` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
+Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
 ```bash
-ng add @nrwl/angular  --unitTestRunner=karma --e2eTestRunner=protractor
+npm install -D @nrwl/angular
 ```
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
@@ -48,7 +48,7 @@ For this example, we will use Karma and Protractor, the most common unit test ru
 With the Angular capability added, generate your application:
 
 ```bash
-ng generate @nrwl/angular:application --name=realworld
+nx generate @nrwl/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:
@@ -72,74 +72,49 @@ Your `package.json` should now look like this:
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "ng": "nx",
-    "postinstall": "node ./decorate-angular-cli.js && ngcc --properties es2015 browser module main",
-    "nx": "nx",
-    "start": "ng serve",
-    "build": "ng build",
-    "test": "ng test",
-    "lint": "nx workspace-lint && ng lint",
-    "e2e": "ng e2e",
-    "affected:apps": "nx affected:apps",
-    "affected:libs": "nx affected:libs",
-    "affected:build": "nx affected:build",
-    "affected:e2e": "nx affected:e2e",
-    "affected:test": "nx affected:test",
-    "affected:lint": "nx affected:lint",
-    "affected:dep-graph": "nx affected:dep-graph",
-    "affected": "nx affected",
-    "format": "nx format:write",
-    "format:write": "nx format:write",
-    "format:check": "nx format:check",
-    "update": "nx migrate latest",
-    "workspace-generator": "nx workspace-generator",
-    "dep-graph": "nx dep-graph",
-    "help": "nx help"
+    "postinstall": "ngcc --properties es2015 browser module main",
+    "start": "nx serve",
+    "build": "nx build",
+    "test": "nx test",
+    "e2e": "nx e2e"
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^11.2.0",
-    "@angular/common": "^11.2.0",
-    "@angular/compiler": "^11.2.0",
-    "@angular/core": "^11.2.0",
-    "@angular/forms": "^11.2.0",
-    "@angular/platform-browser": "^11.2.0",
-    "@angular/platform-browser-dynamic": "^11.2.0",
-    "@angular/router": "^11.2.0",
-    "@nrwl/angular": "^11.5.1",
+    "@angular/animations": "~13.1.0",
+    "@angular/common": "~13.1.0",
+    "@angular/compiler": "~13.1.0",
+    "@angular/core": "~13.1.0",
+    "@angular/forms": "~13.1.0",
+    "@angular/platform-browser": "~13.1.0",
+    "@angular/platform-browser-dynamic": "~13.1.0",
+    "@angular/router": "~13.1.0",
     "angular": "^1.5.0-rc.2",
     "angular-ui-router": "^0.4.2",
     "marked": "^0.3.5",
-    "rxjs": "~6.6.3",
+    "rxjs": "~7.4.0",
     "tslib": "^2.0.0",
-    "zone.js": "^0.10.2"
+    "zone.js": "~0.11.4"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~0.1102.0",
-    "@angular-eslint/eslint-plugin": "~1.0.0",
-    "@angular-eslint/eslint-plugin-template": "~1.0.0",
-    "@angular-eslint/template-parser": "~1.0.0",
-    "@angular/cli": "~11.0.0",
-    "@angular/compiler-cli": "^11.2.0",
-    "@angular/language-service": "^11.2.0",
-    "@nrwl/cli": "11.5.1",
-    "@nrwl/eslint-plugin-nx": "11.5.1",
-    "@nrwl/linter": "11.5.1",
-    "@nrwl/nx-cloud": "latest",
-    "@nrwl/tao": "11.5.1",
-    "@nrwl/workspace": "11.5.1",
+    "@angular-devkit/build-angular": "~13.1.0",
+    "@angular-eslint/eslint-plugin": "~13.0.1",
+    "@angular-eslint/eslint-plugin-template": "~13.0.1",
+    "@angular-eslint/template-parser": "~13.0.1",
+    "@angular/cli": "~13.1.0",
+    "@angular/compiler-cli": "~13.1.0",
+    "@angular/language-service": "~13.1.0",
+    "@nrwl/angular": "^13.4.6",
+    "@nrwl/cli": "13.4.6",
+    "@nrwl/eslint-plugin-nx": "13.4.6",
+    "@nrwl/linter": "13.4.6",
+    "@nrwl/tao": "13.4.6",
+    "@nrwl/workspace": "13.4.6",
     "@types/jasmine": "~3.5.0",
     "@types/jasminewd2": "~2.0.3",
-    "@types/node": "12.12.38",
-    "@typescript-eslint/eslint-plugin": "4.3.0",
-    "@typescript-eslint/parser": "4.3.0",
-    "babel-preset-es2015": "^6.3.13",
-    "babelify": "^7.2.0",
-    "browser-sync": "^2.11.1",
-    "browserify": "^13.0.0",
-    "browserify-ngannotate": "^2.0.0",
-    "dotenv": "6.2.0",
-    "eslint": "7.32.0",
+    "@types/node": "14.14.33",
+    "@typescript-eslint/eslint-plugin": "~5.3.0",
+    "@typescript-eslint/parser": "~5.3.0",
+    "eslint": "8.2.0",
     "eslint-config-prettier": "8.1.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",
@@ -154,11 +129,13 @@ Your `package.json` should now look like this:
     "karma-coverage-istanbul-reporter": "~3.0.2",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
+    "karma-webpack": "^5.0.0",
+    "marked": "^0.3.5",
     "merge-stream": "^1.0.0",
-    "prettier": "2.2.1",
+    "prettier": "^2.3.1",
     "protractor": "~7.0.0",
     "ts-node": "~9.1.1",
-    "typescript": "~4.0.3",
+    "typescript": "~4.4.3",
     "vinyl-source-stream": "^1.1.0"
   }
 }
@@ -324,7 +301,7 @@ gulp.task('default', ['html', 'browserify'], function () {
 });
 ```
 
-You need to point your `build` and `serve` tasks at this gulp build process. Typically, an Angular app is built using the Angular CLI, but the Angular CLI doesn’t know how to build AngularJS projects. All of your tasks are configured in the `angular.json` file. Find the `build` and `serve` tasks and replace them with this code block:
+You need to point your `build` and `serve` tasks at this gulp build process. Typically, an Angular app is built using the Angular CLI, but the Angular CLI doesn’t know how to build AngularJS projects. All of your tasks are configured in the project configuration file `apps/realworld/project.json`. Find the `build` and `serve` tasks and replace them with this code block:
 
 ```json
 ...
@@ -354,7 +331,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
 This sets up the `build` and `serve` commands to use the locally installed version of gulp to run `build` and `serve`. To see the RealWorld app working, run:
 
 ```bash
-ng serve realworld
+nx serve realworld
 ```
 
 Navigate around the application and see that things work.
@@ -406,7 +383,7 @@ module.exports = (config, context) => {
 
 > This webpack configuration is deliberately simplified for this tutorial. A real production-ready webpack config for your project will be much more involved. See [this project](https://github.com/preboot/angularjs-webpack) for an example.
 
-To use webpack instead of gulp, go back to your `angular.json` file and modify the `build` and `serve` commands again:
+To use webpack instead of gulp, go back to your `apps/realworld/project.json` file and modify the `build` and `serve` commands again:
 
 ```json
 ...
@@ -561,7 +538,7 @@ angular.bootstrap(document, ['app'], {
 Run the application the same way as before:
 
 ```bash
-ng serve realworld
+nx serve realworld
 ```
 
 ## Unit testing
@@ -679,7 +656,7 @@ This unit test does a check to make sure the component compiles and that it sets
 To run the unit tests:
 
 ```bash
-ng test
+nx test
 ```
 
 You should see green text as your test passes.
@@ -742,7 +719,7 @@ export class AppPage {
 To run e2e tests, use the `e2e` command:
 
 ```bash
-ng e2e
+nx e2e realworld-e2e
 ```
 
 You should see a browser pop up to run the Protractor tests and then green success text in your console.
