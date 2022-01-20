@@ -28,7 +28,6 @@ export function addTailwindConfig(
     joinPathFragments(__dirname, '..', filesDir),
     project.root,
     {
-      projectType: project.projectType,
       relativeSourceRoot: relative(project.root, project.sourceRoot),
       tmpl: '',
     }
