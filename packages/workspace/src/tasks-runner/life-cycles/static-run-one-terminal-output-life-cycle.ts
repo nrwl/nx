@@ -1,5 +1,5 @@
 import type { Task } from '@nrwl/devkit';
-import { output, TaskCacheStatus } from '../../utilities/output';
+import { output } from '../../utilities/output';
 import { TaskStatus } from '../tasks-runner';
 import { getCommandArgsForTask } from '../utils';
 import type { LifeCycle } from '../life-cycle';
@@ -15,7 +15,6 @@ import type { LifeCycle } from '../life-cycle';
 export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
-  skippedTasks = [] as Task[];
 
   constructor(
     private readonly initiatingProject: string,
@@ -98,9 +97,9 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     for (let t of taskResults) {
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
-      } else if (t.status === 'skipped') {
-        this.skippedTasks.push(t.task);
       } else if (t.status === 'local-cache') {
+        this.cachedTasks.push(t.task);
+      } else if (t.status === 'local-cache-kept-existing') {
         this.cachedTasks.push(t.task);
       } else if (t.status === 'remote-cache') {
         this.cachedTasks.push(t.task);
@@ -110,18 +109,16 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
 
   printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskCacheStatus,
+    status: TaskStatus,
     terminalOutput: string
   ) {
     if (
-      cacheStatus === TaskCacheStatus.NoCache ||
+      status === 'success' ||
+      status === 'failure' ||
       task.target.project === this.initiatingProject
     ) {
       const args = getCommandArgsForTask(task);
-      output.logCommand(
-        `${args.filter((a) => a !== 'run').join(' ')}`,
-        cacheStatus
-      );
+      output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`, status);
       output.addNewline();
       process.stdout.write(terminalOutput);
     }

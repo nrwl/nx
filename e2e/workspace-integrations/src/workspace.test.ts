@@ -17,7 +17,6 @@ import {
   updateProjectConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
-import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 
 describe('run-one', () => {
   let proj: string;
@@ -769,7 +768,7 @@ describe('cache', () => {
     // build individual project with caching
     const individualBuildWithCache = runCLI(`build ${myapp1}`);
     expect(individualBuildWithCache).toContain(
-      TaskCacheStatus.MatchedExistingOutput
+      'existing outputs match the cache'
     );
 
     // skip caching when building individual projects
@@ -777,7 +776,7 @@ describe('cache', () => {
       `build ${myapp1} --skip-nx-cache`
     );
     expect(individualBuildWithSkippedCache).not.toContain(
-      TaskCacheStatus.MatchedExistingOutput
+      'existing outputs match the cache'
     );
 
     // run lint with caching
@@ -879,12 +878,12 @@ describe('cache', () => {
     // --------------------------------------------
     const outputThatPutsDataIntoCache = runCLI(`run ${mylib1}:build`);
     // now the data is in cache
-    expect(outputThatPutsDataIntoCache).not.toContain('from cache');
+    expect(outputThatPutsDataIntoCache).not.toContain('cache');
 
     rmDist();
 
     const outputWithBuildTasksCached = runCLI(`run ${mylib1}:build`);
-    expect(outputWithBuildTasksCached).toContain('from cache');
+    expect(outputWithBuildTasksCached).toContain('cache');
     expectCached(outputWithBuildTasksCached, [mylib1]);
     // Ensure that only the specific file in outputs was copied to cache
     expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`index.esm.js`]);
@@ -904,14 +903,14 @@ describe('cache', () => {
     expectProjectMatchTaskCacheStatus(
       actualOutput,
       expectedMatchedOutputProjects,
-      TaskCacheStatus.MatchedExistingOutput
+      'existing outputs match the cache'
     );
   }
 
   function expectProjectMatchTaskCacheStatus(
     actualOutput: string,
     expectedProjects: string[],
-    cacheStatus: TaskCacheStatus = TaskCacheStatus.RetrievedFromCache
+    cacheStatus: string = 'local cache'
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');

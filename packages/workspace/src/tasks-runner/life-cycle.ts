@@ -1,6 +1,5 @@
 import type { Task } from '@nrwl/devkit';
 import { TaskStatus } from './tasks-runner';
-import { TaskCacheStatus } from '../utilities/output';
 
 export interface TaskResult {
   task: Task;
@@ -40,7 +39,7 @@ export interface LifeCycle {
 
   printTaskTerminalOutput?(
     task: Task,
-    cacheStatus: TaskCacheStatus,
+    status: TaskStatus,
     output: string
   ): void;
 }
@@ -110,12 +109,12 @@ export class CompositeLifeCycle implements LifeCycle {
 
   printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskCacheStatus,
+    status: TaskStatus,
     output: string
   ): void {
     for (let l of this.lifeCycles) {
       if (l.printTaskTerminalOutput) {
-        l.printTaskTerminalOutput(task, cacheStatus, output);
+        l.printTaskTerminalOutput(task, status, output);
       }
     }
   }

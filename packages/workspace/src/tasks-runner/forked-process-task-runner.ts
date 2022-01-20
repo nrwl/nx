@@ -4,7 +4,7 @@ import { ChildProcess, fork } from 'child_process';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task } from './tasks-runner';
-import { output, TaskCacheStatus } from '../utilities/output';
+import { output } from '../utilities/output';
 import { getCliPath, getCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { join } from 'path';
@@ -138,7 +138,7 @@ export class ForkedProcessTaskRunner {
           if (!forwardOutput) {
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
-              TaskCacheStatus.NoCache,
+              code === 0 ? 'success' : 'failure',
               terminalOutput
             );
           }
@@ -180,30 +180,29 @@ export class ForkedProcessTaskRunner {
           if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output
+          let terminalOutput = '';
           try {
-            const terminalOutput = this.readTerminalOutput(temporaryOutputPath);
+            terminalOutput = this.readTerminalOutput(temporaryOutputPath);
             if (!forwardOutput) {
               this.options.lifeCycle.printTaskTerminalOutput(
                 task,
-                TaskCacheStatus.NoCache,
+                code === 0 ? 'success' : 'failure',
                 terminalOutput
               );
             }
-            res({
-              code,
-              terminalOutput,
-            });
           } catch (e) {
-            rej(
-              new Error(stripIndents`
+            console.log(stripIndents`
               Unable to print terminal output for Task "${task.id}".
               Task failed with Exit Code ${code} and Signal "${signal}".
               
               Received error message: 
               ${e.message} 
-            `)
-            );
+            `);
           }
+          res({
+            code,
+            terminalOutput,
+          });
         });
       } catch (e) {
         console.error(e);

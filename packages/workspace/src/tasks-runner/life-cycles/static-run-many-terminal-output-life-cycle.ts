@@ -1,5 +1,5 @@
 import type { Task } from '@nrwl/devkit';
-import { output, TaskCacheStatus } from '../../utilities/output';
+import { output } from '../../utilities/output';
 import { TaskStatus } from '../tasks-runner';
 import { getCommandArgsForTask } from '../utils';
 import type { LifeCycle } from '../life-cycle';
@@ -15,7 +15,7 @@ import type { LifeCycle } from '../life-cycle';
 export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
-  skippedTasks = [] as Task[];
+  allCompletedTasks = new Set<Task>();
 
   constructor(
     private readonly projectNames: string[],
@@ -93,13 +93,14 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       output.addVerticalSeparatorWithoutNewLines('red');
 
       const bodyLines = [];
-      if (this.skippedTasks.length > 0) {
+      const skippedTasks = this.skippedTasks();
+      if (skippedTasks.length > 0) {
         bodyLines.push(
           output.colors.gray(
             'Tasks not run because their dependencies failed:'
           ),
           '',
-          ...this.skippedTasks.map(
+          ...skippedTasks.map(
             (task) => `${output.colors.gray('-')} ${task.id}`
           ),
           ''
@@ -108,7 +109,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       bodyLines.push(
         output.colors.gray('Failed tasks:'),
         '',
-        ...this.failedTasks.map(
+        ...[...this.failedTasks.values()].map(
           (task) => `${output.colors.gray('-')} ${task.id}`
         )
       );
@@ -119,15 +120,20 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
   }
 
+  private skippedTasks() {
+    return this.tasks.filter((t) => !this.allCompletedTasks.has(t));
+  }
+
   endTasks(
     taskResults: { task: Task; status: TaskStatus; code: number }[]
   ): void {
     for (let t of taskResults) {
+      this.allCompletedTasks.add(t.task);
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
-      } else if (t.status === 'skipped') {
-        this.skippedTasks.push(t.task);
       } else if (t.status === 'local-cache') {
+        this.cachedTasks.push(t.task);
+      } else if (t.status === 'local-cache-kept-existing') {
         this.cachedTasks.push(t.task);
       } else if (t.status === 'remote-cache') {
         this.cachedTasks.push(t.task);
@@ -137,7 +143,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
 
   printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskCacheStatus,
+    cacheStatus: TaskStatus,
     terminalOutput: string
   ) {
     const args = getCommandArgsForTask(task);

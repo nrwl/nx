@@ -1,6 +1,7 @@
 import * as chalk from 'chalk';
 import { EOL } from 'os';
 import { isCI } from './is_ci';
+import { TaskStatus } from '@nrwl/workspace/src/tasks-runner/tasks-runner';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -22,12 +23,6 @@ export interface CLINoteMessageConfig {
 export interface CLISuccessMessageConfig {
   title: string;
   bodyLines?: string[];
-}
-
-export enum TaskCacheStatus {
-  NoCache = '[no cache]',
-  MatchedExistingOutput = '[existing outputs match the cache, left as is]',
-  RetrievedFromCache = '[retrieved from cache]',
 }
 
 /**
@@ -211,18 +206,19 @@ class CLIOutput {
     this.addNewline();
   }
 
-  logCommand(
-    message: string,
-    cacheStatus: TaskCacheStatus = TaskCacheStatus.NoCache
-  ) {
+  logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
-
     let commandOutput = `${chalk.dim('> nx run')} ${message}`;
-    if (cacheStatus !== TaskCacheStatus.NoCache) {
-      commandOutput += `  ${chalk.grey(cacheStatus)}`;
+    if (taskStatus === 'local-cache') {
+      commandOutput += `  ${chalk.grey('[local cache]')}`;
+    } else if (taskStatus === 'remote-cache') {
+      commandOutput += `  ${chalk.grey('[remote cache]')}`;
+    } else if (taskStatus === 'local-cache-kept-existing') {
+      commandOutput += `  ${chalk.grey(
+        '[existing outputs match the cache, left as is]'
+      )}`;
     }
     this.writeToStdOut(commandOutput);
-
     this.addNewline();
   }
 
