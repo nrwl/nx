@@ -11,7 +11,6 @@ export enum Preset {
   ReactWithExpress = 'react-express',
   ReactNative = 'react-native',
   NextJs = 'next',
-  Gatsby = 'gatsby',
   Nest = 'nest',
   Express = 'express',
 }

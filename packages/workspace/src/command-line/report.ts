@@ -30,7 +30,6 @@ export const packagesWeCareAbout = [
   '@nrwl/web',
   '@nrwl/workspace',
   '@nrwl/storybook',
-  '@nrwl/gatsby',
   'typescript',
   'rxjs',
 ];

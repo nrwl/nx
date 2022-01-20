@@ -237,7 +237,6 @@ The scope must be one of the following:
 - dep-graph - anything dep-graph app specific
 - detox - anything Detox specific
 - devkit - devkit-related changes
-- gatsby - anything Gatsby specific
 - express - anything Express specific
 - js - anything related to @nrwl/js package or general js/ts support
 - linter - anything Linter specific

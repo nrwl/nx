@@ -122,7 +122,6 @@ function build(nxVersion: string) {
     ...[
       'react',
       'next',
-      'gatsby',
       'web',
       'jest',
       'node',
@@ -139,7 +138,6 @@ function build(nxVersion: string) {
     ...[
       'react',
       'next',
-      'gatsby',
       'web',
       'jest',
       'node',

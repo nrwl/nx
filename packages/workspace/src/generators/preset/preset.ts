@@ -170,17 +170,6 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/express');
-  } else if (options.preset === Preset.Gatsby) {
-    const {
-      applicationGenerator: gatsbyApplicationGenerator,
-    } = require('@nrwl' + '/gatsby');
-    await gatsbyApplicationGenerator(tree, {
-      name: options.name,
-      linter: options.linter,
-      style: options.style,
-      standaloneConfig: options.standaloneConfig,
-    });
-    setDefaultCollection(tree, '@nrwl/gatsby');
   } else if (options.preset === 'react-native') {
     const { reactNativeApplicationGenerator } = require('@nrwl' +
       '/react-native');

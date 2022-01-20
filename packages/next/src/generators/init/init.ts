@@ -19,13 +19,6 @@ import {
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree) {
-  updateJson(host, 'package.json', (json) => {
-    if (json.dependencies && json.dependencies['@nrwl/gatsby']) {
-      delete json.dependencies['@nrwl/gatsby'];
-    }
-    return json;
-  });
-
   return addDependenciesToPackageJson(
     host,
     {

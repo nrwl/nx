@@ -158,11 +158,6 @@
       "data": { "tags": [], "root": "packages/devkit", "files": [] }
     },
     {
-      "name": "gatsby",
-      "type": "lib",
-      "data": { "tags": [], "root": "packages/gatsby", "files": [] }
-    },
-    {
       "name": "linter",
       "type": "lib",
       "data": { "tags": [], "root": "packages/linter", "files": [] }
@@ -260,11 +255,6 @@
       "name": "nx",
       "type": "lib",
       "data": { "tags": [], "root": "packages/nx", "files": [] }
-    },
-    {
-      "name": "e2e-gatsby",
-      "type": "app",
-      "data": { "tags": [], "root": "e2e/gatsby", "files": [] }
     },
     {
       "name": "e2e-linter",
@@ -476,15 +466,6 @@
       }
     ],
     "devkit": [{ "source": "devkit", "target": "tao", "type": "static" }],
-    "gatsby": [
-      { "source": "gatsby", "target": "tao", "type": "static" },
-      { "source": "gatsby", "target": "workspace", "type": "static" },
-      { "source": "gatsby", "target": "devkit", "type": "static" },
-      { "source": "gatsby", "target": "cypress", "type": "static" },
-      { "source": "gatsby", "target": "linter", "type": "static" },
-      { "source": "gatsby", "target": "jest", "type": "static" },
-      { "source": "gatsby", "target": "react", "type": "static" }
-    ],
     "linter": [
       { "source": "linter", "target": "eslint-plugin-nx", "type": "implicit" },
       { "source": "linter", "target": "devkit", "type": "static" },
@@ -644,10 +625,6 @@
       { "source": "e2e-cypress", "target": "e2e-utils", "type": "static" }
     ],
     "nx": [{ "source": "nx", "target": "cli", "type": "static" }],
-    "e2e-gatsby": [
-      { "source": "e2e-gatsby", "target": "gatsby", "type": "implicit" },
-      { "source": "e2e-gatsby", "target": "e2e-utils", "type": "static" }
-    ],
     "e2e-linter": [
       { "source": "e2e-linter", "target": "linter", "type": "implicit" },
       { "source": "e2e-linter", "target": "e2e-utils", "type": "static" }
