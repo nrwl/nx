@@ -240,7 +240,7 @@ class CLIOutput {
   ) {
     this.addNewline();
 
-    let commandOutput = `    ${chalk.dim('> nx run')} ${message}`;
+    let commandOutput = `${chalk.dim('> nx run')} ${message}`;
     if (cacheStatus !== TaskCacheStatus.NoCache) {
       commandOutput += `  ${chalk.grey(cacheStatus)}`;
     }
