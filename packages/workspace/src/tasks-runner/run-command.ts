@@ -53,7 +53,7 @@ async function getTerminalOutputLifeCycle(
     };
   } else if (
     shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
-    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'true'
+    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false'
   ) {
     return await createDynamicOutputRenderer({
       projectNames,
