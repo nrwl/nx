@@ -488,6 +488,70 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
+    it('should error when there is a disallowed tag in the dependency tree', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/public/src/index.ts`,
+        `
+          import '@mycompany/dependsOnPrivate';
+          import('@mycompany/dependsOnPrivate');
+        `,
+        {
+          nodes: {
+            publicName: {
+              name: 'publicName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/public',
+                tags: ['public'],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/public/src/index.ts`)],
+              },
+            },
+            privateName: {
+              name: 'privateName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/private',
+                tags: ['private'],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/private/src/index.ts`)],
+              },
+            },
+            dependsOnPrivateName: {
+              name: 'dependsOnPrivateName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/dependsOnPrivate',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/dependsOnPrivate/src/index.ts`)],
+              },
+            },
+          },
+          dependencies: {
+            dependsOnPrivateName: [
+              {
+                source: 'dependsOnPrivateName',
+                target: 'privateName',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        }
+      );
+
+      expect(failures.length).toEqual(2);
+      // TODO: Add project dependency path to message
+      const message =
+        'A project tagged with "public" can not depend on libs tagged with "private"';
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
     it('should error when the source library is untagged', () => {
       const failures = runRule(
         depConstraints,

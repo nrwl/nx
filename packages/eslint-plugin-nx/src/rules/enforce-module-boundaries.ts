@@ -424,7 +424,11 @@ export default createESLintRule<Options, MessageIds>({
           }
           if (
             constraint.notDependOnLibsWithTags &&
-            hasAnyOfTheseTags(targetProject, constraint.notDependOnLibsWithTags)
+            hasAnyOfTheseTags(
+              projectGraph,
+              targetProject.name,
+              constraint.notDependOnLibsWithTags
+            )
           ) {
             const disallowedTags = constraint.notDependOnLibsWithTags
               .map((s) => `"${s}"`)

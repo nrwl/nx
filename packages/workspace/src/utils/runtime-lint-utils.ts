@@ -37,10 +37,28 @@ export function hasNoneOfTheseTags(
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
 }
 
-export function hasAnyOfTheseTags(proj: ProjectGraphProjectNode, tags: string[]) {
-  return (
-    tags.filter((disallowedTag) => hasTag(proj, disallowedTag)).length !== 0
-  );
+export function hasAnyOfTheseTags(
+  graph: ProjectGraph,
+  projectName: string,
+  tags: string[],
+  visited?: string[]
+) {
+  visited = visited ?? [];
+
+  let found =
+    tags.filter((disallowedTag) =>
+      hasTag(graph.nodes[projectName], disallowedTag)
+    ).length !== 0;
+
+  if (found) return true;
+
+  for (let d of graph.dependencies[projectName] || []) {
+    if (visited.indexOf(d.target) > -1) continue;
+    visited.push(d.target);
+    if (hasAnyOfTheseTags(graph, d.target, tags, visited)) return true;
+  }
+
+  return false;
 }
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {
