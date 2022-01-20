@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   e2eCwd,
   expectNoAngularDevkit,
+  expectNoTsJestInJestConfig,
   getPackageManagerCommand,
   getSelectedPackageManager,
   packageManagerLockFile,
@@ -103,6 +104,7 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    expectNoTsJestInJestConfig(appName);
   });
 
   it('should be able to create an next workspace', () => {
@@ -153,6 +155,7 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    expectNoTsJestInJestConfig(appName);
   });
 
   it('should be able to create an express workspace', () => {
