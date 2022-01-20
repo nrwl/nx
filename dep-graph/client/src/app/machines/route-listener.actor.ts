@@ -36,13 +36,11 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
   return events;
 }
 
-export const routeListener: InvokeCallback<
-  DepGraphUIEvents,
-  DepGraphUIEvents
-> = (callback) => {
-  const history = createBrowserHistory();
+export const routeListener: InvokeCallback<DepGraphUIEvents, DepGraphUIEvents> =
+  (callback) => {
+    const history = createBrowserHistory();
 
-  parseSearchParamsToEvents(history.location.search).forEach((event) =>
-    callback(event)
-  );
-};
+    parseSearchParamsToEvents(history.location.search).forEach((event) =>
+      callback(event)
+    );
+  };

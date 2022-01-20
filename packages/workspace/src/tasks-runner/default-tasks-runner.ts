@@ -23,43 +23,44 @@ export interface DefaultTasksRunnerOptions {
   skipNxCache?: boolean;
 }
 
-export const defaultTasksRunner: TasksRunner<
-  DefaultTasksRunnerOptions
-> = async (
-  tasks: Task[],
-  options: DefaultTasksRunnerOptions,
-  context: {
-    target: string;
-    initiatingProject?: string;
-    projectGraph: ProjectGraph;
-    nxJson: NxJsonConfiguration;
-  }
-): Promise<{ [id: string]: TaskStatus }> => {
-  if (
-    (options as any)['parallel'] === 'false' ||
-    (options as any)['parallel'] === false
-  ) {
-    (options as any)['parallel'] = 1;
-  } else if (
-    (options as any)['parallel'] === 'true' ||
-    (options as any)['parallel'] === true
-  ) {
-    (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
-  } else if (options.parallel === undefined) {
-    options.parallel = Number((options as any)['maxParallel'] || 3);
-  }
+export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> =
+  async (
+    tasks: Task[],
+    options: DefaultTasksRunnerOptions,
+    context: {
+      target: string;
+      initiatingProject?: string;
+      projectGraph: ProjectGraph;
+      nxJson: NxJsonConfiguration;
+    }
+  ): Promise<{ [id: string]: TaskStatus }> => {
+    if (
+      (options as any)['parallel'] === 'false' ||
+      (options as any)['parallel'] === false
+    ) {
+      (options as any)['parallel'] = 1;
+    } else if (
+      (options as any)['parallel'] === 'true' ||
+      (options as any)['parallel'] === true
+    ) {
+      (options as any)['parallel'] = Number(
+        (options as any)['maxParallel'] || 3
+      );
+    } else if (options.parallel === undefined) {
+      options.parallel = Number((options as any)['maxParallel'] || 3);
+    }
 
-  options.lifeCycle.startCommand();
-  try {
-    return await runAllTasks(tasks, options, context);
-  } catch (e) {
-    console.error('Unexpected error:');
-    console.error(e);
-    process.exit(1);
-  } finally {
-    options.lifeCycle.endCommand();
-  }
-};
+    options.lifeCycle.startCommand();
+    try {
+      return await runAllTasks(tasks, options, context);
+    } catch (e) {
+      console.error('Unexpected error:');
+      console.error(e);
+      process.exit(1);
+    } finally {
+      options.lifeCycle.endCommand();
+    }
+  };
 
 async function runAllTasks(
   tasks: Task[],
