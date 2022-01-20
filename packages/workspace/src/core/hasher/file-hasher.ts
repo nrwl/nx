@@ -15,7 +15,7 @@ function createFileHasher(): FileHasherBase {
     // checking the folder first, cause it is faster
     statSync(joinPathFragments(appRootPath, '.git')).isDirectory();
     return new GitBasedFileHasher();
-  } catch (err) {
+  } catch {
     try {
       execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
       return new GitBasedFileHasher();

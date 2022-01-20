@@ -1,6 +1,5 @@
 import {
   NxJsonConfiguration,
-  parseJson,
   ProjectGraph,
   readJsonFile,
   Task,
@@ -8,7 +7,7 @@ import {
 } from '@nrwl/devkit';
 import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
 import { exec } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import * as minimatch from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -274,10 +273,9 @@ export class Hasher {
 
     let nxJsonContents = '{}';
     try {
-      const fileContents = readFileSync(nxJsonPath, 'utf-8');
-      const r = parseJson(fileContents);
-      delete r.projects;
-      nxJsonContents = JSON.stringify(r);
+      const nxJson = readJsonFile(nxJsonPath);
+      delete nxJson.projects;
+      nxJsonContents = JSON.stringify(nxJson);
     } catch {}
 
     return [

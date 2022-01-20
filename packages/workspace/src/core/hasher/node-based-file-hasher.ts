@@ -2,13 +2,17 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { FileData } from '@nrwl/tao/src/shared/project-graph';
 import { join, relative } from 'path';
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
-import { stripIndents } from '@nrwl/devkit';
-import ignore from 'ignore';
+import { getIgnoredGlobs } from '../file-utils';
 
 export class NodeBasedFileHasher extends FileHasherBase {
-  ignoredGlobs = getIgnoredGlobs();
+  ignoredGlobs = getIgnoredGlobs().add([
+    'node_modules',
+    'tmp',
+    'dist',
+    'build',
+  ]);
 
   async init() {
     performance.mark('init hashing:start');
@@ -54,25 +58,8 @@ export class NodeBasedFileHasher extends FileHasherBase {
           } else if (s.isDirectory() && recurse) {
             this.allFilesInDir(absoluteChild, true);
           }
-        } catch (e) {}
+        } catch {}
       });
-    } catch (e) {}
+    } catch {}
   }
-}
-
-function getIgnoredGlobs() {
-  const ig = ignore();
-  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
-  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
-  ig.add(stripIndents`
-      node_modules
-      tmp
-      dist
-      build    
-    `);
-  return ig;
-}
-
-function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
