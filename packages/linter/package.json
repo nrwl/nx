@@ -38,5 +38,10 @@
     "@nrwl/jest": "*",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    }
   }
 }
