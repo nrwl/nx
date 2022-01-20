@@ -9,7 +9,7 @@ function createFileHasher(): FileHasherBase {
   try {
     statSync(joinPathFragments(appRootPath, '.git')).isDirectory();
     return new GitBasedFileHasher();
-  } catch (err) {
+  } catch {
     return new NodeBasedFileHasher();
   }
 }

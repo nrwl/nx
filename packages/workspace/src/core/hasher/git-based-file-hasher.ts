@@ -16,9 +16,9 @@ export class GitBasedFileHasher extends FileHasherBase {
     this.clear();
 
     const gitResult = await getFileHashes(appRootPath);
-    const ignore = getIgnoredGlobs();
+    const ignores = getIgnores();
     gitResult.allFiles.forEach((hash, filename) => {
-      if (!ignore.ignores(filename)) {
+      if (!ignores(filename)) {
         this.fileHashes.set(filename, hash);
       }
     });
@@ -36,12 +36,11 @@ export class GitBasedFileHasher extends FileHasherBase {
   }
 }
 
-function getIgnoredGlobs() {
+function getIgnores() {
   if (existsSync(`${appRootPath}/.nxignore`)) {
-    const ig = ignore();
-    ig.add(readFileSync(`${appRootPath}/.nxignore`, 'utf-8'));
-    return ig;
+    return ignore().add(readFileSync(`${appRootPath}/.nxignore`, 'utf-8'))
+      .ignores;
   } else {
-    return { ignores: (file: string) => false };
+    return () => false;
   }
 }
