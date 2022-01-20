@@ -52,9 +52,7 @@ describe('Tailwind support', () => {
     const tailwindConfigFile = 'tailwind.config.js';
 
     const tailwindConfig = `module.exports = {
-      mode: 'jit',
-      purge: ['./apps/**/*.{html,ts}', './libs/**/*.{html,ts}'],
-      darkMode: false,
+      content: ['./apps/**/*.{html,ts}', './libs/**/*.{html,ts}'],
       theme: {
         spacing: {
           sm: '${spacing.root.sm}',
@@ -77,12 +75,10 @@ describe('Tailwind support', () => {
     const { join } = require('path');
   
     module.exports = {
-      mode: 'jit',
-      purge: [
+      content: [
         join(__dirname, 'src/**/*.{html,ts}'),
         ...createGlobPatternsForDependencies(__dirname),
       ],
-      darkMode: false,
       theme: {
         spacing: {
           sm: '${libSpacing.sm}',

@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { output } from '../../../../utilities/output';
 import { startServer } from './server';
 import * as process from 'process';
 
@@ -6,7 +6,11 @@ import * as process from 'process';
   try {
     await startServer();
   } catch (err) {
-    logger.error(err);
+    output.error({
+      title:
+        err?.message ||
+        'Something unexpected went wrong when starting the server',
+    });
     process.exit(1);
   }
 })();

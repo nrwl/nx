@@ -8,12 +8,8 @@ r = r.replace(
   fs.readFileSync('scripts/readme-fragments/links.md')
 );
 r = r.replace(
-  `{{what-is-nx}}`,
-  fs.readFileSync('scripts/readme-fragments/what-is-nx.md')
-);
-r = r.replace(
-  `{{getting-started}}`,
-  fs.readFileSync('scripts/readme-fragments/getting-started.md')
+  `{{content}}`,
+  fs.readFileSync('scripts/readme-fragments/content.md')
 );
 r = r.replace(
   `{{resources}}`,

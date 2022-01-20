@@ -1,10 +1,18 @@
 import type { Task } from '@nrwl/devkit';
-import { output, TaskCacheStatus } from '../utilities/output';
-import { LifeCycle } from './life-cycle';
-import { TaskStatus } from './tasks-runner';
-import { getCommandArgsForTask } from './utils';
+import { output, TaskCacheStatus } from '../../utilities/output';
+import { TaskStatus } from '../tasks-runner';
+import { getCommandArgsForTask } from '../utils';
+import type { LifeCycle } from '../life-cycle';
 
-export class RunOneTerminalOutputLifeCycle implements LifeCycle {
+/**
+ * The following life cycle's outputs are static, meaning no previous content
+ * is rewritten or modified as new outputs are added. It is therefore intended
+ * for use in CI environments.
+ *
+ * For the common case of a user executing a command on their local machine,
+ * the dynamic equivalent of this life cycle is usually preferable.
+ */
+export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
   skippedTasks = [] as Task[];
@@ -27,16 +35,14 @@ export class RunOneTerminalOutputLifeCycle implements LifeCycle {
 
     if (numberOfDeps > 0) {
       output.log({
-        title: `${output.colors.gray('Running target')} ${
+        color: 'cyan',
+        title: `Running target ${output.bold(
           this.args.target
-        } ${output.colors.gray('for project')} ${
-          this.initiatingProject
-        } ${output.colors.gray(
-          `and`
-        )} ${numberOfDeps} task(s) ${output.colors.gray(`that it depends on.`)}
-        `,
+        )} for project ${output.bold(this.initiatingProject)} and ${output.bold(
+          numberOfDeps
+        )} task(s) it depends on`,
       });
-      output.addVerticalSeparatorWithoutNewLines();
+      output.addVerticalSeparatorWithoutNewLines('cyan');
     }
   }
 
@@ -46,23 +52,28 @@ export class RunOneTerminalOutputLifeCycle implements LifeCycle {
       return;
     }
     output.addNewline();
-    output.addVerticalSeparatorWithoutNewLines();
 
     if (this.failedTasks.length === 0) {
+      output.addVerticalSeparatorWithoutNewLines('green');
+
       const bodyLines =
         this.cachedTasks.length > 0
           ? [
               output.colors.gray(
-                `Nx read the output from cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
+                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
               ),
             ]
           : [];
 
       output.success({
-        title: `Running target "${this.args.target}" succeeded`,
+        title: `Successfully ran target ${output.bold(
+          this.args.target
+        )} for project ${output.bold(this.initiatingProject)}`,
         bodyLines,
       });
     } else {
+      output.addVerticalSeparatorWithoutNewLines('red');
+
       const bodyLines = [
         output.colors.gray('Failed tasks:'),
         '',
@@ -107,7 +118,11 @@ export class RunOneTerminalOutputLifeCycle implements LifeCycle {
       task.target.project === this.initiatingProject
     ) {
       const args = getCommandArgsForTask(task);
-      output.logCommand(`nx ${args.join(' ')}`, cacheStatus);
+      output.logCommand(
+        `${args.filter((a) => a !== 'run').join(' ')}`,
+        cacheStatus
+      );
+      output.addNewline();
       process.stdout.write(terminalOutput);
     }
   }

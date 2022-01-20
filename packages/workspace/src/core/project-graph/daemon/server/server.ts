@@ -1,4 +1,3 @@
-import { logger, normalizePath, stripIndents } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';

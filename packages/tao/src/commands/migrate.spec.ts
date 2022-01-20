@@ -673,6 +673,10 @@ describe('Migration', () => {
     });
 
     it('should handle different variations of the target package', () => {
+      expect(parseMigrationsOptions(['@angular/core'])).toMatchObject({
+        targetPackage: '@angular/core',
+        targetVersion: 'latest',
+      });
       expect(parseMigrationsOptions(['8.12'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0',
@@ -680,6 +684,10 @@ describe('Migration', () => {
       expect(parseMigrationsOptions(['8'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.0.0',
+      });
+      expect(parseMigrationsOptions(['12'])).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '12.0.0',
       });
       expect(parseMigrationsOptions(['next'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
@@ -695,6 +703,10 @@ describe('Migration', () => {
       });
       expect(parseMigrationsOptions(['mypackage'])).toMatchObject({
         targetPackage: 'mypackage',
+        targetVersion: 'latest',
+      });
+      expect(parseMigrationsOptions(['mypackage2'])).toMatchObject({
+        targetPackage: 'mypackage2',
         targetVersion: 'latest',
       });
       expect(parseMigrationsOptions(['@nrwl/workspace@latest'])).toMatchObject({

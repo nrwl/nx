@@ -718,13 +718,6 @@ describe('with dependencies', () => {
         import "@${proj}/${parentLib}";
         `
     );
-
-    // we are setting paths to {} to make sure built libs are read from dist
-    updateFile('tsconfig.base.json', (c) => {
-      const json = JSON.parse(c);
-      json.compilerOptions.paths = {};
-      return JSON.stringify(json, null, 2);
-    });
   });
 
   it('should build a library without dependencies', () => {
@@ -770,15 +763,7 @@ describe('with dependencies', () => {
     const buildWithDeps = runCLI(
       `build ${app} --with-deps --buildLibsFromSource=false`
     );
-    expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+    expect(buildWithDeps).toContain('Successfully ran target build');
     checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
-
-    // we remove all path mappings from the root tsconfig, so when trying to build
-    // libs from source, the builder will throw
-    const failedBuild = runCLI(
-      `build ${app} --with-deps --buildLibsFromSource`,
-      { silenceError: true }
-    );
-    expect(failedBuild).toContain(`Can't resolve`);
   }, 1000000);
 });

@@ -60,6 +60,11 @@
       "items": {
         "type": "string"
       }
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": true
     }
   },
   "additionalProperties": false,

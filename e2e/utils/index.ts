@@ -13,6 +13,7 @@ import {
   writeFileSync,
 } from 'fs-extra';
 import * as path from 'path';
+import { join } from 'path';
 import { dirSync } from 'tmp';
 import { check as portCheck } from 'tcp-port-used';
 import {
@@ -21,12 +22,12 @@ import {
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { promisify } from 'util';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
-import { join } from 'path';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Tree } from '../../packages/tao/src/shared/tree';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -606,6 +607,16 @@ export function checkFilesExist(...expectedFiles: string[]) {
   });
 }
 
+export function updateJson<T extends object = any, U extends object = T>(
+  f: string,
+  updater: (value: T) => U
+) {
+  updateFile(f, (s) => {
+    const json = JSON.parse(s);
+    return JSON.stringify(updater(json), null, 2);
+  });
+}
+
 export function checkFilesDoNotExist(...expectedFiles: string[]) {
   expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
@@ -753,4 +764,32 @@ export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
   const result = runCommand(`${list} @angular-devkit/core`);
   expect(result).not.toContain('@angular-devkit/core');
+}
+
+export function waitUntil(
+  predicate: () => boolean,
+  opts: { timeout: number; ms: number; allowError?: boolean } = {
+    timeout: 1000,
+    ms: 50,
+  }
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const t = setInterval(() => {
+      const run = () => {};
+      try {
+        run();
+        if (predicate()) {
+          clearInterval(t);
+          resolve();
+        }
+      } catch (e) {
+        if (opts.allowError) reject(e);
+      }
+    }, opts.ms);
+
+    setTimeout(() => {
+      clearInterval(t);
+      reject(new Error(`Timed out waiting for condition to return true`));
+    }, opts.timeout);
+  });
 }

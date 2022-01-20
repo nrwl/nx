@@ -1,6 +1,6 @@
-import { LifeCycle } from './life-cycle';
+import { LifeCycle } from '../life-cycle';
 import { Task } from '@nrwl/devkit';
-import { TaskStatus } from './tasks-runner';
+import { TaskStatus } from '../tasks-runner';
 
 export class TaskTimingsLifeCycle implements LifeCycle {
   private timings: {

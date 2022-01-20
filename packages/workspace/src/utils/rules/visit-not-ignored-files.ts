@@ -5,14 +5,14 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-import ignore from 'ignore';
+import ignore, { Ignore } from 'ignore';
 
 export function visitNotIgnoredFiles(
   visitor: (file: Path, host: Tree, context: SchematicContext) => void | Rule,
   dir: Path = normalize('')
 ): Rule {
   return (host, context) => {
-    let ig;
+    let ig: Ignore | undefined;
     if (host.exists('.gitignore')) {
       ig = ignore();
       ig.add(host.read('.gitignore').toString());

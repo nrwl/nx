@@ -105,8 +105,8 @@ describe('@nrwl/workspace:library', () => {
     expect(result).toContain(
       `Done compiling TypeScript files for project "${buildableLib}".`
     );
-    expect(result).toContain('Copying asset files...');
-    expect(result).toContain('Done copying asset files.');
+
+    checkFilesExist(`dist/libs/${buildableLib}/README.md`);
 
     const json = readJson(`dist/libs/${buildableLib}/package.json`);
     expect(json.main).toEqual('./src/index.js');

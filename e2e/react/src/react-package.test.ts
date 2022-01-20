@@ -92,13 +92,6 @@ describe('Build React libraries and apps', () => {
       return json;
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
-
-    // we are setting paths to {} to make sure built libs are read from dist
-    updateFile('tsconfig.base.json', (c) => {
-      const json = JSON.parse(c);
-      json.compilerOptions.paths = {};
-      return JSON.stringify(json, null, 2);
-    });
   });
 
   afterEach(() => killPorts());
@@ -234,15 +227,8 @@ export async function h() { return 'c'; }
       const buildFromSource = runCLI(
         `build ${app} --buildLibsFromSource=false`
       );
-      expect(buildFromSource).toContain(`Running target "build" succeeded`);
+      expect(buildFromSource).toContain('Successfully ran target build');
       checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
-
-      // we remove all path mappings from the root tsconfig, so when trying to build
-      // libs from source, the builder will throw
-      const failedBuild = runCLI(`build ${app} --buildLibsFromSource`, {
-        silenceError: true,
-      });
-      expect(failedBuild).toContain(`Can't resolve`);
     }, 1000000);
 
     it('should not create a dist folder if there is an error', async () => {

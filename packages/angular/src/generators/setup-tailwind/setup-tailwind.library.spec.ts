@@ -197,7 +197,14 @@ describe('setupTailwind generator', () => {
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          content: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
           theme: {
             extend: {},
           },
@@ -222,7 +229,14 @@ describe('setupTailwind generator', () => {
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          content: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
           theme: {
             extend: {},
           },
@@ -247,7 +261,15 @@ describe('setupTailwind generator', () => {
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        const { join } = require('path');
+
+        module.exports = {
+          mode: 'jit',
+          purge: [
+            join(__dirname, 'src/**/*.{html,ts}'),
+            ...createGlobPatternsForDependencies(__dirname),
+          ],
           darkMode: false, // or 'media' or 'class'
           theme: {
             extend: {},

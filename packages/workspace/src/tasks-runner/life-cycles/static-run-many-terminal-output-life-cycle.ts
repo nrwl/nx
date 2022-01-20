@@ -1,10 +1,18 @@
 import type { Task } from '@nrwl/devkit';
-import { output, TaskCacheStatus } from '../utilities/output';
-import { LifeCycle } from './life-cycle';
-import { TaskStatus } from './tasks-runner';
-import { getCommandArgsForTask } from './utils';
+import { output, TaskCacheStatus } from '../../utilities/output';
+import { TaskStatus } from '../tasks-runner';
+import { getCommandArgsForTask } from '../utils';
+import type { LifeCycle } from '../life-cycle';
 
-export class RunManyTerminalOutputLifeCycle implements LifeCycle {
+/**
+ * The following life cycle's outputs are static, meaning no previous content
+ * is rewritten or modified as new outputs are added. It is therefore intended
+ * for use in CI environments.
+ *
+ * For the common case of a user executing a command on their local machine,
+ * the dynamic equivalent of this life cycle is usually preferable.
+ */
+export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
   skippedTasks = [] as Task[];
@@ -30,7 +38,7 @@ export class RunManyTerminalOutputLifeCycle implements LifeCycle {
     }
 
     const bodyLines = this.projectNames.map(
-      (affectedProject) => `${output.colors.gray('-')} ${affectedProject}`
+      (affectedProject) => ` ${output.colors.gray('-')} ${affectedProject}`
     );
     if (Object.keys(this.taskOverrides).length > 0) {
       bodyLines.push('');
@@ -40,44 +48,50 @@ export class RunManyTerminalOutputLifeCycle implements LifeCycle {
         .forEach((arg) => bodyLines.push(arg));
     }
 
-    let title = `${output.colors.gray('Running target')} ${
+    let title = `Running target ${output.bold(
       this.args.target
-    } ${output.colors.gray(`for`)} ${this.projectNames.length} project(s)`;
+    )} for ${output.bold(this.projectNames.length)} project(s)`;
     const dependentTasksCount = this.tasks.length - this.projectNames.length;
     if (dependentTasksCount > 0) {
-      title += ` ${output.colors.gray(`and`)} ${
-        this.tasks.length - this.projectNames.length
-      } task(s) ${output.colors.gray(`they depend on`)}`;
+      title += ` and ${output.bold(
+        dependentTasksCount
+      )} task(s) they depend on`;
     }
     title += ':';
 
     output.log({
+      color: 'cyan',
       title,
       bodyLines,
     });
 
-    output.addVerticalSeparatorWithoutNewLines();
+    output.addVerticalSeparatorWithoutNewLines('cyan');
   }
 
   endCommand(): void {
     output.addNewline();
-    output.addVerticalSeparatorWithoutNewLines();
 
     if (this.failedTasks.length === 0) {
+      output.addVerticalSeparatorWithoutNewLines('green');
+
       const bodyLines =
         this.cachedTasks.length > 0
           ? [
               output.colors.gray(
-                `Nx read the output from cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
+                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
               ),
             ]
           : [];
 
       output.success({
-        title: `Running target "${this.args.target}" succeeded`,
+        title: `Successfully ran target ${output.bold(
+          this.args.target
+        )} for ${output.bold(this.projectNames.length)} projects`,
         bodyLines,
       });
     } else {
+      output.addVerticalSeparatorWithoutNewLines('red');
+
       const bodyLines = [];
       if (this.skippedTasks.length > 0) {
         bodyLines.push(
@@ -127,7 +141,11 @@ export class RunManyTerminalOutputLifeCycle implements LifeCycle {
     terminalOutput: string
   ) {
     const args = getCommandArgsForTask(task);
-    output.logCommand(`nx ${args.join(' ')}`, cacheStatus);
+    output.logCommand(
+      `${args.filter((a) => a !== 'run').join(' ')}`,
+      cacheStatus
+    );
+    output.addNewline();
     process.stdout.write(terminalOutput);
   }
 }

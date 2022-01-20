@@ -39,9 +39,8 @@ export class ForkedProcessTaskRunner {
           );
         } else {
           const args = getCommandArgsForTask(Object.values(taskGraph.tasks)[0]);
-          const commandLine = `nx ${args.join(' ')}`;
-
-          output.logCommand(commandLine);
+          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.addNewline();
         }
 
         const p = fork(workerPath, {
@@ -97,10 +96,9 @@ export class ForkedProcessTaskRunner {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getCommandArgsForTask(task);
-        const commandLine = `nx ${args.join(' ')}`;
-
         if (forwardOutput) {
-          output.logCommand(commandLine);
+          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.addNewline();
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
@@ -163,10 +161,9 @@ export class ForkedProcessTaskRunner {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getCommandArgsForTask(task);
-        const commandLine = `nx ${args.join(' ')}`;
-
         if (forwardOutput) {
-          output.logCommand(commandLine);
+          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.addNewline();
         }
         const p = fork(this.cliPath, args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],

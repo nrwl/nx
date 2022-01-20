@@ -4,16 +4,8 @@
 
 <hr>
 
-# Linter Plugin for Nx
+# Nx: Smart, Fast and Extensible Build System
 
-{{what-is-nx}}
+Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-## What is It?
-
-Executors and generators adding TS and JS lint checks to applications and libraries.
-
-## How to Use
-
-This package is used by the `@nrwl/web`, `@nrwl/react`, `@nrwl/angular`, `@nrwl/node`. See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more information.
-
-{{resources}}
+{{content}
