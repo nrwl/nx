@@ -1,7 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
-  copyAssetFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
 import { join, resolve } from 'path';
@@ -94,7 +93,8 @@ export async function* tscExecutor(
 
   return yield* eachValueFrom(
     compileTypeScriptFiles(options, context, async () => {
-      await updatePackageAndCopyAssets(options, projectRoot);
+      await assetHandler.processAllAssetsOnce();
+      updatePackageJson(options.main, options.outputPath, projectRoot);
     }).pipe(
       map(
         ({ success }) =>
@@ -105,14 +105,6 @@ export async function* tscExecutor(
       )
     )
   );
-}
-
-async function updatePackageAndCopyAssets(
-  options: NormalizedExecutorOptions,
-  projectRoot: string
-) {
-  await copyAssetFiles(options.files);
-  updatePackageJson(options.main, options.outputPath, projectRoot);
 }
 
 export default tscExecutor;
