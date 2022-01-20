@@ -165,4 +165,44 @@ describe('preset', () => {
       readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
     ).toBe('@nrwl/react-native');
   });
+
+  describe('core preset', () => {
+    describe('package manager workspaces', () => {
+      it('should be configured in package.json', async () => {
+        await presetGenerator(tree, {
+          name: 'proj',
+          preset: Preset.Core,
+          linter: 'eslint',
+          cli: 'nx',
+          standaloneConfig: false,
+          packageManager: 'npm',
+        });
+
+        expect(readJson(tree, 'package.json').workspaces)
+          .toMatchInlineSnapshot(`
+          Array [
+            "packages/**",
+          ]
+        `);
+      });
+
+      it('should be configured in pnpm-workspace.yaml', async () => {
+        await presetGenerator(tree, {
+          name: 'proj',
+          preset: Preset.Core,
+          linter: 'eslint',
+          cli: 'nx',
+          standaloneConfig: false,
+          packageManager: 'pnpm',
+        });
+
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "packages:
+            - 'packages/**'
+          "
+        `);
+      });
+    });
+  });
 });
