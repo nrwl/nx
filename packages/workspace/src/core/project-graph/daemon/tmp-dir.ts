@@ -7,11 +7,11 @@ import { writeFileSync, statSync } from 'fs';
 import { join } from 'path';
 import { cacheDir } from '../../../utilities/cache-directory';
 
-export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(cacheDir, 'nx-daemon');
+export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(cacheDir, 'd');
 
 export const DAEMON_OUTPUT_LOG_FILE = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  'server.log'
+  'daemon.log'
 );
 
 export const DAEMON_SOCKET_PATH = join(
@@ -21,12 +21,12 @@ export const DAEMON_SOCKET_PATH = join(
 );
 
 export function markDaemonAsDisabled() {
-  writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, "disabled"), "true");
+  writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), 'true');
 }
 
 export function isDaemonDisabled() {
   try {
-    statSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, "disabled"));
+    statSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'));
     return true;
   } catch (e) {
     return false;

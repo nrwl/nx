@@ -143,16 +143,18 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
 
     socket.on('error', (err) => {
       let error: any;
+      if (err.message.startsWith('LOCK-FILES-CHANGED')) {
+        return getProjectGraphFromServer().then(resolve, reject);
+      }
+
       if (err.message.startsWith('connect ENOENT')) {
         error = daemonProcessException('The Daemon Server is not running');
-      }
-      if (err.message.startsWith('connect ECONNREFUSED')) {
+      } else if (err.message.startsWith('connect ECONNREFUSED')) {
         error = daemonProcessException(
           `A server instance had not been fully shut down. Please try running the command again.`
         );
         killSocketOrPath();
-      }
-      if (err.message.startsWith('read ECONNRESET')) {
+      } else if (err.message.startsWith('read ECONNRESET')) {
         error = daemonProcessException(
           `Unable to connect to the daemon process.`
         );

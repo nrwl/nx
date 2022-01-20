@@ -3149,7 +3149,7 @@
 
 "@nrwl/cli@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-13.5.0-beta.3.tgz#eae5703be72763026fd352e3fa737295ee4245e5"
+  resolved "https://registry.npmjs.org/@nrwl/cli/-/cli-13.5.0-beta.3.tgz"
   integrity sha512-LG/A/XWtptyY+N5ksyidT3/SpujQtx7g+fjxRPNZgftHN71sES1AE0+3Iqcsu16G2S4tDzOTHIZTdcrUcvGMpw==
   dependencies:
     "@nrwl/tao" "13.5.0-beta.3"
@@ -3160,7 +3160,7 @@
 
 "@nrwl/cypress@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/cypress/-/cypress-13.5.0-beta.3.tgz#b5b42874865e1dc5d9f076ad00519aaa8e2c0b9e"
+  resolved "https://registry.npmjs.org/@nrwl/cypress/-/cypress-13.5.0-beta.3.tgz"
   integrity sha512-JjOj1X5b3IjMnRBlks6B6fHhqcpNwLDIclIoYW7ZjI8cLE99GCTKiFqdQmKhjeIztANGjiJklk65eVT6+WAOoA==
   dependencies:
     "@cypress/webpack-preprocessor" "^5.9.1"
@@ -3191,7 +3191,7 @@
 
 "@nrwl/devkit@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/devkit/-/devkit-13.5.0-beta.3.tgz#d01eec36ab153037df5123c2e11fb4140d153645"
+  resolved "https://registry.npmjs.org/@nrwl/devkit/-/devkit-13.5.0-beta.3.tgz"
   integrity sha512-/O0V3ERQBZDvYdRbfV0NdkwDqylD/N22VeUfxWR5IcZQwdZaC5Z3a7Nvqkj3ikN+vcBN6HQ16p50ukhjwm29cg==
   dependencies:
     "@nrwl/tao" "13.5.0-beta.3"
@@ -3203,7 +3203,7 @@
 
 "@nrwl/eslint-plugin-nx@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-13.5.0-beta.3.tgz#000611b6f8e99a3b90913a36ba556370f210ffa3"
+  resolved "https://registry.npmjs.org/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-13.5.0-beta.3.tgz"
   integrity sha512-UeCF7r04Qpd+YZ68j0tBOAfbXOGv9um5nFUUuLXL51vzTPKWnRUAqKCRGJvIZP1KGz7bxx1i11ixlmOVSpqEpg==
   dependencies:
     "@nrwl/devkit" "13.5.0-beta.3"
@@ -3232,7 +3232,7 @@
 
 "@nrwl/jest@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-13.5.0-beta.3.tgz#151d6148e399e27bc618fdf343496699610f6462"
+  resolved "https://registry.npmjs.org/@nrwl/jest/-/jest-13.5.0-beta.3.tgz"
   integrity sha512-fkt8IJvW4nChKrdiIGSNUTy9SSojK2IyStptymCWreUqWpdlnGkuKwXD5Iva8CCONQhKMrX7FqJPyLP69pJj6Q==
   dependencies:
     "@jest/reporters" "27.2.2"
@@ -3261,7 +3261,7 @@
 
 "@nrwl/js@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/js/-/js-13.5.0-beta.3.tgz#a77f1d7e9bde8539a2e4ab29ffaa640f4f86560d"
+  resolved "https://registry.npmjs.org/@nrwl/js/-/js-13.5.0-beta.3.tgz"
   integrity sha512-lET2w5P2N6+E/vSuiztiBAtEEYMzHtxqbIJ+4GV7IvnOYlm2/3Yn1bLlPGQmdpQuL+lt6Cq2Jax2dGopYXaygQ==
   dependencies:
     "@nrwl/devkit" "13.5.0-beta.3"
@@ -3296,7 +3296,7 @@
 
 "@nrwl/linter@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-13.5.0-beta.3.tgz#9bbfafb5e891bdc8d0cd33d97c0007b513490f3e"
+  resolved "https://registry.npmjs.org/@nrwl/linter/-/linter-13.5.0-beta.3.tgz"
   integrity sha512-Zy4715EgbDm+1mA8o96XwweZLTZxBm49QkKIdbyrdfshehbK300xBGurKvMPGrPepa+TywPCxlyJGyHJeqSWJg==
   dependencies:
     "@nrwl/devkit" "13.5.0-beta.3"
@@ -3307,7 +3307,7 @@
 
 "@nrwl/next@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/next/-/next-13.5.0-beta.3.tgz#897e05fd8c0a0da1672764d9a276fbab835f8279"
+  resolved "https://registry.npmjs.org/@nrwl/next/-/next-13.5.0-beta.3.tgz"
   integrity sha512-CEHe2TDNndPLTHZDFeA9MstgK4COUucQqKgmCaOPlCbAIojncmAWhOdkRlOS3UYLTekLik6+bV3tb//nsDO5hQ==
   dependencies:
     "@babel/plugin-proposal-decorators" "^7.14.5"
@@ -3329,7 +3329,7 @@
 
 "@nrwl/node@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-13.5.0-beta.3.tgz#cc401c4be3b14a4b2650c8ee0561415ad6c039ab"
+  resolved "https://registry.npmjs.org/@nrwl/node/-/node-13.5.0-beta.3.tgz"
   integrity sha512-IoymySCRLs80pZLbkRIuPzsA5PSSw6hiBhJ13Ry0axC8ieCAs58TVTAWca+Y9Gf0tkeGcXhyrzlFXsYWIvOdWA==
   dependencies:
     "@nrwl/devkit" "13.5.0-beta.3"
@@ -3358,7 +3358,7 @@
 
 "@nrwl/nx-cloud@13.1.2":
   version "13.1.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-13.1.2.tgz#5715bd571d883f48b34354468265e723cc41cb6d"
+  resolved "https://registry.npmjs.org/@nrwl/nx-cloud/-/nx-cloud-13.1.2.tgz"
   integrity sha512-0MzPYtnt63ZoiWCN6B4zpDprkM+/+/opGV1g8evXb5GbMpLQIeAkyABt49RlNuBPhhmUUYvte4WwyzEmyWZSRQ==
   dependencies:
     axios "^0.21.1"
@@ -3370,7 +3370,7 @@
 
 "@nrwl/react@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/react/-/react-13.5.0-beta.3.tgz#bbeeedf382e5095cc876cba81b8d68b409920665"
+  resolved "https://registry.npmjs.org/@nrwl/react/-/react-13.5.0-beta.3.tgz"
   integrity sha512-19Hz2h8CH6pSdNxjMzHvotc+yGEJEWb+VnWJky8Bpq8937lJT1H3PVO5/1Ii+Ehze8G9NYVepuPxZI2RHcEDuQ==
   dependencies:
     "@babel/core" "^7.15.0"
@@ -3399,7 +3399,7 @@
 
 "@nrwl/storybook@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/storybook/-/storybook-13.5.0-beta.3.tgz#b3c92c198858e4f8f7863c9eeec88352cbbafce7"
+  resolved "https://registry.npmjs.org/@nrwl/storybook/-/storybook-13.5.0-beta.3.tgz"
   integrity sha512-qe0rtMgIuDLO+UBiOv7qa1/8UcIO7ZknIKbdcqk2MAOnlXlw60mFjQnsTMussydG7xAL23fzHxgHY2lCwqrLYw==
   dependencies:
     "@nrwl/cypress" "13.5.0-beta.3"
@@ -3432,7 +3432,7 @@
 
 "@nrwl/tao@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-13.5.0-beta.3.tgz#60d97c606425098b743dc03906e7ef45d10169ed"
+  resolved "https://registry.npmjs.org/@nrwl/tao/-/tao-13.5.0-beta.3.tgz"
   integrity sha512-BUiHMu2gC25EWVtem9bWQX1OwlosU6NQvIhQNxy2NogS11cvFo8M30uOFS7VWhiS/p/0lxj5f5XSwPZsI2PjWw==
   dependencies:
     chalk "4.1.0"
@@ -3451,7 +3451,7 @@
 
 "@nrwl/web@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/web/-/web-13.5.0-beta.3.tgz#f7c6a532614d3c15dbaad8807de6b3889dc1a7bf"
+  resolved "https://registry.npmjs.org/@nrwl/web/-/web-13.5.0-beta.3.tgz"
   integrity sha512-uaOjEc9pvuhyBaHhWIPfvEu8pDh5KAga48XFpeMJhEFyeXA17zxMvFb9rV+0DcA/MI68a2A186PU1x2s0Z1L4A==
   dependencies:
     "@babel/core" "^7.15.0"
@@ -3571,7 +3571,7 @@
 
 "@nrwl/workspace@13.5.0-beta.3":
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-13.5.0-beta.3.tgz#74db033ee65f13619952543977329eb0e79a5b7e"
+  resolved "https://registry.npmjs.org/@nrwl/workspace/-/workspace-13.5.0-beta.3.tgz"
   integrity sha512-77MQKu3mBpIJIcOXk8N707g3Hf18/5fOTiJUGEKmthlhoUCzOpqHvHHCqKr+UNhZ0gSEOKzz811ceWvtPwCCbw==
   dependencies:
     "@nrwl/cli" "13.5.0-beta.3"
@@ -7906,7 +7906,7 @@ chalk@4.0.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-chalk@4.1.0:
+chalk@4.1.0, chalk@^4.0.0:
   version "4.1.0"
   resolved "https://registry.npmjs.org/chalk/-/chalk-4.1.0.tgz"
   integrity sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==
@@ -7914,7 +7914,7 @@ chalk@4.1.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-chalk@4.1.2, chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.1, chalk@^4.1.2:
+chalk@4.1.2, chalk@^4.1.0, chalk@^4.1.1, chalk@^4.1.2:
   version "4.1.2"
   resolved "https://registry.npmjs.org/chalk/-/chalk-4.1.2.tgz"
   integrity sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==
@@ -17118,7 +17118,7 @@ nx@13.3.0-beta.22:
 
 nx@13.5.0-beta.3:
   version "13.5.0-beta.3"
-  resolved "https://registry.yarnpkg.com/nx/-/nx-13.5.0-beta.3.tgz#1e4eb2158d61609799f73f700d60654028ee9e28"
+  resolved "https://registry.npmjs.org/nx/-/nx-13.5.0-beta.3.tgz"
   integrity sha512-MdvxopmyOAz0XWAGo/HA370WUcjlxUtCltUxsHiyPkTk/AnmIkQW2GH8U6ImI2AZ2qOIXJQCixYIaomOIYwnWA==
   dependencies:
     "@nrwl/cli" "13.5.0-beta.3"
@@ -18821,15 +18821,10 @@ prettier-bytes@^1.0.4:
   resolved "https://registry.npmjs.org/prettier-bytes/-/prettier-bytes-1.0.4.tgz"
   integrity sha1-mUsCqkb2mcULYle1+qp/4lV+YtY=
 
-prettier@2.3.2:
+prettier@2.3.2, prettier@^2.2.1:
   version "2.3.2"
   resolved "https://registry.npmjs.org/prettier/-/prettier-2.3.2.tgz"
   integrity sha512-lnJzDfJ66zkMy58OL5/NY5zp70S7Nz6KqcKkXYzn2tMVrNxvbqaBpg7H3qHaLxCJ5lNMsGuM8+ohS7cZrthdLQ==
-
-prettier@^2.2.1:
-  version "2.4.1"
-  resolved "https://registry.npmjs.org/prettier/-/prettier-2.4.1.tgz"
-  integrity sha512-9fbDAXSBcc6Bs1mZrDYb3XKzDLm4EXXL9sC1LqKP5rZkT6KRr/rf9amVUcODVXgguK/isJz0d0hP72WeaKWsvA==
 
 pretty-bytes@^5.3.0, pretty-bytes@^5.6.0:
   version "5.6.0"
@@ -19790,12 +19785,12 @@ regenerator-runtime@0.13.4:
   resolved "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.4.tgz"
   integrity sha512-plpwicqEzfEyTQohIKktWigcLzmNStMGwbOUbykx51/29Z3JOGYldaaNGK7ngNXV+UcoqvIMmloZ48Sr74sd+g==
 
-regenerator-runtime@0.13.7:
+regenerator-runtime@0.13.7, regenerator-runtime@^0.13.7:
   version "0.13.7"
   resolved "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.7.tgz"
   integrity sha512-a54FxoJDIr27pgf7IgeQGxmqUNYrcV338lf/6gH456HZ/PhX+5BcwHXG9ajESmwe6WRO0tAzRUrRmNONWgkrew==
 
-regenerator-runtime@0.13.9, regenerator-runtime@^0.13.4, regenerator-runtime@^0.13.7:
+regenerator-runtime@0.13.9, regenerator-runtime@^0.13.4:
   version "0.13.9"
   resolved "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.9.tgz"
   integrity sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==
