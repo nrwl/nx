@@ -3,6 +3,7 @@
  * location within the OS's tmp directory where we write log files for background processes
  * and where we create the actual unix socket/named pipe for the daemon.
  */
+import { writeFileSync, statSync } from 'fs';
 import { join } from 'path';
 import { cacheDir } from '../../../utilities/cache-directory';
 
@@ -18,3 +19,16 @@ export const DAEMON_SOCKET_PATH = join(
   // As per notes above on socket/named pipe length limitations, we keep this intentionally short
   'd.sock'
 );
+
+export function markDaemonAsDisabled() {
+  writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, "disabled"), "true");
+}
+
+export function isDaemonDisabled() {
+  try {
+    statSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, "disabled"));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
