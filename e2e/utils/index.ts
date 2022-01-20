@@ -223,7 +223,6 @@ export function newProject({
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
-        `@nrwl/gatsby`,
         `@nrwl/jest`,
         `@nrwl/js`,
         `@nrwl/linter`,

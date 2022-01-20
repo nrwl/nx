@@ -163,7 +163,7 @@ faster and with better dev ergonomics. But Nx enables much more than that.
 Nx is like a VS Code of build tools. It has a very powerful core, but it's really the plugins and extra capabilities
 that really transform how you develop.
 
-Nx has first class support for React, Next.js, Gatsby, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and
+Nx has first class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and
 many more. All the plugins are designed to work together and create a cohesive and pleasant to use dev environment.
 
 In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in

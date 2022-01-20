@@ -30,7 +30,6 @@
       "@nrwl/e2e/utils": ["./e2e/utils"],
       "@nrwl/eslint-plugin-nx": ["./packages/eslint-plugin-nx/src"],
       "@nrwl/express": ["./packages/express"],
-      "@nrwl/gatsby": ["./packages/gatsby"],
       "@nrwl/jest": ["./packages/jest"],
       "@nrwl/jest/*": ["./packages/jest/*"],
       "@nrwl/js": ["./packages/js/src"],

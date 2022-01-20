@@ -151,22 +151,6 @@ describe('preset', () => {
     expect(tree.exists('apps/proj/.eslintrc.json')).toBe(true);
   });
 
-  it(`should create files (preset = ${Preset.Gatsby})`, async () => {
-    await presetGenerator(tree, {
-      name: 'proj',
-      preset: Preset.Gatsby,
-      style: 'css',
-      linter: 'eslint',
-      cli: 'nx',
-      standaloneConfig: false,
-    });
-
-    expect(tree.exists('/apps/proj/src/pages/index.tsx')).toBe(true);
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
-    ).toBe('@nrwl/gatsby');
-  });
-
   it('should create files (preset = react-native)', async () => {
     await presetGenerator(tree, {
       name: 'proj',

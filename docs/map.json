@@ -1129,43 +1129,6 @@
         ]
       },
       {
-        "name": "gatsby",
-        "id": "gatsby",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/gatsby Overview",
-            "file": "shared/gatsby-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "generated/api-gatsby/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "generated/api-gatsby/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "generated/api-gatsby/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "generated/api-gatsby/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "file": "generated/api-gatsby/executors/server"
-          }
-        ]
-      },
-      {
         "name": "detox",
         "id": "detox",
         "itemList": [

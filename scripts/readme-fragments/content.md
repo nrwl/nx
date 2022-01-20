@@ -30,7 +30,6 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
   react             [a workspace with a single React application]
   angular           [a workspace with a single Angular application]
   next.js           [a workspace with a single Next.js application]
-  gatsby            [a workspace with a single Gatsby application]
   nest              [a workspace with a single Nest application]
   express           [a workspace with a single Express application]
   web components    [a workspace with a single app built using web components]

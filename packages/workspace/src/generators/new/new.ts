@@ -271,9 +271,6 @@ function getPresetDependencies(preset: string, version?: string) {
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
 
-    case Preset.Gatsby:
-      return { dependencies: {}, dev: { '@nrwl/gatsby': nxVersion } };
-
     case Preset.Nest:
       return { dependencies: {}, dev: { '@nrwl/nest': nxVersion } };
 
