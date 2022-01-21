@@ -122,7 +122,7 @@ In this simple setup, Nx doesn't do any automated path mapping as it usually doe
 ```json
 {
   ...
-  workspaces: [
+  "workspaces": [
     "packages/*"
   ]
 }

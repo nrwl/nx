@@ -716,6 +716,26 @@ export class AppPage {
 }
 ```
 
+You also need to modify the project configuration of the `realworld-e2e` app at `apps/realworld-e2e/project.json`. This will point your e2e process at the `development` configuration of the `realworld` app by default.
+
+```json
+{
+  ...
+      "e2e": {
+      "executor": "@angular-devkit/build-angular:protractor",
+      "options": {
+        "protractorConfig": "apps/realworld-e2e/protractor.conf.js",
+        "devServerTarget": "realworld:serve"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "realworld:serve:production"
+        }
+      }
+    },
+}
+```
+
 To run e2e tests, use the `e2e` command:
 
 ```bash
