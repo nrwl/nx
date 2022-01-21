@@ -37,8 +37,6 @@ Show help
 
 ### plugin
 
-Default: `null`
-
 The name of an installed plugin to query
 
 ### version

@@ -40,12 +40,13 @@ myorg/
 │   │   │   ├── main.ts
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
-│   │   │   └── test.ts
-│   │   ├── .babelrc
+│   │   │   └── test-setup.ts
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
-│   │   ├── jest.conf.js
+│   │   ├── jest.config.js
+│   │   ├── project.json
 │   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.editor.json
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.spec.json
 │   └── todos-e2e/
@@ -61,20 +62,20 @@ myorg/
 │       │       ├── commands.ts
 │       │       └── index.ts
 │       ├── cypress.json
-│       ├── tsconfig.e2e.json
+│       ├── project.json
 │       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── .eslintrc.json
 ├── .prettierrc
-├── babel.config.json
+├── angular.json
+├── decorate-angular-cli.js
 ├── jest.config.js
 ├── jest.preset.js
 ├── nx.json
 ├── package.json
 ├── README.md
-├── tsconfig.base.json
-└── workspace.json
+└── tsconfig.base.json
 ```
 
 The generate command added two projects to our workspace:
@@ -112,7 +113,7 @@ or
 yarn global add nx
 ```
 
-Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
+Alternatively, you can run the local installation of Nx by prepending every command with `npx`:
 
 ```bash
 npx nx serve todos
@@ -126,11 +127,11 @@ yarn nx serve todos
 
 ## Note on `nx serve` and `ng serve`
 
-Internally, the Nx CLI delegates to the Angular CLI when running commands or generating code. The `nx serve` command
+The Nx CLI syntax is intentionally similar to the Angular CLI. The `nx serve` command
 produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI
 supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only
-works when using the Nx CLI. In other words, using `nx` instead `ng` results in the same output, but often performs
-a lot better. [Read more about Nx CLI and Angular CLI.](/using-nx/nx-cli)
+works when using the Nx CLI. In other words, using `nx` instead of `ng` results in the same output, but often performs
+a lot better.
 
 ## What's Next
 
