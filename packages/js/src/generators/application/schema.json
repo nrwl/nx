@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NxTypescriptLibrary",
+  "$id": "NxTypescriptApplication",
   "cli": "nx",
-  "title": "Create a TypeScript Library",
+  "title": "Create a TypeScript application",
   "type": "object",
   "examples": [
     {
