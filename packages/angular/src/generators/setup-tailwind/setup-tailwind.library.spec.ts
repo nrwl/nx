@@ -202,7 +202,7 @@ describe('setupTailwind generator', () => {
 
         module.exports = {
           content: [
-            join(__dirname, 'src/**/*.{html,ts}'),
+            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
           theme: {
@@ -234,7 +234,7 @@ describe('setupTailwind generator', () => {
 
         module.exports = {
           content: [
-            join(__dirname, 'src/**/*.{html,ts}'),
+            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
           theme: {
@@ -267,7 +267,7 @@ describe('setupTailwind generator', () => {
         module.exports = {
           mode: 'jit',
           purge: [
-            join(__dirname, 'src/**/*.{html,ts}'),
+            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
           darkMode: false, // or 'media' or 'class'
