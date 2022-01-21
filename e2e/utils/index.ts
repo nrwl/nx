@@ -17,6 +17,7 @@ import { join } from 'path';
 import { dirSync } from 'tmp';
 import { check as portCheck } from 'tcp-port-used';
 import {
+  joinPathFragments,
   parseJson,
   ProjectConfiguration,
   WorkspaceJsonConfiguration,
@@ -763,6 +764,13 @@ export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
   const result = runCommand(`${list} @angular-devkit/core`);
   expect(result).not.toContain('@angular-devkit/core');
+}
+
+export function expectNoTsJestInJestConfig(appName: string) {
+  const jestConfig = readFile(
+    joinPathFragments('apps', appName, 'jest.config.js')
+  );
+  expect(jestConfig).not.toContain('ts-jest');
 }
 
 export function waitUntil(
