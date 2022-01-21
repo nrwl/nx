@@ -77,7 +77,6 @@
     "mini-css-extract-plugin": "~2.4.7",
     "parse5": "4.0.0",
     "parse5-html-rewriting-stream": "6.0.1",
-    "open": "^7.4.2",
     "postcss": "^8.2.13",
     "postcss-import": "14.0.2",
     "postcss-loader": "^6.1.1",
