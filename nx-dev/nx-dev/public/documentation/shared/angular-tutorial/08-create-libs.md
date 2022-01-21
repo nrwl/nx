@@ -167,4 +167,4 @@ npx nx serve todos
 
 ## What's Next
 
-- Continue to [Step 9: Using the Dependency Graph](/angular-tutorial/09-dep-graph)
+- Continue to [Step 9: Using the Project Graph](/angular-tutorial/09-dep-graph)

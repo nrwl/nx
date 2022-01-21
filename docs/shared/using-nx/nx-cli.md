@@ -5,8 +5,7 @@
 The Nx CLI isn't like most command lines that accomplishes a predefined task. Nx can be configured to work with
 different tools and even different languages.
 
-Nx allows you to break up your codebase into different **projects**. The Nx CLI provides commands to operate and manage
-the different parts of the codebase. These commands fall into three categories:
+Nx allows you to break up your codebase into different **projects**. The Nx CLI provides commands to operate and manage the different parts of the codebase. These commands fall into three categories:
 
 - Acting on code (Build, Test, Serve)
 - Modifying code
@@ -28,7 +27,7 @@ nx build my-js-app
 
 However, `nx build` is only an abstraction over what it means to "build" projects rather than tied to a certain
 implementation. For instance, if you have a `project.json` file defining `build` using
-a **[executor](/executors/using-builders)**, that executor will be invoked. If you don't specify an
+an **[executor](/executors/using-builders)**, that executor will be invoked. If you don't specify an
 executor for the build target, `nx build my-react-app` will invoke the `build` npm script in the project's folder. Every
 argument you pass into `run` will be forwarded to the executor or the npm script.
 
@@ -42,7 +41,7 @@ nx run-many --target=build --projects=app1,app2
 nx run-many --target=test --all # Runs all projects that have a test target, use this sparingly.
 ```
 
-The [`nx affected` command](/cli/affected) isolates set projects that may have changed in behavior and
+The [`nx affected` command](/cli/affected) isolates the set projects that may have changed in behavior and
 runs a target across them. This is more efficient than running all projects every time.
 
 ```bash
@@ -63,7 +62,7 @@ Again, like `nx run`, `nx generate` is only an abstraction over generating code.
 want via **generators**. **[Generators](/generators/using-schematics)** can be installed as part of a
 plugin or developed locally within an Nx workspace to fit the needs of your organization.
 
-A [Workspace Generator](/generators/workspace-generators) is a custom generator for your
+A [workspace generator](/generators/workspace-generators) is a custom generator for your
 workspace. `nx generate workspace-generator my-generator` generates a workspace generator which can be run with
 the [`nx workspace-generator` command](/cli/workspace-generator). This can be useful to allow your
 organization to consistently generate projects according to your own standards.
@@ -84,18 +83,20 @@ nx migrate --run-migrations # Runs the migrations scheduled by the previous comm
 
 ## Understanding the codebase
 
-Nx creates and maintains a dependency graph between projects based on import statements in your code and uses that
+Nx creates and maintains a project graph between projects based on import statements in your code and uses that
 information to run executors only on the [affected](/cli/affected) projects in a codebase. A visual
-version of the [project dependency graph](/structure/dependency-graph) is also available to help developers
+version of the [project project graph](/structure/dependency-graph) is also available to help developers
 understand the architecture of the codebase.
 
-The [`nx dep-graph` command](/cli/dep-graph) displays this dependency graph in a web browser for you to
+The [`nx graph` command](/cli/dep-graph) displays this project graph in a web browser for you to
 explore.
 
+Note: In older versions of Nx, the project graph was launched with `nx dep-graph`. For backward compatibility, that command is aliased to `nx graph`.
+
 ```bash
-nx dep-graph
-nx dep-graph --watch # Updates the browser as code is changed
-nx affected:dep-graph # Highlights projects which may have changed in behavior
+nx graph
+nx graph --watch # Updates the browser as code is changed
+nx affected:graph # Highlights projects which may have changed in behavior
 ```
 
 The [`nx list` command](/cli/list) lists the currently installed Nx plugins and other available plugins.

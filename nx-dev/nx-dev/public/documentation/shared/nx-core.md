@@ -158,7 +158,7 @@ elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/guide
 
 ### Nx Understands How Your Workspace Is Structured
 
-If you run `nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
+If you run `nx graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
 invalidate the computation cache for `complex`, but changes to `complex` won't invalidate the cache for `simple`.
 
 In contrast to more basic monorepo tools, Nx doesn't just analyze `package.json` files. It does much more. Nx also knows

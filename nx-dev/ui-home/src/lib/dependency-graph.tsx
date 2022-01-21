@@ -72,10 +72,10 @@ export function DependencyGraph(): ReactComponentElement<any> {
               <motion.div variants={opacityVariant} className="mt-6">
                 <Link href="/structure/dependency-graph">
                   <a
-                    title="Nx dep-graph tool to visally interact with monorepo dependencies"
+                    title="Nx graph tool to visally interact with monorepo dependencies"
                     className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
                   >
-                    Learn about "nx dep-graph"
+                    Learn about "nx graph"
                   </a>
                 </Link>
               </motion.div>

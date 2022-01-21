@@ -226,7 +226,7 @@ export function ConfSchedule(): JSX.Element {
       type: 'event',
       time: '12-12:25pm',
       title: 'Optimizing Workspaces for Nx',
-      description: `In this talk, we’ll discuss the concerns to consider when architecting an Nx workspace, and discuss how to be proactive in managing your dependency graph to get the most out of developer productivity, and reduce the risk of dreaded circular dependencies.`,
+      description: `In this talk, we’ll discuss the concerns to consider when architecting an Nx workspace, and discuss how to be proactive in managing your project graph to get the most out of developer productivity, and reduce the risk of dreaded circular dependencies.`,
       speakers: ['Zack DeRose / Nrwl'],
       videoUrl: 'https://www.youtube.com/watch?v=xgqH1WWRNhA',
     },
@@ -241,8 +241,8 @@ export function ConfSchedule(): JSX.Element {
     {
       type: 'event',
       time: '1:30-1:55pm',
-      title: 'Solving Problems with the Dependency Graph',
-      description: `The dependency graph can be a powerful part of your workspace, but it can be hard to parse 
+      title: 'Solving Problems with the Project Graph',
+      description: `The project graph can be a powerful part of your workspace, but it can be hard to parse 
         much information from the visualization, especially in large projects. In this talk, you’ll learn about 
         strategies to cut your graph down to size to understand more visually and also how to use the 
         JSON output of the graph when a visual just won’t cut it.`,

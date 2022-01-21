@@ -17,7 +17,7 @@ nx print-affected
 
 ### Examples
 
-Print information about affected projects and the dependency graph:
+Print information about affected projects and the project graph:
 
 ```bash
 nx print-affected

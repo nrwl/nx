@@ -96,7 +96,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
             >
               <Image
                 src="/images/nx-affected.webp"
-                alt="Nx affected dep-graph"
+                alt="Nx affected graph"
                 layout={'fixed'}
                 width={727}
                 height={482}

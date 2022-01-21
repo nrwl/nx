@@ -298,13 +298,13 @@ const App = () => {
                 <Terminal width={24} height={24} stroke="#000000" />
                 <View style={styles.listItemTextContainer}>
                   <Text style={styles.textSm}>
-                    View interactive dependency graph
+                    View interactive project graph
                   </Text>
                 </View>
               </View>
               <View style={[styles.codeBlock, styles.marginBottomLg]}>
                 <Text style={[styles.textXS, styles.monospace]}>
-                  nx dep-graph
+                  nx graph
                 </Text>
               </View>
               <View style={styles.listItem}>
@@ -324,7 +324,7 @@ const App = () => {
                     styles.marginBottomMd,
                   ]}
                 >
-                  nx affected:dep-graph
+                  nx affected:graph
                 </Text>
                 <Text style={[styles.textXS, styles.monospace, styles.comment]}>
                   # run tests for current changes

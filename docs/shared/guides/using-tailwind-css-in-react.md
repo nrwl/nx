@@ -40,7 +40,7 @@ module.exports = {
 
 In a typical `tailwind.config.js` file, the `purge` property of the tailwind config would be an array that includes all files that could mention tailwind class names (you can find more details on tailwind's [official documentation](https://tailwindcss.com/docs/optimizing-for-production#basic-usage)).
 
-Nx has a utility function for determining the glob representation of all files the application depends on (based on the Nx Dependency Graph), which should be used when setting this purge property. This eliminates additional manual maintenance as your workspace progresses.
+Nx has a utility function for determining the glob representation of all files the application depends on (based on the Nx Project Graph), which should be used when setting this purge property. This eliminates additional manual maintenance as your workspace progresses.
 
 ```js
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');

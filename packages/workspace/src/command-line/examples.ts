@@ -8,7 +8,7 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'print-affected',
       description:
-        'Print information about affected projects and the dependency graph',
+        'Print information about affected projects and the project graph',
     },
     {
       command: 'print-affected --base=main --head=HEAD',
@@ -196,74 +196,74 @@ export const examples: Record<string, Example[]> = {
   ],
   'format:write': [],
   'format:check': [],
-  'dep-graph': [
+  graph: [
     {
-      command: 'dep-graph',
-      description: 'Open the dep graph of the workspace in the browser',
+      command: 'graph',
+      description: 'Open the project graph of the workspace in the browser',
     },
     {
-      command: 'dep-graph --file=output.json',
-      description: 'Save the dep graph into a json file',
+      command: 'graph --file=output.json',
+      description: 'Save the project graph into a json file',
     },
     {
-      command: 'dep-graph --file=output.html',
+      command: 'graph --file=output.html',
       description:
-        'Generate a static website with dep graph into an html file, accompanied by an asset folder called static',
+        'Generate a static website with project graph into an html file, accompanied by an asset folder called static',
     },
     {
-      command: 'dep-graph --focus=todos-feature-main',
+      command: 'graph --focus=todos-feature-main',
       description:
         'Show the graph where every node is either an ancestor or a descendant of todos-feature-main',
     },
     {
-      command: 'dep-graph --include=project-one,project-two',
-      description: 'Include project-one and project-two in the dep graph',
+      command: 'graph --include=project-one,project-two',
+      description: 'Include project-one and project-two in the project graph',
     },
     {
-      command: 'dep-graph --exclude=project-one,project-two',
-      description: 'Exclude project-one and project-two from the dep graph',
+      command: 'graph --exclude=project-one,project-two',
+      description: 'Exclude project-one and project-two from the project graph',
     },
     {
       command:
-        'dep-graph --focus=todos-feature-main --exclude=project-one,project-two',
+        'graph --focus=todos-feature-main --exclude=project-one,project-two',
       description:
         'Show the graph where every node is either an ancestor or a descendant of todos-feature-main, but exclude project-one and project-two',
     },
     {
-      command: 'dep-graph --watch',
-      description: 'Watch for changes to dep graph and update in-browser',
+      command: 'graph --watch',
+      description: 'Watch for changes to project graph and update in-browser',
     },
   ],
-  'affected:dep-graph': [
+  'affected:graph': [
     {
-      command: 'affected:dep-graph --files=libs/mylib/src/index.ts',
+      command: 'affected:graph --files=libs/mylib/src/index.ts',
       description:
-        'Open the dep graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file',
+        'Open the project graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected:dep-graph --base=main --head=HEAD',
+      command: 'affected:graph --base=main --head=HEAD',
       description:
-        'Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
+        'Open the project graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:dep-graph --base=main --head=HEAD --file=output.json',
+      command: 'affected:graph --base=main --head=HEAD --file=output.json',
       description:
-        'Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
+        'Save the project graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:dep-graph --base=main --head=HEAD --file=output.html',
+      command: 'affected:graph --base=main --head=HEAD --file=output.html',
       description:
-        'Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR)',
+        'Generate a static website with project graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected:dep-graph --base=main~1 --head=main',
+      command: 'affected:graph --base=main~1 --head=main',
       description:
-        'Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on main',
+        'Open the project graph of the workspace in the browser, and highlight the projects affected by the last commit on main',
     },
     {
-      command: 'affected:dep-graph --exclude=project-one,project-two',
+      command: 'affected:graph --exclude=project-one,project-two',
       description:
-        'Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two',
+        'Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two',
     },
   ],
   'workspace-generator': [],

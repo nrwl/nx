@@ -150,19 +150,22 @@ ${daemonHelpOutput}
         target: 'e2e',
       })
   )
-  .command(
-    'affected:dep-graph',
-    chalk.bold('Graph dependencies affected by changes'),
-    (yargs) =>
+  .command({
+    command: 'affected:graph',
+    describe: chalk.bold(
+      'Graph dependencies affected by changes. Alias: affected:dep-graph'
+    ),
+    aliases: ['affected:dep-graph'],
+    builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withDepGraphOptions(yargs)),
-        'affected:dep-graph'
+        'affected:graph'
       ),
-    async (args) =>
-      (await import('./affected')).affected('dep-graph', {
+    handler: async (args) =>
+      (await import('./affected')).affected('graph', {
         ...args,
-      })
-  )
+      }),
+  })
   .command(
     'print-affected',
     chalk.bold(
@@ -207,12 +210,17 @@ npx nx daemon
     async (args) => (await import('./daemon')).daemonHandler(args)
   )
 
-  .command(
-    'dep-graph',
-    chalk.bold('Graph dependencies within workspace'),
-    (yargs) => linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
-    async (args) => (await import('./dep-graph')).generateGraph(args as any, [])
-  )
+  .command({
+    command: 'graph',
+    describe: chalk.bold(
+      'Graph dependencies within workspace. Alias: dep-graph'
+    ),
+    aliases: ['dep-graph'],
+    builder: (yargs) =>
+      linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
+    handler: async (args) =>
+      (await import('./dep-graph')).generateGraph(args as any, []),
+  })
 
   .command(
     'format:check',
@@ -517,34 +525,34 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('focus', {
       describe:
-        'Use to show the dependency graph for a particular project and every node that is either an ancestor or a descendant.',
+        'Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.',
       type: 'string',
     })
     .option('exclude', {
       describe:
-        'List of projects delimited by commas to exclude from the dependency graph.',
+        'List of projects delimited by commas to exclude from the project graph.',
       type: 'array',
       coerce: parseCSV,
     })
     .option('groupByFolder', {
-      describe: 'Group projects by folder in the dependency graph',
+      describe: 'Group projects by folder in the project graph',
       type: 'boolean',
     })
     .option('host', {
-      describe: 'Bind the dependency graph server to a specific ip address.',
+      describe: 'Bind the project graph server to a specific ip address.',
       type: 'string',
     })
     .option('port', {
-      describe: 'Bind the dependency graph server to a specific port.',
+      describe: 'Bind the project graph server to a specific port.',
       type: 'number',
     })
     .option('watch', {
-      describe: 'Watch for changes to dependency graph and update in-browser',
+      describe: 'Watch for changes to project graph and update in-browser',
       type: 'boolean',
       default: false,
     })
     .option('open', {
-      describe: 'Open the dependency graph in the browser.',
+      describe: 'Open the project graph in the browser.',
       type: 'boolean',
       default: true,
     });

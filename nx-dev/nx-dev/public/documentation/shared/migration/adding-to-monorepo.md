@@ -91,8 +91,8 @@ tools because it looks not just at the changed files but also at the nature of t
 
 ### Workspace Visualization
 
-Run `nx dep-graph` to see a visualization of your workspace. `nx affected:dep-graph` shows what is affected by your
-commit. `nx dep-graph --watch` watches your workspace for changes and updates the visualization.
+Run `nx graph` to see a visualization of your workspace. `nx affected:graph` shows what is affected by your
+commit. `nx graph --watch` watches your workspace for changes and updates the visualization.
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/v87Y8NgAYLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
