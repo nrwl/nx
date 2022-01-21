@@ -40,7 +40,7 @@
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "fs-extra": "^9.1.0",
     "glob": "7.1.4",
-    "license-webpack-plugin": "2.3.15",
+    "license-webpack-plugin": "4.0.0",
     "rxjs": "^6.5.4",
     "source-map-support": "0.5.19",
     "tree-kill": "1.2.2",
