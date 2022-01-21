@@ -36,6 +36,11 @@
             "name": "Nx and Angular",
             "id": "nx-and-angular",
             "file": "shared/getting-started/nx-and-angular"
+          },
+          {
+            "name": "Glossary",
+            "id": "glossary",
+            "file": "shared/glossary"
           }
         ]
       },
@@ -320,7 +325,6 @@
           }
         ]
       },
-
       {
         "name": "CLI",
         "id": "cli",
