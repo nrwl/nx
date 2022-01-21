@@ -40,18 +40,10 @@ export async function createDynamicOutputRenderer({
     }
   }
 
-  function teardown() {
-    clearRenderInterval();
-    cliCursor.show();
-    if (resolveRenderIsDonePromise) {
-      resolveRenderIsDonePromise();
-    }
-  }
-
-  process.on('exit', () => teardown());
-  process.on('SIGINT', () => teardown());
-  process.on('unhandledRejection', () => teardown());
-  process.on('uncaughtException', () => teardown());
+  process.on('exit', () => clearRenderInterval());
+  process.on('SIGINT', () => clearRenderInterval());
+  process.on('SIGTERM', () => clearRenderInterval());
+  process.on('SIGHUP', () => clearRenderInterval());
 
   const lifeCycle = {} as Partial<LifeCycle>;
   const isVerbose = overrides.verbose === true;
@@ -123,6 +115,20 @@ export async function createDynamicOutputRenderer({
             output.dim('  nx run ') +
             task.id
           }  ${output.colors.gray('[local cache]')}`
+        );
+        if (isVerbose) {
+          writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
+        }
+        break;
+      case 'local-cache-kept-existing':
+        writeLine(
+          `${
+            output.colors.green(figures.tick) +
+            output.dim('  nx run ') +
+            task.id
+          }  ${output.colors.gray(
+            '[existing outputs match the cache, left as is]'
+          )}`
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -300,6 +306,97 @@ export async function createDynamicOutputRenderer({
     renderPinnedFooter([]);
   };
 
+  lifeCycle.endCommand = () => {
+    clearRenderInterval();
+    const timeTakenText = prettyTime(process.hrtime(start));
+
+    clearPinnedFooter();
+    if (totalSuccessfulTasks === totalTasks) {
+      let text = `Successfully ran target ${output.bold(
+        targetName
+      )} for ${output.bold(totalProjects)} projects`;
+      if (totalDependentTasks > 0) {
+        text += ` and ${output.bold(
+          totalDependentTasks
+        )} task(s) they depend on`;
+      }
+
+      const taskOverridesRows = [];
+      if (Object.keys(overrides).length > 0) {
+        const leftPadding = `${output.X_PADDING}       `;
+        taskOverridesRows.push('');
+        taskOverridesRows.push(
+          `${leftPadding}${output.dim.green('With additional flags:')}`
+        );
+        Object.entries(overrides)
+          .map(([flag, value]) =>
+            output.dim.green(`${leftPadding}  --${flag}=${value}`)
+          )
+          .forEach((arg) => taskOverridesRows.push(arg));
+      }
+
+      const pinnedFooterLines = [
+        output.applyNxPrefix(
+          'green',
+          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+        ),
+        ...taskOverridesRows,
+      ];
+      if (totalCachedTasks > 0) {
+        pinnedFooterLines.push(
+          output.colors.gray(
+            `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
+          )
+        );
+      }
+      renderPinnedFooter(pinnedFooterLines, 'green');
+    } else {
+      let text = `Ran target ${output.bold(targetName)} for ${output.bold(
+        totalProjects
+      )} projects`;
+      if (totalDependentTasks > 0) {
+        text += ` and ${output.bold(
+          totalDependentTasks
+        )} task(s) they depend on`;
+      }
+
+      const taskOverridesRows = [];
+      if (Object.keys(overrides).length > 0) {
+        const leftPadding = `${output.X_PADDING}       `;
+        taskOverridesRows.push('');
+        taskOverridesRows.push(
+          `${leftPadding}${output.dim.red('With additional flags:')}`
+        );
+        Object.entries(overrides)
+          .map(([flag, value]) =>
+            output.dim.red(`${leftPadding}  --${flag}=${value}`)
+          )
+          .forEach((arg) => taskOverridesRows.push(arg));
+      }
+
+      renderPinnedFooter(
+        [
+          output.applyNxPrefix(
+            'red',
+            output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+          ),
+          ...taskOverridesRows,
+          '',
+          `   ${output.colors.red(
+            figures.cross
+          )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
+          `   ${output.colors.gray(
+            figures.tick
+          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.colors.gray(
+            `[${totalCachedTasks} read from cache]`
+          )}`,
+        ],
+        'red'
+      );
+    }
+    resolveRenderIsDonePromise();
+  };
+
   lifeCycle.startTasks = (tasks: Task[]) => {
     for (const task of tasks) {
       tasksToProcessStartTimes[task.id] = process.hrtime();
@@ -323,9 +420,8 @@ export async function createDynamicOutputRenderer({
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    totalCompletedTasks++;
-
     for (let t of taskResults) {
+      totalCompletedTasks++;
       const matchingProjectRow = projectRows.find(
         (pr) => pr.projectName === t.task.target.project
       );
@@ -336,7 +432,10 @@ export async function createDynamicOutputRenderer({
       switch (t.status) {
         case 'remote-cache':
         case 'local-cache':
+        case 'local-cache-kept-existing':
           totalCachedTasks++;
+          totalSuccessfulTasks++;
+          break;
         case 'success':
           totalSuccessfulTasks++;
           break;
@@ -344,100 +443,7 @@ export async function createDynamicOutputRenderer({
           totalFailedTasks++;
           break;
       }
-
       printTaskResult(t.task, t.status);
-    }
-
-    if (totalCompletedTasks === totalTasks) {
-      clearRenderInterval();
-      const timeTakenText = prettyTime(process.hrtime(start));
-
-      clearPinnedFooter();
-
-      if (totalSuccessfulTasks === totalTasks) {
-        let text = `Successfully ran target ${output.bold(
-          targetName
-        )} for ${output.bold(totalProjects)} projects`;
-        if (totalDependentTasks > 0) {
-          text += ` and ${output.bold(
-            totalDependentTasks
-          )} task(s) they depend on`;
-        }
-
-        const taskOverridesRows = [];
-        if (Object.keys(overrides).length > 0) {
-          const leftPadding = `${output.X_PADDING}       `;
-          taskOverridesRows.push('');
-          taskOverridesRows.push(
-            `${leftPadding}${output.dim.green('With additional flags:')}`
-          );
-          Object.entries(overrides)
-            .map(([flag, value]) =>
-              output.dim.green(`${leftPadding}  --${flag}=${value}`)
-            )
-            .forEach((arg) => taskOverridesRows.push(arg));
-        }
-
-        const pinnedFooterLines = [
-          output.applyNxPrefix(
-            'green',
-            output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
-          ),
-          ...taskOverridesRows,
-        ];
-        if (totalCachedTasks > 0) {
-          pinnedFooterLines.push(
-            output.colors.gray(
-              `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
-            )
-          );
-        }
-        renderPinnedFooter(pinnedFooterLines, 'green');
-      } else {
-        let text = `Ran target ${output.bold(targetName)} for ${output.bold(
-          totalProjects
-        )} projects`;
-        if (totalDependentTasks > 0) {
-          text += ` and ${output.bold(
-            totalDependentTasks
-          )} task(s) they depend on`;
-        }
-
-        const taskOverridesRows = [];
-        if (Object.keys(overrides).length > 0) {
-          const leftPadding = `${output.X_PADDING}       `;
-          taskOverridesRows.push('');
-          taskOverridesRows.push(
-            `${leftPadding}${output.dim.red('With additional flags:')}`
-          );
-          Object.entries(overrides)
-            .map(([flag, value]) =>
-              output.dim.red(`${leftPadding}  --${flag}=${value}`)
-            )
-            .forEach((arg) => taskOverridesRows.push(arg));
-        }
-
-        renderPinnedFooter(
-          [
-            output.applyNxPrefix(
-              'red',
-              output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
-            ),
-            ...taskOverridesRows,
-            '',
-            `   ${output.colors.red(
-              figures.cross
-            )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-            `   ${output.colors.gray(
-              figures.tick
-            )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.colors.gray(
-              `[${totalCachedTasks} read from cache]`
-            )}`,
-          ],
-          'red'
-        );
-      }
-      resolveRenderIsDonePromise();
     }
   };
 

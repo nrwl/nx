@@ -11,6 +11,6 @@ export function resetHandler() {
   stopDaemon();
   removeSync(cacheDir);
   output.success({
-    title: 'Successful reset the Nx workspace.',
+    title: 'Successfully reset the Nx workspace.',
   });
 }
