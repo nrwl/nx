@@ -4,15 +4,12 @@ Nx is a smart, fast and extensible build system with first class monorepo suppor
 
 ## Philosophy
 
-Nx has a similar design philosophy to Visual Studio Code. Code is a powerful text editor, and you can be very productive
-with it even if you don't install any extensions. The ecosystem of VSCode's extensions though is what can really level
-up your productivity.
+Nx shares the design philosophy with Visual Studio Code. Code is a powerful text editor, and you can be very productive
+with it even if you don't install any extensions. The ecosystem of VSCode's extensions is what levels up your productivity.
 
-Nx is similar. The core of Nx is generic, simple, and unobtrusive. Nx plugins, although very useful for many projects,
-are completely optional.
+Similarly, the core of Nx is generic, simple, and unobtrusive. Nx plugins, although very useful, are completely optional.
 
-Most examples on this site use Nx plugins. It's just easier to demonstrate many features Nx offers when Nx generates all
-the boilerplate. However, the vast majority of the features will work the same way in a workspace with no plugins.
+Because Nx generates the boilerplate for you, most examples use Nx plugins. This maks it easier to demonstrate the features of Nx. The vast majority of features work without the need of plugins.
 
 ## Getting Started
 
