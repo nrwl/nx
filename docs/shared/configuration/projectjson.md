@@ -61,7 +61,7 @@ Let's look at the following `project.json`:
     }
   },
   "tags": ["scope:myteam"],
-  "implicitDependencies": ["anotherlib"]]
+  "implicitDependencies": ["anotherlib"]
 }
 ```
 
