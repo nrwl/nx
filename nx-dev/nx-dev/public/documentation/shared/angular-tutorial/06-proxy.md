@@ -6,20 +6,23 @@ You passed `--frontendProject=todos` when creating the node application. What di
 
 It created a proxy configuration that allows the Angular application to talk to the API in development.
 
-**To see how it works, open `angular.json` and find the `serve` target of the todos app.**
+**To see how it works, open `apps/todos/project.json` and find the `serve` target of the todos app.**
 
 ```json
 {
   "serve": {
-    "builder": "@angular-devkit/build-angular:dev-server",
-    "options": {
-      "browserTarget": "todos:build",
-      "proxyConfig": "apps/todos/proxy.conf.json"
-    },
+    "executor": "@angular-devkit/build-angular:dev-server",
     "configurations": {
       "production": {
         "browserTarget": "todos:build:production"
+      },
+      "development": {
+        "browserTarget": "todos:build:development"
       }
+    },
+    "defaultConfiguration": "development",
+    "options": {
+      "proxyConfig": "apps/todos/proxy.conf.json"
     }
   }
 }
@@ -27,7 +30,7 @@ It created a proxy configuration that allows the Angular application to talk to 
 
 **Note the `proxyConfig` property.**
 
-**Now open `proxy.conf.json`:**
+**Now open `apps/todos/proxy.conf.json`:**
 
 ```json
 {
