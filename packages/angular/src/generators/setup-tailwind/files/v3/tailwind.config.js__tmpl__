@@ -3,7 +3,7 @@ const { join } = require('path');
 
 module.exports = {
   content: [
-    join(__dirname, '<%= relativeSourceRoot %>/**/*.{html,ts}'),
+    join(__dirname, '<%= relativeSourceRoot %>/**/!(*.stories|*.spec).{ts,html}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {

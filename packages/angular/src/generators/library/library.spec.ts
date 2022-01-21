@@ -1371,7 +1371,7 @@ describe('lib', () => {
 
         module.exports = {
           content: [
-            join(__dirname, 'src/**/*.{html,ts}'),
+            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
             ...createGlobPatternsForDependencies(__dirname),
           ],
           theme: {

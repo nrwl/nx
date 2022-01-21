@@ -4,7 +4,7 @@ const { join } = require('path');
 module.exports = {
   mode: 'jit',
   purge: [
-    join(__dirname, '<%= relativeSourceRoot %>/**/*.{html,ts}'),
+    join(__dirname, '<%= relativeSourceRoot %>/**/!(*.stories|*.spec).{ts,html}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   darkMode: false, // or 'media' or 'class'
