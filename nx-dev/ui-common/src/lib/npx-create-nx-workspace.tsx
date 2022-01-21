@@ -121,7 +121,7 @@ export function NpxCreateNxWorkspaceAnimation({
       },
     });
     await frameworkSelectionAnswerSectionArrow.start({
-      y: 18,
+      y: 56,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
     await frameworkSelectionAnswerSectionPreviousHighlight.start({
@@ -305,27 +305,79 @@ export function NpxCreateNxWorkspaceAnimation({
                     initial={{ color: '#34D399' }}
                     animate={frameworkSelectionAnswerSectionPreviousHighlight}
                   >
-                    empty [an empty workspace with a layout that works best for
-                    building apps]
+                    apps{' '}
+                    <span className="text-[9px]">
+                      [an empty workspace with no plugins with a layout that
+                      works best for building apps]
+                    </span>
                   </motion.span>
+                  <br />
+                  core{' '}
+                  <span className="text-[9px]">
+                    [an empty workspace with no plugins set up to publish npm
+                    packages (similar to yarn workspaces)]
+                  </span>
+                  <br />
+                  ts{' '}
+                  <span className="text-[9px]">
+                    [an empty workspace with the JS/TS plugin preinstalled]
+                  </span>
                   <br />
                   <motion.span
                     initial={{ color: '#E5E7EB' }}
                     animate={frameworkSelectionAnswerSectionNextHighlight}
                   >
-                    react [a workspace with a single React application]
+                    react{' '}
+                    <span className="text-[9px]">
+                      [a workspace with a single React application]
+                    </span>
                   </motion.span>
                   <br />
-                  angular [a workspace with a single Angular application]
+                  angular{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single Angular application]
+                  </span>
                   <br />
-                  next.js [a workspace with a single Next.js application]
+                  next.js{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single Next.js application]
+                  </span>
                   <br />
-                  nest [a workspace with a single Nest application]
+                  gatsby{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single Gatsby application]
+                  </span>
                   <br />
-                  express [a workspace with a single Express application]
+                  nest{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single Nest application]
+                  </span>
                   <br />
-                  web components [a workspace with a single app built using web
-                  components]
+                  express{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single Express application]
+                  </span>
+                  <br />
+                  web components{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single app built using web components]
+                  </span>
+                  <br />
+                  react-native{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a single React Native application]
+                  </span>
+                  <br />
+                  react-express{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a full stack application (React +
+                    Express)]
+                  </span>
+                  <br />
+                  angular-nest{' '}
+                  <span className="text-[9px]">
+                    [a workspace with a full stack application (Angular + Nest)]
+                  </span>
                   <br />
                   <span className="text-gray-500">(Use arrow keys)</span>
                 </motion.div>
