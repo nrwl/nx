@@ -1,15 +1,9 @@
-import {
-  buildWorkspaceConfigurationFromGlobs,
-  inlineProjectConfigurations,
-  readOrExtendNxConfig,
-  toProjectName,
-} from './workspace';
-import { readJsonFile } from '../utils/fileutils';
+import { toProjectName, Workspaces } from './workspace';
 import { NxJsonConfiguration } from './nx';
+import { vol } from 'memfs';
 
-const fs = require('fs');
+jest.mock('fs', () => require('memfs').fs);
 
-jest.mock('../utils/fileutils');
 jest.mock('fast-glob', () => ({
   sync: () => [
     'libs/lib1/package.json',
@@ -20,7 +14,6 @@ jest.mock('fast-glob', () => ({
     'libs/domain/lib4/package.json',
   ],
 }));
-jest.mock('fs');
 
 const libConfig = (name) => ({
   root: `libs/${name}`,
@@ -32,101 +25,61 @@ const packageLibConfig = (root) => ({
   sourceRoot: root,
 });
 
-describe('workspace', () => {
-  beforeAll(() => {
-    fs.existsSync.mockReturnValue(true);
+describe('Workspaces', () => {
+  afterEach(() => {
+    vol.reset();
   });
 
-  it('should be able to inline project configurations', () => {
-    const standaloneConfig = libConfig('lib1');
+  describe('readWorkspaceConfiguration', () => {
+    it('should be able to inline project configurations', () => {
+      const standaloneConfig = libConfig('lib1');
 
-    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
-      if (path.endsWith('libs/lib1/project.json')) {
-        return standaloneConfig;
-      }
-      throw `${path} not in mock!`;
+      const config = {
+        version: 2,
+        projects: {
+          lib1: 'libs/lib1',
+          lib2: libConfig('lib2'),
+        },
+      };
+      vol.fromJSON(
+        {
+          'libs/lib1/project.json': JSON.stringify(standaloneConfig),
+          'workspace.json': JSON.stringify(config),
+        },
+        '/root'
+      );
+
+      const workspaces = new Workspaces('/root');
+      const resolved = workspaces.readWorkspaceConfiguration();
+      expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
-    const inlineConfig = {
-      version: 1,
-      projects: {
-        lib1: 'libs/lib1',
-        lib2: libConfig('lib2'),
-      },
-    };
+    it('should build project configurations from glob', () => {
+      const lib1Config = libConfig('lib1');
+      const lib2Config = packageLibConfig('libs/lib2');
+      const domainPackageConfig = packageLibConfig('libs/domain/lib3');
+      const domainLibConfig = libConfig('domain/lib4');
 
-    const resolved = inlineProjectConfigurations(inlineConfig);
-    expect(resolved).toEqual({
-      ...inlineConfig,
-      projects: {
-        ...inlineConfig.projects,
-        lib1: { ...standaloneConfig },
-      },
-    });
-  });
+      vol.fromJSON(
+        {
+          'libs/lib1/project.json': JSON.stringify(lib1Config),
+          'libs/lib1/package.json': JSON.stringify({ name: 'some-other-name' }),
+          'libs/lib2/package.json': JSON.stringify({ name: 'lib2' }),
+          'libs/domain/lib3/package.json': JSON.stringify({
+            name: 'domain-lib3',
+          }),
+          'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
+          'libs/domain/lib4/package.json': JSON.stringify({}),
+        },
+        '/root'
+      );
 
-  it('should read and/or normalize an nx.json config (including any base config)', () => {
-    const defaultNxJson = {
-      extends: '@some-org/libs/shared/config/nx.json',
-    } as NxJsonConfiguration;
-    const npmWorkspaceLayout = {
-      workspaceLayout: { libsDir: 'packages' },
-    };
-
-    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
-      if (/node_modules/.test(path)) {
-        return { ...defaultNxJson, ...npmWorkspaceLayout };
-      } else if (path.endsWith('nx.json')) {
-        return defaultNxJson;
-      }
-      throw `${path} not in mock!`;
-    });
-
-    const localNxJson = readOrExtendNxConfig('nx.json');
-    expect(localNxJson).toEqual({ ...defaultNxJson, ...npmWorkspaceLayout });
-    expect(readOrExtendNxConfig(defaultNxJson)).toEqual({
-      ...defaultNxJson,
-      ...npmWorkspaceLayout,
-    });
-  });
-
-  it('should build project configurations from glob', () => {
-    const lib1Config = libConfig('lib1');
-    const lib2Config = packageLibConfig('libs/lib2');
-    const domainPackageConfig = packageLibConfig('libs/domain/lib3');
-    const domainLibConfig = libConfig('domain/lib4');
-
-    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
-      if (path.endsWith('libs/lib1/project.json')) {
-        return lib1Config;
-      }
-      if (path.endsWith('libs/lib1/package.json')) {
-        return { name: 'some-other-name' };
-      }
-      if (path.endsWith('libs/lib2/package.json')) {
-        return { name: 'lib2' };
-      }
-      if (path.endsWith('libs/domain/lib3/package.json')) {
-        return { name: 'domain-lib3' };
-      }
-      if (path.endsWith('libs/domain/lib4/project.json')) {
-        return domainLibConfig;
-      }
-      if (path.endsWith('libs/domain/lib4/package.json')) {
-        return {};
-      }
-      throw `${path} not in mock!`;
-    });
-
-    const resolved = buildWorkspaceConfigurationFromGlobs({ npmScope: '' });
-    expect(resolved).toEqual({
-      version: 2,
-      projects: {
-        lib1: lib1Config,
-        lib2: lib2Config,
-        'domain-lib3': domainPackageConfig,
-        'domain-lib4': domainLibConfig,
-      },
+      const workspaces = new Workspaces('/root');
+      const { projects } = workspaces.readWorkspaceConfiguration();
+      expect(projects.lib1).toEqual(lib1Config);
+      expect(projects.lib2).toEqual(lib2Config);
+      expect(projects['domain-lib3']).toEqual(domainPackageConfig);
+      expect(projects['domain-lib4']).toEqual(domainLibConfig);
     });
   });
 

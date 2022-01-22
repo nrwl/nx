@@ -21,7 +21,6 @@ import {
   globForProjectFiles,
   ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
-  readOrExtendNxConfig,
   toNewFormat,
   toNewFormatOrNull,
   toOldFormatOrNull,
@@ -229,13 +228,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     const readJsonFile = (path: string) =>
       super
         .read(path as Path)
-        .pipe(
-          map((data) =>
-            readOrExtendNxConfig(
-              JSON.parse(Buffer.from(data).toString()) as NxJsonConfiguration
-            )
-          )
-        );
+        .pipe(map((data) => JSON.parse(Buffer.from(data).toString())));
 
     const readWorkspaceJsonFile = (
       nxJson: NxJsonConfiguration
@@ -627,17 +620,11 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         // we have to add them into the file.
         const createdProjectFiles = findCreatedProjects(this.host);
         const deletedProjectFiles = findDeletedProjects(this.host);
-        let nxJsonInTree = nxJsonChange
+        const nxJsonInTree = nxJsonChange
           ? parseJson(nxJsonChange.content.toString())
           : parseJson(this.host.read('nx.json').toString());
         const readJsonWithHost = (file) =>
           parseJson(this.host.read(file).toString());
-
-        if (nxJsonInTree?.extends) {
-          nxJsonInTree = readOrExtendNxConfig(
-            nxJsonInTree as NxJsonConfiguration
-          );
-        }
 
         const staticProjects = buildWorkspaceConfigurationFromGlobs(
           nxJsonInTree,
@@ -1301,8 +1288,8 @@ function saveWorkspaceConfigurationInWrappedSchematic(
       host.write(path, serializeJson(config));
     }
   }
-  const nxJson: NxJsonConfiguration = readOrExtendNxConfig(
-    parseJson(host.read('nx.json').toString()) as NxJsonConfiguration
+  const nxJson: NxJsonConfiguration = parseJson(
+    host.read('nx.json').toString()
   );
   nxJson.generators = workspace.generators || workspace.schematics;
   nxJson.cli = workspace.cli || nxJson.cli;

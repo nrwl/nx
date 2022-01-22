@@ -8,7 +8,7 @@ import {
   toNewFormat,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
-import { basename, dirname } from 'path';
+import { basename, dirname, relative } from 'path';
 
 import {
   getWorkspaceLayout,
@@ -113,11 +113,6 @@ export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
     return workspace;
   }
 
-  const nxJsonExtends = readNxJsonExtends(tree, nxJson as any);
-  if (nxJsonExtends) {
-    nxJson = { ...nxJsonExtends, ...nxJson };
-  }
-
   return {
     ...workspace,
     ...nxJson,
@@ -164,8 +159,8 @@ export function updateWorkspaceConfiguration(
 
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      const nxJsonExtends = readNxJsonExtends(tree, json as any);
-      if (nxJsonExtends) {
+      if (json.extends) {
+        const nxJsonExtends = readNxJsonExtends(tree, json.extends);
         const changedPropsOfNxJson = {};
         Object.keys(nxJson).forEach((prop) => {
           if (
@@ -194,18 +189,19 @@ export function updateWorkspaceConfiguration(
   }
 }
 
-function readNxJsonExtends(tree: Tree, nxJson: { extends?: string }) {
-  if (nxJson.extends) {
-    const extendsPath = nxJson.extends;
-    try {
-      return JSON.parse(
-        tree.read(joinPathFragments('node_modules', extendsPath), 'utf-8')
-      );
-    } catch (e) {
-      throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
-    }
-  } else {
-    return null;
+function readNxJsonExtends(tree: Tree, extendsPath: string) {
+  try {
+    return readJson(
+      tree,
+      relative(
+        tree.root,
+        require.resolve(extendsPath, {
+          paths: [tree.root],
+        })
+      )
+    );
+  } catch (e) {
+    throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
   }
 }
 
@@ -240,9 +236,8 @@ export function readNxJson(tree: Tree): NxJsonConfiguration | null {
     return null;
   }
   let nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-  const nxJsonExtends = readNxJsonExtends(tree, nxJson as any);
-  if (nxJsonExtends) {
-    nxJson = { ...nxJsonExtends, ...nxJson };
+  if (nxJson.extends) {
+    nxJson = { ...readNxJsonExtends(tree, nxJson.extends), ...nxJson };
   }
   return nxJson;
 }

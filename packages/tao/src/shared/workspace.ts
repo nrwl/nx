@@ -290,7 +290,7 @@ export class Workspaces {
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
     NxJsonConfiguration {
     const nxJsonPath = path.join(this.root, 'nx.json');
-    const nxJson = readOrExtendNxConfig(nxJsonPath);
+    const nxJson = readNxJson(nxJsonPath);
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
       ? path.join(this.root, workspaceFile)
@@ -612,10 +612,7 @@ export function resolveNewFormatWithInlineProjects(
   return toNewFormat(inlineProjectConfigurations(w, root));
 }
 
-export function inlineProjectConfigurations(
-  w: any,
-  root: string = appRootPath
-) {
+function inlineProjectConfigurations(w: any, root: string = appRootPath) {
   Object.entries(w.projects || {}).forEach(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {
@@ -631,25 +628,19 @@ export function inlineProjectConfigurations(
 /**
  * Reads an nx.json file from a given path or extends a local nx.json config.
  */
-export function readOrExtendNxConfig(
-  nxJson: string | NxJsonConfiguration
-): NxJsonConfiguration {
+function readNxJson(nxJson: string): NxJsonConfiguration {
   let nxJsonConfig: NxJsonConfiguration;
-  if (typeof nxJson === 'string') {
-    if (existsSync(nxJson)) {
-      nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
-    } else {
-      nxJsonConfig = {} as NxJsonConfiguration;
-    }
+  if (existsSync(nxJson)) {
+    nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
   } else {
-    nxJsonConfig = { ...nxJson };
+    nxJsonConfig = {} as NxJsonConfiguration;
   }
-  const extendNxJsonPath = nxJsonConfig.extends
-    ? join('node_modules', nxJsonConfig.extends)
-    : undefined;
-  if (extendNxJsonPath && existsSync(extendNxJsonPath)) {
-    const baseNxJson = readJsonFile<NxJsonConfiguration>(extendNxJsonPath);
-    return { ...baseNxJson, ...nxJsonConfig };
+  if (nxJsonConfig.extends) {
+    const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
+      paths: [dirname(nxJson)],
+    });
+    const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+    nxJsonConfig = { ...baseNxJson, ...nxJsonConfig };
   }
   return nxJsonConfig;
 }
@@ -792,7 +783,6 @@ export function buildWorkspaceConfigurationFromGlobs(
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
 ): WorkspaceJsonConfiguration {
   const projects: Record<string, ProjectConfiguration> = {};
-  nxJson = readOrExtendNxConfig(nxJson);
 
   for (const file of projectFiles) {
     const directory = dirname(file).split('\\').join('/');
