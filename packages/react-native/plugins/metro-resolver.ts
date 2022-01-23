@@ -44,7 +44,13 @@ export function getResolveRequest(extensions: string[]) {
       }
     }
 
-    return tsconfigPathsResolver(extensions, realModuleName, moduleName);
+    return tsconfigPathsResolver(
+      context,
+      extensions,
+      realModuleName,
+      moduleName,
+      platform
+    );
   };
 }
 
@@ -53,7 +59,7 @@ export function getResolveRequest(extensions: string[]) {
  * @returns path if resolved, else undefined
  */
 function defaultMetroResolver(
-  context: string,
+  context: any,
   moduleName: string,
   platform: string
 ) {
@@ -103,28 +109,23 @@ function pnpmResolver(extensions, context, realModuleName, moduleName) {
  * @returns path if resolved, else undefined
  */
 function tsconfigPathsResolver(
+  context: any,
   extensions: string[],
   realModuleName: string,
-  moduleName: string
+  moduleName: string,
+  platform: string
 ) {
   const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
   const matcher = getMatcher();
-  let match;
-
-  // find out the file extension
-  const matchExtension = extensions.find((extension) => {
-    match = matcher(realModuleName, undefined, undefined, ['.' + extension]);
-    return !!match;
-  });
+  const match = matcher(
+    realModuleName,
+    undefined,
+    undefined,
+    extensions.map((ext) => `.${ext}`)
+  );
 
   if (match) {
-    return {
-      type: 'sourceFile',
-      filePath:
-        !matchExtension || match.endsWith(`.${matchExtension}`)
-          ? match
-          : `${match}.${matchExtension}`,
-    };
+    return metroResolver.resolve(context, match, platform);
   } else {
     if (DEBUG) {
       console.log(
