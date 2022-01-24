@@ -12,6 +12,7 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  runCommand,
 } from '@nrwl/e2e/utils';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
@@ -207,6 +208,14 @@ describe('dep-graph', () => {
     runCLI(`generate @nrwl/angular:lib ${mylib}`);
     runCLI(`generate @nrwl/angular:lib ${mylib2}`);
 
+    runCommand(`git init`);
+    runCommand(`git config user.email "test@test.com"`);
+    runCommand(`git config user.name "Test"`);
+    runCommand(`git config commit.gpgsign false`);
+    runCommand(
+      `git add . && git commit -am "initial commit" && git checkout -b main`
+    );
+
     updateFile(
       `apps/${myapp}/src/main.ts`,
       `
@@ -385,6 +394,27 @@ describe('dep-graph', () => {
     expect(() => checkFilesExist('static/runtime.esm.js')).not.toThrow();
     expect(() => checkFilesExist('static/polyfills.esm.js')).not.toThrow();
     expect(() => checkFilesExist('static/main.esm.js')).not.toThrow();
+    expect(() => checkFilesExist('static/environment.js')).not.toThrow();
+
+    const environmentJs = readFile('static/environment.js');
+
+    expect(environmentJs).toContain('window.projectGraphResponse');
+    expect(environmentJs).toContain('"affected":[]');
+  });
+
+  it.only('affected:dep-graph should include affected projects in environment file', () => {
+    runCLI(`affected:dep-graph --file=project-graph.html`);
+
+    const environmentJs = readFile('static/environment.js');
+    const affectedProjects = environmentJs
+      .match(/"affected":\[(.*)\],/)[1]
+      ?.split(',');
+
+    expect(affectedProjects).toContain(`"${myapp}"`);
+    expect(affectedProjects).toContain(`"${myappE2e}"`);
+    expect(affectedProjects).toContain(`"${myapp2}"`);
+    expect(affectedProjects).toContain(`"${myapp2E2e}"`);
+    expect(affectedProjects).toContain(`"${mylib}"`);
   });
 });
 
