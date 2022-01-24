@@ -6,13 +6,17 @@ Storybook is a development environment for UI components. It allows you to brows
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
-## Add the Storybook plugin
+## Setting Up Storybook
+
+### Add the Storybook plugin
 
 ```bash
 yarn add --dev @nrwl/storybook
 ```
 
-## Generating Storybook Configuration
+## Using Storybook
+
+### Generating Storybook Configuration
 
 You can generate Storybook configuration for an individual project with this command:
 
@@ -20,7 +24,7 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/angular:storybook-configuration project-name
 ```
 
-## Running Storybook
+### Running Storybook
 
 Serve Storybook using this command:
 
@@ -28,7 +32,7 @@ Serve Storybook using this command:
 nx run project-name:storybook
 ```
 
-## Anatomy of the Storybook setup
+### Anatomy of the Storybook setup
 
 When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create
 
@@ -50,7 +54,7 @@ The **global** Storybook configuration allows to set addon-ons or custom webpack
 └── etc...
 ```
 
-The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
+The project-specific Storybook configuration is pretty much similar to what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 
 ```treeview
 <project root>/
@@ -102,7 +106,7 @@ To register an [addon](https://storybook.js.org/addons/) for a single storybook 
    export const decorators = [someDecorator];
    ```
 
-## Auto-generate Stories
+### Auto-generate Stories
 
 The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
@@ -118,7 +122,7 @@ You can re-run it at a later point using the following command:
 nx g @nrwl/angular:stories <project-name>
 ```
 
-## Cypress tests for Stories
+### Cypress tests for Stories
 
 Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
@@ -157,7 +161,6 @@ export default {
 } as Meta<ButtonComponent>;
 
 const Template: Story<ButtonComponent> = (args: ButtonComponent) => ({
-  component: ButtonComponent,
   props: args,
 });
 
@@ -185,11 +188,11 @@ describe('shared-ui', () => {
 });
 ```
 
-## More Information
+## More Documentation
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
-## Migration Scenarios
+### Migration Scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
