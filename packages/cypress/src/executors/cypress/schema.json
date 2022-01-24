@@ -74,7 +74,14 @@
       "x-deprecated": true
     },
     "ciBuildId": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "description": "A unique identifier for a run to enable grouping or parallelization."
     },
     "group": {
