@@ -402,7 +402,7 @@ describe('dep-graph', () => {
     expect(environmentJs).toContain('"affected":[]');
   });
 
-  it.only('affected:dep-graph should include affected projects in environment file', () => {
+  it('affected:dep-graph should include affected projects in environment file', () => {
     runCLI(`affected:dep-graph --file=project-graph.html`);
 
     const environmentJs = readFile('static/environment.js');
