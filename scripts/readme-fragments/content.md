@@ -47,7 +47,7 @@ Run:
 npx add-nx-to-monorepo@latest
 ```
 
-### Documentation & Resources
+## Documentation & Resources
 
 A few links to help you get started:
 

@@ -1,4 +1,4 @@
-### Documentation & Resources
+## Documentation & Resources
 
 A few links to help you get started:
 
