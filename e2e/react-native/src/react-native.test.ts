@@ -27,7 +27,7 @@ describe('react native', () => {
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
-      let updated = `import ${componentName} from '${proj}/${libName}';\n${content}`;
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport ${componentName} from '${proj}/${libName}';\n${content}`;
       return updated;
     });
 
