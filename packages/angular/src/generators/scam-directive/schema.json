@@ -62,6 +62,11 @@
           "format": "html-selector"
         }
       ]
+    },
+    "export": {
+      "type": "boolean",
+      "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
+      "default": false
     }
   },
   "required": ["name"]
