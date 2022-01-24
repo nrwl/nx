@@ -26,6 +26,7 @@ import { EmptyTerminalOutputLifeCycle } from './life-cycles/empty-terminal-outpu
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { createDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
+import { isCI } from '../utilities/is_ci';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -228,11 +229,11 @@ export function createTasksForProjectToRun(
 }
 
 function shouldUseDynamicLifeCycle(tasks: Task[], options: any) {
-  const isTTY = !!process.stdout.isTTY && process.env['CI'] !== 'true';
+  const isTTY = !!process.stdout.isTTY;
   const noForwarding = !tasks.find((t) =>
     shouldForwardOutput(t, null, options)
   );
-  return isTTY && noForwarding;
+  return isTTY && noForwarding && !isCI();
 }
 
 function addTasksForProjectTarget(
