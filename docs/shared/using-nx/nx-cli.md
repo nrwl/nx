@@ -115,3 +115,5 @@ There are some environment variables that you can set to log additional informat
 
 - Setting **NX_VERBOSE_LOGGING=true** will print debug information useful for troubleshooting.
 - Setting **NX_PERF_LOGGING=true** will print debug information useful for profiling executors and Nx itself.
+- Setting **NX_TASKS_RUNNER_DYNAMIC_OUTPUT=false** will use non-dynamic terminal output strategy (what you see in CI),
+  even when you terminal can support the dynamic version.
