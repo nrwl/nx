@@ -10,4 +10,4 @@ Nx is a next generation build system with first class monorepo support and power
 
 This package is a [React plugin for Nx](https://nx.dev/react/overview).
 
-{{content}
+{{content}}
