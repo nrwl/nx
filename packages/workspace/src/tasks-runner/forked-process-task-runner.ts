@@ -40,7 +40,7 @@ export class ForkedProcessTaskRunner {
           );
         } else {
           const args = getCommandArgsForTask(Object.values(taskGraph.tasks)[0]);
-          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.logCommand(args.join(' '));
           output.addNewline();
         }
 
@@ -98,7 +98,7 @@ export class ForkedProcessTaskRunner {
       try {
         const args = getCommandArgsForTask(task);
         if (forwardOutput) {
-          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.logCommand(args.join(' '));
           output.addNewline();
         }
         const p = fork(this.cliPath, args, {
@@ -163,7 +163,7 @@ export class ForkedProcessTaskRunner {
       try {
         const args = getCommandArgsForTask(task);
         if (forwardOutput) {
-          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.logCommand(args.join(' '));
           output.addNewline();
         }
         const p = fork(this.cliPath, args, {

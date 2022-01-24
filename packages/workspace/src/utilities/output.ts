@@ -207,6 +207,13 @@ class CLIOutput {
   }
 
   logCommand(message: string, taskStatus?: TaskStatus) {
+    // normalize the message
+    if (message.startsWith('nx run ')) {
+      message = message.substring('nx run '.length);
+    } else if (message.startsWith('run ')) {
+      message = message.substring('run '.length);
+    }
+
     this.addNewline();
     let commandOutput = `${chalk.dim('> nx run')} ${message}`;
     if (taskStatus === 'local-cache') {
