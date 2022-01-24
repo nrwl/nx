@@ -34,6 +34,7 @@ import {
 } from '@nrwl/workspace/src/utils/graph-utils';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
+import * as chalk from 'chalk';
 
 type Options = [
   {
@@ -145,7 +146,16 @@ export default createESLintRule<Options, MessageIds>({
         (global as any).projectGraph = mapProjectGraphFiles(
           readCachedProjectGraph()
         );
-      } catch {}
+      } catch {
+        const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;
+        const RULE_NAME_SUFFIX = `${chalk.reset.dim(
+          '@nrwl/nx/enforce-module-boundaries'
+        )}`;
+        process.stdout
+          .write(`${WARNING_PREFIX} No cached ProjectGraph is available. The rule will be skipped.
+        If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
+        ${RULE_NAME_SUFFIX}\n`);
+      }
     }
 
     if (!(global as any).projectGraph) {

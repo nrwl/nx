@@ -28,7 +28,6 @@ import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
-import { Tree } from '../../packages/tao/src/shared/tree';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
