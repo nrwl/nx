@@ -5,4 +5,5 @@ export interface Schema {
   skipTests?: boolean;
   inlineScam?: boolean;
   flat?: boolean;
+  export?: boolean;
 }
