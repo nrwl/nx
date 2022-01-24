@@ -81,6 +81,9 @@ const fileSys = {
   './libs/domain2/src/index.ts': '',
   './libs/buildableLib/src/main.ts': '',
   './libs/nonBuildableLib/src/main.ts': '',
+  './libs/public/src/index.ts': '',
+  './libs/dependsOnPrivate/src/index.ts': '',
+  './libs/private/src/index.ts': '',
   './tsconfig.base.json': JSON.stringify(tsconfig),
   './package.json': JSON.stringify(packageJson),
 };
@@ -263,6 +266,19 @@ describe('Enforce Module Boundaries (eslint)', () => {
             files: [createFile(`libs/public/src/index.ts`)],
           },
         },
+        dependsOnPrivateName: {
+          name: 'dependsOnPrivateName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/dependsOnPrivate',
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            files: [
+              createFile(`libs/dependsOnPrivate/src/index.ts`, ['privateName']),
+            ],
+          },
+        },
         privateName: {
           name: 'privateName',
           type: ProjectType.lib,
@@ -271,7 +287,11 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['private'],
             implicitDependencies: [],
             architect: {},
-            files: [createFile(`libs/private/src/index.ts`)],
+            files: [
+              createFile(
+                `libs/private/src/index.tslibs/private/src/index.tslibs/private/src/index.ts`
+              ),
+            ],
           },
         },
         untaggedName: {
@@ -320,7 +340,15 @@ describe('Enforce Module Boundaries (eslint)', () => {
           },
         },
       },
-      dependencies: {},
+      dependencies: {
+        dependsOnPrivateName: [
+          {
+            source: 'dependsOnPrivateName',
+            target: 'privateName',
+            type: DependencyType.static,
+          },
+        ],
+      },
     };
 
     const depConstraints = {
@@ -499,52 +527,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '@mycompany/dependsOnPrivate';
           import('@mycompany/dependsOnPrivate');
         `,
-        {
-          nodes: {
-            publicName: {
-              name: 'publicName',
-              type: ProjectType.lib,
-              data: {
-                root: 'libs/public',
-                tags: ['public'],
-                implicitDependencies: [],
-                architect: {},
-                files: [createFile(`libs/public/src/index.ts`)],
-              },
-            },
-            privateName: {
-              name: 'privateName',
-              type: ProjectType.lib,
-              data: {
-                root: 'libs/private',
-                tags: ['private'],
-                implicitDependencies: [],
-                architect: {},
-                files: [createFile(`libs/private/src/index.ts`)],
-              },
-            },
-            dependsOnPrivateName: {
-              name: 'dependsOnPrivateName',
-              type: ProjectType.lib,
-              data: {
-                root: 'libs/dependsOnPrivate',
-                tags: [],
-                implicitDependencies: [],
-                architect: {},
-                files: [createFile(`libs/dependsOnPrivate/src/index.ts`)],
-              },
-            },
-          },
-          dependencies: {
-            dependsOnPrivateName: [
-              {
-                source: 'dependsOnPrivateName',
-                target: 'privateName',
-                type: DependencyType.static,
-              },
-            ],
-          },
-        }
+        graph
       );
 
       expect(failures.length).toEqual(2);
