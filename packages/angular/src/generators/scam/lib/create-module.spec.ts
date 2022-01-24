@@ -1,4 +1,4 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
+import { addProjectConfiguration, logger } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { createScam } from './create-module';
@@ -60,6 +60,109 @@ describe('Create module in the tree', () => {
         exports: [ExampleComponent],
       })
       export class ExampleComponentModule {}"
+    `);
+  });
+
+  it('should skip export flag if project is application', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'example',
+      project: 'app1',
+      skipImport: true,
+      export: false,
+    });
+
+    const loggerWarnSpy = jest.spyOn(logger, 'warn');
+
+    // ACT
+    createScam(tree, {
+      name: 'example',
+      project: 'app1',
+      inlineScam: true,
+      export: true,
+    });
+
+    // ASSERT
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      '--export=true was ignored as the project the SCAM is being generated in is not a library.'
+    );
+  });
+
+  it('should create the scam inline and export the path to the component file', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'example',
+      project: 'lib1',
+      skipImport: true,
+      export: false,
+    });
+
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    createScam(tree, {
+      name: 'example',
+      project: 'lib1',
+      inlineScam: true,
+      export: true,
+    });
+
+    // ASSERT
+    const componentSource = tree.read(
+      'libs/lib1/src/lib/example/example.component.ts',
+      'utf-8'
+    );
+    expect(componentSource).toMatchInlineSnapshot(`
+      "import { Component, OnInit, NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Component({
+        selector: 'example',
+        templateUrl: './example.component.html',
+        styleUrls: ['./example.component.css']
+      })
+      export class ExampleComponent implements OnInit {
+
+        constructor() { }
+
+        ngOnInit(): void {
+        }
+
+      }
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleComponent],
+        exports: [ExampleComponent],
+      })
+      export class ExampleComponentModule {}"
+    `);
+    const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
+    expect(entryPointSource).toMatchInlineSnapshot(`
+      "
+        export * from \\"./lib/example/example.component\\";"
     `);
   });
 

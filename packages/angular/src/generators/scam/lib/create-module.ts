@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { logger, readJson, Tree } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
 import {
@@ -83,19 +83,75 @@ export function createScam(tree: Tree, schema: Schema) {
     )}`;
 
     tree.write(componentFilePath, updatedComponentSource);
+    exportScam(tree, schema, componentFilePath);
     return;
   }
 
+  const scamFilePath = joinPathFragments(
+    componentDirectory,
+    `${componentNames.fileName}.module.ts`
+  );
+
   tree.write(
-    joinPathFragments(
-      componentDirectory,
-      `${componentNames.fileName}.module.ts`
-    ),
+    scamFilePath,
     createSeparateAngularComponentModuleFile(
       `${componentNames.className}${typeNames.className}`,
       componentFileName
     )
   );
+
+  exportScam(tree, schema, scamFilePath);
+}
+
+function exportScam(tree: Tree, schema: Schema, scamFilePath: string) {
+  if (!schema.export) {
+    return;
+  }
+
+  const project =
+    schema.project ?? readWorkspaceConfiguration(tree).defaultProject;
+
+  const { root, sourceRoot, projectType } = readProjectConfiguration(
+    tree,
+    project
+  );
+
+  if (projectType === 'application') {
+    logger.warn(
+      '--export=true was ignored as the project the SCAM is being generated in is not a library.'
+    );
+
+    return;
+  }
+
+  const ngPackageJsonPath = joinPathFragments(root, 'ng-package.json');
+  const ngPackageEntryPoint = tree.exists(ngPackageJsonPath)
+    ? readJson(tree, ngPackageJsonPath).lib?.entryFile
+    : undefined;
+
+  const projectEntryPoint = ngPackageEntryPoint
+    ? joinPathFragments(root, ngPackageEntryPoint)
+    : joinPathFragments(sourceRoot, `index.ts`);
+
+  if (!tree.exists(projectEntryPoint)) {
+    // Let's not error, simply warn the user
+    // It's not too much effort to manually do this
+    // It would be more frustrating to have to find the correct path and re-run the command
+    logger.warn(
+      `Could not export SCAM. Unable to determine project's entry point. Path ${projectEntryPoint} does not exist. SCAM has still been created.`
+    );
+
+    return;
+  }
+
+  const relativePathFromEntryPoint = `.${scamFilePath
+    .split(sourceRoot)[1]
+    .replace('.ts', '')}`;
+
+  const updateEntryPointContent = `${tree.read(projectEntryPoint)}
+  export * from "${relativePathFromEntryPoint}";`;
+
+  tree.write(projectEntryPoint, updateEntryPointContent);
 }
 
 function createAngularComponentModule(name: string) {

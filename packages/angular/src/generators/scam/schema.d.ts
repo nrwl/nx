@@ -15,4 +15,5 @@ export interface Schema {
   prefix?: string;
   selector?: string;
   skipSelector?: boolean;
+  export?: boolean;
 }
