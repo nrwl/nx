@@ -1,12 +1,9 @@
-import {
-  buildWorkspaceConfigurationFromGlobs,
-  inlineProjectConfigurations,
-  toProjectName,
-} from './workspace';
-import { readJsonFile } from '../utils/fileutils';
+import { toProjectName, Workspaces } from './workspace';
 import { NxJsonConfiguration } from './nx';
+import { vol } from 'memfs';
 
-jest.mock('../utils/fileutils');
+jest.mock('fs', () => require('memfs').fs);
+
 jest.mock('fast-glob', () => ({
   sync: () => [
     'libs/lib1/package.json',
@@ -28,72 +25,61 @@ const packageLibConfig = (root) => ({
   sourceRoot: root,
 });
 
-describe('workspace', () => {
-  it('should be able to inline project configurations', () => {
-    const standaloneConfig = libConfig('lib1');
-
-    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
-      if (path.endsWith('libs/lib1/project.json')) {
-        return standaloneConfig;
-      }
-      throw `${path} not in mock!`;
-    });
-
-    const inlineConfig = {
-      version: 1,
-      projects: {
-        lib1: 'libs/lib1',
-        lib2: libConfig('lib2'),
-      },
-    };
-
-    const resolved = inlineProjectConfigurations(inlineConfig);
-    expect(resolved).toEqual({
-      ...inlineConfig,
-      projects: {
-        ...inlineConfig.projects,
-        lib1: { ...standaloneConfig },
-      },
-    });
+describe('Workspaces', () => {
+  afterEach(() => {
+    vol.reset();
   });
 
-  it('should build project configurations from glob', () => {
-    const lib1Config = libConfig('lib1');
-    const lib2Config = packageLibConfig('libs/lib2');
-    const domainPackageConfig = packageLibConfig('libs/domain/lib3');
-    const domainLibConfig = libConfig('domain/lib4');
+  describe('readWorkspaceConfiguration', () => {
+    it('should be able to inline project configurations', () => {
+      const standaloneConfig = libConfig('lib1');
 
-    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
-      if (path.endsWith('libs/lib1/project.json')) {
-        return lib1Config;
-      }
-      if (path.endsWith('libs/lib1/package.json')) {
-        return { name: 'some-other-name' };
-      }
-      if (path.endsWith('libs/lib2/package.json')) {
-        return { name: 'lib2' };
-      }
-      if (path.endsWith('libs/domain/lib3/package.json')) {
-        return { name: 'domain-lib3' };
-      }
-      if (path.endsWith('libs/domain/lib4/project.json')) {
-        return domainLibConfig;
-      }
-      if (path.endsWith('libs/domain/lib4/package.json')) {
-        return {};
-      }
-      throw `${path} not in mock!`;
+      const config = {
+        version: 2,
+        projects: {
+          lib1: 'libs/lib1',
+          lib2: libConfig('lib2'),
+        },
+      };
+      vol.fromJSON(
+        {
+          'libs/lib1/project.json': JSON.stringify(standaloneConfig),
+          'workspace.json': JSON.stringify(config),
+        },
+        '/root'
+      );
+
+      const workspaces = new Workspaces('/root');
+      const resolved = workspaces.readWorkspaceConfiguration();
+      expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
-    const resolved = buildWorkspaceConfigurationFromGlobs({ npmScope: '' });
-    expect(resolved).toEqual({
-      version: 2,
-      projects: {
-        lib1: lib1Config,
-        lib2: lib2Config,
-        'domain-lib3': domainPackageConfig,
-        'domain-lib4': domainLibConfig,
-      },
+    it('should build project configurations from glob', () => {
+      const lib1Config = libConfig('lib1');
+      const lib2Config = packageLibConfig('libs/lib2');
+      const domainPackageConfig = packageLibConfig('libs/domain/lib3');
+      const domainLibConfig = libConfig('domain/lib4');
+
+      vol.fromJSON(
+        {
+          'libs/lib1/project.json': JSON.stringify(lib1Config),
+          'libs/lib1/package.json': JSON.stringify({ name: 'some-other-name' }),
+          'libs/lib2/package.json': JSON.stringify({ name: 'lib2' }),
+          'libs/domain/lib3/package.json': JSON.stringify({
+            name: 'domain-lib3',
+          }),
+          'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
+          'libs/domain/lib4/package.json': JSON.stringify({}),
+        },
+        '/root'
+      );
+
+      const workspaces = new Workspaces('/root');
+      const { projects } = workspaces.readWorkspaceConfiguration();
+      expect(projects.lib1).toEqual(lib1Config);
+      expect(projects.lib2).toEqual(lib2Config);
+      expect(projects['domain-lib3']).toEqual(domainPackageConfig);
+      expect(projects['domain-lib4']).toEqual(domainLibConfig);
     });
   });
 

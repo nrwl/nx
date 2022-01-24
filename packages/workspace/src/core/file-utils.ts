@@ -159,29 +159,26 @@ export function readPackageJson(): any {
 export function readNxJson(
   path: string = `${appRootPath}/nx.json`
 ): NxJsonConfiguration {
-  const config = readJsonFile<NxJsonConfiguration>(path);
+  let config = readJsonFile<NxJsonConfiguration>(path);
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
 
-  const nxJsonExtends = readNxJsonExtends(config as any);
-  if (nxJsonExtends) {
-    return { ...nxJsonExtends, ...config };
-  } else {
-    return config;
+  if (config.extends) {
+    config = {
+      ...resolveNxJsonExtends(config.extends),
+      ...config,
+    };
   }
+
+  return config;
 }
 
-function readNxJsonExtends(nxJson: { extends?: string }) {
-  if (nxJson.extends) {
-    const extendsPath = nxJson.extends;
-    try {
-      return readJsonFile(require.resolve(extendsPath));
-    } catch (e) {
-      throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
-    }
-  } else {
-    return null;
+function resolveNxJsonExtends(extendedNxJsonPath: string) {
+  try {
+    return readJsonFile(require.resolve(extendedNxJsonPath));
+  } catch (e) {
+    throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
   }
 }
 

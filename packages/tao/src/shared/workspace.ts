@@ -7,7 +7,7 @@ import { TaskGraph } from './tasks';
 import { logger } from './logger';
 import { sync as globSync } from 'fast-glob';
 import ignore, { Ignore } from 'ignore';
-import { basename, dirname, join, toNamespacedPath } from 'path';
+import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { loadNxPlugins } from './nx-plugin';
 
@@ -290,9 +290,7 @@ export class Workspaces {
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
     NxJsonConfiguration {
     const nxJsonPath = path.join(this.root, 'nx.json');
-    const nxJson = existsSync(nxJsonPath)
-      ? readJsonFile<NxJsonConfiguration>(nxJsonPath)
-      : ({} as NxJsonConfiguration);
+    const nxJson = readNxJson(nxJsonPath);
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
       ? path.join(this.root, workspaceFile)
@@ -614,10 +612,7 @@ export function resolveNewFormatWithInlineProjects(
   return toNewFormat(inlineProjectConfigurations(w, root));
 }
 
-export function inlineProjectConfigurations(
-  w: any,
-  root: string = appRootPath
-) {
+function inlineProjectConfigurations(w: any, root: string = appRootPath) {
   Object.entries(w.projects || {}).forEach(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {
@@ -628,6 +623,26 @@ export function inlineProjectConfigurations(
     }
   );
   return w;
+}
+
+/**
+ * Reads an nx.json file from a given path or extends a local nx.json config.
+ */
+function readNxJson(nxJson: string): NxJsonConfiguration {
+  let nxJsonConfig: NxJsonConfiguration;
+  if (existsSync(nxJson)) {
+    nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
+  } else {
+    nxJsonConfig = {} as NxJsonConfiguration;
+  }
+  if (nxJsonConfig.extends) {
+    const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
+      paths: [dirname(nxJson)],
+    });
+    const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+    nxJsonConfig = { ...baseNxJson, ...nxJsonConfig };
+  }
+  return nxJsonConfig;
 }
 
 /**
