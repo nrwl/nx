@@ -197,7 +197,7 @@ function buildExplicitDependencies(
   // files we need to process is >= 100 and there are more than 2 CPUs
   // to be able to use at least 2 workers (1 worker per CPU and
   // 1 CPU for the main thread)
-  if (totalNumOfFilesToProcess < 100 || os.cpus().length < 3) {
+  if (totalNumOfFilesToProcess < 100 || getNumberOfWorkers() <= 2) {
     return buildExplicitDependenciesWithoutWorkers(
       jsPluginConfig,
       ctx,
@@ -296,7 +296,7 @@ function buildExplicitDependenciesUsingWorkers(
   totalNumOfFilesToProcess: number,
   builder: ProjectGraphBuilder
 ) {
-  const numberOfWorkers = os.cpus().length - 1;
+  const numberOfWorkers = getNumberOfWorkers();
   const bins = splitFilesIntoBins(
     ctx,
     totalNumOfFilesToProcess,
@@ -347,6 +347,10 @@ function buildExplicitDependenciesUsingWorkers(
       w.postMessage({ filesToProcess: bins.shift() });
     }
   });
+}
+
+function getNumberOfWorkers(): number {
+  return +process.env.NX_PROJECT_GRAPH_MAX_WORKERS ?? os.cpus().length - 1;
 }
 
 function createContext(
