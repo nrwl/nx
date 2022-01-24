@@ -70,15 +70,17 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     }
   };
 
+  let fileWritten = false;
   function writeFile(withErrors: boolean) {
-    writeFileSync(
-      process.env.NX_TERMINAL_OUTPUT_PATH,
-      withErrors ? outWithErr.join('') : out.join('')
-    );
-    fileWritten = true;
+    if (!fileWritten) {
+      writeFileSync(
+        process.env.NX_TERMINAL_OUTPUT_PATH,
+        withErrors ? outWithErr.join('') : out.join('')
+      );
+      fileWritten = true;
+    }
   }
 
-  let fileWritten = false;
   process.on('exit', (code) => {
     if (code === 0) {
       writeFile(captureStderr);
