@@ -11,9 +11,9 @@ NPM_DEST=build/npm
 ORIG_DIRECTORY=`pwd`
 NPM_REGISTRY=`npm config get registry` # for local releases
 
+echo
+echo "Publishing to npm registry $NPM_REGISTRY"
 if [ "$LOCALBUILD" = "--local" ]; then
-  echo
-  echo "Publishing to npm registry $NPM_REGISTRY"
 
   if [[ ! $NPM_REGISTRY == http://localhost* ]]; then
     echo "------------------"
@@ -47,7 +47,8 @@ do
   if [ "$LOCALBUILD" = "--local" ]; then
     npm publish --tag $TAG --access public --registry=$NPM_REGISTRY
   else
-    npm publish --tag $TAG --access public
+    npm publish --tag previous --access public
+    npm dist-tag add $PACKAGE_NAME@12.10.1 previous
   fi
 
   cd $ORIG_DIRECTORY
