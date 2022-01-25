@@ -4,43 +4,24 @@ import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
 
-/**
- * Optionally, if ts-node and tsconfig-paths are available in the current workspace, apply the require
- * register hooks so that .ts files can be used for writing workspace lint rules.
- *
- * If ts-node and tsconfig-paths are not available, the user can still provide an index.js file in
- * tools/eslint-rules and write their rules in JavaScript and the fundamentals will still work (but
- * workspace path mapping will not, for example).
- */
-function registerTSWorkspaceLint() {
-  try {
-    require('ts-node').register({
-      dir: WORKSPACE_PLUGIN_DIR,
-    });
-
-    const tsconfigPaths = require('tsconfig-paths');
-
-    // Load the tsconfig from tools/eslint-rules/tsconfig.json
-    const tsConfigResult = tsconfigPaths.loadConfig(WORKSPACE_PLUGIN_DIR);
-
-    /**
-     * Register the custom workspace path mappings with node so that workspace libraries
-     * can be imported and used within custom workspace lint rules.
-     */
-    tsconfigPaths.register({
-      baseUrl: tsConfigResult.absoluteBaseUrl,
-      paths: tsConfigResult.paths,
-    });
-  } catch (err) {}
-}
-
 export const workspaceRules = ((): ESLintRules => {
   // If `tools/eslint-rules` folder doesn't exist, there is no point trying to register and load it
   if (!existsSync(WORKSPACE_PLUGIN_DIR)) {
     return {};
   }
-  // Register `tools/eslint-rules` for TS transpilation
-  registerTSWorkspaceLint();
+  /**
+   * Optionally, if swc-node/register is available in the current workspace, apply the require
+   * register hooks so that .ts files can be used for writing workspace lint rules.
+   *
+   * If swc-node/register is not available, the user can still provide an index.js file in
+   * tools/eslint-rules and write their rules in JavaScript and the fundamentals will still work (but
+   * workspace path mapping will not, for example).
+   */
+  try {
+    require('@swc-node/register')({
+      dir: WORKSPACE_PLUGIN_DIR,
+    });
+  } catch (err) {}
   try {
     /**
      * Currently we only support applying the rules from the user's workspace plugin object
