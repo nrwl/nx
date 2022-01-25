@@ -49,7 +49,7 @@ export function checkDependencies(
     }
     return {
       tmpTsConfig: createTmpTsConfig(
-        join(context.root, tsConfigPath),
+        tsConfigPath,
         context.root,
         projectRoot,
         dependencies
