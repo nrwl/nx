@@ -142,11 +142,13 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
     const socket = connect(FULL_OS_SOCKET_PATH);
 
     socket.on('error', (err) => {
-      let error: any;
+      if (!err.message) {
+        return reject(err);
+      }
       if (err.message.startsWith('LOCK-FILES-CHANGED')) {
         return getProjectGraphFromServer().then(resolve, reject);
       }
-
+      let error: any;
       if (err.message.startsWith('connect ENOENT')) {
         error = daemonProcessException('The Daemon Server is not running');
       } else if (err.message.startsWith('connect ECONNREFUSED')) {
