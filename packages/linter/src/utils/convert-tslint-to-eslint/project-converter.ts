@@ -101,18 +101,20 @@ export class ProjectConverter {
      * Given the user is converting a project from TSLint to ESLint, we expect them
      * to have both a root and a project-specific tslint.json
      */
-    if (!host.exists(this.rootTSLintJsonPath)) {
-      throw new Error(
-        'We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?'
-      );
+    if (!ignoreExistingTslintConfig) {
+      if (!host.exists(this.rootTSLintJsonPath)) {
+        throw new Error(
+          'We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?'
+        );
+      }
+      if (!host.exists(this.projectTSLintJsonPath)) {
+        throw new Error(
+          `We could not find a tslint.json for the selected project "${this.projectTSLintJsonPath}", maybe you have already migrated to ESLint?`
+        );
+      }
+      this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
+      this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
     }
-    if (!host.exists(this.projectTSLintJsonPath)) {
-      throw new Error(
-        `We could not find a tslint.json for the selected project "${this.projectTSLintJsonPath}", maybe you have already migrated to ESLint?`
-      );
-    }
-    this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
-    this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
 
     /**
      * We are not able to support --dry-run in this generator, because we need to dynamically install
