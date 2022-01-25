@@ -110,7 +110,7 @@ function readTsConfigWithRemappedPaths(
     dependencies
   );
 
-  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+  if (process.env.NX_VERBOSE_LOGGING_PATH_MAPPINGS === 'true') {
     output.log({
       title: 'TypeScript path mappings have been rewritten.',
     });
