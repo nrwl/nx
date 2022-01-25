@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs';
+import { appendFileSync, closeSync, openSync, writeFileSync } from 'fs';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -40,16 +40,18 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
 
-  let out = [];
-  let outWithErr = [];
+  // The terminal output file gets out and err
+  const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
+  const stdoutAndStderrLogFileHandle = openSync(outputPath, 'w');
 
+  const onlyStdout = new Buffer('');
   process.stdout._write = (
     chunk: any,
     encoding: string,
     callback: Function
   ) => {
-    out.push(chunk.toString());
-    outWithErr.push(chunk.toString());
+    onlyStdout.write(chunk);
+    appendFileSync(stdoutAndStderrLogFileHandle, chunk);
     if (forwardOutput) {
       stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
     } else {
@@ -62,7 +64,7 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     encoding: string,
     callback: Function
   ) => {
-    outWithErr.push(chunk.toString());
+    appendFileSync(stdoutAndStderrLogFileHandle, chunk);
     if (forwardOutput) {
       stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
     } else {
@@ -70,26 +72,14 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     }
   };
 
-  let fileWritten = false;
-  function writeFile(withErrors: boolean) {
-    if (!fileWritten) {
-      writeFileSync(
-        process.env.NX_TERMINAL_OUTPUT_PATH,
-        withErrors ? outWithErr.join('') : out.join('')
-      );
-      fileWritten = true;
-    }
-  }
-
   process.on('exit', (code) => {
-    if (code === 0) {
-      writeFile(captureStderr);
-    } else {
-      writeFile(true);
+    // close the outAndErrorHandle
+    closeSync(stdoutAndStderrLogFileHandle);
+
+    // when the process exits successfully, and we are not asked to capture stderr
+    // override the file with only stdout
+    if (code === 0 && !captureStderr) {
+      writeFileSync(outputPath, onlyStdout);
     }
   });
-
-  process.on('SIGINT', () => writeFile(true));
-  process.on('SIGTERM', () => writeFile(true));
-  process.on('SIGHUP', () => writeFile(true));
 }
