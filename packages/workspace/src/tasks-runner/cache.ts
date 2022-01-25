@@ -16,6 +16,7 @@ import { dirname, join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn, exec } from 'child_process';
 import { cacheDir } from '../utilities/cache-directory';
+import { platform } from 'os';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -30,7 +31,7 @@ export class Cache {
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
   latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
-  useFsExtraToCopyAndRemove = false;
+  useFsExtraToCopyAndRemove = platform() === 'win32';
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -102,9 +103,10 @@ export class Cache {
           const src = join(this.root, f);
           if (await pathExists(src)) {
             const cached = join(td, 'outputs', f);
-            const directory = resolve(cached, '..');
+            const isFile = (await lstat(src)).isFile();
+            const directory = isFile ? dirname(cached) : cached;
             await mkdir(directory, { recursive: true });
-            await this.copy(src, directory);
+            await this.copy(src, cached);
           }
         })
       );
@@ -139,11 +141,13 @@ export class Cache {
         outputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
           if (await pathExists(cached)) {
+            const isFile = (await lstat(cached)).isFile();
             const src = join(this.root, f);
             await this.remove(src);
-            const directory = resolve(src, '..');
+            // Ensure parent directory is created if src is a file
+            const directory = isFile ? resolve(src, '..') : src;
             await mkdir(directory, { recursive: true });
-            await this.copy(cached, directory);
+            await this.copy(cached, src);
           }
         })
       );
@@ -185,8 +189,8 @@ export class Cache {
       return copy(src, directory);
     }
 
-    return new Promise<void>((res, rej) => {
-      exec(`cp -a "${src}" "${directory}"`, (error) => {
+    return new Promise((res, rej) => {
+      exec(`cp -a "${src}" "${dirname(directory)}"`, (error) => {
         if (!error) {
           res();
         } else {
