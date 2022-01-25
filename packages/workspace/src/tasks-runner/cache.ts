@@ -104,12 +104,15 @@ export class Cache {
 
       await mkdir(join(td, 'outputs'));
       await Promise.all(
-        outputs.map(async (f) => {
-          const src = join(this.root, f);
+        outputs.map(async (fileOrDirectory) => {
+          const src = join(this.root, fileOrDirectory);
           if (await existsAsync(src)) {
-            const cached = join(td, 'outputs', f);
-            const directory = resolve(cached, '..');
-            await ensureDir(directory);
+            const cached = join(td, 'outputs', fileOrDirectory);
+            const isFile = (await lstatAsync(src)).isFile();
+            // If source is a file, then we need to resolve the directory
+            const directory = isFile ? resolve(cached, '..') : cached;
+            await this.remove(directory); // Cleanup output directory
+            await ensureDir(directory); // Ensure output directory exists
             await this.copy(src, directory);
           }
         })
@@ -142,13 +145,15 @@ export class Cache {
     return this.tryAndRetry(async () => {
       await this.removeRecordedOutputsHashes(outputs);
       await Promise.all(
-        outputs.map(async (f) => {
-          const cached = join(cachedResult.outputsPath, f);
+        outputs.map(async (fileOrDirectory) => {
+          const cached = join(cachedResult.outputsPath, fileOrDirectory);
           if (await existsAsync(cached)) {
-            const src = join(this.root, f);
-            await this.remove(src);
-            const directory = resolve(src, '..');
-            await ensureDir(directory);
+            const isFile = (await lstatAsync(cached)).isFile();
+            const src = join(this.root, fileOrDirectory);
+            // If cached is a file, then we need to resolve the directory
+            const directory = isFile ? resolve(src, '..') : src;
+            await this.remove(directory); // Cleanup output directory
+            await ensureDir(directory); // Ensure output directory exists
             await this.copy(cached, directory);
           }
         })
