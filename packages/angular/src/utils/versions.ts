@@ -1,6 +1,6 @@
 export const nxVersion = '*';
-export const angularVersion = '~13.2.0-rc.0';
-export const angularDevkitVersion = '~13.2.0-rc.0';
+export const angularVersion = '~13.2.0-rc.1';
+export const angularDevkitVersion = '~13.2.0-rc.1';
 export const angularJsVersion = '1.7.9';
 export const ngrxVersion = '~13.0.0';
 export const rxjsVersion = '~7.4.0';
