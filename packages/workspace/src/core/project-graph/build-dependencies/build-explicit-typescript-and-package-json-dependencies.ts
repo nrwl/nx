@@ -1,9 +1,4 @@
-import {
-  ProjectFileMap,
-  ProjectGraph,
-  ProjectGraphBuilderExplicitDependency,
-  Workspace,
-} from '@nrwl/devkit';
+import { ProjectFileMap, ProjectGraph, Workspace } from '@nrwl/devkit';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
@@ -15,7 +10,7 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
   workspace: Workspace,
   projectGraph: ProjectGraph,
   filesToProcess: ProjectFileMap
-): ProjectGraphBuilderExplicitDependency[] {
+) {
   let res = [];
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||

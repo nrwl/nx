@@ -11,19 +11,7 @@ export interface FileData {
   hash: string;
   /** @deprecated this field will be removed in v13. Use {@link path.extname} to parse extension */
   ext?: string;
-  deps?: FileDependency[];
-}
-
-export interface FileDependency {
-  projectName: string;
-  dependencyType: DependencyType;
-}
-
-export interface ProjectGraphBuilderExplicitDependency {
-  sourceProjectName: string;
-  targetProjectName: string;
-  sourceProjectFile: string;
-  dependencyType: DependencyType;
+  deps?: string[];
 }
 
 /**
@@ -61,10 +49,6 @@ export enum DependencyType {
    * Implicit dependencies are inferred
    */
   implicit = 'implicit',
-  /**
-   * Type-only dependencies are those of the form `import type ...`
-   */
-  typeOnly = 'typeOnly',
 }
 
 /**
@@ -124,7 +108,7 @@ export interface ProjectGraphExternalNode {
  * A dependency between two projects
  */
 export interface ProjectGraphDependency {
-  type: DependencyType;
+  type: DependencyType | string;
   /**
    * The project being imported by the other
    */

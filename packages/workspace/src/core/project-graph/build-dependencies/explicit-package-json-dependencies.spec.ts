@@ -2,7 +2,6 @@ import { buildExplicitPackageJsonDependencies } from './explicit-package-json-de
 import { vol } from 'memfs';
 import { ProjectGraphNode } from '../project-graph-models';
 import {
-  DependencyType,
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
@@ -126,19 +125,16 @@ describe('explicit package json dependencies', () => {
         sourceProjectName: 'proj',
         targetProjectName: 'proj2',
         sourceProjectFile: 'libs/proj/package.json',
-        dependencyType: DependencyType.static,
       },
       {
         sourceProjectFile: 'libs/proj/package.json',
         sourceProjectName: 'proj',
         targetProjectName: 'npm:external',
-        dependencyType: DependencyType.static,
       },
       {
         sourceProjectName: 'proj',
         targetProjectName: 'proj3',
         sourceProjectFile: 'libs/proj/package.json',
-        dependencyType: DependencyType.static,
       },
     ]);
   });

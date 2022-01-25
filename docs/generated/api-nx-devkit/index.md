@@ -36,7 +36,6 @@ It only uses language primitives and immutable objects
 - [FileData](../../generated/nx-devkit/index#filedata)
 - [ProjectFileMap](../../generated/nx-devkit/index#projectfilemap)
 - [ProjectGraph](../../generated/nx-devkit/index#projectgraph)
-- [ProjectGraphBuilderExplicitDependency](../../generated/nx-devkit/index#projectgraphbuilderexplicitdependency)
 - [ProjectGraphDependency](../../generated/nx-devkit/index#projectgraphdependency)
 - [ProjectGraphExternalNode](../../generated/nx-devkit/index#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../generated/nx-devkit/index#projectgraphprocessorcontext)
@@ -208,12 +207,6 @@ A plugin for Nx
 | Name | Type  |
 | :--- | :---- |
 | `T`  | `any` |
-
----
-
-### ProjectGraphBuilderExplicitDependency
-
-• **ProjectGraphBuilderExplicitDependency**: `Object`
 
 ---
 

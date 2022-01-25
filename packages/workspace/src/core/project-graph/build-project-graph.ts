@@ -8,7 +8,6 @@ import {
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphBuilder,
-  ProjectGraphBuilderExplicitDependency,
   ProjectGraphProcessorContext,
   readJsonFile,
   WorkspaceJsonConfiguration,
@@ -281,8 +280,7 @@ function buildExplicitDependenciesWithoutWorkers(
     builder.addExplicitDependency(
       r.sourceProjectName,
       r.sourceProjectFile,
-      r.targetProjectName,
-      r.dependencyType
+      r.targetProjectName
     );
   });
 }
@@ -308,16 +306,13 @@ function buildExplicitDependenciesUsingWorkers(
   return new Promise((res, reject) => {
     for (let w of workers) {
       w.on('message', (explicitDependencies) => {
-        explicitDependencies.forEach(
-          (r: ProjectGraphBuilderExplicitDependency) => {
-            builder.addExplicitDependency(
-              r.sourceProjectName,
-              r.sourceProjectFile,
-              r.targetProjectName,
-              r.dependencyType
-            );
-          }
-        );
+        explicitDependencies.forEach((r) => {
+          builder.addExplicitDependency(
+            r.sourceProjectName,
+            r.sourceProjectFile,
+            r.targetProjectName
+          );
+        });
         if (bins.length > 0) {
           w.postMessage({ filesToProcess: bins.shift() });
         }

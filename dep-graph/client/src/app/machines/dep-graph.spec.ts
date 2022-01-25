@@ -1,9 +1,5 @@
 // nx-ignore-next-line
-import {
-  DependencyType,
-  ProjectGraphDependency,
-  ProjectGraphNode,
-} from '@nrwl/devkit';
+import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
 import { depGraphMachine } from './dep-graph.machine';
 import { interpret } from 'xstate';
 
@@ -55,38 +51,38 @@ export const mockProjects: ProjectGraphNode[] = [
 export const mockDependencies: Record<string, ProjectGraphDependency[]> = {
   app1: [
     {
-      type: DependencyType.static,
+      type: 'static',
       source: 'app1',
       target: 'auth-lib',
     },
     {
-      type: DependencyType.static,
+      type: 'static',
       source: 'app1',
       target: 'feature-lib1',
     },
   ],
   app2: [
     {
-      type: DependencyType.static,
+      type: 'static',
       source: 'app2',
       target: 'auth-lib',
     },
     {
-      type: DependencyType.static,
+      type: 'static',
       source: 'app2',
       target: 'feature-lib2',
     },
   ],
   'feature-lib1': [
     {
-      type: DependencyType.static,
+      type: 'static',
       source: 'feature-lib1',
       target: 'ui-lib',
     },
   ],
   'feature-lib2': [
     {
-      type: DependencyType.static,
+      type: 'static',
       source: 'feature-lib2',
       target: 'ui-lib',
     },

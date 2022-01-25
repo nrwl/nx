@@ -1170,16 +1170,7 @@ Circular file chain:
 });
 
 function createFile(f: string, deps?: string[]): FileData {
-  return {
-    file: f,
-    hash: '',
-    ...(deps && {
-      deps: deps.map((dep) => ({
-        projectName: dep,
-        dependencyType: DependencyType.static,
-      })),
-    }),
-  };
+  return { file: f, hash: '', ...(deps && { deps }) };
 }
 
 function runRule(

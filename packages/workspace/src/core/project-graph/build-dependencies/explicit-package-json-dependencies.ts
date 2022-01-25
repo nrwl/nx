@@ -1,11 +1,9 @@
 import { ProjectGraph, ProjectGraphNodeRecords } from '../project-graph-models';
 import { defaultFileRead } from '../../file-utils';
 import {
-  DependencyType,
   joinPathFragments,
   parseJson,
   ProjectFileMap,
-  ProjectGraphBuilderExplicitDependency,
   Workspace,
 } from '@nrwl/devkit';
 import { join } from 'path';
@@ -14,8 +12,8 @@ export function buildExplicitPackageJsonDependencies(
   workspace: Workspace,
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
-): ProjectGraphBuilderExplicitDependency[] {
-  const res: ProjectGraphBuilderExplicitDependency[] = [];
+) {
+  const res = [] as any;
   let packageNameMap = undefined;
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
@@ -57,7 +55,7 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   graph: ProjectGraph,
-  collectedDeps: ProjectGraphBuilderExplicitDependency[],
+  collectedDeps: any[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {
@@ -70,14 +68,12 @@ function processPackageJson(
           sourceProjectName: sourceProject,
           targetProjectName: packageNameMap[d],
           sourceProjectFile: fileName,
-          dependencyType: DependencyType.static,
         });
       } else if (graph.externalNodes[`npm:${d}`]) {
         collectedDeps.push({
           sourceProjectName: sourceProject,
           targetProjectName: `npm:${d}`,
           sourceProjectFile: fileName,
-          dependencyType: DependencyType.static,
         });
       }
     });

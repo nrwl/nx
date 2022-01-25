@@ -4,7 +4,7 @@ import { DependencyType } from '@nrwl/devkit';
 import { stripSourceCode } from '../../../utilities/strip-source-code';
 import { defaultFileRead } from '../../file-utils';
 
-let tsModule: typeof ts;
+let tsModule: any;
 
 export class TypeScriptImportLocator {
   private readonly scanner: ts.Scanner;
@@ -46,7 +46,7 @@ export class TypeScriptImportLocator {
 
   fromNode(
     filePath: string,
-    node: ts.Node,
+    node: any,
     visitor: (
       importExpr: string,
       filePath: string,
@@ -59,15 +59,7 @@ export class TypeScriptImportLocator {
     ) {
       if (!this.ignoreStatement(node)) {
         const imp = this.getStringLiteralValue(node.moduleSpecifier);
-        const isTypeOnly =
-          (tsModule.isImportDeclaration(node) &&
-            node.importClause?.isTypeOnly) ||
-          (tsModule.isExportDeclaration(node) && node.isTypeOnly);
-        visitor(
-          imp,
-          filePath,
-          isTypeOnly ? DependencyType.typeOnly : DependencyType.static
-        );
+        visitor(imp, filePath, DependencyType.static);
       }
       return; // stop traversing downwards
     }

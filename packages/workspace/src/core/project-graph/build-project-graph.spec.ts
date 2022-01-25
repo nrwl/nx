@@ -72,12 +72,6 @@ describe('project graph', () => {
           projectType: 'library',
           targets: {},
         },
-        'types-lib': {
-          root: 'libs/types-lib',
-          sourceRoot: 'libs/types-lib',
-          projectType: 'library',
-          targets: {},
-        },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
@@ -104,7 +98,6 @@ describe('project graph', () => {
           '@nrwl/shared-util-data': ['libs/shared/util/data/src/index.ts'],
           '@nrwl/ui': ['libs/ui/src/index.ts'],
           '@nrwl/lazy-lib': ['libs/lazy-lib/src/index.ts'],
-          '@nrwl/types-lib': ['libs/types-lib/src/index.ts'],
         },
       },
     };
@@ -115,7 +108,6 @@ describe('project graph', () => {
       './apps/demo/src/index.ts': stripIndents`
         import * as ui from '@nrwl/ui';
         import * as data from '@nrwl/shared-util-data;
-        import type { MyType } from '@nrwl/types-lib;
         const s = { loadChildren: '@nrwl/lazy-lib#LAZY' }
       `,
       './apps/demo-e2e/src/integration/app.spec.ts': stripIndents`
@@ -134,9 +126,6 @@ describe('project graph', () => {
       './libs/lazy-lib/src/index.ts': stripIndents`
         export const LAZY = 'lazy lib';
       `,
-      './libs/types-lib/src/index.ts': stripIndents`
-        export type MyType = {};
-      `,
       './package.json': JSON.stringify(packageJson),
       './nx.json': JSON.stringify(nxJson),
       './workspace.json': JSON.stringify(workspaceJson),
@@ -153,9 +142,7 @@ describe('project graph', () => {
       fail('Invalid tsconfigs should cause project graph to throw error');
     } catch (e) {
       expect(e.message).toMatchInlineSnapshot(
-        `"InvalidSymbol in /root/tsconfig.base.json at position ${
-          JSON.stringify(tsConfigJson).length
-        }"`
+        `"InvalidSymbol in /root/tsconfig.base.json at position 247"`
       );
     }
   });
@@ -189,35 +176,23 @@ describe('project graph', () => {
       },
     });
     expect(graph.dependencies).toEqual({
-      api: [
-        { source: 'api', target: 'npm:express', type: DependencyType.static },
-      ],
+      api: [{ source: 'api', target: 'npm:express', type: 'static' }],
       demo: [
-        { source: 'demo', target: 'api', type: DependencyType.implicit },
+        { source: 'demo', target: 'api', type: 'implicit' },
         {
           source: 'demo',
           target: 'ui',
-          type: DependencyType.static,
+          type: 'static',
         },
-        {
-          source: 'demo',
-          target: 'shared-util-data',
-          type: DependencyType.static,
-        },
-        {
-          source: 'demo',
-          target: 'types-lib',
-          type: DependencyType.typeOnly,
-        },
+        { source: 'demo', target: 'shared-util-data', type: 'static' },
         {
           source: 'demo',
           target: 'lazy-lib',
-          type: DependencyType.dynamic,
+          type: 'static',
         },
       ],
       'demo-e2e': [],
       'lazy-lib': [],
-      'types-lib': [],
       'shared-util': [
         { source: 'shared-util', target: 'npm:happy-nrwl', type: 'static' },
       ],
@@ -227,7 +202,7 @@ describe('project graph', () => {
         {
           source: 'ui',
           target: 'lazy-lib',
-          type: 'dynamic',
+          type: 'static',
         },
       ],
     });
@@ -269,7 +244,7 @@ describe('project graph', () => {
         target: 'shared-util',
       },
       {
-        type: DependencyType.dynamic,
+        type: DependencyType.static,
         source: 'ui',
         target: 'lazy-lib',
       },

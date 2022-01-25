@@ -9,7 +9,6 @@ import { vol } from 'memfs';
 import { ProjectGraphNode } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import {
-  DependencyType,
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
 } from '@nrwl/devkit';
@@ -200,25 +199,21 @@ describe('explicit project dependencies', () => {
 
     expect(res).toEqual([
       {
-        dependencyType: 'static',
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj2',
       },
       {
-        dependencyType: 'dynamic',
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj3a',
       },
       {
-        dependencyType: 'dynamic',
         sourceProjectFile: 'libs/proj/index.ts',
         sourceProjectName: 'proj',
         targetProjectName: 'proj4ab',
       },
       {
-        dependencyType: 'static',
         sourceProjectFile: 'libs/proj1234/index.ts',
         sourceProjectName: 'proj1234',
         targetProjectName: 'proj1234-child',

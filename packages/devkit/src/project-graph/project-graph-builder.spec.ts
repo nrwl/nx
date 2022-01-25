@@ -1,4 +1,3 @@
-import { DependencyType } from './interfaces';
 import { ProjectGraphBuilder } from './project-graph-builder';
 
 describe('ProjectGraphBuilder', () => {
@@ -97,77 +96,21 @@ describe('ProjectGraphBuilder', () => {
     });
   });
 
-  describe('dependency type priority', () => {
-    it(`should use implicit dep when both implicit and explicit deps are available`, () => {
-      // don't include duplicates
-      builder.addImplicitDependency('source', 'target');
-      builder.addExplicitDependency('source', 'source/index.ts', 'target');
+  it(`should use implicit dep when both implicit and explicit deps are available`, () => {
+    // don't include duplicates
+    builder.addImplicitDependency('source', 'target');
+    builder.addExplicitDependency('source', 'source/index.ts', 'target');
 
-      const graph = builder.getUpdatedProjectGraph();
-      expect(graph.dependencies).toEqual({
-        source: [
-          {
-            source: 'source',
-            target: 'target',
-            type: 'implicit',
-          },
-        ],
-        target: [],
-      });
-    });
-
-    it(`should use explicit deps in priority order "static > dynamic"`, () => {
-      builder.addExplicitDependency(
-        'source',
-        'source/index.ts',
-        'target',
-        DependencyType.dynamic
-      );
-      builder.addExplicitDependency(
-        'source',
-        'source/index.ts',
-        'target',
-        DependencyType.static
-      );
-
-      const graph = builder.getUpdatedProjectGraph();
-      expect(graph.dependencies).toEqual({
-        source: [
-          {
-            source: 'source',
-            target: 'target',
-            type: DependencyType.static,
-          },
-        ],
-        target: [],
-      });
-    });
-
-    it(`should use explicit deps in priority order "dynamic > type-only"`, () => {
-      builder.addExplicitDependency(
-        'source',
-        'source/index.ts',
-        'target',
-        DependencyType.dynamic
-      );
-      builder.addExplicitDependency(
-        'source',
-        'source/second.ts',
-        'target',
-        DependencyType.typeOnly
-      );
-
-      const graph = builder.getUpdatedProjectGraph();
-      expect(graph.dependencies).toEqual({
-        source: [
-          {
-            source: 'source',
-            target: 'target',
-            type: DependencyType.dynamic,
-          },
-        ],
-        target: [],
-      });
+    const graph = builder.getUpdatedProjectGraph();
+    expect(graph.dependencies).toEqual({
+      source: [
+        {
+          source: 'source',
+          target: 'target',
+          type: 'implicit',
+        },
+      ],
+      target: [],
     });
   });
 

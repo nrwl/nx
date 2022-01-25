@@ -185,7 +185,7 @@
       {
         "source": "shared-product-data",
         "target": "shared-product-types",
-        "type": "typeOnly"
+        "type": "static"
       }
     ],
     "products-home-page": [

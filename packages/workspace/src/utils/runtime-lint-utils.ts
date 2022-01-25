@@ -254,7 +254,7 @@ export function mapProjectGraphFiles<T>(
     projectGraph.nodes as Record<string, ProjectGraphProjectNode>
   ).forEach(([name, node]) => {
     const files: Record<string, FileData> = {};
-    node.data.files.forEach(({ file, hash, deps }: FileData) => {
+    node.data.files.forEach(({ file, hash, deps }) => {
       files[removeExt(file)] = { file, hash, ...(deps && { deps }) };
     });
     const data = { ...node.data, files };
