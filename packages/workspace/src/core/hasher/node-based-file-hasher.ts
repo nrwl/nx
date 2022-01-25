@@ -1,7 +1,7 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { FileData } from '@nrwl/tao/src/shared/project-graph';
-import { join, relative } from 'path';
+import { join, relative } from 'path/posix';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
 import { stripIndents } from '@nrwl/devkit';
@@ -68,7 +68,7 @@ function getIgnoredGlobs() {
       node_modules
       tmp
       dist
-      build    
+      build
     `);
   return ig;
 }
