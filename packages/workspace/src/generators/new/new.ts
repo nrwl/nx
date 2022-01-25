@@ -89,6 +89,7 @@ function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.linter ? `--linter=${opts.linter}` : null,
       opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
       opts.preset ? `--preset=${opts.preset}` : null,
+      opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       `--cli=${cliCommand}`,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
     ].filter((e) => !!e);
@@ -270,9 +271,6 @@ function getPresetDependencies(preset: string, version?: string) {
 
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
-
-    case Preset.Gatsby:
-      return { dependencies: {}, dev: { '@nrwl/gatsby': nxVersion } };
 
     case Preset.Nest:
       return { dependencies: {}, dev: { '@nrwl/nest': nxVersion } };

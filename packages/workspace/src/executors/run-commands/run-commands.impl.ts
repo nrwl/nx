@@ -249,7 +249,11 @@ function transformCommand(
     return command.replace(regex, (_, group: string) => args[camelCase(group)]);
   } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
-      .map((a) => `--${a}=${args[a]}`)
+      .map((a) =>
+        typeof args[a] === 'string' && args[a].includes(' ')
+          ? `--${a}="${args[a].replace(/"/g, '"')}"`
+          : `--${a}=${args[a]}`
+      )
       .join(' ');
     return `${command} ${stringifiedArgs}`;
   } else {

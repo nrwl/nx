@@ -21,6 +21,10 @@ export interface NxAffectedConfig {
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
+   * Optional (additional) Nx.json configuration file which becomes a base for this one
+   */
+  extends?: string;
+  /**
    * Map of files to projects that implicitly depend on them
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;

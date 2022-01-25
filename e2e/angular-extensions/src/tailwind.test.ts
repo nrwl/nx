@@ -52,7 +52,10 @@ describe('Tailwind support', () => {
     const tailwindConfigFile = 'tailwind.config.js';
 
     const tailwindConfig = `module.exports = {
-      content: ['./apps/**/*.{html,ts}', './libs/**/*.{html,ts}'],
+      content: [
+        './apps/**/!(*.stories|*.spec).{ts,html}',
+        './libs/**/!(*.stories|*.spec).{ts,html}',
+      ],
       theme: {
         spacing: {
           sm: '${spacing.root.sm}',
@@ -76,7 +79,7 @@ describe('Tailwind support', () => {
   
     module.exports = {
       content: [
-        join(__dirname, 'src/**/*.{html,ts}'),
+        join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
         ...createGlobPatternsForDependencies(__dirname),
       ],
       theme: {

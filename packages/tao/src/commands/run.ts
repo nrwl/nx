@@ -58,6 +58,10 @@ function parseRunOpts(
       alias: {
         c: 'configuration',
       },
+      configuration: {
+        'strip-dashed': false,
+        'dot-notation': false,
+      },
     })
   );
   const help = runOptions.help as boolean;

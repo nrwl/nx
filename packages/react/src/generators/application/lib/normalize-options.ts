@@ -33,6 +33,7 @@ export function normalizeOptions(
   options.classComponent = options.classComponent ?? false;
   options.unitTestRunner = options.unitTestRunner ?? 'jest';
   options.e2eTestRunner = options.e2eTestRunner ?? 'cypress';
+  options.compiler = options.compiler ?? 'babel';
 
   return {
     ...options,

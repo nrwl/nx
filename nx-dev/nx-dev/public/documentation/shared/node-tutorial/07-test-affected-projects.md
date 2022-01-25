@@ -35,7 +35,7 @@ export class AuthController {
 }
 ```
 
-**Run `nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps are affected by this change.
+**Run `nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the project graph to figure out which apps are affected by this change.
 
 **Run `nx affected:libs`**, and you should see `auth` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 

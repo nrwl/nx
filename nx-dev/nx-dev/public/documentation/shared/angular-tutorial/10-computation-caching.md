@@ -7,42 +7,50 @@ Nx has built-in computation caching, which helps drastically improve the perform
 **To see it in action, run `npx nx build todos`:**
 
 ```bash
-> npx nx run todos:build
-Generating ES5 bundles for differential loading...
-ES5 bundle generation complete.
+❯ nx build todos
 
-chunk {runtime} runtime-es2015.js, runtime-es2015.js.map (runtime) 6.16 kB [entry] [rendered]
-chunk {runtime} runtime-es5.js, runtime-es5.js.map (runtime) 6.16 kB [entry] [rendered]
-chunk {polyfills} polyfills-es2015.js, polyfills-es2015.js.map (polyfills) 141 kB [initial] [rendered]
-chunk {main} main-es2015.js, main-es2015.js.map (main) 22.7 kB [initial] [rendered]
-chunk {main} main-es5.js, main-es5.js.map (main) 24.1 kB [initial] [rendered]
-chunk {styles} styles-es2015.js, styles-es2015.js.map (styles) 9.88 kB [initial] [rendered]
-chunk {styles} styles-es5.js, styles-es5.js.map (styles) 11.1 kB [initial] [rendered]
-chunk {polyfills-es5} polyfills-es5.js, polyfills-es5.js.map (polyfills-es5) 759 kB [initial] [rendered]
-chunk {vendor} vendor-es2015.js, vendor-es2015.js.map (vendor) 2.35 MB [initial] [rendered]
-chunk {vendor} vendor-es5.js, vendor-es5.js.map (vendor) 2.75 MB [initial] [rendered]
+> nx run todos:build:production
+✔ Browser application bundle generation complete.
+✔ Copying assets complete.
+✔ Index html generation complete.
+
+Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
+main.198853e72abe040f.js      | main          | 125.05 kB |                35.88 kB
+polyfills.80c46001d98dd563.js | polyfills     |  36.21 kB |                11.49 kB
+runtime.db95d73b9ee480c5.js   | runtime       |   1.04 kB |               599 bytes
+styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
+
+                              | Initial Total | 162.30 kB |                47.96 kB
+
+Build at: 2022-01-21T20:36:14.528Z - Hash: 795c96ce5e48a766 - Time: 11596ms
+
+———————————————————————————————————————————————
+
+>  NX   SUCCESS  Running target "build" succeeded
 ```
 
 **Now, run `npx nx build todos` again, and you will see the results appearing instantly:**
 
 ```bash
-> npx nx run todos:build
+❯ nx build todos
 
->  NX   NOTE  Cached Output:
+> nx run todos:build:production [existing outputs match the cache, left as is]
 
-Generating ES5 bundles for differential loading...
-ES5 bundle generation complete.
+Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
+main.198853e72abe040f.js      | main          | 125.05 kB |                35.88 kB
+polyfills.80c46001d98dd563.js | polyfills     |  36.21 kB |                11.49 kB
+runtime.db95d73b9ee480c5.js   | runtime       |   1.04 kB |               599 bytes
+styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
 
-chunk {polyfills-es5} polyfills-es5.js, polyfills-es5.js.map (polyfills-es5) 759 kB [initial] [rendered]
-chunk {polyfills} polyfills-es2015.js, polyfills-es2015.js.map (polyfills) 141 kB [initial] [rendered]
-chunk {main} main-es2015.js, main-es2015.js.map (main) 22.5 kB [initial] [rendered]
-chunk {main} main-es5.js, main-es5.js.map (main) 23.9 kB [initial] [rendered]
-chunk {vendor} vendor-es2015.js, vendor-es2015.js.map (vendor) 2.35 MB [initial] [rendered]
-chunk {vendor} vendor-es5.js, vendor-es5.js.map (vendor) 2.75 MB [initial] [rendered]
-chunk {styles} styles-es2015.js, styles-es2015.js.map (styles) 9.88 kB [initial] [rendered]
-chunk {styles} styles-es5.js, styles-es5.js.map (styles) 11.1 kB [initial] [rendered]
-chunk {runtime} runtime-es2015.js, runtime-es2015.js.map (runtime) 6.16 kB [entry] [rendered]
-chunk {runtime} runtime-es5.js, runtime-es5.js.map (runtime) 6.16 kB [entry] [rendered]
+                              | Initial Total | 162.30 kB |                47.96 kB
+
+Build at: 2022-01-21T20:36:14.528Z - Hash: 795c96ce5e48a766 - Time: 11596ms
+
+———————————————————————————————————————————————
+
+>  NX   SUCCESS  Running target "build" succeeded
+
+  Nx read the output from cache instead of running the command for 1 out of 1 tasks.
 ```
 
 Based on the state of the source code and the environment, Nx was able to figure out that it had already run this exact command. Nx found the artifact in the local cache and replayed the output and restored the necessary files.
@@ -60,7 +68,7 @@ npx nx run-many --target=build --projects=todos,api
 And notice the output:
 
 ```bash
-Nx read the output from the cache instead of running the command for 1 out of 2 projects.
+Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 
 Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache here [here](/using-nx/caching).

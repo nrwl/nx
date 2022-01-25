@@ -35,7 +35,7 @@ export function Todos(props: TodosProps) {
 export default Todos;
 ```
 
-**Run `npx nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
+**Run `npx nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the project graph to figure out which apps can be affected by this change.
 
 **Run `npx nx affected:libs`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 

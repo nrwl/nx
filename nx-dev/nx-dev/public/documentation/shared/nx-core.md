@@ -117,7 +117,18 @@ This is expected. Nx analyzes your source to enable computation caching, it know
 but it **does not** change how your npm scripts run. Whatever tools you use in your npm scripts will run exactly as they
 would without Nx. **Nx Core doesn't replace your tools and doesn't change how they work.**
 
-To make it work, add a dependency from `complex` to `simple` in `packages/complex/package.json`:
+In this simple setup, Nx doesn't do any automated path mapping as it usually does, but rather fully relies on a corresponding `yarn` or `npm` workspaces setup. As such, at the root-level `package.json` you should have something like:
+
+```json
+{
+  ...
+  "workspaces": [
+    "packages/*"
+  ]
+}
+```
+
+Moreover, a dependency from `complex` to `simple` in `packages/complex/package.json` needs to be added:
 
 ```json
 {
@@ -132,9 +143,9 @@ To make it work, add a dependency from `complex` to `simple` in `packages/comple
 }
 ```
 
-Finally, run `yarn`.
+Finally, run `yarn install` or `npm install` to make the package available in the yarn/npm workspace.
 
-`nx test complex` works now.
+Running `nx test complex` should work now.
 
 ## Using Yarn/PNPM/Lerna
 
@@ -147,7 +158,7 @@ elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/guide
 
 ### Nx Understands How Your Workspace Is Structured
 
-If you run `nx dep-graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
+If you run `nx graph` you will see that `complex` has a dependency on `simple`. Any change to `simple` will
 invalidate the computation cache for `complex`, but changes to `complex` won't invalidate the cache for `simple`.
 
 In contrast to more basic monorepo tools, Nx doesn't just analyze `package.json` files. It does much more. Nx also knows

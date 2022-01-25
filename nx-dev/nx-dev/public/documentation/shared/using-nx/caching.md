@@ -12,9 +12,9 @@ By default, the computation hash for say `nx test app1` includes:
 
 - All the source files of `app1` and its dependencies
 - Relevant global configuration
-- Versions of externals dependencies
+- Versions of external dependencies
 - Runtime values provisioned by the user such as the version of Node
-- Command flags
+- CLI Command flags
 
 ![computation-hashing](/shared/mental-model/computation-hashing.png)
 

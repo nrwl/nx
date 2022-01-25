@@ -53,7 +53,9 @@ function convertCompletedTasksToOutputFormat(completedTasks: {
     return {
       success:
         taskStatus === 'success' ||
+        (taskStatus as any) === 'cache' ||
         taskStatus === 'local-cache' ||
+        taskStatus === 'local-cache-kept-existing' ||
         taskStatus === 'remote-cache',
     };
   });

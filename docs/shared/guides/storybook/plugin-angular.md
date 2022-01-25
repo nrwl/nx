@@ -6,13 +6,17 @@ Storybook is a development environment for UI components. It allows you to brows
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
-## Add the Storybook plugin
+## Setting Up Storybook
+
+### Add the Storybook plugin
 
 ```bash
 yarn add --dev @nrwl/storybook
 ```
 
-## Generating Storybook Configuration
+## Using Storybook
+
+### Generating Storybook Configuration
 
 You can generate Storybook configuration for an individual project with this command:
 
@@ -20,7 +24,7 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/angular:storybook-configuration project-name
 ```
 
-## Running Storybook
+### Running Storybook
 
 Serve Storybook using this command:
 
@@ -28,7 +32,7 @@ Serve Storybook using this command:
 nx run project-name:storybook
 ```
 
-## Anatomy of the Storybook setup
+### Anatomy of the Storybook setup
 
 When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create
 
@@ -50,7 +54,7 @@ The **global** Storybook configuration allows to set addon-ons or custom webpack
 └── etc...
 ```
 
-The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
+The project-specific Storybook configuration is pretty much similar to what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 
 ```treeview
 <project root>/
@@ -102,7 +106,7 @@ To register an [addon](https://storybook.js.org/addons/) for a single storybook 
    export const decorators = [someDecorator];
    ```
 
-## Auto-generate Stories
+### Auto-generate Stories
 
 The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
@@ -118,7 +122,7 @@ You can re-run it at a later point using the following command:
 nx g @nrwl/angular:stories <project-name>
 ```
 
-## Cypress tests for Stories
+### Cypress tests for Stories
 
 Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
@@ -157,7 +161,6 @@ export default {
 } as Meta<ButtonComponent>;
 
 const Template: Story<ButtonComponent> = (args: ButtonComponent) => ({
-  component: ButtonComponent,
   props: args,
 });
 
@@ -185,11 +188,75 @@ describe('shared-ui', () => {
 });
 ```
 
-## More Information
+### Setting up `projectBuildConfig`
+
+Storybook for Angular needs a default project specified in order to run. The reason is that it uses that default project to read the build configuration from (paths to files to include in the build, and other configurations/settings). In Nx workspaces, that project is specified with the `projectBuildConfig` property.
+
+If you're using Nx version `>=13.4.6` either in a new Nx workspace, or you migrated your older Nx workspace to Nx version `>=13.4.6`, Nx will automatically add the `projectBuildConfig` property in your projects `project.json` files, for projects that are using Storybook. It will look like this:
+
+```
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+         ...
+        "projectBuildConfig": "my-project:build-storybook"
+      },
+      ...
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+       ...
+      "options": {
+         ...
+        "projectBuildConfig": "my-project:build-storybook"
+      },
+     ...
+    }
+```
+
+This setup instructs Nx to use the configuration under the `build-storybook` target of `my-project` when using the `storybook` and `build-storybook` executors.
+
+If the `projectBuildConfig` is not set in your `project.json`, you can manually set it up in one of the following ways:
+
+#### Adding the `projectBuildConfig` option directly in the project's `project.json`
+
+In your project's `project.json` file find the `storybook` and `build-storybook` targets. Add the `projectBuildConfig` property under the `options` as shown above.
+
+After you add this property, you can run your `storybook` and `build-storybook` executors as normal:
+
+```
+nx storybook my-project
+```
+
+and
+
+```
+nx build-storybook my-project
+```
+
+#### Using the `projectBuildConfig` flag on the executors
+
+The way you would run your `storybook` and your `build-storybook` executors would be:
+
+```
+nx storybook my-project --projectBuildConfig=my-project:build-storybook
+```
+
+and
+
+```
+nx build-storybook my-project --projectBuildConfig=my-project:build-storybook
+```
+
+**Note:** If your project is buildable (eg. any project that has a `build` target set up in its `project.json`) you can also do `nx storybook my-project --projectBuildConfig=my-project`.
+
+> In a pure Angular/Storybook setup (**not** an Nx workspace), the Angular application/project would have an `angular.json` file. That file would have a property called `defaultProject`. In an Nx workspace the `defaultProject` property would be specified in the `nx.json` file. Previously, Nx would try to resolve the `defaultProject` of the workspace, and use the build configuration of that project. In most cases, the `defaultProject`'s build configuration would not work for some other project set up with Storybook, since there would most probably be mismatches in paths or other project-specific options.
+
+## More Documentation
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
-## Migration Scenarios
+### Migration Scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 

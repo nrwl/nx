@@ -32,12 +32,4 @@ export default {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-parameter-properties': 'off',
   },
-  overrides: [
-    {
-      files: ['*.tsx'],
-      rules: {
-        '@typescript-eslint/no-unused-vars': 'off',
-      },
-    },
-  ],
 };

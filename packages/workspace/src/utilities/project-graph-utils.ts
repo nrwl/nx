@@ -36,7 +36,7 @@ export function mergeNpmScriptsWithTargets(
 ): Record<string, TargetConfiguration> {
   try {
     const { scripts, nx }: PackageJson = readJsonFile(
-      `${projectRoot}/package.json`
+      join(projectRoot, 'package.json')
     );
     const res: Record<string, TargetConfiguration> = {};
     // handle no scripts

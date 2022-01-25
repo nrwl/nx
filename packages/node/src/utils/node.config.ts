@@ -5,6 +5,7 @@ import { merge } from 'webpack-merge';
 import { getBaseWebpackPartial } from './config';
 import { BuildNodeBuilderOptions } from './types';
 import nodeExternals = require('webpack-node-externals');
+import TerserPlugin = require('terser-webpack-plugin');
 
 function getNodePartial(options: BuildNodeBuilderOptions) {
   const webpackConfig: Configuration = {
@@ -18,6 +19,13 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
   if (options.optimization) {
     webpackConfig.optimization = {
       minimize: true,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            mangle: false,
+          },
+        }),
+      ],
       concatenateModules: true,
     };
   }

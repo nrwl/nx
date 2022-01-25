@@ -81,6 +81,13 @@ const server = createServer(async (socket) => {
       );
     }
 
+    if (lockFileChanged()) {
+      await respondWithErrorAndExit(socket, `Lock files changed`, {
+        name: '',
+        message: 'LOCK-FILES-CHANGED',
+      });
+    }
+
     resetInactivityTimeout(handleInactivityTimeout);
 
     const payload = data.toString();

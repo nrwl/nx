@@ -46,7 +46,7 @@ function updatePackageJson(tree) {
       'affected:e2e': 'nx affected:e2e',
       'affected:test': 'nx affected:test',
       'affected:lint': 'nx affected:lint',
-      'affected:dep-graph': 'nx affected:dep-graph',
+      'affected:graph': 'nx affected:graph',
       affected: 'nx affected',
       format: 'nx format:write',
       'format:write': 'nx format:write',
@@ -54,7 +54,7 @@ function updatePackageJson(tree) {
       update: 'ng update @nrwl/workspace',
       'update:check': 'ng update',
       lint: 'nx workspace-lint && ng lint',
-      'dep-graph': 'nx dep-graph',
+      graph: 'nx graph',
       'workspace-schematic': 'nx workspace-schematic',
       help: 'nx help',
     };

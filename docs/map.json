@@ -187,7 +187,7 @@
             "file": "shared/react-tutorial/08-create-libs"
           },
           {
-            "name": "9 - Dep Graph",
+            "name": "9 - Project Graph",
             "id": "09-dep-graph",
             "file": "shared/react-tutorial/09-dep-graph"
           },
@@ -253,7 +253,7 @@
             "file": "shared/angular-tutorial/08-create-libs"
           },
           {
-            "name": "9 - Dep Graph",
+            "name": "9 - Project Graph",
             "id": "09-dep-graph",
             "file": "shared/angular-tutorial/09-dep-graph"
           },
@@ -299,7 +299,7 @@
             "file": "shared/node-tutorial/04-create-libs"
           },
           {
-            "name": "5 - Dep Graph",
+            "name": "5 - Project Graph",
             "id": "05-dep-graph",
             "file": "shared/node-tutorial/05-dep-graph"
           },
@@ -366,9 +366,9 @@
             "file": "generated/cli/daemon"
           },
           {
-            "name": "dep-graph",
+            "name": "graph",
             "id": "dep-graph",
-            "file": "generated/cli/dep-graph"
+            "file": "generated/cli/graph"
           },
           {
             "name": "run-many",
@@ -401,9 +401,9 @@
             "file": "generated/cli/affected-e2e"
           },
           {
-            "name": "affected:dep-graph",
+            "name": "affected:graph",
             "id": "affected-dep-graph",
-            "file": "generated/cli/affected-dep-graph"
+            "file": "generated/cli/affected-graph"
           },
           {
             "name": "affected:apps",
@@ -1129,43 +1129,6 @@
         ]
       },
       {
-        "name": "gatsby",
-        "id": "gatsby",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "searchResultsName": "@nrwl/gatsby Overview",
-            "file": "shared/gatsby-plugin"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "file": "generated/api-gatsby/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "file": "generated/api-gatsby/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "file": "generated/api-gatsby/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "file": "generated/api-gatsby/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "file": "generated/api-gatsby/executors/server"
-          }
-        ]
-      },
-      {
         "name": "detox",
         "id": "detox",
         "itemList": [
@@ -1396,7 +1359,7 @@
             "file": "shared/monorepo-tags"
           },
           {
-            "name": "Dependency Graph",
+            "name": "Project Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
           },

@@ -17,6 +17,7 @@ import { join } from 'path';
 import { dirSync } from 'tmp';
 import { check as portCheck } from 'tcp-port-used';
 import {
+  joinPathFragments,
   parseJson,
   ProjectConfiguration,
   WorkspaceJsonConfiguration,
@@ -27,7 +28,6 @@ import isCI = require('is-ci');
 
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
-import { Tree } from '../../packages/tao/src/shared/tree';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -223,7 +223,6 @@ export function newProject({
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
-        `@nrwl/gatsby`,
         `@nrwl/jest`,
         `@nrwl/js`,
         `@nrwl/linter`,
@@ -764,6 +763,13 @@ export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
   const result = runCommand(`${list} @angular-devkit/core`);
   expect(result).not.toContain('@angular-devkit/core');
+}
+
+export function expectNoTsJestInJestConfig(appName: string) {
+  const jestConfig = readFile(
+    joinPathFragments('apps', appName, 'jest.config.js')
+  );
+  expect(jestConfig).not.toContain('ts-jest');
 }
 
 export function waitUntil(

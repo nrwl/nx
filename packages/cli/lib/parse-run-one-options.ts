@@ -84,6 +84,7 @@ export function parseRunOneOptions(
     },
     configuration: {
       'strip-dashed': true,
+      'dot-notation': false,
     },
   });
 

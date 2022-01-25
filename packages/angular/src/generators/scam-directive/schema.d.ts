@@ -7,4 +7,5 @@ export interface Schema {
   flat?: boolean;
   prefix?: string;
   selector?: string;
+  export?: boolean;
 }

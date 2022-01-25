@@ -2,10 +2,13 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
+  generateFiles,
   installPackagesTask,
   names,
+  PackageManager,
   readWorkspaceConfiguration,
   Tree,
+  updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
@@ -15,6 +18,7 @@ import { libraryGenerator } from '../library/library';
 import { insertImport } from '../utils/insert-import';
 import { insertStatement } from '../utils/insert-statement';
 import { Preset } from '../utils/presets';
+import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
@@ -32,8 +36,6 @@ async function createPreset(tree: Tree, options: Schema) {
   if (
     options.preset === Preset.Empty ||
     options.preset === Preset.Apps ||
-    options.preset === Preset.NPM ||
-    options.preset === Preset.Core ||
     options.preset === Preset.TS
   ) {
     return;
@@ -170,17 +172,6 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/express');
-  } else if (options.preset === Preset.Gatsby) {
-    const {
-      applicationGenerator: gatsbyApplicationGenerator,
-    } = require('@nrwl' + '/gatsby');
-    await gatsbyApplicationGenerator(tree, {
-      name: options.name,
-      linter: options.linter,
-      style: options.style,
-      standaloneConfig: options.standaloneConfig,
-    });
-    setDefaultCollection(tree, '@nrwl/gatsby');
   } else if (options.preset === 'react-native') {
     const { reactNativeApplicationGenerator } = require('@nrwl' +
       '/react-native');
@@ -191,8 +182,21 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: 'detox',
     });
     setDefaultCollection(tree, '@nrwl/react-native');
+  } else if (options.preset === Preset.Core || options.preset === Preset.NPM) {
+    setupPackageManagerWorkspaces(tree, options);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
+  }
+}
+
+function setupPackageManagerWorkspaces(tree: Tree, options: Schema) {
+  if (options.packageManager === 'pnpm') {
+    generateFiles(tree, join(__dirname, './files/pnpm-workspace'), '.', {});
+  } else {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/**'];
+      return json;
+    });
   }
 }
 

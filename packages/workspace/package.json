@@ -39,7 +39,6 @@
       "@nrwl/devkit",
       "@nrwl/eslint-plugin-nx",
       "@nrwl/express",
-      "@nrwl/gatsby",
       "@nrwl/jest",
       "@nrwl/linter",
       "@nrwl/nest",
@@ -53,7 +52,7 @@
     ]
   },
   "peerDependencies": {
-    "prettier": "^2.3.0"
+    "prettier": "^2.5.1"
   },
   "peerDependenciesMeta": {
     "prettier": {

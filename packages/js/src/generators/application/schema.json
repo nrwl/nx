@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NxTypescriptLibrary",
+  "$id": "NxTypescriptApplication",
   "cli": "nx",
-  "title": "Create a TypeScript Library",
+  "title": "Create a TypeScript application",
   "type": "object",
   "examples": [
     {
@@ -92,7 +92,7 @@
       "type": "string",
       "enum": ["tsc", "swc"],
       "default": "tsc",
-      "description": "The compiler used by the build and test targets (tsc is preferred, swc is experimental)"
+      "description": "The compiler used by the build and test targets"
     }
   },
   "required": ["name"]

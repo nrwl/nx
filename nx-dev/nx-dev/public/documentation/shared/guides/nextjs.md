@@ -103,7 +103,7 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 
 - Share code between applications
 - Publish a package to be used outside the monorepo
-- Better visualize the architecture using `npx nx dep-graph`
+- Better visualize the architecture using `npx nx graph`
 
 For more information on Nx libraries, see our documentation on [Creating Libraries](/structure/creating-libraries)
 and [Library Types](/structure/library-types).

@@ -31,7 +31,6 @@ export enum Preset {
   ReactWithExpress = 'react-express',
   ReactNative = 'react-native',
   NextJs = 'next',
-  Gatsby = 'gatsby',
   Nest = 'nest',
   Express = 'express',
 }
@@ -65,10 +64,6 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.NextJs,
     message:
       'next.js           [a workspace with a single Next.js application]',
-  },
-  {
-    name: Preset.Gatsby,
-    message: 'gatsby            [a workspace with a single Gatsby application]',
   },
   {
     name: Preset.Nest,
@@ -201,7 +196,7 @@ function showHelp() {
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
 
     style                     Default style option to be used when a non-empty preset is selected
-                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js, Gatsby
+                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js 
 
     interactive               Enable interactive mode when using presets (boolean)
 
@@ -424,14 +419,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     });
   }
 
-  if (
-    [
-      Preset.ReactWithExpress,
-      Preset.React,
-      Preset.NextJs,
-      Preset.Gatsby,
-    ].includes(preset)
-  ) {
+  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
     choices.push(
       {
         name: 'styled-components',
@@ -689,7 +677,6 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
-    case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
         title,

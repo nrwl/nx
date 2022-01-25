@@ -1,4 +1,4 @@
-# Imposing Constraints on the Dependency Graph
+# Imposing Constraints on the Project Graph
 
 If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, the chaos will ensue, and the workspace will become unmanageable.
 

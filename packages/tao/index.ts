@@ -3,7 +3,12 @@ import { dirname, join } from 'path';
 import { existsSync } from 'fs-extra';
 import * as yargsParser from 'yargs-parser';
 
-const argv = yargsParser(process.argv.slice(2));
+const argv = yargsParser(process.argv.slice(2), {
+  configuration: {
+    'strip-dashed': true,
+    'dot-notation': false,
+  },
+});
 
 export async function invokeCommand(
   command: string,

@@ -197,5 +197,32 @@ describe('project graph utils', () => {
         },
       });
     });
+
+    it("should work when project root is ''", () => {
+      jsonFileOverrides['package.json'] = {
+        name: 'my-app',
+        scripts: {
+          test: 'echo testing',
+        },
+      };
+
+      const result = mergeNpmScriptsWithTargets('', {
+        build: {
+          executor: '@nrwl/workspace:run-commands',
+          options: { command: 'echo hi' },
+        },
+      });
+
+      expect(result).toEqual({
+        build: {
+          executor: '@nrwl/workspace:run-commands',
+          options: { command: 'echo hi' },
+        },
+        test: {
+          executor: '@nrwl/workspace:run-script',
+          options: { script: 'test' },
+        },
+      });
+    });
   });
 });

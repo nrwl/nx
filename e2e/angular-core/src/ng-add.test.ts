@@ -91,7 +91,7 @@ xdescribe('Angular Package', () => {
         'affected:e2e': 'nx affected:e2e',
         'affected:test': 'nx affected:test',
         'affected:lint': 'nx affected:lint',
-        'affected:dep-graph': 'nx affected:dep-graph',
+        'affected:graph': 'nx affected:graph',
         affected: 'nx affected',
         format: 'nx format:write',
         'format:write': 'nx format:write',
@@ -99,7 +99,7 @@ xdescribe('Angular Package', () => {
         update: 'ng update @nrwl/workspace',
         'update:check': 'ng update',
         postinstall: 'node ./decorate-angular-cli.js',
-        'dep-graph': 'nx dep-graph',
+        graph: 'nx graph',
         'workspace-generator': 'nx workspace-generator',
         help: 'nx help',
       });

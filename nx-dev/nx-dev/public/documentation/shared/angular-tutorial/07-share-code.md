@@ -22,17 +22,21 @@ myorg/
 │   └── data/
 │       ├── src/
 │       │   ├── lib/
+│       │   │   ├── data.spec.ts
 │       │   │   └── data.ts
 │       │   └── index.ts
-│       ├── .eslintrc
+│       ├── .babelrc
+│       ├── .eslintrc.json
 │       ├── jest.config.js
-│       ├── tsconfig.app.json
+│       ├── project.json
+│       ├── README.md
 │       ├── tsconfig.json
+│       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
-├── workspace.json
+├── tools/
+├── angular.json
 ├── nx.json
 ├── package.json
-├── tools/
 └── tsconfig.base.json
 ```
 
@@ -46,7 +50,7 @@ export interface Todo {
 
 ### A note about VS Code :
 
-If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognized. This may need to be done **every time a new workspace library is added**.
+If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognized. This may need to be done **every time a new workspace library is added**. If you install the [Nx Console](/using-nx/console) extension you won't need to take this step.
 
 ## Refactor the API
 

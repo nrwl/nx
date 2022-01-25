@@ -30,6 +30,7 @@
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
     "@typescript-eslint/experimental-utils": "~5.3.0",
+    "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0"

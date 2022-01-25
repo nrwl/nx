@@ -6,13 +6,17 @@ Storybook is a development environment for UI components. It allows you to brows
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
-## Add the Storybook plugin
+## Setting Up Storybook
+
+### Add the Storybook plugin
 
 ```bash
 yarn add --dev @nrwl/storybook
 ```
 
-## Generating Storybook Configuration
+## Using Storybook
+
+### Generating Storybook Configuration
 
 You can generate Storybook configuration for an individual project with this command:
 
@@ -20,7 +24,7 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/react:storybook-configuration project-name
 ```
 
-## Running Storybook
+### Running Storybook
 
 Serve Storybook using this command:
 
@@ -28,7 +32,7 @@ Serve Storybook using this command:
 nx run project-name:storybook
 ```
 
-## Anatomy of the Storybook setup
+### Anatomy of the Storybook setup
 
 When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create
 
@@ -64,7 +68,7 @@ The project-specific Storybook configuration is pretty much similar what you wou
 └── etc...
 ```
 
-## Nx React Storybook Preset
+### Nx React Storybook Preset
 
 `@nrwl/react` ships with a Storybook preset to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the preset to your configuration.
 
@@ -78,7 +82,7 @@ module.exports = {
 };
 ```
 
-## Using Addons
+### Using Addons
 
 To register a [Storybook addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
@@ -116,7 +120,7 @@ To register an [addon](https://storybook.js.org/addons/) for a single storybook 
    export const decorators = [someDecorator];
    ```
 
-## Auto-generate Stories
+### Auto-generate Stories
 
 The `@nrwl/react:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
@@ -132,7 +136,7 @@ You can re-run it at a later point using the following command:
 nx g @nrwl/react:stories <project-name>
 ```
 
-## Cypress tests for Stories
+### Cypress tests for Stories
 
 Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
@@ -191,11 +195,11 @@ describe('shared-ui', () => {
 });
 ```
 
-## More Information
+## More Documentation
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
-## Migration Scenarios
+### Migration Scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 

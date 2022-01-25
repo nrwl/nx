@@ -11,38 +11,32 @@ Nx is an extensible framework with plugins for many modern tools and frameworks.
 ```bash
 >  NX  Installed plugins:
 
-  @nrwl/angular (executors,generators)
-  @nrwl/cypress (executors,generators)
-  @nrwl/jest (executors,generators)
-  @nrwl/workspace (executors,generators)
+  @angular-devkit/build-angular (builders)
+  @nrwl/angular (builders,generators)
+  @nrwl/cypress (builders,generators)
+  @nrwl/jest (builders,generators)
+  @nrwl/linter (builders,generators)
+  @nrwl/storybook (builders,generators)
+  @nrwl/workspace (builders,generators)
 
 
 >  NX  Also available:
 
   @nrwl/express (executors,generators)
-  @nrwl/linter (builders)
   @nrwl/nest (executors,generators)
   @nrwl/next (executors,generators)
   @nrwl/node (executors,generators)
   @nrwl/nx-plugin (executors,generators)
   @nrwl/react (executors,generators)
-  @nrwl/storybook (executors,generators)
   @nrwl/web (executors,generators)
 
 
 >  NX  Community plugins:
 
-  @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers
-  @offeringsolutions/nx-karma-to-jest - Nx plugin for replacing karma with jest in an Nx workspace
-  @dev-thought/nx-deploy-it - Nx plugin to deploy applications on your favorite cloud provider
-```
-
-**Now run `npx nx list @nrwl/nest`, and you will see:**
-
-```bash
->  NX   NOTE  @nrwl/nest is not currently installed
-
-  Use "yarn add --dev @nrwl/nest" to add new capabilities
+  nx-plugins - Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.
+  @codebrew/nx-aws-cdk - An Nx plugin for aws cdk develop.
+  @rxap/plugin-localazy - An Nx plugin for localazy.com upload and download tasks.
+  ...
 ```
 
 **Add the dependency:**
@@ -95,10 +89,10 @@ myorg/
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
 ├── libs/
+├── tools/
 ├── angular.json
 ├── nx.json
 ├── package.json
-├── tools/
 └── tsconfig.base.json
 ```
 

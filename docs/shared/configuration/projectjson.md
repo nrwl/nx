@@ -67,7 +67,7 @@ Let's look at the following `project.json`:
 
 - `root` tells Nx the location of the library including its sources and configuration files.
 - `sourceRoot` tells Nx the location of the library's source files.
-- `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux
+- `projectType` is either 'application' or 'library'. The project type is used in project graph viz and in a few aux
   commands.
 
 ### Targets

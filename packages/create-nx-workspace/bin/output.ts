@@ -47,12 +47,6 @@ export interface CLISuccessMessageConfig {
   bodyLines?: string[];
 }
 
-export enum TaskCacheStatus {
-  NoCache = '[no cache]',
-  MatchedExistingOutput = '[existing outputs match the cache, left as is]',
-  RetrievedFromCache = '[retrieved from cache]',
-}
-
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
@@ -234,20 +228,7 @@ class CLIOutput {
     this.addNewline();
   }
 
-  logCommand(
-    message: string,
-    cacheStatus: TaskCacheStatus = TaskCacheStatus.NoCache
-  ) {
-    this.addNewline();
-
-    let commandOutput = `${chalk.dim('> nx run')} ${message}`;
-    if (cacheStatus !== TaskCacheStatus.NoCache) {
-      commandOutput += `  ${chalk.grey(cacheStatus)}`;
-    }
-    this.writeToStdOut(commandOutput);
-
-    this.addNewline();
-  }
+  logCommand(message: string) {}
 
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();

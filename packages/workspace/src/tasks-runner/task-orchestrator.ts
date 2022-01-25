@@ -4,7 +4,6 @@ import { performance } from 'perf_hooks';
 import { Hasher } from '../core/hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { TaskCacheStatus } from '../utilities/output';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -112,9 +111,12 @@ export class TaskOrchestrator {
   }
 
   // region Applying Cache
-  private async applyCachedResults(
-    tasks: Task[]
-  ): Promise<{ task: Task; status: 'local-cache' | 'remote-cache' }[]> {
+  private async applyCachedResults(tasks: Task[]): Promise<
+    {
+      task: Task;
+      status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
+    }[]
+  > {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
@@ -124,9 +126,10 @@ export class TaskOrchestrator {
     return res.filter((r) => r !== null);
   }
 
-  private async applyCachedResult(
-    task: Task
-  ): Promise<{ task: Task; status: 'local-cache' | 'remote-cache' }> {
+  private async applyCachedResult(task: Task): Promise<{
+    task: Task;
+    status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
+  }> {
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -140,18 +143,19 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
+    const status = cachedResult.remote
+      ? 'remote-cache'
+      : shouldCopyOutputsFromCache
+      ? 'local-cache'
+      : 'local-cache-kept-existing';
     this.options.lifeCycle.printTaskTerminalOutput(
       task,
-      shouldCopyOutputsFromCache
-        ? TaskCacheStatus.RetrievedFromCache
-        : TaskCacheStatus.MatchedExistingOutput,
+      status,
       cachedResult.terminalOutput
     );
     return {
       task,
-      status: (cachedResult.remote ? 'remote-cache' : 'local-cache') as
-        | 'local-cache'
-        | 'remote-cache',
+      status,
     };
   }
 
@@ -330,6 +334,7 @@ export class TaskOrchestrator {
         .filter(
           ({ status }) =>
             status !== 'local-cache' &&
+            status !== 'local-cache-kept-existing' &&
             status !== 'remote-cache' &&
             status !== 'skipped'
         )
@@ -337,6 +342,7 @@ export class TaskOrchestrator {
           ...result,
           code:
             result.status === 'local-cache' ||
+            result.status === 'local-cache-kept-existing' ||
             result.status === 'remote-cache' ||
             result.status === 'success'
               ? 0
@@ -355,6 +361,7 @@ export class TaskOrchestrator {
         const code =
           result.status === 'success' ||
           result.status === 'local-cache' ||
+          result.status === 'local-cache-kept-existing' ||
           result.status === 'remote-cache'
             ? 0
             : 1;

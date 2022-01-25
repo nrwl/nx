@@ -70,14 +70,26 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     }
   };
 
-  process.on('exit', (code) => {
-    if (code === 0) {
+  let fileWritten = false;
+  function writeFile(withErrors: boolean) {
+    if (!fileWritten) {
       writeFileSync(
         process.env.NX_TERMINAL_OUTPUT_PATH,
-        captureStderr ? outWithErr.join('') : out.join('')
+        withErrors ? outWithErr.join('') : out.join('')
       );
+      fileWritten = true;
+    }
+  }
+
+  process.on('exit', (code) => {
+    if (code === 0) {
+      writeFile(captureStderr);
     } else {
-      writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
+      writeFile(true);
     }
   });
+
+  process.on('SIGINT', () => writeFile(true));
+  process.on('SIGTERM', () => writeFile(true));
+  process.on('SIGHUP', () => writeFile(true));
 }

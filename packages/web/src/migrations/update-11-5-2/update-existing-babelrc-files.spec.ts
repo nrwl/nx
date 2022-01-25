@@ -24,10 +24,6 @@ describe('Create missing .babelrc files', () => {
           root: 'apps/react-app',
           projectType: 'application',
         },
-        'gatsby-app': {
-          root: 'apps/gatsby-app',
-          projectType: 'application',
-        },
         'not-using-babel': {
           root: 'apps/not-using-babel',
           projectType: 'application',
@@ -43,7 +39,6 @@ describe('Create missing .babelrc files', () => {
         'missing-babel-presets': {},
         'web-app': {},
         'react-app': {},
-        'gatsby-app': {},
         'not-using-babel': {},
         'next-app': {},
       },
@@ -55,9 +50,6 @@ describe('Create missing .babelrc files', () => {
     writeJson(tree, 'apps/web-app/.babelrc', { presets: ['@nrwl/web/babel'] });
     writeJson(tree, 'apps/react-app/.babelrc', {
       presets: ['@nrwl/react/babel'],
-    });
-    writeJson(tree, 'apps/gatsby-app/.babelrc', {
-      presets: ['@nrwl/gatsby/babel'],
     });
     writeJson(tree, 'apps/next-app/.babelrc', {
       presets: ['@nrwl/next/babel'],
@@ -77,10 +69,6 @@ describe('Create missing .babelrc files', () => {
 
     expect(readJson(tree, 'apps/react-app/.babelrc')).toMatchObject({
       presets: ['@nrwl/react/babel'],
-    });
-
-    expect(readJson(tree, 'apps/gatsby-app/.babelrc')).toMatchObject({
-      presets: ['@nrwl/gatsby/babel'],
     });
 
     expect(tree.exists('apps/not-using-babel/.babelrc')).not.toBeTruthy();

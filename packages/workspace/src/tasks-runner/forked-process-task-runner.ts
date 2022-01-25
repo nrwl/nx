@@ -4,7 +4,7 @@ import { ChildProcess, fork } from 'child_process';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task } from './tasks-runner';
-import { output, TaskCacheStatus } from '../utilities/output';
+import { output } from '../utilities/output';
 import { getCliPath, getCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { join } from 'path';
@@ -13,6 +13,7 @@ import {
   BatchMessageType,
   BatchResults,
 } from './batch/batch-messages';
+import { stripIndents } from '@nrwl/devkit';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -39,7 +40,7 @@ export class ForkedProcessTaskRunner {
           );
         } else {
           const args = getCommandArgsForTask(Object.values(taskGraph.tasks)[0]);
-          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.logCommand(args.join(' '));
           output.addNewline();
         }
 
@@ -97,7 +98,7 @@ export class ForkedProcessTaskRunner {
       try {
         const args = getCommandArgsForTask(task);
         if (forwardOutput) {
-          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.logCommand(args.join(' '));
           output.addNewline();
         }
         const p = fork(this.cliPath, args, {
@@ -137,7 +138,7 @@ export class ForkedProcessTaskRunner {
           if (!forwardOutput) {
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
-              TaskCacheStatus.NoCache,
+              code === 0 ? 'success' : 'failure',
               terminalOutput
             );
           }
@@ -162,7 +163,7 @@ export class ForkedProcessTaskRunner {
       try {
         const args = getCommandArgsForTask(task);
         if (forwardOutput) {
-          output.logCommand(`${args.filter((a) => a !== 'run').join(' ')}`);
+          output.logCommand(args.join(' '));
           output.addNewline();
         }
         const p = fork(this.cliPath, args, {
@@ -179,13 +180,24 @@ export class ForkedProcessTaskRunner {
           if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output
-          const terminalOutput = this.readTerminalOutput(temporaryOutputPath);
-          if (!forwardOutput) {
-            this.options.lifeCycle.printTaskTerminalOutput(
-              task,
-              TaskCacheStatus.NoCache,
-              terminalOutput
-            );
+          let terminalOutput = '';
+          try {
+            terminalOutput = this.readTerminalOutput(temporaryOutputPath);
+            if (!forwardOutput) {
+              this.options.lifeCycle.printTaskTerminalOutput(
+                task,
+                code === 0 ? 'success' : 'failure',
+                terminalOutput
+              );
+            }
+          } catch (e) {
+            console.log(stripIndents`
+              Unable to print terminal output for Task "${task.id}".
+              Task failed with Exit Code ${code} and Signal "${signal}".
+              
+              Received error message: 
+              ${e.message} 
+            `);
           }
           res({
             code,
@@ -200,17 +212,11 @@ export class ForkedProcessTaskRunner {
   }
 
   private readTerminalOutput(outputPath: string) {
-    try {
-      return readFileSync(outputPath).toString();
-    } catch (e) {
-      return null;
-    }
+    return readFileSync(outputPath).toString();
   }
 
   private writeTerminalOutput(outputPath: string, content: string) {
-    try {
-      writeFileSync(outputPath, content);
-    } catch (e) {}
+    writeFileSync(outputPath, content);
   }
 
   // region Environment Variables

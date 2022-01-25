@@ -31,18 +31,19 @@ myorg/
 │   └── ui/
 │       ├── src/
 │       │   ├── lib/
-│       │   │   ├── ui.module.spec.ts
 │       │   │   └── ui.module.ts
-│       │   └── index.ts
-│       ├── .eslintrc
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
+│       │   ├── index.ts
+│       │   └── test-setup.ts
+│       ├── .eslintrc.json
+│       ├── jest.config.js
+│       ├── project.json
 │       ├── tsconfig.json
+│       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
-├── .eslintrc
+├── tools/
+├── .eslintrc.json
 ├── nx.json
 ├── package.json
-├── tools/
 └── tsconfig.base.json
 ```
 
@@ -82,17 +83,16 @@ myorg/
 │       │   │   │   ├── todos.component.html
 │       │   │   │   ├── todos.component.spec.ts
 │       │   │   │   └── todos.component.ts
-│       │   │   ├── ui.module.spec.ts
 │       │   │   └── ui.module.ts
 │       │   └── index.ts
-│       ├── .eslintrc
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
+│       ├── .eslintrc.json
+│       ├── jest.config.js
 │       ├── tsconfig.json
+│       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
+├── tools/
 ├── nx.json
 ├── package.json
-├── tools/
 └── tsconfig.base.json
 ```
 
@@ -167,4 +167,4 @@ npx nx serve todos
 
 ## What's Next
 
-- Continue to [Step 9: Using the Dependency Graph](/angular-tutorial/09-dep-graph)
+- Continue to [Step 9: Using the Project Graph](/angular-tutorial/09-dep-graph)

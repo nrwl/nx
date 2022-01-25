@@ -227,7 +227,9 @@ export async function generateGraph(
         },
       });
 
-      const depGraphClientResponse = await createDepGraphClientResponse();
+      const depGraphClientResponse = await createDepGraphClientResponse(
+        affectedProjects
+      );
 
       const environmentJs = buildEnvironmentJs(
         args.exclude || [],
@@ -305,8 +307,7 @@ async function startServer(
     startWatcher();
   }
 
-  currentDepGraphClientResponse = await createDepGraphClientResponse();
-  currentDepGraphClientResponse.affected = affected;
+  currentDepGraphClientResponse = await createDepGraphClientResponse(affected);
   currentDepGraphClientResponse.focus = focus;
   currentDepGraphClientResponse.groupByFolder = groupByFolder;
   currentDepGraphClientResponse.exclude = exclude;
@@ -370,7 +371,7 @@ async function startServer(
   app.listen(port, host);
 
   output.note({
-    title: `Dep graph started at http://${host}:${port}`,
+    title: `Project graph started at http://${host}:${port}`,
   });
 
   if (openBrowser) {
@@ -416,7 +417,7 @@ function getIgnoredGlobs(root: string) {
 
 function startWatcher() {
   createFileWatcher(appRootPath, async () => {
-    output.note({ title: 'Recalculating dependency graph...' });
+    output.note({ title: 'Recalculating project graph...' });
 
     const newGraphClientResponse = await createDepGraphClientResponse();
 
@@ -466,13 +467,15 @@ function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
   return { close: () => watcher.close() };
 }
 
-async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
-  performance.mark('dep graph watch calculation:start');
+async function createDepGraphClientResponse(
+  affected: string[] = []
+): Promise<DepGraphClientResponse> {
+  performance.mark('project graph watch calculation:start');
   await defaultFileHasher.init();
 
   let graph = pruneExternalNodes(await createProjectGraphAsync());
-  performance.mark('dep graph watch calculation:end');
-  performance.mark('dep graph response generation:start');
+  performance.mark('project graph watch calculation:end');
+  performance.mark('project graph response generation:start');
 
   const layout = workspaceLayout();
   const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes).map(
@@ -495,18 +498,18 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
 
   const hash = hasher.digest('hex');
 
-  performance.mark('dep graph response generation:end');
+  performance.mark('project graph response generation:end');
 
   performance.measure(
-    'dep graph watch calculation',
-    'dep graph watch calculation:start',
-    'dep graph watch calculation:end'
+    'project graph watch calculation',
+    'project graph watch calculation:start',
+    'project graph watch calculation:end'
   );
 
   performance.measure(
-    'dep graph response generation',
-    'dep graph response generation:start',
-    'dep graph response generation:end'
+    'project graph response generation',
+    'project graph response generation:start',
+    'project graph response generation:end'
   );
 
   return {
@@ -515,5 +518,6 @@ async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
     layout,
     projects,
     dependencies,
+    affected,
   };
 }

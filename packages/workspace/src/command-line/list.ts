@@ -1,4 +1,3 @@
-import * as yargs from 'yargs';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output } from '../utilities/output';
 import {
@@ -11,23 +10,10 @@ import {
   listPluginCapabilities,
 } from '../utilities/plugins';
 
-export interface YargsListArgs extends yargs.Arguments, ListArgs {}
-
-interface ListArgs {
-  plugin?: string;
+export interface ListArgs {
+  /** The name of an installed plugin to query  */
+  plugin?: string | undefined;
 }
-
-export const list = {
-  command: 'list [plugin]',
-  describe:
-    'Lists installed plugins, capabilities of installed plugins and other available plugins.',
-  builder: (yargs: yargs.Argv) =>
-    yargs.positional('plugin', {
-      default: null,
-      description: 'The name of an installed plugin to query',
-    }),
-  handler: listHandler,
-};
 
 /**
  * List available plugins or capabilities within a specific plugin
@@ -37,7 +23,7 @@ export const list = {
  * Must be run within an Nx workspace
  *
  */
-async function listHandler(args: YargsListArgs) {
+export async function listHandler(args: ListArgs): Promise<void> {
   if (args.plugin) {
     listPluginCapabilities(args.plugin);
   } else {

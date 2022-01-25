@@ -5,6 +5,10 @@ import { readNxJson, workspaceFileName } from '../file-utils';
 import { output } from '../../utilities/output';
 import { isCI } from '../../utilities/is_ci';
 import { defaultFileHasher } from '../hasher/file-hasher';
+import {
+  isDaemonDisabled,
+  markDaemonAsDisabled,
+} from '@nrwl/workspace/src/core/project-graph/daemon/tmp-dir';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -48,6 +52,20 @@ export function readCachedProjectGraph(
   );
 }
 
+async function buildProjectGraphWithoutDaemon(projectGraphVersion: string) {
+  try {
+    await defaultFileHasher.ensureInitialized();
+    return projectGraphAdapter(
+      '5.0',
+      projectGraphVersion,
+      await buildProjectGraph()
+    );
+  } catch (e) {
+    printErrorMessage(e);
+    process.exit(1);
+  }
+}
+
 export async function createProjectGraphAsync(
   projectGraphVersion = '5.0'
 ): Promise<ProjectGraph> {
@@ -66,21 +84,17 @@ export async function createProjectGraphAsync(
   // option=true,env=undefined,!ci => daemon
   // option=true,env=true => daemon
   // option=false,env=true => daemon
-  try {
-    if (
-      (useDaemonProcessOption === undefined && env === undefined) ||
-      (useDaemonProcessOption === true && env === 'false') ||
-      (useDaemonProcessOption === false && env === undefined) ||
-      (useDaemonProcessOption === false && env === 'false') ||
-      (useDaemonProcessOption === true && env === undefined && isCI())
-    ) {
-      await defaultFileHasher.ensureInitialized();
-      return projectGraphAdapter(
-        '5.0',
-        projectGraphVersion,
-        await buildProjectGraph()
-      );
-    } else {
+  if (
+    isDaemonDisabled() ||
+    (useDaemonProcessOption === undefined && env === undefined) ||
+    (useDaemonProcessOption === true && env === 'false') ||
+    (useDaemonProcessOption === false && env === undefined) ||
+    (useDaemonProcessOption === false && env === 'false') ||
+    (useDaemonProcessOption === true && env === undefined && isCI())
+  ) {
+    return await buildProjectGraphWithoutDaemon(projectGraphVersion);
+  } else {
+    try {
       const daemonClient = require('./daemon/client/client');
       if (!(await daemonClient.isServerAvailable())) {
         await daemonClient.startInBackground();
@@ -90,15 +104,32 @@ export async function createProjectGraphAsync(
         projectGraphVersion,
         await daemonClient.getProjectGraphFromServer()
       );
+    } catch (e) {
+      // common errors with the daemon due to OS settings (cannot watch all the files available)
+      if (e.message.indexOf('inotify_add_watch') > -1) {
+        // https://askubuntu.com/questions/1088272/inotify-add-watch-failed-no-space-left-on-device
+        output.warn({
+          title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon. Nx Daemon is going to be disabled until you run "nx reset".`,
+          bodyLines: [
+            'For more information read: https://askubuntu.com/questions/1088272/inotify-add-watch-failed-no-space-left-on-device',
+          ],
+        });
+        markDaemonAsDisabled();
+        return buildProjectGraphWithoutDaemon(projectGraphVersion);
+      } else {
+        printErrorMessage(e);
+        process.exit(1);
+      }
     }
-  } catch (e) {
-    const lines = e.message.split('\n');
-    output.error({
-      title: lines[0],
-      bodyLines: lines.slice(1),
-    });
-    process.exit(1);
   }
+}
+
+function printErrorMessage(e: any) {
+  const lines = e.message.split('\n');
+  output.error({
+    title: lines[0],
+    bodyLines: lines.slice(1),
+  });
 }
 
 /**

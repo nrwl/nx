@@ -24,7 +24,7 @@ import { performance } from 'perf_hooks';
 import type { Environment } from '../core/shared-interfaces';
 
 export async function affected(
-  command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
+  command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
   parsedArgs: yargs.Arguments & RawNxArgs
 ): Promise<void> {
   performance.mark('command-execution-begins');
@@ -78,7 +78,7 @@ export async function affected(
         }
         break;
 
-      case 'dep-graph':
+      case 'graph':
         const projectNames = filteredProjects.map((p) => p.name);
         await generateGraph(parsedArgs as any, projectNames);
         break;

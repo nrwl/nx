@@ -91,8 +91,8 @@ tools because it looks not just at the changed files but also at the nature of t
 
 ### Workspace Visualization
 
-Run `nx dep-graph` to see a visualization of your workspace. `nx affected:dep-graph` shows what is affected by your
-commit. `nx dep-graph --watch` watches your workspace for changes and updates the visualization.
+Run `nx graph` to see a visualization of your workspace. `nx affected:graph` shows what is affected by your
+commit. `nx graph --watch` watches your workspace for changes and updates the visualization.
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/v87Y8NgAYLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
 
@@ -163,7 +163,7 @@ faster and with better dev ergonomics. But Nx enables much more than that.
 Nx is like a VS Code of build tools. It has a very powerful core, but it's really the plugins and extra capabilities
 that really transform how you develop.
 
-Nx has first class support for React, Next.js, Gatsby, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and
+Nx has first class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and
 many more. All the plugins are designed to work together and create a cohesive and pleasant to use dev environment.
 
 In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in
