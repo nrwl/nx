@@ -18,10 +18,10 @@ The Nx Plugin for Angular contains executors, generators, and utilities for mana
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
 ```bash
-#yarn
 yarn add -D @nrwl/angular
+```
 
-#npm
+```bash
 npm install -D @nrwl/angular
 ```
 
