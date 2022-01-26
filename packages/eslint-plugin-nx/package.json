@@ -32,6 +32,7 @@
     "@swc-node/register": "^1.4.2",
     "@typescript-eslint/experimental-utils": "~5.3.0",
     "chalk": "4.1.0",
-    "confusing-browser-globals": "^1.0.9"
+    "confusing-browser-globals": "^1.0.9",
+    "tsconfig-paths": "^3.9.0"
   }
 }
