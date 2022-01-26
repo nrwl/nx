@@ -94,9 +94,9 @@ If you need to fine tune your Cypress setup, you can do so by modifying `cypress
 React Nx Tutorial
 
 - [Step 2: Add E2E Tests](/react-tutorial/02-add-e2e-test)
-- [Step 3: Display Todso](/react-tutorial/03-display-todos)
+- [Step 3: Display Todos](/react-tutorial/03-display-todos)
 
 Angular Nx Tutorial
 
 - [Step 2: Add E2E Tests](/angular-tutorial/02-add-e2e-test)
-- [Step 3: Display Todso](/angular-tutorial/03-display-todos)
+- [Step 3: Display Todos](/angular-tutorial/03-display-todos)
