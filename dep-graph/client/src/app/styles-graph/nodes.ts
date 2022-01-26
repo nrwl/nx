@@ -1,4 +1,5 @@
 import { Stylesheet } from 'cytoscape';
+import { selectDynamically } from '../theme-resolver';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
 
@@ -8,15 +9,20 @@ const allNodes: Stylesheet = {
     'font-size': '32px',
     'font-family': FONTS,
     'border-style': 'solid',
-    'border-color': NrwlPalette.darkGray,
-    'border-width': '1px',
+    'border-color': selectDynamically(NrwlPalette.gray, NrwlPalette.darkGray),
+    'border-width': '2px',
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
-    color: NrwlPalette.black,
+    color: selectDynamically(NrwlPalette.white, NrwlPalette.black),
     label: 'data(id)',
+    /*
+    TODO: with no longer supports 'label' as value, it's deprecated.
+    I did a bit of digging and this is the solution I found:
+    https://stackoverflow.com/questions/68399821/cytoscape-js-warning-the-style-value-of-label-is-deprecated-for-width-whe
+    */
     width: 'label',
-    backgroundColor: NrwlPalette.white,
+    backgroundColor: selectDynamically(NrwlPalette.stone, NrwlPalette.white),
     'transition-property':
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,

@@ -14,6 +14,7 @@ import {
   projectIsSelectedSelector,
 } from './machines/selectors';
 import Sidebar from './sidebar/sidebar';
+import { selectStatically } from './theme-resolver';
 
 export function Shell() {
   const depGraphService = useDepGraphService();
@@ -97,7 +98,10 @@ export function Shell() {
   return (
     <>
       <Sidebar></Sidebar>
-      <div id="main-content" className="flex-grow overflow-hidden">
+      <div
+        id="main-content"
+        className="dark:bg-graph-dark flex-grow overflow-hidden transition-all"
+      >
         {environment.appConfig.showDebugger ? (
           <DebuggerPanel
             projectGraphs={environment.appConfig.projectGraphs}
@@ -108,7 +112,10 @@ export function Shell() {
         ) : null}
 
         {!projectIsSelected ? (
-          <div id="no-projects-chosen" className="flex text-gray-700">
+          <div
+            id="no-projects-chosen"
+            className="dark:text-graph-text-dark flex text-gray-700"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="mr-4 h-6 w-6"
@@ -128,7 +135,11 @@ export function Shell() {
         ) : null}
         <div id="graph-container">
           <div id="cytoscape-graph"></div>
-          <Tippy content="Download Graph as PNG" placement="right" theme="nx">
+          <Tippy
+            content="Download Graph as PNG"
+            placement="right"
+            theme={selectStatically('dark-nx', 'nx')}
+          >
             <button
               type="button"
               className={`

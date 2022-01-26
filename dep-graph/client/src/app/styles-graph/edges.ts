@@ -1,15 +1,20 @@
 import { Stylesheet } from 'cytoscape';
+import { selectDynamically } from '../theme-resolver';
 import { NrwlPalette } from './palette';
 
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
-    width: '1px',
-    'line-color': NrwlPalette.black,
+    width: '2px',
+    'line-color': selectDynamically(NrwlPalette.gray, NrwlPalette.darkGray),
     'curve-style': 'unbundled-bezier',
     'target-arrow-shape': 'triangle',
+    'arrow-scale': 2,
     'target-arrow-fill': 'filled',
-    'target-arrow-color': NrwlPalette.black,
+    'target-arrow-color': selectDynamically(
+      NrwlPalette.gray,
+      NrwlPalette.darkGray
+    ),
   },
 };
 
@@ -26,9 +31,16 @@ const implicitEdges: Stylesheet = {
   selector: 'edge.implicit',
   style: {
     label: 'implicit',
-    'font-size': '16px',
-    'edge-text-rotation': 'autorotate',
+    'font-size': '18px',
     'curve-style': 'unbundled-bezier',
+    'text-rotation': 'autorotate',
+    'text-background-padding': '5px',
+    'text-background-color': selectDynamically(
+      NrwlPalette.lightBlue,
+      NrwlPalette.blue
+    ),
+    'text-background-opacity': selectDynamically(0.7, 0.1),
+    color: selectDynamically(NrwlPalette.gray, NrwlPalette.black),
   },
 };
 

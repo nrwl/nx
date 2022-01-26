@@ -62,7 +62,11 @@ function ProjectListItem({
   focusProject: (projectId: string) => void;
 }) {
   return (
-    <li className="relative block cursor-default select-none py-1 pl-3 pr-9 text-xs text-gray-600">
+    <li
+      className="dark:text-sidebar-subtitle-dark relative block cursor-default select-none py-1 pl-3 pr-9 text-xs
+    text-gray-600
+    "
+    >
       <div className="flex items-center">
         <button
           type="button"
@@ -70,7 +74,10 @@ function ProjectListItem({
           title="Focus on this library"
           onClick={() => focusProject(project.projectGraphNode.name)}
         >
-          <span className="flex items-center rounded-md bg-white p-1 font-medium shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50">
+          <span
+            className="dark:bg-sidebar-btn-dark flex items-center rounded-md bg-white p-1 font-medium shadow-sm ring-1 ring-gray-200 transition 
+          hover:bg-gray-50 dark:ring-stone-700"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -87,7 +94,9 @@ function ProjectListItem({
           </span>
         </button>
         <label
-          className="ml-3 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-gray-50"
+          className="hover:dark:bg-sidebar-btn-dark/[0.5] dark:text-sidebar-text-dark ml-3 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal
+          transition hover:bg-gray-50
+          "
           data-project={project.projectGraphNode.name}
           data-active={project.isSelected.toString()}
           onClick={() =>
@@ -160,7 +169,7 @@ function SubProjectList({
 
   return (
     <>
-      <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs">
+      <h3 className="dark:text-sidebar-subtitle-dark mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs">
         {headerText}
       </h3>
       <ul className="mt-2 -ml-3">
@@ -224,7 +233,7 @@ export function ProjectList() {
 
   return (
     <div id="project-lists" className="mt-8 border-t border-gray-200 px-4">
-      <h2 className="mt-8 border-b border-solid border-gray-50 text-lg font-bold">
+      <h2 className="dark:text-sidebar-title-dark mt-8 border-b border-solid border-gray-50 text-lg font-bold">
         app projects
       </h2>
 
@@ -241,7 +250,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-gray-50 text-lg font-bold">
+      <h2 className="dark:text-sidebar-title-dark mt-8 border-b border-solid border-gray-50 text-lg font-bold">
         e2e projects
       </h2>
 
@@ -258,7 +267,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-gray-50 text-lg font-bold">
+      <h2 className="dark:text-sidebar-title-dark mt-8 border-b border-solid border-gray-50 text-lg font-bold">
         lib projects
       </h2>
 

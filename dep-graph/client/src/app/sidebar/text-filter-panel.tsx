@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '../hooks/use-debounce';
+import { DarkClasses } from '../dark-theme-styles';
 
 export interface TextFilterPanelProps {
   textFilter: string;
@@ -53,7 +54,9 @@ export function TextFilterPanel({
           className="relative flex rounded-md shadow-sm"
           onSubmit={(event) => event.preventDefault()}
         >
-          <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 p-2 text-gray-500">
+          <span
+            className={`inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 p-2 text-gray-500 ${DarkClasses.button}`}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -71,7 +74,7 @@ export function TextFilterPanel({
           </span>
           <input
             type="text"
-            className="block w-full flex-1 rounded-none rounded-r-md border border-gray-300 bg-white p-1.5 text-gray-600"
+            className={`block w-full flex-1 rounded-none rounded-r-md border border-gray-300 bg-white p-1.5 text-gray-600 ${DarkClasses.input}`}
             placeholder="lib name, other lib name"
             data-cy="textFilterInput"
             name="filter"
@@ -122,11 +125,11 @@ export function TextFilterPanel({
           <div className="ml-3 text-sm">
             <label
               htmlFor="includeInPath"
-              className="cursor-pointer font-medium text-gray-700"
+              className="dark:text-sidebar-subtitle-dark cursor-pointer font-medium text-gray-700"
             >
               Include related libraries
             </label>
-            <p className="text-gray-500">
+            <p className="dark:text-sidebar-text-dark text-gray-500">
               Show libraries that are related to your search.
             </p>
           </div>
