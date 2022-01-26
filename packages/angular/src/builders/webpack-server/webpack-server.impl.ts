@@ -53,7 +53,11 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
             // The extra Webpack configuration file can export a synchronous or asynchronous function,
             // for instance: `module.exports = async config => { ... }`.
             if (typeof customWebpackConfiguration === 'function') {
-              return customWebpackConfiguration(baseWebpackConfig);
+              return customWebpackConfiguration(
+                baseWebpackConfig,
+                selectedConfiguration,
+                context.target
+              );
             } else {
               return merge(
                 baseWebpackConfig,
