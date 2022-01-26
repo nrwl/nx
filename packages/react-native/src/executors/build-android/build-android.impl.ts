@@ -35,9 +35,11 @@ function runCliBuild(
   options: ReactNativeBuildOptions
 ) {
   return new Promise((resolve, reject) => {
+    const gradleCommand = getGradleCommand(options);
+
     childProcess = spawn(
       process.platform === 'win32' ? 'gradlew.bat' : './gradlew',
-      [options.apk ? 'assembleRelease' : 'bundleRelease'],
+      [gradleCommand],
       {
         cwd: join(workspaceRoot, projectRoot, 'android'),
         stdio: [0, 1, 2],
@@ -59,4 +61,20 @@ function runCliBuild(
       }
     });
   });
+}
+
+function getGradleCommand(options: ReactNativeBuildOptions) {
+  if (options.apk && options.debug) {
+    return 'assembleDebug';
+  }
+
+  if (options.apk) {
+    return 'assembleRelease';
+  }
+
+  if (options.debug) {
+    return 'bundleDebug';
+  }
+
+  return 'bundleRelease';
 }
