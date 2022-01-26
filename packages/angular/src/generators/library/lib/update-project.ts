@@ -45,6 +45,7 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
     host.delete(path.join(options.projectRoot, 'ng-package.json'));
     host.delete(path.join(options.projectRoot, 'package.json'));
     host.delete(path.join(options.projectRoot, 'tsconfig.lib.prod.json'));
+    host.delete(path.join(options.projectRoot, '.browserslistrc'));
   }
 
   host.delete(path.join(options.projectRoot, 'karma.conf.js'));
