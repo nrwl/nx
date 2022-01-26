@@ -344,6 +344,4 @@ exports[`ProjectConverter should throw if -d is set 1`] = `
 "
 `;
 
-exports[`ProjectConverter should throw if no project tslint.json is found 1`] = `"We could not find a tslint.json for the selected project \\"apps/foo/tslint.json\\", maybe you have already migrated to ESLint?"`;
-
 exports[`ProjectConverter should throw if no root tslint.json is found 1`] = `"We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?"`;

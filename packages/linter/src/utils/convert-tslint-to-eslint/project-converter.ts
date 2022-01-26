@@ -107,13 +107,14 @@ export class ProjectConverter {
           'We could not find a tslint.json at the root of your workspace, maybe you have already migrated to ESLint?'
         );
       }
+      this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
       if (!host.exists(this.projectTSLintJsonPath)) {
-        throw new Error(
+        logger.warn(
           `We could not find a tslint.json for the selected project "${this.projectTSLintJsonPath}", maybe you have already migrated to ESLint?`
         );
+      } else {
+        this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
       }
-      this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
-      this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
     }
 
     /**
@@ -269,7 +270,7 @@ export class ProjectConverter {
   async convertProjectConfig(
     applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config
   ): Promise<GeneratorCallback> {
-    if (this.ignoreExistingTslintConfig) {
+    if (this.ignoreExistingTslintConfig || !this.projectTSLintJson) {
       return Promise.resolve(() => {});
     }
 
