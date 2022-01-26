@@ -47,8 +47,10 @@ You can add Nx-specific configuration as follows:
       "test": {
         "outputs": [],
         "dependsOn": [
-          "target": "build",
-          "projects": "self"
+          {
+            "target": "build",
+            "projects": "self"
+          }
         ]
       }
     }

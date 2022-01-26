@@ -35,6 +35,14 @@ Type: `string`
 
 The name of the directive.
 
+### export
+
+Default: `false`
+
+Type: `boolean`
+
+Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.
+
 ### flat
 
 Default: `true`
