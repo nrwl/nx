@@ -194,7 +194,7 @@ Storybook for Angular needs a default project specified in order to run. The rea
 
 If you're using Nx version `>=13.4.6` either in a new Nx workspace, or you migrated your older Nx workspace to Nx version `>=13.4.6`, Nx will automatically add the `projectBuildConfig` property in your projects `project.json` files, for projects that are using Storybook. It will look like this:
 
-```
+```json
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
@@ -224,13 +224,13 @@ In your project's `project.json` file find the `storybook` and `build-storybook`
 
 After you add this property, you can run your `storybook` and `build-storybook` executors as normal:
 
-```
+```bash
 nx storybook my-project
 ```
 
 and
 
-```
+```bash
 nx build-storybook my-project
 ```
 
@@ -238,13 +238,13 @@ nx build-storybook my-project
 
 The way you would run your `storybook` and your `build-storybook` executors would be:
 
-```
+```bash
 nx storybook my-project --projectBuildConfig=my-project:build-storybook
 ```
 
 and
 
-```
+```bash
 nx build-storybook my-project --projectBuildConfig=my-project:build-storybook
 ```
 
