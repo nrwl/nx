@@ -16,3 +16,9 @@ Options can be configured in `workspace.json` when defining the executor, or whe
 Type: `boolean`
 
 Generate apk file(s) rather than a bundle (.aab).
+
+### debug
+
+Type: `boolean`
+
+Generate a debug build instead of a release build
