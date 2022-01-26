@@ -11,12 +11,10 @@ The Nx Plugin for Web Components contains generators for managing Web Component 
 Adding the Web plugin to a workspace can be done with the following:
 
 ```bash
-#yarn
 yarn add -D @nrwl/web
 ```
 
 ```bash
-#npm
 npm install -D @nrwl/web
 ```
 
