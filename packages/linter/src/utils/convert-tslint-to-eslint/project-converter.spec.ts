@@ -146,7 +146,19 @@ describe('ProjectConverter', () => {
     ).toThrowErrorMatchingSnapshot();
   });
 
-  it('should throw if no project tslint.json is found', () => {
+  it('should not throw if no root tslint.json is found but ignore is set', () => {
+    expect(
+      () =>
+        new ProjectConverter({
+          host,
+          projectName,
+          ignoreExistingTslintConfig: true,
+          eslintInitializer: () => undefined,
+        })
+    ).not.toThrow();
+  });
+
+  it('should not throw if no project tslint.json is found', () => {
     writeJson(host, 'tslint.json', {});
 
     expect(
@@ -157,7 +169,7 @@ describe('ProjectConverter', () => {
           ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
-    ).toThrowErrorMatchingSnapshot();
+    ).not.toThrow();
   });
 
   it('should not throw when not in dry-run and config files successfully found', () => {
