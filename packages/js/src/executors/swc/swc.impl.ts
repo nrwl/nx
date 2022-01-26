@@ -4,22 +4,19 @@ import {
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
 import { join, relative, resolve } from 'path';
-import { eachValueFrom } from 'rxjs-for-await';
-import { map } from 'rxjs/operators';
 
 import { checkDependencies } from '../../utils/check-dependencies';
+import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import {
-  ExecutorEvent,
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
 import { addTempSwcrc } from '../../utils/swc/add-temp-swcrc';
-import { compileSwc } from '../../utils/swc/compile-swc';
-import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
+import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
-export function normalizeOptions(
+function normalizeOptions(
   options: SwcExecutorOptions,
   contextRoot: string,
   sourceRoot?: string,
@@ -62,6 +59,22 @@ export function normalizeOptions(
     tsConfig: join(contextRoot, options.tsConfig),
     swcCliOptions,
   } as NormalizedSwcExecutorOptions;
+}
+
+function processAssetsAndPackageJsonOnce(
+  assetHandler: CopyAssetsHandler,
+  options: NormalizedSwcExecutorOptions,
+  projectRoot: string
+) {
+  return async () => {
+    await assetHandler.processAllAssetsOnce();
+    updatePackageJson(
+      options.main,
+      options.outputPath,
+      projectRoot,
+      !options.skipTypeCheck
+    );
+  };
 }
 
 export async function* swcExecutor(
@@ -109,26 +122,18 @@ export async function* swcExecutor(
       await disposeWatchAssetChanges();
       await disposePackageJsonChanges();
     });
+
+    return yield* compileSwcWatch(
+      context,
+      options,
+      processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+    );
   }
 
-  return yield* eachValueFrom(
-    compileSwc(context, options, async () => {
-      await assetHandler.processAllAssetsOnce();
-      updatePackageJson(
-        options.main,
-        options.outputPath,
-        projectRoot,
-        !options.skipTypeCheck
-      );
-    }).pipe(
-      map(
-        ({ success }) =>
-          ({
-            success,
-            outfile: options.mainOutputPath,
-          } as ExecutorEvent)
-      )
-    )
+  return yield compileSwc(
+    context,
+    options,
+    processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
   );
 }
 

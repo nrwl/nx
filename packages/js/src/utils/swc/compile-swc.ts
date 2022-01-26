@@ -1,164 +1,227 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
+import { cacheDir } from '@nrwl/workspace/src/utilities/cache-directory';
 import { exec, execSync } from 'child_process';
-import { EMPTY, Observable, zip } from 'rxjs';
-import { concatMap, map } from 'rxjs/operators';
 import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
-import {
-  runTypeCheck,
-  runTypeCheckWatch,
-  TypeCheckOptions,
-} from '../typescript/run-type-check';
+import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 
-export function compileSwc(
+function getSwcCmd(
+  normalizedOptions: NormalizedSwcExecutorOptions,
+  watch = false
+) {
+  const srcPath = `../${normalizedOptions.swcCliOptions.projectDir}`;
+  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.swcCliOptions.destPath} --source-maps --no-swcrc --config-file=${normalizedOptions.swcrcPath}`;
+  return watch ? swcCmd.concat(' --watch') : swcCmd;
+}
+
+function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
+  const { projectRoot, watch, tsConfig, root, outputPath } = normalizedOptions;
+
+  const typeCheckOptions: TypeCheckOptions = {
+    mode: 'emitDeclarationOnly',
+    tsConfigPath: tsConfig,
+    outDir: outputPath.replace(`/${projectRoot}`, ''),
+    workspaceRoot: root,
+  };
+
+  if (watch) {
+    typeCheckOptions.incremental = true;
+    typeCheckOptions.cacheDir = cacheDir;
+  }
+
+  return typeCheckOptions;
+}
+
+export async function compileSwc(
   context: ExecutorContext,
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => Promise<void>
 ) {
   logger.log(`Compiling with SWC for ${context.projectName}...`);
-  const srcPath = `../${normalizedOptions.swcCliOptions.projectDir}`;
-  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.swcCliOptions.destPath} --source-maps --no-swcrc --config-file=${normalizedOptions.swcrcPath}`;
 
-  const postCompilationOperator = () =>
-    concatMap(({ success }) => {
-      if (success) {
-        return postCompilationCallback().then(() => ({ success }));
-      }
-      return EMPTY;
-    });
+  const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
+    cwd: normalizedOptions.projectRoot,
+  }).toString();
+  logger.log(swcCmdLog.replace(/\n/, ''));
+  const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 
-  const compile$ = new Observable<{ success: boolean }>((subscriber) => {
-    if (normalizedOptions.watch) {
-      swcCmd += ' --watch';
-      const watchProcess = createSwcWatchProcess(
-        swcCmd,
-        normalizedOptions.projectRoot,
-        (success) => {
-          subscriber.next({ success });
-        }
-      );
-
-      return () => {
-        watchProcess.close();
-        subscriber.complete();
-      };
-    }
-
-    const swcCmdLog = execSync(swcCmd, {
-      cwd: normalizedOptions.projectRoot,
-    }).toString();
-    logger.log(swcCmdLog.replace(/\n/, ''));
-    subscriber.next({ success: swcCmdLog.includes('Successfully compiled') });
-
-    return () => {
-      subscriber.complete();
-    };
-  });
+  await postCompilationCallback();
 
   if (normalizedOptions.skipTypeCheck) {
-    return compile$.pipe(postCompilationOperator());
+    return { success: isCompileSuccess };
   }
 
-  const tsOptions = {
-    outputPath: normalizedOptions.outputPath,
-    projectName: context.projectName,
-    projectRoot: normalizedOptions.projectRoot,
-    tsConfig: normalizedOptions.tsConfig,
-    watch: normalizedOptions.watch,
-  };
-  const outDir = tsOptions.outputPath.replace(`/${tsOptions.projectRoot}`, '');
-  const typeCheck$ = new Observable<{ success: boolean }>((subscriber) => {
-    const typeCheckOptions: TypeCheckOptions = {
-      mode: 'emitDeclarationOnly',
-      tsConfigPath: tsOptions.tsConfig,
-      outDir,
-      workspaceRoot: normalizedOptions.root,
-    };
-    if (normalizedOptions.watch) {
-      let typeCheckRunner: { close: () => void };
-      let preEmit = false;
-      runTypeCheckWatch(
-        typeCheckOptions,
-        (diagnostic, formattedDiagnostic, errorCount) => {
-          // 6031 and 6032 are to skip watchCompilerHost initialization (Start watching for changes... message)
-          // We also skip if preEmit has been set to true, because it means that the first type check before
-          // the WatchCompiler emits.
-          if (preEmit && diagnostic.code !== 6031 && diagnostic.code !== 6032) {
-            const hasErrors = errorCount > 0;
-            if (hasErrors) {
-              void printDiagnostics([formattedDiagnostic]);
-            } else {
-              void printDiagnostics([], [formattedDiagnostic]);
-            }
-            subscriber.next({ success: !hasErrors });
-          }
-        }
-      ).then(({ close, preEmitErrors, preEmitWarnings }) => {
-        const hasErrors = preEmitErrors.length > 0;
-        if (hasErrors) {
-          void printDiagnostics(preEmitErrors, preEmitWarnings);
-        }
-        typeCheckRunner = { close };
-        subscriber.next({ success: !hasErrors });
-        preEmit = true;
-      });
-
-      return () => {
-        if (typeCheckRunner) {
-          typeCheckRunner.close();
-        }
-        subscriber.complete();
-      };
-    }
-
-    runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
-      const hasErrors = errors.length > 0;
-      if (hasErrors) {
-        void printDiagnostics(errors, warnings);
-      }
-      subscriber.next({ success: !hasErrors });
-      subscriber.complete();
-    });
-
-    return () => {
-      subscriber.complete();
-    };
-  });
-
-  return zip(compile$, typeCheck$).pipe(
-    map(([compileResult, typeCheckResult]) => ({
-      success: compileResult.success && typeCheckResult.success,
-    })),
-    postCompilationOperator()
+  const { errors, warnings } = await runTypeCheck(
+    getTypeCheckOptions(normalizedOptions)
   );
+  const hasErrors = errors.length > 0;
+  const hasWarnings = warnings.length > 0;
+
+  if (hasErrors || hasWarnings) {
+    await printDiagnostics(errors, warnings);
+  }
+
+  return { success: !hasErrors && isCompileSuccess };
 }
 
-function createSwcWatchProcess(
-  swcCmd: string,
-  cwd: string,
-  callback: (success: boolean) => void
+export async function* compileSwcWatch(
+  context: ExecutorContext,
+  normalizedOptions: NormalizedSwcExecutorOptions,
+  postCompilationCallback: () => Promise<void>
 ) {
-  const watchProcess = exec(swcCmd, { cwd });
+  logger.log(
+    `Compiling with SWC for ${context.projectName}.....................`
+  );
 
-  watchProcess.stdout.on('data', (data) => {
-    process.stdout.write(data);
-    callback(data.includes('Successfully compiled'));
+  const getResult = (success: boolean) => ({
+    success,
+    outfile: normalizedOptions.mainOutputPath,
   });
 
-  watchProcess.stderr.on('data', (err) => {
-    process.stderr.write(err);
-    callback(false);
+  const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
+    cwd: normalizedOptions.projectRoot,
   });
 
-  const processExitListener = () => watchProcess.kill();
+  const promisifySwcWatcher = () => {
+    let processOnExit: () => void;
+    let stdoutOnData: () => void;
+    let stderrOnData: () => void;
+    let watcherOnExit: () => void;
 
-  process.on('SIGINT', processExitListener);
-  process.on('SIGTERM', processExitListener);
-  process.on('exit', processExitListener);
+    return new Promise<{
+      success: boolean;
+      timestamp: number;
+      exit: boolean;
+    }>((resolve) => {
+      processOnExit = () => {
+        swcWatcher.kill();
+        resolve({ success: true, exit: true, timestamp: Date.now() });
+      };
 
-  watchProcess.on('exit', () => {
-    callback(true);
-  });
+      stdoutOnData = (data?: any) => {
+        process.stdout.write(data);
+        if (!data.startsWith('Watching')) {
+          resolve({
+            success: data.includes('Successfully'),
+            exit: false,
+            timestamp: Date.now(),
+          });
+        }
+      };
 
-  return { close: () => watchProcess.kill() };
+      stderrOnData = (err?: any) => {
+        process.stderr.write(err);
+        resolve({ success: false, exit: false, timestamp: Date.now() });
+      };
+
+      watcherOnExit = () => {
+        resolve({ success: true, exit: true, timestamp: Date.now() });
+      };
+
+      swcWatcher.stdout.on('data', stdoutOnData);
+      swcWatcher.stderr.on('data', stderrOnData);
+
+      process.on('SIGINT', processOnExit);
+      process.on('SIGTERM', processOnExit);
+      process.on('exit', processOnExit);
+
+      swcWatcher.on('exit', watcherOnExit);
+    }).finally(() => {
+      if (processOnExit) {
+        process.off('SIGINT', processOnExit);
+        process.off('SIGTERM', processOnExit);
+        process.off('exit', processOnExit);
+      }
+
+      if (stdoutOnData) {
+        swcWatcher.stdout.off('data', stdoutOnData);
+      }
+
+      if (stderrOnData) {
+        swcWatcher.stderr.off('data', stderrOnData);
+      }
+
+      if (watcherOnExit) {
+        swcWatcher.off('exit', watcherOnExit);
+      }
+    });
+  };
+
+  let typeCheckOptions: TypeCheckOptions;
+
+  // initial
+  const { success: initialSwcStatus } = await promisifySwcWatcher();
+
+  await postCompilationCallback();
+
+  if (normalizedOptions.skipTypeCheck) {
+    yield getResult(initialSwcStatus);
+  } else {
+    typeCheckOptions = getTypeCheckOptions(normalizedOptions);
+    const { errors, warnings } = await runTypeCheck(typeCheckOptions);
+    if (errors.length > 0) {
+      printDiagnostics(errors, warnings);
+      yield getResult(false);
+    } else {
+      if (warnings.length > 0) {
+        printDiagnostics(errors, warnings);
+      }
+      yield getResult(initialSwcStatus);
+    }
+  }
+
+  // watch
+  while (true) {
+    const { success: swcStatus, exit } = await promisifySwcWatcher();
+    if (exit) {
+      return getResult(swcStatus);
+    }
+
+    if (normalizedOptions.skipTypeCheck) {
+      yield getResult(swcStatus);
+    } else {
+      const delayed = delay(5000);
+      yield getResult(
+        await Promise.race([
+          delayed.start().then(() => ({ tscStatus: false, type: 'timeout' })),
+          runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
+            const hasErrors = errors.length > 0;
+            if (hasErrors) {
+              printDiagnostics(errors, warnings);
+            }
+            return {
+              tscStatus: !hasErrors,
+              type: 'tsc',
+            };
+          }),
+        ]).then(({ type, tscStatus }) => {
+          if (type === 'tsc') {
+            delayed.cancel();
+            return tscStatus && swcStatus;
+          }
+
+          return swcStatus;
+        })
+      );
+    }
+  }
+}
+
+function delay(ms: number): { start: () => Promise<void>; cancel: () => void } {
+  let timerId: ReturnType<typeof setTimeout> = undefined;
+  return {
+    start() {
+      return new Promise<void>((resolve) => {
+        timerId = setTimeout(() => {
+          resolve();
+        }, ms);
+      });
+    },
+    cancel() {
+      if (timerId) {
+        clearTimeout(timerId);
+        timerId = undefined;
+      }
+    },
+  };
 }

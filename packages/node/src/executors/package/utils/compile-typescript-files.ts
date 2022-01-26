@@ -8,14 +8,14 @@ import {
   compileTypeScriptWatcher,
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join } from 'path';
-import { NormalizedBuilderOptions } from './models';
-import { loadTsPlugins } from '../../../utils/load-ts-plugins';
 import type {
   CustomTransformers,
   Program,
   SourceFile,
   TransformerFactory,
 } from 'typescript';
+import { loadTsPlugins } from '../../../utils/load-ts-plugins';
+import { NormalizedBuilderOptions } from './models';
 
 export default async function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
