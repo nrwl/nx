@@ -8,6 +8,7 @@ import { defaultFileHasher } from '../hasher/file-hasher';
 import {
   isDaemonDisabled,
   markDaemonAsDisabled,
+  writeDaemonLogs,
 } from '@nrwl/workspace/src/core/project-graph/daemon/tmp-dir';
 
 /**
@@ -74,23 +75,20 @@ export async function createProjectGraphAsync(
     nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
   const env = process.env.NX_DAEMON;
 
-  // env takes precendence
-  // option=undefined,env=undefined => no daemon
+  // env takes precedence
   // option=true,env=false => no daemon
   // option=false,env=undefined => no daemon
   // option=false,env=false => no daemon
-  // option=true,env=undefined,ci => no daemon
 
-  // option=true,env=undefined,!ci => daemon
+  // option=undefined,env=undefined => daemon
   // option=true,env=true => daemon
   // option=false,env=true => daemon
   if (
+    isCI() ||
     isDaemonDisabled() ||
-    (useDaemonProcessOption === undefined && env === undefined) ||
     (useDaemonProcessOption === true && env === 'false') ||
     (useDaemonProcessOption === false && env === undefined) ||
-    (useDaemonProcessOption === false && env === 'false') ||
-    (useDaemonProcessOption === true && env === undefined && isCI())
+    (useDaemonProcessOption === false && env === 'false')
   ) {
     return await buildProjectGraphWithoutDaemon(projectGraphVersion);
   } else {
@@ -107,19 +105,26 @@ export async function createProjectGraphAsync(
     } catch (e) {
       // common errors with the daemon due to OS settings (cannot watch all the files available)
       if (e.message.indexOf('inotify_add_watch') > -1) {
-        // https://askubuntu.com/questions/1088272/inotify-add-watch-failed-no-space-left-on-device
-        output.warn({
-          title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon. Nx Daemon is going to be disabled until you run "nx reset".`,
+        output.note({
+          title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon.`,
           bodyLines: [
             'For more information read: https://askubuntu.com/questions/1088272/inotify-add-watch-failed-no-space-left-on-device',
+            'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled();
-        return buildProjectGraphWithoutDaemon(projectGraphVersion);
       } else {
-        printErrorMessage(e);
-        process.exit(1);
+        const errorLogFile = writeDaemonLogs(e.message);
+        output.warn({
+          title: `Nx Daemon was not able to compute the project graph.`,
+          bodyLines: [
+            `Log file with the error: ${errorLogFile}',
+            'Please file an issue at https://github.com/nrwl/nx`,
+            'Nx Daemon is going to be disabled until you run "nx reset".',
+          ],
+        });
       }
+      markDaemonAsDisabled();
+      return buildProjectGraphWithoutDaemon(projectGraphVersion);
     }
   }
 }

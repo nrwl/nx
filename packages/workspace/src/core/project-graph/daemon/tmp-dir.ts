@@ -20,6 +20,12 @@ export const DAEMON_SOCKET_PATH = join(
   'd.sock'
 );
 
+export function writeDaemonLogs(error?: string) {
+  const file = join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon-error.log');
+  writeFileSync(file, error);
+  return file;
+}
+
 export function markDaemonAsDisabled() {
   writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), 'true');
 }
