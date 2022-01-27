@@ -8,11 +8,7 @@ import { BuildBuilderOptions } from './types';
 import { loadTsPlugins } from './load-ts-plugins';
 import CopyWebpackPlugin = require('copy-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-
-// Inlining tsconfig-paths-webpack-plugin with a patch
-// See: https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/85
-// TODO(jack): Remove once the patch lands in original package
-import TsConfigPathsPlugin from './webpack/plugins/tsconfig-paths/tsconfig-paths.plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 export const OUT_FILENAME_TEMPLATE = '[name].js';
 
@@ -85,11 +81,11 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
-        new TsConfigPathsPlugin({
+        new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }),
+        }) as never, // TODO: Remove never type when 'tsconfig-paths-webpack-plugin' types fixed
       ],
       mainFields,
     },
