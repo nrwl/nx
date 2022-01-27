@@ -1,6 +1,6 @@
 export const nxVersion = '*';
 
-export const angularCliVersion = '~13.2.0-rc.1';
+export const angularCliVersion = '~13.2.0';
 export const typescriptVersion = '~4.4.3';
 export const prettierVersion = '^2.5.1';
 export const tslintVersion = '~6.1.0';
