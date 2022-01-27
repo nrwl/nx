@@ -48,9 +48,7 @@ export const workspaceRules = ((): ESLintRules => {
      * (i.e. not other things that plugings can expose like configs, processors etc)
      */
     const { rules } = require(WORKSPACE_PLUGIN_DIR);
-    if (registrationCleanup) {
-      registrationCleanup();
-    }
+
     // Apply the namespace to the resolved rules
     const namespacedRules: ESLintRules = {};
     for (const [ruleName, ruleConfig] of Object.entries(rules as ESLintRules)) {
@@ -59,5 +57,9 @@ export const workspaceRules = ((): ESLintRules => {
     return namespacedRules;
   } catch (err) {
     return {};
+  } finally {
+    if (registrationCleanup) {
+      registrationCleanup();
+    }
   }
 })();
