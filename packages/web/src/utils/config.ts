@@ -3,7 +3,7 @@ import * as webpack from 'webpack';
 import { Configuration, WebpackPluginInstance } from 'webpack';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-import * as TerserWebpackPlugin from 'terser-webpack-plugin';
+import TerserPlugin = require('terser-webpack-plugin');
 import { AssetGlobPattern, BuildBuilderOptions } from './shared-models';
 import { getOutputHashFormat } from './hash-format';
 
@@ -147,10 +147,10 @@ export function getBaseWebpackPartial(
     webpackConfig.optimization = {
       sideEffects: false,
       minimizer: [
-        new TerserWebpackPlugin({
+        new TerserPlugin({
           parallel: true,
           terserOptions: {
-            ecma: esm ? 2016 : 5,
+            ecma: (esm ? 2016 : 5) as TerserPlugin.TerserECMA,
             safari10: true,
             output: {
               ascii_only: true,
