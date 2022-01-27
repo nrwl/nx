@@ -42,6 +42,8 @@
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "minimatch": "3.0.4",
+    "rxjs": "^6.5.4",
+    "rxjs-for-await": "0.0.2",
     "source-map-support": "0.5.19",
     "tree-kill": "1.2.2"
   }
