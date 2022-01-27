@@ -15,9 +15,9 @@ function getWebpackConfig(config: Configuration) {
     {
       test: /\.svg$/,
       oneOf: [
-        // If coming from JS/TS file, then transform into React component using SVGR.
+        // If coming from JS/TS or MDX file, then transform into React component using SVGR.
         {
-          issuer: /\.[jt]sx?$/,
+          issuer: /\.(js|ts|md)x?$/,
           use: [
             {
               loader: require.resolve('@svgr/webpack'),
