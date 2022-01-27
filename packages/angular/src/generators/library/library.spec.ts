@@ -221,7 +221,7 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
-    it('should remove tsconfib.lib.prod.json when library is not publishable', async () => {
+    it('should remove .browserlistrc when library is not buildable or publishable', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: false,
@@ -229,9 +229,18 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const libProdConfig = tree.read('libs/my-lib/tsconfig.lib.prod.json');
+      expect(tree.read('libs/my-lib/.browserlistrc')).toBeFalsy();
+    });
 
-      expect(libProdConfig).toBeFalsy();
+    it('should remove tsconfib.lib.prod.json when library is not buildable or publishable', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        publishable: false,
+        buildable: false,
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/tsconfig.lib.prod.json')).toBeFalsy();
     });
 
     it('should update tags', async () => {
@@ -674,6 +683,7 @@ describe('lib', () => {
 
       // Make sure these exist
       [
+        'my-dir/my-lib/.browserslistrc',
         'my-dir/my-lib/jest.config.js',
         'my-dir/my-lib/ng-package.json',
         'my-dir/my-lib/project.json',
