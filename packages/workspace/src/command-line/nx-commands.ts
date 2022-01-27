@@ -237,7 +237,7 @@ npx nx daemon
   .command(
     'workspace-lint [files..]',
     chalk.bold(
-      'Lint nx specific workspace files (nx.json, workspace.json) and check existence of the configured packages and apps.  Note: To exclude files from this lint rule, you can add them to the `.nxignore` file'
+      'Lint nx specific workspace files (nx.json, workspace.json), checks if your configuration and your source code are in sync. This command identifies projects with no files in the configured project root folder, as well as files that are not part of any projects in the workspace. Note: To exclude files from this lint rule, you can add them to the `.nxignore` file.'
     ),
     noop,
     async (_) => (await import('./lint')).workspaceLint()
