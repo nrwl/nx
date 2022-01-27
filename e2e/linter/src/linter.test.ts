@@ -359,6 +359,7 @@ function updateGeneratedRuleImplementation(
             undefined,
             ts.factory.createNamedImports([
               ts.factory.createImportSpecifier(
+                false,
                 undefined,
                 ts.factory.createIdentifier(libMethodName)
               ),
