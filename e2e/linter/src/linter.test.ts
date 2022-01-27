@@ -4,11 +4,9 @@ import {
   newProject,
   readFile,
   readJson,
-  removeFile,
   runCLI,
   uniq,
   updateFile,
-  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import * as ts from 'typescript';
 
@@ -138,9 +136,20 @@ describe('Linter', () => {
 
   describe('workspace lint rules', () => {
     it('should supporting creating, testing and using workspace lint rules', () => {
-      newProject();
       const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      const messageId = 'e2eMessageId';
+      const libMethodName = 'getMessageId';
+
+      const projScope = newProject();
       runCLI(`generate @nrwl/react:app ${myapp}`);
+      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      // add custom function
+      updateFile(
+        `libs/${mylib}/src/lib/${mylib}.ts`,
+        `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`
+      );
 
       // Generate a new rule (should also scaffold the required workspace project and tests)
       const newRuleName = 'e2e-test-rule-name';
@@ -157,7 +166,10 @@ describe('Linter', () => {
       const updatedRuleContents = updateGeneratedRuleImplementation(
         newRulePath,
         newRuleGeneratedContents,
-        knownLintErrorMessage
+        knownLintErrorMessage,
+        messageId,
+        libMethodName,
+        `@${projScope}/${mylib}`
       );
       updateFile(newRulePath, updatedRuleContents);
 
@@ -172,7 +184,9 @@ describe('Linter', () => {
       });
       updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-      const lintOutput = runCLI(`lint ${myapp}`, { silenceError: true });
+      const lintOutput = runCLI(`lint ${myapp} --verbose`, {
+        silenceError: true,
+      });
       expect(lintOutput).toContain(newRuleNameForUsage);
       expect(lintOutput).toContain(knownLintErrorMessage);
     }, 1000000);
@@ -189,7 +203,10 @@ describe('Linter', () => {
 function updateGeneratedRuleImplementation(
   newRulePath: string,
   newRuleGeneratedContents: string,
-  knownLintErrorMessage: string
+  knownLintErrorMessage: string,
+  messageId,
+  libMethodName: string,
+  libPath: string
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const newRuleSourceFile = ts.createSourceFile(
@@ -199,10 +216,8 @@ function updateGeneratedRuleImplementation(
     true
   );
 
-  const messageId = 'e2eMessageId';
-
   const transformer =
-    <T extends ts.Node>(context: ts.TransformationContext) =>
+    <T extends ts.SourceFile>(context: ts.TransformationContext) =>
     (rootNode: T) => {
       function visit(node: ts.Node): ts.Node {
         /**
@@ -234,13 +249,20 @@ function updateGeneratedRuleImplementation(
         /**
          * Update the rule implementation to report the knownLintErrorMessage on every Program node
          *
+         * During the debugging of the switch from ts-node to swc-node we found out
+         * that regular rules would work even without explicit path mapping registration,
+         * but rules that import runtime functionality from within the workspace
+         * would break the rule registration.
+         *
+         * Instead of having a static literal messageId we retreieved it via imported getMessageId method.
+         *
          * i.e.
          *
          * create(context) {
          *    return  {
          *      Program(node) {
          *        context.report({
-         *          messageId: 'e2eMessageId',
+         *          messageId: getMessageId(),
          *          node,
          *        });
          *      }
@@ -296,7 +318,11 @@ function updateGeneratedRuleImplementation(
                             ts.factory.createObjectLiteralExpression([
                               ts.factory.createPropertyAssignment(
                                 'messageId',
-                                ts.factory.createStringLiteral(messageId)
+                                ts.factory.createCallExpression(
+                                  ts.factory.createIdentifier(libMethodName),
+                                  [],
+                                  []
+                                )
                               ),
                               ts.factory.createShorthandPropertyAssignment(
                                 'node'
@@ -315,7 +341,34 @@ function updateGeneratedRuleImplementation(
 
         return ts.visitEachChild(node, visit, context);
       }
-      return ts.visitNode(rootNode, visit);
+      /**
+       * Add lib import as a first line of the rule file.
+       * Needed for the access of getMessageId in the context report above.
+       *
+       * i.e.
+       *
+       * import { getMessageId } from "@myproj/mylib";
+       *
+       */
+      const importAdded = ts.factory.updateSourceFile(rootNode, [
+        ts.factory.createImportDeclaration(
+          undefined,
+          undefined,
+          ts.factory.createImportClause(
+            false,
+            undefined,
+            ts.factory.createNamedImports([
+              ts.factory.createImportSpecifier(
+                undefined,
+                ts.factory.createIdentifier(libMethodName)
+              ),
+            ])
+          ),
+          ts.factory.createStringLiteral(libPath)
+        ),
+        ...rootNode.statements,
+      ]);
+      return ts.visitNode(importAdded, visit);
     };
 
   const result: ts.TransformationResult<ts.SourceFile> =

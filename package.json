@@ -90,6 +90,7 @@
     "@storybook/core": "~6.4.12",
     "@storybook/react": "~6.4.12",
     "@svgr/webpack": "^6.1.2",
+    "@swc-node/register": "^1.4.2",
     "@testing-library/react": "11.2.6",
     "@testing-library/react-hooks": "7.0.1",
     "@tippyjs/react": "^4.2.6",

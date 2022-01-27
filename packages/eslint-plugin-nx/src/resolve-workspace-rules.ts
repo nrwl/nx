@@ -1,6 +1,9 @@
 import type { TSESLint } from '@typescript-eslint/experimental-utils';
 import { existsSync } from 'fs';
+import { join } from 'path';
 import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
+import { readDefaultTsConfig } from '@swc-node/register/read-default-tsconfig';
+import { register } from '@swc-node/register/register';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
 
@@ -14,9 +17,7 @@ type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
  */
 function registerTSWorkspaceLint() {
   try {
-    require('ts-node').register({
-      dir: WORKSPACE_PLUGIN_DIR,
-    });
+    register(readDefaultTsConfig(join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')));
 
     const tsconfigPaths = require('tsconfig-paths');
 
@@ -27,7 +28,7 @@ function registerTSWorkspaceLint() {
      * Register the custom workspace path mappings with node so that workspace libraries
      * can be imported and used within custom workspace lint rules.
      */
-    tsconfigPaths.register({
+    return tsconfigPaths.register({
       baseUrl: tsConfigResult.absoluteBaseUrl,
       paths: tsConfigResult.paths,
     });
@@ -40,7 +41,7 @@ export const workspaceRules = ((): ESLintRules => {
     return {};
   }
   // Register `tools/eslint-rules` for TS transpilation
-  registerTSWorkspaceLint();
+  const registrationCleanup = registerTSWorkspaceLint();
   try {
     /**
      * Currently we only support applying the rules from the user's workspace plugin object
@@ -56,5 +57,9 @@ export const workspaceRules = ((): ESLintRules => {
     return namespacedRules;
   } catch (err) {
     return {};
+  } finally {
+    if (registrationCleanup) {
+      registrationCleanup();
+    }
   }
 })();
