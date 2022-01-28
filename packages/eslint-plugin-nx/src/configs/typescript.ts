@@ -6,11 +6,6 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
  *
  * It should therefore NOT contain any rules or plugins which are specific
  * to one ecosystem, such as React, Angular, Node etc.
- *
- * NOTE: Currently the one exception to this is that there is an override for .tsx
- * for the @typescript-eslint/no-unused-vars rule for backwards compatibility
- * with the original root Nx ESlint config. This will be split out into a dedicated
- * tsx configuration in a follow up PR which handles overrides.
  */
 export default {
   parser: '@typescript-eslint/parser',
