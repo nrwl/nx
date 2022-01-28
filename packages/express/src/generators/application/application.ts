@@ -5,29 +5,30 @@ import {
   joinPathFragments,
   names,
   toJS,
-  Tree,
   updateJson,
 } from '@nrwl/devkit';
-
+import type { Tree } from '@nrwl/devkit';
 import { applicationGenerator as nodeApplicationGenerator } from '@nrwl/node';
-
 import { join } from 'path';
-import { Schema } from './schema';
 import { initGenerator } from '../init/init';
+import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
 }
 
 function addTypes(tree: Tree, options: NormalizedSchema) {
-  const tsConfigPath = join(options.appProjectRoot, 'tsconfig.app.json');
-  updateJson(tree, tsConfigPath, (json) => {
-    json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
-    return json;
-  });
+  updateJson(
+    tree,
+    join(options.appProjectRoot, 'tsconfig.app.json'),
+    (json) => {
+      json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
+      return json;
+    }
+  );
 }
 
-function addAppFiles(tree: Tree, options: NormalizedSchema) {
+function addMainFile(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.appProjectRoot, `src/main.${options.js ? 'js' : 'ts'}`),
     `/**
@@ -63,9 +64,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     ...schema,
     skipFormat: true,
   });
-  addAppFiles(tree, options);
+  addMainFile(tree, options);
   addTypes(tree, options);
-  await formatFiles(tree);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return async () => {
     await initTask();
