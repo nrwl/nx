@@ -20,57 +20,6 @@ This command creates a brand new workspace, and sets up a pre-configured plugin 
 
 > Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
 
-## Workspace Structure
-
-After executing the above command, the following tree structure is created:
-
-```treeview
-my-org/
-├── e2e/
-│   └── my-plugin-e2e/
-│       ├── jest.config.js
-│       ├── tests/
-│       │   └── my-plugin.test.ts
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
-├── packages/
-│   └── my-plugin/
-│       ├── README.md
-│       ├── executors.json
-│       ├── generators.json
-│       ├── jest.config.js
-│       ├── package.json
-│       ├── src/
-│       │   ├── executors/
-│       │   │   └── my-plugin/
-│       │   │       ├── executor.spec.ts
-│       │   │       ├── executor.ts
-│       │   │       ├── schema.d.ts
-│       │   │       └── schema.json
-│       │   ├── index.ts
-│       │   └── generators/
-│       │       └── my-plugin/
-│       │           ├── files/
-│       │           │   └── src/
-│       │           │       └── index.ts.__template__
-│       │           ├── schema.d.ts
-│       │           ├── schema.json
-│       │           ├── generator.spec.ts
-│       │           └── generator.ts
-│       ├── tsconfig.json
-│       ├── tsconfig.lib.json
-│       └── tsconfig.spec.json
-├── tools
-│   ├── generators/
-│   └── tsconfig.tools.json
-├── jest.config.js
-├── nx.json
-├── package.json
-├── tsconfig.base.json
-├── workspace.json
-└── yarn.lock
-```
-
 > If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
 
 A new plugin is created with a default generator, executor, and e2e app.
