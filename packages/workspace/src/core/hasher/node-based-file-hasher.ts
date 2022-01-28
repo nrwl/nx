@@ -1,10 +1,10 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { FileData } from '@nrwl/tao/src/shared/project-graph';
-import { join, relative } from 'path/posix';
+import { relative } from 'path';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
-import { stripIndents } from '@nrwl/devkit';
+import { joinPathFragments, stripIndents } from '@nrwl/devkit';
 import ignore from 'ignore';
 
 export class NodeBasedFileHasher extends FileHasherBase {
@@ -42,8 +42,11 @@ export class NodeBasedFileHasher extends FileHasherBase {
     }
     try {
       readdirSync(absoluteDirName).forEach((c) => {
-        const absoluteChild = join(absoluteDirName, c);
-        const relChild = relative(appRootPath, absoluteChild);
+        const absoluteChild = joinPathFragments(absoluteDirName, c);
+        const relChild = relative(appRootPath, absoluteChild).replace(
+          /\\/g,
+          '/'
+        );
         if (this.ignoredGlobs.ignores(relChild)) {
           return;
         }
