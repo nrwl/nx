@@ -91,7 +91,7 @@ export async function* compileSwcWatch(
 
       processOnExit = () => {
         swcWatcher.kill();
-        done(getResult(true));
+        done();
         process.off('SIGINT', processOnExit);
         process.off('SIGTERM', processOnExit);
         process.off('exit', processOnExit);
@@ -152,7 +152,7 @@ export async function* compileSwcWatch(
       };
 
       watcherOnExit = () => {
-        done(getResult(true));
+        done();
         swcWatcher.off('exit', watcherOnExit);
       };
 

@@ -58,37 +58,9 @@ export async function* compileTypeScriptFiles(
       } else {
         const { success } = compileTypeScript(tscOptions);
         await postCompilationCallback();
-        done(getResult(success));
+        next(getResult(success));
+        done();
       }
     }
   );
-
-  // return new Observable((subscriber) => {
-  //   if (options.watch) {
-  //     const watcher = compileTypeScriptWatcher(
-  //       tscOptions,
-  //       async (d: Diagnostic) => {
-  //         if (d.code === 6194) {
-  //           await postCompleteAction();
-  //           subscriber.next({ success: true });
-  //         }
-  //       }
-  //     );
-  //
-  //     return () => {
-  //       watcher.close();
-  //       subscriber.complete();
-  //     };
-  //   }
-  //
-  //   const result = compileTypeScript(tscOptions);
-  //   (postCompleteAction() as Promise<void>).then(() => {
-  //     subscriber.next(result);
-  //     subscriber.complete();
-  //   });
-  //
-  //   return () => {
-  //     subscriber.complete();
-  //   };
-  // });
 }

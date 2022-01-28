@@ -54,42 +54,4 @@ describe(createAsyncIterable.name, () => {
 
     expect(results).toEqual(['Hello Alice', 'Hello Bob', 'Bye']);
   });
-
-  // test('forked process with abort controller', async () => {
-  //   const it = createAsyncIterable<string>(async ({ next, error, done }) => {
-  //     const cp = await import('child_process');
-  //     const path = await import('path');
-  //     const controller = new AbortController();
-  //     const { signal } = controller;
-  //
-  //     const p = cp.fork(path.join(__dirname, 'fixtures/test.js'), { signal });
-  //     p.on('message', (data) => {
-  //       next(data as string);
-  //     });
-  //     p.on('exit', () => {
-  //       done();
-  //     });
-  //     p.on('error', (err) => {
-  //       error(err);
-  //     });
-  //     p.send('Alice');
-  //     setTimeout(() => {
-  //       controller.abort();
-  //     }, 100);
-  //     setTimeout(() => {
-  //       p.send('Bob');
-  //       p.send('Fred');
-  //     }, 110);
-  //   });
-  //
-  //   const results: string[] = [];
-  //
-  //   await expect(async () => {
-  //     for await (const x of it) {
-  //       results.push(x);
-  //     }
-  //   }).rejects.toThrow(/The operation was aborted/);
-  //
-  //   expect(results).toEqual(['Hello Alice']);
-  // });
 });

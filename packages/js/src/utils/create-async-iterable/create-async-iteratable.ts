@@ -1,6 +1,6 @@
 export interface AsyncPushCallbacks<T> {
   next: (value: T) => void;
-  done: (value?: T) => void;
+  done: () => void;
   error: (err: unknown) => void;
 }
 
@@ -37,9 +37,9 @@ export function createAsyncIterable<T = unknown>(
             error = err;
           }
         },
-        done: (value) => {
+        done: () => {
           if (pullQueue.length > 0) {
-            pullQueue.shift()?.[0]({ value, done: true });
+            pullQueue.shift()?.[0]({ value: undefined, done: true });
           } else {
             done = true;
           }
