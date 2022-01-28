@@ -26,6 +26,11 @@
     "@typescript-eslint/parser": "~5.10.0",
     "eslint-config-prettier": "^8.1.0"
   },
+  "peerDependenciesMeta": {
+    "eslint-config-prettier": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
