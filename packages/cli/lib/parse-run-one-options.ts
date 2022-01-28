@@ -1,5 +1,4 @@
 import yargsParser = require('yargs-parser');
-import * as fs from 'fs';
 import type {
   WorkspaceJsonConfiguration,
   NxJsonConfiguration,
@@ -84,7 +83,6 @@ export function parseRunOneOptions(
     },
     configuration: {
       'strip-dashed': true,
-      'dot-notation': false,
     },
   });
 
