@@ -6,8 +6,8 @@ import {
 
 export function removeOldTaskRunnerOptions(host: Tree) {
   const workspaceConfig = readWorkspaceConfiguration(host);
-  if (workspaceConfig.tasksRunnerOptions['default']) {
-    const options = workspaceConfig.tasksRunnerOptions['default'].options;
+  const options = workspaceConfig.tasksRunnerOptions?.['default']?.options;
+  if (options) {
     delete options.scan;
     delete options.analytics;
     updateWorkspaceConfiguration(host, workspaceConfig);
