@@ -27,19 +27,17 @@ You can create a new Cypress E2E project for an existing project.
 
 If the `@nrwl/cypress` package is not installed, install the version that matches your `@nrwl/workspace` version.
 
-```sh
-#yarn
+```bash
 yarn add --dev @nrwl/cypress
 ```
 
-```sh
-#npm
+```bash
 npm install --save-dev @nrwl/cypress
 ```
 
 Next, generate an E2E project based on an existing project.
 
-```sh
+```bash
 nx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name
 ```
 

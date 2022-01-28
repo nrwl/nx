@@ -7,12 +7,10 @@ The Express plugin contains generators to add a new Express application to an Nx
 Adding the Express plugin to a workspace can be done with the following:
 
 ```bash
-#yarn
 yarn add -D @nrwl/express
 ```
 
 ```bash
-#npm
 npm install -D @nrwl/express
 ```
 

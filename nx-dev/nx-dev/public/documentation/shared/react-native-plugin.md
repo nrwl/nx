@@ -13,12 +13,10 @@ The Nx Plugin for React Native contains generators for managing React Native app
 Adding the React plugin to a workspace can be done with the following:
 
 ```bash
-#yarn
 yarn add -D @nrwl/react-native
 ```
 
 ```bash
-#npm
 npm install -D @nrwl/react-native
 ```
 
