@@ -30,7 +30,7 @@ export interface CypressExecutorOptions extends Json {
   env?: Record<string, string>;
   spec?: string;
   copyFiles?: string;
-  ciBuildId?: string;
+  ciBuildId?: string | number;
   group?: string;
   ignoreTestFiles?: string;
   reporter?: string;
@@ -197,7 +197,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   options.record = opts.record;
   options.key = opts.key;
   options.parallel = opts.parallel;
-  options.ciBuildId = opts.ciBuildId;
+  options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
   options.ignoreTestFiles = opts.ignoreTestFiles;
 
