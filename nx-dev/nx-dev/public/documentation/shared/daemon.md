@@ -16,7 +16,7 @@ The Nx Daemon is a process which runs in the background on your local machine. T
 
 > On macOS and linux, the server runs as a unix socket, and on Windows it runs as a named pipe.
 
-The Nx Deamon is more efficient at recomputing the project graph because it watches the files in your workspaces and updates the project graph right away (intelligently throttling to ensure minimal recomputation). It also keeps everything in memory, so the response tends to be a lot faster.
+The Nx Daemon is more efficient at recomputing the project graph because it watches the files in your workspaces and updates the project graph right away (intelligently throttling to ensure minimal recomputation). It also keeps everything in memory, so the response tends to be a lot faster.
 
 In order to be most efficient, the Nx Daemon has some built in mechanisms to automatically shut down (including removing all file watchers) when it is not needed. These include:
 
@@ -27,7 +27,7 @@ If you ever need to manually shut down the Nx Daemon, you can run `nx reset` wit
 
 ## Turning it Off
 
-As of v13.6.0, the Nx Daemon is enabled by default. If you want to turn it off, simply set `useDaemonProcess: false` in the runners options in nx.json. You can also set the `NX_DEAMON` env variable to `false`.
+As of v13.6.0, the Nx Daemon is enabled by default. If you want to turn it off, simply set `useDaemonProcess: false` in the runners options in nx.json. You can also set the `NX_DAEMON` env variable to `false`.
 
 ## Logs
 
