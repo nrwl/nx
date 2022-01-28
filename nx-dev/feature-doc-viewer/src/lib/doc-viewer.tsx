@@ -72,7 +72,10 @@ export function DocViewer({
                   aria-hidden="true"
                   href={[
                     'https://github.com/nrwl/nx/blob/master',
-                    document.filePath,
+                    document.filePath.replace(
+                      'nx-dev/nx-dev/public/documentation',
+                      'docs'
+                    ),
                   ].join('/')}
                   target="_blank"
                   rel="noreferrer"
