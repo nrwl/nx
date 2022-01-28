@@ -21,7 +21,6 @@ import { parseFiles } from './shared';
 import type { NxArgs, RawNxArgs } from './utils';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { performance } from 'perf_hooks';
-import type { Environment } from '../core/shared-interfaces';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
@@ -40,14 +39,12 @@ export async function affected(
 
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
-  const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment();
-  const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 
   try {
     switch (command) {
       case 'apps':
-        const apps = filteredProjects
+        const apps = projects
           .filter((p) => p.type === ProjectType.app)
           .map((p) => p.name);
         if (parsedArgs.plain) {
@@ -63,7 +60,7 @@ export async function affected(
         break;
 
       case 'libs':
-        const libs = filteredProjects
+        const libs = projects
           .filter((p) => p.type === ProjectType.lib)
           .map((p) => p.name);
         if (parsedArgs.plain) {
@@ -79,19 +76,16 @@ export async function affected(
         break;
 
       case 'graph':
-        const projectNames = filteredProjects.map((p) => p.name);
+        const projectNames = projects.map((p) => p.name);
         await generateGraph(parsedArgs as any, projectNames);
         break;
 
       case 'print-affected':
         if (nxArgs.target) {
-          const projectsWithTarget = allProjectsWithTarget(
-            filteredProjects,
-            nxArgs
-          );
+          const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
           await printAffected(
             projectsWithTarget,
-            filteredProjects,
+            projects,
             projectGraph,
             env,
             nxArgs,
@@ -100,7 +94,7 @@ export async function affected(
         } else {
           await printAffected(
             [],
-            filteredProjects,
+            projects,
             projectGraph,
             env,
             nxArgs,
@@ -110,10 +104,7 @@ export async function affected(
         break;
 
       case 'affected': {
-        const projectsWithTarget = allProjectsWithTarget(
-          filteredProjects,
-          nxArgs
-        );
+        const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         await runCommand(
           projectsWithTarget,
           projectGraph,
@@ -133,8 +124,6 @@ export async function affected(
 }
 
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
-  if (nxArgs.all) return projectGraph.nodes;
-
   let affectedGraph = nxArgs.all
     ? projectGraph
     : filterAffected(
@@ -145,35 +134,21 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
           nxArgs
         )
       );
-  if (nxArgs.withDeps) {
+  if (!nxArgs.all && nxArgs.withDeps) {
     affectedGraph = withDeps(
       projectGraph,
       Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[]
     );
   }
-  return affectedGraph.nodes;
-}
 
-function applyExclude(
-  projects: Record<string, ProjectGraphNode>,
-  nxArgs: NxArgs
-) {
-  return Object.keys(projects)
-    .filter((key) => !(nxArgs.exclude || []).includes(key))
-    .reduce((p, key) => {
-      p[key] = projects[key];
-      return p;
-    }, {} as Record<string, ProjectGraphNode>);
-}
+  if (nxArgs.exclude) {
+    const excludedProjects = new Set(nxArgs.exclude);
+    return Object.entries(affectedGraph.nodes)
+      .filter(([projectName]) => !excludedProjects.has(projectName))
+      .map(([, project]) => project);
+  }
 
-function applyOnlyFailed(
-  projectsNotExcluded: Record<string, ProjectGraphNode>,
-  nxArgs: NxArgs,
-  env: Environment
-) {
-  return Object.values(projectsNotExcluded).filter(
-    (n) => !nxArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
-  );
+  return Object.values(affectedGraph.nodes);
 }
 
 function allProjectsWithTarget(projects: ProjectGraphNode[], nxArgs: NxArgs) {

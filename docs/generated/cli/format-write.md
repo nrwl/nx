@@ -51,9 +51,11 @@ Show help
 
 Format only libraries and applications files.
 
-### only-failed
+### ~~only-failed~~
 
 Default: `false`
+
+**Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
 Isolate projects which previously failed
 
