@@ -31,18 +31,17 @@ myorg/
 │   └── ui/
 │       ├── src/
 │       │   ├── lib/
-│       │   │   ├── ui.css
+│       │   │   ├── ui.module.css
 │       │   │   ├── ui.spec.tsx
 │       │   │   └── ui.tsx
 │       │   └── index.ts
-│       ├── jest.conf.js
+│       ├── jest.config.js
 │       ├── project.json
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json
-├── workspace.json
 ├── package.json
 └── tsconfig.base.json
 ```
@@ -88,7 +87,7 @@ myorg/
 │       ├── src/
 │       │   ├── lib/
 │       │   │   └── todos/
-│       │   │   │   ├── todos.css
+│       │   │   │   ├── todos.module.css
 │       │   │   │   ├── todos.spec.tsx
 │       │   │   │   └── todos.tsx
 │       │   │   ├── ui.css
@@ -108,6 +107,8 @@ myorg/
 ```
 
 **Implement the Todos component.**
+
+`libs/ui/src/lib/todos/todos.tsx`
 
 ```typescript
 import { Todo } from '@myorg/data';

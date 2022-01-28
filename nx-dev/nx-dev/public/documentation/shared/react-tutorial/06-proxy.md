@@ -51,7 +51,7 @@ Every target uses an executor which actually runs this target. So targets are an
 There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `npx nx serve todos --help` results in:
 
 ```bash
-npx nx run todos:serve [options,...]
+nx run todos:serve [options,...]
 
 Options:
   --buildTarget           Target which builds the application
@@ -68,9 +68,11 @@ Options:
   --allowedHosts          This option allows you to whitelist services that are allowed to access the dev server.
   --memoryLimit           Memory limit for type checking service process in MB.
   --maxWorkers            Number of workers to use for type checking.
+  --baseHref              Base url for the application being built.
+  --skip-nx-cache         Skip the use of Nx cache.
   --help                  Show available options for project target.
 ```
 
 It helps with good editor integration (see [VSCode Support](/using-nx/console#nx-console-for-vscode)).
 
-But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds.
+But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed [computation caching](/using-nx/caching) and [distributed builds](/using-nx/dte).
