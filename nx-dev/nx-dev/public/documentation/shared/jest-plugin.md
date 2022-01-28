@@ -18,7 +18,7 @@ nx g @nrwl/web:app frontend
 
 ### Adding Jest to an Existing Project
 
-Add Jest to a project run using the `jest-project` generator from `@nrwl/jest`.
+Add Jest to a project using the `jest-project` generator from `@nrwl/jest`.
 
 First, install `@nrwl/jest`, if not already installed using your preferred package manager.
 
