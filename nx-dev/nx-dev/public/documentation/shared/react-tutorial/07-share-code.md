@@ -24,7 +24,7 @@ myorg/
 │       │   ├── lib/
 │       │   │   └── data.ts
 │       │   └── index.ts
-│       ├── jest.conf.js
+│       ├── jest.config.js
 │       ├── project.json
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
@@ -45,7 +45,7 @@ export interface Todo {
 
 ### A note about VS Code :
 
-If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognised. This may need to be done **every time a new workspace library is added**.
+If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognised. This may need to be done **every time a new workspace library is added**. If you install the [Nx Console](/using-nx/console) extension you won't need to take this step.
 
 ## Refactor the API
 
@@ -74,7 +74,7 @@ export function addTodoRoutes(app: Express) {
 **Next import the interface in `apps/todos/src/app/app.tsx`:**
 
 ```typescript
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 
 export const App = () => {
