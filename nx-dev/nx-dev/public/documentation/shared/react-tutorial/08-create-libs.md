@@ -135,7 +135,7 @@ export default Todos;
 **Now import `Todos` into `apps/todos/src/app/app.tsx`.**
 
 ```typescript
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 import { Todos } from '@myorg/ui';
 

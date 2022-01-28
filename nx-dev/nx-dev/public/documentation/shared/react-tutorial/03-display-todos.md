@@ -13,7 +13,7 @@ The best way to work with Cypress is to keep the failing E2E test running while 
 To make the first assertion of the e2e test pass, update `apps/todos/src/app/app.tsx`:
 
 ```typescript
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface Todo {
   title: string;
@@ -47,7 +47,7 @@ export default App;
 **Add the `add-todo` button with the corresponding click handler.**
 
 ```typescript
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface Todo {
   title: string;
