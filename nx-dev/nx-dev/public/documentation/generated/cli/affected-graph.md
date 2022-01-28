@@ -101,9 +101,11 @@ Show help
 
 Bind the project graph server to a specific ip address.
 
-### only-failed
+### ~~only-failed~~
 
 Default: `false`
+
+**Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
 Isolate projects which previously failed
 

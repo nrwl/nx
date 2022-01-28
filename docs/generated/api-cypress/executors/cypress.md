@@ -31,7 +31,7 @@ The browser to run tests in.
 
 ### ciBuildId
 
-Type: `string`
+Type: `string | number `
 
 A unique identifier for a run to enable grouping or parallelization.
 

@@ -31,7 +31,14 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/node": "*",
-    "@nrwl/jest": "*",
     "@nrwl/workspace": "*"
+  },
+  "peerDependencies": {
+    "express": "4.17.2"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    }
   }
 }

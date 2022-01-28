@@ -7,12 +7,12 @@ Detox is gray box end-to-end testing and automation library for mobile apps. It 
 - Cross Platform
 - Runs on Devices
 - Automatically Synchronized
+- Test Runner Independent
+- Debuggable
 
-## How to Use Detox
+## Setting Up Detox
 
-### Setup
-
-#### Install applesimutils (Mac only)
+### Install applesimutils (Mac only)
 
 [applesimutils](https://github.com/wix/AppleSimulatorUtils) is a collection of utils for Apple simulators.
 
@@ -21,7 +21,7 @@ brew tap wix/brew
 brew install applesimutils
 ```
 
-#### Install Jest Globally
+### Install Jest Globally
 
 ```sh
 npm install -g jest
@@ -33,30 +33,6 @@ By default, when creating a mobile application, Nx will use Detox to create the 
 
 ```bash
 nx g @nrwl/react-native:app frontend
-```
-
-```treeview
-<workspace name>/
-├── apps/
-│   ├── frontend/
-│   └── frontend-e2e/
-│       ├── .detoxrc.json
-│       ├── src/
-│       │   └── app.spec.ts
-│       ├── .babelrc
-│       ├── jest.config.json
-│       ├── project.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
-├── libs/
-├── tools/
-├── babel.config.json
-├── jest.config.js
-├── jest.preset.js
-├── nx.json
-├── package.json
-├── tsconfig.base.json
-└── workspace.json
 ```
 
 ### Creating a Detox E2E project for an existing project
@@ -85,6 +61,8 @@ Replace `your-app-name` with the app's name as defined in your `workspace.json` 
 
 In addition, you need to follow [instructions at Detox](https://github.com/wix/Detox/blob/master/docs/Introduction.Android.md) to do manual setup for Android files.
 
+## Using Detox
+
 ### Testing Applications
 
 - Run `nx test-ios frontend-e2e` to build the iOS app and execute e2e tests with Detox for iOS (Mac only)
@@ -103,6 +81,8 @@ You can run your e2e test against a production build:
 - `nx test-android frontend-e2e`: rto build the Android app and execute e2e tests with Detox for Android with release build type
 - `nx build-ios frontend-e2e --prod`: build the iOS app using Release configuration (Mac only)
 - `nx build-android frontend-e2e --prod`: build the Android app using release build type
+
+## Configuration
 
 ### Using .detoxrc.json
 

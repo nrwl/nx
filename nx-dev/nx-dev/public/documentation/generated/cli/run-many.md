@@ -55,9 +55,11 @@ Exclude certain projects from being processed
 
 Show help
 
-### only-failed
+### ~~only-failed~~
 
 Default: `false`
+
+**Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
 Only run the target on projects which previously failed
 

@@ -48,15 +48,3 @@ Executors provide an optimized way of running targets but unfortunately, not eve
 Running `nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
 
 > See more about [`@nrwl/workspace:run-commands`](/workspace/run-commands-executor)
-
-## Generators
-
-- [library](/workspace/library) - Create a plain typescript library
-- [move](/workspace/move) - Move a project to another directory and update all references
-- [remove](/workspace/remove) - Remove a project from the workspace
-- [run-commands](/workspace/run-commands-generator) - Add a target to a project that uses the run-commands executor
-- [workspace-generator](/workspace/workspace-generator) - Scaffold a custom generator for use within your workspace
-
-## Executors / Builders
-
-- [run-commands](/workspace/run-commands-executor) - Execute an arbitrary command line script

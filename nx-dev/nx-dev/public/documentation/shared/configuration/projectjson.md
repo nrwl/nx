@@ -61,7 +61,7 @@ Let's look at the following `project.json`:
     }
   },
   "tags": ["scope:myteam"],
-  "implicitDependencies": ["anotherlib"]]
+  "implicitDependencies": ["anotherlib"]
 }
 ```
 
@@ -151,8 +151,11 @@ or `nx run mylib:build:configuration=production`.
 The following code snippet shows how the executor options get constructed:
 
 ```javascript
-require(`@nrwl/jest`).executors['jest']({ ...options, ...selectedConfiguration, ...commandLineArgs }
-}) // Pseudocode
+require(`@nrwl/jest`).executors['jest']({
+  ...options,
+  ...selectedConfiguration,
+  ...commandLineArgs,
+}); // Pseudocode
 ```
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the
