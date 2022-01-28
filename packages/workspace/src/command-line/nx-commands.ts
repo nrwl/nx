@@ -442,6 +442,8 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
     })
     .options('only-failed', {
+      deprecated:
+        'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
       describe: 'Isolate projects which previously failed',
       type: 'boolean',
       default: false,
@@ -497,6 +499,8 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
         'Configure target dependencies instead. It will be removed in v14.',
     })
     .options('only-failed', {
+      deprecated:
+        'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
       describe: 'Only run the target on projects which previously failed',
       type: 'boolean',
       default: false,

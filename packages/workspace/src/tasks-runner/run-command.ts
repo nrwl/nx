@@ -84,11 +84,6 @@ export async function runCommand(
   terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
   initiatingProject: string | null
 ) {
-  if (nxArgs.onlyFailed || nxArgs['only-failed']) {
-    output.warn({
-      title: '--only-failed has been removed. Nx is executing all the tasks.',
-    });
-  }
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
   // Doing this for backwards compatibility, should be removed in v14
