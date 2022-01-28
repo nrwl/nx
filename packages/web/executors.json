@@ -6,7 +6,7 @@
       "description": "Build an application using webpack"
     },
     "rollup": {
-      "implementation": "./src/executors/rollup/rollup.impl",
+      "implementation": "./src/executors/rollup/compat",
       "schema": "./src/executors/rollup/schema.json",
       "description": "Package a library using rollup"
     },
