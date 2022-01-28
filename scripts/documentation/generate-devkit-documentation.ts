@@ -12,7 +12,7 @@ export function generateDevkitDocumentation() {
   execSync('nx build typedoc-theme', execSyncOptions);
 
   execSync(
-    `rm -rf docs/generated/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/generated/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../generated/nx-devkit/ --theme dist/typedoc-theme/src/lib --readme none`,
+    `rm -rf docs/generated/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/generated/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../nx-devkit/ --theme dist/typedoc-theme/src/lib --readme none`,
     execSyncOptions
   );
   execSync(

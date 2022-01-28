@@ -7,12 +7,10 @@ The Node Plugin contains generators and executors to manage Node applications wi
 Installing the Node plugin to a workspace can be done with the following:
 
 ```bash
-#yarn
 yarn add -D @nrwl/node
 ```
 
 ```bash
-#npm
 npm install -D @nrwl/node
 ```
 
