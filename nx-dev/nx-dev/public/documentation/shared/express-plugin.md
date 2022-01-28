@@ -1,126 +1,88 @@
 # Express Plugin
 
-The Express plugin contains generators to add a new Express application to an Nx workspace.
+![Express Logo](/shared/express-logo.png)
 
-## Adding the Express plugin
+[Express](https://expressjs.com/) is mature, minimal, and an open source web framework for making web applications and
+apis.
 
-Adding the Express plugin to a workspace can be done with the following:
+## Setting Up Express
 
-```bash
-yarn add -D @nrwl/express
+To create a new workspace with Express, run the following command:
+
+```shell
+ npx create-nx-workspace --preset=express
 ```
 
-```bash
+### Adding Express to an Existing Project
+
+Install the express plugin
+
+```shell
 npm install -D @nrwl/express
 ```
 
-> Note: You can create new workspace that has Express and React set up by doing `npx create-nx-workspace@latest --preset=react-express`
-
-## Applications
-
-Generating new applications can be done with the following:
-
-```bash
-nx generate @nrwl/express:application <express-app>
+```shell
+yarn add -D @nrwl/express
 ```
 
-This creates the following app structure:
+## Creating Applications
 
-```treeview
-my-org/
-├── apps/
-    └── express-app/
-        ├── jest.config.js
-        ├── src/
-        │   ├── app/
-        │   ├── assets/
-        │   ├── environments/
-        │   │   ├── environment.prod.ts
-        │   │   └── environment.ts
-        │   └── main.ts
-        ├── tsconfig.app.json
-        ├── tsconfig.json
-        ├── tsconfig.spec.json
-        └── tslint.json
+Add a new application to your workspace with the following command:
+
+```shell
+nx g @nrwl/express:app my-app
 ```
 
-The `main.ts` content should look similar to this:
+Serve the application by running
 
-```typescript
-import * as express from 'express';
-
-const app = express();
-
-app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to express-app!' });
-});
-
-const port = process.env.port || 3333;
-const server = app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}/api`);
-});
-server.on('error', console.error);
+```shell
+nx serve my-app
 ```
 
-#### Application Proxies
+This starts the application on localhost:3333/api by default.
 
-Generating Express applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
+> Express does not come with any library generators, but you can leverage the[`@nrwl/js`](/js/overview#create-libraries) plugin to generate a Node.js library for your express application.
 
-```bash
-nx generate @nrwl/express:application <express-app> --frontendProject my-react-app
+### Application Proxies
+
+The Express application generator has an option to configure other projects in the workspace to proxy API requests. This
+can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
+
+```shell
+nx g @nrwl/express:app <express-app> --frontendProject my-react-app
 ```
 
-### Application commands
+## Using Express
 
-When a Express application is added to the workspace.json (or angular.json), the following architect commands are available for execution:
+### Testing Projects
 
-#### build
+You can run unit tests with:
 
-```bash
-nx build <express-app>
+```shell
+nx test <project-name>
 ```
 
-The build command will compile the application using Webpack. It supports a production configuration by building with the following command:
+### Building Projects
 
-```bash
-nx build <express-app> --configuration=production
+Express projects can be built with:
+
+```shell
+nx build <project-name>
 ```
 
-Additional configurations can be added in the workspace.json. Changing the `--configuration` flag with the new configuration name will run that config.
+Build artifacts will be found in the `dist` directory under `apps/<project-name>` by default. Customize the build
+configuration by editing `outputPath` in the [project configuration](/configuration/projectjson).
 
-#### serve
+### Waiting for Other Tasks
 
-```bash
-nx serve <express-app>
-```
+You can wait for other tasks to run before serving the express app which can be handy for spinning up various services
+the application depends on— for example, other apis in a microservice.
 
-The serve command runs the `build` target, and executes the application.
+Setting the `waitUntilTargets` option with an array of targets (format: `"project:target"`) executes those tasks
+before serving the Express application.
 
-By default, the serve command will run in watch mode. This allows code to be changed, and the Express application to be rebuilt automatically.
-Express applications also have the `inspect` flag set, so you can attach your debugger to the running instance.
+## More Documentation
 
-##### Debugging
-
-Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` architect in the workspace.json. Or by running the serve command with `--port <number>`.
-
-For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://expressjs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
-
-##### Waiting for other builds
-
-Setting the `waitUntilTargets` option with an array of projects (with the following format: `"project:architect"`) will execute those commands before serving the Express application.
-
-#### lint
-
-The lint command will run linting within the scope of the Express app.
-
-```bash
-nx lint <express-app>
-```
-
-#### test
-
-Test will execute Jest tests within the scope of the Express app.
-
-```bash
-nx test <express-app>
-```
+- [Using Jest](/jest/overview)
+- [@nrwl/js](/js/overview)
+- [Express](https://expressjs.com/)
