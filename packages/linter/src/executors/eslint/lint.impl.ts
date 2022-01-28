@@ -120,7 +120,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     }
   }
 
-  const formattedResults = formatter.format(lintResults);
+  const formattedResults = await formatter.format(lintResults);
 
   if (options.outputFile) {
     const pathToOutputFile = join(context.root, options.outputFile);
