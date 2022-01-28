@@ -35,7 +35,9 @@ export interface CLISuccessMessageConfig {
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
-if (isCI() && !process.env.FORCE_COLOR) {
+const forceColor =
+  process.env.FORCE_COLOR === '' || process.env.FORCE_COLOR === 'true';
+if (isCI() && !forceColor) {
   (chalk as any).Level = 0;
 }
 
