@@ -1501,6 +1501,11 @@
             "file": "shared/guides/using-tailwind-css-in-react"
           },
           {
+            "name": "Using Tailwind CSS with Angular projects",
+            "id": "using-tailwind-css-with-angular-projects",
+            "file": "shared/guides/using-tailwind-css-with-angular-projects"
+          },
+          {
             "name": "Using NgRx",
             "id": "misc-ngrx",
             "file": "shared/guides/misc-ngrx"
