@@ -8,7 +8,7 @@ import {
   remove,
   unlink,
   writeFile,
-  existsSync,
+  pathExists,
   lstat,
   readdir,
 } from 'fs-extra';
@@ -100,7 +100,7 @@ export class Cache {
       await Promise.all(
         outputs.map(async (f) => {
           const src = join(this.root, f);
-          if (existsSync(src)) {
+          if (await pathExists(src)) {
             const cached = join(td, 'outputs', f);
             const directory = resolve(cached, '..');
             await mkdir(directory, { recursive: true });
@@ -138,7 +138,7 @@ export class Cache {
       await Promise.all(
         outputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (existsSync(cached)) {
+          if (await pathExists(cached)) {
             const src = join(this.root, f);
             await this.remove(src);
             const directory = resolve(src, '..');
@@ -260,23 +260,24 @@ export class Cache {
       const rootOutputPath = join(this.root, output);
 
       if (
-        existsSync(cacheOutputPath) &&
+        (await pathExists(cacheOutputPath)) &&
         (await lstat(cacheOutputPath)).isFile()
       ) {
         return (
-          existsSync(join(cachedResult.outputsPath, output)) &&
-          !existsSync(join(this.root, output))
+          (await pathExists(join(cachedResult.outputsPath, output))) &&
+          !(await pathExists(join(this.root, output)))
         );
       }
 
       const haveDifferentAmountOfFiles =
-        existsSync(cacheOutputPath) &&
-        existsSync(rootOutputPath) &&
+        (await pathExists(cacheOutputPath)) &&
+        (await pathExists(rootOutputPath)) &&
         (await readdir(cacheOutputPath)).length !==
           (await readdir(rootOutputPath)).length;
 
       if (
-        (existsSync(cacheOutputPath) && !existsSync(rootOutputPath)) ||
+        ((await pathExists(cacheOutputPath)) &&
+          !(await pathExists(rootOutputPath))) ||
         haveDifferentAmountOfFiles
       ) {
         return true;
@@ -296,7 +297,7 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (existsSync(tdCommit)) {
+    if (await pathExists(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
         'utf-8'
