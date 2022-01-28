@@ -15,7 +15,7 @@ import { dirname, join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn, exec } from 'child_process';
 import { cacheDir } from '../utilities/cache-directory';
-
+import { platform } from 'os';
 const util = require('util');
 
 const readFileAsync = util.promisify(readFile);
@@ -36,7 +36,7 @@ export class Cache {
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
   latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
-  useFsExtraToCopyAndRemove = false;
+  useFsExtraToCopyAndRemove = platform() != 'win32';
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -108,9 +108,10 @@ export class Cache {
           const src = join(this.root, f);
           if (await existsAsync(src)) {
             const cached = join(td, 'outputs', f);
-            const directory = resolve(cached, '..');
+            const isFile = (await lstatAsync(src)).isFile();
+            const directory = isFile ? dirname(cached) : cached;
             await ensureDir(directory);
-            await this.copy(src, directory);
+            await this.copy(src, cached);
           }
         })
       );
@@ -145,11 +146,13 @@ export class Cache {
         outputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
           if (await existsAsync(cached)) {
+            const isFile = (await lstatAsync(cached)).isFile();
             const src = join(this.root, f);
             await this.remove(src);
-            const directory = resolve(src, '..');
+            // Ensure parent directory is created if src is a file
+            const directory = isFile ? resolve(src, '..') : src;
             await ensureDir(directory);
-            await this.copy(cached, directory);
+            await this.copy(cached, src);
           }
         })
       );
@@ -192,7 +195,7 @@ export class Cache {
     }
 
     return new Promise((res, rej) => {
-      exec(`cp -a "${src}" "${directory}"`, (error) => {
+      exec(`cp -a "${src}" "${dirname(directory)}"`, (error) => {
         if (!error) {
           res(null);
         } else {
