@@ -1,8 +1,8 @@
 {
   "schematics": {},
   "packageJsonUpdates": {
-    "13.5.0": {
-      "version": "13.5.0",
+    "13.7.0": {
+      "version": "13.7.0",
       "packages": {
         "express": {
           "version": "4.17.2",

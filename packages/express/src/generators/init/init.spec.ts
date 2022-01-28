@@ -23,15 +23,10 @@ describe('init', () => {
       { '@nrwl/express': expressVersion, [existing]: existingVersion },
       { [existing]: existingVersion }
     );
-    await initGenerator(tree, {
-      unitTestRunner: 'jest',
-      skipFormat: false,
-    });
+    await initGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     // add express
     expect(packageJson.dependencies['express']).toBeDefined();
-    // add tslib
-    expect(packageJson.dependencies['tslib']).toBeDefined();
     // move `@nrwl/express` to dev
     expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
@@ -44,7 +39,7 @@ describe('init', () => {
 
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
-      await initGenerator(tree, { unitTestRunner: 'jest', skipFormat: false });
+      await initGenerator(tree, {});
       const { cli } = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(cli.defaultCollection).toEqual('@nrwl/express');
     });
@@ -53,7 +48,6 @@ describe('init', () => {
   it('should not add jest config if unitTestRunner is none', async () => {
     await initGenerator(tree, {
       unitTestRunner: 'none',
-      skipFormat: false,
     });
     expect(tree.exists('jest.config.js')).toEqual(false);
   });

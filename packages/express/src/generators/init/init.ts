@@ -3,8 +3,8 @@ import {
   updateJson,
   formatFiles,
   convertNxGenerator,
+  Tree,
 } from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { initGenerator as nodeInitGenerator } from '@nrwl/node';
 import {
