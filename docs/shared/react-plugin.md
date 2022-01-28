@@ -2,7 +2,8 @@
 
 ![React Logo](/shared/react-logo.png)
 
-The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:
+The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
+It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.
 - Generators for applications, libraries, components, hooks, and more.
@@ -31,14 +32,21 @@ You can add a new application with the following:
 nx g @nrwl/react:app my-new-app
 ```
 
+To start the application in development mode, run `nx serve my-new-app`.
+
 And add a new library as follows:
 
 ```bash
 nx g @nrwl/react:lib my-new-lib
 
-# If you want the library to be buildable and publishable to npm
-nx g @nrwl/react:lib my-new-lib
+# If you want the library to be buildable or publishable to npm
+nx g @nrwl/react:lib my-new-lib --buildable
+nx g @nrwl/react:lib my-new-lib \
+--publishable \
+--importPath=@myorg/my-new-lib
 ```
+
+Read more about [building and publishing libraries here](/structure/buildable-and-publishable-libraries).
 
 ### Creating Components
 
@@ -102,7 +110,8 @@ And if you generated a library with `--buildable`, then you can build a library 
 nx build my-new-lib
 ```
 
-The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
+The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the
+project's `project.json` file.
 
 The application in `dist` is deployable, and you can try it out locally with:
 
@@ -118,13 +127,13 @@ The library in `dist` is publishable to npm or a private registry.
 - [Using Jest](/jest/overview)
 - [Using Storybook](/storybook/overview-react)
 
-### Executors / Builders
+### Executors
 
 React applications are built using the executors from the `@nrwl/web` plugin.
 
 - [build](/web/build) - Builds a web components application
 - [dev-server](/web/package) - Builds and serves a web application
-- [package](/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [package](/web/package) - Bundles artifacts for a buildable library that can be distributed as an npm package.
 
 ### Generators
 

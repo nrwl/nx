@@ -1,4 +1,4 @@
-# Nx Plugin for Web
+# Web Plugin
 
 The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:
 
@@ -30,7 +30,9 @@ nx g @nrwl/web:app my-new-app
 
 The application uses no framework and generates with web components. You can add any framework you want on top of the default setup.
 
-**Note:** If you are looking to start a React application, check out the [React plugin](/react/overview).
+To start the application in development mode, run `nx serve my-new-app`.
+
+**Note:** If you are looking to add a React application, check out the [React plugin](/react/overview).
 
 ### Creating Libraries
 
@@ -38,6 +40,12 @@ To create a generic TypeScript library (i.e. non-framework specific), use the [`
 
 ```bash
 nx g @nrwl/js:lib my-new-lib
+
+# If you want the library to be buildable or publishable to npm
+nx g @nrwl/web:lib my-new-lib --buildable
+nx g @nrwl/web:lib my-new-lib \
+--publishable \
+--importPath=@myorg/my-new-lib
 ```
 
 ## Using Web
@@ -90,7 +98,7 @@ The library in `dist` is publishable to npm or a private registry.
 - [Using Cypress](/cypress/overview)
 - [Using Jest](/cypress/overview)
 
-## Executors / Builders
+## Executors
 
 - [build](/web/build) - Builds a web components application
 - [dev-server](/web/dev-server) - Builds and serves a web application
