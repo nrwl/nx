@@ -1,6 +1,7 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { cacheDir } from '@nrwl/workspace/src/utilities/cache-directory';
 import { exec, execSync } from 'child_process';
+import { createAsyncIterable } from '../create-async-iterable/create-async-iteratable';
 import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
@@ -69,53 +70,90 @@ export async function* compileSwcWatch(
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => Promise<void>
 ) {
-  logger.log(
-    `Compiling with SWC for ${context.projectName}.....................`
-  );
-
   const getResult = (success: boolean) => ({
     success,
     outfile: normalizedOptions.mainOutputPath,
   });
 
-  const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
-    cwd: normalizedOptions.projectRoot,
-  });
+  let typeCheckOptions: TypeCheckOptions;
+  let initialPostCompile = true;
 
-  const promisifySwcWatcher = () => {
-    let processOnExit: () => void;
-    let stdoutOnData: () => void;
-    let stderrOnData: () => void;
-    let watcherOnExit: () => void;
+  return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
+    async ({ next, done }) => {
+      let processOnExit: () => void;
+      let stdoutOnData: () => void;
+      let stderrOnData: () => void;
+      let watcherOnExit: () => void;
 
-    return new Promise<{
-      success: boolean;
-      timestamp: number;
-      exit: boolean;
-    }>((resolve) => {
+      const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
+        cwd: normalizedOptions.projectRoot,
+      });
+
       processOnExit = () => {
         swcWatcher.kill();
-        resolve({ success: true, exit: true, timestamp: Date.now() });
+        done(getResult(true));
+        process.off('SIGINT', processOnExit);
+        process.off('SIGTERM', processOnExit);
+        process.off('exit', processOnExit);
       };
 
-      stdoutOnData = (data?: any) => {
+      stdoutOnData = async (data?: string) => {
         process.stdout.write(data);
         if (!data.startsWith('Watching')) {
-          resolve({
-            success: data.includes('Successfully'),
-            exit: false,
-            timestamp: Date.now(),
-          });
+          const swcStatus = data.includes('Successfully');
+
+          if (initialPostCompile) {
+            await postCompilationCallback();
+            initialPostCompile = false;
+          }
+
+          if (normalizedOptions.skipTypeCheck) {
+            next(getResult(swcStatus));
+            return;
+          }
+
+          if (!typeCheckOptions) {
+            typeCheckOptions = getTypeCheckOptions(normalizedOptions);
+          }
+
+          const delayed = delay(5000);
+          next(
+            getResult(
+              await Promise.race([
+                delayed
+                  .start()
+                  .then(() => ({ tscStatus: false, type: 'timeout' })),
+                runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
+                  const hasErrors = errors.length > 0;
+                  if (hasErrors) {
+                    printDiagnostics(errors, warnings);
+                  }
+                  return {
+                    tscStatus: !hasErrors,
+                    type: 'tsc',
+                  };
+                }),
+              ]).then(({ type, tscStatus }) => {
+                if (type === 'tsc') {
+                  delayed.cancel();
+                  return tscStatus && swcStatus;
+                }
+
+                return swcStatus;
+              })
+            )
+          );
         }
       };
 
       stderrOnData = (err?: any) => {
         process.stderr.write(err);
-        resolve({ success: false, exit: false, timestamp: Date.now() });
+        next(getResult(false));
       };
 
       watcherOnExit = () => {
-        resolve({ success: true, exit: true, timestamp: Date.now() });
+        done(getResult(true));
+        swcWatcher.off('exit', watcherOnExit);
       };
 
       swcWatcher.stdout.on('data', stdoutOnData);
@@ -126,85 +164,8 @@ export async function* compileSwcWatch(
       process.on('exit', processOnExit);
 
       swcWatcher.on('exit', watcherOnExit);
-    }).finally(() => {
-      if (processOnExit) {
-        process.off('SIGINT', processOnExit);
-        process.off('SIGTERM', processOnExit);
-        process.off('exit', processOnExit);
-      }
-
-      if (stdoutOnData) {
-        swcWatcher.stdout.off('data', stdoutOnData);
-      }
-
-      if (stderrOnData) {
-        swcWatcher.stderr.off('data', stderrOnData);
-      }
-
-      if (watcherOnExit) {
-        swcWatcher.off('exit', watcherOnExit);
-      }
-    });
-  };
-
-  let typeCheckOptions: TypeCheckOptions;
-
-  // initial
-  const { success: initialSwcStatus } = await promisifySwcWatcher();
-
-  await postCompilationCallback();
-
-  if (normalizedOptions.skipTypeCheck) {
-    yield getResult(initialSwcStatus);
-  } else {
-    typeCheckOptions = getTypeCheckOptions(normalizedOptions);
-    const { errors, warnings } = await runTypeCheck(typeCheckOptions);
-    if (errors.length > 0) {
-      printDiagnostics(errors, warnings);
-      yield getResult(false);
-    } else {
-      if (warnings.length > 0) {
-        printDiagnostics(errors, warnings);
-      }
-      yield getResult(initialSwcStatus);
     }
-  }
-
-  // watch
-  while (true) {
-    const { success: swcStatus, exit } = await promisifySwcWatcher();
-    if (exit) {
-      return getResult(swcStatus);
-    }
-
-    if (normalizedOptions.skipTypeCheck) {
-      yield getResult(swcStatus);
-    } else {
-      const delayed = delay(5000);
-      yield getResult(
-        await Promise.race([
-          delayed.start().then(() => ({ tscStatus: false, type: 'timeout' })),
-          runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
-            const hasErrors = errors.length > 0;
-            if (hasErrors) {
-              printDiagnostics(errors, warnings);
-            }
-            return {
-              tscStatus: !hasErrors,
-              type: 'tsc',
-            };
-          }),
-        ]).then(({ type, tscStatus }) => {
-          if (type === 'tsc') {
-            delayed.cancel();
-            return tscStatus && swcStatus;
-          }
-
-          return swcStatus;
-        })
-      );
-    }
-  }
+  );
 }
 
 function delay(ms: number): { start: () => Promise<void>; cancel: () => void } {
