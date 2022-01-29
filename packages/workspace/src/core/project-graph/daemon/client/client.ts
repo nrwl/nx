@@ -1,81 +1,77 @@
-import { ProjectGraph } from '@nrwl/devkit';
-import { ChildProcess, spawn, spawnSync } from 'child_process';
-import { openSync, readFileSync } from 'fs';
-import { ensureDirSync, ensureFileSync } from 'fs-extra';
-import { connect } from 'net';
-import { performance } from 'perf_hooks';
-import { output } from '../../../../utilities/output';
+import { ProjectGraph } from "@nrwl/devkit";
+import { ChildProcess, spawn, spawnSync } from "child_process";
+import { openSync, readFileSync } from "fs";
+import { ensureDirSync, ensureFileSync } from "fs-extra";
+import { connect } from "net";
+import { performance } from "perf_hooks";
+import { output } from "../../../../utilities/output";
 import {
   safelyCleanUpExistingProcess,
-  writeDaemonJsonProcessCache,
-} from '../cache';
-import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
+  writeDaemonJsonProcessCache
+} from "../cache";
+import { FULL_OS_SOCKET_PATH, killSocketOrPath } from "../socket-utils";
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  DAEMON_OUTPUT_LOG_FILE,
-} from '../tmp-dir';
+  DAEMON_OUTPUT_LOG_FILE
+} from "../tmp-dir";
 
-export async function startInBackground(): Promise<ChildProcess['pid']> {
+export async function startInBackground(): Promise<ChildProcess["pid"]> {
   await safelyCleanUpExistingProcess();
   ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
   ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
-  try {
-    const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
-      cwd: __dirname,
-      stdio: ['ignore', out, err],
-      detached: true,
-      windowsHide: true,
-      shell: false,
-    });
-    backgroundProcess.unref();
+  const out = openSync(DAEMON_OUTPUT_LOG_FILE, "a");
+  const err = openSync(DAEMON_OUTPUT_LOG_FILE, "a");
+  const backgroundProcess = spawn(process.execPath, ["../server/start.js"], {
+    cwd: __dirname,
+    stdio: ["ignore", out, err],
+    detached: true,
+    windowsHide: true,
+    shell: false
+  });
+  backgroundProcess.unref();
 
-    // Persist metadata about the background process so that it can be cleaned up later if needed
-    await writeDaemonJsonProcessCache({
-      processId: backgroundProcess.pid,
-    });
+  // Persist metadata about the background process so that it can be cleaned up later if needed
+  await writeDaemonJsonProcessCache({
+    processId: backgroundProcess.pid
+  });
 
-    /**
-     * Ensure the server is actually available to connect to via IPC before resolving
-     */
-    let attempts = 0;
-    return new Promise((resolve) => {
-      const id = setInterval(async () => {
-        if (await isServerAvailable()) {
-          clearInterval(id);
-          resolve(backgroundProcess.pid);
-        } else if (attempts > 200) {
-          // daemon fails to start, the process probably exited
-          // we print the logs and exit the client
-          throw daemonProcessException(
-            'Failed to start the Nx Daemon process.'
-          );
-        } else {
-          attempts++;
-        }
-      }, 10);
-    });
-  } catch (err) {
-    throw err;
-  }
+  /**
+   * Ensure the server is actually available to connect to via IPC before resolving
+   */
+  let attempts = 0;
+  return new Promise((resolve, reject) => {
+    const id = setInterval(async () => {
+      if (await isServerAvailable()) {
+        clearInterval(id);
+        resolve(backgroundProcess.pid);
+      } else if (attempts > 200) {
+        // daemon fails to start, the process probably exited
+        // we print the logs and exit the client
+        reject(daemonProcessException(
+          "Failed to start the Nx Daemon process."
+        ));
+      } else {
+        attempts++;
+      }
+    }, 10);
+  });
 }
 
 function daemonProcessException(message: string) {
   try {
-    let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
+    let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split("\n");
     if (log.length > 20) {
       log = log.slice(log.length - 20);
     }
     return new Error(
       [
         message,
-        'Messages from the log:',
+        "Messages from the log:",
         ...log,
-        '\n',
-        `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
-      ].join('\n')
+        "\n",
+        `More information: ${DAEMON_OUTPUT_LOG_FILE}`
+      ].join("\n")
     );
   } catch (e) {
     return new Error(message);
@@ -84,22 +80,22 @@ function daemonProcessException(message: string) {
 
 export function startInCurrentProcess(): void {
   output.log({
-    title: `Daemon Server - Starting in the current process...`,
+    title: `Daemon Server - Starting in the current process...`
   });
 
-  spawnSync(process.execPath, ['../server/start.js'], {
+  spawnSync(process.execPath, ["../server/start.js"], {
     cwd: __dirname,
-    stdio: 'inherit',
+    stdio: "inherit"
   });
 }
 
 export function stop(): void {
-  spawnSync(process.execPath, ['../server/stop.js'], {
+  spawnSync(process.execPath, ["../server/stop.js"], {
     cwd: __dirname,
-    stdio: 'inherit',
+    stdio: "inherit"
   });
 
-  output.log({ title: 'Daemon Server - Stopped' });
+  output.log({ title: "Daemon Server - Stopped" });
 }
 
 /**
@@ -117,7 +113,7 @@ export async function isServerAvailable(): Promise<boolean> {
         socket.destroy();
         resolve(true);
       });
-      socket.once('error', () => {
+      socket.once("error", () => {
         resolve(false);
       });
     } catch (err) {
@@ -138,25 +134,25 @@ export async function isServerAvailable(): Promise<boolean> {
  */
 export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
   return new Promise((resolve, reject) => {
-    performance.mark('getProjectGraphFromServer-start');
+    performance.mark("getProjectGraphFromServer-start");
     const socket = connect(FULL_OS_SOCKET_PATH);
 
-    socket.on('error', (err) => {
+    socket.on("error", (err) => {
       if (!err.message) {
         return reject(err);
       }
-      if (err.message.startsWith('LOCK-FILES-CHANGED')) {
+      if (err.message.startsWith("LOCK-FILES-CHANGED")) {
         return getProjectGraphFromServer().then(resolve, reject);
       }
       let error: any;
-      if (err.message.startsWith('connect ENOENT')) {
-        error = daemonProcessException('The Daemon Server is not running');
-      } else if (err.message.startsWith('connect ECONNREFUSED')) {
+      if (err.message.startsWith("connect ENOENT")) {
+        error = daemonProcessException("The Daemon Server is not running");
+      } else if (err.message.startsWith("connect ECONNREFUSED")) {
         error = daemonProcessException(
           `A server instance had not been fully shut down. Please try running the command again.`
         );
         killSocketOrPath();
-      } else if (err.message.startsWith('read ECONNRESET')) {
+      } else if (err.message.startsWith("read ECONNRESET")) {
         error = daemonProcessException(
           `Unable to connect to the daemon process.`
         );
@@ -169,31 +165,31 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
      * request payload. See the notes above createServer() for more context as to why we explicitly
      * request the graph from the client like this.
      */
-    socket.on('connect', () => {
-      socket.write('REQUEST_PROJECT_GRAPH_PAYLOAD');
+    socket.on("connect", () => {
+      socket.write("REQUEST_PROJECT_GRAPH_PAYLOAD");
 
-      let serializedProjectGraphResult = '';
-      socket.on('data', (data) => {
+      let serializedProjectGraphResult = "";
+      socket.on("data", (data) => {
         serializedProjectGraphResult += data.toString();
       });
 
-      socket.on('end', () => {
+      socket.on("end", () => {
         try {
-          performance.mark('json-parse-start');
+          performance.mark("json-parse-start");
           const projectGraphResult = JSON.parse(serializedProjectGraphResult);
-          performance.mark('json-parse-end');
+          performance.mark("json-parse-end");
           performance.measure(
-            'deserialize graph result on the client',
-            'json-parse-start',
-            'json-parse-end'
+            "deserialize graph result on the client",
+            "json-parse-start",
+            "json-parse-end"
           );
           if (projectGraphResult.error) {
             reject(projectGraphResult.error);
           } else {
             performance.measure(
-              'total for getProjectGraphFromServer()',
-              'getProjectGraphFromServer-start',
-              'json-parse-end'
+              "total for getProjectGraphFromServer()",
+              "getProjectGraphFromServer-start",
+              "json-parse-end"
             );
             return resolve(projectGraphResult.projectGraph);
           }
@@ -201,19 +197,19 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
           const endOfGraph =
             serializedProjectGraphResult.length > 300
               ? serializedProjectGraphResult.substring(
-                  serializedProjectGraphResult.length - 300
-                )
+                serializedProjectGraphResult.length - 300
+              )
               : serializedProjectGraphResult;
           reject(
             daemonProcessException(
               [
-                'Could not deserialize project graph.',
+                "Could not deserialize project graph.",
                 `Message: ${e.message}`,
-                '\n',
+                "\n",
                 `Received:`,
                 endOfGraph,
-                '\n',
-              ].join('\n')
+                "\n"
+              ].join("\n")
             )
           );
         }
