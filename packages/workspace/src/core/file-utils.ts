@@ -1,8 +1,12 @@
-import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
+import {
+  toOldFormatOrNull,
+  WorkspaceJsonConfiguration,
+  Workspaces,
+} from '@nrwl/tao/src/shared/workspace';
 import type {
   FileData,
   NxJsonConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectGraphNode,
 } from '@nrwl/devkit';
 import { readJsonFile } from '@nrwl/devkit';
 import { execSync } from 'child_process';
@@ -35,10 +39,11 @@ export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
-export function getIgnoredGlobs() {
-  return ignore()
-    .add(readFileIfExisting(`${appRootPath}/.gitignore`))
-    .add(readFileIfExisting(`${appRootPath}/.nxignore`));
+function getIgnoredGlobs() {
+  const ig = ignore();
+  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
+  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
+  return ig;
 }
 
 export function calculateFileChanges(
@@ -77,7 +82,7 @@ export function calculateFileChanges(
 
             try {
               return jsonDiff(JSON.parse(atBase), JSON.parse(atHead));
-            } catch {
+            } catch (e) {
               return [new WholeFileChange()];
             }
           default:
@@ -188,7 +193,7 @@ export function workspaceLayout(): { appsDir: string; libsDir: string } {
 export function readEnvironment(): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readWorkspaceJson();
-  return { nxJson, workspaceJson, workspaceResults: null };
+  return { nxJson, workspaceJson, workspaceResults: null } as any;
 }
 
 // Original Exports
