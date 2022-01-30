@@ -1,7 +1,7 @@
 export const nxVersion = '*';
 
-export const swcCoreVersion = '1.2.118';
+export const swcCoreVersion = '1.2.135';
 
-export const swcCliVersion = '~0.1.52';
+export const swcCliVersion = '~0.1.55';
 
-export const swcHelpersVersion = '~0.2.14';
+export const swcHelpersVersion = '~0.3.2';
