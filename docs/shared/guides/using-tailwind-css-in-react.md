@@ -46,16 +46,15 @@ Nx has a utility function for determining the glob representation of all files t
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 
 module.exports = {
-  purge: createGlobPatternsForDependencies(__dirname),
-  darkMode: false, // or 'media' or 'class'
+  content: [
+    createGlobPatternsForDependencies(__dirname),
+  ],
   theme: {
     extend: {},
   },
-  variants: {
-    extend: {},
-  },
   plugins: [],
-};
+}
+
 ```
 
 _NOTE:_ To ensure proper purging for custom configurations, be sure that the `NODE_ENV` environment variable is set to `production`. By default, Nx only purges on prod build (for example: `nx build --prod`).
