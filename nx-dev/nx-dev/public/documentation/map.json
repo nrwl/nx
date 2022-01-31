@@ -529,6 +529,12 @@
         "id": "js",
         "itemList": [
           {
+            "name": "Overview",
+            "id": "overview",
+            "searchResultsName": "@nrwl/js Overview",
+            "file": "shared/js-plugin"
+          },
+          {
             "name": "application generator",
             "id": "application",
             "file": "generated/api-js/generators/application"
@@ -540,7 +546,7 @@
           },
           {
             "name": "convert-to-swc generator",
-            "id": "library",
+            "id": "convert-to-swc",
             "file": "generated/api-js/generators/convert-to-swc"
           },
           {
@@ -1494,6 +1500,11 @@
             "name": "Using Tailwind CSS in React",
             "id": "using-tailwind-css-in-react",
             "file": "shared/guides/using-tailwind-css-in-react"
+          },
+          {
+            "name": "Using Tailwind CSS with Angular projects",
+            "id": "using-tailwind-css-with-angular-projects",
+            "file": "shared/guides/using-tailwind-css-with-angular-projects"
           },
           {
             "name": "Using NgRx",
