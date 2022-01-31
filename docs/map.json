@@ -1482,11 +1482,6 @@
             "file": "shared/guides/browser-support"
           },
           {
-            "name": "Next.js projects with Nx",
-            "id": "nextjs",
-            "file": "shared/guides/nextjs"
-          },
-          {
             "name": "React Native with Nx",
             "id": "react-native",
             "file": "shared/guides/react-native"

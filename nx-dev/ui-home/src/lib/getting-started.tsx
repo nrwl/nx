@@ -617,7 +617,7 @@ function ReactPane(): ReactComponentElement<any> {
               </svg>
               <h3 className="mt-2 font-semibold">
                 Next.js{' '}
-                <Link href="/guides/nextjs">
+                <Link href="/next/overview">
                   <a className="italic font-normal text-sm text-gray-600 hover:underline">
                     (follow our Next.js guide)
                   </a>
