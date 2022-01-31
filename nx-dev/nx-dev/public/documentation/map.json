@@ -529,6 +529,12 @@
         "id": "js",
         "itemList": [
           {
+            "name": "Overview",
+            "id": "overview",
+            "searchResultsName": "@nrwl/js Overview",
+            "file": "shared/js-plugin"
+          },
+          {
             "name": "application generator",
             "id": "application",
             "file": "generated/api-js/generators/application"
@@ -540,7 +546,7 @@
           },
           {
             "name": "convert-to-swc generator",
-            "id": "library",
+            "id": "convert-to-swc",
             "file": "generated/api-js/generators/convert-to-swc"
           },
           {
@@ -913,6 +919,18 @@
         "name": "linter",
         "id": "linter",
         "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/linter Overview",
+            "file": "shared/linter-plugin"
+          },
+          {
+            "id": "eslint-plugin-nx",
+            "name": "eslint-plugin-nx",
+            "searchResultsName": "@nrwl/eslint-plugin-nx Overview",
+            "file": "shared/eslint-plugin-nx"
+          },
           {
             "name": "eslint executor",
             "id": "eslint",
@@ -1494,6 +1512,11 @@
             "name": "Using Tailwind CSS in React",
             "id": "using-tailwind-css-in-react",
             "file": "shared/guides/using-tailwind-css-in-react"
+          },
+          {
+            "name": "Using Tailwind CSS with Angular projects",
+            "id": "using-tailwind-css-with-angular-projects",
+            "file": "shared/guides/using-tailwind-css-with-angular-projects"
           },
           {
             "name": "Using NgRx",

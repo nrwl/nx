@@ -18,11 +18,11 @@ To create a new workspace with Express, run the following command:
 Install the express plugin
 
 ```shell
-npm install -D @nrwl/express
+npm install --save-dev @nrwl/express
 ```
 
 ```shell
-yarn add -D @nrwl/express
+yarn add --dev @nrwl/express
 ```
 
 ## Creating Applications
