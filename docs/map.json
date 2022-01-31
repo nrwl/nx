@@ -529,6 +529,12 @@
         "id": "js",
         "itemList": [
           {
+            "name": "Overview",
+            "id": "overview",
+            "searchResultsName": "@nrwl/js Overview",
+            "file": "shared/js-plugin"
+          },
+          {
             "name": "application generator",
             "id": "application",
             "file": "generated/api-js/generators/application"
@@ -540,7 +546,7 @@
           },
           {
             "name": "convert-to-swc generator",
-            "id": "library",
+            "id": "convert-to-swc",
             "file": "generated/api-js/generators/convert-to-swc"
           },
           {
