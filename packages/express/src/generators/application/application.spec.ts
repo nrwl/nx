@@ -1,6 +1,5 @@
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 

@@ -9,18 +9,19 @@ The requests fail because the API has not been created yet. Using Nx you develop
 Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `npx nx list`:**
 
 ```bash
->  NX  Installed plugins:
+>  NX   Installed plugins:
 
-  @nrwl/cypress (builders,generators)
-  @nrwl/jest (builders,generators)
-  @nrwl/linter (builders,generators)
+  @nrwl/cypress (executors,generators)
+  @nrwl/jest (executors,generators)
+  @nrwl/linter (executors,generators)
+  @nrwl/nx-cloud (generators)
   @nrwl/react (generators)
-  @nrwl/storybook (builders,generators)
-  @nrwl/web (builders,generators)
-  @nrwl/workspace (builders,generators)
+  @nrwl/storybook (executors,generators)
+  @nrwl/web (executors,generators)
+  @nrwl/workspace (executors,generators)
 
 
->  NX  Also available:
+>  NX   Also available:
 
   @nrwl/angular (generators)
   @nrwl/express (executors,generators)
@@ -30,19 +31,11 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
   @nrwl/nx-plugin (executors,generators)
 
 
->  NX  Community plugins:
+>  NX   Community plugins:
 
-  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries
-  @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers
+  nx-plugins - Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / nowpack / ... plugins.
+  @codebrew/nx-aws-cdk - An Nx plugin for aws cdk develop.
   ...
-```
-
-**Now run `npx nx list @nrwl/express`, and you see:**
-
-```bash
->  NX   NOTE  @nrwl/express is not currently installed
-
-  Use "yarn add --dev @nrwl/express" to add new capabilities
 ```
 
 **Add the dependency:**
@@ -72,24 +65,24 @@ After this is done, you should see something like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   │   ├── src/
-│   │   ├── project.json
-│   │   └── proxy.conf.json
-│   ├── todos-e2e/
-│   └── api/
-│       ├── src/
-│       │   ├── app/
-│       │   ├── assets/
-│       │   ├── environments/
-│       │   │   ├── environment.ts
-│       │   │   └── environment.prod.ts
-│       │   └── main.ts
-│       ├── jest.conf.js
-│       ├── project.json
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│   ├── api/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   │   ├── environment.ts
+│   │   │   │   └── environment.prod.ts
+│   │   │   └── main.ts
+│   │   ├── jest.conf.js
+│   │   ├── project.json
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   ├── todos/
+│   │   ├── src/
+│   │   ├── project.json
+│   │   └── proxy.conf.json
+│   └── todos-e2e/
 ├── libs/
 ├── tools/
 ├── workspace.json
@@ -129,7 +122,7 @@ export function addTodoRoutes(app: Express) {
 }
 ```
 
-Here, you are building an Express application with Nx. Nx also comes with Nest support, and you can also use any other node library you want.
+Here, you are building an Express application with Nx. Nx also comes with Next support, and you can also use any other node library you want.
 
 **Next update `apps/api/src/main.ts` to register the routes**
 

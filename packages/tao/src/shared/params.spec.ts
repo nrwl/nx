@@ -803,6 +803,29 @@ describe('params', () => {
         ).not.toThrow();
       });
 
+      describe('array', () => {
+        it('should handle validating patterns', () => {
+          const schema = {
+            properties: {
+              a: {
+                type: ['string', 'boolean'],
+              },
+            },
+          };
+          expect(() =>
+            validateOptsAgainstSchema({ a: 'abc' }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: true }, schema)
+          ).not.toThrow();
+          expect(() =>
+            validateOptsAgainstSchema({ a: 123 }, schema)
+          ).toThrowErrorMatchingInlineSnapshot(
+            `"Property 'a' does not match the schema. '123' should be a 'string,boolean'."`
+          );
+        });
+      });
+
       describe('string', () => {
         it('should handle validating patterns', () => {
           const schema = {

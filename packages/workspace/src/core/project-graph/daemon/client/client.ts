@@ -20,46 +20,42 @@ export async function startInBackground(): Promise<ChildProcess['pid']> {
   ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
   ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
-  try {
-    const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
-      cwd: __dirname,
-      stdio: ['ignore', out, err],
-      detached: true,
-      windowsHide: true,
-      shell: false,
-    });
-    backgroundProcess.unref();
+  const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+  const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+  const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
+    cwd: __dirname,
+    stdio: ['ignore', out, err],
+    detached: true,
+    windowsHide: true,
+    shell: false,
+  });
+  backgroundProcess.unref();
 
-    // Persist metadata about the background process so that it can be cleaned up later if needed
-    await writeDaemonJsonProcessCache({
-      processId: backgroundProcess.pid,
-    });
+  // Persist metadata about the background process so that it can be cleaned up later if needed
+  await writeDaemonJsonProcessCache({
+    processId: backgroundProcess.pid,
+  });
 
-    /**
-     * Ensure the server is actually available to connect to via IPC before resolving
-     */
-    let attempts = 0;
-    return new Promise((resolve) => {
-      const id = setInterval(async () => {
-        if (await isServerAvailable()) {
-          clearInterval(id);
-          resolve(backgroundProcess.pid);
-        } else if (attempts > 200) {
-          // daemon fails to start, the process probably exited
-          // we print the logs and exit the client
-          throw daemonProcessException(
-            'Failed to start the Nx Daemon process.'
-          );
-        } else {
-          attempts++;
-        }
-      }, 10);
-    });
-  } catch (err) {
-    throw err;
-  }
+  /**
+   * Ensure the server is actually available to connect to via IPC before resolving
+   */
+  let attempts = 0;
+  return new Promise((resolve, reject) => {
+    const id = setInterval(async () => {
+      if (await isServerAvailable()) {
+        clearInterval(id);
+        resolve(backgroundProcess.pid);
+      } else if (attempts > 200) {
+        // daemon fails to start, the process probably exited
+        // we print the logs and exit the client
+        reject(
+          daemonProcessException('Failed to start the Nx Daemon process.')
+        );
+      } else {
+        attempts++;
+      }
+    }, 10);
+  });
 }
 
 function daemonProcessException(message: string) {

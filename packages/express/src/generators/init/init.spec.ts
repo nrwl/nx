@@ -1,12 +1,12 @@
 import {
   addDependenciesToPackageJson,
+  readJson,
   NxJsonConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import { expressVersion } from '../../utils/versions';
 import initGenerator from './init';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson } from '@nrwl/devkit';
 
 describe('init', () => {
   let tree: Tree;

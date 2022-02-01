@@ -597,6 +597,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.7.0": {
+      "version": "13.7.0-beta.9",
+      "packages": {
+        "eslint-plugin-react-hooks": {
+          "version": "4.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

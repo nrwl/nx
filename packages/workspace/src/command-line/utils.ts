@@ -114,6 +114,13 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.configuration = 'production';
   }
 
+  // TODO(v15): onlyFailed should not be an option
+  if (options.printWarnings && nxArgs.onlyFailed) {
+    output.warn({
+      title: `--onlyFailed is deprecated. All tasks will be run.`,
+    });
+  }
+
   if (mode === 'affected') {
     if (options.printWarnings && nxArgs.all) {
       output.warn({

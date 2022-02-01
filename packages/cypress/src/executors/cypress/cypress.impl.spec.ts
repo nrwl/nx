@@ -172,6 +172,42 @@ describe('Cypress builder', () => {
     );
   });
 
+  it('should call `Cypress.run` with provided ciBuildId (type: number)', async () => {
+    const ciBuildId = 1234;
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        ciBuildId,
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ciBuildId: ciBuildId.toString(),
+      })
+    );
+  });
+
+  it('should call `Cypress.run` with provided ciBuildId (type: string)', async () => {
+    const ciBuildId = 'stringBuildId';
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        devServerTarget: undefined,
+        ciBuildId,
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ciBuildId,
+        project: path.dirname(cypressOptions.cypressConfig),
+      })
+    );
+  });
+
   it('should call `Cypress.run` with provided browser', async () => {
     const { success } = await cypressExecutor(
       {

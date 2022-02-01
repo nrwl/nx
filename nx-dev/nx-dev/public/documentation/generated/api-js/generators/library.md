@@ -49,7 +49,7 @@ Library name
 
 ### buildable
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 

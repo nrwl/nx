@@ -11,6 +11,7 @@ const redirects = {
   '/getting-started/console': '/using-nx/console',
   '/core-extended/affected': '/using-nx/affected',
   '/core-extended/computation-caching': '/using-nx/caching',
+  '/guides/nextjs': '/next/overview',
 };
 
 module.exports = withNx({

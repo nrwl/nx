@@ -1,11 +1,11 @@
 ---
 title: 'daemon - CLI command'
-description: "EXPERIMENTAL: Nx DaemonThe Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph."
+description: "The Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph."
 ---
 
 # daemon
 
-EXPERIMENTAL: Nx DaemonThe Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph.
+The Nx Daemon is a local server which runs in the background in order to intelligently cache information about the workspace's project graph.
 
 ## Usage
 

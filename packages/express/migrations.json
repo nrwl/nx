@@ -1,3 +1,18 @@
 {
-  "schematics": {}
+  "schematics": {},
+  "packageJsonUpdates": {
+    "13.7.0": {
+      "version": "13.7.0",
+      "packages": {
+        "express": {
+          "version": "4.17.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "4.17.13",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

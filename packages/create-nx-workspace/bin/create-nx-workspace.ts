@@ -203,8 +203,6 @@ function showHelp() {
     packageManager            Package manager to use (npm, yarn, pnpm)
 
     nx-cloud                  Use Nx Cloud (boolean)
-
-    [new workspace options]   any 'new workspace' options
 `);
 }
 

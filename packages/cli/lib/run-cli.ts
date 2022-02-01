@@ -44,13 +44,13 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
   const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
   const stdoutAndStderrLogFileHandle = openSync(outputPath, 'w');
 
-  const onlyStdout = new Buffer('');
+  const onlyStdout = [] as string[];
   process.stdout._write = (
     chunk: any,
     encoding: string,
     callback: Function
   ) => {
-    onlyStdout.write(chunk);
+    onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
     if (forwardOutput) {
       stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
@@ -73,13 +73,10 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
   };
 
   process.on('exit', (code) => {
-    // close the outAndErrorHandle
-    closeSync(stdoutAndStderrLogFileHandle);
-
     // when the process exits successfully, and we are not asked to capture stderr
     // override the file with only stdout
     if (code === 0 && !captureStderr) {
-      writeFileSync(outputPath, onlyStdout);
+      writeFileSync(outputPath, onlyStdout.join(''));
     }
   });
 }

@@ -1,5 +1,5 @@
 import { NxJsonConfiguration, readJsonFile } from '@nrwl/devkit';
-import { join } from 'path';
+import { join, isAbsolute } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
@@ -17,10 +17,10 @@ function cacheDirectory(root: string, cacheDirectory: string) {
     cacheDirectory = cacheDirFromEnv;
   }
   if (cacheDirectory) {
-    if (cacheDirectory.startsWith('./')) {
-      return join(root, cacheDirectory);
-    } else {
+    if (isAbsolute(cacheDirectory)) {
       return cacheDirectory;
+    } else {
+      return join(root, cacheDirectory);
     }
   } else {
     return join(root, 'node_modules', '.cache', 'nx');

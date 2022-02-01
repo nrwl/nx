@@ -68,6 +68,26 @@ describe('parseRunOneOptions', () => {
     });
   });
 
+  it('should handle dot notation', () => {
+    expect(
+      parseRunOneOptions('root', workspaceJson, [
+        'run',
+        'myproj:build',
+        '--env.URL=https://localhost:9999',
+      ])
+    ).toEqual({
+      project: 'myproj',
+      target: 'build',
+      configuration: 'someDefaultConfig',
+      parsedArgs: {
+        _: [],
+        env: {
+          URL: 'https://localhost:9999',
+        },
+      },
+    });
+  });
+
   it('should use defaultProjectName when no provided', () => {
     expect(
       parseRunOneOptions(

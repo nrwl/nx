@@ -117,8 +117,8 @@ export async function createProjectGraphAsync(
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
           bodyLines: [
-            `Log file with the error: ${errorLogFile}',
-            'Please file an issue at https://github.com/nrwl/nx`,
+            `Log file with the error: ${errorLogFile}`,
+            `Please file an issue at https://github.com/nrwl/nx`,
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });

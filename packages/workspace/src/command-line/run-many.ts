@@ -9,7 +9,6 @@ import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import type { Environment } from '../core/shared-interfaces';
 
 export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   performance.mark('command-execution-begins');
@@ -22,12 +21,10 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
 
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
-  const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment();
-  const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 
   await runCommand(
-    filteredProjects,
+    projects,
     projectGraph,
     env,
     nxArgs,
@@ -37,44 +34,23 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   );
 }
 
-function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
+function projectsToRun(
+  nxArgs: NxArgs,
+  projectGraph: ProjectGraph
+): ProjectGraphNode[] {
   const allProjects = Object.values(projectGraph.nodes);
+  const excludedProjects = new Set(nxArgs.exclude ?? []);
   if (nxArgs.all) {
-    return runnableForTarget(allProjects, nxArgs.target).reduce(
-      (m, c) => ((m[c.name] = c), m),
-      {}
-    );
-  } else {
-    checkForInvalidProjects(nxArgs, allProjects);
-    let selectedProjects = nxArgs.projects.map((name) =>
-      allProjects.find((project) => project.name === name)
-    );
-    return runnableForTarget(selectedProjects, nxArgs.target, true).reduce(
-      (m, c) => ((m[c.name] = c), m),
-      {}
+    return runnableForTarget(allProjects, nxArgs.target).filter(
+      (proj) => !excludedProjects.has(proj.name)
     );
   }
-}
-
-function applyExclude(
-  projects: Record<string, ProjectGraphNode>,
-  nxArgs: NxArgs
-) {
-  return Object.keys(projects)
-    .filter((key) => !(nxArgs.exclude || []).includes(key))
-    .reduce((p, key) => {
-      p[key] = projects[key];
-      return p;
-    }, {} as Record<string, ProjectGraphNode>);
-}
-
-function applyOnlyFailed(
-  projectsNotExcluded: Record<string, ProjectGraphNode>,
-  nxArgs: NxArgs,
-  env: Environment
-) {
-  return Object.values(projectsNotExcluded).filter(
-    (n) => !nxArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+  checkForInvalidProjects(nxArgs, allProjects);
+  let selectedProjects = nxArgs.projects.map((name) =>
+    allProjects.find((project) => project.name === name)
+  );
+  return runnableForTarget(selectedProjects, nxArgs.target, true).filter(
+    (proj) => !excludedProjects.has(proj.name)
   );
 }
 

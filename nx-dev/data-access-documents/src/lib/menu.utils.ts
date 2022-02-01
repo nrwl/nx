@@ -92,6 +92,7 @@ export function getApiSection(items: MenuItem[]): MenuSection {
       (m) =>
         // m.id === 'plugins-overview' ||
         m.id === 'workspace' ||
+        m.id === 'js' ||
         m.id === 'web' ||
         m.id === 'angular' ||
         m.id === 'react' ||

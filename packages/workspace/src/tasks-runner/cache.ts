@@ -1,27 +1,22 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Task } from '@nrwl/devkit';
-import { exists, lstat, readdir } from 'fs';
 import {
   copy,
-  ensureDir,
-  ensureDirSync,
   mkdir,
+  mkdirSync,
   readFile,
   remove,
   unlink,
   writeFile,
+  pathExists,
+  lstat,
+  readdir,
 } from 'fs-extra';
 import { dirname, join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn, exec } from 'child_process';
 import { cacheDir } from '../utilities/cache-directory';
-
-const util = require('util');
-
-const readFileAsync = util.promisify(readFile);
-const existsAsync = util.promisify(exists);
-const lstatAsync = util.promisify(lstat);
-const readdirAsync = util.promisify(readdir);
+import { platform } from 'os';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -36,7 +31,7 @@ export class Cache {
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
   latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
-  useFsExtraToCopyAndRemove = false;
+  useFsExtraToCopyAndRemove = platform() === 'win32';
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -106,11 +101,12 @@ export class Cache {
       await Promise.all(
         outputs.map(async (f) => {
           const src = join(this.root, f);
-          if (await existsAsync(src)) {
+          if (await pathExists(src)) {
             const cached = join(td, 'outputs', f);
-            const directory = resolve(cached, '..');
-            await ensureDir(directory);
-            await this.copy(src, directory);
+            const isFile = (await lstat(src)).isFile();
+            const directory = isFile ? dirname(cached) : cached;
+            await mkdir(directory, { recursive: true });
+            await this.copy(src, cached);
           }
         })
       );
@@ -144,12 +140,14 @@ export class Cache {
       await Promise.all(
         outputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (await existsAsync(cached)) {
+          if (await pathExists(cached)) {
+            const isFile = (await lstat(cached)).isFile();
             const src = join(this.root, f);
             await this.remove(src);
-            const directory = resolve(src, '..');
-            await ensureDir(directory);
-            await this.copy(cached, directory);
+            // Ensure parent directory is created if src is a file
+            const directory = isFile ? resolve(src, '..') : src;
+            await mkdir(directory, { recursive: true });
+            await this.copy(cached, src);
           }
         })
       );
@@ -166,7 +164,7 @@ export class Cache {
       const hashFile = this.getFileNameWithLatestRecordedHashForOutput(output);
       try {
         await unlink(hashFile);
-      } catch (e) {}
+      } catch {}
     }
   }
 
@@ -186,15 +184,15 @@ export class Cache {
     );
   }
 
-  private copy(src: string, directory: string) {
+  private copy(src: string, directory: string): Promise<void> {
     if (this.useFsExtraToCopyAndRemove) {
       return copy(src, directory);
     }
 
     return new Promise((res, rej) => {
-      exec(`cp -a "${src}" "${directory}"`, (error) => {
+      exec(`cp -a "${src}" "${dirname(directory)}"`, (error) => {
         if (!error) {
-          res(null);
+          res();
         } else {
           this.useFsExtraToCopyAndRemove = true;
           copy(src, directory).then(res, rej);
@@ -203,15 +201,15 @@ export class Cache {
     });
   }
 
-  private remove(folder: string) {
+  private remove(folder: string): Promise<void> {
     if (this.useFsExtraToCopyAndRemove) {
       return remove(folder);
     }
 
-    return new Promise((res, rej) => {
+    return new Promise<void>((res, rej) => {
       exec(`rm -rf "${folder}"`, (error) => {
         if (!error) {
-          res(null);
+          res();
         } else {
           this.useFsExtraToCopyAndRemove = true;
           remove(folder).then(res, rej);
@@ -227,7 +225,7 @@ export class Cache {
     for (const output of outputs) {
       const hashFile = this.getFileNameWithLatestRecordedHashForOutput(output);
       try {
-        await ensureDir(dirname(hashFile));
+        await mkdir(dirname(hashFile), { recursive: true });
         await writeFile(hashFile, hash);
       } catch {}
     }
@@ -248,12 +246,11 @@ export class Cache {
     output: string
   ): Promise<string | null> {
     try {
-      return (
-        await readFileAsync(
-          this.getFileNameWithLatestRecordedHashForOutput(output)
-        )
-      ).toString();
-    } catch (e) {
+      return await readFile(
+        this.getFileNameWithLatestRecordedHashForOutput(output),
+        'utf-8'
+      );
+    } catch {
       return null;
     }
   }
@@ -267,24 +264,24 @@ export class Cache {
       const rootOutputPath = join(this.root, output);
 
       if (
-        (await existsAsync(cacheOutputPath)) &&
-        (await lstatAsync(cacheOutputPath)).isFile()
+        (await pathExists(cacheOutputPath)) &&
+        (await lstat(cacheOutputPath)).isFile()
       ) {
         return (
-          (await existsAsync(join(cachedResult.outputsPath, output))) &&
-          !(await existsAsync(join(this.root, output)))
+          (await pathExists(join(cachedResult.outputsPath, output))) &&
+          !(await pathExists(join(this.root, output)))
         );
       }
 
       const haveDifferentAmountOfFiles =
-        (await existsAsync(cacheOutputPath)) &&
-        (await existsAsync(rootOutputPath)) &&
-        (await readdirAsync(cacheOutputPath)).length !==
-          (await readdirAsync(rootOutputPath)).length;
+        (await pathExists(cacheOutputPath)) &&
+        (await pathExists(rootOutputPath)) &&
+        (await readdir(cacheOutputPath)).length !==
+          (await readdir(rootOutputPath)).length;
 
       if (
-        ((await existsAsync(cacheOutputPath)) &&
-          !(await existsAsync(rootOutputPath))) ||
+        ((await pathExists(cacheOutputPath)) &&
+          !(await pathExists(rootOutputPath))) ||
         haveDifferentAmountOfFiles
       ) {
         return true;
@@ -304,7 +301,7 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (await existsAsync(tdCommit)) {
+    if (await pathExists(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
         'utf-8'
@@ -312,7 +309,7 @@ export class Cache {
       let code = 0;
       try {
         code = Number(await readFile(join(td, 'code'), 'utf-8'));
-      } catch (e) {}
+      } catch {}
       return {
         terminalOutput,
         outputsPath: join(td, 'outputs'),
@@ -324,19 +321,19 @@ export class Cache {
   }
 
   private createCacheDir() {
-    ensureDirSync(cacheDir);
+    mkdirSync(cacheDir, { recursive: true });
     return cacheDir;
   }
 
   private createTerminalOutputsDir() {
     const path = join(this.cachePath, 'terminalOutputs');
-    ensureDirSync(path);
+    mkdirSync(path, { recursive: true });
     return path;
   }
 
   private ensureLatestOutputsHashesDir() {
     const path = join(this.cachePath, 'latestOutputsHashes');
-    ensureDirSync(path);
+    mkdirSync(path, { recursive: true });
     return path;
   }
 

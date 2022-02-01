@@ -4,7 +4,7 @@ import { logger } from './logger';
 import { NxJsonConfiguration } from './nx';
 
 type PropertyDescription = {
-  type?: string;
+  type?: string | string[];
   required?: string[];
   enum?: string[];
   properties?: any;
@@ -123,6 +123,14 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
   if (prop.oneOf) {
     for (let i = 0; i < prop.oneOf.length; ++i) {
       const coerced = coerceType(prop.oneOf[i], value);
+      if (coerced !== value) {
+        return coerced;
+      }
+    }
+    return value;
+  } else if (Array.isArray(prop.type)) {
+    for (let i = 0; i < prop.type.length; ++i) {
+      const coerced = coerceType({ type: prop.type[i] }, value);
       if (coerced !== value) {
         return coerced;
       }
@@ -287,7 +295,25 @@ function validateProperty(
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
-    if (schema.type && typeof value !== normalizedPrimitiveType(schema.type)) {
+    if (Array.isArray(schema.type)) {
+      const passes = schema.type.some((t) => {
+        try {
+          const rule = { type: t };
+          validateProperty(propName, value, rule, definitions);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      });
+      if (!passes) {
+        throw new SchemaError(
+          `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
+        );
+      }
+    } else if (
+      schema.type &&
+      typeof value !== normalizedPrimitiveType(schema.type)
+    ) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
       );

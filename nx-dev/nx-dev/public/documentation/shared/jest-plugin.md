@@ -2,109 +2,122 @@
 
 ![Jest logo](/shared/jest-logo.png)
 
-[Jest](https://jestjs.io/) is an open source test runner created by Facebook. It is used within Facebook internally as well as many other enterprise and open source projects including Nx itself!
+[Jest](https://jestjs.io/) is an open source test runner created by Facebook. It has a lot of great features:
 
-## Reasons for Using Jest
+- Immersive watch mode for providing near instant feedback when developing tests.
+- Snapshot testing for validating features.
+- Great built-in reporter for printing out test results.
 
-- Jest was built with monorepos in mind and is able to isolate the important parts of a monorepo to test.
-- Jest has a great built-in reporter for printing out results of tests.
-- Jest has an immersive watch mode which provides near instant feedback when developing tests.
-- Jest provides the ability to use Snapshot Testing to validate features.
-- And more...
-
-## How to use Jest
+## Setting up Jest
 
 By default, Nx will use Jest when creating applications and libraries.
 
-```treeview
-<workspace name>/
-├── apps/
-│   ├── frontend/
-│   │   ├── src/
-│   │   ├── browserslist
-│   │   ├── jest.config.js # <== jest config
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── frontend-e2e/
-├── libs/
-├── tools/
-├── nx.json
-├── package.json
-├── README.md
-├── workspace.json
-└── tsconfig.base.json
+```shell
+nx g @nrwl/web:app frontend
 ```
 
-Depending on the project you are creating, Nx can support other test runners in addition to Jest. You can configure the test runner you use by passing `--unit-test-runner=jest` when creating applications or libraries.
+### Adding Jest to an Existing Project
 
-### Running Tests
+Add Jest to a project using the `jest-project` generator from `@nrwl/jest`.
 
-```bash
+First, install `@nrwl/jest`, if not already installed using your preferred package manager.
+
+```shell
+npm install --save-dev @nrwl/jest
+```
+
+```shell
+yarn add --dev @nrwl/jest
+```
+
+Once installed, run the `jest-project` generator
+
+```shell
+nx g @nrwl/jest:jest-project --project=<project-name>
+```
+
+> Hint: You can use the `--dry-run` flag to see what will be generated.
+
+Replacing `<project-name>` with the name of the project you're wanting to add Jest too.
+
+## Using Jest
+
+### Testing Applications
+
+Run the Jest test with
+
+```shell
 nx test frontend
+```
+
+### Watching for Changes
+
+Using the `--watch` flag will run the tests whenever a file changes.
+
+```shell
+nx test frontend --watch
 ```
 
 ### Snapshot Testing
 
-Jest has support for **Snapshot Testing**, a tool which simplifies validating data did not change. Check out the [official Jest Documentation on Snapshot Testing](https://jestjs.io/docs/en/snapshot-testing).
+Jest has support for **Snapshot Testing**, a tool which simplifies validating data. Check out the [official Jest Documentation on Snapshot Testing](https://jestjs.io/docs/en/snapshot-testing).
 
-#### Writing Tests Using Snapshot Testing
-
-To write a test which uses **Snapshot Testing**, use the `toMatchSnapshot()` matcher.
+Example of using snapshots:
 
 ```typescript
-describe('Home Page', () => {
-  it('should have a header', () => {
-    const header = renderHeader();
-    expect(header).toMatchSnapshot();
+describe('SuperAwesomFunction', () => {
+  it('should return the correct data shape', () => {
+    const actual = superAwesomFunction();
+    expect(actual).toMatchSnapshot();
   });
 });
 ```
 
-The snapshot will be generated the first time the test is run. If the contents of that snapshot change, the test will fail indicating unexpected changes to the snapshot. Below is an example of the test results if the hamburger icon disappears unintentionally.
+When using snapshots, you can update them with the `--updateSnapshot` flag, `-u` for short.
 
-```bash
-Home Page > should have a header
- expect(value).toMatchSnapshot()
- Received value does not match stored snapshot "Home Page should have a header 1".
- - Snapshot
-+ Received
- <header>
-  <h1>
--   <mat-icon>
--     hamburger
--   </mat-icon>
-    Example
-  </h1>
-</header>
+> By default, snapshots will be generated when there are not existing snapshots for the associated test.
+
+```shell
+nx test frontend -u
 ```
 
-> Note: These snapshot files should be checked in with your code.
+Snapshot files should be checked in with your code.
 
-#### Updating Snapshots
+## Configurations
 
-When intentionally changing the contents of a snapshot, you can run tests with the `--updateSnapshot` flag to update failing snapshots instead of failing the test.
+### Jest
 
-```bash
-nx test libname --updateSnapshot
+Primary configurations for Jest will be via the `jest.config.js` file that generated for your project. This file will extend the root `jest.config.js` file. Learn more about [Jest configurations](https://jestjs.io/docs/configuration#options).
+
+### Nx
+
+Nx Jest Plugin options can be configured via the [project config file](/configuration/projectjson) or via the [command line flags](/jest/jest).
+
+> Hint: Use `--help` to see all available options
+>
+> ```shell
+> nx test <project-name> --help
+> ```
+
+### Code Coverage
+
+Enable code coverage with the `--coverage` flag or by adding it to the executor options in the [project configuration file](/configuration/projectjson).
+
+By default, coverage reports will be generated in the `coverage/` directory under projects name. i.e. `coverage/apps/frontend`. Modify this directory with the `--coverageDirectory` flag. Coverage reporters can also be customized with the `--coverageReporters` flag.
+
+> `coverageDirectory` and `coverageReporters` are configurable via the project configuration file as well.
+
+## Debugging Failing Tests
+
+If your code editor doesn't provide a way to debug your tests, you can leverage the Chrome DevTools to debug your tests with the `--inspect-brk` flag for node.
+
+```shell
+node --inspect-brk ./node_modules/@nrwl/cli/bin/nx test <project-name>
 ```
 
-> Make sure no **unintentional** snapshots are failing **BEFORE** updating failing snapshots.
+Enter [chrome://inspect](chrome://inspect) in Chrome address bar and inspect the target to attach to the node process. Visit the official [Jest documentation](https://jestjs.io/docs/en/troubleshooting#tests-are-failing-and-you-don-t-know-why) to find out more.
 
-### Watching for Changes
+## More Documentation
 
-If you are a developer making changes locally to a library, start jest's interactive watch mode to run the library's tests related to uncommitted changes and then rerun tests whenever files are changed.
-
-```bash
-nx test libname --watch
-```
-
-#### Debugging Failing Tests
-
-To debug failing tests using Chrome Devtools or an IDE you can run the test command through node's `--inspect-brk` flag.
-
-```bash
-node --inspect-brk ./node_modules/@nrwl/cli/bin/nx test libname
-```
-
-Now, you can visit [chrome://inspect](chrome://inspect) in Chrome and inspect the target to attach to the node process. You can now use Chrome Devtools to step through your code line by line and debug the cause of the failing tests. Visit the official [Jest documentation](https://jestjs.io/docs/en/troubleshooting#tests-are-failing-and-you-don-t-know-why) to find out more.
+- [Jest Docs](https://jestjs.io/)
+- [@nrwl/jest options](/jest/jest)

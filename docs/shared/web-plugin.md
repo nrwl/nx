@@ -1,4 +1,4 @@
-# Nx Plugin for Web
+# Web Plugin
 
 The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:
 
@@ -6,70 +6,99 @@ The Nx Plugin for Web Components contains generators for managing Web Component 
 - Scaffolding for creating buildable libraries that can be published to npm.
 - Utilities for automatic workspace refactoring.
 
-## Adding the Web plugin
+## Setting Up Web
 
-Adding the Web plugin to a workspace can be done with the following:
+To create a new workspace with web, run `npx create-nx-workspace@latest --preset=web`.
+
+To add the web plugin to an existing workspace, run one of the following:
 
 ```bash
+# For npm users
+npm install -D @nrwl/web
+
+# For yarn users
 yarn add -D @nrwl/web
 ```
 
+### Creating Applications
+
+You can add a new application with the following:
+
 ```bash
-npm install -D @nrwl/web
+nx g @nrwl/web:app my-new-app
 ```
 
-> Note: You can create a new workspace that has Web Components set up by doing `npx create-nx-workspace@latest --preset=web-components`
+The application uses no framework and generates with web components. You can add any framework you want on top of the default setup.
 
-The file structure for a Web Components application looks like:
+To start the application in development mode, run `nx serve my-new-app`.
 
-```treeview
-myorg/
-├── apps/
-│   ├── todos/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   └── styles.css
-│   │   ├── browserslist
-│   │   ├── jest.config.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── todos-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
-├── libs/
-├── tools/
-├── README.md
-├── workspace.json
-├── nx.json
-├── package.json
-└── tsconfig.base.json
+**Note:** If you are looking to add a React application, check out the [React plugin](/react/overview).
+
+### Creating Libraries
+
+To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/js/overview) plugin.
+
+```bash
+nx g @nrwl/js:lib my-new-lib
+
+# If you want the library to be buildable or publishable to npm
+nx g @nrwl/web:lib my-new-lib --buildable
+nx g @nrwl/web:lib my-new-lib \
+--publishable \
+--importPath=@myorg/my-new-lib
 ```
 
-## See Also
+## Using Web
+
+### Testing Projects
+
+You can run unit tests with:
+
+```bash
+nx test my-new-app
+nx test my-new-lib
+```
+
+Replace `my-new-app` with the name or your project. This command works for both applications and libraries.
+
+You can also run E2E tests for applications:
+
+```bash
+nx e2e my-new-app-e2e
+```
+
+Replace `my-new-app-e2e` with the name or your project with `-e2e` appended.
+
+### Building Projects
+
+React applications can be build with:
+
+```bash
+nx build my-new-app
+```
+
+And if you generated a library with `--buildable`, then you can build a library as well:
+
+```bash
+nx build my-new-lib
+```
+
+The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
+
+The application in `dist` is deployable, and you can try it out locally with:
+
+```bash
+npx http-server dist/apps/my-new-app
+```
+
+The library in `dist` is publishable to npm or a private registry.
+
+## More Documentation
 
 - [Using Cypress](/cypress/overview)
 - [Using Jest](/cypress/overview)
 
-## Executors / Builders
+## Executors
 
 - [build](/web/build) - Builds a web components application
 - [dev-server](/web/dev-server) - Builds and serves a web application

@@ -3,10 +3,10 @@ import * as webpack from 'webpack';
 import { Configuration, WebpackPluginInstance } from 'webpack';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-import TerserPlugin = require('terser-webpack-plugin');
 import { AssetGlobPattern, BuildBuilderOptions } from './shared-models';
 import { getOutputHashFormat } from './hash-format';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import TerserPlugin = require('terser-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
@@ -58,6 +58,15 @@ export function getBaseWebpackPartial(
       // Enabled for performance
       unsafeCache: true,
       rules: [
+        {
+          test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: 10_000, // 10 kB
+            },
+          },
+        },
         {
           // There's an issue resolving paths without fully specified extensions
           // See: https://github.com/graphql/graphql-js/issues/2721

@@ -54,9 +54,9 @@ export class NodeBasedFileHasher extends FileHasherBase {
           } else if (s.isDirectory() && recurse) {
             this.allFilesInDir(absoluteChild, true);
           }
-        } catch (e) {}
+        } catch {}
       });
-    } catch (e) {}
+    } catch {}
   }
 }
 

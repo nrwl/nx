@@ -5,8 +5,8 @@ import {
   generateFiles,
   getWorkspaceLayout,
   getWorkspacePath,
+  joinPathFragments,
   names,
-  readWorkspaceConfiguration,
   Tree,
   writeJson,
 } from '@nrwl/devkit';
@@ -29,7 +29,7 @@ function addFiles(
 ) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: join(`@${npmScope}`, options.name),
+    name: joinPathFragments(`@${npmScope}`, options.name),
     version: '0.0.0',
     scripts: {
       test: 'node index.js',

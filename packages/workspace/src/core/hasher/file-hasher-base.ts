@@ -1,9 +1,7 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
-import { getFileHashes } from './git-hasher';
 import { defaultHashing } from './hashing-impl';
 import { FileData } from '@nrwl/tao/src/shared/project-graph';
-import { existsSync, readFileSync } from 'fs';
 
 export abstract class FileHasherBase {
   protected fileHashes: Map<string, string>;
@@ -65,8 +63,8 @@ export abstract class FileHasherBase {
     const relativePath = path.startsWith(appRootPath)
       ? path.substr(appRootPath.length + 1)
       : path;
-    if (this.fileHashes[relativePath]) {
-      return this.fileHashes[relativePath];
+    if (this.fileHashes.has(relativePath)) {
+      return this.fileHashes.get(relativePath);
     } else {
       try {
         return defaultHashing.hashFile(path);
