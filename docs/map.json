@@ -645,7 +645,7 @@
           },
           {
             "name": "library-secondary-entry-point generator",
-            "id": "library",
+            "id": "library-secondary-entry-point",
             "file": "generated/api-angular/generators/library-secondary-entry-point"
           },
           {
