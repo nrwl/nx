@@ -52,7 +52,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(tree);
+    const cypressTask = cypressInitGenerator(tree, {});
     tasks.push(cypressTask);
   }
   const installTask = updateDependencies(tree);

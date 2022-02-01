@@ -53,6 +53,11 @@
     "standaloneConfig": {
       "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
       "type": "boolean"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
     }
   },
   "required": ["name"]

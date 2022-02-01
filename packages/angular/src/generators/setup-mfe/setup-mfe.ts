@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -36,15 +36,18 @@ export async function setupMfe(host: Tree, options: Schema) {
 
   fixBootstrap(host, projectConfig.root);
 
-  // add package to install
-  const installPackages = addDependenciesToPackageJson(
-    host,
-    {
-      '@angular-architects/module-federation':
-        angularArchitectsModuleFederationPluginVersion,
-    },
-    {}
-  );
+  let installPackages: GeneratorCallback = () => {};
+  if (!options.skipPackageJson) {
+    // add package to install
+    installPackages = addDependenciesToPackageJson(
+      host,
+      {
+        '@angular-architects/module-federation':
+          angularArchitectsModuleFederationPluginVersion,
+      },
+      {}
+    );
+  }
 
   // format files
   if (!options.skipFormat) {

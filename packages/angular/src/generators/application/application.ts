@@ -69,7 +69,7 @@ export async function applicationGenerator(
     viewEncapsulation: options.viewEncapsulation,
     routing: false,
     skipInstall: true,
-    skipPackageJson: false,
+    skipPackageJson: options.skipPackageJson,
   });
 
   createFiles(host, options, appProjectRoot);
@@ -99,6 +99,7 @@ export async function applicationGenerator(
     await setupTailwindGenerator(host, {
       project: options.name,
       skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
     });
   }
 

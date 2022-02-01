@@ -21,7 +21,7 @@ describe('init', () => {
       json.devDependencies[existing] = existingVersion;
       return json;
     });
-    cypressInitGenerator(tree);
+    cypressInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
 
     expect(packageJson.devDependencies.cypress).toBeDefined();

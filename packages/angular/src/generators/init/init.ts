@@ -27,7 +27,9 @@ export async function angularInitGenerator(
   setDefaults(host, options);
   addPostInstall(host);
 
-  const depsTask = updateDependencies(host);
+  const depsTask = !options.skipPackageJson
+    ? updateDependencies(host)
+    : () => {};
   const unitTestTask = addUnitTestRunner(host, options);
   const e2eTask = addE2ETestRunner(host, options);
   addGitIgnoreEntry(host, '.angular');
@@ -102,47 +104,50 @@ function updateDependencies(host: Tree): GeneratorCallback {
   );
 }
 
-function addUnitTestRunner(
-  host: Tree,
-  options: Pick<Schema, 'unitTestRunner'>
-): GeneratorCallback {
+function addUnitTestRunner(host: Tree, options: Schema): GeneratorCallback {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return karmaGenerator(host);
+      return karmaGenerator(host, { skipPackageJson: options.skipPackageJson });
     case UnitTestRunner.Jest:
-      addDependenciesToPackageJson(
-        host,
-        {},
-        {
-          'jest-preset-angular': jestPresetAngularVersion,
-        }
-      );
-      return jestInitGenerator(host, {});
+      if (!options.skipPackageJson) {
+        addDependenciesToPackageJson(
+          host,
+          {},
+          {
+            'jest-preset-angular': jestPresetAngularVersion,
+          }
+        );
+      }
+
+      return jestInitGenerator(host, {
+        skipPackageJson: options.skipPackageJson,
+      });
     default:
       return () => {};
   }
 }
 
-function addE2ETestRunner(
-  host: Tree,
-  options: Pick<Schema, 'e2eTestRunner'>
-): GeneratorCallback {
+function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
-      return addDependenciesToPackageJson(
-        host,
-        {},
-        {
-          protractor: '~7.0.0',
-          'jasmine-core': '~3.6.0',
-          'jasmine-spec-reporter': '~5.0.0',
-          'ts-node': '~9.1.1',
-          '@types/jasmine': '~3.6.0',
-          '@types/jasminewd2': '~2.0.3',
-        }
-      );
+      return !options.skipPackageJson
+        ? addDependenciesToPackageJson(
+            host,
+            {},
+            {
+              protractor: '~7.0.0',
+              'jasmine-core': '~3.6.0',
+              'jasmine-spec-reporter': '~5.0.0',
+              'ts-node': '~9.1.1',
+              '@types/jasmine': '~3.6.0',
+              '@types/jasminewd2': '~2.0.3',
+            }
+          )
+        : () => {};
     case E2eTestRunner.Cypress:
-      return cypressInitGenerator(host);
+      return cypressInitGenerator(host, {
+        skipPackageJson: options.skipPackageJson,
+      });
     default:
       return () => {};
   }

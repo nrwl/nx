@@ -17,15 +17,17 @@ import { GeneratorOptions } from './schema';
 export async function setupTailwindGenerator(
   tree: Tree,
   rawOptions: GeneratorOptions
-): Promise<GeneratorCallback | undefined> {
+): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   const project = readProjectConfiguration(tree, options.project);
 
   const tailwindInstalledVersion = detectTailwindInstalledVersion(tree);
 
-  let installTask: GeneratorCallback | undefined;
-  if (tailwindInstalledVersion === undefined) {
-    installTask = addTailwindRequiredPackages(tree);
+  let installTask: GeneratorCallback = () => {};
+  if (!options.skipPackageJson) {
+    if (tailwindInstalledVersion === undefined) {
+      installTask = addTailwindRequiredPackages(tree);
+    }
   }
 
   addTailwindConfig(tree, options, project, tailwindInstalledVersion ?? '3');
