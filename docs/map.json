@@ -878,6 +878,11 @@
             "file": "shared/guides/storybook/storybook-v6-angular"
           },
           {
+            "id": "storybook-composition-setup",
+            "name": "Setting up Storybook Composition with Nx",
+            "file": "shared/guides/storybook/storybook-composition-setup"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "generated/api-storybook/generators/configuration"
