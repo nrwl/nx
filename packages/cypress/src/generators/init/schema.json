@@ -4,5 +4,11 @@
   "cli": "nx",
   "title": "Add Cypress Configuration to the workspace",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
+    }
+  }
 }

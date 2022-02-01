@@ -141,17 +141,20 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
       `${options.projectRoot}/**/*.${options.js ? 'js' : '{js,ts}'}`,
     ],
     setParserOptionsProject: options.setParserOptionsProject,
+    skipPackageJson: options.skipPackageJson,
   });
 
   if (!options.linter || options.linter !== Linter.EsLint) {
     return installTask;
   }
 
-  const installTask2 = addDependenciesToPackageJson(
-    host,
-    {},
-    { 'eslint-plugin-cypress': eslintPluginCypressVersion }
-  );
+  const installTask2 = !options.skipPackageJson
+    ? addDependenciesToPackageJson(
+        host,
+        {},
+        { 'eslint-plugin-cypress': eslintPluginCypressVersion }
+      )
+    : () => {};
 
   updateJson(host, join(options.projectRoot, '.eslintrc.json'), (json) => {
     json.extends = ['plugin:cypress/recommended', ...json.extends];

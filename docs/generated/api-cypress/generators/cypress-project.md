@@ -87,6 +87,14 @@ Type: `boolean`
 
 Skip formatting files
 
+### skipPackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add dependencies to `package.json`.
+
 ### standaloneConfig
 
 Type: `boolean`

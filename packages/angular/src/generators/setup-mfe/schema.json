@@ -40,6 +40,11 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes."
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
     }
   },
   "required": ["appName", "mfeType"],

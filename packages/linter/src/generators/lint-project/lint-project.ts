@@ -17,6 +17,7 @@ interface LintProjectOptions {
   tsConfigPaths?: string[];
   skipFormat: boolean;
   setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean;
 }
 
 function createTsLintConfiguration(
@@ -87,6 +88,7 @@ export async function lintProjectGenerator(
 ) {
   const installTask = lintInitGenerator(tree, {
     linter: options.linter,
+    skipPackageJson: options.skipPackageJson,
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 

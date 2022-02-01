@@ -14,4 +14,5 @@ export interface JestProjectSchema {
   babelJest?: boolean;
   skipFormat?: boolean;
   compiler?: 'tsc' | 'babel' | 'swc';
+  skipPackageJson?: boolean;
 }

@@ -6,6 +6,7 @@ import {
 } from '@nrwl/devkit';
 
 import { cypressVersion, nxVersion } from '../../utils/versions';
+import { Schema } from './schema';
 
 function updateDependencies(host: Tree) {
   updateJson(host, 'package.json', (json) => {
@@ -24,8 +25,8 @@ function updateDependencies(host: Tree) {
   );
 }
 
-export function cypressInitGenerator(host: Tree) {
-  return updateDependencies(host);
+export function cypressInitGenerator(host: Tree, options: Schema) {
+  return !options.skipPackageJson ? updateDependencies(host) : () => {};
 }
 
 export default cypressInitGenerator;

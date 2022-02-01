@@ -27,6 +27,11 @@
     "stylesEntryPoint": {
       "type": "string",
       "description": "Path to the styles entry point relative to the workspace root. If not provided the generator will do its best to find it and it will error if it can't. This option only applies to applications."
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
     }
   },
   "additionalProperties": false,
