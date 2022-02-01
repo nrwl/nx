@@ -40,20 +40,6 @@ export function getStylesConfig(
         postcssImports({
           addModulesDirectories: includePaths,
           resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
-          load: (filename: string) => {
-            return new Promise<string>((resolve, reject) => {
-              loader.fs.readFile(filename, (err: Error, data: Buffer) => {
-                if (err) {
-                  reject(err);
-
-                  return;
-                }
-
-                const content = data.toString();
-                resolve(content);
-              });
-            });
-          },
         }),
         PostcssCliResources({
           baseHref: buildOptions.baseHref,
