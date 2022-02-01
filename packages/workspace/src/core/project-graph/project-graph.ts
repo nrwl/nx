@@ -10,6 +10,7 @@ import {
   markDaemonAsDisabled,
   writeDaemonLogs,
 } from '@nrwl/workspace/src/core/project-graph/daemon/tmp-dir';
+import { lstatSync, statSync } from 'fs';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -85,6 +86,7 @@ export async function createProjectGraphAsync(
   // option=false,env=true => daemon
   if (
     isCI() ||
+    isDocker() ||
     isDaemonDisabled() ||
     (useDaemonProcessOption === true && env === 'false') ||
     (useDaemonProcessOption === false && env === undefined) ||
@@ -103,8 +105,8 @@ export async function createProjectGraphAsync(
         await daemonClient.getProjectGraphFromServer()
       );
     } catch (e) {
-      // common errors with the daemon due to OS settings (cannot watch all the files available)
       if (e.message.indexOf('inotify_add_watch') > -1) {
+        // common errors with the daemon due to OS settings (cannot watch all the files available)
         output.note({
           title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon.`,
           bodyLines: [
@@ -126,6 +128,15 @@ export async function createProjectGraphAsync(
       markDaemonAsDisabled();
       return buildProjectGraphWithoutDaemon(projectGraphVersion);
     }
+  }
+}
+
+function isDocker() {
+  try {
+    statSync('/.dockerenv');
+    return true;
+  } catch {
+    return false;
   }
 }
 
