@@ -64,6 +64,16 @@ const invalidTargetNames = [
   'list',
 ];
 
+const targetAliases = {
+  b: 'build',
+  e: 'e2e',
+  'i18n-extract': 'extract-i18n',
+  xi18n: 'extract-i18n',
+  l: 'lint',
+  s: 'serve',
+  t: 'test',
+};
+
 export function parseRunOneOptions(
   root: string,
   workspaceConfiguration: any,
@@ -126,6 +136,11 @@ export function parseRunOneOptions(
     targets = readJsonFile(`${p}/project.json`).targets;
   } else {
     targets = p.architect ?? p.targets;
+  }
+
+  // if it doesn't match an existing target, try to find an alias
+  if (!targets?.[target] && targetAliases[target]) {
+    target = targetAliases[target];
   }
 
   // for backwards compat we require targets to be set when use defaultProjectName
