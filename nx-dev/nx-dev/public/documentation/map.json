@@ -920,6 +920,18 @@
         "id": "linter",
         "itemList": [
           {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/linter Overview",
+            "file": "shared/linter-plugin"
+          },
+          {
+            "id": "eslint-plugin-nx",
+            "name": "eslint-plugin-nx",
+            "searchResultsName": "@nrwl/eslint-plugin-nx Overview",
+            "file": "shared/eslint-plugin-nx"
+          },
+          {
             "name": "eslint executor",
             "id": "eslint",
             "file": "generated/api-linter/executors/eslint"
