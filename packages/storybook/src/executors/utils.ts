@@ -262,6 +262,11 @@ export function resolveCommonStorybookOptionMapper(
       },
       logger: angularDevkitCompatibleLogger,
     };
+
+    // Add watch to angularBuilderOptions for Storybook to merge configs correctly
+    storybookOptions.angularBuilderOptions = {
+      watch: true,
+    };
   } else {
     // keep the backwards compatibility
     setStorybookAppProject(context, builderOptions.projectBuildConfig);
