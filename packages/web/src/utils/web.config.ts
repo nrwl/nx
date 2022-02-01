@@ -7,6 +7,8 @@ import { Configuration } from 'webpack';
 
 import { WebWebpackExecutorOptions } from '../executors/webpack/webpack.impl';
 import { convertBuildOptions } from './normalize';
+
+// TODO(jack): These should be inlined in a single function so it is easier to understand
 import { getBaseWebpackPartial } from './config';
 import { getBrowserConfig } from './webpack/partials/browser';
 import { getCommonConfig } from './webpack/partials/common';
@@ -51,6 +53,7 @@ export function getWebConfig(
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
+  // TODO(jack): Replace merge behavior with an inlined config so it is easier to understand.
   return webpackMerge.merge([
     _getBaseWebpackPartial(
       options,
@@ -67,12 +70,8 @@ export function getWebConfig(
     ),
     getStylesPartial(wco.root, wco.projectRoot, wco.buildOptions, true),
     getCommonPartial(wco),
-    getBrowserPartial(wco, options),
+    getBrowserConfig(wco),
   ]);
-}
-
-function getBrowserPartial(wco: any, options: WebWebpackExecutorOptions) {
-  return getBrowserConfig(wco);
 }
 
 function _getBaseWebpackPartial(
@@ -144,25 +143,11 @@ export function getStylesPartial(
     },
     importLoaders: 1,
   };
-  const postcssOptions: PostcssOptions = (loader) => ({
+  const postcssOptions: PostcssOptions = () => ({
     plugins: [
       postcssImports({
         addModulesDirectories: includePaths,
         resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
-        load: (filename: string) => {
-          return new Promise<string>((resolve, reject) => {
-            loader.fs.readFile(filename, (err: Error, data: Buffer) => {
-              if (err) {
-                reject(err);
-
-                return;
-              }
-
-              const content = data.toString();
-              resolve(content);
-            });
-          });
-        },
       }),
     ],
   });
