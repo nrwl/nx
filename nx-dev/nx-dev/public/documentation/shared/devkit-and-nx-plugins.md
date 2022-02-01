@@ -27,7 +27,7 @@ Plugins have:
 
   - Plugins can provide a function `processProjectGraph` to add extra edges to the project graph.
   - This allows plugins to influence the behavior of `nx affected` and the project graph visualization.
-  - See [project graph plugins]('./workspace/project-graph-plugins') for more information.
+  - See [project graph plugins](/structure/project-graph-plugins) for more information.
 
 - **Project Inference Extensions**
 
