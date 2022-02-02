@@ -347,7 +347,7 @@ nx run login:serve
 
 We can see if we navigate a browser to `http://localhost:4201` that we see the login form rendered:
 
-![Login App](./login-app.png)
+![Login App](/shared/guides/login-app.png)
 
 If we type in the correct username and password _(demo, demo)_, then we can also see the user gets authenticated!
 

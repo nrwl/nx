@@ -49,6 +49,14 @@ Type: `boolean`
 
 Skips formatting the workspace after the generator completes.
 
+### skipPackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add dependencies to `package.json`.
+
 ### stylesEntryPoint
 
 Type: `string`
