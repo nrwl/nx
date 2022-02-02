@@ -39,5 +39,8 @@
     "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9",
     "tsconfig-paths": "^3.9.0"
+  },
+  "optionalDependencies": {
+    "@swc/core-linux-musl": "^1.2.42"
   }
 }
