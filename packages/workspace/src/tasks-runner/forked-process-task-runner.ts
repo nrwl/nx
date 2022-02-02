@@ -286,6 +286,7 @@ export class ForkedProcessTaskRunner {
   ) {
     const env: NodeJS.ProcessEnv = {
       NX_TASK_TARGET_PROJECT: task.target.project,
+      NX_TASK_PROJECT_ROOT: task.projectRoot,
       NX_TASK_HASH: task.hash,
     };
 
