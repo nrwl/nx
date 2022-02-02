@@ -6,4 +6,5 @@ export interface Schema {
   host?: string;
   routing?: boolean;
   skipFormat?: boolean;
+  skipPackageJson?: boolean;
 }

@@ -40,6 +40,7 @@ export async function addE2e(
       linter: options.linter,
       skipFormat: options.skipFormat,
       standaloneConfig: options.standaloneConfig,
+      skipPackageJson: options.skipPackageJson,
     });
   }
 
@@ -62,6 +63,7 @@ export async function addE2e(
         ],
         skipFormat: true,
         setParserOptionsProject: options.setParserOptionsProject,
+        skipPackageJson: options.skipPackageJson,
       });
     }
   }

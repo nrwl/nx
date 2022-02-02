@@ -29,4 +29,5 @@ export interface Schema {
   port?: number;
   host?: string;
   setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean;
 }

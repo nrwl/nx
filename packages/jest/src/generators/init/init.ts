@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  GeneratorCallback,
   stripIndents,
   Tree,
   updateJson,
@@ -99,8 +100,13 @@ function updateExtensions(host: Tree) {
 export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
   const options = normalizeOptions(schema);
   createJestConfig(tree);
-  const installTask = updateDependencies(tree, options);
-  removeNrwlJestFromDeps(tree);
+
+  let installTask: GeneratorCallback = () => {};
+  if (!options.skipPackageJson) {
+    installTask = updateDependencies(tree, options);
+    removeNrwlJestFromDeps(tree);
+  }
+
   updateExtensions(tree);
   return installTask;
 }

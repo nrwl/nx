@@ -10,6 +10,11 @@
       "alias": "babel-jest",
       "description": "Use babel-jest instead of ts-jest",
       "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
     }
   },
   "required": []

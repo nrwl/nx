@@ -57,6 +57,11 @@
       "description": "Skip formatting files",
       "type": "boolean",
       "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
     }
   },
   "required": []

@@ -13,6 +13,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       setupFile: 'angular',
       supportTsx: false,
       skipSerializers: false,
+      skipPackageJson: options.skipPackageJson,
     });
   } else if (options.unitTestRunner === UnitTestRunner.Karma) {
     await karmaProjectGenerator(host, {

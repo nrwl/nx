@@ -135,4 +135,13 @@ describe('parseRunOneOptions', () => {
   it('should return false when no project specified', () => {
     expect(parseRunOneOptions('root', workspaceJson, ['build'])).toBe(false);
   });
+
+  it('should support aliases', () => {
+    expect(parseRunOneOptions('root', workspaceJson, ['b', 'myproj'])).toEqual({
+      project: 'myproj',
+      target: 'build',
+      configuration: 'someDefaultConfig',
+      parsedArgs: { _: [] },
+    });
+  });
 });

@@ -17,14 +17,14 @@ describe('karma', () => {
       return json;
     });
 
-    karmaGenerator(tree);
+    karmaGenerator(tree, {});
 
     expect(devkit.generateFiles).not.toHaveBeenCalled();
     expect(devkit.addDependenciesToPackageJson).not.toHaveBeenCalled();
   });
 
   it('should add karma dependencies', () => {
-    karmaGenerator(tree);
+    karmaGenerator(tree, {});
 
     const { devDependencies } = devkit.readJson(tree, 'package.json');
     expect(devDependencies['karma']).toBeDefined();
@@ -38,7 +38,7 @@ describe('karma', () => {
   });
 
   it('should add karma configuration', () => {
-    karmaGenerator(tree);
+    karmaGenerator(tree, {});
 
     expect(tree.exists('karma.conf.js')).toBeTruthy();
   });

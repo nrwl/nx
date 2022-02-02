@@ -3,6 +3,7 @@ export interface GeneratorOptions {
   buildTarget?: string;
   skipFormat?: boolean;
   stylesEntryPoint?: string;
+  skipPackageJson?: boolean;
 }
 
 export interface NormalizedGeneratorOptions extends GeneratorOptions {

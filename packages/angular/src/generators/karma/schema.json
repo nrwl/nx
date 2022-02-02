@@ -4,7 +4,13 @@
   "title": "Add Karma Configuration to the workspace.",
   "cli": "nx",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
+    }
+  },
   "additionalProperties": false,
   "required": []
 }

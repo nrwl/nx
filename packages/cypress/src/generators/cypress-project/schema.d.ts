@@ -10,4 +10,5 @@ export interface Schema {
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  skipPackageJson?: boolean;
 }

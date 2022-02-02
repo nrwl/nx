@@ -10,8 +10,15 @@ export async function addLintingGenerator(
   tree: Tree,
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
-  const installTask = lintInitGenerator(tree, { linter: Linter.EsLint });
-  addAngularEsLintDependencies(tree);
+  const installTask = lintInitGenerator(tree, {
+    linter: Linter.EsLint,
+    skipPackageJson: options.skipPackageJson,
+  });
+
+  if (!options.skipPackageJson) {
+    addAngularEsLintDependencies(tree);
+  }
+
   createEsLintConfiguration(tree, options);
   addProjectLintTarget(tree, options);
 
