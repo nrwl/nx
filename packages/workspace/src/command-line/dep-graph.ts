@@ -8,7 +8,7 @@ import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
-import { ProjectGraphProjectNode, writeJsonFile } from '@nrwl/devkit';
+import { writeJsonFile } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
 import { URL, URLSearchParams } from 'url';
 import { workspaceLayout } from '../core/file-utils';
@@ -17,14 +17,14 @@ import {
   createProjectGraphAsync,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
   pruneExternalNodes,
 } from '../core/project-graph';
 import { output } from '../utilities/output';
 
 export interface DepGraphClientResponse {
   hash: string;
-  projects: ProjectGraphNode[];
+  projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   layout: { appsDir: string; libsDir: string };
   affected: string[];
@@ -61,7 +61,7 @@ function buildEnvironmentJs(
   window.watch = ${!!watchMode};
   window.environment = 'release';
   window.localMode = '${localMode}';
-  
+
   window.appConfig = {
     showDebugger: false,
     projectGraphs: [
@@ -86,7 +86,10 @@ function buildEnvironmentJs(
   return environmentJs;
 }
 
-function projectExists(projects: ProjectGraphNode[], projectToFind: string) {
+function projectExists(
+  projects: ProjectGraphProjectNode[],
+  projectToFind: string
+) {
   return (
     projects.find((project) => project.name === projectToFind) !== undefined
   );
@@ -113,9 +116,9 @@ function filterGraph(
   focus: string,
   exclude: string[]
 ): ProjectGraph {
-  let projectNames = (Object.values(graph.nodes) as ProjectGraphNode[]).map(
-    (project) => project.name
-  );
+  let projectNames = (
+    Object.values(graph.nodes) as ProjectGraphProjectNode[]
+  ).map((project) => project.name);
 
   let filteredProjectNames: Set<string>;
 
@@ -166,7 +169,7 @@ export async function generateGraph(
   let graph = pruneExternalNodes(await createProjectGraphAsync());
   const layout = workspaceLayout();
 
-  const projects = Object.values(graph.nodes) as ProjectGraphNode[];
+  const projects = Object.values(graph.nodes) as ProjectGraphProjectNode[];
   projects.sort((a, b) => {
     return a.name.localeCompare(b.name);
   });

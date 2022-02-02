@@ -1,13 +1,13 @@
-import type { DependencyType, ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 
 export {
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
   DependencyType,
 } from '@nrwl/devkit';
 
-export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;
+export type ProjectGraphNodeRecords = Record<string, ProjectGraphProjectNode>;
 
 export enum ProjectType {
   app = 'app',

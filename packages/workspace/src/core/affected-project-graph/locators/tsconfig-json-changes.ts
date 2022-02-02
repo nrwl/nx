@@ -5,7 +5,7 @@ import {
   JsonChange,
 } from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { ProjectGraphNode } from '../../project-graph';
+import { ProjectGraphProjectNode } from '../../project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
@@ -54,7 +54,7 @@ function allChangesArePathChanges(
  */
 function getProjectsAffectedByPaths(
   change: JsonChange,
-  nodes: ProjectGraphNode[]
+  nodes: ProjectGraphProjectNode[]
 ) {
   const result = [];
   const paths: string[] = [change.value.lhs, change.value.rhs];

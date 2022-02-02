@@ -1,8 +1,7 @@
 import {
   normalizePath,
-  NxPlugin,
   ProjectGraph,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
   readJsonFile,
   TargetConfiguration,
 } from '@nrwl/devkit';
@@ -10,16 +9,18 @@ import {
   buildTargetFromScript,
   PackageJson,
 } from '@nrwl/tao/src/shared/package-json';
-import { sync } from 'glob';
 import { join, relative } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 
-export function projectHasTarget(project: ProjectGraphNode, target: string) {
+export function projectHasTarget(
+  project: ProjectGraphProjectNode,
+  target: string
+) {
   return project.data && project.data.targets && project.data.targets[target];
 }
 
 export function projectHasTargetAndConfiguration(
-  project: ProjectGraphNode,
+  project: ProjectGraphProjectNode,
   target: string,
   configuration: string
 ) {
@@ -111,7 +112,7 @@ function findAllProjectNodeDependencies(
   const dependencyNodeNames = new Set<string>();
 
   collectDependentProjectNodesNames(
-    projectGraph,
+    projectGraph as ProjectGraph,
     dependencyNodeNames,
     parentNodeName
   );

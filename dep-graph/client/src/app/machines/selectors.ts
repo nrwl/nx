@@ -1,11 +1,11 @@
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import { DepGraphSelector } from '../hooks/use-dep-graph-selector';
 import { WorkspaceLayout } from '../interfaces';
 import { GraphPerfReport } from './interfaces';
 
-export const allProjectsSelector: DepGraphSelector<ProjectGraphNode[]> = (
-  state
-) => state.context.projects;
+export const allProjectsSelector: DepGraphSelector<
+  ProjectGraphProjectNode[]
+> = (state) => state.context.projects;
 
 export const workspaceLayoutSelector: DepGraphSelector<WorkspaceLayout> = (
   state

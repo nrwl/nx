@@ -1,14 +1,19 @@
 import { isNpmProject, ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
 import { directoryExists } from './fileutils';
-import { stripIndents, readJsonFile, writeJsonFile } from '@nrwl/devkit';
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import {
+  stripIndents,
+  readJsonFile,
+  writeJsonFile,
+  ProjectGraphExternalNode,
+} from '@nrwl/devkit';
+import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
 
-function isBuildable(target: string, node: ProjectGraphNode): boolean {
+function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
     node.data.targets &&
     node.data.targets[target] &&
@@ -19,7 +24,7 @@ function isBuildable(target: string, node: ProjectGraphNode): boolean {
 export type DependentBuildableProjectNode = {
   name: string;
   outputs: string[];
-  node: ProjectGraphNode;
+  node: ProjectGraphProjectNode | ProjectGraphExternalNode;
 };
 
 export function calculateProjectDependencies(
@@ -29,7 +34,7 @@ export function calculateProjectDependencies(
   targetName: string,
   configurationName: string
 ): {
-  target: ProjectGraphNode;
+  target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
   nonBuildableDependencies: string[];
 } {
@@ -255,7 +260,7 @@ export function updateBuildableProjectPackageJsonDependencies(
   projectName: string,
   targetName: string,
   configurationName: string,
-  node: ProjectGraphNode,
+  node: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[],
   typeOfDependency: 'dependencies' | 'peerDependencies' = 'dependencies'
 ) {

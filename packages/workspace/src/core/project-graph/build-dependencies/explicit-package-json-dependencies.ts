@@ -17,7 +17,12 @@ export function buildExplicitPackageJsonDependencies(
   let packageNameMap = undefined;
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(graph.nodes, f.file)) {
+      if (
+        isPackageJsonAtProjectRoot(
+          graph.nodes as ProjectGraphNodeRecords,
+          f.file
+        )
+      ) {
         // we only create the package name map once and only if a package.json file changes
         packageNameMap = packageNameMap || createPackageNameMap(workspace);
         processPackageJson(source, f.file, graph, res, packageNameMap);

@@ -1,4 +1,4 @@
-import { ProjectGraph, stripIndents } from '@nrwl/devkit';
+import { ProjectGraph, ProjectGraphV4, stripIndents } from '@nrwl/devkit';
 import { ProjectGraphCache, readCache } from '../nx-deps/nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
 import { readNxJson, workspaceFileName } from '../file-utils';
@@ -16,9 +16,7 @@ import { lstatSync, statSync } from 'fs';
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
  */
-export function readCachedProjectGraph(
-  projectGraphVersion = '5.0'
-): ProjectGraph {
+export function readCachedProjectGraph(): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
   const angularSpecificError =
     workspaceFileName() === 'angular.json'
@@ -45,32 +43,26 @@ export function readCachedProjectGraph(
     nodes: projectGraphCache.nodes,
     externalNodes: projectGraphCache.externalNodes,
     dependencies: projectGraphCache.dependencies,
-  };
+  } as ProjectGraph;
 
   return projectGraphAdapter(
     projectGraph.version,
-    projectGraphVersion,
+    '5.0',
     projectGraph
-  );
+  ) as ProjectGraph;
 }
 
-async function buildProjectGraphWithoutDaemon(projectGraphVersion: string) {
+async function buildProjectGraphWithoutDaemon() {
   try {
     await defaultFileHasher.ensureInitialized();
-    return projectGraphAdapter(
-      '5.0',
-      projectGraphVersion,
-      await buildProjectGraph()
-    );
+    return await buildProjectGraph();
   } catch (e) {
     printErrorMessage(e);
     process.exit(1);
   }
 }
 
-export async function createProjectGraphAsync(
-  projectGraphVersion = '5.0'
-): Promise<ProjectGraph> {
+export async function createProjectGraphAsync(): Promise<ProjectGraph> {
   const nxJson = readNxJson();
   const useDaemonProcessOption =
     nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
@@ -92,18 +84,14 @@ export async function createProjectGraphAsync(
     (useDaemonProcessOption === false && env === undefined) ||
     (useDaemonProcessOption === false && env === 'false')
   ) {
-    return await buildProjectGraphWithoutDaemon(projectGraphVersion);
+    return await buildProjectGraphWithoutDaemon();
   } else {
     try {
       const daemonClient = require('./daemon/client/client');
       if (!(await daemonClient.isServerAvailable())) {
         await daemonClient.startInBackground();
       }
-      return projectGraphAdapter(
-        '5.0',
-        projectGraphVersion,
-        await daemonClient.getProjectGraphFromServer()
-      );
+      return daemonClient.getProjectGraphFromServer();
     } catch (e) {
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
@@ -126,7 +114,7 @@ export async function createProjectGraphAsync(
         });
       }
       markDaemonAsDisabled();
-      return buildProjectGraphWithoutDaemon(projectGraphVersion);
+      return buildProjectGraphWithoutDaemon();
     }
   }
 }
@@ -160,12 +148,12 @@ export function projectGraphAdapter(
   sourceVersion: string,
   targetVersion: string,
   projectGraph: ProjectGraph
-): ProjectGraph {
+): ProjectGraph | ProjectGraphV4 {
   if (sourceVersion === targetVersion) {
     return projectGraph;
   }
   if (sourceVersion === '5.0' && targetVersion === '4.0') {
-    return projectGraphCompat5to4(projectGraph);
+    return projectGraphCompat5to4(projectGraph as ProjectGraph);
   }
   throw new Error(
     `Invalid source or target versions. Source: ${sourceVersion}, Target: ${targetVersion}.
@@ -182,7 +170,7 @@ Check the versions running "nx report" and/or remove your "nxdeps.json" file (in
  * @param {ProjectGraph} projectGraph
  * @returns {ProjectGraph}
  */
-function projectGraphCompat5to4(projectGraph: ProjectGraph): ProjectGraph {
+function projectGraphCompat5to4(projectGraph: ProjectGraph): ProjectGraphV4 {
   const { externalNodes, ...rest } = projectGraph;
   return {
     ...rest,

@@ -1,7 +1,7 @@
 import {
   getPackageManagerCommand,
   ProjectGraph,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
   TargetDependencyConfig,
   Task,
   TaskGraph,
@@ -51,13 +51,16 @@ export function getDependencyConfigs(
   return dependencyConfigs;
 }
 
-export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {
+export function getOutputs(
+  p: Record<string, ProjectGraphProjectNode>,
+  task: Task
+) {
   return getOutputsForTargetAndConfiguration(task, p[task.target.project]);
 }
 
 export function getOutputsForTargetAndConfiguration(
   task: Pick<Task, 'target' | 'overrides'>,
-  node: ProjectGraphNode
+  node: ProjectGraphProjectNode
 ) {
   const { target, configuration } = task.target;
 

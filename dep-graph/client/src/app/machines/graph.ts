@@ -1,5 +1,8 @@
 // nx-ignore-next-line
-import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import type { VirtualElement } from '@popperjs/core';
 import { default as cy } from 'cytoscape';
 import { default as cytoscapeDagre } from 'cytoscape-dagre';
@@ -323,7 +326,7 @@ export class GraphService {
   }
 
   initGraph(
-    allProjects: ProjectGraphNode[],
+    allProjects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout,
     dependencies: Record<string, ProjectGraphDependency[]>,
@@ -341,7 +344,7 @@ export class GraphService {
   }
 
   private generateCytoscapeLayout(
-    allProjects: ProjectGraphNode[],
+    allProjects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout,
     dependencies: Record<string, ProjectGraphDependency[]>,
@@ -364,7 +367,7 @@ export class GraphService {
   }
 
   private createElements(
-    projects: ProjectGraphNode[],
+    projects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout: {
       appsDir: string;

@@ -69,7 +69,9 @@ export function filterNodes(
 /**
  * @deprecated will be removed in v14. All projects in ProjectGraph's `nodes` are workspace projects
  */
-export function isWorkspaceProject(project: ProjectGraphNode) {
+export function isWorkspaceProject(
+  project: ProjectGraphNode
+): project is ProjectGraphProjectNode {
   return (
     project.type === 'app' || project.type === 'lib' || project.type === 'e2e'
   );

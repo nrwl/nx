@@ -3,7 +3,7 @@ import { runCommand } from '../tasks-runner/run-command';
 import type { NxArgs, RawNxArgs } from './utils';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { createProjectGraphAsync } from '../core/project-graph';
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
@@ -37,7 +37,7 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
 function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
-): ProjectGraphNode[] {
+): ProjectGraphProjectNode[] {
   const allProjects = Object.values(projectGraph.nodes);
   const excludedProjects = new Set(nxArgs.exclude ?? []);
   if (nxArgs.all) {
@@ -56,7 +56,7 @@ function projectsToRun(
 
 function checkForInvalidProjects(
   nxArgs: NxArgs,
-  allProjects: ProjectGraphNode[]
+  allProjects: ProjectGraphProjectNode[]
 ) {
   const invalid = nxArgs.projects.filter(
     (name) => !allProjects.find((p) => p.name === name)
@@ -67,12 +67,12 @@ function checkForInvalidProjects(
 }
 
 function runnableForTarget(
-  projects: ProjectGraphNode[],
+  projects: ProjectGraphProjectNode[],
   target: string,
   strict = false
-): ProjectGraphNode[] {
-  const notRunnable = [] as ProjectGraphNode[];
-  const runnable = [] as ProjectGraphNode[];
+): ProjectGraphProjectNode[] {
+  const notRunnable = [] as ProjectGraphProjectNode[];
+  const runnable = [] as ProjectGraphProjectNode[];
 
   for (let project of projects) {
     if (projectHasTarget(project, target)) {

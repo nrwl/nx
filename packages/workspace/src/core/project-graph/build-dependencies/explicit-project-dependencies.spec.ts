@@ -6,7 +6,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 }));
 
 import { vol } from 'memfs';
-import { ProjectGraphNode } from '../project-graph-models';
+import { ProjectGraphProjectNode } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import {
   ProjectGraphBuilder,
@@ -16,7 +16,7 @@ import { defaultFileHasher } from '../../hasher/file-hasher';
 
 describe('explicit project dependencies', () => {
   let ctx: ProjectGraphProcessorContext;
-  let projects: Record<string, ProjectGraphNode>;
+  let projects: Record<string, ProjectGraphProjectNode>;
   let fsJson;
   beforeEach(() => {
     const workspaceJson = {

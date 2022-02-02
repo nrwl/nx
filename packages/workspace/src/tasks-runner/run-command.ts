@@ -4,7 +4,7 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import type {
   NxJsonConfiguration,
   ProjectGraph,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
   TargetDependencyConfig,
   Task,
 } from '@nrwl/devkit';
@@ -76,7 +76,7 @@ async function getTerminalOutputLifeCycle(
 }
 
 export async function runCommand(
-  projectsToRun: ProjectGraphNode[],
+  projectsToRun: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   { nxJson }: Environment,
   nxArgs: NxArgs,
@@ -188,7 +188,7 @@ async function anyFailuresInObservable(obs: any) {
 }
 
 interface TaskParams {
-  project: ProjectGraphNode;
+  project: ProjectGraphProjectNode;
   target: string;
   configuration: string;
   overrides: Object;
@@ -196,7 +196,7 @@ interface TaskParams {
 }
 
 export function createTasksForProjectToRun(
-  projectsToRun: ProjectGraphNode[],
+  projectsToRun: ProjectGraphProjectNode[],
   params: Omit<TaskParams, 'project' | 'errorIfCannotFindConfiguration'>,
   projectGraph: ProjectGraph,
   initiatingProject: string | null,
@@ -330,7 +330,7 @@ export function createTask({
 }
 
 function addTasksForProjectDependencyConfig(
-  project: ProjectGraphNode,
+  project: ProjectGraphProjectNode,
   {
     target,
     configuration,
@@ -367,10 +367,13 @@ function addTasksForProjectDependencyConfig(
     const dependencies = projectGraph.dependencies[project.name];
     if (dependencies) {
       for (const dep of dependencies) {
-        const depProject =
-          projectGraph.nodes[dep.target] ||
-          projectGraph.externalNodes[dep.target];
-        if (projectHasTarget(depProject, dependencyConfig.target)) {
+        const depProject = projectGraph.nodes[
+          dep.target
+        ] as ProjectGraphProjectNode;
+        if (
+          depProject &&
+          projectHasTarget(depProject, dependencyConfig.target)
+        ) {
           addTasksForProjectTarget(
             {
               project: depProject,
@@ -390,7 +393,10 @@ function addTasksForProjectDependencyConfig(
           if (seenSet.has(dep.target)) {
             continue;
           }
-
+          if (!depProject) {
+            seenSet.add(dep.target);
+            continue;
+          }
           addTasksForProjectDependencyConfig(
             depProject,
             { target, configuration, overrides },

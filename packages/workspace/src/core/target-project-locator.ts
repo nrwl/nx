@@ -1,7 +1,10 @@
 import { resolveModuleByImport } from '../utilities/typescript';
 import { readFileIfExisting } from './file-utils';
-import type { ProjectGraphNode } from '@nrwl/devkit';
-import { parseJson, ProjectGraphExternalNode } from '@nrwl/devkit';
+import {
+  parseJson,
+  ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
@@ -17,7 +20,7 @@ export class TargetProjectLocator {
   private npmResolutionCache = new Map<string, string | null>();
 
   constructor(
-    private readonly nodes: Record<string, ProjectGraphNode>,
+    private readonly nodes: Record<string, ProjectGraphProjectNode>,
     private readonly externalNodes: Record<string, ProjectGraphExternalNode>
   ) {}
 
@@ -194,7 +197,9 @@ export class TargetProjectLocator {
   }
 }
 
-function createProjectRootMappings(nodes: Record<string, ProjectGraphNode>) {
+function createProjectRootMappings(
+  nodes: Record<string, ProjectGraphProjectNode>
+) {
   const projectRootMappings = new Map();
   for (const projectName of Object.keys(nodes)) {
     const root = nodes[projectName].data.root;
