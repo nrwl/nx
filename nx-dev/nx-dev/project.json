@@ -23,17 +23,6 @@
         "command": "npx next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
       }
     },
-    "serve": {
-      "executor": "@nrwl/workspace:run-commands",
-      "outputs": [],
-      "options": {
-        "commands": [
-          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts --watch",
-          "nx run nx-dev:serve-nextjs"
-        ],
-        "parallel": true
-      }
-    },
     "sync-documentation": {
       "executor": "@nrwl/workspace:run-commands",
       "outputs": ["nx-dev/nx-dev/public/documentation"],
@@ -52,7 +41,7 @@
         "production": {}
       }
     },
-    "serve-nextjs": {
+    "serve": {
       "executor": "@nrwl/next:server",
       "options": {
         "buildTarget": "nx-dev:build-base",
@@ -70,9 +59,7 @@
       "outputs": ["nx-dev/nx-dev/public/documentation"],
       "options": {
         "commands": [
-          "rm -r nx-dev/nx-dev/public/documentation",
-          "cp -R docs nx-dev/nx-dev/public/",
-          "mv nx-dev/nx-dev/public/docs nx-dev/nx-dev/public/documentation",
+          "echo \"🛑️ REPLACE ME WITH STANDARD BUILD COMMAND 🛑\"",
           "nx run nx-dev:build"
         ],
         "parallel": false

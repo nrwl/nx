@@ -117,15 +117,14 @@ We would love for you to contribute to our documentation as well! Please feel we
 
 #### Documentation Pages
 
-Our documentation pages can be found within this repo under the `docs` directory. Pages that we consider framework specific are nested in their own subdirectories - otherwise they should be nested within the `docs/shared` directory.
+Our documentation pages can be found within this repo under the `docs` directory.
 
 The `docs/map.json` file is considered our source of truth for our site's structure, and should be updated when adding a new page to our documentation to ensure that it is included in the documentation site. We also run automated scripts based on this `map.json` data to safeguard against common human errors that could break our site.
 
 #### Nx-Dev Application
 
 Our public `nx.dev` documentation site is a [Next.js](https://nextjs.org/) application, that can be found in the `nx-dev` directory of this repo.
-
-The `nx-dev/nx-dev/public/documentation` directory contains `.md` files that are generated from the `docs` directory when new releases are cut. As such, these should not be changed when submitting a change to existing docs.
+The documentation site is consuming the `docs/` directly by copy-ing its content while deploying, so the website is always in sync and reflects the latest version of `docs/`.
 
 Jump to [Running the Documentation Site Locally](#running-the-documentation-site-locally) to see how to preview your changes while serving.
 
@@ -152,10 +151,6 @@ npx nx serve nx-dev
 ```
 
 You can then access the application locally at `localhost:4200`.
-
-By default, the site displays the `Latest` cut release of the docs. To see your current changes in the docs be sure to select `Preview` from the version selection box of the site.
-
-<img src="https://raw.githubusercontent.com/nrwl/nx/master/images/selecting-preview-from-version-selection-box.png" width="600" alt="Selecting Preview from Version Selection box">
 
 #### Troubleshooting: `JavaScript heap out of memory`
 

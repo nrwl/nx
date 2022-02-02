@@ -4,8 +4,8 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { DefaultSeo } from 'next-seo';
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
-import '../styles/main.css';
 import Script from 'next/script';
+import '../styles/main.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
