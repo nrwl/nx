@@ -2,9 +2,9 @@
 
 ![Angular logo](/shared/angular-logo.png)
 
-The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
+The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:
 
-- Integration with libraries such as Storybook, Jest, Cypress, Karma and Protractor.
+- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.
 - Generators to help scaffold code quickly, including:
   - Micro Frontends
   - Libraries, both internal to your codebase and publishable to npm
@@ -41,7 +41,7 @@ By default, the application will be generated with:
 - Jest as the unit test runner.
 - Cypress as the E2E test runner.
 
-We can then serve, build, test, lint and run e2e tests on the application with the following commands:
+We can then serve, build, test, lint, and run e2e tests on the application with the following commands:
 
 ```bash
 nx serve appName
@@ -51,7 +51,7 @@ nx lint appName
 nx e2e appName
 ```
 
-### Generating an library
+### Generating a library
 
 Generating an Angular library is very similar to generating an application:
 
@@ -71,7 +71,11 @@ nx test libName
 nx lint libName
 ```
 
-[Read more about generating libraries, including buildable and publishable libraries.]()
+Read more about:
+
+- [Creating Libraries](/structure/creating-libraries)
+- [Library Types](/structure/library-types)
+- [Buildable and Publishable Libraries](/structure/buildable-and-publishable-libraries)
 
 ## More Documentation
 
@@ -80,3 +84,4 @@ nx lint libName
 - [Using NgRx](/guides/misc-ngrx)
 - [Using DataPersistence](/guides/misc-data-persistence)
 - [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)
+- [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)

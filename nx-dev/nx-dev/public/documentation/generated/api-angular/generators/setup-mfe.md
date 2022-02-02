@@ -74,3 +74,11 @@ Generate a routing setup to allow a host application to route to the remote appl
 Type: `boolean`
 
 Skip formatting the workspace after the generator completes.
+
+### skipPackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add dependencies to `package.json`.

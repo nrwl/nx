@@ -26,3 +26,13 @@ Show what will be generated without writing to disk:
 ```bash
 nx g karma ... --dry-run
 ```
+
+## Options
+
+### skipPackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add dependencies to `package.json`.
