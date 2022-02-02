@@ -257,6 +257,9 @@
     "yargs-parser": "20.0.0",
     "zone.js": "~0.11.4"
   },
+  "optionalDependencies": {
+    "@swc/core-linux-musl": "~1.2.42"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "config": {

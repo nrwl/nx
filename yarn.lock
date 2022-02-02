@@ -5557,6 +5557,11 @@
   resolved "https://registry.yarnpkg.com/@swc/core-linux-arm64-musl/-/core-linux-arm64-musl-1.2.133.tgz#9daae6e86b9c692aecdaa6109721a5ff00d114ad"
   integrity sha512-tZiqwz7dTOxnGMwnYguULKl6gNom6CQWXoUyoliksaZA6+uNALO1/PNh/ctzuDbu2Agj4ltsmoevhZlrzC3geA==
 
+"@swc/core-linux-musl@~1.2.42":
+  version "1.2.42"
+  resolved "https://registry.yarnpkg.com/@swc/core-linux-musl/-/core-linux-musl-1.2.42.tgz#3cd5f565bce5763a92cf3f7b55b9906df2dcc3eb"
+  integrity sha512-pXl7+nPYFbYI31Uj9U2GNZkrJGcHobGncF8mGEAfDFUAulLlWf98HnS1+GfxgP05cxbAn4RwetlaneQqeGxBaA==
+
 "@swc/core-linux-x64-gnu@1.2.133":
   version "1.2.133"
   resolved "https://registry.yarnpkg.com/@swc/core-linux-x64-gnu/-/core-linux-x64-gnu-1.2.133.tgz#77439a67f2e39125b2f6c5c62d70accaf5140323"
