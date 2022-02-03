@@ -41,6 +41,9 @@
     "tsconfig-paths": "^3.9.0"
   },
   "optionalDependencies": {
-    "@swc/core-linux-musl": "^1.2.42"
+    "@swc/core-linux-x64-musl": "^1.2.136",
+    "@swc/core-linux-x64-gnu": "^1.2.136",
+    "@swc/core-linux-arm64-gnu": "^1.2.136",
+    "@swc/core-linux-arm64-musl": "^1.2.136"
   }
 }
