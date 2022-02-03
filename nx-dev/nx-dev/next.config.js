@@ -68,6 +68,11 @@ module.exports = withNx({
       destination: '/storybook/overview-angular',
       permanent: true,
     });
+    rules.push({
+      source: '/(l|latest)/(a|angular|r|react)/storybook/executors',
+      destination: '/storybook/executors-storybook',
+      permanent: true,
+    });
 
     // Customs
     for (let s of Object.keys(redirects)) {
