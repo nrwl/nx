@@ -15,26 +15,36 @@ import { parseRunOneOptions } from './parse-run-one-options';
 process.env.NX_CLI_SET = 'true';
 
 export function initLocal(workspace: Workspace) {
-  performance.mark('init-local');
-  //nx-ignore-next-line
-  require('@nrwl/workspace/src/utilities/perf-logging');
+  try {
+    performance.mark('init-local');
+    //nx-ignore-next-line
+    require('@nrwl/workspace/src/utilities/perf-logging');
 
-  const supportedNxCommands =
-    //nx-ignore-next-line
-    require('@nrwl/workspace/src/command-line/supported-nx-commands').supportedNxCommands;
+    const supportedNxCommands =
+      //nx-ignore-next-line
+      require('@nrwl/workspace/src/command-line/supported-nx-commands').supportedNxCommands;
 
-  const runOpts = runOneOptions(workspace);
-  const running = runOpts !== false;
-  if (supportedNxCommands.includes(process.argv[2])) {
-    // required to make sure nrwl/workspace import works
-    //nx-ignore-next-line
-    require('@nrwl/workspace/src/command-line/nx-commands').commandsObject.argv;
-  } else if (running) {
-    //nx-ignore-next-line
-    require('@nrwl/workspace/src/command-line/run-one').runOne(runOpts);
-  } else if (generating()) {
-    loadCli(workspace, '@nrwl/tao/index.js');
-  } else {
+    if (supportedNxCommands.includes(process.argv[2])) {
+      // required to make sure nrwl/workspace import works
+      //nx-ignore-next-line
+      require('@nrwl/workspace/src/command-line/nx-commands').commandsObject
+        .argv;
+      return;
+    }
+
+    if (generating()) {
+      loadCli(workspace, '@nrwl/tao/index.js');
+      return;
+    }
+
+    const runOpts = runOneOptions(workspace);
+    const running = runOpts !== false;
+    if (running) {
+      //nx-ignore-next-line
+      require('@nrwl/workspace/src/command-line/run-one').runOne(runOpts);
+      return;
+    }
+
     if (workspace.type === 'nx') {
       loadCli(workspace, '@nrwl/tao/index.js');
     } else {
@@ -96,6 +106,9 @@ export function initLocal(workspace: Workspace) {
         loadCli(workspace, '@angular/cli/lib/init.js');
       }
     }
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
   }
 }
 
@@ -112,19 +125,15 @@ function loadCli(workspace: Workspace, cliPath: string) {
 function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
-  try {
-    const workspaceConfig = new Workspaces(
-      workspace.dir
-    ).readWorkspaceConfiguration();
+  const workspaceConfig = new Workspaces(
+    workspace.dir
+  ).readWorkspaceConfiguration();
 
-    return parseRunOneOptions(
-      workspace.dir,
-      workspaceConfig,
-      process.argv.slice(2)
-    );
-  } catch {
-    return false;
-  }
+  return parseRunOneOptions(
+    workspace.dir,
+    workspaceConfig,
+    process.argv.slice(2)
+  );
 }
 
 function generating(): boolean {
