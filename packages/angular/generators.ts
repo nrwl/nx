@@ -18,3 +18,7 @@ export * from './src/generators/setup-mfe/setup-mfe';
 export * from './src/generators/scam/scam';
 export * from './src/generators/scam-directive/scam-directive';
 export * from './src/generators/scam-pipe/scam-pipe';
+export * from './src/generators/add-linting/add-linting';
+export * from './src/generators/component-cypress-spec/component-cypress-spec';
+export * from './src/generators/component-story/component-story';
+export * from './src/generators/web-worker/web-worker';
