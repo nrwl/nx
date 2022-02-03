@@ -121,7 +121,7 @@ export function NpxCreateNxWorkspaceAnimation({
       },
     });
     await frameworkSelectionAnswerSectionArrow.start({
-      y: 56,
+      y: 54,
       transition: { ease: 'easeOut', duration: 0.24 },
     });
     await frameworkSelectionAnswerSectionPreviousHighlight.start({
