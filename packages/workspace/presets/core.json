@@ -4,7 +4,8 @@
       "dependencies": "*",
       "devDependencies": "*"
     },
-    ".eslintrc.json": "*"
+    ".eslintrc.json": "*",
+    "packages/**/project.json": "*"
   },
   "targetDependencies": {
     "build": [

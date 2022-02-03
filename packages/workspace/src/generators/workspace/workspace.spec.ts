@@ -48,6 +48,8 @@ describe('@nrwl/workspace:workspace', () => {
           devDependencies: '*',
         },
         '.eslintrc.json': '*',
+        'apps/**/project.json': '*',
+        'libs/**/project.json': '*',
       },
       tasksRunnerOptions: {
         default: {
@@ -123,14 +125,14 @@ describe('@nrwl/workspace:workspace', () => {
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`
-Object {
-  "build": "nx build",
-  "ng": "nx",
-  "postinstall": "node ./decorate-angular-cli.js",
-  "start": "nx serve",
-  "test": "nx test",
-}
-`);
+      Object {
+        "build": "nx build",
+        "ng": "nx",
+        "postinstall": "node ./decorate-angular-cli.js",
+        "start": "nx serve",
+        "test": "nx test",
+      }
+    `);
   });
 
   it('should not add decorate-angular-cli when used with nx cli', async () => {
@@ -145,12 +147,12 @@ Object {
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`
-Object {
-  "build": "nx build",
-  "start": "nx serve",
-  "test": "nx test",
-}
-`);
+      Object {
+        "build": "nx build",
+        "start": "nx serve",
+        "test": "nx test",
+      }
+    `);
   });
 
   it('should create a workspace using package layout', async () => {
