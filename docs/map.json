@@ -1352,6 +1352,11 @@
         "id": "structure",
         "itemList": [
           {
+            "name": "Applications and Libraries",
+            "id": "applications-and-libraries",
+            "file": "shared/workspace/applications-and-libraries"
+          },
+          {
             "name": "Creating Libraries",
             "id": "creating-libraries",
             "file": "shared/workspace/creating-libraries"
