@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressConvertToTen",
+  "cli": "nx",
+  "title": "Convert e2e project to Cypress 10",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g @nrwl/cypress:convert-cypress-ten --project=my-cool-app-e2e",
+      "description": "Convert my-cool-app-e2e to Cypress 10"
+    },
+    {
+      "command": "g @nrwl/cypress:convert-cypress-ten --all",
+      "description": "Convert all e2e projects in the workspace to Cypress 10"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to convert",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "all": {
+      "type": "boolean",
+      "description": "Convert all projects in the workspace",
+      "default": false
+    },
+    "targets": {
+      "type": "array",
+      "description": "The targets to convert",
+      "default": ["e2e"]
+    }
+  }
+}

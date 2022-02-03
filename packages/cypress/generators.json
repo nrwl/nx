@@ -12,7 +12,13 @@
     "cypress-project": {
       "factory": "./src/generators/cypress-project/cypress-project#cypressProjectSchematic",
       "schema": "./src/generators/cypress-project/schema.json",
-      "description": "Add a Cypress E2E Project."
+      "description": "Add a Cypress E2E Project"
+    },
+    "convert-cypress-ten": {
+      "factory": "./src/generators/convert-to-cypress-10/convert-to-cypress-ten#convertCypressProject",
+      "schema": "./src/generators/convert-to-cypress-10/schema.json",
+      "aliases": ["cy10"],
+      "description": "Convert existing Cypress e2e projects to Cypress 10"
     }
   },
   "generators": {
@@ -28,6 +34,12 @@
       "schema": "./src/generators/cypress-project/schema.json",
       "description": "Add a Cypress E2E Project.",
       "hidden": true
+    },
+    "convert-cypress-ten": {
+      "factory": "./src/generators/convert-to-cypress-10/convert-to-cypress-ten#convertCypressProject",
+      "schema": "./src/generators/convert-to-cypress-10/schema.json",
+      "aliases": ["cy10"],
+      "description": "Convert to Cypress 10"
     }
   }
 }
