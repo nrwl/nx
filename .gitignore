@@ -13,3 +13,4 @@ jest.debug.config.js
 /.nx-cache
 /.verdaccio/build/local-registry
 dep-graph/client/src/assets/environment.js
+/nx-dev/nx-dev/public/documentation
