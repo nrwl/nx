@@ -902,21 +902,16 @@
             "id": "migrate-stories-to-6-2",
             "file": "generated/api-storybook/generators/migrate-stories-to-6-2"
           },
+
           {
-            "id": "executors",
-            "name": "Executors / Builders",
-            "itemList": [
-              {
-                "name": "build",
-                "id": "build",
-                "file": "generated/api-storybook/executors/build"
-              },
-              {
-                "name": "storybook",
-                "id": "storybook",
-                "file": "generated/api-storybook/executors/storybook"
-              }
-            ]
+            "name": "Executors: Build",
+            "id": "executors-build",
+            "file": "generated/api-storybook/executors/build"
+          },
+          {
+            "name": "Executors: Storybook",
+            "id": "executors-storybook",
+            "file": "generated/api-storybook/executors/storybook"
           }
         ]
       },
