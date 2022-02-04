@@ -1,7 +1,7 @@
 // nx-ignore-next-line
 const withNx = require('@nrwl/next/plugins/with-nx');
 const { copy } = require('fs-extra');
-const path = require('node:path');
+const path = require('path');
 
 /**
  * TODO@ben: Temporary solution before Nextjs' assets management tasks is up and running
