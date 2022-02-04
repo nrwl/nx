@@ -229,6 +229,6 @@ Test runner to use for unit tests.
 
 Type: `string`
 
-Possible values: `Emulated`, `Native`, `None`
+Possible values: `Emulated`, `None`, `ShadowDom`
 
 Specifies the view encapsulation strategy.
