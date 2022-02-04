@@ -97,13 +97,3 @@ The library in `dist` is publishable to npm or a private registry.
 
 - [Using Cypress](/cypress/overview)
 - [Using Jest](/cypress/overview)
-
-## Executors
-
-- [build](/web/build) - Builds a web components application
-- [dev-server](/web/dev-server) - Builds and serves a web application
-- [package](/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
-
-## Generators
-
-- [application](/web/application) - Create an Web Components application

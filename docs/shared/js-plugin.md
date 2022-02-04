@@ -127,15 +127,3 @@ nx g @nrwl/js:convert-to-swc my-buildable-lib
 Now the `build` command will use `@nrwl/js:swc` executor to compile your projects.
 
 > The first time you generate a `swc` project (application or library) or convert a `tsc` project over to `swc`, `@nrwl/js` will install the necessary dependencies to use `swc`.
-
-## Executors
-
-- [tsc](/js/tsc) - Builds applications/libraries using TSC
-- [swc](/js/swc) - Builds applications/libraries using SWC
-- [node](/js/node) - Serve applications
-
-## Generators
-
-- [application](/js/application) - Generates an application
-- [library](/js/library) - Generates a library
-- [convert-to-swc](/js/convert-to-swc) - Convert a `tsc` project to `swc`
