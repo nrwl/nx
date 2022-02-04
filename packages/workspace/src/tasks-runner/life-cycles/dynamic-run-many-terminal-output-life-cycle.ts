@@ -14,7 +14,7 @@ import { prettyTime } from './pretty-time';
  *
  * In CI environments the static equivalent of this life cycle should be used.
  */
-export async function createDynamicOutputRenderer({
+export async function createRunManyDynamicOutputRenderer({
   projectNames,
   tasks,
   args,

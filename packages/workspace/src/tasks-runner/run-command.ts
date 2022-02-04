@@ -24,9 +24,10 @@ import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-m
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { EmptyTerminalOutputLifeCycle } from './life-cycles/empty-terminal-output-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
-import { createDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
+import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { isCI } from '../utilities/is_ci';
+import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -37,7 +38,20 @@ async function getTerminalOutputLifeCycle(
   overrides: Record<string, unknown>,
   runnerOptions: any
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
+  const showVerboseOutput = !!overrides.verbose;
   if (terminalOutputStrategy === 'run-one') {
+    if (
+      shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
+      !showVerboseOutput &&
+      process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false'
+    ) {
+      return await createRunOneDynamicOutputRenderer({
+        initiatingProject,
+        tasks,
+        args: nxArgs,
+        overrides,
+      });
+    }
     return {
       lifeCycle: new StaticRunOneTerminalOutputLifeCycle(
         initiatingProject,
@@ -56,7 +70,7 @@ async function getTerminalOutputLifeCycle(
     shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
     process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false'
   ) {
-    return await createDynamicOutputRenderer({
+    return await createRunManyDynamicOutputRenderer({
       projectNames,
       tasks,
       args: nxArgs,
