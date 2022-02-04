@@ -86,13 +86,3 @@ For additional information on how to debug Node applications, see the [Node.js d
 
 - [Using Cypress](/cypress/overview)
 - [Using Jest](/jest/overview)
-
-### Executors / Builders
-
-- [build](/node/build) - Builds a Node application
-- [package](/node/package) - Packages a Node library
-
-### Generators
-
-- [application](/node/application) - Create a Node application
-- [library](/node/library) - Create a Node library
