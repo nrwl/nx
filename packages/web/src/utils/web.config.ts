@@ -68,7 +68,13 @@ export function getWebConfig(
       esm,
       isScriptOptimizeOn
     ),
-    getStylesPartial(wco.root, wco.projectRoot, wco.buildOptions, true),
+    getStylesPartial(
+      wco.root,
+      wco.projectRoot,
+      wco.buildOptions,
+      true,
+      options.postcssConfig
+    ),
     getCommonPartial(wco),
     getBrowserConfig(wco),
   ]);
@@ -106,7 +112,8 @@ export function getStylesPartial(
   workspaceRoot: string,
   projectRoot: string,
   options: any,
-  extractCss: boolean
+  extractCss: boolean,
+  postcssConfig?: string
 ): Configuration {
   const includePaths: string[] = [];
 
@@ -151,7 +158,11 @@ export function getStylesPartial(
       }),
     ],
   });
-  postcssOptions.config = projectRoot;
+  // If a path to postcssConfig is passed in, set it for app and all libs, otherwise
+  // use automatic detection.
+  if (typeof postcssConfig === 'string') {
+    postcssOptions.config = path.join(workspaceRoot, postcssConfig);
+  }
 
   const commonLoaders = [
     {

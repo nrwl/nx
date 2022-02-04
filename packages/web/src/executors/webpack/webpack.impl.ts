@@ -55,6 +55,8 @@ export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   deleteOutputPath?: boolean;
 
   generateIndexHtml?: boolean;
+
+  postcssConfig?: string;
 }
 
 function getWebpackConfigs(
