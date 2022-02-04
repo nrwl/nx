@@ -277,10 +277,10 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
             constraint.onlyDependOnLibsWithTags || []
           )
         ) {
-          const allowedTags = constraint.onlyDependOnLibsWithTags
+          const tags = constraint.onlyDependOnLibsWithTags
             .map((s) => `"${s}"`)
             .join(', ');
-          const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
+          const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${tags}`;
           this.addFailureAt(node.getStart(), node.getWidth(), error);
           return;
         }

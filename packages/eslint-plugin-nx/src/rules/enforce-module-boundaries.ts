@@ -107,8 +107,8 @@ export default createESLintRule<Options, MessageIds>({
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
-      onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
-      notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{disallowedTags}}`,
+      onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
+      notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}`,
     },
   },
   defaultOptions: [
@@ -409,7 +409,7 @@ export default createESLintRule<Options, MessageIds>({
               constraint.onlyDependOnLibsWithTags
             )
           ) {
-            const allowedTags = constraint.onlyDependOnLibsWithTags
+            const tags = constraint.onlyDependOnLibsWithTags
               .map((s) => `"${s}"`)
               .join(', ');
             context.report({
@@ -417,7 +417,7 @@ export default createESLintRule<Options, MessageIds>({
               messageId: 'onlyTagsConstraintViolation',
               data: {
                 sourceTag: constraint.sourceTag,
-                allowedTags,
+                tags,
               },
             });
             return;
@@ -430,7 +430,7 @@ export default createESLintRule<Options, MessageIds>({
               constraint.notDependOnLibsWithTags
             )
           ) {
-            const disallowedTags = constraint.notDependOnLibsWithTags
+            const tags = constraint.notDependOnLibsWithTags
               .map((s) => `"${s}"`)
               .join(', ');
             context.report({
@@ -438,7 +438,7 @@ export default createESLintRule<Options, MessageIds>({
               messageId: 'notTagsConstraintViolation',
               data: {
                 sourceTag: constraint.sourceTag,
-                disallowedTags: disallowedTags,
+                tags,
               },
             });
             return;

@@ -46,9 +46,7 @@ export function hasAnyOfTheseTags(
   visited = visited ?? [];
 
   let found =
-    tags.filter((disallowedTag) =>
-      hasTag(graph.nodes[projectName], disallowedTag)
-    ).length !== 0;
+    tags.filter((tag) => hasTag(graph.nodes[projectName], tag)).length !== 0;
 
   if (found) return true;
 
