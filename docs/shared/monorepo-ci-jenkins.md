@@ -27,7 +27,7 @@ pipeline {
         NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
     }
     stages {
-        stage('Pipelien') {
+        stage('Pipeline') {
             parallel {
                 stage('Main') {
                     when {
@@ -50,8 +50,8 @@ pipeline {
                     steps {
                         sh "npm install"
                         sh "npx nx-cloud start-ci-run"
-                        sh "npx nx affected --target=build --parallel --max-parallel=3"
-                        sh "npx nx affected --target=test --parallel --max-parallel=2"
+                        sh "npx nx affected --base origin/${CHANGE_TARGET} --target=build --parallel --max-parallel=3"
+                        sh "npx nx affected --base origin/${CHANGE_TARGET} --target=test --parallel --max-parallel=2"
                         sh "npx nx-cloud stop-all-agents"
                     }
                 }
