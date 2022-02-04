@@ -115,6 +115,12 @@
       "description": "Remove old options that are no longer used",
       "cli": "nx",
       "implementation": "./src/migrations/update-13-6-0/remove-old-task-runner-options"
+    },
+    "13-7-3-add-project-json-to-implicit-deps": {
+      "version": "13.7.3",
+      "description": "Add project.json to nx implicitDependencies",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-7-3/add-project-json-to-implicit-deps"
     }
   },
   "packageJsonUpdates": {
