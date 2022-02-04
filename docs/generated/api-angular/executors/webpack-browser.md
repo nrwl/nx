@@ -125,6 +125,16 @@ Type: `array`
 
 Replace compilation source files with other compilation source files in the build.
 
+### i18nDuplicateTranslation
+
+Default: `warning`
+
+Type: `string`
+
+Possible values: `warning`, `error`, `ignore`
+
+How to handle duplicate translations for i18n.
+
 ### i18nMissingTranslation
 
 Default: `warning`
