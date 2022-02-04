@@ -24,7 +24,7 @@ The `ngrx` schematic generates an NgRx feature set containing the following file
 The following command is used to run the `ngrx` schematic:
 
 ```bash
-ng g @nrwl/angular:ngrx <featurename> --module=<path-to-module> --defaults [options]
+nx g@nrwl/angular:ngrx <featurename> --module=<path-to-module> --defaults [options]
 ```
 
 > Note: the `name` and the `--module=` arguments are required. The `defaults` option chooses the recommended defaults for the schematic, unless you override them.
@@ -46,7 +46,7 @@ To get started with NgRx in an Angular application, you set up the root level st
 The example below shows you how to setup NgRx in the root of your application.
 
 ```bash
-ng g @nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts --root
+nx g@nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts --root
 ```
 
 The above command applies the following changes to the provided module:
@@ -66,7 +66,7 @@ state to be easily shared across other libraries and applications. The steps bel
 The example below generates a library to begin a new feature. For this example, `products` is used as the library name.
 
 ```bash
-ng g @nrwl/angular:lib products
+nx g@nrwl/angular:lib products
 ```
 
 To manage the feature state:
@@ -75,7 +75,7 @@ To manage the feature state:
 - Provide a path to the `products` library module.
 
 ```bash
-ng g @nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --defaults
+nx g@nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --defaults
 ```
 
 > Use the `--facade` option to generate an injectable Facade class along with the feature.
