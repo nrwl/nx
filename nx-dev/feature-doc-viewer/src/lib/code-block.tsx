@@ -27,7 +27,7 @@ export function CodeBlock({
     };
   }, [copied]);
   return (
-    <div className="relative group code-block">
+    <div className="group code-block relative">
       <CopyToClipboard
         text={text}
         onCopy={() => {
@@ -37,7 +37,7 @@ export function CodeBlock({
       >
         <button
           type="button"
-          className="flex absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

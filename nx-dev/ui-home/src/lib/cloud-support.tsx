@@ -52,9 +52,9 @@ export function CloudSupport(): ReactComponentElement<any> {
             },
           },
         }}
-        className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24"
+        className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
       >
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:py-32 lg:px-0">
           <div>
             <div className="mt-6">
               <motion.h1
@@ -75,7 +75,7 @@ export function CloudSupport(): ReactComponentElement<any> {
                 <Link href="https://nx.app">
                   <a
                     title="Enable Nx generation monorepo tooling with NxCloud"
-                    className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
+                    className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
                   >
                     Enable Nx Cloud
                   </a>
@@ -86,12 +86,12 @@ export function CloudSupport(): ReactComponentElement<any> {
         </div>
         <div
           aria-hidden="true"
-          className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-2"
+          className="mt-12 sm:mt-16 lg:col-start-2 lg:mt-0"
         >
-          <div className="relative px-4 sm:pr-6 lg:px-0 lg:h-full">
+          <div className="relative px-4 sm:pr-6 lg:h-full lg:px-0">
             <motion.div
               variants={opacityTranslateXVariant}
-              className="w-full mx-auto max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:left-16 lg:-top-28 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="mx-auto w-full max-w-screen-sm overflow-hidden rounded-xl border border-gray-300 shadow-xl lg:absolute lg:left-16 lg:-top-28 lg:h-full lg:w-auto lg:max-w-none"
             >
               <Image
                 src="/images/nx-cloud.webp"
@@ -104,7 +104,7 @@ export function CloudSupport(): ReactComponentElement<any> {
             <motion.div
               variants={opacityTranslateXVariant}
               custom={0.25}
-              className="w-full mx-auto max-w-screen-sm hidden lg:flex rounded-xl shadow-xl border border-gray-300 lg:absolute lg:-left-20 lg:-bottom-64 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="mx-auto hidden w-full max-w-screen-sm overflow-hidden rounded-xl border border-gray-300 shadow-xl lg:absolute lg:-left-20 lg:-bottom-64 lg:flex lg:h-full lg:w-auto lg:max-w-none"
             >
               <Image
                 src="/images/github-app.webp"

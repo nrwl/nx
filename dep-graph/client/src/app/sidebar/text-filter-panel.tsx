@@ -50,10 +50,10 @@ export function TextFilterPanel({
     <div>
       <div className="mt-10 px-4">
         <form
-          className="flex rounded-md shadow-sm relative"
+          className="relative flex rounded-md shadow-sm"
           onSubmit={(event) => event.preventDefault()}
         >
-          <span className="inline-flex items-center p-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+          <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 p-2 text-gray-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -71,7 +71,7 @@ export function TextFilterPanel({
           </span>
           <input
             type="text"
-            className="p-1.5 bg-white text-gray-600 flex-1 block w-full rounded-none rounded-r-md border border-gray-300"
+            className="block w-full flex-1 rounded-none rounded-r-md border border-gray-300 bg-white p-1.5 text-gray-600"
             placeholder="lib name, other lib name"
             data-cy="textFilterInput"
             name="filter"
@@ -84,7 +84,7 @@ export function TextFilterPanel({
               data-cy="textFilterReset"
               type="reset"
               onClick={resetClicked}
-              className="p-1 top-1 right-1 absolute bg-white inline-block rounded-md text-gray-500"
+              className="absolute top-1 right-1 inline-block rounded-md bg-white p-1 text-gray-500"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -107,14 +107,14 @@ export function TextFilterPanel({
 
       <div className="mt-4 px-4">
         <div className="flex items-start">
-          <div className="flex items-center h-5">
+          <div className="flex h-5 items-center">
             <input
               disabled={textFilter.length === 0}
               id="includeInPath"
               name="textFilterCheckbox"
               type="checkbox"
               value="includeInPath"
-              className="h-4 w-4 border-gray-300 rounded"
+              className="h-4 w-4 rounded border-gray-300"
               checked={includePath}
               onChange={toggleIncludeLibsInPathChange}
             ></input>
@@ -122,7 +122,7 @@ export function TextFilterPanel({
           <div className="ml-3 text-sm">
             <label
               htmlFor="includeInPath"
-              className="font-medium text-gray-700 cursor-pointer"
+              className="cursor-pointer font-medium text-gray-700"
             >
               Include related libraries
             </label>

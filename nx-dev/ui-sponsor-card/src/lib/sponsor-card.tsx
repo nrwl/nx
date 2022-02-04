@@ -8,7 +8,7 @@ export interface Sponsor {
 }
 export function SponsorCard(data: Sponsor) {
   return (
-    <figure className="py-6 h-full grid grid-cols-1 md:grid-cols-3 gap-12 align-center items-center justify-center">
+    <figure className="align-center grid h-full grid-cols-1 items-center justify-center gap-12 py-6 md:grid-cols-3">
       <div className="rounded-full md:col-span-1">
         <a
           className="cursor-pointer"
@@ -20,7 +20,7 @@ export function SponsorCard(data: Sponsor) {
         </a>
       </div>
       <div className="md:col-span-2">
-        <h5 className="mb-3 font-input-mono">{data.name}</h5>
+        <h5 className="font-input-mono mb-3">{data.name}</h5>
         <p className="text-gray-400">{data.description}</p>
       </div>
     </figure>

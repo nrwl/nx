@@ -44,27 +44,27 @@ export function DocViewer({
           type: 'website',
         }}
       />
-      <div className="w-full max-w-screen-lg mx-auto">
+      <div className="mx-auto w-full max-w-screen-lg">
         <div className="lg:flex">
           <Sidebar menu={menu} navIsOpen={navIsOpen} />
           <div
             id="content-wrapper"
             className={cx(
-              'min-w-0 w-full flex-auto flex-col lg:static lg:max-h-full lg:overflow-visible pt-16 md:pl-4',
-              navIsOpen && 'overflow-hidden max-h-screen fixed'
+              'w-full min-w-0 flex-auto flex-col pt-16 md:pl-4 lg:static lg:max-h-full lg:overflow-visible',
+              navIsOpen && 'fixed max-h-screen overflow-hidden'
             )}
           >
             <Content document={document} />
-            <div className="flex items-center space-x-2 w-full px-4 sm:px-6 xl:px-8 pt-24 pb-24 lg:pb-16">
-              <div className="ml-4 flex flex-grow h-0.5 w-full bg-slate-50 rounded" />
-              <div className="flex-shrink-0 relative z-0 inline-flex shadow-sm rounded-md">
+            <div className="flex w-full items-center space-x-2 px-4 pt-24 pb-24 sm:px-6 lg:pb-16 xl:px-8">
+              <div className="ml-4 flex h-0.5 w-full flex-grow rounded bg-slate-50" />
+              <div className="relative z-0 inline-flex flex-shrink-0 rounded-md shadow-sm">
                 <a
                   aria-hidden="true"
                   href="https://github.com/nrwl/nx/issues/new?assignees=&labels=type%3A+docs&template=3-documentation.md"
                   target="_blank"
                   rel="noreferrer"
                   title="Report an issue on Github"
-                  className="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-nx-base focus:border-blue-nx-base"
+                  className="focus:ring-blue-nx-base focus:border-blue-nx-base relative inline-flex items-center rounded-l-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
                 >
                   Report an issue
                 </a>
@@ -80,7 +80,7 @@ export function DocViewer({
                   target="_blank"
                   rel="noreferrer"
                   title="Edit this page on Github"
-                  className="-ml-px relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-nx-base focus:border-blue-nx-base"
+                  className="focus:ring-blue-nx-base focus:border-blue-nx-base relative -ml-px inline-flex items-center rounded-r-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
                 >
                   Edit this page
                 </a>

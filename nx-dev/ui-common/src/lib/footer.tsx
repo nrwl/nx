@@ -119,9 +119,9 @@ export function Footer({ useDarkBackground }: FooterProps) {
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="text-gray-500 space-y-4 xl:col-span-1">
+          <div className="space-y-4 text-gray-500 xl:col-span-1">
             <svg
               className="h-14 subpixel-antialiased"
               role="img"
@@ -151,10 +151,10 @@ export function Footer({ useDarkBackground }: FooterProps) {
               ))}
             </div>
           </div>
-          <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
+          <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
                   Resources
                 </h3>
                 <ul role="list" className="mt-4 space-y-4">
@@ -177,7 +177,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
                   Help
                 </h3>
                 <ul role="list" className="mt-4 space-y-4">
@@ -202,7 +202,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
                   Community
                 </h3>
                 <ul role="list" className="mt-4 space-y-4">
@@ -225,7 +225,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
                   Solutions
                 </h3>
                 <ul role="list" className="mt-4 space-y-4">
@@ -255,7 +255,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
             &copy; 2022 made with{' '}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="-mt-0.5 h-5 w-5 inline"
+              className="-mt-0.5 inline h-5 w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -269,7 +269,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
             <Link href="https://nrwl.io/?utm_source=nx.dev">
               <a target="_blank" rel="nofollow">
                 <svg
-                  className="-mt-0.5 ml-0.5 w-14 h-auto inline"
+                  className="-mt-0.5 ml-0.5 inline h-auto w-14"
                   role="img"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"

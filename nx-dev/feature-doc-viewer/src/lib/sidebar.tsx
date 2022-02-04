@@ -18,21 +18,21 @@ export function Sidebar({ menu, navIsOpen }: SidebarProps) {
     <div
       data-testid="sidebar"
       className={cx(
-        'fixed z-20 inset-0 flex-none h-full bg-black bg-opacity-25 w-full lg:bg-white lg:static lg:h-auto lg:overflow-y-visible lg:pt-o lg:w-64 lg:block border-r border-gray-50',
+        'lg:pt-o fixed inset-0 z-20 h-full w-full flex-none border-r border-gray-50 bg-black bg-opacity-25 lg:static lg:block lg:h-auto lg:w-64 lg:overflow-y-visible lg:bg-white',
         !navIsOpen && 'hidden',
         navIsOpen && 'block'
       )}
     >
       <div
         data-testid="navigation-wrapper"
-        className="h-full overflow-y-auto scrolling-touch lg:h-auto lg:block lg:relative lg:sticky lg:bg-transparent overflow-auto lg:top-18 bg-white mr-24 lg:mr-0 px-2 sm:pr-4 xl:pr-6"
+        className="scrolling-touch lg:top-18 mr-24 h-full overflow-auto overflow-y-auto bg-white px-2 sm:pr-4 lg:relative lg:sticky lg:mr-0 lg:block lg:h-auto lg:bg-transparent xl:pr-6"
       >
-        <div className="hidden lg:block h-12 pointer-events-none absolute inset-x-0 z-10 bg-gradient-to-b from-white" />
+        <div className="pointer-events-none absolute inset-x-0 z-10 hidden h-12 bg-gradient-to-b from-white lg:block" />
 
         <nav
           id="nav"
           data-testid="navigation"
-          className="px-1 pt-16 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
+          className="sticky?lg:h-(screen-18) px-1 pt-16 pb-10 text-base font-medium sm:px-3 lg:pb-14 lg:text-sm xl:px-5"
         >
           {menu.sections.map((section, index) => (
             <SidebarSection key={section.id + '-' + index} section={section} />
@@ -49,7 +49,7 @@ function SidebarSection({ section }: { section: MenuSection }) {
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mt-8 text-lg font-bold border-b border-gray-50 border-solid"
+          className="mt-8 border-b border-solid border-gray-50 text-lg font-bold"
         >
           {section.name}
         </h4>
@@ -87,7 +87,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'flex py-2',
-          'uppercase tracking-wide font-semibold text-sm lg:text-xs text-gray-900',
+          'text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
@@ -108,11 +108,11 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
               <Link href={item.url as string}>
                 <a
                   className={cx(
-                    'py-1 transition-colors duration-200 relative block text-gray-500 hover:text-gray-900'
+                    'relative block py-1 text-gray-500 transition-colors duration-200 hover:text-gray-900'
                   )}
                 >
                   {isActiveLink ? (
-                    <span className="rounded-md absolute h-full w-1 -right-2 sm:-right-4 top-0 bg-blue-nx-base" />
+                    <span className="bg-blue-nx-base absolute -right-2 top-0 h-full w-1 rounded-md sm:-right-4" />
                   ) : null}
                   <span
                     className={cx('relative', {
@@ -136,8 +136,8 @@ function CollapsibleIcon({ isCollapsed }: { isCollapsed: boolean }) {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className={cx(
-        'transition-all h-3.5 w-3.5 text-gray-500',
-        !isCollapsed && 'transform rotate-90'
+        'h-3.5 w-3.5 text-gray-500 transition-all',
+        !isCollapsed && 'rotate-90 transform'
       )}
       fill="none"
       viewBox="0 0 24 24"

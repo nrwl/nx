@@ -18,11 +18,11 @@ export function Selector<T = {}>(props: SelectorProps<T>) {
         {({ open }) => (
           <>
             <div className="relative mt-1">
-              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-white rounded border border-gray-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-blue-300 focus-visible:ring-offset-2 focus-visible:border-blue-500 sm:text-sm font-medium">
+              <Listbox.Button className="relative w-full cursor-pointer rounded border border-gray-200 bg-white py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
                 <span className="block truncate">{props.selected.label}</span>
-                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                   <SelectorIcon
-                    className="w-5 h-5 text-gray-500"
+                    className="h-5 w-5 text-gray-500"
                     aria-hidden="true"
                   />
                 </span>
@@ -39,7 +39,7 @@ export function Selector<T = {}>(props: SelectorProps<T>) {
               >
                 <Listbox.Options
                   static
-                  className="absolute w-full py-1 mt-1 overflow-auto text-base bg-white rounded-sm shadow-md max-h-60 focus:outline-none sm:text-sm z-10"
+                  className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-white py-1 text-base shadow-md focus:outline-none sm:text-sm"
                 >
                   {props.items.map((item, personIdx) => (
                     <Listbox.Option
@@ -47,16 +47,16 @@ export function Selector<T = {}>(props: SelectorProps<T>) {
                       className={({ active }) =>
                         `${
                           active
-                            ? 'text-white bg-blue-nx-base'
+                            ? 'bg-blue-nx-base text-white'
                             : 'text-gray-500'
                         }
-                          cursor-pointer select-none relative py-2 pl-10 pr-4`
+                          relative cursor-pointer select-none py-2 pl-10 pr-4`
                       }
                       value={item}
                     >
                       {({ selected, active }) => (
                         <>
-                          <span className={'font-medium block truncate'}>
+                          <span className={'block truncate font-medium'}>
                             {item.label}
                           </span>
                           {selected || item.value === props.selected.value ? (
@@ -67,7 +67,7 @@ export function Selector<T = {}>(props: SelectorProps<T>) {
                                 absolute inset-y-0 left-0 flex items-center pl-3`}
                             >
                               <CheckIcon
-                                className="w-5 h-5"
+                                className="h-5 w-5"
                                 aria-hidden="true"
                               />
                             </span>

@@ -3,7 +3,7 @@ import { Html, Head, Main, NextScript } from 'next/document';
 export default function Document() {
   return (
     <Html
-      className="scroll-smooth selection:bg-blue-nx-base selection:text-white"
+      className="selection:bg-blue-nx-base scroll-smooth selection:text-white"
       lang="en"
     >
       <Head />

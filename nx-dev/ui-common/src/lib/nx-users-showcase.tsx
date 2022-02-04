@@ -1,10 +1,10 @@
 export function NxUsersShowcase() {
   return (
     <div className="overflow-hidden py-4 px-4">
-      <div className="mx-auto w-60 top-1 bottom-3 text-center text-xs text-gray-400">
+      <div className="top-1 bottom-3 mx-auto w-60 text-center text-xs text-gray-400">
         Powering leading companies like
       </div>
-      <div id="sponsors-carousel" className="w-full flex column text-gray-400">
+      <div id="sponsors-carousel" className="column flex w-full text-gray-400">
         <div className="flex justify-center">
           <svg className="w-full" viewBox="0 0 160 88" fill="currentColor">
             <path d="M90.9947 24.3067L98.6787 27.3333L90.9947 30.1947V34.2827L104.155 28.9693V25.7L90.9947 20.3867V24.3067Z" />

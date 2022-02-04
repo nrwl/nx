@@ -42,19 +42,19 @@ export function ConfPage() {
         }}
       >
         <div
-          className="w-full overflow-hidden bg-blue-nx-base"
+          className="bg-blue-nx-base w-full overflow-hidden"
           style={{
             background:
               "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Crect width='2' height='2' fill='white' fill-opacity='0.15'/%3E%3C/svg%3E\")",
           }}
         >
           {/*INTRO*/}
-          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
-            <div className="mt-24 py-48 flex lg:flex-row flex-col items-start">
-              <div className="w-full lg:w-2/5 flex flex-col lg:pb-0 pb-10 mt-8 lg:mt-0 relative">
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
+            <div className="mt-24 flex flex-col items-start py-48 lg:flex-row">
+              <div className="relative mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-2/5 lg:pb-0">
                 <svg
                   id="nx-conf-glow"
-                  className="z-0 absolute w-full"
+                  className="absolute z-0 w-full"
                   style={{
                     transform: 'scale(1.5, 1.5) translate3d(-12%, -25%, 0)',
                   }}
@@ -143,7 +143,7 @@ export function ConfPage() {
                 </svg>
                 <svg
                   id="nx-conf-logo"
-                  className="z-10 -left-60 -top-60 w-full"
+                  className="-left-60 -top-60 z-10 w-full"
                   role="img"
                   width="446"
                   height="86"
@@ -179,16 +179,16 @@ export function ConfPage() {
                   />
                 </svg>
               </div>
-              <div className="w-full lg:w-3/5 flex flex-col lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0 z-50">
+              <div className="z-50 mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-3/5 lg:pl-16 lg:pb-0">
                 <h2 className="my-6">
-                  <div className="inline-block py-4 px-6 text-xl sm:text-2xl lg:text-2xl leading-none font-input-mono font-extrabold tracking-tight mb-4 bg-blue-nx-dark rounded-md">
+                  <div className="font-input-mono bg-blue-nx-dark mb-4 inline-block rounded-md py-4 px-6 text-xl font-extrabold leading-none tracking-tight sm:text-2xl lg:text-2xl">
                     <span className="hidden">
                       Announcing the first ever Nx Conf on{' '}
                     </span>{' '}
                     September 16 & 17, 2021
                   </div>
                 </h2>
-                <p className="sm:text-lg mb-6">
+                <p className="mb-6 sm:text-lg">
                   Nx Conf is a new, online & free-to-attend, 2-day conference
                   featuring members of the Nx team and community. Watch us as we
                   share our ideas and expertise about making development faster,
@@ -276,15 +276,15 @@ export function ConfPage() {
                   Grab your FREE Nx Conf ticket and save your workshop seat
                   today!
                 </p> */}
-                <div className="flex mt-16">
+                <div className="mt-16 flex">
                   <a
-                    className="flex items-center justify-end font-input-mono group w-full sm:text-2xl"
+                    className="font-input-mono group flex w-full items-center justify-end sm:text-2xl"
                     href="https://www.youtube.com/watch?v=oG2QbFquraA"
                   >
                     <span className="group-hover:underline">Watch Day 1</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="ml-1 h-8 w-8 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
+                      className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -298,13 +298,13 @@ export function ConfPage() {
                     </svg>
                   </a>
                   <a
-                    className="flex items-center justify-end font-input-mono group w-full sm:text-2xl"
+                    className="font-input-mono group flex w-full items-center justify-end sm:text-2xl"
                     href="https://www.youtube.com/watch?v=hlGOaGDsWKg"
                   >
                     <span className="group-hover:underline">Watch Day 2</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="ml-1 h-8 w-8 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
+                      className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -324,9 +324,9 @@ export function ConfPage() {
         </div>
         <div className="w-full overflow-hidden">
           {/*NAVIGATION*/}
-          <div className="hidden md:block border-t border-b border-gray-600">
-            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
-              <div className="md:grid grid-cols-7 items-center text-center font-input-mono divide-x divide-gray-600">
+          <div className="hidden border-t border-b border-gray-600 md:block">
+            <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+              <div className="font-input-mono grid-cols-7 items-center divide-x divide-gray-600 text-center md:grid">
                 <div className="p-8">
                   <svg
                     id="nx-conf-logo"
@@ -365,22 +365,22 @@ export function ConfPage() {
                   </svg>
                 </div>
                 <Link href="#agenda">
-                  <a className="p-8 hover:bg-blue-nx-dark transition cursor-pointer">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
                     Agenda
                   </a>
                 </Link>
                 <Link href="#speakers">
-                  <a className="p-8 hover:bg-blue-nx-dark transition cursor-pointer">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
                     Speakers
                   </a>
                 </Link>
                 <Link href="#workshop">
-                  <a className="p-8 hover:bg-blue-nx-dark transition cursor-pointer">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
                     Workshop
                   </a>
                 </Link>
                 <Link href="#sponsors">
-                  <a className="p-8 hover:bg-blue-nx-dark transition cursor-pointer">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
                     Sponsors
                   </a>
                 </Link>
@@ -389,9 +389,9 @@ export function ConfPage() {
           </div>
 
           {/*AGENDA*/}
-          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
-              <h2 id="agenda" className="my-20 text-3xl font-input-mono">
+              <h2 id="agenda" className="font-input-mono my-20 text-3xl">
                 Agenda (EST)
               </h2>
             </div>
@@ -399,19 +399,19 @@ export function ConfPage() {
           <ConfSchedule />
 
           {/*SPEAKERS*/}
-          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
-              <h2 id="speakers" className="my-20 text-3xl font-input-mono">
+              <h2 id="speakers" className="font-input-mono my-20 text-3xl">
                 Speakers
               </h2>
             </div>
           </div>
           <ConfSpeakers />
 
-          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             {/*WORKSHOP*/}
             <div className="mt-24">
-              <h2 id="workshop" className="my-20 text-3xl font-input-mono">
+              <h2 id="workshop" className="font-input-mono my-20 text-3xl">
                 Workshop
               </h2>
             </div>
@@ -419,16 +419,16 @@ export function ConfPage() {
           <ConfWorkshop />
 
           {/*SPONSORS*/}
-          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
-              <h2 id="sponsors" className="my-20 text-3xl font-input-mono">
+              <h2 id="sponsors" className="font-input-mono my-20 text-3xl">
                 Sponsors
               </h2>
             </div>
           </div>
           <ConfSponsors />
 
-          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 text-white">
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             {/*SPONSORS*/}
             {/*<div className="my-24">*/}
             {/*  <h2 id="sponsors" className="my-20 text-3xl font-input-mono">*/}

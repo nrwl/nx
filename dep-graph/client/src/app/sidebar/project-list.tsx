@@ -61,7 +61,7 @@ function ProjectListItem({
   focusProject: (projectId: string) => void;
 }) {
   return (
-    <li className="text-xs text-gray-600 block cursor-default select-none relative py-1 pl-3 pr-9">
+    <li className="relative block cursor-default select-none py-1 pl-3 pr-9 text-xs text-gray-600">
       <div className="flex items-center">
         <button
           type="button"
@@ -69,7 +69,7 @@ function ProjectListItem({
           title="Focus on this library"
           onClick={() => focusProject(project.projectGraphNode.name)}
         >
-          <span className="p-1 rounded-md flex items-center font-medium bg-white transition hover:bg-gray-50 shadow-sm ring-1 ring-gray-200">
+          <span className="flex items-center rounded-md bg-white p-1 font-medium shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -86,7 +86,7 @@ function ProjectListItem({
           </span>
         </button>
         <label
-          className="font-mono font-normal ml-3 p-2 transition hover:bg-gray-50 cursor-pointer block rounded-md truncate w-full"
+          className="ml-3 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-gray-50"
           data-project={project.projectGraphNode.name}
           data-active={project.isSelected.toString()}
           onClick={() =>
@@ -100,7 +100,7 @@ function ProjectListItem({
       {project.isSelected ? (
         <span
           title="This library is visible"
-          className="text-green-nx-base absolute inset-y-0 right-0 flex items-center cursor-pointer"
+          className="text-green-nx-base absolute inset-y-0 right-0 flex cursor-pointer items-center"
           onClick={() =>
             toggleProject(project.projectGraphNode.name, project.isSelected)
           }
@@ -159,7 +159,7 @@ function SubProjectList({
 
   return (
     <>
-      <h3 className="mt-4 py-2 uppercase tracking-wide font-semibold text-sm lg:text-xs text-gray-900 cursor-text">
+      <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs">
         {headerText}
       </h3>
       <ul className="mt-2 -ml-3">
@@ -222,8 +222,8 @@ export function ProjectList() {
   const sortedE2EDirectories = Object.keys(e2eDirectoryGroups).sort();
 
   return (
-    <div id="project-lists" className="mt-8 px-4 border-t border-gray-200">
-      <h2 className="mt-8 text-lg font-bold border-b border-gray-50 border-solid">
+    <div id="project-lists" className="mt-8 border-t border-gray-200 px-4">
+      <h2 className="mt-8 border-b border-solid border-gray-50 text-lg font-bold">
         app projects
       </h2>
 
@@ -240,7 +240,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 text-lg font-bold border-b border-gray-50 border-solid">
+      <h2 className="mt-8 border-b border-solid border-gray-50 text-lg font-bold">
         e2e projects
       </h2>
 
@@ -257,7 +257,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 text-lg font-bold border-b border-gray-50 border-solid">
+      <h2 className="mt-8 border-b border-solid border-gray-50 text-lg font-bold">
         lib projects
       </h2>
 

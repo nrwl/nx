@@ -195,9 +195,9 @@ export function EcosystemFeatures(): ReactComponentElement<any> {
             },
           },
         }}
-        className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24"
+        className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
       >
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:py-16 lg:px-0">
           <div>
             <div className="mt-6">
               <motion.h1
@@ -217,27 +217,27 @@ export function EcosystemFeatures(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="md:mt-16 lg:mt-0 lg:col-start-2">
-          <div className="px-4 m-0 lg:px-0 lg:relative lg:h-full">
-            <div className="h-full py-14 grid items-center grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:mt-16 lg:col-start-2 lg:mt-0">
+          <div className="m-0 px-4 lg:relative lg:h-full lg:px-0">
+            <div className="grid h-full grid-cols-1 items-center gap-4 py-14 md:grid-cols-2">
               {featureItems.map((item, index: number) => (
                 <motion.div
                   key={'monorepo-feature-' + index}
                   variants={opacityTranslateXVariant}
                   className={cx(
-                    'relative rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-md flex items-center space-x-4 hover:bg-gray-50 transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base',
+                    'focus-within:ring-blue-nx-base relative flex items-center space-x-4 rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-md transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50',
                     [2, 3].includes(index) && 'lg:left-8'
                   )}
                 >
                   <div
                     className={cx(
-                      'flex-shrink-0 p-2 rounded-full text-white ',
+                      'flex-shrink-0 rounded-full p-2 text-white ',
                       item.classNames
                     )}
                   >
                     {item.svg}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <Link href={item.link}>
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />

@@ -102,14 +102,14 @@ export function ConfSponsors(): JSX.Element {
                 sponsorLevelList.length === levelIndex + 1 && 'border-b'
               )}
             >
-              <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">
+              <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
                 <div className="grid grid-cols-1 md:grid-cols-2">
                   {row.map((speaker) => (
                     <div
                       key={speaker.name}
-                      className="py-8 md:odd:pr-12 md:even:pl-12 odd:border-b md:odd:border-r md:odd:border-b-0 border-gray-600"
+                      className="border-gray-600 py-8 odd:border-b md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
                     >
-                      <div className="px-5 h-full">
+                      <div className="h-full px-5">
                         <SponsorCard
                           imageUrl={speaker.imageUrl}
                           name={speaker.name}

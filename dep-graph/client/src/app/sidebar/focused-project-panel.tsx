@@ -10,14 +10,14 @@ export const FocusedProjectPanel = memo(
     return (
       <div className="mt-10 px-4">
         <div
-          className="p-2 shadow-sm bg-green-nx-base text-gray-50 border border-gray-200 rounded-md flex items-center group relative cursor-pointer overflow-hidden"
+          className="bg-green-nx-base group relative flex cursor-pointer items-center overflow-hidden rounded-md border border-gray-200 p-2 text-gray-50 shadow-sm"
           data-cy="unfocusButton"
           onClick={() => resetFocus()}
         >
           <p className="truncate transition duration-200 ease-in-out group-hover:opacity-60">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 inline -mt-1 mr-1"
+              className="-mt-1 mr-1 inline h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -31,9 +31,9 @@ export const FocusedProjectPanel = memo(
             </svg>
             <span id="focused-project-name">Focused on {focusedProject}</span>
           </p>
-          <div className="absolute right-2 flex transition-all translate-x-32 transition duration-200 ease-in-out group-hover:translate-x-0 pl-2 rounded-md text-gray-700 items-center text-sm font-medium bg-white shadow-sm ring-1 ring-gray-500">
+          <div className="absolute right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0">
             Reset
-            <span className="p-1 rounded-md">
+            <span className="rounded-md p-1">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
