@@ -27,7 +27,7 @@ pipeline {
         NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
     }
     stages {
-        stage('Pipelien') {
+        stage('Pipeline') {
             parallel {
                 stage('Main') {
                     when {
