@@ -43,7 +43,7 @@ const components: any = (config: ComponentsConfig) => ({
 
 export function Content(props: ContentProps) {
   return (
-    <div className="min-w-0 flex-auto px-4 sm:px-6 xl:px-8 pt-8 pb-24 lg:pb-16">
+    <div className="min-w-0 flex-auto px-4 pt-8 pb-24 sm:px-6 lg:pb-16 xl:px-8">
       <ReactMarkdown
         remarkPlugins={[gfm]}
         rehypePlugins={[

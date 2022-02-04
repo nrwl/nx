@@ -72,7 +72,7 @@ export function AlgoliaSearch() {
         type="button"
         ref={searchButtonRef}
         onClick={handleOpen}
-        className="group leading-6 font-medium flex items-center space-x-3 sm:space-x-4 text-white opacity-90 hover:opacity-100 transition-colors duration-200 w-full py-2"
+        className="group flex w-full items-center space-x-3 py-2 font-medium leading-6 text-white opacity-90 transition-colors duration-200 hover:opacity-100 sm:space-x-4"
       >
         <svg width="24" height="24" fill="none" className="text-white">
           <path
@@ -88,7 +88,7 @@ export function AlgoliaSearch() {
         </span>
         <span
           style={{ opacity: browserDetected ? '1' : '0' }}
-          className="hidden sm:block text-sm leading-5 py-0.5 px-1.5 border border-white rounded-md"
+          className="hidden rounded-md border border-white py-0.5 px-1.5 text-sm leading-5 sm:block"
         >
           <span className="sr-only">Press </span>
           <kbd className="font-sans">

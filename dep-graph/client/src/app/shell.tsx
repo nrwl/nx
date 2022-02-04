@@ -111,7 +111,7 @@ export function Shell() {
           <div id="no-projects-chosen" className="flex text-gray-700">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 mr-4"
+              className="mr-4 h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -132,20 +132,20 @@ export function Shell() {
             <button
               type="button"
               className={`
+            bg-green-nx-base
             fixed
-            z-50
             bottom-4
             right-4
-            w-16
-            h-16
-            rounded-full
-            bg-green-nx-base
-            shadow-sm
-            text-white
+            z-50
             block
+            h-16
+            w-16
+            transform
+            rounded-full
+            text-white
+            shadow-sm
             transition
             duration-300
-            transform
             ${!projectIsSelected ? 'opacity-0' : ''}
           `}
               data-cy="downloadImageButton"

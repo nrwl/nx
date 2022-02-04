@@ -10,13 +10,13 @@ export const GroupByFolderPanel = memo(
     return (
       <div className="mt-8 px-4">
         <div className="flex items-start">
-          <div className="flex items-center h-5">
+          <div className="flex h-5 items-center">
             <input
               id="displayOptions"
               name="displayOptions"
               value="groupByFolder"
               type="checkbox"
-              className="h-4 w-4 border-gray-300 rounded"
+              className="h-4 w-4 rounded border-gray-300"
               onChange={(event) => groupByFolderChanged(event.target.checked)}
               checked={groupByFolder}
             ></input>

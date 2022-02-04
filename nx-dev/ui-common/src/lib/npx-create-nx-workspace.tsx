@@ -243,22 +243,22 @@ export function NpxCreateNxWorkspaceAnimation({
     <>
       <div
         key={'npx-create-nx-workspace-animation'}
-        className="pt-4 shadow-lg text-gray-200 text-xs font-mono subpixel-antialiased
-              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal max-w-full overflow-hidden h-96 relative"
+        className="relative h-96 max-w-full overflow-hidden rounded-lg bg-gray-800
+              pt-4 pb-6 pt-4 font-mono text-xs leading-normal text-gray-200 subpixel-antialiased shadow-lg"
       >
-        <div className="px-5 top mb-2 flex">
-          <div className="h-3 w-3 bg-red-500 rounded-full" />
-          <div className="ml-2 h-3 w-3 bg-yellow-300 rounded-full" />
-          <div className="ml-2 h-3 w-3 bg-green-500 rounded-full" />
+        <div className="top mb-2 flex px-5">
+          <div className="h-3 w-3 rounded-full bg-red-500" />
+          <div className="ml-2 h-3 w-3 rounded-full bg-yellow-300" />
+          <div className="ml-2 h-3 w-3 rounded-full bg-green-500" />
         </div>
-        <div className="px-5 overflow-y-hidden">
+        <div className="overflow-y-hidden px-5">
           <motion.div initial={{ y: 0 }} animate={wrapper}>
             <div className="mt-4 flex">
               <span className="text-green-nx-base mr-2">/workspace ➜</span>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={npxCreateNxWorkspace}
-                className="flex-1 typing items-center"
+                className="typing flex-1 items-center"
               >
                 {typing('npx create-nx-workspace ludicrous-narwhals').map(
                   (x) => x
@@ -269,7 +269,7 @@ export function NpxCreateNxWorkspaceAnimation({
               <AnimateSharedLayout>
                 {/*LOADING*/}
                 <motion.div
-                  className="inline-block items-center bg-green-nx-base"
+                  className="bg-green-nx-base inline-block items-center"
                   initial={{ width: '0%', height: '12px' }}
                   animate={firstLoading}
                 />
@@ -289,13 +289,13 @@ export function NpxCreateNxWorkspaceAnimation({
                   </motion.span>
                 </motion.div>
                 <motion.div
-                  className="mt-2 relative"
+                  className="relative mt-2"
                   initial={{ opacity: 0 }}
                   animate={frameworkSelectionAnswerSection}
                 >
                   {/*SELECTION ARROW*/}
                   <motion.div
-                    className="absolute -left-4 top-0 text-green-nx-base"
+                    className="text-green-nx-base absolute -left-4 top-0"
                     initial={{ y: 0 }}
                     animate={frameworkSelectionAnswerSectionArrow}
                   >
@@ -417,13 +417,13 @@ export function NpxCreateNxWorkspaceAnimation({
                   </motion.span>
                 </motion.div>
                 <motion.div
-                  className="mt-2 relative"
+                  className="relative mt-2"
                   initial={{ opacity: 0 }}
                   animate={stylesheetSelectionAnswerSection}
                 >
                   {/*SELECTION ARROW*/}
                   <motion.div
-                    className="absolute -left-4 top-0 text-green-nx-base"
+                    className="text-green-nx-base absolute -left-4 top-0"
                     initial={{ y: 0 }}
                     animate={stylesheetSelectionAnswerSectionArrow}
                   >
@@ -521,13 +521,13 @@ export function NpxCreateNxWorkspaceAnimation({
                   </motion.span>
                 </motion.div>
                 <motion.div
-                  className="mt-2 relative"
+                  className="relative mt-2"
                   initial={{ opacity: 0 }}
                   animate={nxCloudSelectionAnswerSection}
                 >
                   {/*SELECTION ARROW*/}
                   <motion.div
-                    className="absolute -left-4 top-0 text-green-nx-base"
+                    className="text-green-nx-base absolute -left-4 top-0"
                     initial={{ y: 18 }}
                     animate={nxCloudSelectionAnswerSectionArrow}
                   >
@@ -556,7 +556,7 @@ export function NpxCreateNxWorkspaceAnimation({
                   initial={{ opacity: 0 }}
                   animate={creatingNxWorkspace}
                 >
-                  <span className="px-1 py-0.5 bg-green-nx-base">NX</span> Nx is
+                  <span className="bg-green-nx-base px-1 py-0.5">NX</span> Nx is
                   creating your workspace. To make sure the command works
                   reliably in all environments, and that the preset is applied
                   correctly, Nx will run "yarn install" several times. Please
@@ -573,7 +573,7 @@ export function NpxCreateNxWorkspaceAnimation({
                 {/*LOADING*/}
                 <motion.div
                   layout
-                  className="mt-2 items-center bg-green-nx-base"
+                  className="bg-green-nx-base mt-2 items-center"
                   initial={{ width: '0%', height: '12px' }}
                   animate={secondLoading}
                 />
@@ -585,15 +585,15 @@ export function NpxCreateNxWorkspaceAnimation({
                   animate={workpaceReady}
                 >
                   <div>
-                    <span className="px-1 py-0.5 bg-green-nx-base">
+                    <span className="bg-green-nx-base px-1 py-0.5">
                       NX SUCCESS
                     </span>{' '}
                     Nx has successfully created the workspace.
                   </div>
-                  <div className="my-3 w-full h-px bg-gray-100" />
+                  <div className="my-3 h-px w-full bg-gray-100" />
                   <div>
-                    <span className="px-1 py-0.5 bg-green-nx-base">NX</span>
-                    <span className="ml-1 px-1 py-0.5 bg-yellow-500">
+                    <span className="bg-green-nx-base px-1 py-0.5">NX</span>
+                    <span className="ml-1 bg-yellow-500 px-1 py-0.5">
                       NOTE
                     </span>{' '}
                     First time using Nx? Check out this interactive Nx tutorial.
@@ -632,10 +632,10 @@ export function NpxCreateNxWorkspaceAnimation({
           <button
             type="button"
             onClick={() => restartFunction() && sequence()}
-            className="w-full sm:w-auto flex-none bg-gray-800 text-green-nx-base hover:bg-gray-700 text-xs font-normal py-1 px-3 border border-gray-700 rounded-md transition"
+            className="text-green-nx-base w-full flex-none rounded-md border border-gray-700 bg-gray-800 py-1 px-3 text-xs font-normal transition hover:bg-gray-700 sm:w-auto"
           >
             <svg
-              className="inline-flex w-5 h-5 r-2"
+              className="r-2 inline-flex h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -679,15 +679,15 @@ export function NpxCreateNxWorkspace() {
       ) : (
         <div
           key={'npx-create-nx-workspace-animation'}
-          className="pt-4 shadow-lg text-gray-200 text-xs font-mono subpixel-antialiased
-              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal w-full overflow-hidden h-96 relative"
+          className="relative h-96 w-full overflow-hidden rounded-lg bg-gray-800
+              pt-4 pb-6 pt-4 font-mono text-xs leading-normal text-gray-200 subpixel-antialiased shadow-lg"
         >
-          <div className="px-5 top mb-2 flex">
-            <div className="h-3 w-3 bg-red-500 rounded-full" />
-            <div className="ml-2 h-3 w-3 bg-yellow-300 rounded-full" />
-            <div className="ml-2 h-3 w-3 bg-green-500 rounded-full" />
+          <div className="top mb-2 flex px-5">
+            <div className="h-3 w-3 rounded-full bg-red-500" />
+            <div className="ml-2 h-3 w-3 rounded-full bg-yellow-300" />
+            <div className="ml-2 h-3 w-3 rounded-full bg-green-500" />
           </div>
-          <div className="px-5 overflow-y-hidden" />
+          <div className="overflow-y-hidden px-5" />
         </div>
       )}
     </>

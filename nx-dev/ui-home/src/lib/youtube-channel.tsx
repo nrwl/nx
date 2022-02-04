@@ -15,7 +15,7 @@ export function YoutubeChannel(): ReactComponentElement<any> {
   return (
     <article
       id="youtube-channel"
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
     >
       <motion.div
         ref={ref}
@@ -32,9 +32,9 @@ export function YoutubeChannel(): ReactComponentElement<any> {
             },
           },
         }}
-        className="bg-blue-nx-base rounded-lg shadow-xl overflow-hidden lg:grid lg:grid-cols-2 lg:gap-4"
+        className="bg-blue-nx-base overflow-hidden rounded-lg shadow-xl lg:grid lg:grid-cols-2 lg:gap-4"
       >
-        <div className="pt-10 pb-12 px-6 sm:pt-16 sm:px-16 lg:py-16 lg:pr-0 xl:py-20 xl:px-20 lg:order-2">
+        <div className="px-6 pt-10 pb-12 sm:px-16 sm:pt-16 lg:order-2 lg:py-16 lg:pr-0 xl:py-20 xl:px-20">
           <div className="lg:self-center">
             <h1 className="text-3xl font-extrabold text-white sm:text-4xl">
               <span className="block">A dedicated</span>
@@ -49,7 +49,7 @@ export function YoutubeChannel(): ReactComponentElement<any> {
                 title="Get the latest resources about Nx"
                 rel="nofollow"
                 target="_blank"
-                className="mt-8 bg-white border border-transparent rounded-md shadow px-5 py-3 inline-flex items-center text-base font-medium text-blue-nx-base hover:bg-gray-100"
+                className="text-blue-nx-base mt-8 inline-flex items-center rounded-md border border-transparent bg-white px-5 py-3 text-base font-medium shadow hover:bg-gray-100"
               >
                 Check the Nx Youtube channel
               </a>
@@ -58,11 +58,11 @@ export function YoutubeChannel(): ReactComponentElement<any> {
         </div>
         <div
           aria-hidden="true"
-          className="-mt-6 aspect-w-5 aspect-h-3 md:aspect-w-2 md:aspect-h-1 lg:order-1"
+          className="aspect-w-5 aspect-h-3 md:aspect-w-2 md:aspect-h-1 -mt-6 lg:order-1"
         >
           <img
             loading="lazy"
-            className="transform -translate-x-6 translate-y-6 rounded-md object-cover object-left-top sm:-translate-x-22 lg:translate-y-20"
+            className="sm:-translate-x-22 -translate-x-6 translate-y-6 transform rounded-md object-cover object-left-top lg:translate-y-20"
             src="/images/nrwlio-channel.webp"
             alt="nrwl youtube channel"
           />

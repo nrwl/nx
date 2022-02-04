@@ -3,13 +3,13 @@ import React from 'react';
 export function Testimonials() {
   return (
     <section className="bg-blue-nx-base">
-      <div className="max-w-7xl mx-auto md:grid md:grid-cols-2 md:px-6 lg:px-8">
-        <div className="py-12 px-4 sm:px-6 md:flex md:flex-col md:py-16 md:pl-0 md:pr-10 md:border-r md:border-blue-nx-dark lg:pr-16">
+      <div className="mx-auto max-w-7xl md:grid md:grid-cols-2 md:px-6 lg:px-8">
+        <div className="md:border-blue-nx-dark py-12 px-4 sm:px-6 md:flex md:flex-col md:border-r md:py-16 md:pl-0 md:pr-10 lg:pr-16">
           <div className="md:flex-shrink-0">
-            <div className="mx-auto flex items-center text-white font-mono tracking-wider">
+            <div className="mx-auto flex items-center font-mono tracking-wider text-white">
               <svg
                 role="img"
-                className="w-8 h-8"
+                className="h-8 w-8"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -19,10 +19,10 @@ export function Testimonials() {
               <span className="ml-2 font-bold ">TypeScript-ESLint</span>
             </div>
           </div>
-          <blockquote className="mt-6 md:flex-grow md:flex md:flex-col">
+          <blockquote className="mt-6 md:flex md:flex-grow md:flex-col">
             <div className="relative text-lg font-medium text-white md:flex-grow">
               <svg
-                className="hidden md:flex absolute top-0 left-0 transform -translate-x-4 -translate-y-4 h-8 w-8 text-green-nx-base"
+                className="text-green-nx-base absolute top-0 left-0 hidden h-8 w-8 -translate-x-4 -translate-y-4 transform md:flex"
                 fill="currentColor"
                 viewBox="0 0 32 32"
                 aria-hidden="true"
@@ -35,7 +35,7 @@ export function Testimonials() {
             </div>
             <footer className="mt-8">
               <div className="flex items-start">
-                <div className="flex-shrink-0 inline-flex rounded-full border-2 border-white">
+                <div className="inline-flex flex-shrink-0 rounded-full border-2 border-white">
                   <img
                     className="h-12 w-12 rounded-full"
                     src="https://avatars.githubusercontent.com/u/900523?v=4"
@@ -54,11 +54,11 @@ export function Testimonials() {
             </footer>
           </blockquote>
         </div>
-        <div className="py-12 px-4 border-t-2 border-blue-nx-dark sm:px-6 md:py-16 md:pr-0 md:pl-10 md:border-t-0 md:border-l lg:pl-16">
+        <div className="border-blue-nx-dark border-t-2 py-12 px-4 sm:px-6 md:border-t-0 md:border-l md:py-16 md:pr-0 md:pl-10 lg:pl-16">
           <div className="md:flex-shrink-0">
-            <div className="mx-auto flex items-center text-white font-mono tracking-wider">
+            <div className="mx-auto flex items-center font-mono tracking-wider text-white">
               <svg
-                className="w-10 h-auto"
+                className="h-auto w-10"
                 fill="currentColor"
                 role="img"
                 viewBox="0 0 24 24"
@@ -69,10 +69,10 @@ export function Testimonials() {
               <span className="ml-2 font-bold ">Storybook</span>
             </div>
           </div>
-          <blockquote className="mt-6 md:flex-grow md:flex md:flex-col">
+          <blockquote className="mt-6 md:flex md:flex-grow md:flex-col">
             <div className="relative text-lg font-medium text-white md:flex-grow">
               <svg
-                className="hidden md:flex absolute top-0 left-0 transform -translate-x-4 -translate-y-4 h-8 w-8 text-green-nx-base"
+                className="text-green-nx-base absolute top-0 left-0 hidden h-8 w-8 -translate-x-4 -translate-y-4 transform md:flex"
                 fill="currentColor"
                 viewBox="0 0 32 32"
               >
@@ -85,7 +85,7 @@ export function Testimonials() {
             </div>
             <footer className="mt-8">
               <div className="flex items-start">
-                <div className="flex-shrink-0 inline-flex rounded-full border-2 border-white">
+                <div className="inline-flex flex-shrink-0 rounded-full border-2 border-white">
                   <img
                     className="h-12 w-12 rounded-full"
                     src="https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=8cc7a3620510c32066d3fbb193e7eb23"

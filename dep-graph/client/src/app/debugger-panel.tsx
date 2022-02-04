@@ -19,20 +19,20 @@ export const DebuggerPanel = memo(function ({
     <div
       id="debugger-panel"
       className="
+          flex-column
+          flex
           w-auto
-          text-gray-700
-          bg-gray-50
-          border-b border-gray-200
-          p-4
-          flex flex-column
-          items-center
-          justify-items-center
+          items-center justify-items-center
           gap-4
+          border-b border-gray-200
+          bg-gray-50
+          p-4
+          text-gray-700
         "
     >
-      <h4 className="text-lg font-bold mr-4">Debugger</h4>
+      <h4 className="mr-4 text-lg font-bold">Debugger</h4>
       <select
-        className="w-auto flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white"
+        className="flex w-auto items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700"
         data-cy="project-select"
         onChange={(event) => projectGraphChange(event.target.value)}
         value={selectedProjectGraph}
@@ -47,9 +47,9 @@ export const DebuggerPanel = memo(function ({
       </select>
       <p className="text-sm">
         Last render took {lastPerfReport.renderTime}ms:{' '}
-        <b className="font-mono text-medium">{lastPerfReport.numNodes} nodes</b>{' '}
+        <b className="text-medium font-mono">{lastPerfReport.numNodes} nodes</b>{' '}
         |{' '}
-        <b className="font-mono text-medium">{lastPerfReport.numEdges} edges</b>
+        <b className="text-medium font-mono">{lastPerfReport.numEdges} edges</b>
         .
       </p>
     </div>

@@ -13,7 +13,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'The UI component explorer. Develop, document, & test React, Vue, Angular, Web Components, Ember, Svelte & more!',
       icon: (
         <svg
-          className="w-10 h-auto text-[#FF4785]"
+          className="h-auto w-10 text-[#FF4785]"
           fill="currentColor"
           role="img"
           viewBox="0 0 24 24"
@@ -30,7 +30,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'Fluent UI web represents a collection of utilities, React components, and web components for building web applications.',
       icon: (
         <svg
-          className="w-10 h-auto text-[#5E5E5E]"
+          className="h-auto w-10 text-[#5E5E5E]"
           fill="currentColor"
           role="img"
           viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
       description: 'Reactive libraries for Angular.',
       icon: (
         <svg
-          className="w-10 h-auto"
+          className="h-auto w-10"
           role="img"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1000 1000"
@@ -85,7 +85,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'NativeScript empowers you to access native platform APIs from JavaScript directly. Angular, Capacitor, Ionic, React, Svelte, Vue and you name it compatible.',
       icon: (
         <svg
-          className="w-10 h-auto text-[#3655FF]"
+          className="h-auto w-10 text-[#3655FF]"
           fill="currentColor"
           role="img"
           viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'Monorepo for all the tooling which enables ESLint to support TypeScript',
       icon: (
         <svg
-          className="w-10 h-auto text-[#3178C6]"
+          className="h-auto w-10 text-[#3178C6]"
           fill="currentColor"
           role="img"
           viewBox="0 0 24 24"
@@ -119,7 +119,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'The Homebridge UI. Monitor, configure and backup Homebridge from a browser.',
       icon: (
         <svg
-          className="w-10 h-auto text-[#491F59]"
+          className="h-auto w-10 text-[#491F59]"
           fill="currentColor"
           role="img"
           viewBox="0 0 24 24"
@@ -154,7 +154,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'Fast and reliable Bootstrap widgets in Angular (supports Ivy engine)',
       icon: (
         <svg
-          className="w-10 h-auto"
+          className="h-auto w-10"
           role="img"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 27"
@@ -192,7 +192,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
         'WooCommerce is a customizable, open-source eCommerce platform built on WordPress. Get started quickly and make your way.',
       icon: (
         <svg
-          className="w-10 h-auto text-[#96588A]"
+          className="h-auto w-10 text-[#96588A]"
           fill="currentColor"
           role="img"
           viewBox="0 0 24 24"
@@ -263,9 +263,9 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
             },
           },
         }}
-        className="lg:mx-auto lg:max-w-7xl p-4 flex"
+        className="flex p-4 lg:mx-auto lg:max-w-7xl"
       >
-        <div className="w-full rounded-lg bg-gray-200 overflow-hidden shadow divide-y divide-gray-200 divide-y-0 grid grid-cols-2 gap-px">
+        <div className="grid w-full grid-cols-2 gap-px divide-y divide-y-0 divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow">
           {projectList.map((project, index: number) => (
             <motion.div
               key={project.title + '-' + index}
@@ -278,11 +278,11 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                 index === projectList.length - 1
                   ? 'rounded-br-lg rounded-bl-none'
                   : '',
-                'relative w-full group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-nx-base'
+                'group focus-within:ring-blue-nx-base relative w-full bg-white p-6 focus-within:ring-2 focus-within:ring-inset'
               )}
             >
               <div>
-                <span className="rounded-lg inline-flex">{project.icon}</span>
+                <span className="inline-flex rounded-lg">{project.icon}</span>
               </div>
               <div className="sm:mt-2">
                 <p className="text-lg font-medium">
@@ -298,12 +298,12 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                     </a>
                   </Link>
                 </p>
-                <p className="mt-2 hidden sm:block text-sm text-gray-400">
+                <p className="mt-2 hidden text-sm text-gray-400 sm:block">
                   {project.description}
                 </p>
               </div>
               <span
-                className="pointer-events-none absolute top-6 right-6 text-gray-300 group-hover:text-gray-400 transition-all group-hover:translate-x-2 group-hover:-translate-y-2"
+                className="pointer-events-none absolute top-6 right-6 text-gray-300 transition-all group-hover:translate-x-2 group-hover:-translate-y-2 group-hover:text-gray-400"
                 aria-hidden="true"
               >
                 <svg

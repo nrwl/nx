@@ -52,9 +52,9 @@ export function AffectedCommand(): ReactComponentElement<any> {
             },
           },
         }}
-        className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24"
+        className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
       >
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-2 lg:mx-0 lg:max-w-none lg:py-32 lg:px-0">
           <div>
             <div className="mt-6">
               <motion.h1
@@ -76,7 +76,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
                 <Link href="/using-nx/affected">
                   <a
                     title="Nx allows you to see what is affected by your changes"
-                    className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
+                    className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
                   >
                     Learn about "nx affected"
                   </a>
@@ -86,13 +86,13 @@ export function AffectedCommand(): ReactComponentElement<any> {
           </div>
         </div>
         <div
-          className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1"
+          className="mt-12 sm:mt-16 lg:col-start-1 lg:mt-0"
           aria-hidden="true"
         >
-          <div className="relative px-4 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+          <div className="relative px-4 sm:pr-6 md:-ml-16 lg:relative lg:m-0 lg:h-full lg:px-0">
             <motion.div
               variants={opacityTranslateXVariant}
-              className="-mt-8 w-full max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="-mt-8 w-full max-w-screen-sm overflow-hidden rounded-xl border border-gray-300 shadow-xl lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none"
             >
               <Image
                 src="/images/nx-affected.webp"
@@ -105,35 +105,35 @@ export function AffectedCommand(): ReactComponentElement<any> {
             <motion.div
               variants={opacityTranslateXVariant}
               custom={0.25}
-              className="hidden md:flex absolute -bottom-8 right-8 bg-gray-500 rounded-xl shadow-xl"
+              className="absolute -bottom-8 right-8 hidden rounded-xl bg-gray-500 shadow-xl md:flex"
             >
               <div
-                className="coding inverse-toggle px-5 pt-4 shadow-lg text-gray-200 text-xs font-mono subpixel-antialiased
-              bg-gray-800 pb-6 pt-4 rounded-lg leading-normal overflow-hidden"
+                className="coding inverse-toggle overflow-hidden rounded-lg bg-gray-800 px-5 pt-4 pb-6 pt-4
+              font-mono text-xs leading-normal text-gray-200 subpixel-antialiased shadow-lg"
               >
                 <div className="top mb-2 flex">
-                  <div className="h-3 w-3 bg-red-500 rounded-full" />
-                  <div className="ml-2 h-3 w-3 bg-yellow-300 rounded-full" />
-                  <div className="ml-2 h-3 w-3 bg-green-500 rounded-full" />
+                  <div className="h-3 w-3 rounded-full bg-red-500" />
+                  <div className="ml-2 h-3 w-3 rounded-full bg-yellow-300" />
+                  <div className="ml-2 h-3 w-3 rounded-full bg-green-500" />
                 </div>
                 <div className="mt-4 flex">
                   <span className="text-green-400">/workspace ➜</span>
-                  <p className="flex-1 typing items-center pl-2">
+                  <p className="typing flex-1 items-center pl-2">
                     nx affected:test --parallel
                   </p>
                 </div>
                 <div className="mt-2 flex">
-                  <p className="flex-1 typing items-center pl-2">
+                  <p className="typing flex-1 items-center pl-2">
                     <span className="text-green-400">{'>'}</span>{' '}
-                    <span className="px-1 py-0.5 bg-blue-nx-base">NX</span>
-                    <span className="ml-1 px-1 py-0.5 bg-yellow-500">
+                    <span className="bg-blue-nx-base px-1 py-0.5">NX</span>
+                    <span className="ml-1 bg-yellow-500 px-1 py-0.5">
                       NOTE
                     </span>{' '}
                     Affected criteria defaulted to --base=master --head=HEAD
                     <br />
                     <br />
                     <span className="text-green-400">{'>'}</span>{' '}
-                    <span className="px-1 py-0.5 bg-blue-nx-base mr-1">NX</span>{' '}
+                    <span className="bg-blue-nx-base mr-1 px-1 py-0.5">NX</span>{' '}
                     Running target test for 3 project(s):
                     <br />
                     - nx-dev <br />
@@ -144,10 +144,10 @@ export function AffectedCommand(): ReactComponentElement<any> {
                     <span className="text-green-400">{'>'}</span> nx run
                     nx-dev:test RUNS nx-dev
                     <br />
-                    <span className="px-1 py-0.5 bg-green-nx-base">
+                    <span className="bg-green-nx-base px-1 py-0.5">
                       RUNS
                     </span>{' '}
-                    <span className="px-1 py-0.5 bg-gray-200 text-gray-700">
+                    <span className="bg-gray-200 px-1 py-0.5 text-gray-700">
                       nx-dev
                     </span>{' '}
                     nx-dev/nx-dev/specs/index.spec.tsx

@@ -22,7 +22,7 @@ function Tabs({
   setActiveTab: (id: string) => void;
 }): ReactComponentElement<any> {
   return (
-    <div className="mt-12 max-w-3xl mx-auto">
+    <div className="mx-auto mt-12 max-w-3xl">
       <div>
         <div className="px-4 sm:hidden">
           <label htmlFor="getting-started-tabs" className="sr-only">
@@ -31,7 +31,7 @@ function Tabs({
           <select
             id="getting-started-tabs"
             name="tabs"
-            className="block w-full focus:ring-blue-nx-base focus:border-blue-nx-base border-gray-300 rounded-md"
+            className="focus:ring-blue-nx-base focus:border-blue-nx-base block w-full rounded-md border-gray-300"
             value={tabs.find((tab) => tab.id === activeTab)?.id}
             onChange={(event) => setActiveTab(event.target.value)}
           >
@@ -44,7 +44,7 @@ function Tabs({
         </div>
         <div className="hidden sm:block">
           <nav
-            className="relative z-0 rounded-lg shadow flex divide-x divide-gray-200"
+            className="relative z-0 flex divide-x divide-gray-200 rounded-lg shadow"
             aria-label="Tabs"
           >
             <h2 className="sr-only">
@@ -56,10 +56,10 @@ function Tabs({
                 key={tab.name}
                 onClick={() => setActiveTab(tab.id)}
                 className={cx(
-                  'group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-sm uppercase text-center hover:bg-gray-50 focus:z-10 transition ease-out',
+                  'group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm uppercase transition ease-out hover:bg-gray-50 focus:z-10',
                   tab.id === activeTab
-                    ? 'text-gray-600 font-bold'
-                    : 'text-gray-400 hover:text-gray-600 font-medium',
+                    ? 'font-bold text-gray-600'
+                    : 'font-medium text-gray-400 hover:text-gray-600',
                   tabIdx === 0 ? 'rounded-l-lg' : '',
                   tabIdx === tabs.length - 1 ? 'rounded-r-lg' : ''
                 )}
@@ -123,25 +123,25 @@ function AngularPane(): ReactComponentElement<any> {
       exit="hidden"
       className="mt-8"
     >
-      <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
-          <div className="mt-6 rounded-lg border border-gray-300 bg-white shadow-md text-md text-gray-700 overflow-hidden">
-            <h2 className="px-4 py-3 text-lg font-semibold tracking-tight bg-gray-50 border-b border-gray-200">
+      <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:py-16 lg:px-0">
+          <div className="text-md mt-6 overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700 shadow-md">
+            <h2 className="border-b border-gray-200 bg-gray-50 px-4 py-3 text-lg font-semibold tracking-tight">
               Create an Angular Workspace with Nx
             </h2>
-            <p className="mt-4 mx-4">
+            <p className="mx-4 mt-4">
               Get an application up and running in minutes. No need to figure
               out webpack, e2e and unit test runners, linting. It all works out
               of the box.
             </p>
-            <p className="mt-4 mx-4 italic font-medium text-gray-600">
+            <p className="mx-4 mt-4 font-medium italic text-gray-600">
               You get better linting, better testing, a faster CLI, support for
               popular modern tools and libraries.
             </p>
 
             <div className="relative my-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +152,7 @@ function AngularPane(): ReactComponentElement<any> {
               <h3 className="mt-2 font-semibold">
                 Angular{' '}
                 <Link href="/angular-tutorial/01-create-application">
-                  <a className="italic font-normal text-sm text-gray-600 hover:underline">
+                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our Angular tutorial)
                   </a>
                 </Link>{' '}
@@ -170,7 +170,7 @@ function AngularPane(): ReactComponentElement<any> {
             </div>
             <div className="relative my-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -181,7 +181,7 @@ function AngularPane(): ReactComponentElement<any> {
               <h3 className="mt-2 font-semibold">
                 Full-stack app built with Angular and Nest.js{' '}
                 <Link href="/angular-tutorial/01-create-application">
-                  <a className="italic font-normal text-sm text-gray-600 hover:underline">
+                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our Angular tutorial)
                   </a>
                 </Link>{' '}
@@ -199,8 +199,8 @@ function AngularPane(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
+        <div className="mt-12 sm:mt-16 lg:col-start-2 lg:mt-0 lg:py-16">
+          <div className="relative flex flex-col items-center justify-center px-4 lg:h-full lg:px-0">
             <iframe
               loading="lazy"
               className="max-w-screen-sm"
@@ -210,18 +210,18 @@ function AngularPane(): ReactComponentElement<any> {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
-            <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="mt-6 grid w-full grid-cols-1 items-center gap-4 lg:grid-cols-2">
               <motion.div
                 custom={0.2}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/migration/migration-angular">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           AngularCLI migration
                         </p>
                         <p className="text-xs text-gray-500">
@@ -232,11 +232,11 @@ function AngularPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white border border-gray-100 bg-white">
+                    <div className="rounded-full border border-gray-100 bg-white p-2 text-white">
                       <svg
                         role="img"
                         viewBox="0 0 24 24"
-                        className="w-6 h-6 text-[#DD0031]"
+                        className="h-6 w-6 text-[#DD0031]"
                         fill="currentColor"
                       >
                         <path d="M9.931 12.645h4.138l-2.07-4.908m0-7.737L.68 3.982l1.726 14.771L12 24l9.596-5.242L23.32 3.984 11.999.001zm7.064 18.31h-2.638l-1.422-3.503H8.996l-1.422 3.504h-2.64L12 2.65z" />
@@ -244,7 +244,7 @@ function AngularPane(): ReactComponentElement<any> {
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -267,14 +267,14 @@ function AngularPane(): ReactComponentElement<any> {
               <motion.div
                 custom={0.6}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/migration/migration-angularjs">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           AngularJS migration
                         </p>
                         <p className="text-xs text-gray-500">
@@ -284,11 +284,11 @@ function AngularPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white border border-gray-100 bg-white">
+                    <div className="rounded-full border border-gray-100 bg-white p-2 text-white">
                       <svg
                         role="img"
                         viewBox="0 0 24 24"
-                        className="w-6 h-6 text-[#E23237]"
+                        className="h-6 w-6 text-[#E23237]"
                         fill="currentColor"
                       >
                         <path d="M11.964 0L.672 3.974l1.784 14.794L11.976 24l9.568-5.303 1.784-14.794zm-.027 1.258l10.265 3.5-1.663 13.232-8.602 4.76-8.469-4.697L1.939 4.822zm0 .78L4.957 17.57l2.604-.048 1.4-3.501h6.257l1.532 3.55 2.492.046zm.02 4.98l2.355 4.93H9.878Z" />
@@ -296,7 +296,7 @@ function AngularPane(): ReactComponentElement<any> {
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -365,13 +365,13 @@ function NodeJsPane(): ReactComponentElement<any> {
       exit="hidden"
       className="mt-8"
     >
-      <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
-          <div className="mt-6 rounded-lg border border-gray-300 bg-white shadow-md text-md text-gray-700 overflow-hidden">
-            <h2 className="px-4 py-3 text-lg font-semibold tracking-tight bg-gray-50 border-b border-gray-200">
+      <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:py-16 lg:px-0">
+          <div className="text-md mt-6 overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700 shadow-md">
+            <h2 className="border-b border-gray-200 bg-gray-50 px-4 py-3 text-lg font-semibold tracking-tight">
               Create a Node Workspace with Nx
             </h2>
-            <p className="mt-4 mx-4">
+            <p className="mx-4 mt-4">
               Get an application up and running in minutes. No need to figure
               out TypeScript compilation, e2e and unit test runners, linting. It
               all works out of the box.
@@ -379,7 +379,7 @@ function NodeJsPane(): ReactComponentElement<any> {
 
             <div className="relative mt-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -390,7 +390,7 @@ function NodeJsPane(): ReactComponentElement<any> {
               <h3 className="mt-2 font-semibold">
                 NestJS{' '}
                 <Link href="/node-tutorial/01-create-application">
-                  <a className="italic font-normal text-sm text-gray-600 hover:underline">
+                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our Nest tutorial)
                   </a>
                 </Link>{' '}
@@ -408,7 +408,7 @@ function NodeJsPane(): ReactComponentElement<any> {
             </div>
             <div className="relative my-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -430,8 +430,8 @@ function NodeJsPane(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
+        <div className="mt-12 sm:mt-16 lg:col-start-2 lg:mt-0 lg:py-16">
+          <div className="relative flex flex-col items-center justify-center px-4 lg:h-full lg:px-0">
             <iframe
               loading="lazy"
               className="max-w-screen-sm"
@@ -441,18 +441,18 @@ function NodeJsPane(): ReactComponentElement<any> {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
-            <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="mt-6 grid w-full grid-cols-1 items-center gap-4 lg:grid-cols-2">
               <motion.div
                 custom={0.2}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/migration/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           Lerna migration
                         </p>
                         <p className="text-xs text-gray-500">
@@ -462,16 +462,16 @@ function NodeJsPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white bg-gradient-to-tr from-green-400 via-blue-500 to-pink-500">
+                    <div className="rounded-full bg-gradient-to-tr from-green-400 via-blue-500 to-pink-500 p-2 text-white">
                       <img
-                        className="h-6 w-6 filter invert"
+                        className="h-6 w-6 invert filter"
                         src="/images/lerna-logo.svg"
                         alt="Migrating to Nx from Lerna"
                       />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -540,13 +540,13 @@ function ReactPane(): ReactComponentElement<any> {
       exit="hidden"
       className="mt-8"
     >
-      <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
-          <div className="mt-6 rounded-lg border border-gray-300 bg-white shadow-md text-md text-gray-700 overflow-hidden">
-            <h2 className="px-4 py-3 text-lg font-semibold tracking-tight bg-gray-50 border-b border-gray-200">
+      <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:py-16 lg:px-0">
+          <div className="text-md mt-6 overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700 shadow-md">
+            <h2 className="border-b border-gray-200 bg-gray-50 px-4 py-3 text-lg font-semibold tracking-tight">
               Create a React Workspace with Nx
             </h2>
-            <p className="mt-4 mx-4">
+            <p className="mx-4 mt-4">
               Get an application up and running in minutes. No need to figure
               out webpack, e2e and unit test runners, linting. It all works out
               of the box.
@@ -554,7 +554,7 @@ function ReactPane(): ReactComponentElement<any> {
 
             <div className="relative mt-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -565,7 +565,7 @@ function ReactPane(): ReactComponentElement<any> {
               <h3 className="mt-2 font-semibold">
                 React{' '}
                 <Link href="/react-tutorial/01-create-application">
-                  <a className="italic font-normal text-sm text-gray-600 hover:underline">
+                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our React tutorial)
                   </a>
                 </Link>{' '}
@@ -594,7 +594,7 @@ function ReactPane(): ReactComponentElement<any> {
               </svg>*/}
               <h3 className="mt-2 font-semibold">React Native</h3>
 
-              <div className="mt-2 max-w-full inline-flex">
+              <div className="mt-2 inline-flex max-w-full">
                 <InlineCommand
                   language={'bash'}
                   command={'npx create-nx-workspace --preset=react-native'}
@@ -607,7 +607,7 @@ function ReactPane(): ReactComponentElement<any> {
 
             <div className="relative my-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -618,7 +618,7 @@ function ReactPane(): ReactComponentElement<any> {
               <h3 className="mt-2 font-semibold">
                 Next.js{' '}
                 <Link href="/next/overview">
-                  <a className="italic font-normal text-sm text-gray-600 hover:underline">
+                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our Next.js guide)
                   </a>
                 </Link>{' '}
@@ -636,8 +636,8 @@ function ReactPane(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
+        <div className="mt-12 sm:mt-16 lg:col-start-2 lg:mt-0 lg:py-16">
+          <div className="relative flex flex-col items-center justify-center px-4 lg:h-full lg:px-0">
             <iframe
               loading="lazy"
               className="max-w-screen-sm"
@@ -647,18 +647,18 @@ function ReactPane(): ReactComponentElement<any> {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
-            <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="mt-6 grid w-full grid-cols-1 items-center gap-4 lg:grid-cols-2">
               <motion.div
                 custom={0.2}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/migration/migration-cra">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           CRA migration
                         </p>
                         <p className="text-xs text-gray-500">
@@ -668,10 +668,10 @@ function ReactPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white bg-gray-600">
+                    <div className="rounded-full bg-gray-600 p-2 text-white">
                       <svg
                         viewBox="0 0 24 24"
-                        className="w-6 h-6 text-[#09D3AC]"
+                        className="h-6 w-6 text-[#09D3AC]"
                         fill="currentColor"
                       >
                         <path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z" />
@@ -679,7 +679,7 @@ function ReactPane(): ReactComponentElement<any> {
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -700,14 +700,14 @@ function ReactPane(): ReactComponentElement<any> {
               <motion.div
                 custom={0.6}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/migration/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           Lerna migration
                         </p>
                         <p className="text-xs text-gray-500">
@@ -717,16 +717,16 @@ function ReactPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white bg-gradient-to-tr from-green-400 via-blue-500 to-pink-500">
+                    <div className="rounded-full bg-gradient-to-tr from-green-400 via-blue-500 to-pink-500 p-2 text-white">
                       <img
-                        className="h-6 w-6 filter invert"
+                        className="h-6 w-6 invert filter"
                         src="/images/lerna-logo.svg"
                         alt="Migrating to Nx from Lerna"
                       />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -795,13 +795,13 @@ function TypescriptPane(): ReactComponentElement<any> {
       exit="hidden"
       className="mt-8"
     >
-      <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-1">
-          <div className="mt-6 rounded-lg border border-gray-300 bg-white shadow-md text-md text-gray-700 overflow-hidden">
-            <h2 className="px-4 py-3 text-lg font-semibold tracking-tight bg-gray-50 border-b border-gray-200">
+      <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:py-16 lg:px-0">
+          <div className="text-md mt-6 overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700 shadow-md">
+            <h2 className="border-b border-gray-200 bg-gray-50 px-4 py-3 text-lg font-semibold tracking-tight">
               Create a TypeScript/JavaScript Workspace with Nx
             </h2>
-            <p className="mt-4 mx-4">
+            <p className="mx-4 mt-4">
               Create an empty workspace where you can create TypeScript or
               JavaScript projects. You can build/test/lint them either yourself
               or using Nx plugins.
@@ -809,7 +809,7 @@ function TypescriptPane(): ReactComponentElement<any> {
 
             <div className="relative my-6 pl-14 pr-4">
               <svg
-                className="absolute left-4 top-0 w-6 h-6"
+                className="absolute left-4 top-0 h-6 w-6"
                 role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -820,7 +820,7 @@ function TypescriptPane(): ReactComponentElement<any> {
               <h3 className="mt-2 font-semibold">
                 TypeScript/JavaScript{' '}
                 <Link href="/getting-started/nx-and-typescript">
-                  <a className="italic font-normal text-sm text-gray-600 hover:underline">
+                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our Nx and TypeScript tutorial)
                   </a>
                 </Link>
@@ -838,8 +838,8 @@ function TypescriptPane(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-0 lg:py-16 lg:col-start-2">
-          <div className="px-4 flex flex-col items-center justify-center lg:px-0 relative lg:h-full">
+        <div className="mt-12 sm:mt-16 lg:col-start-2 lg:mt-0 lg:py-16">
+          <div className="relative flex flex-col items-center justify-center px-4 lg:h-full lg:px-0">
             <iframe
               loading="lazy"
               className="max-w-screen-sm"
@@ -849,18 +849,18 @@ function TypescriptPane(): ReactComponentElement<any> {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
-            <div className="mt-6 w-full grid items-center grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="mt-6 grid w-full grid-cols-1 items-center gap-4 lg:grid-cols-2">
               <motion.div
                 custom={0.2}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/getting-started/nx-and-typescript">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           Nx and TypeScript
                         </p>
                         <p className="text-xs text-gray-500">
@@ -871,9 +871,9 @@ function TypescriptPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white bg-[#3178C6]">
+                    <div className="rounded-full bg-[#3178C6] p-2 text-white">
                       <svg
-                        className="p-0.5 w-6 h-6"
+                        className="h-6 w-6 p-0.5"
                         role="img"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
@@ -884,7 +884,7 @@ function TypescriptPane(): ReactComponentElement<any> {
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -907,14 +907,14 @@ function TypescriptPane(): ReactComponentElement<any> {
               <motion.div
                 custom={0.6}
                 variants={opacityTranslateYVariant}
-                className="relative flex flex-col items-center rounded-lg border border-gray-300 flex items-center bg-white hover:bg-gray-50 shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-nx-base overflow-hidden"
+                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
-                <div className="px-4 py-3 flex w-full">
-                  <div className="flex-1 min-w-0">
+                <div className="flex w-full px-4 py-3">
+                  <div className="min-w-0 flex-1">
                     <Link href="/migration/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="mb-0.5 text-md font-bold text-gray-600">
+                        <p className="text-md mb-0.5 font-bold text-gray-600">
                           Lerna migration
                         </p>
                         <p className="text-xs text-gray-500">
@@ -924,16 +924,16 @@ function TypescriptPane(): ReactComponentElement<any> {
                     </Link>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="p-2 rounded-full text-white bg-gradient-to-tr from-green-400 via-blue-500 to-pink-500">
+                    <div className="rounded-full bg-gradient-to-tr from-green-400 via-blue-500 to-pink-500 p-2 text-white">
                       <img
-                        className="h-6 w-6 filter invert"
+                        className="h-6 w-6 invert filter"
                         src="/images/lerna-logo.svg"
                         alt="Migrating to Nx from Lerna"
                       />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-4 py-3 w-full flex items-center space-x-2 border-t border-gray-200 bg-gray-50 text-gray-400">
+                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"
@@ -970,7 +970,7 @@ export function GettingStarted(): ReactComponentElement<any> {
         <svg
           viewBox="0 0 24 24"
           className={cx(
-            'w-8 h-8 flex-shrink-0 group-hover:text-[#3178C6] transition ease-out',
+            'h-8 w-8 flex-shrink-0 transition ease-out group-hover:text-[#3178C6]',
             active ? 'text-[#3178C6]' : 'text-gray-400'
           )}
           fill="currentColor"
@@ -986,7 +986,7 @@ export function GettingStarted(): ReactComponentElement<any> {
         <svg
           viewBox="0 0 24 24"
           className={cx(
-            'w-8 h-8 flex-shrink-0 group-hover:text-[#52C1DE] transition ease-out',
+            'h-8 w-8 flex-shrink-0 transition ease-out group-hover:text-[#52C1DE]',
             active ? 'text-[#52C1DE]' : 'text-gray-400'
           )}
           fill="currentColor"
@@ -1002,7 +1002,7 @@ export function GettingStarted(): ReactComponentElement<any> {
         <svg
           viewBox="0 0 24 24"
           className={cx(
-            'w-8 h-8 flex-shrink-0 group-hover:text-[#E2431F] transition ease-out',
+            'h-8 w-8 flex-shrink-0 transition ease-out group-hover:text-[#E2431F]',
             active ? 'text-[#E2431F]' : 'text-gray-400'
           )}
           fill="currentColor"
@@ -1018,7 +1018,7 @@ export function GettingStarted(): ReactComponentElement<any> {
         <svg
           viewBox="0 0 24 24"
           className={cx(
-            'w-8 h-8 flex-shrink-0 group-hover:text-[#77AE64] transition ease-out',
+            'h-8 w-8 flex-shrink-0 transition ease-out group-hover:text-[#77AE64]',
             active ? 'text-[#77AE64]' : 'text-gray-400'
           )}
           fill="currentColor"

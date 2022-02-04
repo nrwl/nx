@@ -52,9 +52,9 @@ export function VscodePlugin(): ReactComponentElement<any> {
             },
           },
         }}
-        className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24"
+        className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
       >
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-2 lg:mx-0 lg:max-w-none lg:py-32 lg:px-0">
           <div>
             <div className="mt-6">
               <motion.h1
@@ -75,7 +75,7 @@ export function VscodePlugin(): ReactComponentElement<any> {
                 <Link href="/using-nx/console">
                   <a
                     title="Get a better monorepo experience with Nx Console"
-                    className="inline-flex px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-nx-base hover:bg-blue-nx-dark transition"
+                    className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
                   >
                     Install Nx Console
                   </a>
@@ -86,12 +86,12 @@ export function VscodePlugin(): ReactComponentElement<any> {
         </div>
         <div
           aria-hidden="true"
-          className="mt-12 sm:mt-16 lg:mt-0 lg:col-start-1"
+          className="mt-12 sm:mt-16 lg:col-start-1 lg:mt-0"
         >
-          <div className="relative px-4 lg:px-0 lg:h-full">
+          <div className="relative px-4 lg:h-full lg:px-0">
             <motion.div
               variants={opacityTranslateXVariant}
-              className="-mt-8 mx-auto w-full max-w-screen-sm rounded-xl shadow-xl border border-gray-300 lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none overflow-hidden"
+              className="mx-auto -mt-8 w-full max-w-screen-sm overflow-hidden rounded-xl border border-gray-300 shadow-xl lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none"
             >
               <Image
                 src="/images/nx-console.webp"

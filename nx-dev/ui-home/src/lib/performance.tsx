@@ -84,9 +84,9 @@ export function Performance(): ReactComponentElement<any> {
             },
           },
         }}
-        className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24"
+        className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
       >
-        <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
+        <div className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-2 lg:mx-0 lg:max-w-none lg:py-32 lg:px-0">
           <div>
             <div className="mt-6">
               <motion.h1
@@ -107,7 +107,7 @@ export function Performance(): ReactComponentElement<any> {
           </div>
         </div>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:col-start-1">
-          <div className="p-8 lg:pt-0 lg:pl-0 lg:pb-8 lg:pr-8 col-span-1 flex flex-col justify-center border-r border-b border-gray-100">
+          <div className="col-span-1 flex flex-col justify-center border-r border-b border-gray-100 p-8 lg:pt-0 lg:pl-0 lg:pb-8 lg:pr-8">
             <div className="text-lg text-gray-600">Up to</div>
             <div
               aria-hidden="true"
@@ -121,7 +121,7 @@ export function Performance(): ReactComponentElement<any> {
               reduction in CI time for mid-size projects with standard CI setups
             </div>
           </div>
-          <div className="p-8 lg:pr-0 lg:pt-0 lg:pb-8 lg:pl-8 col-span-1 flex flex-col justify-center border-l border-b border-gray-100">
+          <div className="col-span-1 flex flex-col justify-center border-l border-b border-gray-100 p-8 lg:pr-0 lg:pt-0 lg:pb-8 lg:pl-8">
             <div className="text-lg text-gray-600">Up to</div>
             <div
               aria-hidden="true"
@@ -135,7 +135,7 @@ export function Performance(): ReactComponentElement<any> {
               reduction in CI time for large projects with standard CI setups
             </div>
           </div>
-          <div className="p-8 lg:pb-0 lg:pl-0 lg:pt-8 lg:pr-8 col-span-1 flex flex-col justify-center border-r border-t border-gray-100">
+          <div className="col-span-1 flex flex-col justify-center border-r border-t border-gray-100 p-8 lg:pb-0 lg:pl-0 lg:pt-8 lg:pr-8">
             <div className="text-lg text-gray-600">Up to</div>
             <div
               aria-hidden="true"
@@ -150,7 +150,7 @@ export function Performance(): ReactComponentElement<any> {
               distributed CI setups
             </div>
           </div>
-          <div className="p-8 lg:pb-0 lg:pr-0 lg:pt-8 lg:pl-8 col-span-1 flex flex-col justify-center border-l border-t border-gray-100">
+          <div className="col-span-1 flex flex-col justify-center border-l border-t border-gray-100 p-8 lg:pb-0 lg:pr-0 lg:pt-8 lg:pl-8">
             <div className="text-lg text-gray-600">Average</div>
             <div
               aria-hidden="true"

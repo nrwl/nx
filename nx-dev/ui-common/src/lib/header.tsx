@@ -13,11 +13,11 @@ export function Header(props: HeaderProps) {
   return (
     <div
       className={cx(
-        'h-16 px-5 py-5 flex items-center justify-between print:hidden',
+        'flex h-16 items-center justify-between px-5 py-5 print:hidden',
         props.useDarkBackground ? 'bg-blue-nx-dark' : 'bg-blue-nx-base'
       )}
     >
-      <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto sm:space-x-10">
+      <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between sm:space-x-10">
         {/*LOGO*/}
         <div className="flex items-center">
           <a href="/" className="flex items-center">
@@ -58,14 +58,14 @@ export function Header(props: HeaderProps) {
         {/*SEARCH*/}
         <div className="inline">{!!showSearch ? <AlgoliaSearch /> : null}</div>
         {/*NAVIGATION*/}
-        <div className="text-sm flex-shrink-0">
-          <nav className="flex items-justified justify-center space-x-1">
+        <div className="flex-shrink-0 text-sm">
+          <nav className="items-justified flex justify-center space-x-1">
             <h2 className="sr-only">Main navigation</h2>
             <Link href="/getting-started/intro">
               <a
                 title="Check Nx documentation"
                 className={cx(
-                  'px-3 py-2 text-white leading-tight',
+                  'px-3 py-2 leading-tight text-white',
                   !!props.isDocViewer ? 'font-bold' : ''
                 )}
               >
@@ -75,7 +75,7 @@ export function Header(props: HeaderProps) {
             <Link href="/using-nx/nx-devkit">
               <a
                 title="Check Nx available plugins"
-                className="px-3 py-2 hidden md:inline-flex text-white leading-tight"
+                className="hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
                 Plugins
               </a>
@@ -83,7 +83,7 @@ export function Header(props: HeaderProps) {
             <Link href="/community">
               <a
                 title="Check Nx community"
-                className="px-3 py-2 hidden md:inline-flex text-white leading-tight"
+                className="hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
                 Community
               </a>
@@ -91,7 +91,7 @@ export function Header(props: HeaderProps) {
             <Link href="/conf">
               <a
                 title="Check Nx conference"
-                className="px-3 py-2 hidden md:inline-flex text-white leading-tight"
+                className="hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
                 Nx Conf
               </a>
@@ -102,7 +102,7 @@ export function Header(props: HeaderProps) {
               href="https://nx.app/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 text-white lg:inline-flex leading-tight group relative"
+              className="group relative px-3 py-2 leading-tight text-white lg:inline-flex"
             >
               Nx Cloud
             </a>
@@ -111,7 +111,7 @@ export function Header(props: HeaderProps) {
               href="https://nrwl.io/services/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 text-white hidden lg:inline-flex leading-tight"
+              className="hidden px-3 py-2 leading-tight text-white lg:inline-flex"
             >
               Nx Consulting
             </a>

@@ -51,7 +51,7 @@ export default function DocumentationPage({
         />
         <button
           type="button"
-          className="fixed z-50 bottom-4 right-4 w-16 h-16 rounded-full bg-green-nx-base shadow-sm text-white block lg:hidden"
+          className="bg-green-nx-base fixed bottom-4 right-4 z-50 block h-16 w-16 rounded-full text-white shadow-sm lg:hidden"
           onClick={toggleNav}
         >
           <span className="sr-only">Open site navigation</span>
@@ -60,9 +60,9 @@ export default function DocumentationPage({
             height="24"
             fill="none"
             className={cx(
-              'absolute top-1/2 left-1/2 -mt-3 -ml-3 transition duration-300 transform',
+              'absolute top-1/2 left-1/2 -mt-3 -ml-3 transform transition duration-300',
               {
-                'opacity-0 scale-80': navIsOpen,
+                'scale-80 opacity-0': navIsOpen,
               }
             )}
           >
@@ -79,9 +79,9 @@ export default function DocumentationPage({
             height="24"
             fill="none"
             className={cx(
-              'absolute top-1/2 left-1/2 -mt-3 -ml-3 transition duration-300 transform',
+              'absolute top-1/2 left-1/2 -mt-3 -ml-3 transform transition duration-300',
               {
-                'opacity-0 scale-80': !navIsOpen,
+                'scale-80 opacity-0': !navIsOpen,
               }
             )}
           >

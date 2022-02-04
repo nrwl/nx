@@ -81,19 +81,19 @@ export function Sidebar() {
   return (
     <div
       className="
-    flex flex-col
+    relative flex
     h-full
-    overflow-scroll
     w-72
+    flex-col
+    overflow-scroll
     pb-10
-    shadow-lg
-    ring-1 ring-gray-400 ring-opacity-10
-    relative
+    shadow-lg ring-1 ring-gray-400
+    ring-opacity-10
   "
       id="sidebar"
     >
       <div className="bg-blue-nx-base">
-        <div className="flex items-center justify-start mx-4 my-5 text-white">
+        <div className="mx-4 my-5 flex items-center justify-start text-white">
           <svg
             className="h-10 w-auto"
             viewBox="0 0 24 24"
@@ -111,11 +111,11 @@ export function Sidebar() {
         id="help"
         className="
       mt-3
-      px-4
-      text-xs text-gray-500
       flex
-      items-center
-      cursor-pointer
+      cursor-pointer items-center
+      px-4
+      text-xs
+      text-gray-500
       hover:underline
     "
         href="https://nx.dev/structure/dependency-graph"
@@ -124,7 +124,7 @@ export function Sidebar() {
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 mr-2"
+          className="mr-2 h-4 w-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

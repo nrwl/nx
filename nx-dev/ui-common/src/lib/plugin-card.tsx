@@ -22,8 +22,8 @@ export function PluginCard({ name, description, url }: PluginCardProps) {
     };
   }, [copied]);
   return (
-    <div className="w-full flex flex-col py-8 px-6 border border-gray-100 rounded-md">
-      <h3 className="text-lg font-semibold leading-tight mb-4">
+    <div className="flex w-full flex-col rounded-md border border-gray-100 py-8 px-6">
+      <h3 className="mb-4 text-lg font-semibold leading-tight">
         <a
           href={url}
           target="_blank"
@@ -32,7 +32,7 @@ export function PluginCard({ name, description, url }: PluginCardProps) {
           className="flex items-center"
         >
           <svg
-            className="mr-3 w-5 h-5 text-gray-800"
+            className="mr-3 h-5 w-5 text-gray-800"
             role="img"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +43,7 @@ export function PluginCard({ name, description, url }: PluginCardProps) {
           {name}
         </a>
       </h3>
-      <p className="sm:text-lg mb-6">{description}</p>
+      <p className="mb-6 sm:text-lg">{description}</p>
     </div>
   );
 }

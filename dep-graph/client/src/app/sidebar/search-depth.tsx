@@ -19,13 +19,13 @@ export const SearchDepth = memo(
     return (
       <div className="mt-4 px-4">
         <div className="mt-4 flex items-start">
-          <div className="flex items-center h-5">
+          <div className="flex h-5 items-center">
             <input
               id="depthFilter"
               name="depthFilter"
               value="depthFilterActivated"
               type="checkbox"
-              className="h-4 w-4 border-gray-300 rounded"
+              className="h-4 w-4 rounded border-gray-300"
               checked={searchDepthEnabled}
               onChange={(event) =>
                 searchDepthFilterEnabledChange(event.target.checked)
@@ -45,10 +45,10 @@ export const SearchDepth = memo(
           </div>
         </div>
         <div className="mt-3 px-10">
-          <div className="flex rounded-md shadow-sm text-gray-500">
+          <div className="flex rounded-md text-gray-500 shadow-sm">
             <button
               title="Remove ancestor level"
-              className="inline-flex items-center py-2 px-4 rounded-l-md border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100"
+              className="inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 py-2 px-4 text-gray-500 hover:bg-gray-100"
               onClick={decrementDepthFilter}
             >
               <svg
@@ -68,13 +68,13 @@ export const SearchDepth = memo(
             </button>
             <span
               id="depthFilterValue"
-              className="p-1.5 bg-white flex-1 block w-full rounded-none border-t border-b border-gray-300 text-center font-mono"
+              className="block w-full flex-1 rounded-none border-t border-b border-gray-300 bg-white p-1.5 text-center font-mono"
             >
               {searchDepth}
             </span>
             <button
               title="Add ancestor level"
-              className="inline-flex items-center py-2 px-4 rounded-r-md border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100"
+              className="inline-flex items-center rounded-r-md border border-gray-300 bg-gray-50 py-2 px-4 text-gray-500 hover:bg-gray-100"
               onClick={incrementDepthFilter}
             >
               <svg
