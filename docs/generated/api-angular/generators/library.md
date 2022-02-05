@@ -53,7 +53,7 @@ Default: `false`
 
 Type: `boolean`
 
-Whether to configure TailwindCSS for the application. It can only be used with buildable and publishable libraries. Non-buildable libraries will use the application's Tailwind configuration.
+Whether to configure Tailwind CSS for the application. It can only be used with buildable and publishable libraries. Non-buildable libraries will use the application's Tailwind configuration.
 
 ### buildable
 

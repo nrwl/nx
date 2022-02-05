@@ -2,18 +2,18 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxAngularTailwindSetupGenerator",
   "cli": "nx",
-  "title": "Configures TailwindCSS for an application or a buildable/publishable library.",
-  "description": "Adds the TailwindCSS configuration files for a given Angular project and installs, if needed, the packages required for TailwindCSS to work.",
+  "title": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+  "description": "Adds the Tailwind CSS configuration files for a given Angular project and installs, if needed, the packages required for Tailwind CSS to work.",
   "type": "object",
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to add the TailwindCSS setup for.",
+      "description": "The name of the project to add the Tailwind CSS setup for.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What project would you like to add the TailwindCSS setup?"
+      "x-prompt": "What project would you like to add the Tailwind CSS setup?"
     },
     "buildTarget": {
       "type": "string",

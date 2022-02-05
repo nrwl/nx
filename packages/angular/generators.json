@@ -102,7 +102,7 @@
     "setup-tailwind": {
       "factory": "./src/generators/setup-tailwind/compat",
       "schema": "./src/generators/setup-tailwind/schema.json",
-      "description": "Configures TailwindCSS for an application or a buildable/publishable library."
+      "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
     "stories": {
       "factory": "./src/generators/stories/compat",
@@ -235,7 +235,7 @@
     "setup-tailwind": {
       "factory": "./src/generators/setup-tailwind/setup-tailwind",
       "schema": "./src/generators/setup-tailwind/schema.json",
-      "description": "Configures TailwindCSS for an application or a buildable/publishable library."
+      "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",

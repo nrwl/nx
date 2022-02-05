@@ -157,7 +157,7 @@
     },
     "addTailwind": {
       "type": "boolean",
-      "description": "Whether to configure TailwindCSS for the application.",
+      "description": "Whether to configure Tailwind CSS for the application.",
       "default": false
     }
   },

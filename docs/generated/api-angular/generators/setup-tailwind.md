@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/angular:setup-tailwind generator'
-description: 'Configures TailwindCSS for an application or a buildable/publishable library.'
+description: 'Configures Tailwind CSS for an application or a buildable/publishable library.'
 ---
 
 # @nrwl/angular:setup-tailwind
 
-Configures TailwindCSS for an application or a buildable/publishable library.
+Configures Tailwind CSS for an application or a buildable/publishable library.
 
 ## Usage
 
@@ -33,7 +33,7 @@ nx g setup-tailwind ... --dry-run
 
 Type: `string`
 
-The name of the project to add the TailwindCSS setup for.
+The name of the project to add the Tailwind CSS setup for.
 
 ### buildTarget
 
