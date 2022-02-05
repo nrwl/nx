@@ -28,7 +28,11 @@ The generation for existing or new projects will perform the following steps:
 
 ### `createGlobPatternsForDependencies` utility function
 
-When using the Tailwind CSS JIT mode (the only mode available for v3, optional for v2), the configuration will have the glob patterns that Tailwind CSS will scan to identify which utility classes are used in the project and generate the CSS for them. In an Nx workspace is very common for a project to have other projects as dependencies so you need to include the glob patterns for all its dependencies. Doing this manually can be cumbersome. Fortunately, the `createGlobPatternsForDependencies` utility function automates this for us.
+One of the advantages of Tailwind is that it post-processes your CSS removing (also called "purging") all the parts that are not being used. In order to configure which file should be processed, the `tailwind.config.js` has a `content` property (formerly called `purge` in v2). You can find more details on Tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
+
+The `content` property usually consistes of a glob pattern to include all the necessary files that should be processed. In an Nx workspace it is very common for a project to have other projects as its dependencies. Setting and updating the glob to reflect those dependencies and their files is cumbersome and error prone.
+
+Nx has a utility function that can be used to construct the glob representation of all files a project depends on (based on the Nx Project Graph).
 
 The function receives a directory path that is used to identify the project for which the dependencies are going to be identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to append to each dependency source root path to conform the final glob pattern. If the glob pattern is not provided, it will default to `/**/!(*.stories|*.spec).{ts,html}`.
 

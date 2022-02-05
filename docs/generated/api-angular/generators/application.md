@@ -45,7 +45,7 @@ Default: `false`
 
 Type: `boolean`
 
-Whether to configure TailwindCSS for the application.
+Whether to configure Tailwind CSS for the application.
 
 ### backendProject
 
