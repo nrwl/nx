@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
   killPorts,
   newProject,
   readFile,
@@ -10,6 +11,7 @@ import {
   runCypressTests,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
@@ -21,9 +23,13 @@ describe('React Applications', () => {
   it('should be able to generate a react app + lib', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
+    const libWithNoComponents = uniq('lib');
 
     runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
     runCLI(`generate @nrwl/react:lib ${libName} --style=css --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:lib ${libWithNoComponents} --no-interactive --no-component`
+    );
 
     // Libs should not include package.json by default
     checkFilesDoNotExist(`libs/${libName}/package.json`);
@@ -31,7 +37,11 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
+      `
+        import '@${proj}/${libWithNoComponents}';
+        import '@${proj}/${libName}';
+        ${readFile(mainPath)}
+      `
     );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
@@ -46,31 +56,6 @@ describe('React Applications', () => {
       checkE2E: true,
     });
   }, 500000);
-
-  it('should be able to generate a react lib with no components', async () => {
-    const appName = uniq('app');
-    const libName = uniq('lib');
-
-    runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
-    runCLI(
-      `generate @nrwl/react:lib ${libName} --no-interactive --no-component`
-    );
-
-    const mainPath = `apps/${appName}/src/main.tsx`;
-    updateFile(
-      mainPath,
-      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
-    );
-
-    const libTestResults = await runCLIAsync(`test ${libName}`);
-    expect(libTestResults.stderr).toBe('');
-
-    await testGeneratedApp(appName, {
-      checkStyles: true,
-      checkLinter: false,
-      checkE2E: false,
-    });
-  }, 250000);
 
   it('should generate app with legacy-ie support', async () => {
     const appName = uniq('app');
@@ -96,9 +81,9 @@ describe('React Applications', () => {
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
     );
-  }, 250000);
+  }, 250_000);
 
-  it('should be able to use JSX', async () => {
+  it('should be able to use JS and JSX', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -135,7 +120,7 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 250000);
+  }, 250_000);
 
   async function testGeneratedApp(
     appName,
@@ -251,7 +236,7 @@ describe('React Applications: additional packages', () => {
       `dist/apps/${appName}/polyfills.esm.js`,
       `dist/apps/${appName}/main.esm.js`
     );
-  }, 250000);
+  }, 250_000);
 
   it('should be able to add a redux slice', async () => {
     const appName = uniq('app');
@@ -271,5 +256,56 @@ describe('React Applications: additional packages', () => {
     expect(libTestResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 250000);
+  }, 250_000);
+});
+
+describe('React Applications and Libs with PostCSS', () => {
+  let proj: string;
+
+  beforeAll(() => (proj = newProject()));
+
+  it('should support single path or auto-loading of PostCSS config files', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
+    runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
+
+    const mainPath = `apps/${appName}/src/main.tsx`;
+    updateFile(
+      mainPath,
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
+    );
+
+    createFile(
+      `apps/${appName}/postcss.config.js`,
+      `
+      console.log('HELLO FROM APP'); // need this output for e2e test
+      module.exports = {};
+    `
+    );
+    createFile(
+      `libs/${libName}/postcss.config.js`,
+      `
+      console.log('HELLO FROM LIB'); // need this output for e2e test
+      module.exports = {};
+    `
+    );
+
+    let buildResults = await runCLIAsync(`build ${appName}`);
+
+    expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
+    expect(buildResults.combinedOutput).toMatch(/HELLO FROM LIB/);
+
+    // Only load app PostCSS config
+    updateJson(`apps/${appName}/project.json`, (json) => {
+      json.targets.build.options.postcssConfig = `apps/${appName}/postcss.config.js`;
+      return json;
+    });
+
+    buildResults = await runCLIAsync(`build ${appName}`);
+
+    expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
+    expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
+  }, 250_000);
 });

@@ -223,10 +223,6 @@
       },
       "default": []
     },
-    "webpackConfig": {
-      "type": "string",
-      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config"
-    },
     "buildLibsFromSource": {
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
@@ -236,6 +232,14 @@
       "type": "boolean",
       "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`",
       "default": true
+    },
+    "postcssConfig": {
+      "type": "string",
+      "description": "Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each app/lib directory."
+    },
+    "webpackConfig": {
+      "type": "string",
+      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config"
     }
   },
   "required": ["tsConfig", "main", "index"],

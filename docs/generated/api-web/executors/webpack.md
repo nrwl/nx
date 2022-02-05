@@ -189,6 +189,12 @@ Type: `string`
 
 Polyfills to load before application
 
+### postcssConfig
+
+Type: `string`
+
+Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each app/lib directory.
+
 ### progress
 
 Default: `false`
