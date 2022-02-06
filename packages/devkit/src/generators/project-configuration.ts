@@ -182,10 +182,14 @@ export function updateWorkspaceConfiguration(
   // in project config.
   const workspacePath = getWorkspacePath(tree);
   if (workspacePath) {
-    updateJson<WorkspaceJsonConfiguration>(tree, workspacePath, (json) => ({
-      ...json,
-      version: workspaceConfig.version,
-    }));
+    updateJson<WorkspaceJsonConfiguration>(tree, workspacePath, (json) => {
+      const config = {
+        ...json,
+        version: workspaceConfig.version,
+      };
+      delete (config as any).newProjectRoot;
+      return config;
+    });
   }
 }
 
