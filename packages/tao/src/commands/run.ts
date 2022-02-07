@@ -60,7 +60,6 @@ function parseRunOpts(
       },
       configuration: {
         'strip-dashed': false,
-        'dot-notation': false,
       },
     })
   );
