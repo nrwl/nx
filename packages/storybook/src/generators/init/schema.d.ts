@@ -6,5 +6,6 @@ export interface Schema {
     | '@storybook/web-components'
     | '@storybook/vue'
     | '@storybook/vue3'
-    | '@storybook/svelte';
+    | '@storybook/svelte'
+    | '@storybook/react-native';
 }

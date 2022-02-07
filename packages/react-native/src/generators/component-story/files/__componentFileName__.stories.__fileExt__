@@ -1,0 +1,25 @@
+<% if (hasActions) { %>
+  import { action } from '@storybook/addon-actions';
+<% } %>
+import { storiesOf } from '@storybook/react-native';
+import React from 'react';
+import {
+  <%= componentName %>
+  <% if ( propsTypeName ) { %>, <%= propsTypeName %> <% } %>
+} from './<%= componentFileName %>';
+
+<% if (hasActions) { %>
+  const actions = {<% for (let argType of argTypes) { %>
+    <%= argType.name %>: action('<%- argType.actionText %>'),
+  <% } %>};
+<% } %>
+
+const props <% if ( propsTypeName ) { %>:<%= propsTypeName %><% } %> = {<% for (let prop of props) { %>
+    <%= prop.name %>: <%- prop.defaultValue %>,
+<% } %>};
+
+storiesOf('<%= componentName %>', module)
+  .addDecorator((getStory) => <>{getStory()}</>)
+  .add('Primary', () => (
+    <<%= componentName %> {...props} <% if (hasActions) { %> {...actions} <% } %>/>
+  ));

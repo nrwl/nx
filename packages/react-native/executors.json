@@ -34,6 +34,11 @@
       "implementation": "./src/executors/ensure-symlink/ensure-symlink.impl",
       "schema": "./src/executors/ensure-symlink//schema.json",
       "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    },
+    "storybook": {
+      "implementation": "./src/executors/storybook/storybook.impl",
+      "schema": "./src/executors/storybook/schema.json",
+      "description": "Serve React Native Storybook"
     }
   },
   "builders": {
@@ -71,6 +76,11 @@
       "implementation": "./src/executors/ensure-symlink/compat",
       "schema": "./src/executors/ensure-symlink//schema.json",
       "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    },
+    "storybook": {
+      "implementation": "./src/executors/storybook/compat",
+      "schema": "./src/executors/storybook/schema.json",
+      "description": "Serve React Native Storybook"
     }
   }
 }

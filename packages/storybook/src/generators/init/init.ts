@@ -13,6 +13,8 @@ import {
   babelLoaderVersion,
   babelPresetTypescriptVersion,
   nxVersion,
+  reactNativeStorybookLoader,
+  storybookReactNativeVersion,
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
@@ -100,6 +102,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@storybook/manager-webpack5'] = storybookVersion;
     }
   }
+
   if (isFramework('html', schema)) {
     devDependencies['@storybook/html'] = storybookVersion;
   }
@@ -118,6 +121,55 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   if (isFramework('svelte', schema)) {
     devDependencies['@storybook/svelte'] = storybookVersion;
+  }
+
+  if (isFramework('react-native', schema)) {
+    if (
+      !packageJson.dependencies['@storybook/react-native'] &&
+      !packageJson.devDependencies['@storybook/react-native']
+    ) {
+      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/addon-ondevice-actions'] &&
+      !packageJson.devDependencies['@storybook/addon-ondevice-actions']
+    ) {
+      devDependencies['@storybook/addon-ondevice-actions'] =
+        storybookReactNativeVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/addon-ondevice-backgrounds'] &&
+      !packageJson.devDependencies['@storybook/addon-ondevice-backgrounds']
+    ) {
+      devDependencies['@storybook/addon-ondevice-backgrounds'] =
+        storybookReactNativeVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/addon-ondevice-controls'] &&
+      !packageJson.devDependencies['@storybook/addon-ondevice-controls']
+    ) {
+      devDependencies['@storybook/addon-ondevice-controls'] =
+        storybookReactNativeVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/addon-ondevice-notes'] &&
+      !packageJson.devDependencies['@storybook/addon-ondevice-notes']
+    ) {
+      devDependencies['@storybook/addon-ondevice-notes'] =
+        storybookReactNativeVersion;
+    }
+
+    if (
+      !packageJson.dependencies['react-native-storybook-loader'] &&
+      !packageJson.devDependencies['react-native-storybook-loader']
+    ) {
+      devDependencies['react-native-storybook-loader'] =
+        reactNativeStorybookLoader;
+    }
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);

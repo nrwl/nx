@@ -28,6 +28,24 @@
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React Native component",
       "aliases": ["c"]
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a react-native app or library",
+      "hidden": false
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStorySchematic",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate storybook story for a react-native component",
+      "hidden": false
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesSchematic",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories for all components declared in an app or library",
+      "hidden": false
     }
   },
   "generators": {
@@ -56,6 +74,24 @@
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React Native component",
       "aliases": ["c"]
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a react-native app or library",
+      "hidden": false
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate storybook story for a react-native component",
+      "hidden": false
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesGenerator",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in an app or library",
+      "hidden": false
     }
   }
 }

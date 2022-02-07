@@ -259,10 +259,10 @@
     "zone.js": "~0.11.4"
   },
   "optionalDependencies": {
-    "@swc/core-linux-x64-musl": "^1.2.136",
-    "@swc/core-linux-x64-gnu": "^1.2.136",
     "@swc/core-linux-arm64-gnu": "^1.2.136",
-    "@swc/core-linux-arm64-musl": "^1.2.136"
+    "@swc/core-linux-arm64-musl": "^1.2.136",
+    "@swc/core-linux-x64-gnu": "^1.2.136",
+    "@swc/core-linux-x64-musl": "^1.2.136"
   },
   "author": "Victor Savkin",
   "license": "MIT",

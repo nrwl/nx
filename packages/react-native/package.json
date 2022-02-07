@@ -28,6 +28,7 @@
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
+    "@nrwl/storybook": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
     "chalk": "^4.1.0",

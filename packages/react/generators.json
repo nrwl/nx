@@ -44,7 +44,7 @@
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
       "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up storybook for a react library",
+      "description": "Set up storybook for a react app or library",
       "hidden": false
     },
 
@@ -65,7 +65,7 @@
     "stories": {
       "factory": "./src/generators/stories/stories#storiesSchematic",
       "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories/specs for all components declared in a library",
+      "description": "Create stories/specs for all components declared in an app or library",
       "hidden": false
     },
 
@@ -125,7 +125,7 @@
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
       "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up storybook for a react library",
+      "description": "Set up storybook for a react app or library",
       "hidden": false
     },
 
@@ -146,7 +146,7 @@
     "stories": {
       "factory": "./src/generators/stories/stories#storiesGenerator",
       "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories/specs for all components declared in a library",
+      "description": "Create stories/specs for all components declared in an app or library",
       "hidden": false
     },
 
