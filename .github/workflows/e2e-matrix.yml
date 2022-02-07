@@ -3,9 +3,6 @@ name: E2E matrix
 on:
   schedule:
     - cron: "0 0 * * *"
-  push:
-    paths:
-      - '.github/workflows/e2e-matrix.yml'
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -21,7 +18,6 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          # - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
@@ -29,9 +25,6 @@ jobs:
           - os: macos-latest
             os-name: osx
             os-cache-dir: /tmp/nx-cache
-          # - os: windows-latest
-          #   os-name: windows
-          #   os-cache-dir: ./nx-cache
         node_version:
           - '16'
         package_manager:
@@ -82,14 +75,6 @@ jobs:
             packages: e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
           - os: macos-latest
             packages: e2e-add-nx-to-monorepo
-          # # run just npm on windows
-          # - os: windows-latest
-          #   package_manager: yarn
-          # - os: windows-latest
-          #   package_manager: pnpm
-          # # exclude react-native from windows
-          # - os: windows-latest
-          #   packages: e2e-react-native,e2e-detox
       fail-fast: false
 
     name: ${{ matrix.os-name }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
@@ -180,8 +165,6 @@ jobs:
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
       uses: mxschmitt/action-tmate@v3.8
-      with:
-        sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
   report-success:
     if: ${{ github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
