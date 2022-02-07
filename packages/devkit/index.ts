@@ -69,6 +69,7 @@ export {
   getPackageManagerCommand,
   detectPackageManager,
   getPackageManagerVersion,
+  detectInvokedPackageManager,
 } from '@nrwl/tao/src/shared/package-manager';
 
 /**

@@ -2,6 +2,9 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
+export const supportedPackageManagers = ['yarn', 'pnpm', 'npm'] as const;
+
+// Can be changed to "export type PackageManager = typeof supportedPackageManagers[number];" as soon as Typedoc correctly documents it
 export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
 export interface PackageManagerCommands {
@@ -92,4 +95,31 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager()
 ): string {
   return execSync(`${packageManager} --version`).toString('utf-8').trim();
+}
+
+/**
+ * Detects which package manager was used to invoke the script based on the
+ * main module process that invokes the command.
+ *
+ * - npx returns 'npm'
+ * - pnpx returns 'pnpm'
+ * - yarn create returns 'yarn'
+ *
+ * By default, 'npm' is returned.
+ */
+export function detectInvokedPackageManager(): PackageManager {
+  let detectedPackageManager: PackageManager = 'npm';
+  // mainModule is deprecated since Node 14, fallback for older versions
+  const invoker = require.main || process['mainModule'];
+
+  if (invoker) {
+    for (const pkgManager of supportedPackageManagers) {
+      if (invoker.path.includes(pkgManager)) {
+        return pkgManager;
+      }
+    }
+  }
+
+  // default to `npm`
+  return detectedPackageManager;
 }

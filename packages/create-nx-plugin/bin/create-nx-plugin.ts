@@ -13,7 +13,7 @@ import { showNxWarning } from './shared';
 import {
   detectInvokedPackageManager,
   PackageManager,
-} from './detect-invoked-package-manager';
+} from '@nrwl/tao/src/shared/package-manager';
 import enquirer = require('enquirer');
 import yargsParser = require('yargs-parser');
 

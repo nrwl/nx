@@ -108,6 +108,7 @@ It only uses language primitives and immutable objects
 - [applyChangesToString](../../nx-devkit/index#applychangestostring)
 - [convertNxExecutor](../../nx-devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../nx-devkit/index#convertnxgenerator)
+- [detectInvokedPackageManager](../../nx-devkit/index#detectinvokedpackagemanager)
 - [detectPackageManager](../../nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../nx-devkit/index#formatfiles)
 - [generateFiles](../../nx-devkit/index#generatefiles)
@@ -738,6 +739,25 @@ Convert an Nx Generator into an Angular Devkit Schematic
 ##### Returns
 
 `Promise`<`any`\>
+
+---
+
+### detectInvokedPackageManager
+
+▸ **detectInvokedPackageManager**(): [`PackageManager`](../../nx-devkit/index#packagemanager)
+
+Detects which package manager was used to invoke the script based on the
+main module process that invokes the command.
+
+- npx returns 'npm'
+- pnpx returns 'pnpm'
+- yarn create returns 'yarn'
+
+By default, 'npm' is returned.
+
+#### Returns
+
+[`PackageManager`](../../nx-devkit/index#packagemanager)
 
 ---
 
