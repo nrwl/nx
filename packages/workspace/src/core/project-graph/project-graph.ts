@@ -88,6 +88,7 @@ export async function createProjectGraphAsync(
     isCI() ||
     isDocker() ||
     isDaemonDisabled() ||
+    (useDaemonProcessOption === undefined && env === 'false') ||
     (useDaemonProcessOption === true && env === 'false') ||
     (useDaemonProcessOption === false && env === undefined) ||
     (useDaemonProcessOption === false && env === 'false')

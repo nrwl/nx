@@ -2,6 +2,7 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { defaultHashing } from './hashing-impl';
 import { FileData } from '@nrwl/tao/src/shared/project-graph';
+import { joinPathFragments } from '@nrwl/devkit';
 
 export abstract class FileHasherBase {
   protected fileHashes: Map<string, string>;
@@ -67,7 +68,10 @@ export abstract class FileHasherBase {
       return this.fileHashes.get(relativePath);
     } else {
       try {
-        return defaultHashing.hashFile(path);
+        // this has to be absolute to avoid issues with cwd
+        return defaultHashing.hashFile(
+          joinPathFragments(appRootPath, relativePath)
+        );
       } catch {
         return '';
       }
