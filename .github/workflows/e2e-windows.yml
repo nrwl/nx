@@ -3,9 +3,6 @@ name: E2E matrix (Windows)
 on:
   schedule:
     - cron: "0 0 * * *"
-  push:
-    paths:
-      - '.github/workflows/e2e-windows.yml'
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -15,15 +12,9 @@ on:
 
 jobs:
   e2e:
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     strategy:
       matrix:
-        os:
-          - windows-latest
-        include:
-          - os: windows-latest
-            os-name: windows
-            os-cache-dir: ./nx-cache
         node_version:
           - '16'
         package_manager:
@@ -68,9 +59,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: windows-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
         restore-keys: |
-          ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+          windows-node-${{ matrix.node-version }}-yarn-
 
     - name: Install packages
       run: yarn install --prefer-offline --frozen-lockfile --non-interactive
@@ -82,7 +73,7 @@ jobs:
         GIT_AUTHOR_NAME: Test
         GIT_COMMITTER_EMAIL: test@test.com
         GIT_COMMITTER_NAME: Test
-        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+        NX_E2E_CI_CACHE_KEY: e2e-gha-windows-${{ matrix.node_version }}-${{ matrix.package_manager }}
         NX_E2E_RUN_CYPRESS: ${{ 'true' }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
@@ -91,13 +82,13 @@ jobs:
         NX_VERBOSE_LOGGING: ${{ 'true' }}
         NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
         NX_E2E_SKIP_DAEMON_CLEANUP: ${{ 'true' }}
-        NX_CACHE_DIRECTORY: ${{ matrix.os-cache-dir }}
+        NX_CACHE_DIRECTORY: ./nx-cache
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
       uses: mxschmitt/action-tmate@v3.8
       with:
-        sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
+        sudo: false # disable sudo for windows debugging
 
   report-success:
     if: ${{ github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
