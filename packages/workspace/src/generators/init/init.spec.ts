@@ -153,6 +153,62 @@ describe('workspace', () => {
       }
     });
 
+    it('should remove the newProjectRoot key from configuration', async () => {
+      tree.write(
+        '/angular.json',
+        JSON.stringify({
+          version: 1,
+          defaultProject: 'myApp',
+          newProjectRoot: 'projects',
+          projects: {
+            myApp: {
+              root: 'projects/myApp',
+              sourceRoot: 'projects/myApp/src',
+              architect: {
+                build: {
+                  options: {
+                    tsConfig: 'projects/myApp/tsconfig.app.json',
+                  },
+                  configurations: {},
+                },
+                test: {
+                  options: {
+                    tsConfig: 'projects/myApp/tsconfig.spec.json',
+                  },
+                },
+                lint: {
+                  options: {
+                    tsConfig: [
+                      'projects/myApp/tslint.json',
+                      'projects/myApp/tsconfig.app.json',
+                    ],
+                  },
+                },
+                e2e: {
+                  options: {
+                    protractorConfig: 'projects/myApp/e2e/protractor.conf.js',
+                  },
+                },
+              },
+            },
+          },
+        })
+      );
+
+      tree.write('/projects/myApp/tslint.json', '{"rules": {}}');
+      tree.write('/projects/myApp/tsconfig.app.json', '{}');
+      tree.write('/projects/myApp/tsconfig.spec.json', '{}');
+      tree.write('/projects/myApp/e2e/tsconfig.json', '{}');
+      tree.write('/projects/myApp/e2e/protractor.conf.js', '// content');
+      tree.write('/projects/myApp/src/app/app.module.ts', '// content');
+
+      await initGenerator(tree, { name: 'myApp' });
+
+      const a = readJson(tree, '/angular.json');
+
+      expect(a.newProjectRoot).toBeUndefined();
+    });
+
     it('should set the default collection to @nrwl/angular', async () => {
       await initGenerator(tree, { name: 'myApp' });
       expect(readJson(tree, 'nx.json').cli.defaultCollection).toBe(
