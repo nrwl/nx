@@ -3581,6 +3581,66 @@
     call-me-maybe "^1.0.1"
     glob-to-regexp "^0.3.0"
 
+"@napi-rs/canvas-android-arm64@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-android-arm64/-/canvas-android-arm64-0.1.19.tgz#2f7a54fe74a5300cf276d78687149e818c0f3de4"
+  integrity sha512-HSMvj4FpY/EW1yQ2KcpodCb9NGt8leDZqlFf+ORR+K6e4FQ5N42zbiABkNrzje8qCD37+mCWd2IO9P/onBCYCQ==
+
+"@napi-rs/canvas-darwin-arm64@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-darwin-arm64/-/canvas-darwin-arm64-0.1.19.tgz#6abb53dbb6f26efff62f0ec94ff2841f68ffd07b"
+  integrity sha512-ammO0vS5NFzyFWTdiA0mfKyaTgITinCfGo33m/Xw6vX4FlT3gRhvOQZUIwSr7Uxh39TUr0Jb1DQRpUR3zSXKHA==
+
+"@napi-rs/canvas-darwin-x64@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-darwin-x64/-/canvas-darwin-x64-0.1.19.tgz#9291e04c569b4c6ad70991c4cab613613622189a"
+  integrity sha512-KZt5Ey1ETlMHYwVd2cyv3nP6hOl9ouspcJKsphLyZMZ4bGjTGk2FK85ieUS5uko5KkAI/7T6SnCSXsTzb5YsUw==
+
+"@napi-rs/canvas-linux-arm-gnueabihf@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-linux-arm-gnueabihf/-/canvas-linux-arm-gnueabihf-0.1.19.tgz#687ea58909cc62648f7edfe051dbf8f3f8a6bac2"
+  integrity sha512-6ksFDGbILCo9i3Oara0035kUjvP+uT1nEwcIGMj6v+LjV6pK8j/imYv+ilKKQc95t2dfqAbh9LLfg/HpJxGaFQ==
+
+"@napi-rs/canvas-linux-arm64-gnu@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-linux-arm64-gnu/-/canvas-linux-arm64-gnu-0.1.19.tgz#870754652415df5c48033a9abe3389b130bd0efb"
+  integrity sha512-GjIOj1x0IGz8J7Fom2LdZrhKUjbOXrytooi57JPvYFRW0ial9lshW8Adnq78yTH+d7iEapOKUEFAtWWq9r0umw==
+
+"@napi-rs/canvas-linux-arm64-musl@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-linux-arm64-musl/-/canvas-linux-arm64-musl-0.1.19.tgz#7bee4cd2bd3537c7af89e7106a9a6a654f77a98f"
+  integrity sha512-6ikcZzSDr5Uvk3AzF/E3bw+6l2VATb1YWGC9uJmmtuPG/e8rRk3r3fi2tq+EtoUIT508MJHQYWB7A0Q6Ztybxg==
+
+"@napi-rs/canvas-linux-x64-gnu@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-linux-x64-gnu/-/canvas-linux-x64-gnu-0.1.19.tgz#9e13d9c1ec93dab34946dae0f8e99de64300b771"
+  integrity sha512-6uHDsXZGuDpZa53NIbkqYng4Cjz5pqVGgfxLDT6T+Lx7I9JeoJi/vBPyB4BLZjdWtY8YhZFWPQIb9bbA6RLMFg==
+
+"@napi-rs/canvas-linux-x64-musl@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-linux-x64-musl/-/canvas-linux-x64-musl-0.1.19.tgz#9990bfd0ec4beaa1643cf4256502662b13f3c362"
+  integrity sha512-WeOOySiwexF91baetu7R193W9i1hfFMVHF+n6vxhwVxh09ahisL+AKhPNKJlouTizXYTvlinALZOnKmiTf7FHA==
+
+"@napi-rs/canvas-win32-x64-msvc@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas-win32-x64-msvc/-/canvas-win32-x64-msvc-0.1.19.tgz#734e5a6aba9bd393dd619e72ed2481498578066a"
+  integrity sha512-5RP4n9NsZsYi+Bg08Nd3VULr1+m2EC72OR0D77XqOIh5SXT+Hje+9x3FKgFCDEhaVAVqh5HUzYVD7BJhrXSsMA==
+
+"@napi-rs/canvas@^0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@napi-rs/canvas/-/canvas-0.1.19.tgz#1e3aedf8316430536f41899036557a3dcbeec618"
+  integrity sha512-bpM/IU+j21y3FrV0Gn+NxPXAid+wTtdNyEQC0DdoycmY8xBSnZ9dgwUzVSjpk6yyrRw1d+mPZjvw0IPc0P1v2g==
+  optionalDependencies:
+    "@napi-rs/canvas-android-arm64" "0.1.19"
+    "@napi-rs/canvas-darwin-arm64" "0.1.19"
+    "@napi-rs/canvas-darwin-x64" "0.1.19"
+    "@napi-rs/canvas-linux-arm-gnueabihf" "0.1.19"
+    "@napi-rs/canvas-linux-arm64-gnu" "0.1.19"
+    "@napi-rs/canvas-linux-arm64-musl" "0.1.19"
+    "@napi-rs/canvas-linux-x64-gnu" "0.1.19"
+    "@napi-rs/canvas-linux-x64-musl" "0.1.19"
+    "@napi-rs/canvas-win32-x64-msvc" "0.1.19"
+
 "@napi-rs/triples@1.0.3":
   version "1.0.3"
   resolved "https://registry.npmjs.org/@napi-rs/triples/-/triples-1.0.3.tgz"
@@ -8952,7 +9012,7 @@ chokidar@^2.0.3, chokidar@^2.1.8:
 
 chownr@^1.1.1:
   version "1.1.4"
-  resolved "https://registry.npmjs.org/chownr/-/chownr-1.1.4.tgz"
+  resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.1.4.tgz#6fc9d7b42d32a583596337666e7d08084da2cc6b"
   integrity sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==
 
 chownr@^2.0.0:
@@ -17660,7 +17720,7 @@ mv@2.1.1:
 
 nan@^2.12.1:
   version "2.15.0"
-  resolved "https://registry.npmjs.org/nan/-/nan-2.15.0.tgz"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.15.0.tgz#3f34a473ff18e15c1b5626b62903b5ad6e665fee"
   integrity sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==
 
 nanoid@^3.1.23, nanoid@^3.1.30:
@@ -17702,7 +17762,7 @@ ncp@~2.0.0:
 
 needle@^2.5.2:
   version "2.9.1"
-  resolved "https://registry.npmjs.org/needle/-/needle-2.9.1.tgz"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-2.9.1.tgz#22d1dffbe3490c2b83e301f7709b6736cd8f2684"
   integrity sha512-6R9fqJ5Zcmf+uYaFgdIHmLwNldn5HbK8L5ybn7Uz+ylX/rnOsSp1AHcvQSrCaFN+qNM1wpymHqD7mVasEOlHGQ==
   dependencies:
     debug "^3.2.6"
@@ -18073,7 +18133,7 @@ normalize-url@^6.0.1, normalize-url@^6.1.0:
 
 npm-bundled@^1.1.1:
   version "1.1.2"
-  resolved "https://registry.npmjs.org/npm-bundled/-/npm-bundled-1.1.2.tgz"
+  resolved "https://registry.yarnpkg.com/npm-bundled/-/npm-bundled-1.1.2.tgz#944c78789bd739035b70baa2ca5cc32b8d860bc1"
   integrity sha512-x5DHup0SuyQcmL3s7Rx/YQ8sbw/Hzg0rj48eN0dV7hf5cmQq5PXIeioroH3raV1QC1yh3uTYuMThvEQF3iKgGQ==
   dependencies:
     npm-normalize-package-bin "^1.0.1"
@@ -18147,7 +18207,7 @@ npm-run-path@^4.0.0, npm-run-path@^4.0.1:
 
 npmlog@^4.1.2:
   version "4.1.2"
-  resolved "https://registry.npmjs.org/npmlog/-/npmlog-4.1.2.tgz"
+  resolved "https://registry.yarnpkg.com/npmlog/-/npmlog-4.1.2.tgz#08a7f2a8bf734604779a9efa4ad5cc717abb954b"
   integrity sha512-2uUqazuKlTaSI/dC8AzicUck7+IrEaOnN/e0jd3Xtt1KcGpwx30v50mL7oPyr/h9bL3E4aZccVwpwP+5W9Vjkg==
   dependencies:
     are-we-there-yet "~1.1.2"
@@ -18468,7 +18528,7 @@ os-name@4.0.1:
 
 os-tmpdir@~1.0.1, os-tmpdir@~1.0.2:
   version "1.0.2"
-  resolved "https://registry.npmjs.org/os-tmpdir/-/os-tmpdir-1.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
   integrity sha1-u+Z0BseaqFxc/sdm/lc0VV36EnQ=
 
 ospath@^1.2.2:
@@ -20523,7 +20583,7 @@ raw-loader@^4.0.2:
 
 rc@^1.2.8:
   version "1.2.8"
-  resolved "https://registry.npmjs.org/rc/-/rc-1.2.8.tgz"
+  resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.8.tgz#cd924bf5200a075b83c188cd6b9e211b7fc0d3ed"
   integrity sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==
   dependencies:
     deep-extend "^0.6.0"
@@ -21600,7 +21660,7 @@ rfdc@^1.1.4:
 
 rimraf@2, rimraf@^2.2.8, rimraf@^2.5.2, rimraf@^2.5.4, rimraf@^2.6.0, rimraf@^2.6.3:
   version "2.7.1"
-  resolved "https://registry.npmjs.org/rimraf/-/rimraf-2.7.1.tgz"
+  resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.7.1.tgz#35797f13a7fdadc566142c29d4f07ccad483e3ec"
   integrity sha512-uWjbaKIK3T1OSVptzX7Nl6PvQ3qAGtKEtVRjRuazjfL3Bx5eI409VZSqgND+4UNnmzLVdPj9FqFJNPqBZFve4w==
   dependencies:
     glob "^7.1.3"
@@ -23225,7 +23285,7 @@ tapable@^2.1.1, tapable@^2.2.0:
 
 tar@6.1.11, tar@^6.0.2, tar@^6.1.0, tar@^6.1.2:
   version "6.1.11"
-  resolved "https://registry.npmjs.org/tar/-/tar-6.1.11.tgz"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-6.1.11.tgz#6760a38f003afa1b2ffd0ffe9e9abbd0eab3d621"
   integrity sha512-an/KZQzQUkZCkuoAA64hM92X0Urb6VpRhAFllDzz44U2mcD5scmT3zBc4VgVpkugF580+DQn8eAFSyoQt0tznA==
   dependencies:
     chownr "^2.0.0"
@@ -25264,7 +25324,7 @@ yallist@^2.1.2:
 
 yallist@^3.0.2:
   version "3.1.1"
-  resolved "https://registry.npmjs.org/yallist/-/yallist-3.1.1.tgz"
+  resolved "https://registry.yarnpkg.com/yallist/-/yallist-3.1.1.tgz#dbb7daf9bfd8bac9ab45ebf602b8cbad0d5d08fd"
   integrity sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==
 
 yallist@^4.0.0:

@@ -14,3 +14,4 @@ jest.debug.config.js
 /.verdaccio/build/local-registry
 dep-graph/client/src/assets/environment.js
 /nx-dev/nx-dev/public/documentation
+/nx-dev/nx-dev/public/images/open-graph
