@@ -66,7 +66,7 @@ async function connectToNxCloudPrompt() {
             name: 'No',
           },
         ],
-        initial: 'No' as any,
+        initial: 'Yes' as any,
       },
     ])
     .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
