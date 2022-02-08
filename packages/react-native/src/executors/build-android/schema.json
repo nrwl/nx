@@ -9,6 +9,10 @@
     "apk": {
       "type": "boolean",
       "description": "Generate apk file(s) rather than a bundle (.aab)."
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Generate a debug build instead of a release build"
     }
   },
   "required": []
