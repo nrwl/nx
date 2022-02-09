@@ -8,7 +8,6 @@ import {
   formatFiles,
   Tree,
   updateJson,
-  WorkspaceConfiguration,
   writeJson,
   convertNxGenerator,
 } from '@nrwl/devkit';
@@ -19,8 +18,6 @@ import { join } from 'path';
 
 function getExecutor(type: Schema['type']): string {
   switch (type) {
-    case 'angular':
-      return '@nrwl/angular:ng-packagr-lite';
     case 'detox':
     case 'js':
     case 'web':
@@ -59,21 +56,10 @@ export async function convertToBuildable(host: Tree, schema: Schema) {
     ''
   )}`;
 
-  const packageJson = readJsonFile('package.json');
-
   // Write the package.json the builder will need
   writeJson(host, join(configuration.root, 'package.json'), {
     name: projectImport,
     version: '0.0.1',
-    ...(schema.type === 'angular'
-      ? {
-          peerDependencies: {
-            '@angular/common': packageJson['dependencies']['@angular/common'],
-            '@angular/core': packageJson['dependencies']['@angular/core'],
-          },
-          dependencies: { tslib: packageJson['dependencies']['tslib'] },
-        }
-      : {}),
   });
 
   // Write the build target to the projects configuration
@@ -112,39 +98,6 @@ export async function convertToBuildable(host: Tree, schema: Schema) {
         ],
       };
       break;
-    case 'angular':
-      buildTarget.options = {
-        project: `${configuration.root}/ng-package.json`,
-      };
-      buildTarget.outputs = [`dist/${configuration.root}`];
-      buildTarget.configurations = {
-        production: {
-          tsConfig: `${configuration.root}/tsconfig.lib.prod.json`,
-        },
-        development: {
-          tsConfig: `${configuration.root}/tsconfig.lib.json`,
-        },
-      };
-      buildTarget.defaultConfiguration = 'production';
-      break;
-  }
-
-  if (schema.type === 'angular') {
-    writeJson(host, join(configuration.root, 'tsconfig.lib.prod.json'), {
-      extends: './tsconfig.lib.json',
-      compilerOptions: {
-        declarationMap: false,
-      },
-      angularCompilerOptions: {},
-    });
-
-    writeJson(host, join(configuration.root, 'ng-package.json'), {
-      $schema: '../../node_modules/ng-packagr/ng-package.schema.json',
-      dest: `../../dist/${configuration.root}`,
-      lib: {
-        entryFile: 'src/index.ts',
-      },
-    });
   }
 
   const isStandalone = isStandaloneProject(host, schema.project);

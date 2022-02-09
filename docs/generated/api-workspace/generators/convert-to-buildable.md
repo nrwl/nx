@@ -55,6 +55,6 @@ Skip formatting files.
 
 Type: `string`
 
-Possible values: `js`, `node`, `nest`, `next`, `react`, `angular`, `detox`, `web`
+Possible values: `js`, `node`, `nest`, `next`, `react`, `detox`, `web`
 
 The type of library that this is.

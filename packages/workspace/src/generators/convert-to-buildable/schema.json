@@ -23,7 +23,7 @@
     "type": {
       "description": "The type of library that this is.",
       "type": "string",
-      "enum": ["js", "node", "nest", "next", "react", "angular", "detox", "web"]
+      "enum": ["js", "node", "nest", "next", "react", "detox", "web"]
     }
   }
 }
