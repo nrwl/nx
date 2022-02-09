@@ -48,7 +48,7 @@
     },
     "e2eProjectName": {
       "type": "string",
-      "description": "The project name of the associated e2e project for the application."
+      "description": "The project name of the associated e2e project for the application. This is only required for Cypress e2e projects that do no follow the naming convention <appName>-e2e"
     }
   },
   "required": ["appName", "mfeType"],

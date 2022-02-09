@@ -49,7 +49,7 @@ Type of application to generate the Module Federation configuration for.
 
 Type: `string`
 
-The project name of the associated e2e project for the application.
+The project name of the associated e2e project for the application. This is only required for Cypress e2e projects that do no follow the naming convention <appName>-e2e
 
 ### host
 

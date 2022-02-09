@@ -311,7 +311,7 @@ describe('Init MFE', () => {
 
     // ASSERT
     const cypressCommands = host.read(
-      'apps/test-app-e2e/src/support/commands.ts',
+      'apps/test-app-e2e/src/support/index.ts',
       'utf-8'
     );
     expect(cypressCommands).toContain(

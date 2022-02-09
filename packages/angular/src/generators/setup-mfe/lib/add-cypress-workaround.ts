@@ -37,13 +37,11 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
 
   const pathToCommandsFile = joinPathFragments(
     e2eProject.sourceRoot,
-    'support/commands.ts'
+    'support/index.ts'
   );
 
-  if (!tree.exists(pathToCommandsFile)) {
-    tree.write(pathToCommandsFile, '');
-  }
-
-  const commandsContent = tree.read(pathToCommandsFile, 'utf-8');
+  const commandsContent = tree.exists(pathToCommandsFile)
+    ? tree.read(pathToCommandsFile, 'utf-8')
+    : '';
   tree.write(pathToCommandsFile, `${commandsContent}\n${commandToAdd}`);
 }

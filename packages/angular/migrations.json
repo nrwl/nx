@@ -144,6 +144,12 @@
       "version": "13.5.0-beta.0",
       "description": "A lot of changes to how MFEs operate were discovered and merged without appropriate migrations. This should cover migrating existing MFEs to the latest, using ESM and optmized production bundles.",
       "factory": "./src/migrations/update-13-5-0/update-mfe-configs"
+    },
+    "add-cypress-mfe-workaround": {
+      "cli": "nx",
+      "version": "13.9.0-beta.0",
+      "description": "Angular doesn't attach styles.js to index.html with type=module in dev mode, meaning an error is written to the console. Cypress falls over on this error. Add logic to Cypress e2e projects to ignore this error.",
+      "factory": "./src/migrations/update-13-9-0/add-cypress-mfe-workaround"
     }
   },
   "packageJsonUpdates": {
