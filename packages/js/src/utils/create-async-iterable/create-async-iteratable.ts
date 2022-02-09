@@ -33,16 +33,14 @@ export function createAsyncIterable<T = unknown>(
           if (done || error) return;
           if (pullQueue.length > 0) {
             pullQueue.shift()?.[1](err);
-          } else {
-            error = err;
           }
+          error = err;
         },
         done: () => {
           if (pullQueue.length > 0) {
             pullQueue.shift()?.[0]({ value: undefined, done: true });
-          } else {
-            done = true;
           }
+          done = true;
         },
       });
 
