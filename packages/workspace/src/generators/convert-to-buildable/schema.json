@@ -12,7 +12,7 @@
   ],
   "properties": {
     "project": {
-      "description": "Project name",
+      "description": "Name of project to convert to buildable lib.",
       "type": "string"
     },
     "skipFormat": {
