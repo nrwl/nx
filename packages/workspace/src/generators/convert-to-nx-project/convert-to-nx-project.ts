@@ -83,6 +83,6 @@ To upgrade change the version number at the top of ${getWorkspacePath(
 
 export default convertToNxProjectGenerator;
 
-export const convertToNxProjectSchematic = convertNxGenerator(
+export const convertToBuildableSchematic = convertNxGenerator(
   convertToNxProjectGenerator
 );

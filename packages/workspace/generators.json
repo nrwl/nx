@@ -73,7 +73,7 @@
     },
 
     "convert-to-buildable": {
-      "factory": "./src/generators/convert-to-buildable/convert-to-buildable#convertToBuildable",
+      "factory": "./src/generators/convert-to-buildable/convert-to-buildable#convertToBuildableSchematic",
       "schema": "./src/generators/convert-to-buildable/schema.json",
       "description": "Convert an Nx library to be buildable"
     },
