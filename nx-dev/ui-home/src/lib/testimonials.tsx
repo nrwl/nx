@@ -51,7 +51,7 @@ export function Testimonials(): ReactComponentElement<any> {
         'Just set up a full-stack Angular/NestJS app with @NxDevTools. One command, about 5 minutes, and a working full-stack "hello world". Probably just saved about 2 hours.',
       imageUrl: '/images/testimonials/michael-bromley.jpg',
       link: 'https://twitter.com/i/web/status/1403437555769561090',
-      title: 'Developer working with TypeScript @vendure_io',
+      title: 'Creator of @vendure_io',
     },
   ];
 
