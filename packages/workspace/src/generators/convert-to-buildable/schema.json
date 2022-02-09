@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "SchematicsConvertToBuildable",
+  "title": "Convert library to be a buildable lib",
+  "type": "object",
+  "cli": "nx",
+  "examples": [
+    {
+      "command": "g @nrwl/workspace:convert-to-buildable --project my-feature-lib",
+      "description": "Convert the my-feature-lib project to be buildable"
+    }
+  ],
+  "properties": {
+    "project": {
+      "description": "Project name",
+      "type": "string"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "type": {
+      "description": "The type of library that this is.",
+      "type": "string",
+      "enum": ["js", "node", "nest", "next", "react", "angular", "detox", "web"]
+    }
+  }
+}

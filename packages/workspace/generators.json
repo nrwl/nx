@@ -72,6 +72,12 @@
       "description": "Moves a project's configuration outside of workspace.json"
     },
 
+    "convert-to-buildable": {
+      "factory": "./src/generators/convert-to-buildable/convert-to-buildable#convertToBuildable",
+      "schema": "./src/generators/convert-to-buildable/schema.json",
+      "description": "Convert an Nx library to be buildable"
+    },
+
     "npm-package": {
       "factory": "./src/generators/npm-package/npm-package#npmPackageSchematic",
       "schema": "./src/generators/npm-package/schema.json",
@@ -148,6 +154,12 @@
       "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator",
       "schema": "./src/generators/convert-to-nx-project/schema.json",
       "description": "Moves a project's configuration outside of workspace.json"
+    },
+
+    "convert-to-buildable": {
+      "factory": "./src/generators/convert-to-buildable/convert-to-buildable#convertToBuildable",
+      "schema": "./src/generators/convert-to-buildable/schema.json",
+      "description": "Convert an Nx library to be buildable"
     },
 
     "npm-package": {
