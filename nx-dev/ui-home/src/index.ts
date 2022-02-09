@@ -11,5 +11,6 @@ export * from './lib/nx-playbook';
 export * from './lib/open-platform';
 export * from './lib/open-source-projects';
 export * from './lib/performance';
+export * from './lib/testimonials';
 export * from './lib/vscode-plugin';
 export * from './lib/youtube-channel';
