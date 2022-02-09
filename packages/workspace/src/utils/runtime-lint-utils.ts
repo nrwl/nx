@@ -103,21 +103,21 @@ export function isRelative(s: string) {
   return s.startsWith('.');
 }
 
-export function isRelativeImportIntoAnotherProject(
+export function getTargetProjectBasedOnRelativeImport(
   imp: string,
   projectPath: string,
   projectGraph: MappedProjectGraph,
-  sourceFilePath: string,
-  sourceProject: ProjectGraphProjectNode
-): boolean {
-  if (!isRelative(imp)) return false;
+  sourceFilePath: string
+): MappedProjectGraphNode<any> | undefined {
+  if (!isRelative(imp)) {
+    return undefined;
+  }
 
   const targetFile = normalizePath(
     path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
   ).substring(projectPath.length + 1);
 
-  const targetProject = findTargetProject(projectGraph, targetFile);
-  return sourceProject && targetProject && sourceProject !== targetProject;
+  return findTargetProject(projectGraph, targetFile);
 }
 
 export function findProjectUsingFile<T>(
@@ -307,4 +307,36 @@ export function isTerminalRun(): boolean {
     process.argv.length > 1 &&
     !!process.argv[1].match(/@nrwl\/cli\/lib\/run-cli\.js$/)
   );
+}
+
+/**
+ * Takes an array of imports and tries to group them, so rather than having
+ * `import { A } from './some-location'` and `import { B } from './some-location'` you get
+ * `import { A, B } from './some-location'`
+ * @param importsToRemap
+ * @returns
+ */
+export function groupImports(
+  importsToRemap: { member: string; importPath: string }[]
+): string {
+  const importsToRemapGrouped = importsToRemap.reduce((acc, curr) => {
+    const existing = acc.find(
+      (i) => i.importPath === curr.importPath && i.member !== curr.member
+    );
+    if (existing) {
+      if (existing.member) {
+        existing.member += `, ${curr.member}`;
+      }
+    } else {
+      acc.push({
+        importPath: curr.importPath,
+        member: curr.member,
+      });
+    }
+    return acc;
+  }, []);
+
+  return importsToRemapGrouped
+    .map((entry) => `import { ${entry.member} } from '${entry.importPath}';`)
+    .join('\n');
 }

@@ -10,10 +10,10 @@ import {
   findProjectUsingImport,
   findSourceProject,
   getSourceFilePath,
+  getTargetProjectBasedOnRelativeImport,
   hasBuildExecutor,
   findDependenciesWithTags,
   isAbsoluteImportIntoAnotherProject,
-  isRelativeImportIntoAnotherProject,
   MappedProjectGraph,
   mapProjectGraphFiles,
   matchImportWithWildcard,
@@ -136,16 +136,18 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       this.projectPath
     );
     const sourceProject = findSourceProject(this.projectGraph, filePath);
+    const targetImportProject = getTargetProjectBasedOnRelativeImport(
+      imp,
+      this.projectPath,
+      this.projectGraph,
+      filePath
+    );
 
     // check for relative and absolute imports
     if (
-      isRelativeImportIntoAnotherProject(
-        imp,
-        this.projectPath,
-        this.projectGraph,
-        filePath,
-        sourceProject
-      ) ||
+      (sourceProject &&
+        targetImportProject &&
+        sourceProject !== targetImportProject) ||
       isAbsoluteImportIntoAnotherProject(imp, this.workspaceLayout)
     ) {
       this.addFailureAt(
