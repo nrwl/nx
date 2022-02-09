@@ -45,6 +45,10 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`."
+    },
+    "e2eProjectName": {
+      "type": "string",
+      "description": "The project name of the associated e2e project for the application. This is only required for Cypress e2e projects that do not follow the naming convention `<appName>-e2e`."
     }
   },
   "required": ["appName", "mfeType"],
