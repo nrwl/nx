@@ -117,5 +117,5 @@ export async function convertToBuildable(host: Tree, schema: Schema) {
 
 export default convertToBuildable;
 
-export const convertToNxProjectSchematic =
+export const convertToBuildableSchematic =
   convertNxGenerator(convertToBuildable);
