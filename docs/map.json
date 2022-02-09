@@ -513,6 +513,11 @@
             "file": "generated/api-workspace/generators/convert-to-nx-project"
           },
           {
+            "name": "convert-to-buildable generator",
+            "id": "convert-to-buildable-generator",
+            "file": "generated/api-workspace/generators/convert-to-buildable"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "generated/api-workspace/executors/run-commands"
