@@ -6,5 +6,5 @@
     "types": []
   },
   "include": ["**/*.ts"<% if (js) { %>, "**/*.js"<% } %>],
-  "exclude": ["**/*.spec.ts"<% if (js) { %>, "**/*.spec.js"<% } %>]
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"<% if (js) { %>, "**/*.spec.js", "**/*.test.js"<% } %>]
 }
