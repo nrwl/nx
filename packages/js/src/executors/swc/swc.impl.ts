@@ -128,13 +128,13 @@ export async function* swcExecutor(
       options,
       processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
     );
+  } else {
+    return yield compileSwc(
+        context,
+        options,
+        processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+    );
   }
-
-  return yield compileSwc(
-    context,
-    options,
-    processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
-  );
 }
 
 export default swcExecutor;
