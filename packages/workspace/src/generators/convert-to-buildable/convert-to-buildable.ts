@@ -2,7 +2,6 @@ import {
   NxJsonConfiguration,
   readJsonFile,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   formatFiles,
   Tree,
   writeJson,
@@ -11,7 +10,6 @@ import {
 } from '@nrwl/devkit';
 
 import { Schema } from './schema';
-import { checkWorkspaceVersion } from '@nrwl/workspace/src/utils/workspace';
 import { join } from 'path';
 
 function getExecutor(type: Schema['type']): string {
@@ -30,10 +28,6 @@ function getExecutor(type: Schema['type']): string {
 }
 
 export async function convertToBuildable(host: Tree, schema: Schema) {
-  const workspace = readWorkspaceConfiguration(host);
-
-  checkWorkspaceVersion(workspace, host);
-
   const configuration = readProjectConfiguration(host, schema.project);
 
   if (configuration.projectType !== 'library') {

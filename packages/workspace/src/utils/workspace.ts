@@ -4,27 +4,6 @@ import {
   ProjectDefinition,
   TargetDefinition,
 } from '@angular-devkit/core/src/workspace';
-import {
-  getWorkspacePath,
-  WorkspaceConfiguration,
-  Tree as DevkitTree,
-  logger,
-} from '@nrwl/devkit';
-
-export function checkWorkspaceVersion(
-  workspace: WorkspaceConfiguration,
-  host: DevkitTree
-) {
-  if (workspace.version < 2) {
-    logger.error(`
-NX Only workspaces with version 2+ support project.json files.
-To upgrade change the version number at the top of ${getWorkspacePath(
-      host
-    )} and run 'nx format'.
-`);
-    throw new Error('v2+ Required');
-  }
-}
 
 function createHost(tree: Tree): workspaces.WorkspaceHost {
   return {
