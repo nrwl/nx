@@ -204,11 +204,7 @@ export function createRollupOptions(
           check: true,
           tsconfig: options.tsConfig,
           tsconfigOverride: {
-            compilerOptions: createCompilerOptions(
-              format,
-              options,
-              dependencies
-            ),
+            compilerOptions: createCompilerOptions(options, dependencies),
           },
         }),
       useSwc && swc(),
@@ -294,27 +290,18 @@ export function createRollupOptions(
   });
 }
 
-function createCompilerOptions(format, options, dependencies) {
+function createCompilerOptions(options, dependencies) {
   const compilerOptionPaths = computeCompilerOptionsPaths(
     options.tsConfig,
     dependencies
   );
 
-  const compilerOptions = {
+  return {
     rootDir: options.entryRoot,
     allowJs: false,
     declaration: true,
     paths: compilerOptionPaths,
   };
-
-  if (format !== 'esm') {
-    return {
-      ...compilerOptions,
-      target: 'es5',
-    };
-  }
-
-  return compilerOptions;
 }
 
 function updatePackageJson(
