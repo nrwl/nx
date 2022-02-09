@@ -4,11 +4,11 @@ import {
   ProjectDefinition,
   TargetDefinition,
 } from '@angular-devkit/core/src/workspace';
-import { logger } from '@nrwl/tao/src/shared/logger';
 import {
   getWorkspacePath,
   WorkspaceConfiguration,
   Tree as DevkitTree,
+  logger,
 } from '@nrwl/devkit';
 
 export function checkWorkspaceVersion(
