@@ -41,7 +41,7 @@ nx g @nrwl/workspace:convert-to-buildable --project my-feature-lib
 
 Type: `string`
 
-Project name
+Name of project to convert to buildable lib.
 
 ### skipFormat
 
