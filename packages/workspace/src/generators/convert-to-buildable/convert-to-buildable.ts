@@ -1,15 +1,13 @@
 import {
-  getWorkspacePath,
-  isStandaloneProject,
   NxJsonConfiguration,
   readJsonFile,
   readProjectConfiguration,
   readWorkspaceConfiguration,
   formatFiles,
   Tree,
-  updateJson,
   writeJson,
   convertNxGenerator,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
 
 import { Schema } from './schema';
@@ -100,22 +98,13 @@ export async function convertToBuildable(host: Tree, schema: Schema) {
       break;
   }
 
-  const isStandalone = isStandaloneProject(host, schema.project);
-
-  if (isStandalone) {
-    writeJson(host, join(configuration.root, 'project.json'), {
-      ...configuration,
-      targets: {
-        ...configuration.targets,
-        build: buildTarget,
-      },
-    });
-  } else {
-    updateJson(host, getWorkspacePath(host), (value) => {
-      value.projects[schema.project].targets['build'] = buildTarget;
-      return value;
-    });
-  }
+  updateProjectConfiguration(host, schema.project, {
+    ...configuration,
+    targets: {
+      ...configuration.targets,
+      build: buildTarget,
+    },
+  });
 
   if (!schema.skipFormat) {
     await formatFiles(host);
