@@ -294,4 +294,28 @@ describe('Init MFE', () => {
     expect(serveMfe.options.commands).toContain('nx serve remote2');
     expect(serveMfe.options.commands).toContain('nx serve app1');
   });
+
+  it('should modify the associated cypress project to add the workaround correctly', async () => {
+    // ARRANGE
+    await applicationGenerator(host, {
+      name: 'testApp',
+      routing: true,
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'test-app',
+      mfeType: 'host',
+      routing: true,
+    });
+
+    // ASSERT
+    const cypressCommands = host.read(
+      'apps/test-app-e2e/src/support/commands.ts',
+      'utf-8'
+    );
+    expect(cypressCommands).toContain(
+      "Cannot use 'import.meta' outside a module"
+    );
+  });
 });

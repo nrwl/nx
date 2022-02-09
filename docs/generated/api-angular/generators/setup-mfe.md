@@ -45,6 +45,12 @@ Possible values: `host`, `remote`
 
 Type of application to generate the Module Federation configuration for.
 
+### e2eProjectName
+
+Type: `string`
+
+The project name of the associated e2e project for the application.
+
 ### host
 
 Type: `string`

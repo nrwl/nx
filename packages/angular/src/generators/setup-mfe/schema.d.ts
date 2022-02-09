@@ -7,4 +7,5 @@ export interface Schema {
   routing?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  e2eProjectName?: string;
 }
