@@ -36,6 +36,10 @@ export async function convertToBuildable(host: Tree, schema: Schema) {
 
   const configuration = readProjectConfiguration(host, schema.project);
 
+  if (configuration.projectType !== 'library') {
+    throw new Error(`${schema.project} is not a library.`);
+  }
+
   const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
 
   if (configuration.targets['build'] != null) {
