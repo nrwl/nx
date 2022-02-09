@@ -188,7 +188,7 @@ export function Index() {
                 <p className="mx-auto mt-5 max-w-prose text-xl text-gray-500">
                   Here is what they say about Nx, what they like about it, how
                   it transforms their developer life and what you are missing
-                  out!
+                  out on!
                 </p>
               </div>
             </header>
