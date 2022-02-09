@@ -130,9 +130,9 @@ export async function* swcExecutor(
     );
   } else {
     return yield compileSwc(
-        context,
-        options,
-        processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+      context,
+      options,
+      processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
     );
   }
 }
