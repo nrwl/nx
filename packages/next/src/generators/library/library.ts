@@ -1,6 +1,8 @@
 import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react';
+import { nextInitGenerator } from '../init/init';
 import {
   convertNxGenerator,
+  GeneratorCallback,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -8,17 +10,25 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function libraryGenerator(host: Tree, options: Schema) {
   const name = names(options.name).fileName;
+  const tasks: GeneratorCallback[] = [];
   const projectDirectory = options.directory
     ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const { libsDir } = getWorkspaceLayout(host);
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const initTask = await nextInitGenerator(host, {
+    ...options,
+    skipFormat: true,
+  });
+  tasks.push(initTask);
 
-  const task = await reactLibraryGenerator(host, options);
+  const libTask = await reactLibraryGenerator(host, options);
+  tasks.push(libTask);
 
   updateJson(host, joinPathFragments(projectRoot, '.babelrc'), (json) => {
     if (options.style === '@emotion/styled') {
@@ -73,7 +83,7 @@ export async function libraryGenerator(host: Tree, options: Schema) {
     }
   );
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 export default libraryGenerator;
