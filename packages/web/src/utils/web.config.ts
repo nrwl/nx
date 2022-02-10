@@ -87,13 +87,12 @@ function _getBaseWebpackPartial(
   emitDecoratorMetadata: boolean,
   configuration?: string
 ) {
-  let partial = getBaseWebpackPartial(
-    options,
+  let partial = getBaseWebpackPartial(options, {
     esm,
     isScriptOptimizeOn,
     emitDecoratorMetadata,
-    configuration
-  );
+    configuration,
+  });
   delete partial.resolve.mainFields;
   return partial;
 }
