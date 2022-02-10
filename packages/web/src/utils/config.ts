@@ -15,39 +15,46 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 export function getBaseWebpackPartial(
-  options: BuildBuilderOptions,
-  esm?: boolean,
-  isScriptOptimizeOn?: boolean,
-  emitDecoratorMetadata?: boolean,
-  configuration?: string
+  builderOptions: BuildBuilderOptions,
+  extraOptions: {
+    esm?: boolean;
+    isScriptOptimizeOn?: boolean;
+    emitDecoratorMetadata?: boolean;
+    configuration?: string;
+    skipTypeCheck?: boolean;
+  }
 ): Configuration {
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-  const mainFields = [...(esm ? ['es2015'] : []), 'module', 'main'];
-  const hashFormat = getOutputHashFormat(options.outputHashing);
-  const suffixFormat = esm ? '.esm' : '.es5';
-  const filename = isScriptOptimizeOn
+  const mainFields = [
+    ...(extraOptions.esm ? ['es2015'] : []),
+    'module',
+    'main',
+  ];
+  const hashFormat = getOutputHashFormat(builderOptions.outputHashing);
+  const suffixFormat = extraOptions.esm ? '.esm' : '.es5';
+  const filename = extraOptions.isScriptOptimizeOn
     ? `[name]${hashFormat.script}${suffixFormat}.js`
     : '[name].js';
-  const chunkFilename = isScriptOptimizeOn
+  const chunkFilename = extraOptions.isScriptOptimizeOn
     ? `[name]${hashFormat.chunk}${suffixFormat}.js`
     : '[name].js';
-  const mode = isScriptOptimizeOn ? 'production' : 'development';
+  const mode = extraOptions.isScriptOptimizeOn ? 'production' : 'development';
 
   const webpackConfig: Configuration = {
     target: 'web', // webpack defaults to 'browserslist' which breaks Fast Refresh
 
     entry: {
-      main: [options.main],
+      main: [builderOptions.main],
     },
     devtool:
-      options.sourceMap === 'hidden'
+      builderOptions.sourceMap === 'hidden'
         ? 'hidden-source-map'
-        : options.sourceMap
+        : builderOptions.sourceMap
         ? 'source-map'
         : false,
     mode,
     output: {
-      path: options.outputPath,
+      path: builderOptions.outputPath,
       filename,
       chunkFilename,
       hashFunction: 'xxhash64',
@@ -77,22 +84,24 @@ export function getBaseWebpackPartial(
             fullySpecified: false,
           },
         },
-        options.compiler === 'babel' && {
+        builderOptions.compiler === 'babel' && {
           test: /\.([jt])sx?$/,
           loader: join(__dirname, 'web-babel-loader'),
           exclude: /node_modules/,
           options: {
             rootMode: 'upward',
-            cwd: join(options.root, options.sourceRoot),
-            emitDecoratorMetadata,
-            isModern: esm,
-            envName: isScriptOptimizeOn ? 'production' : configuration,
+            cwd: join(builderOptions.root, builderOptions.sourceRoot),
+            emitDecoratorMetadata: extraOptions.emitDecoratorMetadata,
+            isModern: extraOptions.esm,
+            envName: extraOptions.isScriptOptimizeOn
+              ? 'production'
+              : extraOptions.configuration,
             babelrc: true,
             cacheDirectory: true,
             cacheCompression: false,
           },
         },
-        options.compiler === 'swc' && {
+        builderOptions.compiler === 'swc' && {
           test: /\.([jt])sx?$/,
           loader: require.resolve('swc-loader'),
           exclude: /node_modules/,
@@ -116,10 +125,10 @@ export function getBaseWebpackPartial(
     },
     resolve: {
       extensions,
-      alias: getAliases(options),
+      alias: getAliases(builderOptions),
       plugins: [
         new TsconfigPathsPlugin({
-          configFile: options.tsConfig,
+          configFile: builderOptions.tsConfig,
           extensions,
           mainFields,
         }) as never, // TODO: Remove never type when 'tsconfig-paths-webpack-plugin' types fixed
@@ -130,11 +139,11 @@ export function getBaseWebpackPartial(
       hints: false,
     },
     plugins: [new webpack.DefinePlugin(getClientEnvironment(mode).stringified)],
-    watch: options.watch,
+    watch: builderOptions.watch,
     watchOptions: {
-      poll: options.poll,
+      poll: builderOptions.poll,
     },
-    stats: getStatsConfig(options),
+    stats: getStatsConfig(builderOptions),
     ignoreWarnings: [
       (x) =>
         IGNORED_WEBPACK_WARNINGS.some((r) =>
@@ -146,14 +155,14 @@ export function getBaseWebpackPartial(
     },
   };
 
-  if (options.compiler !== 'swc' && isScriptOptimizeOn) {
+  if (builderOptions.compiler !== 'swc' && extraOptions.isScriptOptimizeOn) {
     webpackConfig.optimization = {
       sideEffects: false,
       minimizer: [
         new TerserPlugin({
           parallel: true,
           terserOptions: {
-            ecma: (esm ? 2016 : 5) as TerserPlugin.TerserECMA,
+            ecma: (extraOptions.esm ? 2016 : 5) as TerserPlugin.TerserECMA,
             safari10: true,
             output: {
               ascii_only: true,
@@ -169,24 +178,24 @@ export function getBaseWebpackPartial(
 
   const extraPlugins: WebpackPluginInstance[] = [];
 
-  if (esm) {
+  if (!extraOptions.skipTypeCheck && extraOptions.esm) {
     extraPlugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {
           enabled: true,
-          configFile: options.tsConfig,
-          memoryLimit: options.memoryLimit || 2018,
+          configFile: builderOptions.tsConfig,
+          memoryLimit: builderOptions.memoryLimit || 2018,
         },
       })
     );
   }
 
-  if (options.progress) {
+  if (builderOptions.progress) {
     extraPlugins.push(new webpack.ProgressPlugin());
   }
 
   // TODO  LicenseWebpackPlugin needs a PR for proper typing
-  if (options.extractLicenses) {
+  if (builderOptions.extractLicenses) {
     extraPlugins.push(
       new LicenseWebpackPlugin({
         stats: {
@@ -198,8 +207,11 @@ export function getBaseWebpackPartial(
     );
   }
 
-  if (Array.isArray(options.assets) && options.assets.length > 0) {
-    extraPlugins.push(createCopyPlugin(options.assets));
+  if (
+    Array.isArray(builderOptions.assets) &&
+    builderOptions.assets.length > 0
+  ) {
+    extraPlugins.push(createCopyPlugin(builderOptions.assets));
   }
 
   webpackConfig.plugins = [...webpackConfig.plugins, ...extraPlugins];
