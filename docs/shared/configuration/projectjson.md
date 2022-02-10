@@ -15,7 +15,7 @@ The `project.json` file contains configuration specific to its project. This fil
 Plugins. It configures custom executors, which are used instead of npm scripts. Custom executors are typed, toolable and provide a
 lot more flexibility for running long-live processes. They are also more composable.
 
-If you satisfied with npm scripts though, you will never see a `project.json` file in your workspace. But we encourage
+If you're satisfied with npm scripts though, you will never see a `project.json` file in your workspace. But we encourage
 you to explore Nx Plugins and the power they bring.
 
 Let's look at the following `project.json`:
