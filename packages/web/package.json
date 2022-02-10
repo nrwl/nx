@@ -83,7 +83,6 @@
     "raw-loader": "^4.0.2",
     "rxjs": "^6.5.4",
     "rxjs-for-await": "0.0.2",
-    "rimraf": "^3.0.2",
     "rollup": "^2.56.2",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
