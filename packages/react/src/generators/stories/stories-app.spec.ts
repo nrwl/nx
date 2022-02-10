@@ -85,6 +85,22 @@ describe('react:stories for applications', () => {
       appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
     ).toBeTruthy();
   });
+
+  it('should not update existing stories', async () => {
+    // ARRANGE
+    appTree.write('apps/test-ui-app/src/app/nx-welcome.stories.tsx', '');
+
+    // ACT
+    await storiesGenerator(appTree, {
+      project: 'test-ui-app',
+      generateCypressSpecs: false,
+    });
+
+    // ASSERT
+    expect(
+      appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
+    ).toEqual('');
+  });
 });
 
 export async function createTestUIApp(
