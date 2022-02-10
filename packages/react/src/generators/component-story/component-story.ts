@@ -45,6 +45,7 @@ export function createComponentStoriesFile(
   const usesEsLint = true;
 
   const componentFilePath = joinPathFragments(sourceRoot, componentPath);
+
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),
     ''

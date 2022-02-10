@@ -76,7 +76,12 @@ export async function createAllStories(
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
       (path.endsWith('.jsx') && !path.endsWith('.spec.jsx'))
     ) {
-      componentPaths.push(path);
+      const ext = path.slice(path.lastIndexOf('.'));
+      const storyPath = `${path.split(ext)[0]}.stories${ext}`;
+      // only add component if a stories file doesnt already exist
+      if (!tree.exists(storyPath)) {
+        componentPaths.push(path);
+      }
     }
   });
 
