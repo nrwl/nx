@@ -7,19 +7,14 @@
  */
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { WebpackConfigOptions } from '../../shared-models';
-
-const SubresourceIntegrityPlugin = require('webpack-subresource-integrity');
+import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 
 export function getBrowserConfig(wco: WebpackConfigOptions) {
   const { buildOptions } = wco;
   const extraPlugins = [];
 
   if (buildOptions.subresourceIntegrity) {
-    extraPlugins.push(
-      new SubresourceIntegrityPlugin({
-        hashFuncNames: ['sha384'],
-      })
-    );
+    extraPlugins.push(new SubresourceIntegrityPlugin());
   }
 
   if (buildOptions.extractLicenses) {
