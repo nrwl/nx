@@ -9,12 +9,12 @@ export default async function update(tree: Tree) {
     return;
   }
 
-  let hasReactNaiveProject = false;
-  projects.forEach((project) => {
-    if (hasReactNaiveProject) return;
-    hasReactNaiveProject =
-      project.targets?.start?.executor === '@nrwl/react-native:start';
-  });
+  const hasReactNaiveProject = Array.from(projects)
+    .map(([_, project]) => project)
+    .some(
+      (project) =>
+        project.targets?.start?.executor === '@nrwl/react-native:start'
+    );
 
   if (hasReactNaiveProject) {
     initRootBabelConfig(tree);

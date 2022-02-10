@@ -12,7 +12,6 @@ import {
   detoxVersion,
   nxVersion,
   testingLibraryJestDom,
-  typesDetoxVersion,
 } from '../../utils/versions';
 
 export async function detoxInitGenerator(host: Tree, schema: Schema) {
@@ -32,7 +31,6 @@ export function updateDependencies(host: Tree) {
     {
       '@nrwl/detox': nxVersion,
       detox: detoxVersion,
-      '@types/detox': typesDetoxVersion,
       '@testing-library/jest-dom': testingLibraryJestDom,
       'jest-circus': jestVersion,
     }
