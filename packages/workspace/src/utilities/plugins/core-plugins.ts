@@ -45,6 +45,10 @@ export function fetchCorePlugins() {
       capabilities: 'executors,generators',
     },
     {
+      name: '@nrwl/js',
+      capabilities: 'executors,generators',
+    },
+    {
       name: '@nrwl/storybook',
       capabilities: 'executors,generators',
     },
