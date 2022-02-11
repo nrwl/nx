@@ -51,6 +51,7 @@
     "nx-dev-feature-versions-and-flavors": "nx-dev/feature-versions-and-flavors",
     "nx-dev-ui-commands": "nx-dev/ui-commands",
     "nx-dev-ui-common": "nx-dev/ui-common",
+    "nx-dev-ui-community": "nx-dev/ui-community",
     "nx-dev-ui-home": "nx-dev/ui-home",
     "nx-dev-ui-member-card": "nx-dev/ui-member-card",
     "nx-dev-ui-sponsor-card": "nx-dev/ui-sponsor-card",

@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/ui-community",
+  "sourceRoot": "nx-dev/ui-community/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "tag:ui"],
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["nx-dev/ui-community/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/ui-community"],
+      "options": {
+        "jestConfig": "nx-dev/ui-community/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  }
+}
