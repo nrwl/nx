@@ -39,8 +39,8 @@ jobs:
     condition: ne(variables['Build.Reason'], 'PullRequest')
     steps:
       - script: npm i
-      - script: npx nx affected --base=HEAD~1 --target=build --parallel --max-parallel=3
-      - script: npx nx affected --base=HEAD~1 --target=test --parallel --max-parallel=2
+      - script: npx nx affected --base=HEAD~1 --target=build --parallel=3
+      - script: npx nx affected --base=HEAD~1 --target=test --parallel=2
 
   - job: pr
     pool:
@@ -48,8 +48,8 @@ jobs:
     condition: eq(variables['Build.Reason'], 'PullRequest')
     steps:
       - script: npm i
-      - script: npx nx affected --target=build --parallel --max-parallel=3
-      - script: npx nx affected --target=test --parallel --max-parallel=2
+      - script: npx nx affected --target=build --parallel=3
+      - script: npx nx affected --target=test --parallel=2
 ```
 
 The `pr` and `main` jobs implement the CI workflow.
