@@ -11,7 +11,7 @@ authored in your repository, such as Webpack, React, Angular, and so forth.
 
 ![project-graph](/shared/mental-model/project-graph.png)
 
-With Nx, nodes in the project graph are defined in `workspace.json`. You can manually define dependencies between the
+With Nx, nodes in the project graph are defined in `project.json` files. You can manually define dependencies between the
 nodes, but you don’t have to do it very often. Nx analyzes files’ source code, your installed dependencies, TypeScript
 files, and others figuring out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.

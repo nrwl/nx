@@ -28,7 +28,7 @@ In that case, when you run the Nx migration scripts, the scripts will ignore the
 
 The `@nrwl/react:storybook-migrate-defaults-5-to-6` generator will not exactly do a migration. It will perform the following actions:
 
-- It will generate new Storybook configuration files using the new (`>6.x`) Storybook way. The way it will do that is, it will look into `workspace.json` and it will find all the projects that have a `Storybook` configuration. Using the `configFolder` path provided there, it will go and generate new Storybook instances in all these paths. Finally, it will generate a new Storybook instance at the root directory.
+- It will generate new Storybook configuration files using the new (`>6.x`) Storybook way. The way it will do that is, it will look in all the `project.json` files and it will find all the projects that have a `Storybook` configuration. Using the `configFolder` path provided there, it will go and generate new Storybook instances in all these paths. Finally, it will generate a new Storybook instance at the root directory.
 
 - If you choose to `keepOld`, then it will add all your existing Storybook configuration files into another folder labeled `.old_storybook`.
 

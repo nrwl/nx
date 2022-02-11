@@ -84,7 +84,7 @@ nx generate @nrwl/nest:application <nest-app> --frontendProject my-angular-app
 
 ### Application commands
 
-When a Nest application is added to the workspace.json (or angular.json), the following architect commands are available for execution:
+When a Nest application is added, the following architect commands are available for execution:
 
 #### build
 
@@ -98,7 +98,7 @@ The build command will compile the application using Webpack. It supports a prod
 nx build <nest-app> --configuration=production
 ```
 
-Additional configurations can be added in the workspace.json. Changing the `--configuration` flag with the new configuration name will run that config.
+Additional configurations can be added in the project.json. Changing the `--configuration` flag with the new configuration name will run that config.
 
 #### serve
 
@@ -113,7 +113,7 @@ Nest applications also have the `inspect` flag set, so you can attach your debug
 
 ##### Debugging
 
-Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` architect in the workspace.json. Or by running the serve command with `--port <number>`.
+Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` architect in the project.json. Or by running the serve command with `--port <number>`.
 
 For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nestjs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
@@ -162,7 +162,7 @@ nx generate @nrwl/nest:library <nest-lib> --buildable
 
 ### Library commands
 
-When a Nest library is added to the workspace.json (or angular.json), the following architect commands are available for execution:
+When a Nest library is added, the following architect commands are available for execution:
 
 #### lint
 

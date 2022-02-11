@@ -15,7 +15,7 @@ You might use the `--publishable` option when generating a new Nx library if you
 
 One typical scenario for this may be that you use Nx to develop your organizations UI design system component library (maybe using its Storybook integration), which should be available also to your organizations’ apps that are not hosted within the same monorepo.
 
-A normal Nx library - let’s call it "workspace library" - is not made for building or publishing. Rather it only includes common lint and test targets in its `angular.json` or `workspace.json`. These libraries are directly referenced from one of the monorepo’s applications and built together with them.
+A normal Nx library - let’s call it "workspace library" - is not made for building or publishing. Rather it only includes common lint and test targets in its `project.json` file. These libraries are directly referenced from one of the monorepo’s applications and built together with them.
 
 Keep in mind that the `--publishable` flag does not enable automatic publishing. Rather it adds to your Nx workspace library a builder target that **compiles** and **bundles** your app. The resulting artifact will be ready to be published to some registry (e.g. [npm](https://npmjs.com/)). By having that builder, you can invoke the build via a command like: `nx build mylib` (where "mylib" is the name of the lib) which will then produce an optimized bundle in the `dist/mylib` folder. Nx [also analyzes](/angular/package#updatebuildableprojectdepsinpackagejson) the library’s dependencies and automatically compiles the dependencies in the resulting `package.json` file.
 

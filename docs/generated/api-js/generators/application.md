@@ -65,7 +65,7 @@ Type: `string`
 
 Possible values: `workspace`, `project`, `npm-scripts`
 
-Determines how whether the project's executors should be configured in workspace.json, project.json or as npm scripts
+Determines whether the project's executors should be configured in workspace.json, project.json or as npm scripts
 
 ### directory
 

@@ -50,7 +50,7 @@ work happens. The rest is either left as is or restored from the cache.
 
 ## Source Code Hash Inputs
 
-The result of building/testing an application or a library depends on the source code of that project and all the source codes of all the libraries it depends on (directly or indirectly). It also depends on the configuration files like `package.json`, `workspace.json`, `nx.json`, `tsconfig.base.json`, and `package-lock.json`. The list of these files isn't arbitrary. Nx can deduce most of them by analyzing our codebase. Few have to be listed manually in the `implicitDependencies` property of `nx.json`.
+The result of building/testing an application or a library depends on the source code of that project and all the source codes of all the libraries it depends on (directly or indirectly). It also depends on the configuration files like `package.json`, `nx.json`, `tsconfig.base.json`, and `package-lock.json`. The list of these files isn't arbitrary. Nx can deduce most of them by analyzing our codebase. Few have to be listed manually in the `implicitDependencies` property of `nx.json`.
 
 ```json
 {
