@@ -26,7 +26,7 @@ export function readTargetOptions<T = any>(
 
   return combineOptionsForExecutor(
     {},
-    configuration ?? '',
+    configuration ?? targetConfiguration.defaultConfiguration ?? '',
     targetConfiguration,
     schema,
     defaultProject,
