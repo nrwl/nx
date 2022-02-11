@@ -384,6 +384,10 @@ export class TaskOrchestrator {
     );
 
     await this.tasksSchedule.scheduleNextTasks();
+
+    // release blocked threads
+    this.waitingForTasks.forEach((f) => f(null));
+    this.waitingForTasks.length = 0;
   }
 
   private complete(
@@ -408,9 +412,6 @@ export class TaskOrchestrator {
         );
       }
     }
-    this.waitingForTasks // release blocked threads
-      .forEach((f) => f(null));
-    this.waitingForTasks.length = 0;
   }
 
   //endregion Lifecycle
