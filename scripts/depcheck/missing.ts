@@ -45,7 +45,28 @@ const IGNORE_MATCHES = {
     'tailwindcss',
   ],
   cli: ['nx'],
-  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
+  cypress: [
+    'cypress',
+    '@angular-devkit/schematics',
+    '@nrwl/cypress',
+    // migration utilities
+    '@phenomnomnominal/tsquery',
+    // installed dynamically
+    '@cypress/webpack-dev-server',
+    '@cypress/react',
+    // deps for cypress component testing devserver plugins deps
+    'css-loader',
+    'less-loader',
+    'loader-utils',
+    'babel-loader',
+    'swc-loader',
+    'next',
+    'sass',
+    'sass-loader',
+    'style-loader',
+    'stylus-loader',
+    'webpack',
+  ],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [

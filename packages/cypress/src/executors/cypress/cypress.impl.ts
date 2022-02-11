@@ -1,6 +1,3 @@
-import 'dotenv/config';
-import { basename, dirname, join } from 'path';
-import { installedCypressVersion } from '../../utils/cypress-version';
 import {
   ExecutorContext,
   logger,
@@ -9,6 +6,9 @@ import {
   runExecutor,
   stripIndents,
 } from '@nrwl/devkit';
+import 'dotenv/config';
+import { basename, dirname, join } from 'path';
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
@@ -47,14 +47,21 @@ export default async function cypressExecutor(
   options = normalizeOptions(options, context);
 
   let success;
-  for await (const baseUrl of startDevServer(options, context)) {
-    try {
-      success = await runCypress(baseUrl, options);
-      if (!options.watch) break;
-    } catch (e) {
-      logger.error(e.message);
-      success = false;
-      if (!options.watch) break;
+
+  if (options.testingType === 'component') {
+    // cypress handles all the dev server stuff
+    // TODO(caleb): is this going to hold the process hostage or exit early?
+    success = await runCypress(options.baseUrl, options, context);
+  } else {
+    for await (const baseUrl of startDevServer(options, context)) {
+      try {
+        success = await runCypress(baseUrl, options, context);
+        if (!options.watch) break;
+      } catch (e) {
+        logger.error(e.message);
+        success = false;
+        if (!options.watch) break;
+      }
     }
   }
 
@@ -162,14 +169,18 @@ async function* startDevServer(
  * By default, Cypress will run tests from the CLI without the GUI and provide directly the results in the console output.
  * If `watch` is `true`: Open Cypress in the interactive GUI to interact directly with the application.
  */
-async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
+async function runCypress(
+  baseUrl: string,
+  opts: CypressExecutorOptions,
+  context: ExecutorContext
+) {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = dirname(opts.cypressConfig);
   const options: any = {
     project: projectFolderPath,
     configFile: basename(opts.cypressConfig),
+    config: {},
   };
-
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
     options.config = { baseUrl };
@@ -187,6 +198,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   }
 
   options.tag = opts.tag;
+  // @ts-ignore
   options.exit = opts.exit;
   options.headed = opts.headed;
 
@@ -199,7 +211,10 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   options.parallel = opts.parallel;
   options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
+  // TODO(caleb): is this supposed to be ignoreSpecPatterns now?
+  // @ts-ignore
   options.ignoreTestFiles = opts.ignoreTestFiles;
+  options.ignoreSpecPatterns = opts.ignoreSpecPatterns;
 
   if (opts.reporter) {
     options.reporter = opts.reporter;

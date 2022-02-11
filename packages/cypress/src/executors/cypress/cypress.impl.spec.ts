@@ -384,22 +384,6 @@ describe('Cypress builder', () => {
     expect(Object.keys(runExecutor.mock.calls[0][1])).toContain('watch');
   });
 
-  it('should forward testingType', async () => {
-    const { success } = await cypressExecutor(
-      {
-        ...cypressOptions,
-        testingType: 'component',
-      },
-      mockContext
-    );
-    expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
-      expect.objectContaining({
-        testingType: 'component',
-      })
-    );
-  });
-
   it('should forward headed', async () => {
     const { success } = await cypressExecutor(
       {
@@ -414,5 +398,35 @@ describe('Cypress builder', () => {
         headed: true,
       })
     );
+  });
+
+  describe('Component Testing', () => {
+    it('should forward testingType', async () => {
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          testingType: 'component',
+        },
+        mockContext
+      );
+      expect(success).toEqual(true);
+      expect(cypressRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          testingType: 'component',
+        })
+      );
+    });
+
+    it('should not create a devserver', async () => {
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          testingType: 'component',
+        },
+        mockContext
+      );
+      expect(success).toEqual(true);
+      expect(runExecutor).not.toHaveBeenCalled();
+    });
   });
 });

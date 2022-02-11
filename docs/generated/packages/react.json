@@ -384,6 +384,12 @@
             "enum": ["babel", "swc"],
             "default": "babel",
             "description": "Which compiler to use."
+          },
+          "addCypress": {
+            "type": "boolean",
+            "description": "Add Cypress component testing to project. https://cypress.io",
+            "default": false,
+            "alias": "cy"
           }
         },
         "required": ["name"],
@@ -525,6 +531,12 @@
           "fileName": {
             "type": "string",
             "description": "Create a component with this file name."
+          },
+          "componentTest": {
+            "type": "boolean",
+            "description": "Create a Cypress component test file for the component. https://docs.cypress.io/guides/component-testing/introduction",
+            "default": false,
+            "alias": "cy"
           }
         },
         "required": ["name", "project"],

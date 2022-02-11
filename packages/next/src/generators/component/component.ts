@@ -3,6 +3,7 @@ import type { SupportedStyles } from '@nrwl/react';
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
 import { convertNxGenerator, getProjects, Tree } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { cypressComponentTestFiles } from '@nrwl/cypress';
 
 interface Schema {
   name: string;
@@ -10,6 +11,7 @@ interface Schema {
   style: SupportedStyles;
   directory?: string;
   flat?: boolean;
+  componentTest?: boolean;
 }
 
 function getDirectory(host: Tree, options: Schema) {
@@ -28,13 +30,21 @@ function getDirectory(host: Tree, options: Schema) {
  * extra dependencies for css, sass, less, styl style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
+  const { componentTest, ...restOptions } = options;
   const componentInstall = await reactComponentGenerator(host, {
-    ...options,
+    ...restOptions,
     directory: getDirectory(host, options),
     pascalCaseFiles: false,
     classComponent: false,
     routing: false,
   });
+
+  if (componentTest) {
+    cypressComponentTestFiles(host, {
+      ...options,
+      componentType: 'next',
+    });
+  }
 
   const styledInstall = addStyleDependencies(host, options.style);
 

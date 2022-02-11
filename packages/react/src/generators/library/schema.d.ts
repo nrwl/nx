@@ -23,4 +23,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   compiler?: 'babel' | 'swc';
+  addCypress?: boolean;
 }

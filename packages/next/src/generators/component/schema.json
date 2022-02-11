@@ -96,6 +96,12 @@
       "type": "boolean",
       "description": "Create component at the source root rather than its own directory.",
       "default": false
+    },
+    "componentTest": {
+      "type": "boolean",
+      "description": "Create a Cypress component test file for the component. https://docs.cypress.io/guides/component-testing/introduction",
+      "default": false,
+      "alias": "cy"
     }
   },
   "required": ["name", "project"]

@@ -11,6 +11,10 @@ import {
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  cypressComponentProject,
+  cypressComponentTestFiles,
+} from '@nrwl/cypress';
 
 export async function libraryGenerator(host: Tree, options: Schema) {
   const name = names(options.name).fileName;
@@ -27,8 +31,29 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   });
   tasks.push(initTask);
 
-  const libTask = await reactLibraryGenerator(host, options);
+  // prevent the React lib generator from making cypress component tests
+  // as we need to make a next version not react
+  const { addCypress, ...restOptions } = options;
+
+  const libTask = await reactLibraryGenerator(host, restOptions);
   tasks.push(libTask);
+
+  // TODO(caleb): test this
+  if (addCypress) {
+    const cypressTask = await cypressComponentProject(host, {
+      project: options.name,
+      componentType: 'next',
+      compiler: 'babel',
+    });
+    tasks.push(cypressTask);
+
+    cypressComponentTestFiles(host, {
+      componentType: 'next',
+      project: options.name,
+      name: options.name,
+      directory: options.directory,
+    });
+  }
 
   updateJson(host, joinPathFragments(projectRoot, '.babelrc'), (json) => {
     if (options.style === '@emotion/styled') {

@@ -6,11 +6,11 @@
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/cypress:convert-cypress-ten --project=my-cool-app-e2e",
+      "command": "nx g @nrwl/cypress:convert-cypress-ten --project=my-cool-app-e2e",
       "description": "Convert my-cool-app-e2e to Cypress 10"
     },
     {
-      "command": "g @nrwl/cypress:convert-cypress-ten --all",
+      "command": "nx g @nrwl/cypress:convert-cypress-ten --all",
       "description": "Convert all e2e projects in the workspace to Cypress 10"
     }
   ],

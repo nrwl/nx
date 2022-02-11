@@ -22,4 +22,5 @@ export interface Schema {
   strict?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  addCypress?: boolean;
 }

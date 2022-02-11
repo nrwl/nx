@@ -1,6 +1,6 @@
-import { createApp, createLib } from '../../utils/testing-generators';
 import { logger, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createApp, createLib } from '../../utils/testing-generators';
 import { componentGenerator } from './component';
 
 describe('component', () => {
@@ -98,6 +98,32 @@ describe('component', () => {
     expect(
       appTree.exists('apps/my-app/src/app/hello/hello.module.css')
     ).toBeFalsy();
+  });
+
+  it('should generate files for cypress component tests', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      componentTest: true,
+      project: projectName,
+    });
+
+    expect(
+      appTree.exists('libs/my-lib/src/lib/hello/hello.cy.tsx')
+    ).toBeTruthy();
+    expect(appTree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
+    ).toBeTruthy();
+    expect(
+      appTree.exists('libs/my-lib/src/lib/hello/hello.module.css')
+    ).toBeTruthy();
+    expect(
+      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
+    ).toMatch(/import styles from '.\/hello.module.css'/);
+    expect(
+      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
+    ).toMatch(/<div className={styles\['container']}>/);
   });
 
   describe('--export', () => {

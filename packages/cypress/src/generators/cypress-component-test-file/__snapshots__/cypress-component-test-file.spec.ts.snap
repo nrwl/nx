@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress Component Test File directory normalization should default next spec directory 1`] = `
+Object {
+  "componentType": "next",
+  "directory": "libs/cool-lib/src/spec",
+  "name": "CoolComponent",
+  "project": "cool-lib",
+}
+`;
+
+exports[`Cypress Component Test File directory normalization should default to library directory 1`] = `
+Object {
+  "componentType": "react",
+  "directory": "libs/cool-lib/src/lib",
+  "name": "CoolComponent",
+  "project": "cool-lib",
+}
+`;
+
+exports[`Cypress Component Test File directory normalization should use the passed in directory 1`] = `
+Object {
+  "componentType": "react",
+  "directory": "libs/cool-lib/src/custom-dir/here",
+  "name": "CoolComponent",
+  "project": "cool-lib",
+}
+`;
+
+exports[`Cypress Component Test File should default react app directory 1`] = `
+Object {
+  "componentType": "react",
+  "directory": "libs/cool-lib/src/app",
+  "name": "CoolComponent",
+  "project": "cool-lib",
+}
+`;
+
+exports[`Cypress Component Test File should fall through to sourceRoot 1`] = `
+Object {
+  "componentType": "idk",
+  "directory": "libs/cool-lib/src",
+  "name": "CoolComponent",
+  "project": "cool-lib",
+}
+`;

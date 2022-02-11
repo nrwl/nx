@@ -74,7 +74,13 @@
     "path": "generated/packages/cypress.json",
     "schemas": {
       "executors": ["cypress"],
-      "generators": ["init", "cypress-project"]
+      "generators": [
+        "init",
+        "cypress-project",
+        "cypress-component-project",
+        "convert-cypress-ten",
+        "cypress-component-test-file"
+      ]
     }
   },
   {

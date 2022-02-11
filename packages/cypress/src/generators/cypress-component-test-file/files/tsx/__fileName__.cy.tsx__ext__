@@ -1,0 +1,10 @@
+import * as React from 'react'
+import { mount } from '@cypress/react'
+import <%= className %> from './<%= fileName %>'
+
+describe(<%= className %>.name, () => {
+  it('should create', () => {
+    mount(<<%= className %> />)
+    cy.contains(/Welcome/i)
+  })
+})

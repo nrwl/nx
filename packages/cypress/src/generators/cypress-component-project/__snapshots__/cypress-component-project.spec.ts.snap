@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress Component Project next should create project w/babel 1`] = `
+Object {
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;
+
+exports[`Cypress Component Project next should create project w/swc 1`] = `
+Object {
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;
+
+exports[`Cypress Component Project react should create project w/babel 1`] = `
+Object {
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;
+
+exports[`Cypress Component Project react should create project w/swc 1`] = `
+Object {
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;
+
+exports[`Cypress Component Project should update build tsconfig 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"exclude\\": [
+    \\"**/*.spec.ts\\",
+    \\"**/*.test.ts\\",
+    \\"**/*.spec.tsx\\",
+    \\"**/*.test.tsx\\",
+    \\"**/*.spec.js\\",
+    \\"**/*.test.js\\",
+    \\"**/*.spec.jsx\\",
+    \\"**/*.test.jsx\\",
+    \\"**/*.cy.ts\\",
+    \\"cypress/**/*\\",
+    \\"cypress.config.ts\\",
+    \\"**/*.cy.js\\",
+    \\"**/*.cy.tsx\\",
+    \\"**/*.cy.jsx\\"
+  ],
+  \\"include\\": [
+    \\"**/*.js\\",
+    \\"**/*.jsx\\",
+    \\"**/*.ts\\",
+    \\"**/*.tsx\\"
+  ]
+}
+"
+`;
+
+exports[`Cypress Component Project validation should create cypress project over existing with --force 1`] = `
+Object {
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;
+
+exports[`Cypress Component Project validation should not be able to create project with < cypress v9 installed 1`] = `[Error: Cypress version of 10 or higher is required to create a component testing project]`;
+
+exports[`Cypress Component Project validation should throw an error if cypress project is already created 1`] = `[Error: The project already has a cypress component testing target. Please use the --force flag to overwrite the existing project.]`;

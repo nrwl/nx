@@ -390,6 +390,12 @@
             "type": "boolean",
             "description": "Create component at the source root rather than its own directory.",
             "default": false
+          },
+          "componentTest": {
+            "type": "boolean",
+            "description": "Create a Cypress component test file for the component. https://docs.cypress.io/guides/component-testing/introduction",
+            "default": false,
+            "alias": "cy"
           }
         },
         "required": ["name", "project"],
@@ -555,6 +561,12 @@
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
             "type": "boolean"
+          },
+          "addCypress": {
+            "type": "boolean",
+            "description": "Add a Cypress component tests to library https://cypress.io",
+            "default": false,
+            "alias": "cy"
           }
         },
         "required": ["name"],
