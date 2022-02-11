@@ -26,15 +26,15 @@ jobs:
       - checkout
       - run: npm install
       - nx/set-shas
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=3
-      - run: npx nx affected --base=$NX_BASE --target=test --parallel --max-parallel=2
+      - run: npx nx affected --base=$NX_BASE --target=build --parallel=3
+      - run: npx nx affected --base=$NX_BASE --target=test --parallel=2
   pr:
     steps:
       - checkout
       - run: npm install
       - nx/set-shas
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=3
-      - run: npx nx affected --base=$NX_BASE --target=test --parallel --max-parallel=2
+      - run: npx nx affected --base=$NX_BASE --target=build --parallel=3
+      - run: npx nx affected --base=$NX_BASE --target=test --parallel=2
 workflows:
   build:
     jobs:
