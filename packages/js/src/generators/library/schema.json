@@ -91,7 +91,7 @@
       "type": "string",
       "enum": ["workspace", "project", "npm-scripts"],
       "default": "project",
-      "description": "Determines how whether the project's executors should be configured in workspace.json, project.json or as npm scripts"
+      "description": "Determines whether the project's executors should be configured in workspace.json, project.json or as npm scripts"
     },
     "compiler": {
       "type": "string",

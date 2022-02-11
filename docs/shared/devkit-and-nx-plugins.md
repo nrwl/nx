@@ -34,7 +34,7 @@ Plugins have:
   - Plugins can provide an array of glob patterns, `projectFilePatterns` that are used to infer project information.
   - Plugins can provide a function `registerProjectTargets` that takes in one of the matched project files, and
     returns an object containing inferred targets from the file.
-  - This allows plugins to add new projects to the workspace when it doesn't contain workspace.json, and infer extra
+  - This allows plugins to add new projects to the workspace when it doesn't contain `workspace.json`, and infer extra
     targets without adding them into project configuration.
 
 All of the core plugins are written using Nx Devkit, and you can use the same utilities to write your own generators and

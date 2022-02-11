@@ -46,7 +46,6 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -74,7 +73,6 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -110,7 +108,6 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json

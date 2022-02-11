@@ -57,7 +57,7 @@ npx nx g @nrwl/react-native:lib your-lib-name
 
 ### Generating Components
 
-To generate a new comopnent inside library run:
+To generate a new component inside library run:
 
 ```bash
 npx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
