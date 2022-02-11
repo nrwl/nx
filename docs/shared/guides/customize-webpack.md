@@ -11,11 +11,13 @@ The custom webpack file contains a function that takes as input the existing web
 `apps/my-app/custom-webpack.config.js`:
 
 ```typescript
+// Helper for combining webpack config objects
+const { merge } = require('webpack-merge');
+
 module.exports = (config, context) => {
-  return {
-    ...config,
+  return merge(config, {
     // overwrite values here
-  };
+  });
 };
 ```
 
