@@ -26,6 +26,7 @@ import {
   CrossOriginValue,
   writeIndexHtml,
 } from '../../utils/webpack/write-index-html';
+import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 
 export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   index: string;
@@ -106,14 +107,20 @@ function getWebpackConfigs(
       : undefined,
   ]
     .filter(Boolean)
-    .map((config) =>
-      options.webpackConfig
-        ? require(options.webpackConfig)(config, {
-            options,
-            configuration: context.configurationName,
-          })
-        : config
-    );
+    .map((config) => {
+      if (options.webpackConfig) {
+        const customWebpack = resolveCustomWebpackConfig(
+          options.webpackConfig,
+          options.tsConfig
+        );
+        return customWebpack(config, {
+          options,
+          configuration: context.configurationName,
+        });
+      } else {
+        return config;
+      }
+    });
 }
 
 export async function* run(
