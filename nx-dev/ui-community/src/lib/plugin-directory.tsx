@@ -46,7 +46,12 @@ export function PluginDirectory({
       <div className="my-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {pluginList
           .filter((plugin) =>
-            !!searchTerm ? plugin.name.includes(searchTerm) : true
+            !!searchTerm
+              ? plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                plugin.description
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+              : true
           )
           .map((plugin) => (
             <PluginCard
