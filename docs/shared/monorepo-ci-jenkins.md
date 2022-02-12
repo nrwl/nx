@@ -50,8 +50,8 @@ pipeline {
                     steps {
                         sh "npm install"
                         sh "npx nx-cloud start-ci-run"
-                        sh "npx nx affected --base origin/${CHANGE_TARGET} --target=build --parallel=3"
-                        sh "npx nx affected --base origin/${CHANGE_TARGET} --target=test --parallel=2"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=build --parallel=3"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=test --parallel=2"
                         sh "npx nx-cloud stop-all-agents"
                     }
                 }
