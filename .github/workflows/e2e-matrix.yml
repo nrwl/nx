@@ -104,9 +104,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ matrix.os }}-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
         restore-keys: |
-          ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+          ${{ matrix.os }}-node-${{ matrix.node_version }}-yarn-
 
     - name: Install packages
       run: yarn install --prefer-offline --frozen-lockfile --non-interactive
@@ -133,7 +133,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
-        key: brew-${{ matrix.node-version }}
+        key: brew-${{ matrix.node_version }}
         restore-keys: |
           brew-
 
