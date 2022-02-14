@@ -6,6 +6,65 @@ export async function getGitHashForFiles(
   potentialFilesToHash: string[],
   path: string
 ): Promise<{ hashes: Map<string, string>; deleted: string[] }> {
+  const { filesToHash, deleted } = getActualFilesToHash(
+    potentialFilesToHash,
+    path
+  );
+
+  const res: Map<string, string> = new Map<string, string>();
+  const promises: Promise<Map<string, string>>[] = [];
+  if (filesToHash.length) {
+    // On windows the max length is limited by the length of
+    // the overall comand, rather than the number of individual
+    // arguments. Since file paths are large and rather variable,
+    // we use a smaller batchSize.
+    const batchSize = process.platform === 'win32' ? 500 : 4000;
+    for (
+      let startIndex = 0;
+      startIndex < filesToHash.length;
+      startIndex += batchSize
+    ) {
+      promises.push(
+        getGitHashForBatch(
+          filesToHash.slice(startIndex, startIndex + batchSize),
+          path
+        )
+      );
+    }
+  }
+  // Merge batch results into final result set
+  const batchResults = await Promise.all(promises);
+  for (const batch of batchResults) {
+    batch.forEach((v, k) => res.set(k, v));
+  }
+  return { hashes: res, deleted };
+}
+
+async function getGitHashForBatch(filesToHash: string[], path) {
+  const res: Map<string, string> = new Map<string, string>();
+  const hashStdout = await spawnProcess(
+    'git',
+    ['hash-object', ...filesToHash],
+    path
+  );
+  const hashes: string[] = hashStdout.split('\n').filter((s) => !!s);
+  if (hashes.length !== filesToHash.length) {
+    throw new Error(
+      `Passed ${filesToHash.length} file paths to Git to hash, but received ${hashes.length} hashes.`
+    );
+  }
+  for (let i = 0; i < hashes.length; i++) {
+    const hash: string = hashes[i];
+    const filePath: string = filesToHash[i];
+    res.set(filePath, hash);
+  }
+  return res;
+}
+
+function getActualFilesToHash(
+  potentialFilesToHash: string[],
+  path: string
+): { filesToHash: string[]; deleted: string[] } {
   const filesToHash = [];
   const deleted = [];
   for (let f of potentialFilesToHash) {
@@ -15,27 +74,7 @@ export async function getGitHashForFiles(
       deleted.push(f);
     }
   }
-
-  const res: Map<string, string> = new Map<string, string>();
-  if (filesToHash.length) {
-    const hashStdout = await spawnProcess(
-      'git',
-      ['hash-object', ...filesToHash],
-      path
-    );
-    const hashes: string[] = hashStdout.split('\n').filter((s) => !!s);
-    if (hashes.length !== filesToHash.length) {
-      throw new Error(
-        `Passed ${filesToHash.length} file paths to Git to hash, but received ${hashes.length} hashes.`
-      );
-    }
-    for (let i = 0; i < hashes.length; i++) {
-      const hash: string = hashes[i];
-      const filePath: string = filesToHash[i];
-      res.set(filePath, hash);
-    }
-  }
-  return { hashes: res, deleted };
+  return { filesToHash, deleted };
 }
 
 async function spawnProcess(command: string, args: string[], cwd: string) {
