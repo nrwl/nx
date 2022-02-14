@@ -12,6 +12,8 @@ For instance, if a library under the `booking` folder is now being shared by mul
 nx g move --project booking-some-library shared/some-library
 ```
 
+> **Note**: For Angular projects, you should use the [`@nrwl/angular:move` generator](/angular/move) instead.
+
 ## Remove Generator
 
 Similarly, if you no longer need a library, you can remove it with the [`@nrwl/workspace:remove` generator](/workspace/remove).
