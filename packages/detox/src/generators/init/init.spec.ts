@@ -13,7 +13,6 @@ describe('init', () => {
     await detoxInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['@nrwl/detox']).toBeDefined();
-    expect(packageJson.devDependencies['@types/detox']).toBeDefined();
     expect(packageJson.devDependencies['detox']).toBeDefined();
   });
 });

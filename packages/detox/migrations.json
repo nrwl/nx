@@ -3,8 +3,14 @@
     "add-build-target-test-13-5-0": {
       "version": "13.5.0-beta.0",
       "cli": "nx",
-      "description": "buildTarget to test-ios and test-android for detox app",
+      "description": "add buildTarget to test-ios and test-android for detox app",
       "factory": "./src/migrations/update-13-5-0/add-build-target-test-13-5-0"
+    },
+    "remove-types-detox-13-8-2": {
+      "version": "13.8.2-beta.0",
+      "cli": "nx",
+      "description": "remove deprecated @types/detox from package.json",
+      "factory": "./src/migrations/update-13-8-2/remove-types-detox-13-8-2"
     }
   },
   "packageJsonUpdates": {
@@ -61,6 +67,19 @@
         },
         "@types/detox": {
           "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "5.16.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.8.2": {
+      "version": "13.8.2-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.4.5",
           "alwaysAddToPackageJson": false
         },
         "@testing-library/jest-dom": {

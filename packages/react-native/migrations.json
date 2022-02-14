@@ -333,6 +333,47 @@
           "addToPackageJson": "devDependencies"
         }
       }
+    },
+    "13.8.2": {
+      "version": "13.8.2-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.67.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.66.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "7.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "7.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "7.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.67.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.67.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.67.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.17.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

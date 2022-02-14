@@ -64,17 +64,15 @@ function runCliBuild(
 }
 
 function getGradleCommand(options: ReactNativeBuildOptions) {
-  if (options.apk && options.debug) {
-    return 'assembleDebug';
-  }
-
   if (options.apk) {
+    if (options.debug) {
+      return 'assembleDebug';
+    }
     return 'assembleRelease';
+  } else {
+    if (options.debug) {
+      return 'bundleDebug';
+    }
+    return 'bundleRelease';
   }
-
-  if (options.debug) {
-    return 'bundleDebug';
-  }
-
-  return 'bundleRelease';
 }
