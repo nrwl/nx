@@ -11,7 +11,7 @@ module.exports = {
     '../src/<%= projectType %>/**/*.stories.mdx',
     '../src/<%= projectType %>/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...rootMain.addons <% if(uiFramework === '@storybook/react') { %>, '@nrwl/react/plugins/storybook' <% } %>],
+  addons: [...rootMain.addons <% if(uiFramework === '@storybook/react') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
     if (rootMain.webpackFinal) {

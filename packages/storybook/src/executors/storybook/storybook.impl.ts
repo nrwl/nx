@@ -7,7 +7,6 @@ import {
   resolveCommonStorybookOptionMapper,
   runStorybookSetupCheck,
 } from '../utils';
-
 export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   host?: string;
   port?: number;
@@ -23,7 +22,7 @@ export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
 export default async function* storybookExecutor(
   options: StorybookExecutorOptions,
   context: ExecutorContext
-) {
+): AsyncGenerator<{ success: boolean }> {
   let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
 
   const frameworkOptions = (await import(frameworkPath)).default;

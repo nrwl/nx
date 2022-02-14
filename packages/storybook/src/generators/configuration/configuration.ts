@@ -82,7 +82,9 @@ export async function configurationGenerator(
   return runTasksInSerial(...tasks);
 }
 
-function normalizeSchema(schema: StorybookConfigureSchema) {
+function normalizeSchema(
+  schema: StorybookConfigureSchema
+): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
     linter: Linter.TsLint,
@@ -209,14 +211,19 @@ function configureTsProjectConfig(
     tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
   }
 
-  tsConfigContent.exclude = [
-    ...(tsConfigContent.exclude || []),
-    '**/*.stories.ts',
-    '**/*.stories.js',
-    ...(isFramework('react', schema)
-      ? ['**/*.stories.jsx', '**/*.stories.tsx']
-      : []),
-  ];
+  if (
+    !tsConfigContent.exclude.includes('**/*.stories.ts') &&
+    !tsConfigContent.exclude.includes('**/*.stories.js')
+  ) {
+    tsConfigContent.exclude = [
+      ...(tsConfigContent.exclude || []),
+      '**/*.stories.ts',
+      '**/*.stories.js',
+      ...(isFramework('react', schema) || isFramework('react-native', schema)
+        ? ['**/*.stories.jsx', '**/*.stories.tsx']
+        : []),
+    ];
+  }
 
   writeJson(tree, tsConfigPath, tsConfigContent);
 }
@@ -231,12 +238,18 @@ function configureTsSolutionConfig(
   const tsConfigPath = join(root, 'tsconfig.json');
   const tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
 
-  tsConfigContent.references = [
-    ...(tsConfigContent.references || []),
-    {
-      path: './.storybook/tsconfig.json',
-    },
-  ];
+  if (
+    !tsConfigContent.references
+      .map((reference) => reference.path)
+      .includes('./.storybook/tsconfig.json')
+  ) {
+    tsConfigContent.references = [
+      ...(tsConfigContent.references || []),
+      {
+        path: './.storybook/tsconfig.json',
+      },
+    ];
+  }
 
   writeJson(tree, tsConfigPath, tsConfigContent);
 }
@@ -305,6 +318,9 @@ function addStorybookTask(
   uiFramework: string,
   buildTargetForAngularProjects: string
 ) {
+  if (uiFramework === '@storybook/react-native') {
+    return;
+  }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
     executor: '@nrwl/storybook:storybook',

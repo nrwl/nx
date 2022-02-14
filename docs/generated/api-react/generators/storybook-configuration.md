@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react:storybook-configuration generator'
-description: 'Set up storybook for a react library'
+description: 'Set up storybook for a react app or library'
 ---
 
 # @nrwl/react:storybook-configuration
 
-Set up storybook for a react library
+Set up storybook for a react app or library
 
 ## Usage
 

@@ -1,11 +1,11 @@
 ---
 title: '@nrwl/react:stories generator'
-description: 'Create stories/specs for all components declared in a library'
+description: 'Create stories/specs for all components declared in an app or library'
 ---
 
 # @nrwl/react:stories
 
-Create stories/specs for all components declared in a library
+Create stories/specs for all components declared in an app or library
 
 ## Usage
 

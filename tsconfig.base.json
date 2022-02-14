@@ -67,6 +67,7 @@
       "@nrwl/react-native": ["./packages/react-native"],
       "@nrwl/react/*": ["./packages/react/*"],
       "@nrwl/storybook": ["./packages/storybook"],
+      "@nrwl/storybook/*": ["./packages/storybook/*"],
       "@nrwl/tao": ["./packages/tao"],
       "@nrwl/tao/*": ["./packages/tao/*"],
       "@nrwl/typedoc-theme": ["/typedoc-theme/src/index.ts"],

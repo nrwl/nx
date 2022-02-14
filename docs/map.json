@@ -1199,6 +1199,21 @@
             "file": "generated/api-react-native/generators/library"
           },
           {
+            "name": "component-story generator",
+            "id": "component-story",
+            "file": "generated/api-react-native/generators/component-story"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "generated/api-react-native/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "generated/api-react-native/generators/storybook-configuration"
+          },
+          {
             "name": "build android executor",
             "id": "build-android",
             "file": "generated/api-react-native/executors/build-android"
@@ -1227,6 +1242,11 @@
             "name": "start executor",
             "id": "start",
             "file": "generated/api-react-native/executors/start"
+          },
+          {
+            "name": "storybook executor",
+            "id": "storybook",
+            "file": "generated/api-react-native/executors/storybook"
           },
           {
             "name": "sync deps executor",

@@ -10,6 +10,7 @@ export const reactNativeCommunityCliIos = '6.2.0';
 export const reactNativeCommunityCliAndroid = '6.3.0';
 
 export const reactNativeConfigVersion = '1.4.5';
+export const reactNativeAsyncStorageVersion = '1.15.17';
 
 export const metroReactNativeBabelPresetVersion = '0.66.2';
 
