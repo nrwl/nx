@@ -275,6 +275,7 @@
     "@docsearch/react": "1.0.0-alpha.27",
     "@headlessui/react": "^1.1.1",
     "@heroicons/react": "^1.0.1",
+    "@napi-rs/canvas": "^0.1.19",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@tailwindcss/forms": "^0.4.0",
     "@tailwindcss/typography": "^0.5.0",
