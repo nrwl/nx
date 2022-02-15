@@ -67,7 +67,7 @@
       "options": {
         "commands": [
           "echo \"🌁 GENERATE OG IMAGES COMMAND 🌁\"",
-          "nx run nx-dev:generate-og-images --skip-nx-cache",
+          "nx run nx-dev:generate-og-images",
           "echo \"BUILD COMMAND\"",
           "nx run nx-dev:build"
         ],
