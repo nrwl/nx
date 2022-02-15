@@ -5,7 +5,7 @@ export function ConnectWithUs(): ReactComponentElement<any> {
   return (
     <article
       id="community"
-      className="flex flex-col space-y-12 p-4 lg:mx-auto lg:max-w-7xl lg:flex-row lg:items-center lg:space-y-0 lg:space-x-20"
+      className="flex flex-col space-y-12 p-4 lg:mx-auto lg:max-w-7xl lg:flex-row lg:items-center lg:space-y-0 lg:space-x-20 lg:px-8"
     >
       <header className="space-y-10 md:py-12 lg:w-5/12 xl:w-5/12">
         <div>
@@ -117,7 +117,7 @@ export function ConnectWithUs(): ReactComponentElement<any> {
                 </p>
               </a>
             </div>
-            <div className="group hover:border-nx-300 relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out">
+            <div className="group hover:border-green-nx-base relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-green-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105"></div>
                 <div className="bg-green-nx-base absolute inset-0 -rotate-6 transform rounded-2xl bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105"></div>
