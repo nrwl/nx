@@ -68,6 +68,7 @@ async function getTerminalOutputLifeCycle(
     };
   } else if (
     shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
+    !showVerboseOutput &&
     process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false'
   ) {
     return await createRunManyDynamicOutputRenderer({
