@@ -48,11 +48,12 @@ export function createAsyncIterable<T = unknown>(
         next() {
           return new Promise<{ value: T | undefined; done: boolean }>(
             (resolve, reject) => {
-              if (done) resolve({ value: undefined, done: true });
-              if (error) reject(error);
-
               if (pushQueue.length > 0) {
                 resolve({ value: pushQueue.shift(), done: false });
+              } else if (done) {
+                resolve({ value: undefined, done: true });
+              } else if (error) {
+                reject(error);
               } else {
                 pullQueue.push([resolve, reject]);
               }

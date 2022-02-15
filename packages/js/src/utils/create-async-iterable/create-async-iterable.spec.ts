@@ -28,4 +28,31 @@ describe(createAsyncIterable.name, () => {
       }
     }).rejects.toThrow(/Oops/);
   });
+
+  test('multiple signals in the same macro/microtask', async () => {
+    const it = createAsyncIterable<string>(({ next, done }) => {
+      setTimeout(() => {
+        next('first');
+      });
+
+      setTimeout(() => {
+        // should pass through in the same macro/microtask
+        next('second');
+        next('third');
+        next('fourth');
+        done();
+      }, 10);
+
+      setTimeout(() => {
+        next('should be ignored');
+      }, 20);
+    });
+
+    const results: string[] = [];
+    for await (const x of it) {
+      results.push(x);
+    }
+
+    expect(results).toEqual(['first', 'second', 'third', 'fourth']);
+  });
 });
