@@ -1,6 +1,6 @@
-import { ensureDir, readFile, readFileSync, writeFileSync } from 'fs-extra';
+import { Canvas, Image } from '@napi-rs/canvas';
+import { ensureDir, readFile, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
-import { GlobalFonts, Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 
 const documents: any[] = require('../../../docs/map.json')[0]['itemList'];
 const targetFolder: string = resolve(
