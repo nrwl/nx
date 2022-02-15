@@ -2,7 +2,6 @@ import {
   BeakerIcon,
   ChatIcon,
   ClipboardListIcon,
-  ShareIcon,
 } from '@heroicons/react/solid';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { ConnectWithUs, PluginDirectory } from '@nrwl/nx-dev/ui-community';
@@ -86,7 +85,7 @@ export function Community(props: CommunityProps) {
                     <span className="absolute inset-0" aria-hidden="true" />
                     <p className="leading-relaxed text-gray-600">
                       There are many ways you can connect with the open-source
-                      Nx community: Slack, Youtube, Twitter and email newletter
+                      Nx community: Slack, Youtube, Twitter and email newsletter
                       are available to keep you on top of all the Nx things!
                     </p>
                   </a>

@@ -10,9 +10,9 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
   return (
     <article
       id="create-nx-plugin"
-      className="items-center lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
+      className="items-center p-4 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
     >
-      <header className="mx-auto max-w-xl px-4 sm:px-6 lg:col-start-1 lg:mx-0 lg:max-w-none lg:px-0">
+      <header className="mx-auto max-w-xl lg:col-start-1 lg:mx-0 lg:max-w-none">
         <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900">
           <span className="sr-only">Nx </span>Community Plugins
         </h1>
@@ -55,7 +55,7 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
         </ul>
       </header>
       <div className="lg:col-start-2">
-        <div className="relative flex flex-col items-center justify-center px-4 lg:h-full lg:px-0">
+        <div className="relative flex flex-col items-center justify-center lg:h-full">
           <iframe
             loading="lazy"
             className="max-w-screen-sm"
