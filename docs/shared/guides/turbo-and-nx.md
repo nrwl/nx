@@ -136,7 +136,7 @@ Benchmarking is hard because a lot depends on what you are trying to run, in wha
 This is the result:
 ![nx and turbo benchmark](/shared/turbo-nx-perf.gif)
 
-Nx is 9.4 times faster on the latest MBP. Nx is 19.5 times faster on a Windows laptop.
+Nx is 9.4 times faster on the latest MBP. We have made several changes to [the benchmark](https://github.com/vsavkin/large-monorepo/) since it was released (removed the usage `npx` and addressed other concerns folks had), but the result remained roughly the same. Please check out the benchmark.
 
 Why is it faster? Nx is in many ways akin to React in that it's doing tree diffing when restoring files from the cache. If the right files are in the right place, Nx won't touch them. Turbo blows everything away every time. Nx's version isn't just faster, it's also more useful (again similarly to tree diffing in React). Blowing everything away on every restoration means that if any tools watch the folders (which is common when you build large apps or build microfrontends), they are going to get confused or triggered for no reason. This is similar to how recreating the DOM from scratch isn't just slower, but results in worse UX. But even if you disable tree-diffing and make Nx do what Turbo does, it is still 1.7 times faster.
 
