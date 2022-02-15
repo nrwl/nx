@@ -4,15 +4,9 @@ import {
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
 import { join, resolve } from 'path';
-import { eachValueFrom } from 'rxjs-for-await';
-import { map } from 'rxjs/operators';
 import { checkDependencies } from '../../utils/check-dependencies';
 import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
-import {
-  ExecutorEvent,
-  ExecutorOptions,
-  NormalizedExecutorOptions,
-} from '../../utils/schema';
+import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
@@ -91,20 +85,10 @@ export async function* tscExecutor(
     });
   }
 
-  return yield* eachValueFrom(
-    compileTypeScriptFiles(options, context, async () => {
-      await assetHandler.processAllAssetsOnce();
-      updatePackageJson(options.main, options.outputPath, projectRoot);
-    }).pipe(
-      map(
-        ({ success }) =>
-          ({
-            success,
-            outfile: options.mainOutputPath,
-          } as ExecutorEvent)
-      )
-    )
-  );
+  return yield* compileTypeScriptFiles(options, context, async () => {
+    await assetHandler.processAllAssetsOnce();
+    updatePackageJson(options.main, options.outputPath, projectRoot);
+  });
 }
 
 export default tscExecutor;

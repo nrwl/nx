@@ -4,17 +4,17 @@ import type {
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode,
   ProjectGraphExternalNode,
+  ProjectGraphNode,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
-import { join } from 'path';
 import { existsSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
-import { directoryExists, fileExists } from '../../utilities/fileutils';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { cacheDir } from '../../utilities/cache-directory';
+import { directoryExists, fileExists } from '../../utilities/fileutils';
 
 export interface ProjectGraphCache {
   version: string;

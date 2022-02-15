@@ -3,7 +3,6 @@ import {
   compileTypeScript,
   compileTypeScriptWatcher,
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
-import { Observable } from 'rxjs';
 import type {
   CustomTransformers,
   Diagnostic,
@@ -11,15 +10,21 @@ import type {
   SourceFile,
   TransformerFactory,
 } from 'typescript';
+import { createAsyncIterable } from '../create-async-iterable/create-async-iteratable';
 import { NormalizedExecutorOptions } from '../schema';
 import { loadTsPlugins } from './load-ts-plugins';
 
-export function compileTypeScriptFiles(
-  options: NormalizedExecutorOptions,
+export async function* compileTypeScriptFiles(
+  normalizedOptions: NormalizedExecutorOptions,
   context: ExecutorContext,
-  postCompleteAction: () => void | Promise<void>
+  postCompilationCallback: () => void | Promise<void>
 ) {
-  const { compilerPluginHooks } = loadTsPlugins(options.transformers);
+  const getResult = (success: boolean) => ({
+    success,
+    outfile: normalizedOptions.mainOutputPath,
+  });
+
+  const { compilerPluginHooks } = loadTsPlugins(normalizedOptions.transformers);
 
   const getCustomTransformers = (program: Program): CustomTransformers => ({
     before: compilerPluginHooks.beforeHooks.map(
@@ -33,54 +38,29 @@ export function compileTypeScriptFiles(
     ),
   });
 
-  // const tcsOptions = {
-  //   outputPath: options.normalizedOutputPath,
-  //   projectName: context.projectName,
-  //   projectRoot: libRoot,
-  //   tsConfig: tsConfigPath,
-  //   deleteOutputPath: options.deleteOutputPath,
-  //   rootDir: options.srcRootForCompilationRoot,
-  //   watch: options.watch,
-  //   getCustomTransformers,
-  // };
-
   const tscOptions = {
-    outputPath: options.outputPath,
+    outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
-    projectRoot: options.projectRoot,
-    tsConfig: options.tsConfig,
-    // deleteOutputPath: options.deleteOutputPath,
-    // rootDir: options.srcRootForCompilationRoot,
-    watch: options.watch,
+    projectRoot: normalizedOptions.projectRoot,
+    tsConfig: normalizedOptions.tsConfig,
+    watch: normalizedOptions.watch,
     getCustomTransformers,
   };
 
-  return new Observable((subscriber) => {
-    if (options.watch) {
-      const watcher = compileTypeScriptWatcher(
-        tscOptions,
-        async (d: Diagnostic) => {
+  return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
+    async ({ next, done }) => {
+      if (normalizedOptions.watch) {
+        compileTypeScriptWatcher(tscOptions, async (d: Diagnostic) => {
           if (d.code === 6194) {
-            await postCompleteAction();
-            subscriber.next({ success: true });
+            next(getResult(true));
           }
-        }
-      );
-
-      return () => {
-        watcher.close();
-        subscriber.complete();
-      };
+        });
+      } else {
+        const { success } = compileTypeScript(tscOptions);
+        await postCompilationCallback();
+        next(getResult(success));
+        done();
+      }
     }
-
-    const result = compileTypeScript(tscOptions);
-    (postCompleteAction() as Promise<void>).then(() => {
-      subscriber.next(result);
-      subscriber.complete();
-    });
-
-    return () => {
-      subscriber.complete();
-    };
-  });
+  );
 }

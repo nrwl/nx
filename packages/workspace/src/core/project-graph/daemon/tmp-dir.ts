@@ -3,7 +3,7 @@
  * location within the OS's tmp directory where we write log files for background processes
  * and where we create the actual unix socket/named pipe for the daemon.
  */
-import { writeFileSync, statSync } from 'fs';
+import { statSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { cacheDir } from '../../../utilities/cache-directory';
 
