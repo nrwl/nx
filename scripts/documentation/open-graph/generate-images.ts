@@ -57,7 +57,10 @@ function createOpenGraphImage(
     context.textAlign = 'center';
     context.textBaseline = 'top';
     context.fillStyle = '#fff';
-    context.fillText(content, 600, 372);
+
+    const truncate = (str, n) =>
+      str.length > n ? str.substring(0, n) + '…' : str;
+    context.fillText(truncate(content, 40), 600, 372);
 
     console.log('Generating: ' + resolve(targetFolder + `/${filename}.jpg`));
 
