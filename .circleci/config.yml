@@ -41,16 +41,6 @@ executors:
     macos:
       xcode: &_XCODE_VERSION '13.0.0'
 
-  android:
-    <<: *defaults
-    docker:
-      - image: reactnativecommunity/react-native-android
-    resource_class: 'large'
-    environment:
-      - ADB_INSTALL_TIMEOUT: 10
-      - _JAVA_OPTIONS: '-Xmx1024m -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
-      - GRADLE_OPTS: '-Xmx2014m -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-XX:+UnlockExperimentalVMOptions -XX:+HeapDumpOnOutOfMemoryError"'
-
 # -------------------------
 #        COMMANDS
 # -------------------------
