@@ -1,0 +1,222 @@
+{
+  "hash": "1c2b69586aa096dc5e42eb252d0b5bfb94f20dc969a1e7b6f381a3b13add6928",
+  "layout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "projects": [
+    {
+      "name": "web",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "root": "apps/app1"
+      }
+    },
+    {
+      "name": "admin",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "root": "apps/app2"
+      }
+    },
+    {
+      "name": "core-util-auth",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "core/util-auth"
+      }
+    },
+    {
+      "name": "web-feature-home-page",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "web/feature-homepage"
+      }
+    },
+    {
+      "name": "web-feature-search",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "web/feature-search"
+      }
+    },
+    {
+      "name": "web-data-access",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "web/feature-search"
+      }
+    },
+    {
+      "name": "admin-feature-users",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "admin/feature-users"
+      }
+    },
+    {
+      "name": "admin-feature-billing",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "admin/feature-billing"
+      }
+    },
+    {
+      "name": "admin-data-access",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "admin/data-access"
+      }
+    },
+    {
+      "name": "shared-components-ui-button",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "shared/components/ui-button"
+      }
+    },
+    {
+      "name": "shared-components-ui-form",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "shared/components/ui-form"
+      }
+    },
+    {
+      "name": "shared-util",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "shared/util"
+      }
+    }
+  ],
+  "dependencies": {
+    "web": [
+      {
+        "type": "dynamic",
+        "source": "web",
+        "target": "web-feature-home-page"
+      },
+      {
+        "type": "dynamic",
+        "source": "web",
+        "target": "web-feature-search"
+      },
+      {
+        "type": "static",
+        "source": "web",
+        "target": "core-util-auth"
+      }
+    ],
+    "admin": [
+      {
+        "type": "dynamic",
+        "source": "admin",
+        "target": "admin-feature-users"
+      },
+      {
+        "type": "dynamic",
+        "source": "admin",
+        "target": "admin-feature-billing"
+      },
+      {
+        "type": "static",
+        "source": "admin",
+        "target": "core-util-auth"
+      }
+    ],
+    "web-feature-home-page": [
+      {
+        "type": "static",
+        "source": "web-feature-home-page",
+        "target": "web-data-access"
+      },
+      {
+        "type": "static",
+        "source": "web-feature-home-page",
+        "target": "shared-components-ui-button"
+      }
+    ],
+    "web-feature-search": [
+      {
+        "type": "static",
+        "source": "web-feature-search",
+        "target": "web-data-access"
+      },
+      {
+        "type": "static",
+        "source": "web-feature-search",
+        "target": "shared-components-ui-button"
+      },
+      {
+        "type": "static",
+        "source": "web-feature-search",
+        "target": "shared-components-ui-form"
+      }
+    ],
+    "web-data-access": [
+      {
+        "type": "static",
+        "source": "web-data-access",
+        "target": "core-util-auth"
+      }
+    ],
+    "admin-feature-users": [
+      {
+        "type": "static",
+        "source": "admin-feature-users",
+        "target": "admin-data-access"
+      },
+      {
+        "type": "static",
+        "source": "admin-feature-users",
+        "target": "shared-components-ui-button"
+      }
+    ],
+    "admin-feature-billing": [
+      {
+        "type": "static",
+        "source": "admin-feature-billing",
+        "target": "admin-data-access"
+      },
+      {
+        "type": "static",
+        "source": "admin-feature-billing",
+        "target": "shared-components-ui-button"
+      }
+    ],
+    "admin-data-access": [
+      {
+        "type": "static",
+        "source": "admin-data-access",
+        "target": "core-util-auth"
+      }
+    ],
+    "core-util-auth": [],
+    "shared-components-ui-button": [],
+    "shared-components-ui-form": [
+      {
+        "type": "static",
+        "source": "shared-components-ui-form",
+        "target": "shared-util"
+      }
+    ],
+    "shared-util": []
+  },
+  "affected": [],
+  "changes": {
+    "added": []
+  }
+}

@@ -24,6 +24,7 @@ export class GraphService {
   private renderGraph: cy.Core;
 
   private openTooltip: Instance = null;
+  private collapseEdges = false;
 
   constructor(
     private tooltipService: GraphTooltipService,
@@ -52,7 +53,8 @@ export class GraphService {
           event.groupByFolder,
           event.workspaceLayout,
           event.dependencies,
-          event.affectedProjects
+          event.affectedProjects,
+          event.collapseEdges
         );
         break;
 
@@ -62,7 +64,8 @@ export class GraphService {
           event.groupByFolder,
           event.workspaceLayout,
           event.dependencies,
-          event.affectedProjects
+          event.affectedProjects,
+          event.collapseEdges
         );
         this.setShownProjects(
           event.selectedProjects.length > 0
@@ -112,9 +115,11 @@ export class GraphService {
     };
 
     if (this.renderGraph) {
-      this.renderGraph
-        .elements()
-        .sort((a, b) => a.id().localeCompare(b.id()))
+      const elements = this.renderGraph.elements().sort((a, b) => {
+        return a.id().localeCompare(b.id());
+      });
+
+      elements
         .layout({
           name: 'dagre',
           nodeDimensionsIncludeLabels: true,
@@ -124,6 +129,80 @@ export class GraphService {
           ranker: 'network-simplex',
         } as CytoscapeDagreConfig)
         .run();
+
+      if (this.collapseEdges) {
+        this.renderGraph.remove(this.renderGraph.edges());
+
+        elements.edges().forEach((edge) => {
+          const sourceNode = edge.source();
+          const targetNode = edge.target();
+
+          if (
+            sourceNode.parent().first().id() ===
+            targetNode.parent().first().id()
+          ) {
+            this.renderGraph.add(edge);
+          } else {
+            let sourceAncestors, targetAncestors;
+            const commonAncestors = edge.connectedNodes().commonAncestors();
+
+            if (commonAncestors.length > 0) {
+              sourceAncestors = sourceNode
+                .ancestors()
+                .filter((anc) => !commonAncestors.contains(anc));
+              targetAncestors = targetNode
+                .ancestors()
+                .filter((anc) => !commonAncestors.contains(anc));
+            } else {
+              sourceAncestors = sourceNode.ancestors();
+              targetAncestors = targetNode.ancestors();
+            }
+
+            let sourceId, targetId;
+
+            if (sourceAncestors.length > 0 && targetAncestors.length === 0) {
+              sourceId = sourceAncestors.last().id();
+              targetId = targetNode.id();
+            } else if (
+              targetAncestors.length > 0 &&
+              sourceAncestors.length === 0
+            ) {
+              sourceId = sourceNode.id();
+              targetId = targetAncestors.last().id();
+            } else {
+              sourceId = sourceAncestors.last().id();
+              targetId = targetAncestors.last().id();
+            }
+
+            if (sourceId !== undefined && targetId !== undefined) {
+              const edgeId = `${sourceId}|${targetId}`;
+
+              if (this.renderGraph.$id(edgeId).length === 0) {
+                const ancestorEdge: cy.EdgeDefinition = {
+                  group: 'edges',
+                  data: {
+                    id: edgeId,
+                    source: sourceId,
+                    target: targetId,
+                  },
+                };
+
+                this.renderGraph.add(ancestorEdge);
+              }
+            } else {
+              console.log(`Couldn't figure out how to draw edge ${edge.id()}`);
+              console.log(
+                'source ancestors',
+                sourceAncestors.map((anc) => anc.id())
+              );
+              console.log(
+                'target ancestors',
+                targetAncestors.map((anc) => anc.id())
+              );
+            }
+          }
+        });
+      }
 
       this.renderGraph.fit().center().resize();
 
@@ -284,12 +363,14 @@ export class GraphService {
     if (!!currentFocusedProjectName) {
       this.renderGraph.$id(currentFocusedProjectName).addClass('focused');
     }
+
     this.renderGraph.on('zoom', () => {
       if (this.openTooltip) {
         this.openTooltip.hide();
         this.openTooltip = null;
       }
     });
+
     this.listenForProjectNodeClicks();
     this.listenForProjectNodeHovers();
   }
@@ -330,8 +411,10 @@ export class GraphService {
     groupByFolder: boolean,
     workspaceLayout,
     dependencies: Record<string, ProjectGraphDependency[]>,
-    affectedProjectIds: string[]
+    affectedProjectIds: string[],
+    collapseEdges: boolean
   ) {
+    this.collapseEdges = collapseEdges;
     this.tooltipService.hideAll();
 
     this.generateCytoscapeLayout(

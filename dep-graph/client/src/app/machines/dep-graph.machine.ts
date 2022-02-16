@@ -23,6 +23,7 @@ export const initialContext: DepGraphContext = {
   searchDepth: 1,
   searchDepthEnabled: false,
   groupByFolder: false,
+  collapseEdges: false,
   workspaceLayout: {
     libsDir: '',
     appsDir: '',
@@ -66,6 +67,7 @@ export const depGraphMachine = Machine<
               affectedProjects: ctx.affectedProjects,
               workspaceLayout: ctx.workspaceLayout,
               groupByFolder: ctx.groupByFolder,
+              collapseEdges: ctx.collapseEdges,
             }),
             {
               to: (context) => context.graphActor,
@@ -112,6 +114,39 @@ export const depGraphMachine = Machine<
       focusProject: {
         target: 'focused',
       },
+      setCollapseEdges: {
+        actions: [
+          'setCollapseEdges',
+          send(
+            (ctx, event) => ({
+              type: 'notifyGraphUpdateGraph',
+              projects: ctx.projects,
+              dependencies: ctx.dependencies,
+              affectedProjects: ctx.affectedProjects,
+              workspaceLayout: ctx.workspaceLayout,
+              groupByFolder: ctx.groupByFolder,
+              collapseEdges: ctx.collapseEdges,
+              selectedProjects: ctx.selectedProjects,
+            }),
+            {
+              to: (context) => context.graphActor,
+            }
+          ),
+          send(
+            (ctx, event) => {
+              if (event.type !== 'setCollapseEdges') return;
+
+              return {
+                type: 'notifyRouteCollapseEdges',
+                collapseEdges: event.collapseEdges,
+              };
+            },
+            {
+              to: (context) => context.routeSetterActor,
+            }
+          ),
+        ],
+      },
       setGroupByFolder: {
         actions: [
           'setGroupByFolder',
@@ -123,6 +158,7 @@ export const depGraphMachine = Machine<
               affectedProjects: ctx.affectedProjects,
               workspaceLayout: ctx.workspaceLayout,
               groupByFolder: ctx.groupByFolder,
+              collapseEdges: ctx.collapseEdges,
               selectedProjects: ctx.selectedProjects,
             }),
             {
@@ -182,6 +218,11 @@ export const depGraphMachine = Machine<
         if (event.type !== 'setGroupByFolder') return;
 
         ctx.groupByFolder = event.groupByFolder;
+      }),
+      setCollapseEdges: assign((ctx, event) => {
+        if (event.type !== 'setCollapseEdges') return;
+
+        ctx.collapseEdges = event.collapseEdges;
       }),
       incrementSearchDepth: assign((ctx) => {
         ctx.searchDepthEnabled = true;

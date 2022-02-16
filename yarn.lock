@@ -10342,10 +10342,10 @@ cypress@^9.1.0:
     url "^0.11.0"
     yauzl "^2.10.0"
 
-cytoscape-dagre@^2.3.2:
-  version "2.3.2"
-  resolved "https://registry.npmjs.org/cytoscape-dagre/-/cytoscape-dagre-2.3.2.tgz"
-  integrity sha512-dL9+RvGkatSlIdOKXiFwHpnpTo8ydFMqIYzZFkImJXNbDci3feyYxR46wFoaG9GFiWimc6XD9Lm0x29b1wvWpw==
+cytoscape-dagre@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/cytoscape-dagre/-/cytoscape-dagre-2.4.0.tgz#abf145b1c675afe3b7d531166e6727dc39dc350d"
+  integrity sha512-jfOtKzKduCnruBs3YMHS9kqWjZKqvp6loSJwlotPO5pcU4wLUhkx7ZBIyW3VWZXa8wfkGxv/zhWoBxWtYrUxKQ==
   dependencies:
     dagre "^0.8.5"
 

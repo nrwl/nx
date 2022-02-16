@@ -22,6 +22,7 @@ export interface Environment {
 
 export interface AppConfig {
   showDebugger: boolean;
+  showExperimentalFeatures: boolean;
   projectGraphs: ProjectGraphList[];
   defaultProjectGraph: string;
 }

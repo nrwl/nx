@@ -1,16 +1,16 @@
 window.exclude = [];
-window.watch = true;
-window.environment = 'watch';
+window.watch = false;
+window.environment = 'release';
 window.useXstateInspect = false;
 
 window.appConfig = {
   showDebugger: false,
-  showExperimentalFeatures: true,
+  showExperimentalFeatures: false,
   projectGraphs: [
     {
       id: 'local',
       label: 'local',
-      url: 'projectGraph.json',
+      url: 'assets/graphs/nx-examples.json',
     },
   ],
   defaultProjectGraph: 'local',

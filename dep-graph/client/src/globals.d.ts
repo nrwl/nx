@@ -1,6 +1,6 @@
 // nx-ignore-next-line
 import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
-import { AppConfig } from './app/models';
+import { AppConfig } from './app/interfaces';
 
 export declare global {
   export interface Window {

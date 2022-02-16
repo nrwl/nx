@@ -39,6 +39,9 @@ export const includePathSelector: DepGraphSelector<boolean> = (state) =>
 export const groupByFolderSelector: DepGraphSelector<boolean> = (state) =>
   state.context.groupByFolder;
 
+export const collapseEdgesSelector: DepGraphSelector<boolean> = (state) =>
+  state.context.collapseEdges;
+
 export const textFilterSelector: DepGraphSelector<string> = (state) =>
   state.context.textFilter;
 
