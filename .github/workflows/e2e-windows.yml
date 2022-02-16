@@ -43,7 +43,7 @@ jobs:
       if: ${{ matrix.package_manager == 'pnpm' }}
       uses: pnpm/action-setup@v2.0.1
       with:
-        version: 6.9.1
+        version: 6.31.0
 
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v2.4.0
