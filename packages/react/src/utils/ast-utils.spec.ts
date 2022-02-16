@@ -444,6 +444,16 @@ describe('getComponentName', () => {
       `,
       expectedName: 'Test',
     },
+    {
+      testName: 'using a JSX self closing element',
+      src: `
+      function Test(props: TestProps) {
+        return <img src="something" />;
+      };
+      export default Test;
+      `,
+      expectedName: 'Test',
+    },
   ].forEach((testConfig) => {
     it(`should find the component when ${testConfig.testName}`, () => {
       const source = ts.createSourceFile(
