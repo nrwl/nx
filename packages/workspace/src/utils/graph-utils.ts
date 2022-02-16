@@ -70,10 +70,10 @@ export function getPath(
   if (sourceProjectName === targetProjectName) return [];
 
   if (reach.graph !== graph) {
-    const result = buildMatrix(graph);
+    const { matrix, adjList } = buildMatrix(graph);
     reach.graph = graph;
-    reach.matrix = result.matrix;
-    reach.adjList = result.adjList;
+    reach.matrix = matrix;
+    reach.adjList = adjList;
   }
 
   const adjList = reach.adjList;
@@ -100,7 +100,7 @@ export function getPath(
   }
 
   if (path.length > 1) {
-    return path.map((n) => graph.nodes[n]);
+    return path.map((n) => graph.nodes[n] as ProjectGraphProjectNode);
   } else {
     return [];
   }
