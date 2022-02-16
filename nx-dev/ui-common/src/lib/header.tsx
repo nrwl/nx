@@ -3,13 +3,11 @@ import Link from 'next/link';
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
 export interface HeaderProps {
-  showSearch: boolean;
   isDocViewer?: boolean;
   useDarkBackground?: boolean;
 }
 
 export function Header(props: HeaderProps) {
-  const showSearch = props.showSearch;
   return (
     <div
       className={cx(
@@ -56,7 +54,9 @@ export function Header(props: HeaderProps) {
           </a>
         </div>
         {/*SEARCH*/}
-        <div className="inline">{!!showSearch ? <AlgoliaSearch /> : null}</div>
+        <div className="inline">
+          <AlgoliaSearch />
+        </div>
         {/*NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
           <nav className="items-justified flex justify-center space-x-1">

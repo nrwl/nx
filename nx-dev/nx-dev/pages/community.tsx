@@ -4,10 +4,13 @@ import {
   ClipboardListIcon,
 } from '@heroicons/react/solid';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
-import { ConnectWithUs, PluginDirectory } from '@nrwl/nx-dev/ui-community';
+import {
+  ConnectWithUs,
+  PluginDirectory,
+  CreateNxPlugin,
+} from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import CreateNxPlugin from '../../ui-community/src/lib/create-nx-plugin';
 
 declare const fetch: any;
 
@@ -57,7 +60,7 @@ export function Community(props: CommunityProps) {
           type: 'website',
         }}
       />
-      <Header useDarkBackground={false} showSearch={false} />
+      <Header useDarkBackground={false} />
       <main>
         <div className="w-full">
           <article

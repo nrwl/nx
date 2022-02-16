@@ -108,7 +108,7 @@
   height: 4.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: black;
+  color: #374151;
   margin-left: 1rem;
   margin-right: 1rem;
   flex: auto;
@@ -117,6 +117,7 @@
 
 .DocSearch-Input:focus {
   outline: 2px dotted transparent;
+  border-color: #143157 !important;
 }
 
 .DocSearch-Input::-webkit-search-cancel-button,
@@ -205,7 +206,7 @@
 }
 
 .DocSearch-Hit-title {
-  color: black;
+  color: #374151;
   line-height: 1.5rem;
   font-weight: 600;
   overflow: hidden;

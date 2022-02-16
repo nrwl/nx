@@ -35,7 +35,7 @@ export function ConfPage() {
           type: 'website',
         }}
       />
-      <Header useDarkBackground={true} showSearch={false} />
+      <Header useDarkBackground={true} />
       <main
         style={{
           background: 'linear-gradient(180deg, #143055 0%, #0b1a2d 100%)',
