@@ -33,7 +33,7 @@ export function hasNoneOfTheseTags(
   proj: ProjectGraphProjectNode<any>,
   tags: string[]
 ) {
-  return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
+  return tags.filter((tag) => hasTag(proj, tag)).length === 0;
 }
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {
