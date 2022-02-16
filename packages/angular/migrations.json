@@ -1346,6 +1346,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.8.2": {
+      "version": "13.8.2-beta.0",
+      "packages": {
+        "jest-preset-angular": {
+          "version": "11.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
