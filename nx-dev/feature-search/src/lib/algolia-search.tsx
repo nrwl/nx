@@ -1,3 +1,4 @@
+import { SearchIcon } from '@heroicons/react/solid';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
@@ -72,23 +73,15 @@ export function AlgoliaSearch() {
         type="button"
         ref={searchButtonRef}
         onClick={handleOpen}
-        className="group flex w-full items-center space-x-3 py-2 font-medium leading-6 text-white opacity-90 transition-colors duration-200 hover:opacity-100 sm:space-x-4"
+        className="flex w-full items-center rounded-md py-1.5 pl-2 pr-3 text-sm leading-6 text-slate-300 ring-1 ring-slate-600 transition hover:text-slate-200 hover:ring-slate-500"
       >
-        <svg width="24" height="24" fill="none" className="text-white">
-          <path
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span>
-          <span className="hidden sm:inline">Quick </span>search
+        <SearchIcon className="mr-3 h-4 w-4 flex-none" />
+        <span className="mx-3">
+          <span className="hidden lg:inline">Quick </span>search
         </span>
         <span
           style={{ opacity: browserDetected ? '1' : '0' }}
-          className="hidden rounded-md border border-white py-0.5 px-1.5 text-sm leading-5 sm:block"
+          className="ml-auto hidden flex-none pl-3 text-xs font-semibold md:block"
         >
           <span className="sr-only">Press </span>
           <kbd className="font-sans">

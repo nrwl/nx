@@ -50,7 +50,7 @@ export function Index() {
         }}
       />
       <h1 className="sr-only">Next generation monorepo tool</h1>
-      <Header showSearch={true} useDarkBackground={false} />
+      <Header useDarkBackground={false} />
       <main role="main">
         <div className="w-full">
           {/*INTRO COMPONENT*/}
