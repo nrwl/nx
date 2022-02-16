@@ -103,6 +103,7 @@ export function initLocal(workspace: Workspace) {
             })
         );
       } else {
+        require('@nrwl/tao/src/compat/compat');
         loadCli(workspace, '@angular/cli/lib/init.js');
       }
     }
