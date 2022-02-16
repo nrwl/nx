@@ -477,7 +477,9 @@ export function getComponentName(sourceFile: ts.SourceFile): ts.Node | null {
   if (
     !(
       defaultExport &&
-      findNodes(defaultExport, ts.SyntaxKind.JsxElement).length > 0
+      (findNodes(defaultExport, ts.SyntaxKind.JsxElement).length > 0 ||
+        findNodes(defaultExport, ts.SyntaxKind.JsxSelfClosingElement).length >
+          0)
     )
   ) {
     return null;
