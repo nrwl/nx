@@ -39,7 +39,7 @@ describe('Storybook schematics', () => {
   });
 
   describe('build storybook', () => {
-    xit('should build a React based storybook', () => {
+    it('should build a React based storybook', () => {
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
     }, 1000000);
@@ -49,7 +49,7 @@ describe('Storybook schematics', () => {
       expect(output).toContain('All files pass linting.');
     }, 1000000);
 
-    xit('should build a React based storybook that references another lib', () => {
+    it('should build a React based storybook that references another lib', () => {
       const anotherReactLib = uniq('test-another-lib-react');
       runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference
