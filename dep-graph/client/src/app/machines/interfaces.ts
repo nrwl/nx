@@ -35,6 +35,7 @@ export type DepGraphUIEvents =
   | { type: 'deselectAll' }
   | { type: 'selectAffected' }
   | { type: 'setGroupByFolder'; groupByFolder: boolean }
+  | { type: 'setCollapseEdges'; collapseEdges: boolean }
   | { type: 'setIncludeProjectsByPath'; includeProjectsByPath: boolean }
   | { type: 'incrementSearchDepth' }
   | { type: 'decrementSearchDepth' }
@@ -73,6 +74,7 @@ export type GraphRenderEvents =
         appsDir: string;
       };
       groupByFolder: boolean;
+      collapseEdges: boolean;
     }
   | {
       type: 'notifyGraphUpdateGraph';
@@ -84,6 +86,7 @@ export type GraphRenderEvents =
         appsDir: string;
       };
       groupByFolder: boolean;
+      collapseEdges: boolean;
       selectedProjects: string[];
     }
   | {
@@ -125,6 +128,10 @@ export type RouteEvents =
       groupByFolder: boolean;
     }
   | {
+      type: 'notifyRouteCollapseEdges';
+      collapseEdges: boolean;
+    }
+  | {
       type: 'notifyRouteSearchDepth';
       searchDepthEnabled: boolean;
       searchDepth: number;
@@ -154,6 +161,7 @@ export interface DepGraphContext {
   searchDepth: number;
   searchDepthEnabled: boolean;
   groupByFolder: boolean;
+  collapseEdges: boolean;
   workspaceLayout: {
     libsDir: string;
     appsDir: string;

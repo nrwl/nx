@@ -21,11 +21,10 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
       case 'groupByFolder':
         events.push({ type: 'setGroupByFolder', groupByFolder: true });
         break;
+      case 'collapseEdges':
+        events.push({ type: 'setCollapseEdges', collapseEdges: true });
+        break;
       case 'searchDepth':
-        // events.push({
-        //   type: 'setSearchDepthEnabled',
-        //   searchDepthEnabled: true,
-        // });
         events.push({
           type: 'setSearchDepth',
           searchDepth: parseInt(value),

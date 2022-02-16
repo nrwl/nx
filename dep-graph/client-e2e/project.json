@@ -21,6 +21,15 @@
         "baseUrl": "http://localhost:4200"
       }
     },
+    "e2e-release-disabled": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "dep-graph/client-e2e/cypress-release.json",
+        "tsConfig": "dep-graph/client-e2e/tsconfig.e2e.json",
+        "devServerTarget": "dep-graph-client:serve-for-e2e:release",
+        "baseUrl": "http://localhost:4200"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

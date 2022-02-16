@@ -3,7 +3,12 @@ import { createBrowserHistory } from 'history';
 import { Machine } from 'xstate';
 import { RouteEvents } from './interfaces';
 
-type ParamKeys = 'focus' | 'groupByFolder' | 'searchDepth' | 'select';
+type ParamKeys =
+  | 'focus'
+  | 'groupByFolder'
+  | 'searchDepth'
+  | 'select'
+  | 'collapseEdges';
 type ParamRecord = Record<ParamKeys, string | null>;
 
 function reduceParamRecordToQueryString(params: ParamRecord): string {
@@ -25,6 +30,7 @@ export const createRouteMachine = () => {
   const paramRecord: ParamRecord = {
     focus: params.get('focus'),
     groupByFolder: params.get('groupByFolder'),
+    collapseEdges: params.get('collapseEdges'),
     searchDepth: params.get('searchDepth'),
     select: params.get('select'),
   };
@@ -48,6 +54,7 @@ export const createRouteMachine = () => {
           groupByFolder: null,
           searchDepth: null,
           select: null,
+          collapseEdges: null,
         },
       },
       always: {
@@ -96,6 +103,11 @@ export const createRouteMachine = () => {
         notifyRouteGroupByFolder: {
           actions: assign((ctx, event) => {
             ctx.params.groupByFolder = event.groupByFolder ? 'true' : null;
+          }),
+        },
+        notifyRouteCollapseEdges: {
+          actions: assign((ctx, event) => {
+            ctx.params.collapseEdges = event.collapseEdges ? 'true' : null;
           }),
         },
         notifyRouteSearchDepth: {

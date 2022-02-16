@@ -17,7 +17,7 @@ export const DebuggerPanel = memo(function ({
 }: DebuggerPanelProps) {
   return (
     <div
-      id="debugger-panel"
+      data-cy="debugger-panel"
       className="
           flex-column
           flex

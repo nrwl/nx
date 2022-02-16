@@ -5,6 +5,7 @@ window.useXstateInspect = false;
 
 window.appConfig = {
   showDebugger: true,
+  showExperimentalFeatures: true,
   projectGraphs: [
     {
       id: 'nx',
@@ -40,6 +41,11 @@ window.appConfig = {
       id: 'affected',
       label: 'Affected',
       url: 'assets/graphs/affected.json',
+    },
+    {
+      id: 'collapsing-edges-testing',
+      label: 'Collapsing Edges',
+      url: 'assets/graphs/collapsing-edges-testing.json',
     },
   ],
   defaultProjectGraph: 'nx',

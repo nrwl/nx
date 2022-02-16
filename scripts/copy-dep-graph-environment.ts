@@ -1,7 +1,7 @@
 import { copyFileSync } from 'fs';
 import { argv } from 'yargs';
 
-type Mode = 'dev' | 'watch';
+type Mode = 'dev' | 'watch' | 'release';
 const mode = argv._[0];
 
 console.log(`Setting up graph for ${mode}`);

@@ -97,6 +97,12 @@
             "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
             "nx serve-base dep-graph-client"
           ]
+        },
+        "release": {
+          "commands": [
+            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts release",
+            "nx serve-base dep-graph-client"
+          ]
         }
       }
     },
@@ -114,6 +120,13 @@
         "watch": {
           "commands": [
             "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
+            "nx serve-base dep-graph-client"
+          ],
+          "readyWhen": "No issues found."
+        },
+        "release": {
+          "commands": [
+            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts release",
             "nx serve-base dep-graph-client"
           ],
           "readyWhen": "No issues found."

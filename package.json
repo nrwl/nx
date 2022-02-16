@@ -132,7 +132,7 @@
     "css-minimizer-webpack-plugin": "^3.1.1",
     "cypress": "^9.1.0",
     "cytoscape": "^3.18.2",
-    "cytoscape-dagre": "^2.3.2",
+    "cytoscape-dagre": "^2.4.0",
     "cytoscape-popper": "^2.0.0",
     "cz-conventional-changelog": "^3.0.2",
     "cz-customizable": "^6.2.0",

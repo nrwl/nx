@@ -64,6 +64,7 @@ function buildEnvironmentJs(
 
   window.appConfig = {
     showDebugger: false,
+    showExperimentalFeatures: false,
     projectGraphs: [
       {
         id: 'local',

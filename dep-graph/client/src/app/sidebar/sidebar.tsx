@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
+import ExperimentalFeature from '../experimental-feature';
 import { useDepGraphService } from '../hooks/use-dep-graph';
 import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
 import {
+  collapseEdgesSelector,
   focusedProjectNameSelector,
   groupByFolderSelector,
   hasAffectedProjectsSelector,
@@ -9,6 +11,7 @@ import {
   searchDepthSelector,
   textFilterSelector,
 } from '../machines/selectors';
+import CollapseEdgesPanel from './collapse-edges-panel';
 import FocusedProjectPanel from './focused-project-panel';
 import GroupByFolderPanel from './group-by-folder-panel';
 import ProjectList from './project-list';
@@ -24,6 +27,7 @@ export function Sidebar() {
   const textFilter = useDepGraphSelector(textFilterSelector);
   const hasAffectedProjects = useDepGraphSelector(hasAffectedProjectsSelector);
   const groupByFolder = useDepGraphSelector(groupByFolderSelector);
+  const collapseEdges = useDepGraphSelector(collapseEdgesSelector);
 
   function resetFocus() {
     depGraphService.send({ type: 'unfocusProject' });
@@ -50,6 +54,10 @@ export function Sidebar() {
 
   function groupByFolderChanged(checked: boolean) {
     depGraphService.send({ type: 'setGroupByFolder', groupByFolder: checked });
+  }
+
+  function collapseEdgesChanged(checked: boolean) {
+    depGraphService.send({ type: 'setCollapseEdges', collapseEdges: checked });
   }
 
   function incrementDepthFilter() {
@@ -174,6 +182,13 @@ export function Sidebar() {
           incrementDepthFilter={incrementDepthFilter}
           decrementDepthFilter={decrementDepthFilter}
         ></SearchDepth>
+
+        <ExperimentalFeature>
+          <CollapseEdgesPanel
+            collapseEdges={collapseEdges}
+            collapseEdgesChanged={collapseEdgesChanged}
+          ></CollapseEdgesPanel>
+        </ExperimentalFeature>
       </div>
 
       <ProjectList></ProjectList>
