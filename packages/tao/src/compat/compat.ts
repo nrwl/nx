@@ -58,12 +58,12 @@ if (!patched) {
         `@angular-devkit/core/src/workspace/json/reader`,
       ]);
       const originalReadJsonWorkspace = readJsonUtils.readJsonWorkspace;
-      readJsonUtils.readJsonWorkspace = (
+      readJsonUtils.readJsonWorkspace = async (
         path,
         host: { readFile: (p) => Promise<string> }
       ) => {
         try {
-          return originalReadJsonWorkspace(path, host);
+          return await originalReadJsonWorkspace(path, host);
         } catch {
           logger.debug(
             '[NX] Angular devkit readJsonWorkspace fell back to Nx workspaces logic'
