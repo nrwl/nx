@@ -63,7 +63,7 @@ export function initLocal(workspace: Workspace) {
           `- change versions of packages to match organizational requirements`
         );
         console.log(
-          `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/latest/angular/workspace/update`
+          `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/getting-started/nx-and-angular#ng-update-and-nx-migrate`
         );
         console.log(
           `Run "nx migrate latest" to update to the latest version of Nx.`
