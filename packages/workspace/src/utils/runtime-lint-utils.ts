@@ -268,3 +268,10 @@ export function mapProjectGraphFiles<T>(
     nodes,
   };
 }
+
+export function isTerminalRun(): boolean {
+  return (
+    process.argv.length > 1 &&
+    !!process.argv[1].match(/@nrwl\/cli\/lib\/run-cli\.js$/)
+  );
+}
