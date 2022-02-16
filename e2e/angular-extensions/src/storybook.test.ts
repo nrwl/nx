@@ -219,7 +219,9 @@ describe('Angular Package', () => {
 
         // create another lib with a component
         const anotherTestLib = uniq('test-another-lib');
-        runCLI(`g @nrwl/angular:library ${anotherTestLib} --no-interactive`);
+        runCLI(
+          `g @nrwl/angular:library ${anotherTestLib} --buildable --no-interactive`
+        );
         runCLI(
           `g @nrwl/angular:component my-test-cmp --project=${anotherTestLib} --no-interactive`
         );
@@ -311,7 +313,7 @@ export function createTestUILib(libName: string): void {
       `libs/${libName}/src/lib/test-button/test-button.component.html`
     ),
     `
-    <button [disabled]="isDisabled" [attr.type]="type" [ngClass]="style">Click me</button>
+    <button [disabled]="isDisabled" [attr.type]="buttonType" [ngClass]="style">Click me</button>
     <p>You are {{age}} years old.</p>
     `
   );

@@ -10,10 +10,14 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  const previousPM = process.env.SELECTED_PM;
+
   let reactStorybookLib: string;
   let proj: string;
 
   beforeAll(() => {
+    process.env.SELECTED_PM = 'yarn';
+
     proj = newProject();
     reactStorybookLib = uniq('test-ui-lib-react');
 
@@ -21,6 +25,10 @@ describe('Storybook schematics', () => {
     runCLI(
       `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
     );
+  });
+
+  afterAll(() => {
+    process.env.SELECTED_PM = previousPM;
   });
 
   describe('serve storybook', () => {
