@@ -131,11 +131,19 @@ function maybeUpdateVersion(tree: Tree): GeneratorCallback {
 
     const allStorybookPackagesInDependencies = Object.keys(
       json.dependencies
-    ).filter((packageName: string) => packageName.startsWith('@storybook/'));
+    ).filter(
+      (packageName: string) =>
+        packageName.startsWith('@storybook/') &&
+        !packageName.includes('@storybook/react-native')
+    );
 
     const allStorybookPackagesInDevDependencies = Object.keys(
       json.devDependencies
-    ).filter((packageName: string) => packageName.startsWith('@storybook/'));
+    ).filter(
+      (packageName: string) =>
+        packageName.startsWith('@storybook/') &&
+        !packageName.includes('@storybook/react-native')
+    );
 
     const storybookPackages = [
       ...allStorybookPackagesInDependencies,

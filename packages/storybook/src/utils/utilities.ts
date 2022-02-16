@@ -22,6 +22,7 @@ export const Constants = {
     vue: '@storybook/vue',
     vue3: '@storybook/vue3',
     svelte: '@storybook/svelte',
+    'react-native': '@storybook/react-native',
   } as const,
 };
 type Constants = typeof Constants;
@@ -60,6 +61,13 @@ export function isFramework(
   }
 
   if (type === 'svelte' && schema.uiFramework === '@storybook/svelte') {
+    return true;
+  }
+
+  if (
+    type === 'react-native' &&
+    schema.uiFramework === '@storybook/react-native'
+  ) {
     return true;
   }
 
@@ -103,6 +111,10 @@ function determineStorybookWorkspaceVersion(packageJsonContents) {
       workspaceStorybookVersion =
         packageJsonContents['devDependencies']['@storybook/core'];
     }
+    if (packageJsonContents['devDependencies']['@storybook/react-native']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react-native'];
+    }
   }
 
   if (packageJsonContents && packageJsonContents['dependencies']) {
@@ -117,6 +129,10 @@ function determineStorybookWorkspaceVersion(packageJsonContents) {
     if (packageJsonContents['dependencies']['@storybook/core']) {
       workspaceStorybookVersion =
         packageJsonContents['dependencies']['@storybook/core'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/react-native']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react-native'];
     }
   }
 

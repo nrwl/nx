@@ -54,7 +54,7 @@ The above command applies the following changes to the provided module:
 - Registers `StoreModule.forRoot({})` in the imports array for state management, with recommended runtime checks enabled for maintaining immutable actions and state.
 - Registers `EffectsModule.forRoot([])` in the `imports` array for isolation of side effects.
 - Registers `StoreRouterConnectingModule.forRoot()` in the `imports` array for integration with the [Angular Router](https://angular.io/guide/router).
-- Registers `StoreDevtools.instrument()` in the `imports` array for integration with the [Redux Devtools browser extension](http://extension.remotedev.io/).
+- Registers `StoreDevtools.instrument()` in the `imports` array for integration with the [Redux Devtools browser extension](https://chrome.google.com/webstore/detail/redux-devtools/lmhkpmbekcpmknklioeibfkpmmfibljd).
 
 You manage separate slices of state using libraries and feature states.
 

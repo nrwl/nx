@@ -39,12 +39,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install PNPM
-      if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v2.0.1
-      with:
-        version: 6.31.0
-
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v2.4.0
       with:
@@ -59,9 +53,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: windows-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
         restore-keys: |
-          windows-node-${{ matrix.node-version }}-yarn-
+          windows-node-${{ matrix.node_version }}-yarn-
 
     - name: Install packages
       run: yarn install --prefer-offline --frozen-lockfile --non-interactive

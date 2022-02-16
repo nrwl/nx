@@ -1,8 +1,13 @@
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
-import * as webpack from 'webpack';
-import { Compiler, Configuration } from 'webpack';
-
+import {
+  ProgressPlugin,
+  ContextReplacementPlugin,
+  sources,
+  ids,
+  Compiler,
+  Configuration,
+} from 'webpack';
 import { ScriptsWebpackPlugin } from '../plugins/scripts-webpack-plugin';
 import { ExtraEntryPoint, WebpackConfigOptions } from '../../shared-models';
 import { BuildBrowserFeatures } from '../build-browser-features';
@@ -11,11 +16,7 @@ import { normalizeExtraEntryPoints } from '../../normalize';
 import { findAllNodeModules, findUp } from '../../fs';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
-const ProgressPlugin = require('webpack/lib/ProgressPlugin');
-
 export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
-  const { ContextReplacementPlugin } = webpack;
-
   const { root, projectRoot, sourceRoot, buildOptions, tsConfig } = wco;
 
   let stylesOptimization: boolean;
@@ -158,9 +159,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
             const data = JSON.stringify(
               compilation.getStats().toJson('verbose')
             );
-            compilation.assets[`stats.json`] = new webpack.sources.RawSource(
-              data
-            );
+            compilation.assets[`stats.json`] = new sources.RawSource(data);
           });
         }
       })()
@@ -264,7 +263,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     optimization: {
       emitOnErrors: false,
       moduleIds: 'deterministic',
-      minimizer: [new webpack.ids.HashedModuleIdsPlugin(), ...extraMinimizers],
+      minimizer: [new ids.HashedModuleIdsPlugin(), ...extraMinimizers],
     },
     plugins: [
       // Always replace the context for the System.import in angular/core to prevent warnings.

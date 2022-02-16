@@ -115,30 +115,25 @@ npx tsc tools/executors/echo/impl
 
 This will create the `impl.js` file in your file directory, which will serve as the artifact used by the CLI.
 
-Our last step is to add this executor to a given project’s `targets` object in your project's `workspace.json` or `angular.json` file. The example below adds this executor to a project named 'platform':
+Our last step is to add this executor to a given project’s `targets` object in your project's `project.json` file:
 
 ```json
 {
   //...
-  "projects": {
-    "platform": {
-      //...
-      "targets": {
-        "build": {
-          // ...
-        },
-        "serve": {
-          // ...
-        },
-        "lint": {
-          // ,,,
-        },
-        "echo": {
-          "executor": "./tools/executors/echo:echo",
-          "options": {
-            "textToEcho": "Hello World"
-          }
-        }
+  "targets": {
+    "build": {
+      // ...
+    },
+    "serve": {
+      // ...
+    },
+    "lint": {
+      // ,,,
+    },
+    "echo": {
+      "executor": "./tools/executors/echo:echo",
+      "options": {
+        "textToEcho": "Hello World"
       }
     }
   }

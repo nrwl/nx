@@ -3,11 +3,7 @@ import {
   WorkspaceJsonConfiguration,
   Workspaces,
 } from '@nrwl/tao/src/shared/workspace';
-import type {
-  FileData,
-  NxJsonConfiguration,
-  ProjectGraphNode,
-} from '@nrwl/devkit';
+import type { FileData, NxJsonConfiguration } from '@nrwl/devkit';
 import { readJsonFile } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';

@@ -56,13 +56,13 @@ build:
   stage: test
   extends: .distributed
   script:
-    - yarn nx affected --base=HEAD~1 --target=build --parallel --max-parallel=3
+    - yarn nx affected --base=HEAD~1 --target=build --parallel=3
 
 test:
   stage: test
   extends: .distributed
   script:
-    - yarn nx affected --base=HEAD~1 --target=test --parallel --max-parallel=2
+    - yarn nx affected --base=HEAD~1 --target=test --parallel=2
 ```
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep

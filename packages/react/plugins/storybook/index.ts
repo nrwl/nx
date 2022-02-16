@@ -73,7 +73,11 @@ export const webpack = async (
 
   // ESM build for modern browsers.
   const baseWebpackConfig = mergeWebpack.merge([
-    getBaseWebpackPartial(builderOptions, esm, isScriptOptimizeOn),
+    getBaseWebpackPartial(builderOptions, {
+      esm,
+      isScriptOptimizeOn,
+      skipTypeCheck: true,
+    }),
     getStylesPartial(
       options.workspaceRoot,
       options.configDir,

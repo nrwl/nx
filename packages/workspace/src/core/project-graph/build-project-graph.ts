@@ -3,7 +3,6 @@ import {
   logger,
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
-  NxPlugin,
   ProjectConfiguration,
   ProjectFileMap,
   ProjectGraph,

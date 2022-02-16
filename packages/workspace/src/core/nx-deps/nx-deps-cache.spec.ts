@@ -1,4 +1,8 @@
-import { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  ProjectGraph,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import {
   createCache as _createCache,
   extractCachedFileData,
@@ -284,7 +288,7 @@ describe('nx deps utils', () => {
       _createCache(
         createNxJson({}),
         createPackageJsonDeps({}),
-        createCache({}),
+        createCache({}) as ProjectGraph,
         {}
       );
     });
@@ -293,7 +297,7 @@ describe('nx deps utils', () => {
       const result = _createCache(
         createNxJson({}),
         createPackageJsonDeps({}),
-        createCache({}),
+        createCache({}) as ProjectGraph,
         undefined
       );
 
@@ -303,7 +307,7 @@ describe('nx deps utils', () => {
 
   function createCache(p: Partial<ProjectGraphCache>): ProjectGraphCache {
     const defaults: ProjectGraphCache = {
-      version: '3.0',
+      version: '5.0',
       deps: {
         '@nrwl/workspace': '12.0.0',
         plugin: '1.0.0',

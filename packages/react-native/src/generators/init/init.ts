@@ -22,6 +22,7 @@ import {
   metroReactNativeBabelPresetVersion,
   metroVersion,
   nxVersion,
+  reactNativeAsyncStorageVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
@@ -88,6 +89,8 @@ export function updateDependencies(host: Tree) {
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
       'react-native-config': reactNativeConfigVersion,
+      '@react-native-async-storage/async-storage':
+        reactNativeAsyncStorageVersion,
       ...(isPnpm
         ? {
             'metro-config': metroVersion, // metro-config is used by metro.config.js

@@ -41,10 +41,8 @@ export function createComponentStoriesFile(
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
 
-  // TODO: Remove this entirely, given we don't support TSLint with React?
-  const usesEsLint = true;
-
   const componentFilePath = joinPathFragments(sourceRoot, componentPath);
+
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),
     ''
@@ -131,7 +129,6 @@ export function createComponentStoriesFile(
       componentName: (cmpDeclaration as any).name.text,
       isPlainJs,
       fileExt,
-      usesEsLint,
     }
   );
 }

@@ -13,5 +13,6 @@ export async function addMfe(host: Tree, options: NormalizedSchema) {
     routing: options.routing,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
+    e2eProjectName: options.e2eProjectName,
   });
 }

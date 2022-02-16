@@ -3,14 +3,11 @@ import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraphAsync,
+  ProjectGraphNodeRecords,
   ProjectType,
   withDeps,
 } from '../core/project-graph';
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+import { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utilities/output';
 import { projectHasTarget } from '../utilities/project-graph-utils';
@@ -123,7 +120,10 @@ export async function affected(
   }
 }
 
-function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
+function projectsToRun(
+  nxArgs: NxArgs,
+  projectGraph: ProjectGraph
+): ProjectGraphProjectNode[] {
   let affectedGraph = nxArgs.all
     ? projectGraph
     : filterAffected(
@@ -143,15 +143,18 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
 
   if (nxArgs.exclude) {
     const excludedProjects = new Set(nxArgs.exclude);
-    return Object.entries(affectedGraph.nodes)
+    return Object.entries(affectedGraph.nodes as ProjectGraphNodeRecords)
       .filter(([projectName]) => !excludedProjects.has(projectName))
       .map(([, project]) => project);
   }
 
-  return Object.values(affectedGraph.nodes);
+  return Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[];
 }
 
-function allProjectsWithTarget(projects: ProjectGraphNode[], nxArgs: NxArgs) {
+function allProjectsWithTarget(
+  projects: ProjectGraphProjectNode[],
+  nxArgs: NxArgs
+) {
   return projects.filter((p) => projectHasTarget(p, nxArgs.target));
 }
 

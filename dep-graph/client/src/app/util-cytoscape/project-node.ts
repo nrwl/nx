@@ -1,4 +1,4 @@
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 import { parseParentDirectoriesFromPilePath } from '../util';
 
@@ -18,7 +18,7 @@ export class ProjectNode {
   focused = false;
 
   constructor(
-    private project: ProjectGraphNode,
+    private project: ProjectGraphProjectNode,
     private workspaceRoot: string
   ) {}
 

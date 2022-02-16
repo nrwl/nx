@@ -19,7 +19,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { getEmittedFiles, runWebpackDevServer } from '../../utils/run-webpack';
-import { tsNodeRegister } from '../../utils/webpack/tsNodeRegister';
+import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 
 export interface WebDevServerOptions {
   host: string;
@@ -127,16 +127,4 @@ function getBuildOptions(
     ...buildOptions,
     ...overrides,
   };
-}
-
-function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  tsNodeRegister(path, tsConfig);
-
-  const customWebpackConfig = require(path);
-  // If the user provides a configuration in TS file
-  // then there are 2 cases for exporing an object. The first one is:
-  // `module.exports = { ... }`. And the second one is:
-  // `export default { ... }`. The ESM format is compiled into:
-  // `{ default: { ... } }`
-  return customWebpackConfig.default || customWebpackConfig;
 }

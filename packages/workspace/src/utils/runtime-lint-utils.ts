@@ -3,7 +3,6 @@ import { FileData, readFileIfExisting } from '../core/file-utils';
 import {
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode,
   ProjectGraphProjectNode,
   normalizePath,
   DependencyType,
@@ -31,13 +30,13 @@ export type DepConstraint = {
 };
 
 export function hasNoneOfTheseTags(
-  proj: ProjectGraphNode<any>,
+  proj: ProjectGraphProjectNode<any>,
   tags: string[]
 ) {
-  return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
+  return tags.filter((tag) => hasTag(proj, tag)).length === 0;
 }
 
-function hasTag(proj: ProjectGraphNode, tag: string) {
+function hasTag(proj: ProjectGraphProjectNode, tag: string) {
   return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
 }
 
@@ -76,7 +75,7 @@ export function isRelativeImportIntoAnotherProject(
   projectPath: string,
   projectGraph: MappedProjectGraph,
   sourceFilePath: string,
-  sourceProject: ProjectGraphNode
+  sourceProject: ProjectGraphProjectNode
 ): boolean {
   if (!isRelative(imp)) return false;
 
@@ -152,7 +151,7 @@ export function findProjectUsingImport(
 
 export function findConstraintsFor(
   depConstraints: DepConstraint[],
-  sourceProject: ProjectGraphNode
+  sourceProject: ProjectGraphProjectNode
 ) {
   return depConstraints.filter((f) => hasTag(sourceProject, f.sourceTag));
 }
@@ -181,8 +180,8 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
 }
 
 export function hasBannedImport(
-  source: ProjectGraphNode,
-  target: ProjectGraphNode,
+  source: ProjectGraphProjectNode,
+  target: ProjectGraphProjectNode | ProjectGraphExternalNode,
   depConstraints: DepConstraint[]
 ): DepConstraint | null {
   // return those constraints that match source projec and have `bannedExternalImports` defined
@@ -234,7 +233,9 @@ function parseImportWildcards(importDefinition: string): RegExp {
  * Verifies whether the given node has an architect builder attached
  * @param projectGraph the node to verify
  */
-export function hasBuildExecutor(projectGraph: ProjectGraphNode): boolean {
+export function hasBuildExecutor(
+  projectGraph: ProjectGraphProjectNode
+): boolean {
   return (
     // can the architect not be defined? real use case?
     projectGraph.data.targets &&
@@ -266,4 +267,11 @@ export function mapProjectGraphFiles<T>(
     ...projectGraph,
     nodes,
   };
+}
+
+export function isTerminalRun(): boolean {
+  return (
+    process.argv.length > 1 &&
+    !!process.argv[1].match(/@nrwl\/cli\/lib\/run-cli\.js$/)
+  );
 }

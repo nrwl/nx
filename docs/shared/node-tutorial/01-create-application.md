@@ -90,9 +90,9 @@ or
 yarn nx serve todos
 ```
 
-## Workspace.json, Targets, Executors
+## Project.json, Targets, Executors
 
-You configure your workspaces in `workspace.json`. This file contains the workspace projects with their architect targets. For instance, `todos` has the `build`, `serve`, `lint`, and `test` targets. This means that you can run `nx build todos`, `nx serve todos`, etc..
+You configure your projects in `project.json` files. These files contains the workspace projects with their command targets. For instance, `todos` has the `build`, `serve`, `lint`, and `test` targets. This means that you can run `nx build todos`, `nx serve todos`, etc..
 
 Every target uses an executor which actually runs this target. So targets are analogous to typed npm scripts, and executors are analogous to typed shell scripts.
 

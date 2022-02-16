@@ -33,9 +33,11 @@ export function DocViewer({
             {
               url: router.asPath.includes('turbo-and-nx')
                 ? 'https://nx.dev/images/nx-media-monorepo.jpg'
-                : 'https://nx.dev/images/nx-media.jpg',
-              width: 800,
-              height: 400,
+                : `https://nx.dev/images/open-graph/${router.asPath
+                    .replace('/', '')
+                    .replace(/\//gi, '-')}.jpg`,
+              width: 1600,
+              height: 800,
               alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },

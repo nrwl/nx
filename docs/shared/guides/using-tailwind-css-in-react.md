@@ -42,7 +42,7 @@ module.exports = {
 
 One of the advantages of Tailwind is that it post-processes your CSS removing (also called "purging") all the parts that are not being used. In order to configure which file should be processed, the `tailwind.config.js` has a `content` property (formerly called `purge` in v2). You can find more details on Tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
 
-The `content` property usually consistes of a glob pattern to include all the necessary files that should be processed. In an Nx workspace it is very common for a project to have other projects as its dependencies. Setting and updating the glob to reflect those dependencies and their files is cumbersome and error prone.
+The `content` property usually consists of a glob pattern to include all the necessary files that should be processed. In a Nx workspace it is very common for a project to have other projects as its dependencies. Setting and updating the glob to reflect those dependencies and their files is cumbersome and error-prone.
 
 Nx has a utility function that can be used to construct the glob representation of all files a project depends on (based on the Nx Project Graph).
 
@@ -55,7 +55,7 @@ const { join } = require('path');
 
 module.exports = {
   content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,tsx,html}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
@@ -69,8 +69,8 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
 
 ```javascript
 [
-  'libs/lib1/src/**/!(*.stories|*.spec).{ts,html}',
-  'libs/lib2/src/**/!(*.stories|*.spec).{ts,html}',
+  'libs/lib1/src/**/!(*.stories|*.spec).{ts,tsx,html}',
+  'libs/lib2/src/**/!(*.stories|*.spec).{ts,tsx,html}',
 ];
 ```
 

@@ -8,6 +8,7 @@ import {
 } from '@nrwl/devkit';
 
 import {
+  addCypressOnErrorWorkaround,
   addEntryModule,
   addImplicitDeps,
   addRemoteToHost,
@@ -35,6 +36,8 @@ export async function setupMfe(host: Tree, options: Schema) {
   setupServeTarget(host, options);
 
   fixBootstrap(host, projectConfig.root);
+
+  addCypressOnErrorWorkaround(host, options);
 
   let installPackages: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

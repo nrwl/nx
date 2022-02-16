@@ -99,21 +99,21 @@ To serve an app incrementally use this command:
 nx serve myapp --with-deps --parallel
 ```
 
-Note: you can specify the `--with-deps` and `--parallel` flags as part of the options property on the file-server executor in your `angular.json` or `workspace.json`. The file-server executor will pass those to the `nx build` command it invokes.
+Note: you can specify the `--with-deps` and `--parallel` flags as part of the options property on the file-server executor in your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
 
 ```json
-"app0": {
+{
     "projectType": "application",
     ...
-    "architect": {
+    "targets": {
         "build": {
-            "builder": "@nrwl/angular:webpack-browser",
+            "executor": "@nrwl/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
             "options": { ... }
             "configurations": { ... }
         },
         "serve": {
-            "builder": "@nrwl/web:file-server",
+            "executor": "@nrwl/web:file-server",
             "options": {
                 "buildTarget": "app0:build",
                 "withDeps": true,

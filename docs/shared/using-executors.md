@@ -9,43 +9,37 @@ There are two main differences between an executor and a shell script or an npm 
 
 ## Executor definitions
 
-The executors that are available for each project are defined and configured in the `/workspace.json` file.
+The executors that are available for each project are defined and configured in the project's `project.json` file.
 
 ```json
 {
-  "projects": {
-    "cart": {
-      "root": "apps/cart",
-      "sourceRoot": "apps/cart/src",
-      "projectType": "application",
-      "generators": {},
-      "targets": {
-        "build": {
-          "executor": "@nrwl/web:webpack",
-          "options": {
-            "outputPath": "dist/apps/cart",
-            ...
-          },
-          "configurations": {
-            "production": {
-              "sourceMap": false,
-              ...
-            }
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            ...
-          }
+  "root": "apps/cart",
+  "sourceRoot": "apps/cart/src",
+  "projectType": "application",
+  "generators": {},
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "options": {
+        "outputPath": "dist/apps/cart",
+        ...
+      },
+      "configurations": {
+        "production": {
+          "sourceMap": false,
+          ...
         }
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        ...
       }
     }
   }
 }
 ```
-
-> Note: There are a few property keys in `workspace.json` that have interchangeable aliases. You can replace `generators` with `schematics`, `targets` with `architect` or `executor` with `builder`.
 
 Each project has its executors defined in the `targets` property. In this snippet, `cart` has two executors defined - `build` and `test`.
 

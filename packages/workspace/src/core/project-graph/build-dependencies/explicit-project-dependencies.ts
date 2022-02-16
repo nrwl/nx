@@ -1,12 +1,11 @@
-import { DependencyType, ProjectGraph } from '../project-graph-models';
+import {
+  DependencyType,
+  ProjectGraph,
+  ProjectGraphNodeRecords,
+} from '../project-graph-models';
 import { TypeScriptImportLocator } from './typescript-import-locator';
 import { TargetProjectLocator } from '../../target-project-locator';
-import {
-  ProjectFileMap,
-  ProjectGraphBuilder,
-  ProjectGraphProcessorContext,
-  Workspace,
-} from '@nrwl/devkit';
+import { ProjectFileMap, Workspace } from '@nrwl/devkit';
 
 export function buildExplicitTypeScriptDependencies(
   workspace: Workspace,
@@ -15,7 +14,7 @@ export function buildExplicitTypeScriptDependencies(
 ) {
   const importLocator = new TypeScriptImportLocator();
   const targetProjectLocator = new TargetProjectLocator(
-    graph.nodes,
+    graph.nodes as ProjectGraphNodeRecords,
     graph.externalNodes
   );
   const res = [] as any;

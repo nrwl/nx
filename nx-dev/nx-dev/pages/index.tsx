@@ -20,6 +20,7 @@ import {
   OpenPlatform,
   OpenSourceProjects,
   Performance,
+  Testimonials,
   VscodePlugin,
   YoutubeChannel,
 } from '@nrwl/nx-dev/ui-home';
@@ -169,6 +170,30 @@ export function Index() {
             <Performance />
             {/*OPEN PLATFORM*/}
             <OpenPlatform />
+          </article>
+
+          {/*TESTIMONIALS*/}
+          <article
+            id="testimonials"
+            className="relative bg-white pt-16 sm:pt-24 lg:pt-32"
+          >
+            <header className="sm:py-18 mx-auto max-w-prose px-4 py-16 text-center sm:max-w-3xl sm:px-6 lg:px-8">
+              <div>
+                <h1 className="text-blue-nx-base text-base font-semibold uppercase tracking-wider">
+                  They talk about Nx
+                </h1>
+                <p className="mt-2 text-4xl font-extrabold tracking-tight text-gray-800 sm:text-6xl">
+                  Devs & CEOs, Startups & big companies are loving Nx
+                </p>
+                <p className="mx-auto mt-5 max-w-prose text-xl text-gray-500">
+                  Here is what they say about Nx, what they like about it, how
+                  it transforms their developer life and what you are missing
+                  out on!
+                </p>
+              </div>
+            </header>
+
+            <Testimonials />
           </article>
 
           {/*GETTING STARTED*/}

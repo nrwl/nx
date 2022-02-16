@@ -25,8 +25,16 @@ export interface ProjectFileMap {
  * A Graph of projects in the workspace and dependencies between them
  */
 export interface ProjectGraph<T = any> {
-  nodes: Record<string, ProjectGraphNode<T>>;
+  nodes: Record<string, ProjectGraphProjectNode<T>>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
+  dependencies: Record<string, ProjectGraphDependency[]>;
+  // this is optional otherwise it might break folks who use project graph creation
+  allWorkspaceFiles?: FileData[];
+  version?: string;
+}
+
+export interface ProjectGraphV4<T = any> {
+  nodes: Record<string, ProjectGraphNode<T>>;
   dependencies: Record<string, ProjectGraphDependency[]>;
   // this is optional otherwise it might break folks who use project graph creation
   allWorkspaceFiles?: FileData[];
@@ -52,7 +60,7 @@ export enum DependencyType {
 }
 
 /**
- * A node describing a node in a workspace
+ * A node describing a project or an external node in a workspace
  */
 export type ProjectGraphNode<T = any> =
   | ProjectGraphProjectNode<T>

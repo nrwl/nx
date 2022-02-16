@@ -15,6 +15,7 @@ import {
   MappedProjectGraph,
   hasBannedImport,
   isDirectDependency,
+  isTerminalRun,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -133,7 +134,11 @@ export default createESLintRule<Options, MessageIds>({
     const projectPath = normalizePath(
       (global as any).projectPath || appRootPath
     );
-    if (!(global as any).projectGraph) {
+    /**
+     * Only reuse graph when running from terminal
+     * Enforce every IDE change to get a fresh nxdeps.json
+     */
+    if (!(global as any).projectGraph || !isTerminalRun()) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
       (global as any).workspaceLayout = nxJson.workspaceLayout;

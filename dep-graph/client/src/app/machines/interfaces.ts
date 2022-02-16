@@ -1,5 +1,8 @@
 // nx-ignore-next-line
-import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
 
 // The hierarchical (recursive) schema for the states
@@ -43,7 +46,7 @@ export type DepGraphUIEvents =
   | { type: 'clearTextFilter' }
   | {
       type: 'initGraph';
-      projects: ProjectGraphNode[];
+      projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {
@@ -53,7 +56,7 @@ export type DepGraphUIEvents =
     }
   | {
       type: 'updateGraph';
-      projects: ProjectGraphNode[];
+      projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
     };
 
@@ -62,7 +65,7 @@ export type DepGraphUIEvents =
 export type GraphRenderEvents =
   | {
       type: 'notifyGraphInitGraph';
-      projects: ProjectGraphNode[];
+      projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {
@@ -73,7 +76,7 @@ export type GraphRenderEvents =
     }
   | {
       type: 'notifyGraphUpdateGraph';
-      projects: ProjectGraphNode[];
+      projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {
@@ -141,7 +144,7 @@ export type AllEvents = DepGraphUIEvents | GraphRenderEvents | RouteEvents;
 
 // The context (extended state) of the machine
 export interface DepGraphContext {
-  projects: ProjectGraphNode[];
+  projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   affectedProjects: string[];
   selectedProjects: string[];

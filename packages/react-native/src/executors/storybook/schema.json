@@ -1,0 +1,28 @@
+{
+  "title": "React Native Storybook Load Stories",
+  "cli": "nx",
+  "description": "Load stories for react native",
+  "type": "object",
+  "properties": {
+    "searchDir": {
+      "type": "string",
+      "description": "The directory or directories, relative to the project root, to search for files in."
+    },
+    "outputFile": {
+      "type": "string",
+      "description": "The output file that will be written. It is relative to the project directory.",
+      "default": "./.storybook/story-loader.js"
+    },
+    "pattern": {
+      "type": "string",
+      "description": "The pattern of files to look at. It can be a specific file, or any valid glob. Note: if using the CLI, globs with **/*... must be escaped with quotes",
+      "default": "**/*.stories.@(js|jsx|ts|tsx|md)"
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Silences output.",
+      "default": false
+    }
+  },
+  "required": ["searchDir", "outputFile", "pattern"]
+}

@@ -116,7 +116,7 @@ For both apps, the generator did the following:
 - Added a `bootstrap.ts` file
 - Moved the code that is normally in `main.ts` to `bootstrap.ts`
 - Changed `main.ts` to dynamically import `bootstrap.ts` _(this is required for the Module Federation to correct load versions of shared libraries)_
-- Updated the `build` target in the `workspace.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom webpack configuration to the Angular compiler)_
+- Updated the `build` target in the `project.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom webpack configuration to the Angular compiler)_
 - Updated the `serve` target to use `@nrwl/angular:webpack-server`. _(this is required as we first need webpack to build the app with our custom webpack config)_
 - Installed Manfred Steyer's `@angular-architects/module-federation` package _(Read more on it [here](https://github.com/angular-architects/module-federation-plugin))_
 

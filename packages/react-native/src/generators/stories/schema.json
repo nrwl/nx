@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxReactNativeStorybookStories",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Library or application name",
+      "$default": {
+        "$source": "projectName",
+        "index": 0
+      },
+      "x-prompt": "What's the name of the project for which you want to generate stories?"
+    }
+  },
+  "required": ["project"]
+}

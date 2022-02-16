@@ -116,7 +116,7 @@ There are additional functions that the `@nrwl/nx-plugin/testing` package export
 
 Sometimes you might want to include some assets with the plugin. This might be a image or some additional binaries.
 
-To make sure that assets are copied to the dist folder, open the `workspace.json` file, and find the plugin's project. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
+To make sure that assets are copied to the dist folder, open the plugin's `project.json` file. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
 
 ```json
 "build": {

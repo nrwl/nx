@@ -8,7 +8,7 @@ To help with that Nx uses code analyses to make sure projects can only depend on
 
 Nx comes with a generic mechanism for expressing constraints: tags.
 
-First, use your project configuration (within `project.json` or `workspace.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
+First, use your project configuration (in `project.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
 
 ```jsonc
 // project "client"

@@ -57,37 +57,31 @@ describe('react native', () => {
     ).not.toThrow();
   }, 1000000);
 
-  xit('should support create application with js', async () => {
+  it('should create storybook with application', async () => {
     const appName = uniq('my-app');
-    runCLI(`generate @nrwl/react-native:application ${appName} --js`);
+    runCLI(`generate @nrwl/react-native:application ${appName}`);
+    runCLI(
+      `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+    );
     expect(() =>
       checkFilesExist(
-        `apps/${appName}/src/main.js`,
-        `apps/${appName}/src/app/App.js`,
-        `apps/${appName}/src/app/App.spec.js`
+        `.storybook/story-loader.js`,
+        `apps/${appName}/.storybook/storybook.ts`,
+        `apps/${appName}/.storybook/toggle-storybook.tsx`,
+        `apps/${appName}/src/app/App.stories.tsx`
       )
     ).not.toThrow();
 
-    expectTestsPass(await runCLIAsync(`test ${appName}`));
-
-    const appLintResults = await runCLIAsync(`lint ${appName}`);
-    expect(appLintResults.combinedOutput).toContain('All files pass linting.');
-
-    const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
-    expect(iosBundleResult.combinedOutput).toContain(
-      'Done writing bundle output'
-    );
-    expect(() =>
-      checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`)
-    ).not.toThrow();
-
-    const androidBundleResult = await runCLIAsync(`bundle-android ${appName}`);
-    expect(androidBundleResult.combinedOutput).toContain(
-      'Done writing bundle output'
-    );
-    expect(() =>
-      checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`)
-    ).not.toThrow();
+    await runCLIAsync(`storybook ${appName}`);
+    const result = readJson(join('apps', appName, 'package.json'));
+    expect(result).toMatchObject({
+      dependencies: {
+        '@storybook/addon-ondevice-actions': '*',
+        '@storybook/addon-ondevice-backgrounds': '*',
+        '@storybook/addon-ondevice-controls': '*',
+        '@storybook/addon-ondevice-notes': '*',
+      },
+    });
   });
 
   it('sync npm dependencies for autolink', async () => {
