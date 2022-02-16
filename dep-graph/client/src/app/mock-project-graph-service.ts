@@ -1,4 +1,7 @@
-import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 // nx-ignore-next-line
 import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
 import { ProjectGraphService } from '../app/interfaces';
@@ -56,7 +59,7 @@ export class MockProjectGraphService implements ProjectGraphService {
     return new Promise((resolve) => resolve(this.response));
   }
 
-  private createNewProject(): ProjectGraphNode {
+  private createNewProject(): ProjectGraphProjectNode {
     const type = Math.random() > 0.25 ? 'lib' : 'app';
     const name = `${type}-${this.response.projects.length + 1}`;
 

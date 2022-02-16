@@ -1,4 +1,4 @@
-import { ProjectGraph, ProjectGraphNode, Task } from '@nrwl/devkit';
+import { ProjectGraph, ProjectGraphProjectNode, Task } from '@nrwl/devkit';
 import type { Environment } from '../core/shared-interfaces';
 import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
@@ -6,8 +6,8 @@ import * as yargs from 'yargs';
 import type { NxArgs } from './utils';
 
 export async function printAffected(
-  affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
-  affectedProjects: ProjectGraphNode[],
+  affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
+  affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   { nxJson }: Environment,
   nxArgs: NxArgs,
@@ -33,7 +33,7 @@ export async function printAffected(
 }
 
 async function createTasks(
-  affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
+  affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   overrides: yargs.Arguments

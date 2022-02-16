@@ -2,7 +2,7 @@ import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphExternalNode,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
 } from './interfaces';
 import { DependencyType } from './interfaces';
 
@@ -28,7 +28,7 @@ export class ProjectGraphBuilder {
   /**
    * Adds a project node to the project graph
    */
-  addNode(node: ProjectGraphNode): void {
+  addNode(node: ProjectGraphProjectNode): void {
     // Check if project with the same name already exists
     if (this.graph.nodes[node.name]) {
       // Throw if existing project is of a different type

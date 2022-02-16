@@ -1,6 +1,6 @@
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { vol } from 'memfs';
-import { ProjectGraphNode } from '../project-graph-models';
+import { ProjectGraphProjectNode } from '../project-graph-models';
 import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
@@ -15,7 +15,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 
 describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphProcessorContext;
-  let projects: Record<string, ProjectGraphNode>;
+  let projects: Record<string, ProjectGraphProjectNode>;
   let fsJson;
   beforeEach(() => {
     const workspaceJson = {

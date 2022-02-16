@@ -77,7 +77,7 @@ export function readCache(): null | ProjectGraphCache {
 export function createCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
-  projectGraph: ProjectGraph<any>,
+  projectGraph: ProjectGraph,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
   const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({

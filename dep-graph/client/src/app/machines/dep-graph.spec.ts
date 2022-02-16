@@ -1,9 +1,12 @@
 // nx-ignore-next-line
-import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { depGraphMachine } from './dep-graph.machine';
 import { interpret } from 'xstate';
 
-export const mockProjects: ProjectGraphNode[] = [
+export const mockProjects: ProjectGraphProjectNode[] = [
   {
     name: 'app1',
     type: 'app',

@@ -1,5 +1,8 @@
-import type { FileData, ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
-import { isWorkspaceProject } from '../core/project-graph/operators';
+import type {
+  FileData,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 
 interface Reach {
   graph: ProjectGraph;
@@ -63,7 +66,7 @@ export function getPath(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string
-): Array<ProjectGraphNode> {
+): Array<ProjectGraphProjectNode> {
   if (sourceProjectName === targetProjectName) return [];
 
   if (reach.graph !== graph) {
@@ -105,16 +108,16 @@ export function getPath(
 
 export function checkCircularPath(
   graph: ProjectGraph,
-  sourceProject: ProjectGraphNode,
-  targetProject: ProjectGraphNode
-): Array<ProjectGraphNode> {
+  sourceProject: ProjectGraphProjectNode,
+  targetProject: ProjectGraphProjectNode
+): Array<ProjectGraphProjectNode> {
   if (!graph.nodes[targetProject.name]) return [];
 
   return getPath(graph, targetProject.name, sourceProject.name);
 }
 
 export function findFilesInCircularPath(
-  circularPath: ProjectGraphNode[]
+  circularPath: ProjectGraphProjectNode[]
 ): Array<string[]> {
   const filePathChain = [];
 
