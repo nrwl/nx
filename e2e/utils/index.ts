@@ -775,7 +775,7 @@ export function expectNoTsJestInJestConfig(appName: string) {
 export function waitUntil(
   predicate: () => boolean,
   opts: { timeout: number; ms: number; allowError?: boolean } = {
-    timeout: 1000,
+    timeout: 5000,
     ms: 50,
   }
 ): Promise<void> {
