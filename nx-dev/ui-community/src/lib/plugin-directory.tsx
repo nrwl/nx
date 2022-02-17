@@ -6,6 +6,7 @@ interface Plugin {
   description: string;
   name: string;
   url: string;
+  isOfficial: boolean;
 }
 
 export function PluginDirectory({
@@ -57,6 +58,7 @@ export function PluginDirectory({
               key={plugin.name}
               name={plugin.name}
               description={plugin.description}
+              isOfficial={plugin.isOfficial}
               url={plugin.url}
             />
           ))}

@@ -20,6 +20,7 @@ interface CommunityProps {
     description: string;
     name: string;
     url: string;
+    isOfficial: boolean;
   }[];
 }
 
@@ -30,12 +31,139 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   const pluginList = await res.json();
   return {
     props: {
-      pluginList,
+      pluginList: pluginList.map((plugin) => ({
+        ...plugin,
+        isOfficial: false,
+      })),
     },
   };
 }
 
 export function Community(props: CommunityProps): ReactComponentElement<any> {
+  const firstPartyPlugins = [
+    {
+      description:
+        'Integration with libraries such as Storybook, Jest, Cypress, NgRx, Micro-frontend...',
+      name: '@nrwl/angular',
+      url: 'https://nx.dev/angular/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Cypress is an e2e test runner built for modern web.',
+      name: '@nrwl/cypress',
+      url: 'https://nx.dev/cypress/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Detox is gray box end-to-end testing and automation library for mobile apps.',
+      name: '@nrwl/detox',
+      url: 'https://nx.dev/detox/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.',
+      name: '@nrwl/devkit',
+      url: 'https://nx.dev/nx-devkit/index',
+      isOfficial: true,
+    },
+    {
+      description:
+        'ESLint is powerful linter by itself, able to work on the syntax of your source files and assert things about based on the rules you configure.',
+      name: '@nrwl/eslint-plugin-nx',
+      url: 'https://nx.dev/guides/eslint#using-eslint-in-nx-workspaces',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Express is mature, minimal, and an open source web framework for making web applications and apis.',
+      name: '@nrwl/express',
+      url: 'https://nx.dev/express/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Jest is an open source test runner created by Facebook.',
+      name: '@nrwl/jest',
+      url: 'https://nx.dev/jest/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.',
+      name: '@nrwl/js',
+      url: 'https://nx.dev/js/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.',
+      name: '@nrwl/linter',
+      url: 'https://nx.dev/linter/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Nest.js is a framework designed for building scalable server-side applications.',
+      name: '@nrwl/nest',
+      url: 'https://nx.dev/nest/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Nest.js is a framework designed for building scalable server-side applications.',
+      name: '@nrwl/next',
+      url: 'https://nx.dev/next/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains generators and executors to manage Node applications within an Nx workspace.',
+      name: '@nrwl/node',
+      url: 'https://nx.dev/node/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Distributed caching and analytics for your Nx Workspace.',
+      name: '@nrwl/nx-cloud',
+      url: 'https://nx.app/',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors and generators for managing React applications and libraries within an Nx workspace.',
+      name: '@nrwl/react',
+      url: 'https://nx.dev/react/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        "React Native brings React's declarative UI framework to iOS and Android.",
+      name: '@nrwl/react-native',
+      url: 'https://nx.dev/react-native/overview',
+      isOfficial: true,
+    },
+    {
+      description: 'Storybook is a development environment for UI components.',
+      name: '@nrwl/storybook',
+      url: 'https://nx.dev/storybook/overview-react',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains generators for managing Web Component applications and libraries within an Nx workspace.',
+      name: '@nrwl/web',
+      url: 'https://nx.dev/web/overview',
+      isOfficial: true,
+    },
+    {
+      description:
+        'Contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.',
+      name: '@nrwl/workspace',
+      url: 'https://nx.dev/workspace/nrwl-workspace-overview',
+      isOfficial: true,
+    },
+  ];
   const router = useRouter();
 
   return (
@@ -137,7 +265,9 @@ export function Community(props: CommunityProps): ReactComponentElement<any> {
           </div>
 
           <div id="plugin-directory" className="relative overflow-hidden py-24">
-            <PluginDirectory pluginList={props.pluginList} />
+            <PluginDirectory
+              pluginList={firstPartyPlugins.concat(props.pluginList)}
+            />
           </div>
         </div>
       </main>
