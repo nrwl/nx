@@ -1,5 +1,5 @@
-import React, { ReactComponentElement, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
+import { ReactComponentElement, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 const featureItems: ReactComponentElement<any>[] = [

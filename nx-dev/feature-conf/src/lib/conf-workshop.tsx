@@ -1,7 +1,7 @@
-import React from 'react';
 import { MemberCard } from '@nrwl/nx-dev/ui-member-card';
+import { ReactComponentElement } from 'react';
 
-export function ConfWorkshop(): JSX.Element {
+export function ConfWorkshop(): ReactComponentElement<any> {
   return (
     <div className="border-t border-b border-gray-600">
       <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">

@@ -1,13 +1,13 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import autolinkHeadings from 'rehype-autolink-headings';
-import gfm from 'remark-gfm';
-import slug from 'rehype-slug';
 import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
-import { transformImagePath } from './renderers/transform-image-path';
-import { renderIframes } from './renderers/render-iframe';
+import { ReactComponentElement } from 'react';
+import ReactMarkdown from 'react-markdown';
+import autolinkHeadings from 'rehype-autolink-headings';
+import slug from 'rehype-slug';
+import gfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
+import { renderIframes } from './renderers/render-iframe';
+import { transformImagePath } from './renderers/transform-image-path';
 
 export interface ContentProps {
   document: DocumentData;
@@ -41,7 +41,7 @@ const components: any = (config: ComponentsConfig) => ({
   },
 });
 
-export function Content(props: ContentProps) {
+export function Content(props: ContentProps): ReactComponentElement<any> {
   return (
     <div className="min-w-0 flex-auto px-4 pt-8 pb-24 sm:px-6 lg:pb-16 xl:px-8">
       <ReactMarkdown

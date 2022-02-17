@@ -1,6 +1,6 @@
-import { uriTransformer } from 'react-markdown';
 import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
 import { join } from 'path';
+import { uriTransformer } from 'react-markdown';
 
 export function transformImagePath({
   document,

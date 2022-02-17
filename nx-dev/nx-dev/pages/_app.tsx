@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
+import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { DefaultSeo } from 'next-seo';
-import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import Script from 'next/script';
+import { useEffect } from 'react';
 import '../styles/main.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {

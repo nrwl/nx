@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import SyntaxHighlighter from 'react-syntax-highlighter';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import SyntaxHighlighter from 'react-syntax-highlighter';
 
 export function CodeBlock({
   text,

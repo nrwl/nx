@@ -1,19 +1,22 @@
-import React, { useCallback, useState } from 'react';
-import cx from 'classnames';
-import Link from 'next/link';
 import {
   Menu,
   MenuItem,
   MenuSection,
 } from '@nrwl/nx-dev/data-access-documents';
+import cx from 'classnames';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { ReactComponentElement, useCallback, useState } from 'react';
 
 export interface SidebarProps {
   menu: Menu;
   navIsOpen?: boolean;
 }
 
-export function Sidebar({ menu, navIsOpen }: SidebarProps) {
+export function Sidebar({
+  menu,
+  navIsOpen,
+}: SidebarProps): ReactComponentElement<any> {
   return (
     <div
       data-testid="sidebar"
@@ -43,7 +46,11 @@ export function Sidebar({ menu, navIsOpen }: SidebarProps) {
   );
 }
 
-function SidebarSection({ section }: { section: MenuSection }) {
+function SidebarSection({
+  section,
+}: {
+  section: MenuSection;
+}): ReactComponentElement<any> {
   return (
     <>
       {section.hideSectionHeader ? null : (
@@ -65,7 +72,11 @@ function SidebarSection({ section }: { section: MenuSection }) {
   );
 }
 
-function SidebarSectionItems({ item }: { item: MenuItem }) {
+function SidebarSectionItems({
+  item,
+}: {
+  item: MenuItem;
+}): ReactComponentElement<any> {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
 
@@ -131,7 +142,11 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
   );
 }
 
-function CollapsibleIcon({ isCollapsed }: { isCollapsed: boolean }) {
+function CollapsibleIcon({
+  isCollapsed,
+}: {
+  isCollapsed: boolean;
+}): ReactComponentElement<any> {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

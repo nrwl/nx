@@ -1,6 +1,6 @@
+import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
 export interface HeaderProps {
   isDocViewer?: boolean;

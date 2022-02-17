@@ -1,6 +1,6 @@
-import React, { Fragment } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, SelectorIcon } from '@heroicons/react/solid';
+import { Fragment, ReactComponentElement } from 'react';
 
 export interface SelectorProps<T> {
   items: { label: string; value: string; data?: T }[];
@@ -8,7 +8,9 @@ export interface SelectorProps<T> {
   onChange: (item: { label: string; value: string; data?: T }) => void;
 }
 
-export function Selector<T = {}>(props: SelectorProps<T>) {
+export function Selector<T = {}>(
+  props: SelectorProps<T>
+): ReactComponentElement<any> {
   return (
     <div className="w-full">
       <Listbox

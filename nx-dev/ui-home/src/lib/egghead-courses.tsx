@@ -1,6 +1,6 @@
-import React, { ReactComponentElement, useEffect } from 'react';
-import Link from 'next/link';
 import { motion, useAnimation } from 'framer-motion';
+import Link from 'next/link';
+import { ReactComponentElement, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 export function EggheadCourses(): ReactComponentElement<any> {

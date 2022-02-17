@@ -1,10 +1,10 @@
-import { ReactComponentElement, useState } from 'react';
+import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
+import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
+import cx from 'classnames';
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { AnimatePresence, motion } from 'framer-motion';
-import cx from 'classnames';
-import { InlineCommand } from '@nrwl/nx-dev/ui-commands';
-import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
+import { ReactComponentElement, useState } from 'react';
 
 interface Tab {
   id: string;

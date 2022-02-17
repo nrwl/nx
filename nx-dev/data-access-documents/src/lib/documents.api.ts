@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import matter from 'gray-matter';
-import { extractTitle } from './documents.utils';
+import { join } from 'path';
 import { DocumentData, DocumentMetadata } from './documents.models';
+import { extractTitle } from './documents.utils';
 
 export interface StaticDocumentPaths {
   params: { segments: string[] };

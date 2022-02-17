@@ -1,16 +1,16 @@
-import Link from 'next/link';
-import { NextSeo } from 'next-seo';
-import { useRouter } from 'next/router';
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
   ConfSchedule,
   ConfSpeakers,
   ConfSponsors,
   ConfWorkshop,
 } from '@nrwl/nx-dev/feature-conf';
-import { useStorage } from '@nrwl/nx-dev/feature-storage';
+import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { NextSeo } from 'next-seo';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { ReactComponentElement } from 'react';
 
-export function ConfPage() {
+export function ConfPage(): ReactComponentElement<any> {
   const router = useRouter();
   return (
     <>
