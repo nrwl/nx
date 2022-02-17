@@ -190,13 +190,13 @@ function createProcess(
     process.on('exit', processExitListener);
     process.on('SIGTERM', processExitListener);
     childProcess.stdout.on('data', (data) => {
-      process.stdout.write(data);
+      process.stdout.write(`[${command}] ${data}`);
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
     });
     childProcess.stderr.on('data', (err) => {
-      process.stderr.write(err);
+      process.stderr.write(`[${command}] ${err}`);
       if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
