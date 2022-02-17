@@ -3,8 +3,8 @@ import {
   DocumentAddIcon,
   ShareIcon,
 } from '@heroicons/react/solid';
-import { ReactComponentElement } from 'react';
 import Link from 'next/link';
+import { ReactComponentElement } from 'react';
 
 export function CreateNxPlugin(): ReactComponentElement<any> {
   return (

@@ -1,7 +1,7 @@
-import React, { ReactComponentElement, useEffect } from 'react';
-import Link from 'next/link';
 import cx from 'classnames';
 import { motion, useAnimation } from 'framer-motion';
+import Link from 'next/link';
+import { ReactComponentElement, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 const featureItems: {

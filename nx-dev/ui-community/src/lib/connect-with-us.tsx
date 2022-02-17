@@ -22,7 +22,7 @@ export function ConnectWithUs(): ReactComponentElement<any> {
       <div className="relative flex-none lg:w-7/12 xl:w-7/12">
         <div className="relative flex flex-col space-y-6 md:flex-row md:space-x-6 md:space-y-0">
           <div className="space-y-6 md:mt-24 md:w-1/2">
-            <div className="group rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out hover:border-violet-300">
+            <div className="group relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out hover:border-violet-300">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-violet-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105"></div>
                 <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#4A154B] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105"></div>

@@ -6,11 +6,12 @@ import {
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
   ConnectWithUs,
-  PluginDirectory,
   CreateNxPlugin,
+  PluginDirectory,
 } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
+import { ReactComponentElement } from 'react';
 
 declare const fetch: any;
 
@@ -34,7 +35,7 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   };
 }
 
-export function Community(props: CommunityProps) {
+export function Community(props: CommunityProps): ReactComponentElement<any> {
   const router = useRouter();
 
   return (

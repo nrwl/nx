@@ -1,5 +1,5 @@
-import React, { ReactComponentElement } from 'react';
 import { TestimonialCard } from '@nrwl/nx-dev/ui-common';
+import { ReactComponentElement } from 'react';
 
 export function Testimonials(): ReactComponentElement<any> {
   const column1 = [

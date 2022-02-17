@@ -1,6 +1,3 @@
-import React from 'react';
-import Link from 'next/link';
-import { NextSeo } from 'next-seo';
 import {
   Footer,
   Header,
@@ -24,8 +21,11 @@ import {
   VscodePlugin,
   YoutubeChannel,
 } from '@nrwl/nx-dev/ui-home';
+import { NextSeo } from 'next-seo';
+import Link from 'next/link';
+import { ReactComponentElement } from 'react';
 
-export function Index() {
+export function Index(): ReactComponentElement<any> {
   return (
     <>
       <NextSeo

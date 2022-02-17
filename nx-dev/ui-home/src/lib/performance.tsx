@@ -1,4 +1,3 @@
-import React, { ReactComponentElement, useEffect, useRef } from 'react';
 import {
   animate,
   motion,
@@ -7,6 +6,7 @@ import {
   useMotionValue,
   useTransform,
 } from 'framer-motion';
+import { ReactComponentElement, useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 function Counter({

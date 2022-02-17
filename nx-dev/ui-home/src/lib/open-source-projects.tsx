@@ -1,8 +1,8 @@
-import React, { ReactComponentElement, useEffect } from 'react';
-import Link from 'next/link';
-import { motion, useAnimation } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
 import cx from 'classnames';
+import { motion, useAnimation } from 'framer-motion';
+import Link from 'next/link';
+import { ReactComponentElement, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 export function OpenSourceProjects(): ReactComponentElement<any> {
   const projectList = [

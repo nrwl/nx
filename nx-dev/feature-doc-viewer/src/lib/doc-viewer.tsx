@@ -1,8 +1,8 @@
-import React from 'react';
-import cx from 'classnames';
-import { useRouter } from 'next/router';
-import { NextSeo } from 'next-seo';
 import { DocumentData, Menu } from '@nrwl/nx-dev/data-access-documents';
+import cx from 'classnames';
+import { NextSeo } from 'next-seo';
+import { useRouter } from 'next/router';
+import { ReactComponentElement } from 'react';
 import Content from './content';
 import Sidebar from './sidebar';
 
@@ -17,7 +17,7 @@ export function DocViewer({
   document,
   menu,
   navIsOpen,
-}: DocumentationFeatureDocViewerProps) {
+}: DocumentationFeatureDocViewerProps): ReactComponentElement<any> {
   const router = useRouter();
 
   return (

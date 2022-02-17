@@ -1,7 +1,6 @@
-import { ReactComponentElement } from 'react';
-import { useState } from 'react';
-import { PluginCard } from '@nrwl/nx-dev/ui-common';
 import { SearchIcon } from '@heroicons/react/solid';
+import { PluginCard } from '@nrwl/nx-dev/ui-common';
+import { ReactComponentElement, useState } from 'react';
 
 interface Plugin {
   description: string;

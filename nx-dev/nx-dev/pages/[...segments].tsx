@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import Router from 'next/router';
-import cx from 'classnames';
 import type { DocumentData, Menu } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import cx from 'classnames';
+import Router from 'next/router';
+import { useCallback, useEffect, useState } from 'react';
 import { documentsApi, menuApi } from '../lib/api';
 
 interface DocumentationPageProps {

@@ -1,4 +1,4 @@
-import { DocumentMetadata, VersionMetadata } from './documents.models';
+import { DocumentMetadata } from './documents.models';
 
 export interface Menu {
   sections: MenuSection[];

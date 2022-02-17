@@ -1,10 +1,10 @@
+import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
 import { SearchIcon } from '@heroicons/react/solid';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
 
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
