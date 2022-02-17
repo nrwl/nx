@@ -31,8 +31,12 @@ describe('addProjectJsonToImplicitDeps', () => {
     expect(result).toEqual({
       npmScope: 'scope',
       implicitDependencies: {
-        'apps/**/project.json': '*',
-        'libs/**/project.json': '*',
+        'apps/**/project.json': {
+          tags: '*',
+        },
+        'libs/**/project.json': {
+          tags: '*',
+        },
       },
     });
   });
@@ -58,8 +62,12 @@ describe('addProjectJsonToImplicitDeps', () => {
           devDependencies: '*',
         },
         '.eslintrc.json': '*',
-        'apps/**/project.json': '*',
-        'libs/**/project.json': '*',
+        'apps/**/project.json': {
+          tags: '*',
+        },
+        'libs/**/project.json': {
+          tags: '*',
+        },
       },
     });
   });
@@ -75,8 +83,12 @@ describe('addProjectJsonToImplicitDeps', () => {
       npmScope: 'scope',
       workspaceLayout: { appsDir: 'appz', libsDir: 'libz' },
       implicitDependencies: {
-        'appz/**/project.json': '*',
-        'libz/**/project.json': '*',
+        'appz/**/project.json': {
+          tags: '*',
+        },
+        'libz/**/project.json': {
+          tags: '*',
+        },
       },
     });
   });
@@ -92,7 +104,9 @@ describe('addProjectJsonToImplicitDeps', () => {
       npmScope: 'scope',
       workspaceLayout: { appsDir: 'packages', libsDir: 'packages' },
       implicitDependencies: {
-        'packages/**/project.json': '*',
+        'packages/**/project.json': {
+          tags: '*',
+        },
       },
     });
   });
@@ -120,7 +134,9 @@ describe('addProjectJsonToImplicitDeps', () => {
         },
         '.eslintrc.json': '*',
         'apps/**/project.json': ['testing'],
-        'libs/**/project.json': '*',
+        'libs/**/project.json': {
+          tags: '*',
+        },
       },
     });
   });

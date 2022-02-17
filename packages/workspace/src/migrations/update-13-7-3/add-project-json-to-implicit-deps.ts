@@ -14,9 +14,13 @@ export function addProjectJsonToImplicitDeps(host: Tree) {
       workspaceConfig.implicitDependencies || {};
     // set implicit dependencies
     workspaceConfig.implicitDependencies[`${appsDir}/**/project.json`] =
-      workspaceConfig.implicitDependencies[`${appsDir}/**/project.json`] || '*';
+      workspaceConfig.implicitDependencies[`${appsDir}/**/project.json`] || {
+        tags: '*',
+      };
     workspaceConfig.implicitDependencies[`${libsDir}/**/project.json`] =
-      workspaceConfig.implicitDependencies[`${libsDir}/**/project.json`] || '*';
+      workspaceConfig.implicitDependencies[`${libsDir}/**/project.json`] || {
+        tags: '*',
+      };
   }
   updateWorkspaceConfiguration(host, workspaceConfig);
 }

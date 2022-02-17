@@ -48,8 +48,12 @@ describe('@nrwl/workspace:workspace', () => {
           devDependencies: '*',
         },
         '.eslintrc.json': '*',
-        'apps/**/project.json': '*',
-        'libs/**/project.json': '*',
+        'apps/**/project.json': {
+          tags: '*',
+        },
+        'libs/**/project.json': {
+          tags: '*',
+        },
       },
       tasksRunnerOptions: {
         default: {

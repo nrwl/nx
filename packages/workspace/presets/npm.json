@@ -5,7 +5,9 @@
       "devDependencies": "*"
     },
     ".eslintrc.json": "*",
-    "packages/**/project.json": "*"
+    "packages/**/project.json": {
+      "tags": "*"
+    }
   },
   "targetDependencies": {
     "build": [

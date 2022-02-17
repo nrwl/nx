@@ -82,8 +82,12 @@ Object {
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
-    "apps/**/project.json": "*",
-    "libs/**/project.json": "*",
+    "apps/**/project.json": Object {
+      "tags": "*",
+    },
+    "libs/**/project.json": Object {
+      "tags": "*",
+    },
     "package.json": Object {
       "dependencies": "*",
       "devDependencies": "*",
