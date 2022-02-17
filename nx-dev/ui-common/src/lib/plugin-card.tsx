@@ -1,11 +1,18 @@
-/* eslint-disable-next-line */
+import { ReactComponentElement } from 'react';
+
 export interface PluginCardProps {
   name: string;
   description: string;
   url: string;
+  isOfficial: boolean;
 }
 
-export function PluginCard({ name, description, url }: PluginCardProps) {
+export function PluginCard({
+  name,
+  description,
+  url,
+  isOfficial,
+}: PluginCardProps): ReactComponentElement<any> {
   return (
     <div className="focus-within:ring-blue-nx-base relative flex w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
       <div className="flex w-full flex-col px-4 py-3">
@@ -25,11 +32,20 @@ export function PluginCard({ name, description, url }: PluginCardProps) {
           href={url}
           target="_blank"
           rel="noreferrer"
-          title="Github repository"
+          title={name}
           className="focus:outline-none"
         >
           <span className="absolute inset-0" aria-hidden="true"></span>
           <p className="mb-6 sm:text-sm">{description}</p>
+
+          {isOfficial ? (
+            <span
+              title="Official plugins are maintained by the Nx Team"
+              className="bg-green-nx-base absolute bottom-3 right-4 rounded-full px-3 py-0.5 text-xs font-medium capitalize text-white"
+            >
+              Official
+            </span>
+          ) : null}
         </a>
       </div>
     </div>
