@@ -840,6 +840,54 @@ describe('createTasksForProjectToRun', () => {
       },
     ]);
   });
+
+  it('should forward overrides to tasks with allowOverwrites', () => {
+    projectGraph.nodes.app1.data.targets.build.executor = 'executor1';
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'prebuild',
+        projects: 'self',
+      },
+    ];
+    projectGraph.nodes.app1.data.targets.prebuild.executor = 'executor2';
+    projectGraph.nodes.app1.data.targets.prebuild.allowOverwrites = [
+      'flagToPass',
+    ];
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: { flagToPass: 'flag value', flagNotToPass: 'flag value' },
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toEqual([
+      {
+        id: 'app1:prebuild',
+        overrides: { flagToPass: 'flag value' },
+        projectRoot: 'app1-root',
+        target: {
+          configuration: undefined,
+          project: 'app1',
+          target: 'prebuild',
+        },
+      },
+      {
+        id: 'app1:build',
+        overrides: { flagToPass: 'flag value', flagNotToPass: 'flag value' },
+        projectRoot: 'app1-root',
+        target: {
+          configuration: undefined,
+          project: 'app1',
+          target: 'build',
+        },
+      },
+    ]);
+  });
 });
 
 describe('getRunner', () => {

@@ -5,6 +5,7 @@ import type {
   NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphProjectNode,
+  TargetConfiguration,
   TargetDependencyConfig,
   Task,
 } from '@nrwl/devkit';
@@ -265,10 +266,11 @@ function addTasksForProjectTarget(
     project,
     target,
     configuration,
-    overrides:
-      project.data.targets?.[target]?.executor === originalTargetExecutor
-        ? overrides
-        : {},
+    overrides: getOverwrites(
+      overrides,
+      originalTargetExecutor,
+      project.data.targets?.[target]
+    ),
     errorIfCannotFindConfiguration,
   });
 
@@ -298,6 +300,28 @@ function addTasksForProjectTarget(
     }
   }
   tasksMap.set(task.id, task);
+}
+
+function getOverwrites(
+  overrides: Object,
+  originalTargetExecutor: string,
+  target?: TargetConfiguration
+): Object {
+  if (!target) {
+    return {};
+  }
+
+  if (target.executor === originalTargetExecutor) {
+    return overrides;
+  }
+
+  return (target.allowOverwrites || []).reduce(
+    (res, key) => ({
+      ...res,
+      [key]: overrides[key],
+    }),
+    {}
+  );
 }
 
 export function createTask({

@@ -140,6 +140,11 @@ export interface TargetConfiguration {
   dependsOn?: TargetDependencyConfig[];
 
   /**
+   * List of overwrites that can be passed to this target.
+   */
+  allowOverwrites?: string[];
+
+  /**
    * Target's options. They are passed in to the executor.
    */
   options?: any;
