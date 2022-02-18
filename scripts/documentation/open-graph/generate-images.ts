@@ -1,4 +1,4 @@
-import { Canvas, Image } from '@napi-rs/canvas';
+import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { ensureDir, readFile, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
@@ -41,26 +41,21 @@ function createOpenGraphImage(
     const context = canvas.getContext('2d');
     context.drawImage(image, 0, 0, 1200, 630);
 
-    context.font = 'bold 52px sans-serif';
+    context.font = 'bold 60px sans-serif';
     context.textAlign = 'center';
     context.textBaseline = 'top';
     context.fillStyle = '#fff';
-    context.fillText('Documentation', 600, 112);
-
-    context.font = 'bold 48px sans-serif';
-    context.textAlign = 'center';
-    context.textBaseline = 'top';
-    context.fillStyle = '#fff';
-    context.fillText(title.toUpperCase() + ':', 600, 260);
+    context.fillText(title.toUpperCase(), 600, 220);
 
     context.font = 'bold 42px sans-serif';
     context.textAlign = 'center';
     context.textBaseline = 'top';
     context.fillStyle = '#fff';
 
-    const truncate = (str, n) =>
-      str.length > n ? str.substring(0, n) + '…' : str;
-    context.fillText(truncate(content, 40), 600, 372);
+    const lines = splitLines(context, content, 1100);
+    lines.forEach((line, index) => {
+      context.fillText(line, 600, 310 + index * 55);
+    });
 
     console.log('Generating: ' + resolve(targetFolder + `/${filename}.jpg`));
 
@@ -69,6 +64,34 @@ function createOpenGraphImage(
       canvas.toBuffer('image/jpeg')
     );
   });
+}
+
+function splitLines(
+  context: SKRSContext2D,
+  text: string,
+  maxWidth: number
+): string[] {
+  // calculate line splits
+  const words = text.split(' ');
+  if (words.length <= 1) {
+    return words;
+  }
+  const lines = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const newLine = `${currentLine} ${word}`;
+    if (context.measureText(newLine).width < maxWidth) {
+      currentLine = newLine;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  lines.push(currentLine);
+
+  return lines;
 }
 
 ensureDir(targetFolder).then(() =>
