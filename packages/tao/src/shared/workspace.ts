@@ -10,6 +10,9 @@ import ignore, { Ignore } from 'ignore';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { loadNxPlugins } from './nx-plugin';
+import { PackageJson } from './package-json';
+import { execSync } from 'child_process';
+import { getPackageManagerCommand } from './package-manager';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -402,10 +405,8 @@ export class Workspaces {
   }
 
   private readExecutorsJson(nodeModule: string, executor: string) {
-    const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
-      paths: this.resolvePaths(),
-    });
-    const packageJson = readJsonFile(packageJsonPath);
+    const { json: packageJson, path: packageJsonPath } =
+      this.readPluginPackageJson(nodeModule);
     const executorsFile = packageJson.executors ?? packageJson.builders;
 
     if (!executorsFile) {
@@ -440,13 +441,8 @@ export class Workspaces {
         paths: this.resolvePaths(),
       });
     } else {
-      const packageJsonPath = require.resolve(
-        `${collectionName}/package.json`,
-        {
-          paths: this.resolvePaths(),
-        }
-      );
-      const packageJson = readJsonFile(packageJsonPath);
+      const { json: packageJson, path: packageJsonPath } =
+        this.readPluginPackageJson(collectionName);
       const generatorsFile = packageJson.generators ?? packageJson.schematics;
 
       if (!generatorsFile) {
@@ -477,6 +473,104 @@ export class Workspaces {
       );
     }
     return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
+  }
+
+  private readPluginPackageJson(pluginName: string): {
+    path: string;
+    json: PackageJson;
+  } {
+    let packageJsonPath: string;
+    try {
+      packageJsonPath = require.resolve(`${pluginName}/package.json`, {
+        paths: this.resolvePaths(),
+      });
+    } catch (e) {
+      if (e.code === 'MODULE_NOT_FOUND') {
+        const localPluginPackageJson = this.resolveLocalNxPlugin(pluginName);
+        if (localPluginPackageJson) {
+          return {
+            path: localPluginPackageJson,
+            json: readJsonFile(localPluginPackageJson),
+          };
+        }
+      }
+      throw e;
+    }
+    return { json: readJsonFile(packageJsonPath), path: packageJsonPath };
+  }
+
+  /**
+   * Builds a plugin package and returns the path to its package.json
+   * @param importPath What is the import path that refers to a potential plugin?
+   * @returns The path to the built package.json file
+   */
+  private resolveLocalNxPlugin(importPath: string): string | null {
+    const workspace = this.readWorkspaceConfiguration();
+    const plugin = this.findNxProjectForImportPath(importPath, workspace);
+    if (!plugin) {
+      return null;
+    }
+
+    const projectConfig = workspace.projects[plugin];
+
+    /**
+     * todo(v14-v15) make this stuff async + use task scheduler
+     *
+     * Ideally, we wouldn't invoke nx via execSync here. We should be
+     * able to run an executor given a project and target programmatically.
+     * Currently, runExecutor is async and doesn't hit the task orchestrator.
+     * So to use it, we would have to make a bunch of this stuff async (a breaking change),
+     * and we would also not benefit from remote or local caches which would be much slower.
+     * Therefore, currently we use execSync here. We should work towards simplifying
+     * the task orchestrator API, while consolidating @nrwl/workspace and @nrwl/tao
+     * to make this something like `await TaskScheduler.runTaskNow({project, target: 'build'})`,
+     * but that API doesn't exist.
+     */
+    execSync(`${getPackageManagerCommand().exec} nx build ${plugin}`, {
+      cwd: this.root,
+    });
+    const packageJsonPath = join(
+      this.root,
+      projectConfig.targets?.build?.options?.outputPath,
+      'package.json'
+    );
+    return packageJsonPath;
+  }
+
+  private findNxProjectForImportPath(
+    importPath: string,
+    workspace: WorkspaceJsonConfiguration
+  ): string | null {
+    const tsConfigPaths: Record<string, string[]> = readJsonFile(
+      join(this.root, 'tsconfig.base.json')
+    )?.compilerOptions?.paths;
+    const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
+      path.resolve(this.root, p)
+    );
+    if (tsConfigPaths[importPath]) {
+      const projectRootMappings = Object.entries(workspace.projects).reduce(
+        (m, [project, config]) => {
+          m[path.resolve(this.root, config.root)] = project;
+          return m;
+        },
+        {}
+      );
+      for (const root of Object.keys(projectRootMappings)) {
+        if (possiblePaths.some((p) => p.startsWith(root))) {
+          return projectRootMappings[root];
+        }
+      }
+      if (process.env.NX_VERBOSE_LOGGING) {
+        console.log(
+          'Unable to find local plugin',
+          possiblePaths,
+          projectRootMappings
+        );
+      }
+      throw new Error(
+        'Unable to resolve local plugin with import path ' + importPath
+      );
+    }
   }
 
   private resolvePaths() {
