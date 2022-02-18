@@ -302,6 +302,10 @@ export default createESLintRule<Options, MessageIds>({
       if (circularPath.length !== 0) {
         const circularFilePath = findFilesInCircularPath(circularPath);
 
+        // spacer text used for indirect dependencies when printing one line per file.
+        // without this, we can end up with a very long line that does not display well in the terminal.
+        const spacer = '\n    ';
+
         context.report({
           node,
           messageId: 'noCircularDependencies',
@@ -314,7 +318,9 @@ export default createESLintRule<Options, MessageIds>({
             ),
             filePaths: circularFilePath
               .map((files) =>
-                files.length > 1 ? `[${files.join(',')}]` : files[0]
+                files.length > 1
+                  ? `[${spacer}${files.join(`,${spacer}`)}\n  ]`
+                  : files[0]
               )
               .reduce(
                 (acc, files) => `${acc}\n- ${files}`,
