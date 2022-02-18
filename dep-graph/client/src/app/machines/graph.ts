@@ -8,7 +8,8 @@ import { default as cy } from 'cytoscape';
 import { default as cytoscapeDagre } from 'cytoscape-dagre';
 import { default as popper } from 'cytoscape-popper';
 import type { Instance } from 'tippy.js';
-import { ProjectNodeToolTip } from '../project-node-tooltip';
+import EdgeNodeTooltip from '../edge-tooltip';
+import ProjectNodeToolTip from '../project-node-tooltip';
 import { edgeStyles, nodeStyles } from '../styles-graph';
 import { GraphTooltipService } from '../tooltip-service';
 import {
@@ -105,6 +106,12 @@ export class GraphService {
 
       case 'notifyGraphShowAffectedProjects':
         this.showAffectedProjects();
+        break;
+
+      case 'notifyGraphTracing':
+        if (event.start && event.end) {
+          this.traceProjects(event.start, event.end);
+        }
         break;
     }
 
@@ -340,6 +347,18 @@ export class GraphService {
     }
   }
 
+  traceProjects(start: string, end: string) {
+    this.traversalGraph.elements().dijkstra({ root: `#${start}` });
+
+    const dijkstra = this.traversalGraph
+      .elements()
+      .dijkstra({ root: `#${start}`, directed: true });
+
+    const path = dijkstra.pathTo(this.traversalGraph.$(`#${end}`));
+
+    this.transferToRenderGraph(path.union(path.ancestors()));
+  }
+
   private transferToRenderGraph(elements: cy.Collection) {
     let currentFocusedProjectName;
     if (this.renderGraph) {
@@ -373,6 +392,7 @@ export class GraphService {
     });
 
     this.listenForProjectNodeClicks();
+    this.listenForEdgeNodeClicks();
     this.listenForProjectNodeHovers();
   }
 
@@ -521,9 +541,38 @@ export class GraphService {
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
 
-      const content = new ProjectNodeToolTip(node).render();
+      const content = ProjectNodeToolTip({
+        id: node.id(),
+        type: node.data('type'),
+        tags: node.data('tags'),
+      });
 
       this.openTooltip = this.tooltipService.open(ref, content);
+    });
+  }
+
+  listenForEdgeNodeClicks() {
+    this.renderGraph.$('edge').on('click', (event) => {
+      const edge: cy.EdgeSingular = event.target;
+      let ref: VirtualElement = edge.popperRef(); // used only for positioning
+
+      const tooltipContent = EdgeNodeTooltip({
+        type: edge.data('type'),
+        source: edge.source().id(),
+        target: edge.target().id(),
+        fileDependencies: edge
+          .source()
+          .data('files')
+          .filter((file) => file.deps && file.deps.includes(edge.target().id()))
+          .map((file) => {
+            return {
+              fileName: file.file.replace(`${edge.source().data('root')}/`, ''),
+              target: edge.target().id(),
+            };
+          }),
+      });
+
+      this.openTooltip = this.tooltipService.open(ref, tooltipContent);
     });
   }
 

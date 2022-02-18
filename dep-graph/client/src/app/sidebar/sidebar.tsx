@@ -5,12 +5,14 @@ import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
 import {
   collapseEdgesSelector,
   focusedProjectNameSelector,
+  getTracingInfo,
   groupByFolderSelector,
   hasAffectedProjectsSelector,
   includePathSelector,
   searchDepthSelector,
   textFilterSelector,
 } from '../machines/selectors';
+import { tracingStateConfig } from '../machines/tracing.state';
 import CollapseEdgesPanel from './collapse-edges-panel';
 import FocusedProjectPanel from './focused-project-panel';
 import GroupByFolderPanel from './group-by-folder-panel';
@@ -18,6 +20,7 @@ import ProjectList from './project-list';
 import SearchDepth from './search-depth';
 import ShowHideProjects from './show-hide-projects';
 import TextFilterPanel from './text-filter-panel';
+import TracingPanel from './tracing-panel';
 import ThemePanel from './theme-panel';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
 
@@ -33,6 +36,9 @@ export function Sidebar() {
   const environment = useEnvironmentConfig();
 
   const { showExperimentalFeatures } = environment.appConfig;
+
+  // const isTracing = depGraphService.state.matches('tracing');
+  const tracingInfo = useDepGraphSelector(getTracingInfo);
 
   function resetFocus() {
     depGraphService.send({ type: 'unfocusProject' });
@@ -82,6 +88,14 @@ export function Sidebar() {
       type: 'setIncludeProjectsByPath',
       includeProjectsByPath: !includePath,
     });
+  }
+
+  function resetTraceStart() {
+    depGraphService.send({ type: 'clearTraceStart' });
+  }
+
+  function resetTraceEnd() {
+    depGraphService.send({ type: 'clearTraceEnd' });
   }
 
   const updateTextFilter = useCallback(
@@ -169,6 +183,13 @@ export function Sidebar() {
           resetFocus={resetFocus}
         ></FocusedProjectPanel>
       ) : null}
+
+      <TracingPanel
+        start={tracingInfo.start}
+        end={tracingInfo.end}
+        resetStart={resetTraceStart}
+        resetEnd={resetTraceEnd}
+      ></TracingPanel>
 
       <TextFilterPanel
         includePath={includePath}

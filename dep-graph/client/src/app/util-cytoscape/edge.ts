@@ -15,6 +15,7 @@ export class ProjectEdge {
         id: `${this.dep.source}|${this.dep.target}`,
         source: this.dep.source,
         target: this.dep.target,
+        type: this.dep.type,
       },
     };
     edge.classes = this.dep.type ?? '';

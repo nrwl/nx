@@ -48,3 +48,8 @@ export const textFilterSelector: DepGraphSelector<string> = (state) =>
 
 export const hasAffectedProjectsSelector: DepGraphSelector<boolean> = (state) =>
   state.context.affectedProjects.length > 0;
+
+export const getTracingInfo: DepGraphSelector<{
+  start: string;
+  end: string;
+}> = (state) => state.context.tracing;

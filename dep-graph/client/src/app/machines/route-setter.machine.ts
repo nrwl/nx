@@ -8,7 +8,9 @@ type ParamKeys =
   | 'groupByFolder'
   | 'searchDepth'
   | 'select'
-  | 'collapseEdges';
+  | 'collapseEdges'
+  | 'traceStart'
+  | 'traceEnd';
 type ParamRecord = Record<ParamKeys, string | null>;
 
 function reduceParamRecordToQueryString(params: ParamRecord): string {
@@ -33,6 +35,8 @@ export const createRouteMachine = () => {
     collapseEdges: params.get('collapseEdges'),
     searchDepth: params.get('searchDepth'),
     select: params.get('select'),
+    traceStart: params.get('traceStart'),
+    traceEnd: params.get('traceEnd'),
   };
 
   const initialContext = {
@@ -55,6 +59,8 @@ export const createRouteMachine = () => {
           searchDepth: null,
           select: null,
           collapseEdges: null,
+          traceStart: null,
+          traceEnd: null,
         },
       },
       always: {
@@ -115,6 +121,20 @@ export const createRouteMachine = () => {
             ctx.params.searchDepth = event.searchDepthEnabled
               ? event.searchDepth.toString()
               : null;
+          }),
+        },
+        notifyRouteTracing: {
+          actions: assign((ctx, event) => {
+            if (event.start !== null && event.end !== null) {
+              ctx.params.traceStart = event.start;
+              ctx.params.traceEnd = event.end;
+
+              ctx.params.focus = null;
+              ctx.params.select = null;
+            } else {
+              ctx.params.traceStart = null;
+              ctx.params.traceEnd = null;
+            }
           }),
         },
       },

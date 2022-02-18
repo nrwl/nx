@@ -43,6 +43,8 @@ export class ProjectNode {
         groupByFolder && this.project.data.hasOwnProperty('root')
           ? this.getParentId()
           : null,
+      files: this.project.data.files,
+      root: this.project.data.root,
     };
   }
 
