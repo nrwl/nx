@@ -56,6 +56,8 @@ jobs:
         key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
         restore-keys: |
           windows-node-${{ matrix.node_version }}-yarn-
+          windows-node-${{ matrix.node_version }}-
+          windows-
 
     - name: Install packages
       run: yarn install --prefer-offline --frozen-lockfile --non-interactive
