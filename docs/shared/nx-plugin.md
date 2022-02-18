@@ -170,3 +170,95 @@ Nx provides a utility (`nx list`) that lists both core and community plugins. To
 > The `yarn submit-plugin` command automatically opens the Github pull request process with the correct template.
 
 We will then verify the plugin, offer suggestions or merge the pull request!
+
+## Preset
+
+A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some of the internal presets that Nx provides by default.
+
+### Custom Preset
+
+At its core a preset is a generator, which we can create inside of a plugin.
+If you **don't** have an existing plugin you can create one by running
+
+```
+  npx create-nx-plugin my-org --pluginName my-plugin
+```
+
+To create our preset inside of our plugin we can run
+
+```
+  nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
+```
+
+> Note: the word `preset` is required for the name of this generator
+
+You should have a similar structure to this:
+
+```
+happynrwl/
+	├── e2e
+	├── jest.config.js
+	├── jest.preset.js
+	├── nx.json
+	├── package-lock.json
+	├── package.json
+	├── packages
+	│   └── happynrwl
+	│       ├── src
+	│       │   ├── executors
+	│       │   ├── generators
+	│       │   │   ├── happynrwl
+	│       │   │   └── preset 		// <------------- Here
+	│       │   └── index.ts
+	├── tools
+	├── tsconfig.base.json
+	└── workspace.json
+```
+
+After the command is finished, the preset generator is created under the folder named **preset**.
+The **generator.ts** provides an entry point to the generator. This file contains a function that is called to perform manipulations on a tree that represents the file system. The **schema.json** provides a description of the generator, available options, validation information, and default values.
+
+Here is the sample generator function which you can customize to meet your needs.
+
+```
+export default async function (tree: Tree, options: PresetGeneratorSchema) {
+  const normalizedOptions = normalizeOptions(tree, options);
+  addProjectConfiguration(
+    tree,
+    normalizedOptions.projectName,
+    {
+      root: normalizedOptions.projectRoot,
+      projectType: 'application',
+      sourceRoot: `${normalizedOptions.projectRoot}/src`,
+      targets: {
+        exec: {
+          executor: "@nrwl/workspace:run-commands",
+          options: {
+	          command: `node ${projectRoot}/src/index.js
+          }
+        },
+      },
+      tags: normalizedOptions.parsedTags,
+    }
+  );
+  addFiles(tree, normalizedOptions);
+  await formatFiles(tree);
+}
+```
+
+To get an in-depth guide on customizing/running or debugging your generator see [workspace generators](https://nx.dev/generators/workspace-generators#running-a-workspace-generator).
+
+### Usage
+
+Before you are able to use your newly created preset you must package and publish it to a registry.
+
+After you have published your plugin to a registry you can now use your preset when creating a new workspace
+
+```
+npx create-nx-workspace my-workspace --preset=my-plugin-name
+```
+
+### Useful links
+
+- [Preset Video by Juri](https://www.youtube.com/watch?v=yGUrF0-uqaU)
+- [Preset release docs](https://blog.nrwl.io/single-file-monorepo-config-custom-workspace-presets-improved-tailwind-support-and-more-in-nx-13-1bc88da334c9)
