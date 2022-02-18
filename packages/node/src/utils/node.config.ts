@@ -23,6 +23,7 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
         new TerserPlugin({
           terserOptions: {
             mangle: false,
+            keep_classnames: true,
           },
         }),
       ],
