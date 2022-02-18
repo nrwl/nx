@@ -6,15 +6,16 @@ import {
   newProject,
   readJson,
   readProjectConfig,
-  readWorkspaceConfig,
   runCLI,
   runCLIAsync,
   uniq,
-  workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugin', () => {
-  beforeEach(() => newProject());
+  let npmScope: string;
+  beforeEach(() => {
+    npmScope = newProject();
+  });
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
@@ -170,6 +171,23 @@ describe('Nx Plugin', () => {
         },
       }),
     });
+  }, 90000);
+
+  it('should be able to use a local plugin', async () => {
+    const plugin = uniq('plugin');
+    const generator = uniq('generator');
+    const generatedProject = uniq('project');
+
+    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(
+      `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
+    );
+
+    runCLI(
+      `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
+    );
+    expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
+    expect(() => runCLI(`build ${generatedProject}`)).not.toThrow();
   }, 90000);
 
   describe('--directory', () => {
