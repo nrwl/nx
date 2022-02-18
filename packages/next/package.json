@@ -30,7 +30,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "next": "^12.0.0"
+    "next": "^12.1.0"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.14.5",
@@ -43,7 +43,7 @@
     "@nrwl/workspace": "*",
     "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
-    "eslint-config-next": "^12.0.0",
+    "eslint-config-next": "^12.1.0",
     "fs-extra": "^9.1.0",
     "url-loader": "^4.1.1",
     "tsconfig-paths": "^3.9.0",
