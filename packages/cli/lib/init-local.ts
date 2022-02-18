@@ -74,10 +74,7 @@ export function initLocal(workspace: Workspace) {
         console.log(
           `If you need to use it, run "FORCE_NG_UPDATE=true ng update".`
         );
-      } else if (
-        (process.argv[2] === 'add' || process.argv[3] === 'add') &&
-        process.env.FORCE_NG_ADD != 'true'
-      ) {
+      } else if (process.argv[2] === 'add') {
         console.log('Ng add is not natively supported by Nx');
         const pkg =
           process.argv[2] === 'add' ? process.argv[3] : process.argv[4];
