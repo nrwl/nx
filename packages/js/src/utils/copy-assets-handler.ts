@@ -109,7 +109,8 @@ export class CopyAssetsHandler {
           pattern = ag.pattern;
         }
 
-        const files = await fg(pattern, {
+        // fast-glob only supports Unix paths
+        const files = await fg(pattern.replace(/\\/g, '/'), {
           cwd: this.rootDir,
         });
 
