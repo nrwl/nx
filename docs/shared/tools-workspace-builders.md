@@ -51,7 +51,7 @@ In our `impl.ts` file, we're creating an `Options` interface that matches the js
 The `impl.ts` contains the actual code for your executor. Your executor's implementation must export a function that takes an options object and returns a `Promise<{ success: boolean }>`.
 
 ```typescript
-import { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -62,7 +62,7 @@ export interface EchoExecutorOptions {
 export default async function echoExecutor(
   options: EchoExecutorOptions,
   context: ExecutorContext
-) {
+): Promise<{ success: boolean }> {
   console.info(`Executing "echo"...`);
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
