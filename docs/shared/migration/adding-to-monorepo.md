@@ -47,7 +47,7 @@ lot** faster than using Lerna.
 
 ### Computation Caching
 
-Nx supports computation caching. If it has seen the computation you are trying to perform, it's going extract the result
+Nx supports computation caching. If it has seen the computation you are trying to perform, it's going to extract the result
 from its cache instead of running it. To see it in action, run the same command twice: `nx build myproj` and then
 again `nx build myproj`. This cache can be shared with your teammates and your CI. Your whole organisation will never
 build or test the same thing twice when using Nx.
