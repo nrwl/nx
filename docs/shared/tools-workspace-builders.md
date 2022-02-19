@@ -62,7 +62,7 @@ export interface EchoExecutorOptions {
 export default async function echoExecutor(
   options: EchoExecutorOptions,
   context: ExecutorContext
-) {
+): Promise<{ success: boolean }> {
   console.info(`Executing "echo"...`);
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
