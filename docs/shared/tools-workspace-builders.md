@@ -55,7 +55,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-export interface EchoExecutorOptions {
+export type interface EchoExecutorOptions {
   textToEcho: string;
 }
 
@@ -182,12 +182,12 @@ Here's an example of this (from a hypothetical project), that serves an api (pro
 ```typescript
 import { ExecutorContext, runExecutor } from '@nrwl/devkit';
 
-export interface MultipleExecutorOptions {}
+export type interface MultipleExecutorOptions {}
 
 export default async function multipleExecutor(
   options: MultipleExecutorOptions,
   context: ExecutorContext
-) {
+): Promise<{ success: boolean }> {
   const result = await Promise.race([
     await runExecutor(
       { project: 'api', target: 'serve' },
