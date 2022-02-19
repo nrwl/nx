@@ -7,6 +7,7 @@ import type { VirtualElement } from '@popperjs/core';
 import { default as cy } from 'cytoscape';
 import { default as cytoscapeDagre } from 'cytoscape-dagre';
 import { default as popper } from 'cytoscape-popper';
+import path from 'path/posix';
 import type { Instance } from 'tippy.js';
 import EdgeNodeTooltip from '../edge-tooltip';
 import ProjectNodeToolTip from '../project-node-tooltip';
@@ -111,6 +112,7 @@ export class GraphService {
       case 'notifyGraphTracing':
         if (event.start && event.end) {
           this.traceProjects(event.start, event.end);
+          // this.traceAllProjects(event.start, event.end);
         }
         break;
     }
@@ -348,15 +350,75 @@ export class GraphService {
   }
 
   traceProjects(start: string, end: string) {
-    this.traversalGraph.elements().dijkstra({ root: `#${start}` });
-
     const dijkstra = this.traversalGraph
       .elements()
-      .dijkstra({ root: `#${start}`, directed: true });
+      .dijkstra({ root: `[id = "${start}"]`, directed: true });
 
-    const path = dijkstra.pathTo(this.traversalGraph.$(`#${end}`));
+    const path = dijkstra.pathTo(this.traversalGraph.$(`[id = "${end}"]`));
 
     this.transferToRenderGraph(path.union(path.ancestors()));
+  }
+
+  traceAllProjects(start: string, end: string) {
+    const startNode = this.traversalGraph.$id(start).nodes().first();
+
+    const queue: cy.NodeSingular[][] = [[startNode]];
+
+    const paths: cy.NodeSingular[][] = [];
+    let iterations = 0;
+
+    while (queue.length > 0 && iterations <= 1000) {
+      const currentPath = queue.pop();
+
+      const nodeToTest = currentPath[currentPath.length - 1];
+
+      const outgoers = nodeToTest.outgoers('node');
+
+      if (outgoers.length > 0) {
+        outgoers.forEach((outgoer) => {
+          const newPath = [...currentPath, outgoer];
+          if (outgoer.id() === end) {
+            paths.push(newPath);
+          } else {
+            queue.push(newPath);
+          }
+        });
+      }
+
+      iterations++;
+    }
+
+    if (iterations >= 1000) {
+      console.log('failsafe triggered!');
+    }
+    paths.forEach((currentPath) => {
+      console.log(
+        currentPath
+          .map((path) => path.map((element) => element.id()))
+          .join(' => ')
+      );
+    });
+
+    let finalCollection = this.traversalGraph.collection();
+
+    paths.forEach((path) => {
+      for (let i = 0; i < path.length; i++) {
+        finalCollection = finalCollection.union(path[i]);
+
+        const nextIndex = i + 1;
+        if (nextIndex < path.length) {
+          finalCollection = finalCollection.union(
+            path[i].edgesTo(path[nextIndex])
+          );
+        }
+      }
+    });
+
+    console.log(finalCollection.length);
+
+    finalCollection.union(finalCollection.ancestors());
+    console.log(finalCollection.map((element) => element.id()));
+    this.transferToRenderGraph(finalCollection);
   }
 
   private transferToRenderGraph(elements: cy.Collection) {

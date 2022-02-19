@@ -7,6 +7,7 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
   const params = new URLSearchParams(searchParams);
 
   params.forEach((value, key) => {
+    console.log(key,value)
     switch (key) {
       case 'select':
         if (value === 'all') {
