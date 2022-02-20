@@ -18,6 +18,7 @@ import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-cha
 
 function normalizeOptions(
   options: SwcExecutorOptions,
+  layoutDir: string,
   contextRoot: string,
   sourceRoot?: string,
   projectRoot?: string
@@ -39,14 +40,15 @@ function normalizeOptions(
   );
 
   const swcCliOptions = {
-    projectDir: projectRoot.split('/').pop(),
-    // TODO: assume consumers put their code in `src`
-    destPath: `${relative(projectRoot, options.outputPath)}/src`,
+    srcPath: projectRoot,
+    destPath:
+      options.outputPath.substring(0, options.outputPath.indexOf(layoutDir)) +
+      layoutDir,
+    swcrcPath: join(projectRoot, '.swcrc'),
   };
 
   return {
     ...options,
-    swcrcPath: join(projectRoot, '.swcrc'),
     mainOutputPath: resolve(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
@@ -81,9 +83,20 @@ export async function* swcExecutor(
   _options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
-  const { sourceRoot, root } = context.workspace.projects[context.projectName];
-  const options = normalizeOptions(_options, context.root, sourceRoot, root);
-  options.swcrcPath = addTempSwcrc(options);
+  const { sourceRoot, root, projectType } =
+    context.workspace.projects[context.projectName];
+  const layoutDir =
+    projectType === 'library'
+      ? context.workspace.workspaceLayout.libsDir
+      : context.workspace.workspaceLayout.appsDir;
+  const options = normalizeOptions(
+    _options,
+    layoutDir,
+    context.root,
+    sourceRoot,
+    root
+  );
+  options.swcCliOptions.swcrcPath = addTempSwcrc(options);
   const { tmpTsConfig, projectRoot } = checkDependencies(
     context,
     options.tsConfig
