@@ -55,7 +55,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-export type interface EchoExecutorOptions {
+export interface EchoExecutorOptions {
   textToEcho: string;
 }
 
