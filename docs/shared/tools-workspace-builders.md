@@ -182,7 +182,7 @@ Here's an example of this (from a hypothetical project), that serves an api (pro
 ```typescript
 import { ExecutorContext, runExecutor } from '@nrwl/devkit';
 
-export type interface MultipleExecutorOptions {}
+export interface MultipleExecutorOptions {}
 
 export default async function multipleExecutor(
   options: MultipleExecutorOptions,
