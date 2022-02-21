@@ -147,7 +147,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const nxJson = readJson('nx.json');
     expect(nxJson).toEqual({
       npmScope: 'projscope',
-      affected: { defaultBase: 'undefined' },
+      affected: { defaultBase: 'main' },
       implicitDependencies: {
         'angular.json': '*',
         'package.json': '*',

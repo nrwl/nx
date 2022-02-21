@@ -424,7 +424,9 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
   const nxJson: NxJsonConfiguration = {
     npmScope: options.npmScope,
     affected: {
-      defaultBase: `${options.defaultBase}` || deduceDefaultBase(),
+      defaultBase: options.defaultBase
+        ? `${options.defaultBase}`
+        : deduceDefaultBase(),
     },
     implicitDependencies: {
       'angular.json': '*',
