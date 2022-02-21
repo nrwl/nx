@@ -20,12 +20,12 @@ export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
         tree,
         {},
         {
-          karma: '~5.0.0',
+          karma: '~6.3.0',
           'karma-chrome-launcher': '~3.1.0',
-          'karma-coverage-istanbul-reporter': '~3.0.2',
+          'karma-coverage': '~2.2.0',
           'karma-jasmine': '~4.0.0',
-          'karma-jasmine-html-reporter': '^1.5.0',
-          'jasmine-core': '~3.6.0',
+          'karma-jasmine-html-reporter': '~1.7.0',
+          'jasmine-core': '~3.10.0',
           'jasmine-spec-reporter': '~5.0.0',
           '@types/jasmine': '~3.5.0',
         }

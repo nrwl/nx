@@ -73,9 +73,7 @@ describe('init', () => {
         // ASSERT
         expect(devDependencies['karma']).toBeDefined();
         expect(devDependencies['karma-chrome-launcher']).toBeDefined();
-        expect(
-          devDependencies['karma-coverage-istanbul-reporter']
-        ).toBeDefined();
+        expect(devDependencies['karma-coverage']).toBeDefined();
         expect(devDependencies['karma-jasmine']).toBeDefined();
         expect(devDependencies['karma-jasmine-html-reporter']).toBeDefined();
         expect(devDependencies['jasmine-core']).toBeDefined();

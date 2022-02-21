@@ -8,8 +8,8 @@ module.exports = function(config) {
   const baseConfig = getBaseKarmaConfig();
   config.set({
     ...baseConfig,
-    coverageIstanbulReporter: {
-      ...baseConfig.coverageIstanbulReporter,
+    coverageReporter: {
+      ...baseConfig.coverageReporter,
       dir: join(__dirname, '<%= offsetFromRoot %>coverage/<%= projectRoot %>')
     }
   });
