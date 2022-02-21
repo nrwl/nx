@@ -408,7 +408,7 @@ describe('workspace', () => {
     it('should update package.json', async () => {
       await initGenerator(tree, {
         name: 'myApp',
-        preserveAngularCLILayout: true,
+        preserveAngularCliLayout: true,
       });
 
       const d = readJson(tree, '/package.json').devDependencies;
@@ -419,7 +419,7 @@ describe('workspace', () => {
     it('should create nx.json', async () => {
       await initGenerator(tree, {
         name: 'myApp',
-        preserveAngularCLILayout: true,
+        preserveAngularCliLayout: true,
       });
 
       const nxJson = readJson(tree, '/nx.json');
@@ -429,7 +429,7 @@ describe('workspace', () => {
     it('should create decorate-angular-cli.js', async () => {
       await initGenerator(tree, {
         name: 'myApp',
-        preserveAngularCLILayout: true,
+        preserveAngularCliLayout: true,
       });
       const s = readJson(tree, '/package.json').scripts;
 

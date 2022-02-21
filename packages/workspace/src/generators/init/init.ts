@@ -629,7 +629,7 @@ function renameDirSyncInTree(tree: Tree, from: string, to: string) {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  if (schema.preserveAngularCLILayout) {
+  if (schema.preserveAngularCliLayout) {
     addDependenciesToPackageJson(tree, {}, { '@nrwl/workspace': nxVersion });
     createNxJson(tree);
     decorateAngularClI(tree);
