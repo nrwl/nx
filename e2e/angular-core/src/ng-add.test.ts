@@ -288,9 +288,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // runCommand('mv src-bak src');
   });
 
-  it('should support preserveAngularCLILayout', () => {
-    // TODO: rename this arg so it doesn't split the CLI letters
-    runNgAdd('--preserve-angular-c-l-i-layout');
+  it('should support preserveAngularCliLayout', () => {
+    runNgAdd('--preserve-angular-cli-layout');
 
     const updatedAngularCLIJson = readJson('angular.json');
     expect(updatedAngularCLIJson.projects[project].root).toEqual('');

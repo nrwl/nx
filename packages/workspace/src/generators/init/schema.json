@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "SchematicsNxNgAdd",
   "title": "Init Workspace",
-  "cli": true,
+  "cli": "ng",
   "description": "NOTE: Does not work in the --dry-run mode",
   "type": "object",
   "properties": {
@@ -19,7 +19,7 @@
       "description": "Skip installing after adding @nrwl/workspace",
       "default": false
     },
-    "preserveAngularCLILayout": {
+    "preserveAngularCliLayout": {
       "type": "boolean",
       "description": "Preserve the Angular CLI layout instead of moving the app into apps.",
       "default": false
