@@ -36,10 +36,11 @@ export default async function (tree: Tree) {
     .replace(/coverageIstanbulReporter/g, 'coverageReporter')
     .replace(/karma-coverage-istanbul-reporter/, 'karma-coverage')
     .replace(
-      /reports: \['html', 'lcovonly'\]/,
+      /reports: \[(.+)\]/,
       `subdir: '.',\nreporters: [{ type: 'html' }, { type: 'text-summary' }]`
     )
-    .replace(/'\.\.\/\.\.\/coverage'/, `'./coverage'`);
+    .replace(/'\.\.\/\.\.\/coverage'/, `'./coverage'`)
+    .replace(/fixWebpackSourcePaths: true,/, '');
 
   tree.write(pathToRootKarmaConf, updatedKarmaContents);
 
@@ -47,10 +48,7 @@ export default async function (tree: Tree) {
     tree,
     {},
     {
-      karma: '~6.3.0',
       'karma-coverage': '~2.2.0',
-      'karma-jasmine-html-reporter': '~1.7.0',
-      'jasmine-core': '~3.10.0',
     }
   );
 
