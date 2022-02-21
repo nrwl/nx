@@ -18,7 +18,9 @@ import {
   findOrCreateConfig,
   readCurrentWorkspaceStorybookVersionFromExecutor,
 } from '../utils/utilities';
+import { StorybookBuilderOptions } from './build-storybook/build-storybook.impl';
 import { CommonNxStorybookConfig } from './models';
+import { StorybookExecutorOptions } from './storybook/storybook.impl';
 
 export interface NodePackage {
   name: string;
@@ -321,4 +323,27 @@ export function findStorybookAndBuildTargets(targets: {
     }
   });
   return returnObject;
+}
+
+export function normalizeAngularBuilderStylesOptions(
+  builderOptions: StorybookBuilderOptions | StorybookExecutorOptions,
+  uiFramework:
+    | '@storybook/angular'
+    | '@storybook/react'
+    | '@storybook/html'
+    | '@storybook/web-components'
+    | '@storybook/vue'
+    | '@storybook/vue3'
+    | '@storybook/svelte'
+    | '@storybook/react-native'
+): StorybookBuilderOptions | StorybookExecutorOptions {
+  if (uiFramework !== '@storybook/angular') {
+    if (builderOptions.styles) {
+      delete builderOptions.styles;
+    }
+    if (builderOptions.stylePreprocessorOptions) {
+      delete builderOptions.stylePreprocessorOptions;
+    }
+  }
+  return builderOptions;
 }

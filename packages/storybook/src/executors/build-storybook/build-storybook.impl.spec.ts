@@ -44,6 +44,10 @@ describe('Build storybook', () => {
       uiFramework,
       outputPath,
       projectBuildConfig: 'proj',
+      stylePreprocessorOptions: {
+        includePaths: ['my-path/my-style-options'],
+      },
+      styles: ['my-other-path/my-other-styles.scss'],
       config,
     };
 

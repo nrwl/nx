@@ -85,6 +85,18 @@ Type: `array`
 
 Directory where to load static files from, array of strings
 
+### stylePreprocessorOptions.includePaths
+
+Type: `array`
+
+Options to pass to style preprocessors. The paths to include. Paths will be resolved to workspace root. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.
+
+### styles
+
+Type: `array`
+
+Global styles to be included in the build. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.
+
 ### watch
 
 Default: `true`
