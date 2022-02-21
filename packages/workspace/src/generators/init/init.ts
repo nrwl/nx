@@ -540,12 +540,12 @@ function createNxJson(host: Tree) {
   writeJson<NxJsonConfiguration>(host, 'nx.json', {
     npmScope: name,
     implicitDependencies: {
-      'angular.json': '*',
-      'package.json': '*',
+      'package.json': {
+        dependencies: '*',
+        devDependencies: '*',
+      },
       [tsConfigPath]: '*',
-      'tslint.json': '*',
       '.eslintrc.json': '*',
-      'nx.json': '*',
     },
     tasksRunnerOptions: {
       default: {
@@ -630,6 +630,12 @@ function renameDirSyncInTree(tree: Tree, from: string, to: string) {
 
 export async function initGenerator(tree: Tree, schema: Schema) {
   if (schema.preserveAngularCliLayout) {
+    updateJson(tree, 'package.json', (json) => {
+      if (json.dependencies?.['@nrwl/workspace']) {
+        delete json.dependencies['@nrwl/workspace'];
+      }
+      return json;
+    });
     addDependenciesToPackageJson(tree, {}, { '@nrwl/workspace': nxVersion });
     createNxJson(tree);
     decorateAngularClI(tree);
