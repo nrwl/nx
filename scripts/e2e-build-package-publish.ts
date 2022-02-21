@@ -104,10 +104,31 @@ async function publishPackage(packagePath: string, npmMajorVersion: number) {
 function build(nxVersion: string) {
   try {
     const b = new Date();
-    execSync('npx nx run-many --target=build --all --parallel=8', {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, NX_INVOKED_BY_RUNNER: 'false' },
-    });
+    const projectsToExclude = [
+      'docs',
+      'nx-dev-data-access-documents',
+      'nx-dev-e2e',
+      'nx-dev',
+      'nx-dev-feature-analytics',
+      'nx-dev-feature-conf',
+      'nx-dev-feature-doc-viewer',
+      'nx-dev-feature-search',
+      'nx-dev-feature-storage',
+      'nx-dev-feature-versions-and-flavors',
+      'nx-dev-ui-commands',
+      'nx-dev-ui-common',
+      'nx-dev-ui-home',
+      'nx-dev-ui-member-card',
+      'nx-dev-ui-sponsor-card',
+      'typedoc-theme',
+    ].join(',');
+    execSync(
+      `npx nx run-many --target=build --all --parallel=8 --exclude=${projectsToExclude}`,
+      {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, NX_INVOKED_BY_RUNNER: 'false' },
+      }
+    );
     const a = new Date();
     console.log(`Packages built successfully in ${a.getTime() - b.getTime()}`);
   } catch (e) {
