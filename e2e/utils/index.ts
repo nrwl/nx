@@ -24,6 +24,8 @@ import {
 } from '@nrwl/devkit';
 import { promisify } from 'util';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { coerce } from 'semver';
 import isCI = require('is-ci');
 
 import chalk = require('chalk');
@@ -180,16 +182,26 @@ export function packageInstall(
   return install ? install.toString() : '';
 }
 
-export function runNgNew(projectName: string): string {
+export function runNgNew(
+  projectName: string,
+  packageManager = getSelectedPackageManager()
+): string {
   projName = projectName;
-  return execSync(
-    `../../node_modules/.bin/ng new ${projName} --no-interactive`,
-    {
-      cwd: e2eCwd,
-      env: process.env,
-      encoding: 'utf-8',
-    }
-  ).toString();
+
+  // Use the latest version of the currently supported @angular/cli major version
+  // to cover existing usage out there while avoiding the tests to fail when a new
+  // major comes out and is still not supported
+  const ngCliMajorVersion = coerce(angularCliVersion).major;
+  const npmMajorVersion = getNpmMajorVersion();
+  const command = `npx ${
+    +npmMajorVersion >= 7 ? '--yes' : ''
+  } @angular/cli@${ngCliMajorVersion} new ${projectName} --package-manager=${packageManager}`;
+
+  return execSync(command, {
+    cwd: e2eCwd,
+    env: process.env,
+    encoding: 'utf-8',
+  }).toString();
 }
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
@@ -722,7 +734,7 @@ export function getPackageManagerCommand({
   addDev: string;
   list: string;
 } {
-  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+  const npmMajorVersion = getNpmMajorVersion();
 
   return {
     npm: {
@@ -751,6 +763,11 @@ export function getPackageManagerCommand({
       list: 'npm ls --depth 10',
     },
   }[packageManager];
+}
+
+function getNpmMajorVersion(): string {
+  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+  return npmMajorVersion;
 }
 
 export const packageManagerLockFile = {
