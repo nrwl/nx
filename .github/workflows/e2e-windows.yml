@@ -74,10 +74,9 @@ jobs:
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
         npm_config_registry: http://localhost:4872
-        YARN_REGISTRY: http://localhost:4872
         NX_VERBOSE_LOGGING: ${{ 'true' }}
         NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
-        NX_CACHE_DIRECTORY: ./nx-cache
+        NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
