@@ -35,6 +35,11 @@
       "description": "Whether to skip TypeScript type checking.",
       "default": false
     },
+    "dts": {
+      "type": "boolean",
+      "description": "Whether to emit Type Declarations using tsc.",
+      "default": true
+    },
     "swcExclude": {
       "type": "array",
       "description": "List of SWC Glob/Regex to be excluded from compilation (https://swc.rs/docs/configuration/compilation#exclude)",

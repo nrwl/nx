@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
   FileInputOutput,
@@ -24,6 +24,10 @@ function normalizeOptions(
   projectRoot?: string
 ): NormalizedSwcExecutorOptions {
   const outputPath = join(contextRoot, options.outputPath);
+
+  if (options.dts == null) {
+    options.dts = true;
+  }
 
   if (options.skipTypeCheck == null) {
     options.skipTypeCheck = false;

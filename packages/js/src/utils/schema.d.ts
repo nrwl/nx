@@ -48,6 +48,7 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
 
 export interface SwcExecutorOptions extends ExecutorOptions {
   skipTypeCheck?: boolean;
+  dts?: boolean;
   swcExclude?: string[];
 }
 
@@ -61,6 +62,7 @@ export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
   swcExclude: string[];
   skipTypeCheck: boolean;
+  dts: boolean;
   swcCliOptions: SwcCliOptions;
 }
 

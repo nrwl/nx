@@ -15,10 +15,11 @@ function getSwcCmd(
 }
 
 function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
-  const { projectRoot, watch, tsConfig, root, outputPath } = normalizedOptions;
+  const { projectRoot, watch, tsConfig, root, outputPath, dts } =
+    normalizedOptions;
 
   const typeCheckOptions: TypeCheckOptions = {
-    mode: 'emitDeclarationOnly',
+    mode: dts ? 'emitDeclarationOnly' : 'noEmit',
     tsConfigPath: tsConfig,
     outDir: outputPath.replace(`/${projectRoot}`, ''),
     workspaceRoot: root,
