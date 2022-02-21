@@ -18,6 +18,20 @@
       "type": "string",
       "description": "Workspace project where Storybook reads the Webpack config from"
     },
+    "styles": {
+      "type": "array",
+      "description": "Global styles to be included in the build. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+      "items": {
+        "$ref": "#/definitions/extraEntryPoint"
+      }
+    },
+    "stylePreprocessorOptions.includePaths": {
+      "description": "Options to pass to style preprocessors. The paths to include. Paths will be resolved to workspace root. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "config": {
       "type": "object",
       "description": ".storybook configuration",
@@ -49,6 +63,37 @@
       "type": "boolean",
       "description": "Suppress verbose build output.",
       "default": true
+    }
+  },
+  "definitions": {
+    "extraEntryPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string",
+              "description": "The file to include."
+            },
+            "bundleName": {
+              "type": "string",
+              "pattern": "^[\\w\\-.]*$",
+              "description": "The bundle name for this extra entry point."
+            },
+            "inject": {
+              "type": "boolean",
+              "description": "If the bundle will be referenced in the HTML file.",
+              "default": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["input"]
+        },
+        {
+          "type": "string",
+          "description": "The file to include."
+        }
+      ]
     }
   },
   "required": ["uiFramework", "config"]

@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { CommonNxStorybookConfig } from '../models';
 import {
   getStorybookFrameworkPath,
+  normalizeAngularBuilderStylesOptions,
   resolveCommonStorybookOptionMapper,
   runStorybookSetupCheck,
 } from '../utils';
@@ -24,8 +25,9 @@ export default async function* storybookExecutor(
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
   let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
-
   const frameworkOptions = (await import(frameworkPath)).default;
+
+  options = normalizeAngularBuilderStylesOptions(options, options.uiFramework);
   const option = storybookOptionMapper(options, frameworkOptions, context);
 
   // print warnings
