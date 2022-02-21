@@ -302,10 +302,6 @@ export async function killPorts(port?: number): Promise<boolean> {
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
 export async function cleanupProject() {
   if (isCI) {
-    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    if (process.env.NX_E2E_SKIP_DAEMON_CLEANUP !== 'true') {
-      runCLI('reset');
-    }
     try {
       removeSync(tmpProjPath());
     } catch (e) {}
