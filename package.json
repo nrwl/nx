@@ -180,7 +180,7 @@
     "kill-port": "^1.6.1",
     "less": "3.12.2",
     "less-loader": "^10.1.0",
-    "license-webpack-plugin": "4.0.0",
+    "license-webpack-plugin": "^4.0.2",
     "loader-utils": "1.2.3",
     "memfs": "^3.0.1",
     "metro-resolver": "^0.67.0",
