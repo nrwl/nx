@@ -68,7 +68,10 @@ export async function* executeExecutor(
   }
 }
 
-function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
+async function runProcess(
+  event: NodeBuildEvent,
+  options: NodeExecuteBuilderOptions
+) {
   if (subProcess || !event.success) {
     return;
   }
@@ -76,6 +79,20 @@ function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
   subProcess = fork(event.outfile, options.args, {
     execArgv: getExecArgv(options),
   });
+
+  if (!options.watch) {
+    await new Promise<void>((resolve, reject) => {
+      subProcess.once('exit', (code) => {
+        if (code !== 0) {
+          reject(`Node process exited with unsuccessful code ${code}`);
+          return;
+        }
+
+        resolve();
+      });
+      subProcess.once('error', reject);
+    });
+  }
 }
 
 function getExecArgv(options: NodeExecuteBuilderOptions) {
@@ -103,7 +120,7 @@ async function handleBuildEvent(
   if ((!event.success || options.watch) && subProcess) {
     await killProcess();
   }
-  runProcess(event, options);
+  await runProcess(event, options);
 }
 
 async function killProcess() {
