@@ -130,7 +130,11 @@ function build(nxVersion: string) {
       }
     );
     const a = new Date();
-    console.log(`\n> Packages built successfully in ${(a.getTime() - b.getTime()) / 1000}s\n`);
+    console.log(
+      `\n> Packages built successfully in ${
+        (a.getTime() - b.getTime()) / 1000
+      }s\n`
+    );
   } catch (e) {
     console.log(e.output.toString());
     console.log('Build failed. See error above.');
