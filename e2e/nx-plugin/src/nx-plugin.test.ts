@@ -9,6 +9,10 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
+  updateFile,
+  createFile,
+  readFile,
+  removeFile,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugin', () => {
@@ -173,22 +177,74 @@ describe('Nx Plugin', () => {
     });
   }, 90000);
 
-  it('should be able to use a local plugin', async () => {
+  describe('local plugins', () => {
     const plugin = uniq('plugin');
-    const generator = uniq('generator');
-    const generatedProject = uniq('project');
+    beforeEach(() => {
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    });
 
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-    runCLI(
-      `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
-    );
+    it('should be able to infer projects and targets', async () => {
+      // Cache workspace json, to test inference and restore afterwards
+      const workspaceJsonContents = readFile('workspace.json');
+      removeFile('workspace.json');
 
-    runCLI(
-      `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
-    );
-    expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
-    expect(() => runCLI(`build ${generatedProject}`)).not.toThrow();
-  }, 90000);
+      // Setup project inference + target inference
+      updateFile(
+        `libs/${plugin}/src/index.ts`,
+        `import {basename} from 'path'
+  
+  export function registerProjectTargets(f) {
+    if (basename(f) === 'my-project-file') {
+      return {
+        build: {
+          executor: "@nrwl/workspace:run-commands",
+          options: {
+            command: "echo 'custom registered target'"
+          }
+        }
+      }
+    }
+  }
+  
+  export const projectFilePatterns = ['my-project-file'];
+  `
+      );
+
+      // Register plugin in nx.json (required for inference)
+      updateFile(`nx.json`, (nxJson) => {
+        const nx = JSON.parse(nxJson);
+        nx.plugins = [`@${npmScope}/${plugin}`];
+        return JSON.stringify(nx, null, 2);
+      });
+
+      // Create project that should be inferred by Nx
+      const inferredProject = uniq('inferred');
+      createFile(`libs/${inferredProject}/my-project-file`);
+
+      // Attempt to use inferred project w/ Nx
+      expect(runCLI(`build ${inferredProject}`)).toContain(
+        'custom registered target'
+      );
+
+      // Restore workspace.json
+      createFile('workspace.json', workspaceJsonContents);
+    });
+
+    it('should be able to use local generators and executors', async () => {
+      const generator = uniq('generator');
+      const generatedProject = uniq('project');
+
+      runCLI(
+        `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
+      );
+
+      runCLI(
+        `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
+      );
+      expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
+      expect(() => runCLI(`build ${generatedProject}`)).not.toThrow();
+    });
+  });
 
   describe('--directory', () => {
     it('should create a plugin in the specified directory', () => {

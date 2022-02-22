@@ -89,7 +89,7 @@
     "@storybook/core": "~6.4.12",
     "@storybook/react": "~6.4.12",
     "@svgr/webpack": "^6.1.2",
-    "@swc/core": "^1.2.146",
+    "@swc/core": "^1.2.152",
     "@swc-node/register": "^1.4.2",
     "@testing-library/react": "11.2.6",
     "@testing-library/react-hooks": "7.0.1",

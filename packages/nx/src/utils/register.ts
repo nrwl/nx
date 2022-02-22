@@ -1,5 +1,3 @@
-import { readDefaultTsConfig } from '@swc-node/register/read-default-tsconfig';
-import { register } from '@swc-node/register/register';
 import { join } from 'path';
 
 /**
@@ -14,22 +12,32 @@ export const registerTsProject = (
   path: string,
   configFilename = 'tsconfig.json'
 ) => {
+  // These are requires to prevent it from registering when it shouldn't
+  const { register } = require('@swc-node/register/register');
+  const {
+    readDefaultTsConfig,
+  } = require('@swc-node/register/read-default-tsconfig');
+
   try {
-    const tsConfig = readDefaultTsConfig(join(path, configFilename));
+    const tsConfigPath = join(path, configFilename);
+    const tsConfig = readDefaultTsConfig(tsConfigPath);
     register(tsConfig);
 
     /**
      * Load the ts config from the source project
      */
-    const tsconfigPaths = require('tsconfig-paths');
-    const tsConfigResult = tsconfigPaths.loadConfig(path);
+    const tsconfigPaths: typeof import('tsconfig-paths') = require('tsconfig-paths');
+    const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
     /**
      * Register the custom workspace path mappings with node so that workspace libraries
      * can be imported and used within project
      */
-    return tsconfigPaths.register({
-      baseUrl: tsConfigResult.absoluteBaseUrl,
-      paths: tsConfigResult.paths,
-    });
+    if (tsConfigResult.resultType === 'success') {
+      return tsconfigPaths.register({
+        baseUrl: tsConfigResult.absoluteBaseUrl,
+        paths: tsConfigResult.paths,
+      });
+    }
   } catch (err) {}
+  return () => {};
 };

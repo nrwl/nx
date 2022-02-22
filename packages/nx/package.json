@@ -28,7 +28,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@swc/core": "^1.2.146",
+    "@swc/core": "^1.2.152",
     "@swc-node/register": "^1.4.2",
     "chalk": "4.1.0",
     "enquirer": "~2.3.6",
