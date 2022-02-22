@@ -1,11 +1,11 @@
 ---
-title: '@nrwl/js:node executor'
-description: 'Build Node.js applications'
+title: '@nrwl/node:node executor'
+description: 'Execute a Node application'
 ---
 
-# @nrwl/js:node
+# @nrwl/node:node
 
-Build Node.js applications
+Execute a Node application
 
 Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 

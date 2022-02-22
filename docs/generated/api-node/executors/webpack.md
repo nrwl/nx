@@ -1,11 +1,11 @@
 ---
-title: '@nrwl/node:build executor'
-description: 'Build a Node application'
+title: '@nrwl/node:webpack executor'
+description: 'Build a Node application using webpack'
 ---
 
-# @nrwl/node:build
+# @nrwl/node:webpack
 
-Build a Node application
+Build a Node application using webpack
 
 Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
 
