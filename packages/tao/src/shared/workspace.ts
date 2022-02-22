@@ -749,7 +749,7 @@ export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
 
 function buildProjectConfigurationFromPackageJson(
   path: string,
-  packageJson: { name: string },
+  packageJson: { name: string; nx: { implicitDependencies?: string[] } },
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(path).split('\\').join('/');
@@ -762,6 +762,7 @@ function buildProjectConfigurationFromPackageJson(
     root: directory,
     sourceRoot: directory,
     name,
+    implicitDependencies: packageJson?.nx?.implicitDependencies,
   };
 }
 
