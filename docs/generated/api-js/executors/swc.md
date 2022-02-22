@@ -35,14 +35,6 @@ Type: `array`
 
 List of static assets.
 
-### dts
-
-Default: `true`
-
-Type: `boolean`
-
-Whether to emit Type Declarations using tsc.
-
 ### skipTypeCheck
 
 Default: `false`

@@ -25,10 +25,6 @@ function normalizeOptions(
 ): NormalizedSwcExecutorOptions {
   const outputPath = join(contextRoot, options.outputPath);
 
-  if (options.dts == null) {
-    options.dts = true;
-  }
-
   if (options.skipTypeCheck == null) {
     options.skipTypeCheck = false;
   }
@@ -43,11 +39,23 @@ function normalizeOptions(
     outputPath
   );
 
+  /**
+   * Reduce outputPath to root of layout dir (libsDir/appsDir)
+   * in desired build output dir (default is dist)
+   *
+   * dist/packages/lib-one -> dist/packages
+   * build/packages/lib-one -> build/packages
+   * dist/packages/lib-one/nested/nested-lib-one -> dist/packages
+   * dist/libs/lib-one -> dist/libs
+   * dist/apps/app-one -> dist/apps
+   */
+  const swcDestPath =
+    options.outputPath.substring(0, options.outputPath.indexOf(layoutDir)) +
+    layoutDir;
+
   const swcCliOptions = {
     srcPath: projectRoot,
-    destPath:
-      options.outputPath.substring(0, options.outputPath.indexOf(layoutDir)) +
-      layoutDir,
+    destPath: swcDestPath,
     swcrcPath: join(projectRoot, '.swcrc'),
   };
 
