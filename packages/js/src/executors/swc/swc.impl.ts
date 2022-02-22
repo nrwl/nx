@@ -39,23 +39,16 @@ function normalizeOptions(
     outputPath
   );
 
-  /**
-   * Reduce outputPath to root of layout dir (libsDir/appsDir)
-   * in desired build output dir (default is dist)
-   *
-   * dist/packages/lib-one -> dist/packages
-   * build/packages/lib-one -> build/packages
-   * dist/packages/lib-one/nested/nested-lib-one -> dist/packages
-   * dist/libs/lib-one -> dist/libs
-   * dist/apps/app-one -> dist/apps
-   */
-  const swcDestPath =
-    options.outputPath.substring(0, options.outputPath.indexOf(layoutDir)) +
-    layoutDir;
+  const projectRootParts = projectRoot.split('/');
+  // We pop the last part of the `projectRoot` to pass
+  // the last part (projectDir) and the remainder (projectRootParts) to swc
+  const projectDir = projectRootParts.pop();
+  const swcCwd = projectRootParts.join('/');
 
   const swcCliOptions = {
-    srcPath: projectRoot,
-    destPath: swcDestPath,
+    srcPath: projectDir,
+    destPath: relative(join(contextRoot, swcCwd), outputPath),
+    swcCwd,
     swcrcPath: join(projectRoot, '.swcrc'),
   };
 

@@ -53,8 +53,9 @@ export interface SwcExecutorOptions extends ExecutorOptions {
 
 export interface SwcCliOptions {
   srcPath: string;
-  swcrcPath: string;
   destPath: string;
+  swcrcPath: string;
+  swcCwd: string;
 }
 
 export interface NormalizedSwcExecutorOptions

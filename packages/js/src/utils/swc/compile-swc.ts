@@ -10,7 +10,7 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-root=${srcPath} --source-maps --no-swcrc --config-file=${swcrcPath}`;
+  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --no-swcrc --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
@@ -39,9 +39,9 @@ export async function compileSwc(
 ) {
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
-  const swcCmdLog = execSync(
-    getSwcCmd(normalizedOptions.swcCliOptions)
-  ).toString();
+  const swcCmdLog = execSync(getSwcCmd(normalizedOptions.swcCliOptions), {
+    cwd: normalizedOptions.swcCliOptions.swcCwd,
+  }).toString();
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 
@@ -84,7 +84,10 @@ export async function* compileSwcWatch(
       let stderrOnData: () => void;
       let watcherOnExit: () => void;
 
-      const swcWatcher = exec(getSwcCmd(normalizedOptions.swcCliOptions, true));
+      const swcWatcher = exec(
+        getSwcCmd(normalizedOptions.swcCliOptions, true),
+        { cwd: normalizedOptions.swcCliOptions.swcCwd }
+      );
 
       processOnExit = () => {
         swcWatcher.kill();
