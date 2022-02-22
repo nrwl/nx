@@ -10,6 +10,7 @@ import ignore, { Ignore } from 'ignore';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { loadNxPlugins } from './nx-plugin';
+import { PackageJson } from '@nrwl/tao/src/shared/package-json';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -749,7 +750,7 @@ export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
 
 function buildProjectConfigurationFromPackageJson(
   path: string,
-  packageJson: { name: string; nx: { implicitDependencies?: string[] } },
+  packageJson: PackageJson,
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(path).split('\\').join('/');
@@ -758,11 +759,12 @@ function buildProjectConfigurationFromPackageJson(
   if (name.startsWith(npmPrefix)) {
     name = name.replace(npmPrefix, '');
   }
+  const { targets, ...rest } = packageJson.nx ?? {};
   return {
+    name,
     root: directory,
     sourceRoot: directory,
-    name,
-    implicitDependencies: packageJson?.nx?.implicitDependencies,
+    ...rest,
   };
 }
 
