@@ -108,5 +108,5 @@ describe('Jest', () => {
     expect(cliResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-  });
+  }, 90000);
 });

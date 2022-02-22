@@ -424,7 +424,7 @@ export function runNgAdd(
 ): string {
   try {
     packageInstall('@nrwl/workspace');
-    return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
+    return execSync(`npx ng add @nrwl/workspace ${command}`, {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
       encoding: 'utf-8',
