@@ -9,14 +9,16 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Detox', () => {
-  beforeEach(() => newProject());
+  const appName = uniq('myapp');
 
-  it('should create files and run lint command', async () => {
-    const appName = uniq('myapp');
+  beforeAll(() => {
+    newProject();
     runCLI(
       `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint`
     );
+  });
 
+  it('should create files and run lint command', async () => {
     checkFilesExist(`apps/${appName}-e2e/.detoxrc.json`);
     checkFilesExist(`apps/${appName}-e2e/tsconfig.json`);
     checkFilesExist(`apps/${appName}-e2e/tsconfig.e2e.json`);
@@ -30,18 +32,13 @@ describe('Detox', () => {
   describe('React Native Detox MACOS-Tests', () => {
     if (isOSX()) {
       it('should build and test ios MACOS-Tests', async () => {
-        const appName = uniq('myapp');
-        runCLI(
-          `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint`
-        );
-
-        expect(runCLI(`build-ios ${appName}-e2e --prod`)).toContain(
+        expect(runCLI(`build-ios ${appName}-e2e`)).toContain(
           'Successfully ran target build-ios'
         );
 
         expect(
           runCLI(
-            `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`
+            `test-ios ${appName}-e2e --debugSynchronization=true --loglevel=trace`
           )
         ).toContain('Successfully ran target test-ios');
 
