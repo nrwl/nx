@@ -51,7 +51,7 @@ export async function* tscExecutor(
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
 
-  const { projectRoot, tmpTsConfig } = checkDependencies(
+  const { projectRoot, tmpTsConfig, target, dependencies } = checkDependencies(
     context,
     _options.tsConfig
   );
@@ -73,7 +73,7 @@ export async function* tscExecutor(
     const disposePackageJsonChanged = await watchForSingleFileChanges(
       join(context.root, projectRoot),
       'package.json',
-      () => updatePackageJson(options.main, options.outputPath, projectRoot)
+      () => updatePackageJson(options, context, target, dependencies)
     );
     process.on('exit', async () => {
       await disposeWatchAssetChanges();
@@ -87,7 +87,7 @@ export async function* tscExecutor(
 
   return yield* compileTypeScriptFiles(options, context, async () => {
     await assetHandler.processAllAssetsOnce();
-    updatePackageJson(options.main, options.outputPath, projectRoot);
+    updatePackageJson(options, context, target, dependencies);
   });
 }
 

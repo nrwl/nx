@@ -1,6 +1,15 @@
-import { normalizePath } from '@nrwl/devkit';
+import {
+  ExecutorContext,
+  normalizePath,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+import {
+  DependentBuildableProjectNode,
+  updateBuildableProjectPackageJsonDependencies,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { basename, dirname, join, relative } from 'path';
+import { NormalizedExecutorOptions } from './schema';
 
 function getMainFileDirRelativeToProjectRoot(
   main: string,
@@ -12,20 +21,18 @@ function getMainFileDirRelativeToProjectRoot(
 }
 
 export function updatePackageJson(
-  main: string,
-  outputPath: string,
-  projectRoot: string,
+  options: NormalizedExecutorOptions,
+  context: ExecutorContext,
+  target: ProjectGraphProjectNode<any>,
+  dependencies: DependentBuildableProjectNode[],
   withTypings = true
 ): void {
-  const packageJson = readJsonFile(join(projectRoot, 'package.json'));
-  if (packageJson.main && packageJson.typings) {
-    return;
-  }
+  const packageJson = readJsonFile(join(options.projectRoot, 'package.json'));
 
-  const mainFile = basename(main).replace(/\.[tj]s$/, '');
+  const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
   const relativeMainFileDir = getMainFileDirRelativeToProjectRoot(
-    main,
-    projectRoot
+    options.main,
+    options.projectRoot
   );
   const mainJsFile = `${relativeMainFileDir}${mainFile}.js`;
   const typingsFile = `${relativeMainFileDir}${mainFile}.d.ts`;
@@ -36,6 +43,20 @@ export function updatePackageJson(
     packageJson.typings = packageJson.typings ?? typingsFile;
   }
 
-  const outputPackageJson = join(outputPath, 'package.json');
-  writeJsonFile(outputPackageJson, packageJson);
+  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+
+  if (
+    dependencies.length > 0 &&
+    options.updateBuildableProjectDepsInPackageJson
+  ) {
+    updateBuildableProjectPackageJsonDependencies(
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName,
+      target,
+      dependencies,
+      options.buildableProjectDepsInPackageJsonType
+    );
+  }
 }

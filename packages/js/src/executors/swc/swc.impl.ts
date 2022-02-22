@@ -1,8 +1,9 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { join, relative, resolve } from 'path';
 
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -64,14 +65,17 @@ function normalizeOptions(
 function processAssetsAndPackageJsonOnce(
   assetHandler: CopyAssetsHandler,
   options: NormalizedSwcExecutorOptions,
-  projectRoot: string
+  context: ExecutorContext,
+  target: ProjectGraphProjectNode<any>,
+  dependencies: DependentBuildableProjectNode[]
 ) {
   return async () => {
     await assetHandler.processAllAssetsOnce();
     updatePackageJson(
-      options.main,
-      options.outputPath,
-      projectRoot,
+      options,
+      context,
+      target,
+      dependencies,
       !options.skipTypeCheck
     );
   };
@@ -84,7 +88,7 @@ export async function* swcExecutor(
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
   options.swcrcPath = addTempSwcrc(options);
-  const { tmpTsConfig, projectRoot } = checkDependencies(
+  const { tmpTsConfig, projectRoot, target, dependencies } = checkDependencies(
     context,
     options.tsConfig
   );
@@ -108,9 +112,10 @@ export async function* swcExecutor(
       'package.json',
       () =>
         updatePackageJson(
-          options.main,
-          options.outputPath,
-          projectRoot,
+          options,
+          context,
+          target,
+          dependencies,
           !options.skipTypeCheck
         )
     );
@@ -126,13 +131,25 @@ export async function* swcExecutor(
     return yield* compileSwcWatch(
       context,
       options,
-      processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+      processAssetsAndPackageJsonOnce(
+        assetHandler,
+        options,
+        context,
+        target,
+        dependencies
+      )
     );
   } else {
     return yield compileSwc(
       context,
       options,
-      processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+      processAssetsAndPackageJsonOnce(
+        assetHandler,
+        options,
+        context,
+        target,
+        dependencies
+      )
     );
   }
 }

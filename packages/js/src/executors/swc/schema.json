@@ -39,6 +39,17 @@
       "type": "array",
       "description": "List of SWC Glob/Regex to be excluded from compilation (https://swc.rs/docs/configuration/compilation#exclude)",
       "default": ["./src/**/.*.spec.ts$", "./**/.*.js$"]
+    },
+    "updateBuildableProjectDepsInPackageJson": {
+      "type": "boolean",
+      "description": "Whether to update the buildable project dependencies in package.json.",
+      "default": true
+    },
+    "buildableProjectDepsInPackageJsonType": {
+      "type": "string",
+      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "peerDependencies"
     }
   },
   "required": ["main", "outputPath", "tsConfig"],
