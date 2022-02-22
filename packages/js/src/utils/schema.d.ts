@@ -63,8 +63,3 @@ export interface NormalizedSwcExecutorOptions
   swcrcPath: string;
   swcCliOptions: SwcCliOptions;
 }
-
-export interface ExecutorEvent {
-  outfile: string;
-  success: boolean;
-}

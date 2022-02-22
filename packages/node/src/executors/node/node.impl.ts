@@ -1,56 +1,45 @@
-import 'dotenv/config';
 import {
-  runExecutor,
-  stripIndents,
-  parseTargetString,
   ExecutorContext,
+  joinPathFragments,
   logger,
-  readTargetOptions,
+  parseTargetString,
+  runExecutor,
 } from '@nrwl/devkit';
-
 import { ChildProcess, fork } from 'child_process';
-import { promisify } from 'util';
 import * as treeKill from 'tree-kill';
-
-import { NodeBuildEvent } from '../build/build.impl';
-import { BuildNodeBuilderOptions } from '../../utils/types';
-
-export const enum InspectType {
-  Inspect = 'inspect',
-  InspectBrk = 'inspect-brk',
-}
-
-export interface NodeExecuteBuilderOptions {
-  inspect: boolean | InspectType;
-  runtimeArgs: string[];
-  args: string[];
-  waitUntilTargets: string[];
-  buildTarget: string;
-  buildTargetOptions: Record<string, any>;
-  host: string;
-  port: number;
-  watch: boolean;
-}
+import { promisify } from 'util';
+import { InspectType, NodeExecutorOptions } from './schema';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
 let subProcess: ChildProcess = null;
 
-export async function* executeExecutor(
-  options: NodeExecuteBuilderOptions,
+export interface ExecutorEvent {
+  outfile: string;
+  success: boolean;
+}
+
+export async function* nodeExecutor(
+  options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
-  process.on('SIGTERM', () => {
-    subProcess?.kill();
+  process.on('SIGTERM', async () => {
+    await killProcess();
     process.exit(128 + 15);
   });
-  process.on('exit', (code) => {
-    process.exit(code);
+  process.on('SIGINT', async () => {
+    await killProcess();
+    process.exit(128 + 2);
+  });
+  process.on('SIGHUP', async () => {
+    await killProcess();
+    process.exit(128 + 1);
   });
 
   if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
     const results = await runWaitUntilTargets(options, context);
     for (const [i, result] of results.entries()) {
       if (!result.success) {
-        console.log('throw');
         throw new Error(
           `Wait until target failed: ${options.waitUntilTargets[i]}.`
         );
@@ -58,27 +47,60 @@ export async function* executeExecutor(
     }
   }
 
+  const mappings = calculateResolveMappings(context, options);
   for await (const event of startBuild(options, context)) {
     if (!event.success) {
       logger.error('There was an error with the build. See above.');
       logger.info(`${event.outfile} was not restarted.`);
     }
-    await handleBuildEvent(event, options);
+    await handleBuildEvent(event, options, mappings);
     yield event;
   }
 }
 
-function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
-  if (subProcess || !event.success) {
-    return;
-  }
-
-  subProcess = fork(event.outfile, options.args, {
-    execArgv: getExecArgv(options),
-  });
+function calculateResolveMappings(
+  context: ExecutorContext,
+  options: NodeExecutorOptions
+) {
+  const projectGraph = readCachedProjectGraph();
+  const parsed = parseTargetString(options.buildTarget);
+  const { dependencies } = calculateProjectDependencies(
+    projectGraph,
+    context.root,
+    parsed.project,
+    parsed.target,
+    parsed.configuration
+  );
+  return dependencies.reduce((m, c) => {
+    if (!c.outputs[0] && c.node.type === 'npm') {
+      c.outputs[0] = `node_modules/${c.node.data.packageName}`;
+    }
+    m[c.name] = joinPathFragments(context.root, c.outputs[0]);
+    return m;
+  }, {});
 }
 
-function getExecArgv(options: NodeExecuteBuilderOptions) {
+function runProcess(
+  event: ExecutorEvent,
+  options: NodeExecutorOptions,
+  mappings: { [project: string]: string }
+) {
+  subProcess = fork(
+    joinPathFragments(__dirname, 'node-with-require-overrides'),
+    options.args,
+    {
+      execArgv: getExecArgv(options),
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        NX_FILE_TO_RUN: event.outfile,
+        NX_MAPPINGS: JSON.stringify(mappings),
+      },
+    }
+  );
+}
+
+function getExecArgv(options: NodeExecutorOptions) {
   const args = [
     '-r',
     require.resolve('source-map-support/register'),
@@ -97,20 +119,19 @@ function getExecArgv(options: NodeExecuteBuilderOptions) {
 }
 
 async function handleBuildEvent(
-  event: NodeBuildEvent,
-  options: NodeExecuteBuilderOptions
+  event: ExecutorEvent,
+  options: NodeExecutorOptions,
+  mappings: { [project: string]: string }
 ) {
   if ((!event.success || options.watch) && subProcess) {
     await killProcess();
   }
-  runProcess(event, options);
+  if (event.success) {
+    runProcess(event, options, mappings);
+  }
 }
 
 async function killProcess() {
-  if (!subProcess) {
-    return;
-  }
-
   const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
     promisify(treeKill);
   try {
@@ -128,26 +149,12 @@ async function killProcess() {
 }
 
 async function* startBuild(
-  options: NodeExecuteBuilderOptions,
+  options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
   const buildTarget = parseTargetString(options.buildTarget);
-  const buildOptions = readTargetOptions<BuildNodeBuilderOptions>(
-    buildTarget,
-    context
-  );
-  if (buildOptions.optimization) {
-    logger.warn(stripIndents`
-            ************************************************
-            This is a simple process manager for use in
-            testing or debugging Node applications locally.
-            DO NOT USE IT FOR PRODUCTION!
-            You should look into proper means of deploying
-            your node application to production.
-            ************************************************`);
-  }
 
-  yield* await runExecutor<NodeBuildEvent>(
+  yield* await runExecutor<ExecutorEvent>(
     buildTarget,
     {
       ...options.buildTargetOptions,
@@ -158,7 +165,7 @@ async function* startBuild(
 }
 
 function runWaitUntilTargets(
-  options: NodeExecuteBuilderOptions,
+  options: NodeExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }[]> {
   return Promise.all(
@@ -179,4 +186,4 @@ function runWaitUntilTargets(
   );
 }
 
-export default executeExecutor;
+export default nodeExecutor;

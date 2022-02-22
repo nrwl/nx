@@ -15,7 +15,7 @@ import {
 import type { Schema } from './schema';
 import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
-import { libraryGenerator } from '@nrwl/node';
+import { libraryGenerator } from '@nrwl/js';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { generatorGenerator } from '../generator/generator';
 import { executorGenerator } from '../executor/executor';
@@ -126,7 +126,8 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   const libraryTask = await libraryGenerator(host, {
     ...schema,
-    publishable: true,
+    config: options.standaloneConfig !== false ? 'project' : 'workspace',
+    buildable: true,
     importPath: schema.importPath ?? options.npmPackageName,
   });
   tasks.push(libraryTask);
@@ -137,7 +138,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     {
       '@nrwl/devkit': nxVersion,
       '@nrwl/jest': nxVersion,
-      '@nrwl/node': nxVersion,
+      '@nrwl/js': nxVersion,
       tslib: '^2.0.0',
     }
   );
@@ -151,7 +152,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     projectDirectory: options.projectDirectory,
     pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
     npmPackageName: options.npmPackageName,
-    standaloneConfig: options.standaloneConfig,
+    standaloneConfig: options.standaloneConfig ?? true,
   });
 
   await formatFiles(host);

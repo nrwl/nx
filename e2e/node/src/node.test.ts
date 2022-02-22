@@ -4,13 +4,11 @@ import * as http from 'http';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  createFile,
   killPorts,
   newProject,
   packageInstall,
   promisifiedTreeKill,
   readFile,
-  readJson,
   removeFile,
   runCLI,
   runCLIAsync,
@@ -20,7 +18,6 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { accessSync, constants } from 'fs-extra';
 
 function getData(port): Promise<any> {
   return new Promise((resolve) => {
@@ -353,177 +350,6 @@ exports.FooDto = FooDto;
   });
 });
 
-describe('Node Libraries', () => {
-  it('should be able to generate a node library', async () => {
-    newProject();
-    const nodelib = uniq('nodelib');
-
-    runCLI(`generate @nrwl/node:lib ${nodelib}`);
-
-    const lintResults = runCLI(`lint ${nodelib}`);
-    expect(lintResults).toContain('All files pass linting.');
-
-    const jestResult = await runCLIAsync(`test ${nodelib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-
-    checkFilesDoNotExist(`libs/${nodelib}/package.json`);
-  }, 300000);
-
-  it('should be able to generate a publishable node library', async () => {
-    const proj = newProject();
-
-    const nodeLib = uniq('nodelib');
-    runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
-    );
-    checkFilesExist(`libs/${nodeLib}/package.json`);
-    const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
-    expect(tslibConfig).toEqual({
-      extends: './tsconfig.json',
-      compilerOptions: {
-        module: 'commonjs',
-        outDir: '../../dist/out-tsc',
-        declaration: true,
-        types: ['node'],
-      },
-      exclude: ['**/*.spec.ts', '**/*.test.ts'],
-      include: ['**/*.ts'],
-    });
-    await runCLIAsync(`build ${nodeLib}`);
-    checkFilesExist(
-      `dist/libs/${nodeLib}/src/index.js`,
-      `dist/libs/${nodeLib}/src/index.d.ts`,
-      `dist/libs/${nodeLib}/package.json`
-    );
-
-    expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
-      name: `@${proj}/${nodeLib}`,
-      version: '0.0.1',
-      main: './src/index.js',
-      typings: './src/index.d.ts',
-    });
-
-    // Copying package.json from assets
-    updateProjectConfig(nodeLib, (config) => {
-      config.targets.build.options.assets.push(`libs/${nodeLib}/package.json`);
-      return config;
-    });
-    createFile(`dist/libs/${nodeLib}/_should_remove.txt`); // Output directory should be removed
-    await runCLIAsync(`build ${nodeLib}`);
-    expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
-      name: `@${proj}/${nodeLib}`,
-      version: '0.0.1',
-      main: './src/index.js',
-      typings: './src/index.d.ts',
-    });
-  }, 300000);
-
-  it('should be able to generate a publishable node library with CLI wrapper', async () => {
-    const proj = newProject();
-
-    const nodeLib = uniq('nodelib');
-    runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
-    );
-
-    updateProjectConfig(nodeLib, (config) => {
-      config.targets.build.options.cli = true;
-      return config;
-    });
-
-    await runCLIAsync(`build ${nodeLib}`);
-
-    const binFile = `dist/libs/${nodeLib}/index.bin.js`;
-    checkFilesExist(binFile);
-    expect(() =>
-      accessSync(tmpProjPath(binFile), constants.X_OK)
-    ).not.toThrow();
-
-    expect(readJson(`dist/libs/${nodeLib}/package.json`).bin).toEqual({
-      [nodeLib]: './index.bin.js',
-    });
-    checkFilesDoNotExist(`dist/libs/${nodeLib}/_should_remove.txt`);
-
-    // Support not deleting output path before build
-    createFile(`dist/libs/${nodeLib}/_should_keep.txt`);
-    await runCLIAsync(`build ${nodeLib} --delete-output-path=false`);
-    checkFilesExist(`dist/libs/${nodeLib}/_should_keep.txt`);
-  }, 300000);
-
-  it('should support --js flag', async () => {
-    const proj = newProject();
-
-    const nodeLib = uniq('nodelib');
-    runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib} --js`
-    );
-    checkFilesExist(
-      `libs/${nodeLib}/package.json`,
-      `libs/${nodeLib}/src/index.js`,
-      `libs/${nodeLib}/src/lib/${nodeLib}.js`,
-      `libs/${nodeLib}/src/lib/${nodeLib}.spec.js`
-    );
-    checkFilesDoNotExist(
-      `libs/${nodeLib}/src/index.ts`,
-      `libs/${nodeLib}/src/lib/${nodeLib}.ts`,
-      `libs/${nodeLib}/src/lib/${nodeLib}.spec.ts`
-    );
-    await runCLIAsync(`build ${nodeLib}`);
-    checkFilesExist(
-      `dist/libs/${nodeLib}/src/index.js`,
-      `dist/libs/${nodeLib}/package.json`
-    );
-  }, 300000);
-
-  it('should be able to copy assets', () => {
-    const proj = newProject();
-    const nodelib = uniq('nodelib');
-    const nglib = uniq('nglib');
-
-    // Generating two libraries just to have a lot of files to copy
-    runCLI(
-      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@${proj}/${nodelib}`
-    );
-    /**
-     * The angular lib contains a lot sub directories that would fail without
-     * `nodir: true` in the package.impl.ts
-     */
-    runCLI(
-      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
-    );
-
-    updateProjectConfig(nodelib, (config) => {
-      config.targets.build.options.assets.push({
-        input: `./dist/libs/${nglib}`,
-        glob: '**/*',
-        output: '.',
-      });
-      return config;
-    });
-
-    runCLI(`build ${nglib}`);
-    runCLI(`build ${nodelib}`);
-    checkFilesExist(`./dist/libs/${nodelib}/esm2020/index.mjs`);
-  }, 300000);
-
-  it('should fail when trying to compile typescript files that are invalid', () => {
-    const proj = newProject();
-    const nodeLib = uniq('nodelib');
-    runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
-    );
-    updateFile(
-      `libs/${nodeLib}/src/index.ts`,
-      stripIndents`
-        const temp: number = 'should fail'
-        `
-    );
-    expect(() => runCLI(`build ${nodeLib}`)).toThrow();
-  });
-});
-
 describe('nest libraries', function () {
   beforeEach(() => newProject());
 
@@ -607,7 +433,7 @@ describe('nest libraries', function () {
     packageInstall('@nestjs/swagger', undefined, '4.8.2');
 
     updateProjectConfig(nestlib, (config) => {
-      config.targets.build.options.tsPlugins = [
+      config.targets.build.options.transformers = [
         {
           name: '@nestjs/swagger/plugin',
           options: {
@@ -656,114 +482,5 @@ exports.FooModel = FooModel;
     expect(() =>
       checkFilesDoNotExist('workspace.json', 'angular.json')
     ).not.toThrow();
-  }, 1000000);
-});
-
-describe('with dependencies', () => {
-  /**
-   * Graph:
-   *
-   *                     childLib
-   *                   /
-   * app => parentLib =>
-   *                  \
-   *                   \
-   *                    childLib2
-   *
-   */
-  let app: string;
-  let parentLib: string;
-  let childLib: string;
-  let childLib2: string;
-  let proj: string;
-
-  beforeEach(() => {
-    app = uniq('app');
-    parentLib = uniq('parentlib');
-    childLib = uniq('childlib');
-    childLib2 = uniq('childlib2');
-
-    proj = newProject();
-
-    runCLI(`generate @nrwl/express:app ${app}`);
-    runCLI(`generate @nrwl/node:lib ${parentLib} --buildable=true`);
-    runCLI(`generate @nrwl/node:lib ${childLib} --buildable=true`);
-    runCLI(`generate @nrwl/node:lib ${childLib2} --buildable=true`);
-
-    // create dependencies by importing
-    const createDep = (parent, children: string[]) => {
-      updateFile(
-        `libs/${parent}/src/lib/${parent}.ts`,
-        `
-                ${children
-                  .map(
-                    (entry) => `import { ${entry} } from '@${proj}/${entry}';`
-                  )
-                  .join('\n')}
-
-                export function ${parent}(): string {
-                  return '${parent}' + ' ' + ${children
-          .map((entry) => `${entry}()`)
-          .join('+')}
-                }
-                `
-      );
-    };
-
-    createDep(parentLib, [childLib, childLib2]);
-
-    updateFile(
-      `apps/${app}/src/main.ts`,
-      `
-        import "@${proj}/${parentLib}";
-        `
-    );
-  });
-
-  it('should build a library without dependencies', () => {
-    const childLibOutput = runCLI(`build ${childLib}`);
-
-    expect(childLibOutput).toContain(
-      `Done compiling TypeScript files for project "${childLib}"`
-    );
-  });
-
-  it('should build a parent library if the dependent libraries have been built before', () => {
-    const childLibOutput = runCLI(`build ${childLib}`);
-    expect(childLibOutput).toContain(
-      `Done compiling TypeScript files for project "${childLib}"`
-    );
-
-    const childLib2Output = runCLI(`build ${childLib2}`);
-    expect(childLib2Output).toContain(
-      `Done compiling TypeScript files for project "${childLib2}"`
-    );
-
-    const parentLibOutput = runCLI(`build ${parentLib}`);
-    expect(parentLibOutput).toContain(
-      `Done compiling TypeScript files for project "${parentLib}"`
-    );
-
-    //   assert package.json deps have been set
-    const assertPackageJson = (
-      parent: string,
-      lib: string,
-      version: string
-    ) => {
-      const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-      const childDependencyVersion = jsonFile.dependencies[`@${proj}/${lib}`];
-      expect(childDependencyVersion).toBe(version);
-    };
-
-    assertPackageJson(parentLib, childLib, '0.0.1');
-    assertPackageJson(parentLib, childLib2, '0.0.1');
-  });
-
-  it('should build an app composed out of buildable libs', () => {
-    const buildWithDeps = runCLI(
-      `build ${app} --with-deps --buildLibsFromSource=false`
-    );
-    expect(buildWithDeps).toContain('Successfully ran target build');
-    checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
   }, 1000000);
 });
