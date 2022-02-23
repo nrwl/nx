@@ -41,12 +41,15 @@ jobs:
           - e2e-web
           - e2e-storybook
           - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
-          - e2e-react-native,e2e-detox
+          - e2e-react-native
+          # - e2e-detox
           - e2e-add-nx-to-monorepo
         exclude:
           # exclude react-native and detox from ubuntu
           - os: ubuntu-latest
-            packages: e2e-react-native,e2e-detox
+            packages: e2e-react-native
+          # - os: ubuntu-latest
+          #   packages: e2e-detox
           # run just npm on macos
           - os: macos-latest
             package_manager: yarn
