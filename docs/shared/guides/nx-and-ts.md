@@ -16,7 +16,7 @@ The `@nrwl/js` package ships with corresponding generators and executors that be
 To get started with TypeScript packages in Nx, either add the `@nrwl/js` package to an existing Nx workspace or generate a new Nx workspace using the `--preset=ts` preset.
 
 ```bash
-npx create-nx-workspace happynrwl -–preset=ts
+npx create-nx-workspace happynrwl --preset=ts
 ```
 
 Generating a new workspace creates a lightweight setup with a `packages` and `tools` folder. The `tools` folder is where you can add monorepo specific scripts and custom Nx generators, the `packages` folder is where all our TS based libs will live.
