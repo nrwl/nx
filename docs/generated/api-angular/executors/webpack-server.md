@@ -17,6 +17,14 @@ Type: `string`
 
 A browser builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.
 
+### additionalConfigurations
+
+Alias(es): extraConf
+
+Type: `array`
+
+Comma-separated list of additional configurations to apply. These configurations will overwrite any existing options.
+
 ### allowedHosts
 
 Type: `array`

@@ -7,6 +7,7 @@ export function normalizeOptions(schema: Schema): Schema {
     liveReload: true,
     open: false,
     ssl: false,
+    additionalConfigurations: [],
     ...schema,
   };
 }

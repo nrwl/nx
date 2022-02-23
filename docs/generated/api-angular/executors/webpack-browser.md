@@ -37,6 +37,14 @@ Type: `string`
 
 The full path for the TypeScript configuration file, relative to the current workspace.
 
+### additionalConfigurations
+
+Alias(es): extraConf
+
+Type: `array`
+
+Comma-separated list of additional configurations to apply. These configurations will overwrite any existing options.
+
 ### allowedCommonJsDependencies
 
 Type: `array`

@@ -7,6 +7,7 @@ import { executeBrowserBuilder } from '@angular-devkit/build-angular';
 import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 import { JsonObject } from '@angular-devkit/core';
 import { joinPathFragments } from '@nrwl/devkit';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -24,13 +25,55 @@ export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
     path: string;
   };
+  additionalConfigurations: string[];
 };
+
+function getAdditionalConfigurations(
+  additionalConfigurations: string[],
+  context: BuilderContext
+) {
+  if (!additionalConfigurations || additionalConfigurations.length === 0) {
+    return {};
+  }
+  const workspaceConfig = new Workspaces(
+    context.workspaceRoot
+  ).readWorkspaceConfiguration();
+
+  const selectedTarget =
+    workspaceConfig.projects[context.target.project].targets[
+      context.target.target
+    ];
+
+  const mergedAdditionalConfigurations = additionalConfigurations.reduce(
+    (config, configurationName) => {
+      if (!(configurationName in selectedTarget.configurations)) {
+        throw new Error(
+          `Could not find configuration "${configurationName}" in "${context.target.target}" for project "${context.target.project}".`
+        );
+      }
+      return {
+        ...config,
+        ...selectedTarget.configurations[configurationName],
+      };
+    },
+    {}
+  );
+
+  return mergedAdditionalConfigurations;
+}
 
 function buildApp(
   options: BrowserBuilderSchema,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const { customWebpackConfig, ...delegateOptions } = options;
+  const { customWebpackConfig, additionalConfigurations, ...delegateOptions } =
+    options;
+
+  const mergedOptions = {
+    ...delegateOptions,
+    ...getAdditionalConfigurations(additionalConfigurations, context),
+  };
+
   // If there is a path to custom webpack config
   // Invoke our own support for custom webpack config
   if (customWebpackConfig && customWebpackConfig.path) {
@@ -41,7 +84,7 @@ function buildApp(
 
     if (existsSync(pathToWebpackConfig)) {
       return buildAppWithCustomWebpackConfiguration(
-        delegateOptions,
+        mergedOptions,
         context,
         pathToWebpackConfig
       );
@@ -52,7 +95,7 @@ function buildApp(
     }
   }
 
-  return executeBrowserBuilder(delegateOptions, context);
+  return executeBrowserBuilder(mergedOptions, context);
 }
 
 function buildAppWithCustomWebpackConfiguration(

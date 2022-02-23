@@ -13,7 +13,8 @@ import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export function webpackServer(schema: Schema, context: BuilderContext) {
-  const options = normalizeOptions(schema);
+  const { additionalConfigurations, ...options } = normalizeOptions(schema);
+
   const workspaceConfig = new Workspaces(
     context.workspaceRoot
   ).readWorkspaceConfiguration();
@@ -75,6 +76,17 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
       );
     }
+  }
+
+  if (additionalConfigurations && additionalConfigurations.length > 0) {
+    context.target.configuration = `${context.target.configuration}${
+      context.target.configuration ? ',' : ''
+    }${additionalConfigurations.join(',')}`;
+
+    options.browserTarget = `${options.browserTarget
+      .split(':')
+      .slice(0, 2)
+      .join(':')}:${context.target.configuration}`;
   }
 
   return serveWebpackBrowser(
