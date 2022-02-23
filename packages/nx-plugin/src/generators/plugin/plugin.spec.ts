@@ -6,7 +6,7 @@ describe('NxPlugin Plugin Generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace(2);
   });
 
   it('should update the workspace.json file', async () => {
@@ -14,12 +14,11 @@ describe('NxPlugin Plugin Generator', () => {
     const project = readProjectConfiguration(tree, 'my-plugin');
     expect(project.root).toEqual('libs/my-plugin');
     expect(project.targets.build).toEqual({
-      executor: '@nrwl/node:package',
+      executor: '@nrwl/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'dist/libs/my-plugin',
         tsConfig: 'libs/my-plugin/tsconfig.lib.json',
-        packageJson: 'libs/my-plugin/package.json',
         main: 'libs/my-plugin/src/index.ts',
         assets: [
           'libs/my-plugin/*.md',
@@ -78,6 +77,7 @@ describe('NxPlugin Plugin Generator', () => {
     await pluginGenerator(tree, { name: 'myPlugin' } as any);
 
     [
+      'libs/my-plugin/project.json',
       'libs/my-plugin/generators.json',
       'libs/my-plugin/executors.json',
       'libs/my-plugin/src/generators/my-plugin/schema.d.ts',

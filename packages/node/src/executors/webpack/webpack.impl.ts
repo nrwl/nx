@@ -27,7 +27,7 @@ export type NodeBuildEvent = {
   success: boolean;
 };
 
-export async function* buildExecutor(
+export async function* webpackExecutor(
   rawOptions: BuildNodeBuilderOptions,
   context: ExecutorContext
 ) {
@@ -116,4 +116,4 @@ function registerTsNode() {
   });
 }
 
-export default buildExecutor;
+export default webpackExecutor;

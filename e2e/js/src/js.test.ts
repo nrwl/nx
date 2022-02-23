@@ -14,7 +14,7 @@ import {
 } from '../../utils';
 
 describe('js e2e', () => {
-  it('should create libs and apps with npm scripts', () => {
+  it('should create libs with npm scripts', () => {
     const scope = newProject();
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(`generate @nrwl/js:lib ${npmScriptsLib} --config=npm-scripts`);
@@ -24,21 +24,13 @@ describe('js e2e', () => {
     expect(runCLI(`test ${npmScriptsLib}`)).toContain('implement test');
     expect(runCLI(`test ${npmScriptsLib}`)).toContain('match the cache');
 
-    const npmScriptsApp = uniq('npmscriptsapp');
-    runCLI(`generate @nrwl/js:app ${npmScriptsApp} --config=npm-scripts`);
-    const appPackageJson = readJson(`apps/${npmScriptsApp}/package.json`);
-    expect(appPackageJson.scripts.test).toBeDefined();
-    expect(appPackageJson.scripts.build).toBeDefined();
-    expect(runCLI(`test ${npmScriptsApp}`)).toContain('implement test');
-    expect(runCLI(`test ${npmScriptsApp}`)).toContain('match the cache');
-
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
       [`@${scope}/${npmScriptsLib}`]: [`libs/${npmScriptsLib}/src/index.ts`],
     });
   }, 120000);
 
-  it('should create libs and apps with js executors (--compiler=tsc)', async () => {
+  it('should create libs with js executors (--compiler=tsc)', async () => {
     const scope = newProject();
     const lib = uniq('lib');
     runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=tsc`);
@@ -96,106 +88,99 @@ describe('js e2e', () => {
     ).resolves.not.toThrow();
     libBuildProcess.kill();
 
-    const app = uniq('app');
-    runCLI(`generate @nrwl/js:app ${app} --buildable --compiler=tsc`);
-    const appPackageJson = readJson(`apps/${app}/package.json`);
-    expect(appPackageJson.scripts).toBeUndefined();
-    expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
+    const parentLib = uniq('parentlib');
+    runCLI(`generate @nrwl/js:lib ${parentLib} --buildable --compiler=tsc`);
+    const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
+    expect(parentLibPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
       'Ran all test suites'
     );
-    expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
+    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
       'match the cache'
     );
 
-    expect(runCLI(`build ${app}`)).toContain('Done compiling TypeScript files');
-    checkFilesExist(
-      `dist/apps/${app}/package.json`,
-      `dist/apps/${app}/src/index.js`,
-      `dist/apps/${app}/src/app/${app}.js`
+    expect(runCLI(`build ${parentLib}`)).toContain(
+      'Done compiling TypeScript files'
     );
-
-    expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(
-      `Running ${app}`
+    checkFilesExist(
+      `dist/libs/${parentLib}/package.json`,
+      `dist/libs/${parentLib}/src/index.js`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.js`
     );
 
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
       [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
+      [`@${scope}/${parentLib}`]: [`libs/${parentLib}/src/index.ts`],
     });
 
-    updateFile(`apps/${app}/src/index.ts`, () => {
+    updateFile(`libs/${parentLib}/src/index.ts`, () => {
       return `
         import { ${lib} } from '@${scope}/${lib}'
-        console.log('Running ' + ${lib}())
       `;
     });
 
-    const output = runCLI(`build ${app}`);
+    const output = runCLI(`build ${parentLib}`);
     expect(output).toContain('1 task(s) it depends on');
     expect(output).toContain('Done compiling TypeScript files');
-
-    expect(runCLI(`serve ${app} --no-watch`)).toContain(`Running ${lib}`);
   }, 120000);
 
-  // reenable when once ci runs on node 16
-  // it('should create libs and apps with js executors (--compiler=swc)', async () => {
-  //   const scope = newProject();
-  //   const lib = uniq('lib');
-  //   runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=swc`);
-  //   const libPackageJson = readJson(`libs/${lib}/package.json`);
-  //   expect(libPackageJson.scripts).toBeUndefined();
-  //   expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
-  //     'Ran all test suites'
-  //   );
-  //   expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
-  //     'match the cache'
-  //   );
-  //
-  //   expect(runCLI(`build ${lib}`)).toContain('Successfully compiled: 2 files with swc');
-  //   checkFilesExist(
-  //     `dist/libs/${lib}/package.json`,
-  //     `dist/libs/${lib}/src/index.js`,
-  //     `dist/libs/${lib}/src/lib/${lib}.js`
-  //   );
-  //
-  //   const app = uniq('app');
-  //   runCLI(`generate @nrwl/js:app ${app} --buildable --compiler=swc`);
-  //   const appPackageJson = readJson(`apps/${app}/package.json`);
-  //   expect(appPackageJson.scripts).toBeUndefined();
-  //   expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
-  //     'Ran all test suites'
-  //   );
-  //   expect((await runCLIAsync(`test ${app}`)).combinedOutput).toContain(
-  //     'match the cache'
-  //   );
-  //
-  //   expect(runCLI(`build ${app}`)).toContain('Successfully compiled: 2 files with swc');
-  //   checkFilesExist(
-  //     `dist/apps/${app}/package.json`,
-  //     `dist/apps/${app}/src/index.js`,
-  //     `dist/apps/${app}/src/app/${app}.js`
-  //   );
-  //
-  //   expect(runCommand(`node dist/apps/${app}/src/index.js`)).toContain(
-  //     `Running ${app}`
-  //   );
-  //
-  //   const tsconfig = readJson(`tsconfig.base.json`);
-  //   expect(tsconfig.compilerOptions.paths).toEqual({
-  //     [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
-  //   });
-  //
-  //   updateFile(`apps/${app}/src/index.ts`, () => {
-  //     return `
-  //       import { ${lib} } from '@${scope}/${lib}'
-  //       console.log('Running ' + ${lib}())
-  //     `;
-  //   });
-  //
-  //   const output = runCLI(`build ${app}`);
-  //   expect(output).toContain('1 task(s) it depends on');
-  //   expect(output).toContain('Successfully compiled: 2 files with swc');
-  //
-  // expect(runCommand(`serve ${app} --watch=false`)).toContain(`Running ${lib}`)
-  // }, 120000);
+  it('should create libs with js executors (--compiler=swc)', async () => {
+    const scope = newProject();
+    const lib = uniq('lib');
+    runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=swc`);
+    const libPackageJson = readJson(`libs/${lib}/package.json`);
+    expect(libPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+      'Ran all test suites'
+    );
+    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
+      'match the cache'
+    );
+
+    expect(runCLI(`build ${lib}`)).toContain(
+      'Successfully compiled: 2 files with swc'
+    );
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/src/index.js`,
+      `dist/libs/${lib}/src/lib/${lib}.js`
+    );
+
+    const parentLib = uniq('parentlib');
+    runCLI(`generate @nrwl/js:lib ${parentLib} --buildable --compiler=swc`);
+    const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
+    expect(parentLibPackageJson.scripts).toBeUndefined();
+    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
+      'Ran all test suites'
+    );
+    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
+      'match the cache'
+    );
+
+    expect(runCLI(`build ${parentLib}`)).toContain(
+      'Successfully compiled: 2 files with swc'
+    );
+    checkFilesExist(
+      `dist/libs/${parentLib}/package.json`,
+      `dist/libs/${parentLib}/src/index.js`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.js`
+    );
+
+    const tsconfig = readJson(`tsconfig.base.json`);
+    expect(tsconfig.compilerOptions.paths).toEqual({
+      [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
+      [`@${scope}/${parentLib}`]: [`libs/${parentLib}/src/index.ts`],
+    });
+
+    updateFile(`libs/${parentLib}/src/index.ts`, () => {
+      return `
+        import { ${lib} } from '@${scope}/${lib}'
+      `;
+    });
+
+    const output = runCLI(`build ${parentLib}`);
+    expect(output).toContain('1 task(s) it depends on');
+    expect(output).toContain('Successfully compiled: 2 files with swc');
+  }, 120000);
 });

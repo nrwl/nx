@@ -64,8 +64,3 @@ export interface NormalizedSwcExecutorOptions
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
 }
-
-export interface ExecutorEvent {
-  outfile: string;
-  success: boolean;
-}

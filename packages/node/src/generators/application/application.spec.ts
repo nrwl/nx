@@ -44,7 +44,7 @@ describe('app', () => {
       expect(project.architect).toEqual(
         expect.objectContaining({
           build: {
-            builder: '@nrwl/node:build',
+            builder: '@nrwl/node:webpack',
             outputs: ['{options.outputPath}'],
             options: {
               outputPath: 'dist/apps/my-node-app',

@@ -535,11 +535,6 @@
             "file": "shared/js-plugin"
           },
           {
-            "name": "application generator",
-            "id": "application",
-            "file": "generated/api-js/generators/application"
-          },
-          {
             "name": "library generator",
             "id": "library",
             "file": "generated/api-js/generators/library"
@@ -548,11 +543,6 @@
             "name": "convert-to-swc generator",
             "id": "convert-to-swc",
             "file": "generated/api-js/generators/convert-to-swc"
-          },
-          {
-            "name": "node executor",
-            "id": "node",
-            "file": "generated/api-js/executors/node"
           },
           {
             "name": "tsc executor",
@@ -969,19 +959,14 @@
             "file": "generated/api-node/generators/library"
           },
           {
-            "name": "build executor",
-            "id": "build",
-            "file": "generated/api-node/executors/build"
+            "name": "webpack executor",
+            "id": "webpack",
+            "file": "generated/api-node/executors/webpack"
           },
           {
-            "name": "execute executor",
-            "id": "execute",
-            "file": "generated/api-node/executors/execute"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "file": "generated/api-node/executors/package"
+            "name": "node executor",
+            "id": "node",
+            "file": "generated/api-node/executors/node"
           }
         ]
       },

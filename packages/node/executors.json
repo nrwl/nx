@@ -1,36 +1,26 @@
 {
   "executors": {
-    "build": {
-      "implementation": "./src/executors/build/build.impl",
-      "schema": "./src/executors/build/schema.json",
-      "description": "Build a Node application"
+    "webpack": {
+      "implementation": "./src/executors/webpack/webpack.impl",
+      "schema": "./src/executors/webpack/schema.json",
+      "description": "Build a Node application using webpack"
     },
-    "execute": {
-      "implementation": "./src/executors/execute/execute.impl",
-      "schema": "./src/executors/execute/schema.json",
+    "node": {
+      "implementation": "./src/executors/node/node.impl",
+      "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application"
-    },
-    "package": {
-      "implementation": "./src/executors/package/package.impl",
-      "schema": "./src/executors/package/schema.json",
-      "description": "Package a Node library"
     }
   },
   "builders": {
-    "build": {
-      "implementation": "./src/executors/build/compat",
-      "schema": "./src/executors/build/schema.json",
-      "description": "Build a Node application"
+    "webpack": {
+      "implementation": "./src/executors/webpack/compat",
+      "schema": "./src/executors/webpack/schema.json",
+      "description": "Build a Node application using webpack"
     },
-    "execute": {
-      "implementation": "./src/executors/execute/compat",
-      "schema": "./src/executors/execute/schema.json",
+    "node": {
+      "implementation": "./src/executors/node/compat",
+      "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application"
-    },
-    "package": {
-      "implementation": "./src/executors/package/compat",
-      "schema": "./src/executors/package/schema.json",
-      "description": "Package a Node library"
     }
   }
 }

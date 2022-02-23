@@ -15,6 +15,24 @@
       "version": "13.0.0-beta.1",
       "description": "Remove packages installed by Nx 12's `@nrwl/node:webpack5` generator.",
       "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
+    },
+    "rename-build-to-webpack": {
+      "cli": "nx",
+      "version": "13.9.0-beta.1",
+      "description": "Renames @nrwl/node:build to @nrwl/node:webpack",
+      "factory": "./src/migrations/update-13-9-0/rename-build-to-webpack"
+    },
+    "rename-execute-to-node": {
+      "cli": "nx",
+      "version": "13.9.0-beta.1",
+      "description": "Renames @nrwl/node:execute to @nrwl/node:node",
+      "factory": "./src/migrations/update-13-9-0/rename-execute-to-node"
+    },
+    "update-package-to-tsc": {
+      "cli": "nx",
+      "version": "13.9.0-beta.1",
+      "description": "Renames @nrwl/node:package to @nrwl/js:tsc",
+      "factory": "./src/migrations/update-13-9-0/update-package-to-tsc"
     }
   }
 }
