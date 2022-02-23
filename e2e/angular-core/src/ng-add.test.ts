@@ -93,7 +93,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
 
     // run ng add
-    runNgAdd('--npm-scope projscope');
+    runNgAdd('--npm-scope projscope --default-base main');
 
     // check that prettier config exits and that files have been moved
     checkFilesExist(

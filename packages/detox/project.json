@@ -61,13 +61,6 @@
           "LICENSE"
         ]
       },
-      "build": {
-        "executor": "@nrwl/workspace:run-commands",
-        "outputs": ["build/packages/detox"],
-        "options": {
-          "command": "node ./scripts/copy-readme.js detox"
-        }
-      },
       "outputs": ["{options.outputPath}"]
     },
     "build": {

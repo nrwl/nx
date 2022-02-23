@@ -9,14 +9,19 @@ import { Route, Link } from 'react-router-dom';
 <% if (hasStyles) {
    if (styledModule && styledModule !== 'styled-jsx') {
     var wrapper = 'Styled' + className;
+    var extras = '';
   %>
   import styled from '<%= styledModule %>';
   <% } else {
     var wrapper = 'div';
+    var extras = globalCss ? '' : " className={styles['container']}";
   %>
-  <%- style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import './${fileName}.module.${style}';`: '' %>
+  <%- style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import styles from './${fileName}.module.${style}';`: '' %>
   <% }
-} else { var wrapper = 'div'; } %>
+} else {
+    var wrapper = 'div';
+    var extras = '';
+} %>
 
 /* eslint-disable-next-line */
 export interface <%= className %>Props {
@@ -31,7 +36,7 @@ const Styled<%= className %> = styled.div`
 export class <%= className %> extends Component<<%= className %>Props> {
   render() {
     return (
-      <<%= wrapper %>>
+      <<%= wrapper %><%- extras %>>
         <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>
         <p>Welcome to <%= className %>!</p>
         <% if (routing) { %>
@@ -47,7 +52,7 @@ export class <%= className %> extends Component<<%= className %>Props> {
 <% } else { %>
 export function <%= className %>(props: <%= className %>Props) {
   return (
-    <<%= wrapper %>>
+    <<%= wrapper %><%- extras %>>
       <% if (styledModule === 'styled-jsx') { %><style jsx>{`div { color: pink; }`}</style><% } %>
       <h1>Welcome to <%= className %>!</h1>
       <% if (routing) { %>

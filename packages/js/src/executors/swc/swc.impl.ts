@@ -39,15 +39,21 @@ function normalizeOptions(
     outputPath
   );
 
+  const projectRootParts = projectRoot.split('/');
+  // We pop the last part of the `projectRoot` to pass
+  // the last part (projectDir) and the remainder (projectRootParts) to swc
+  const projectDir = projectRootParts.pop();
+  const swcCwd = projectRootParts.join('/');
+
   const swcCliOptions = {
-    projectDir: projectRoot.split('/').pop(),
-    // TODO: assume consumers put their code in `src`
-    destPath: `${relative(projectRoot, options.outputPath)}/src`,
+    srcPath: projectDir,
+    destPath: relative(join(contextRoot, swcCwd), outputPath),
+    swcCwd,
+    swcrcPath: join(projectRoot, '.swcrc'),
   };
 
   return {
     ...options,
-    swcrcPath: join(projectRoot, '.swcrc'),
     mainOutputPath: resolve(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
@@ -87,7 +93,7 @@ export async function* swcExecutor(
 ) {
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
-  options.swcrcPath = addTempSwcrc(options);
+  options.swcCliOptions.swcrcPath = addTempSwcrc(options);
   const { tmpTsConfig, projectRoot, target, dependencies } = checkDependencies(
     context,
     options.tsConfig

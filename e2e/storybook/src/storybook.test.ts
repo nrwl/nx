@@ -10,10 +10,14 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  const previousPM = process.env.SELECTED_PM;
+
   let reactStorybookLib: string;
   let proj: string;
 
   beforeAll(() => {
+    process.env.SELECTED_PM = 'yarn';
+
     proj = newProject();
     reactStorybookLib = uniq('test-ui-lib-react');
 
@@ -21,6 +25,10 @@ describe('Storybook schematics', () => {
     runCLI(
       `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
     );
+  });
+
+  afterAll(() => {
+    process.env.SELECTED_PM = previousPM;
   });
 
   describe('serve storybook', () => {
@@ -39,7 +47,7 @@ describe('Storybook schematics', () => {
   });
 
   describe('build storybook', () => {
-    xit('should build a React based storybook', () => {
+    it('should build a React based storybook', () => {
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
     }, 1000000);
@@ -49,7 +57,7 @@ describe('Storybook schematics', () => {
       expect(output).toContain('All files pass linting.');
     }, 1000000);
 
-    xit('should build a React based storybook that references another lib', () => {
+    it('should build a React based storybook that references another lib', () => {
       const anotherReactLib = uniq('test-another-lib-react');
       runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference

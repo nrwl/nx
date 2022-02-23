@@ -5,10 +5,7 @@ exports[`Migrate Karma Config should successfully migrate outdate karma setup 1`
   \\"name\\": \\"test-name\\",
   \\"dependencies\\": {},
   \\"devDependencies\\": {
-    \\"jasmine-core\\": \\"~3.10.0\\",
-    \\"karma\\": \\"~6.3.0\\",
-    \\"karma-coverage\\": \\"~2.2.0\\",
-    \\"karma-jasmine-html-reporter\\": \\"~1.7.0\\"
+    \\"karma-coverage\\": \\"~2.2.0\\"
   }
 }
 "
@@ -39,7 +36,7 @@ exports[`Migrate Karma Config should successfully migrate outdate karma setup 2`
               dir: join(__dirname, './coverage'),
               subdir: '.',
 reporters: [{ type: 'html' }, { type: 'text-summary' }],
-              fixWebpackSourcePaths: true,
+              
             },
             reporters: ['progress', 'kjhtml'],
             port: 9876,

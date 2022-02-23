@@ -150,6 +150,12 @@
       "version": "13.8.1",
       "description": "Angular doesn't attach styles.js to index.html with type=module in dev mode, meaning an error is written to the console. Cypress falls over on this error. Add logic to Cypress e2e projects to ignore this error.",
       "factory": "./src/migrations/update-13-8-1/add-cypress-mfe-workaround"
+    },
+    "migrate-karma-config": {
+      "cli": "nx",
+      "version": "13.8.4",
+      "description": "Karma coverage is broken since Angular 13 upgarde and the karma config is severely out of date. Bring it up to date fixing the coverage issue.",
+      "factory": "./src/migrations/update-13-8-4/migrate-karma-conf"
     }
   },
   "packageJsonUpdates": {
@@ -1352,6 +1358,20 @@
       "packages": {
         "jest-preset-angular": {
           "version": "11.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.8.4": {
+      "version": "13.8.4-beta.0",
+      "packages": {
+        "karma": { "version": "~6.3.0", "alwaysAddToPackageJson": false },
+        "karma-jasmine-html-reporter": {
+          "version": "~1.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~3.10.0",
           "alwaysAddToPackageJson": false
         }
       }
