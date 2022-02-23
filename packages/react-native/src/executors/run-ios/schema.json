@@ -3,22 +3,36 @@
   "$id": "NxReactNativeRunIos",
   "$schema": "http://json-schema.org/schema",
   "title": "Run iOS application",
-  "description": "Run iOS target options",
+  "description": "Run iOS target options.",
   "type": "object",
+  "presets": [
+    {
+      "name": "Run iOS without cache",
+      "keys": [
+        "xcodeConfiguration",
+        "install",
+        "sync",
+        "port",
+        "packager",
+        "resetCache"
+      ]
+    }
+  ],
   "properties": {
     "xcodeConfiguration": {
       "type": "string",
-      "description": "Explicitly set the Xcode configuration to use",
+      "description": "Explicitly set the Xcode configuration to use.",
       "default": "Debug",
       "examples": ["Debug", "Release"]
     },
     "scheme": {
       "type": "string",
-      "description": "Explicitly set the Xcode scheme to use"
+      "description": "Explicitly set the Xcode scheme to use."
     },
     "simulator": {
       "type": "string",
-      "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone X (12.1)\"",
+      "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: `iPhone X (12.1)`.",
+      "default": "iPhone X",
       "examples": ["iPhone X"]
     },
     "device": {
@@ -27,12 +41,12 @@
     },
     "install": {
       "type": "boolean",
-      "description": "Runs 'pod install' for native modules before building iOS app.",
+      "description": "Runs `pod install` for native modules before building iOS app.",
       "default": true
     },
     "sync": {
       "type": "boolean",
-      "description": "Syncs npm dependencies to package.json (for React Native autolink). Always true when --install is used.",
+      "description": "Syncs npm dependencies to `package.json` (for React Native autolink). Always true when `--install` is used.",
       "default": true
     },
     "port": {

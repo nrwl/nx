@@ -2,11 +2,12 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestLibraryGenerator",
   "title": "Create a NestJS Library for Nx",
+  "description": "Create a NestJS Library for Nx.",
   "cli": "nx",
   "type": "object",
   "examples": [
     {
-      "command": "g lib mylib --directory=myapp",
+      "command": "nx g lib mylib --directory=myapp",
       "description": "Generate libs/myapp/mylib"
     }
   ],

@@ -3,6 +3,7 @@
   "cli": "nx",
   "$id": "NxNextReactPage",
   "title": "Create a Page for Next",
+  "description": "Create a Page for Next.",
   "type": "object",
   "examples": [
     {
@@ -31,7 +32,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the page under this directory (can be nested). Will be created under 'pages/'.",
+      "description": "Create the page under this directory (can be nested). Will be created under `pages/`.",
       "alias": "dir"
     },
     "style": {
@@ -77,12 +78,12 @@
     },
     "withTests": {
       "type": "boolean",
-      "description": "When true, creates a \"spec.ts\" test file for the new page.",
+      "description": "When true, creates a `spec.ts` test file for the new page.",
       "default": false
     },
     "export": {
       "type": "boolean",
-      "description": "When true, the component is exported from the project index.ts (if it exists).",
+      "description": "When true, the component is exported from the project `index.ts` (if it exists).",
       "alias": "e",
       "default": false
     },

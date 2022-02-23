@@ -2,21 +2,22 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "SchematicsConvertToNxProject",
   "title": "Create a custom target to run any command",
+  "description": "Create a custom target to run any command.",
   "type": "object",
   "cli": "nx",
   "examples": [
     {
-      "command": "g @nrwl/workspace:convert-to-nx-project --project my-feature-lib",
-      "description": "Convert the my-feature-lib project to use project.json file instead of workspace.json"
+      "command": "nx g @nrwl/workspace:convert-to-nx-project --project my-feature-lib",
+      "description": "Convert the `my-feature-lib` project to use `project.json` file instead of `workspace.json`"
     },
     {
-      "command": "g @nrwl/workspace:convert-to-nx-project --all",
-      "description": "Convert all projects in workspace.json to separate project.json files."
+      "command": "nx g @nrwl/workspace:convert-to-nx-project --all",
+      "description": "Convert all projects in `workspace.json` to separate `project.json` files"
     }
   ],
   "properties": {
     "project": {
-      "description": "Project name",
+      "description": "Project name.",
       "type": "string"
     },
     "all": {

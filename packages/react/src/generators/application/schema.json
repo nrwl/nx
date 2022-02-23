@@ -2,18 +2,19 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactApp",
-  "title": "Create a React Application for Nx",
+  "title": "Create a React Application",
+  "description": "Create a React application for Nx.",
   "examples": [
     {
-      "command": "g app myapp --directory=myorg",
+      "command": "nx g app myapp --directory=myorg",
       "description": "Generate apps/myorg/myapp and apps/myorg/myapp-e2e"
     },
     {
-      "command": "g app myapp --classComponent",
+      "command": "nx g app myapp --classComponent",
       "description": "Use class components instead of functional components"
     },
     {
-      "command": "g app myapp --routing",
+      "command": "nx g app myapp --routing",
       "description": "Set up React Router"
     }
   ],
@@ -96,7 +97,7 @@
       "default": false
     },
     "skipWorkspaceJson": {
-      "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
+      "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. babel, style).",
       "type": "boolean",
       "default": false
     },
@@ -109,7 +110,7 @@
     "e2eTestRunner": {
       "type": "string",
       "enum": ["cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests.",
+      "description": "Test runner to use for end to end (E2E) tests.",
       "default": "cypress"
     },
     "tags": {
@@ -119,7 +120,7 @@
     },
     "pascalCaseFiles": {
       "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
+      "description": "Use pascal case component file name (e.g. `App.tsx`).",
       "alias": "P",
       "default": false
     },
@@ -136,26 +137,26 @@
     },
     "globalCss": {
       "type": "boolean",
-      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
+      "description": "Default is `false`. When `true`, the component is generated with `*.css`/`*.scss` instead of `*.module.css`/`*.module.scss`.",
       "default": false
     },
     "strict": {
       "type": "boolean",
-      "description": "Creates an application with strict mode and strict type checking",
+      "description": "Creates an application with strict mode and strict type checking.",
       "default": true
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
     "compiler": {
       "type": "string",
-      "description": "The compiler to use",
+      "description": "The compiler to use.",
       "enum": ["babel", "swc"],
       "default": "babel"
     }

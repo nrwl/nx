@@ -1,6 +1,6 @@
 {
   "title": "Web Library Rollup Target (Experimental)",
-  "description": "Packages a library for different web usages (UMD, ESM, CJS).",
+  "description": "Packages a library for different web usages (`UMD`, `ESM`, `CJS`).",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -27,7 +27,7 @@
     },
     "format": {
       "type": "array",
-      "description": "Only build the specified comma-separated formats (esm,umd,cjs)",
+      "description": "Only build the specified comma-separated formats (`esm,umd,cjs`)",
       "alias": "f",
       "items": {
         "type": "string",
@@ -37,7 +37,7 @@
     },
     "external": {
       "type": "array",
-      "description": "A list of external modules that will not be bundled (react, react-dom, etc.).",
+      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
       "items": {
         "type": "string"
       }
@@ -49,12 +49,12 @@
     },
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
-      "description": "Update buildable project dependencies in package.json",
+      "description": "Update buildable project dependencies in `package.json`.",
       "default": true
     },
     "buildableProjectDepsInPackageJsonType": {
       "type": "string",
-      "description": "When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`",
+      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
       "default": "peerDependencies"
     },
@@ -70,14 +70,14 @@
           "type": "string"
         }
       ],
-      "description": "Path to a function which takes a rollup config and returns an updated rollup config"
+      "description": "Path to a function which takes a rollup config and returns an updated rollup config."
     },
     "umdName": {
       "type": "string",
-      "description": "The name of your module in UMD format. Defaulted to your project name."
+      "description": "The name of your module in `UMD` format. Defaulted to your project name."
     },
     "globals": {
-      "description": "A mapping of node modules to their UMD global names. Used by the UMD bundle",
+      "description": "A mapping of node modules to their `UMD` global names. Used by the `UMD` bundle.",
       "type": "array",
       "items": {
         "type": "object",
@@ -130,7 +130,7 @@
             },
             "input": {
               "type": "string",
-              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+              "description": "The input directory path in which to apply `glob`. Defaults to the project root."
             },
             "output": {
               "type": "string",

@@ -2,36 +2,37 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxPluginE2E",
-  "title": "Create an e2e app for a Nx Plugin",
+  "title": "Create an E2E app for a Nx Plugin",
+  "description": "Create an E2E app for a Nx Plugin.",
   "type": "object",
   "properties": {
     "pluginName": {
       "type": "string",
-      "description": "the name of the plugin to be tested"
+      "description": "the name of the plugin to be tested."
     },
     "npmPackageName": {
       "type": "string",
-      "description": "the name of the package that would be published to NPM"
+      "description": "the name of the package that would be published to NPM."
     },
     "projectDirectory": {
       "type": "string",
-      "description": "the directory where the plugin is placed"
+      "description": "the directory where the plugin is placed."
     },
     "pluginOutputPath": {
       "type": "string",
-      "description": "the output path of the plugin after it builds"
+      "description": "the output path of the plugin after it builds."
     },
     "jestConfig": {
       "type": "string",
-      "description": "Jest config file"
+      "description": "Jest config file."
     },
     "tsSpecConfig": {
       "type": "string",
-      "description": "Spec tsconfig file",
+      "description": "Spec `tsconfig` file.",
       "x-deprecated": true
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     }
   },

@@ -1,0 +1,8 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "cra-to-nx",
+  "root": "/packages/cra-to-nx",
+  "source": "/packages/cra-to-nx/src",
+  "generators": [],
+  "executors": []
+}

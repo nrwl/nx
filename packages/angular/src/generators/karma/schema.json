@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxAngularKarmaGenerator",
   "title": "Add Karma Configuration to the workspace.",
+  "description": "Add Karma configuration to an Nx workspace.",
   "cli": "nx",
   "type": "object",
   "properties": {

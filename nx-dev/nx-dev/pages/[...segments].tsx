@@ -1,14 +1,25 @@
-import type { DocumentData, Menu } from '@nrwl/nx-dev/data-access-documents';
+import {
+  PackageSchemaList,
+  PackageSchemaViewer,
+} from '@nrwl/nx-dev-feature-package-schema-viewer';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
+import { DocumentData } from '@nrwl/nx-dev/models-document';
+import { Menu } from '@nrwl/nx-dev/models-menu';
+import { PackageMetadata } from '@nrwl/nx-dev/models-package';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import cx from 'classnames';
 import Router from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-import { documentsApi, menuApi } from '../lib/api';
+import { documentsApi, menuApi, packagesApi } from '../lib/api';
 
 interface DocumentationPageProps {
   menu: Menu;
-  document: DocumentData;
+  document: DocumentData | null;
+  pkg: PackageMetadata | null;
+  schemaRequest: {
+    type: 'executors' | 'generators';
+    schemaName: string;
+  } | null;
 }
 
 // We may want to extract this to another lib.
@@ -34,21 +45,48 @@ function useNavToggle() {
 }
 
 export default function DocumentationPage({
-  document,
   menu,
+  document,
+  pkg,
+  schemaRequest,
 }: DocumentationPageProps) {
   const { toggleNav, navIsOpen } = useNavToggle();
+
+  const vm: { entryComponent: JSX.Element } = {
+    entryComponent: (
+      <DocViewer
+        document={document}
+        menu={menu}
+        toc={null}
+        navIsOpen={navIsOpen}
+      />
+    ),
+  };
+
+  if (!!pkg) {
+    vm.entryComponent = (
+      <PackageSchemaList menu={menu} navIsOpen={navIsOpen} pkg={pkg} />
+    );
+  }
+
+  if (!!pkg && !!schemaRequest) {
+    vm.entryComponent = (
+      <PackageSchemaViewer
+        menu={menu}
+        schemaRequest={{
+          ...schemaRequest,
+          pkg,
+        }}
+        navIsOpen={navIsOpen}
+      />
+    );
+  }
 
   return (
     <>
       <Header isDocViewer={true} />
       <main>
-        <DocViewer
-          document={document}
-          menu={menu}
-          toc={null}
-          navIsOpen={navIsOpen}
-        />
+        {vm.entryComponent}
         <button
           type="button"
           className="bg-green-nx-base fixed bottom-4 right-4 z-50 block h-16 w-16 rounded-full text-white shadow-sm lg:hidden"
@@ -106,6 +144,52 @@ export async function getStaticProps({
   params: { segments: string[] };
 }) {
   const menu = menuApi.getMenu();
+
+  if (params.segments[0] === 'packages') {
+    let pkg: PackageMetadata | null = null;
+    try {
+      pkg = packagesApi.getPackage(params.segments[1]);
+    } catch (e) {
+      // Do nothing
+    }
+
+    // TODO@ben: handle packages view routes?
+    if (!pkg || (params.segments.length < 4 && 2 < params.segments.length)) {
+      return {
+        redirect: {
+          // If the menu is found, go to the first document, else go to homepage
+          destination:
+            menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
+          permanent: false,
+        },
+      };
+    }
+
+    // TODO@ben: handle packages view routes?
+    if (pkg && params.segments.length === 2) {
+      return {
+        props: {
+          document: null,
+          menu: menuApi.getMenu(),
+          pkg,
+          schemaRequest: null,
+        },
+      };
+    }
+
+    return {
+      props: {
+        document: null,
+        menu: menuApi.getMenu(),
+        pkg,
+        schemaRequest: {
+          type: params.segments[2],
+          schemaName: params.segments[3],
+        },
+      },
+    };
+  }
+
   let document: DocumentData | undefined;
   try {
     document = documentsApi.getDocument(params.segments);
@@ -118,13 +202,14 @@ export async function getStaticProps({
       props: {
         document,
         menu,
+        schemaRequest: null,
       },
     };
   } else {
     return {
       redirect: {
         // If the menu is found, go to the first document, else go to homepage
-        destination: menu?.sections[0].itemList?.[0].itemList?.[0].url ?? '/',
+        destination: menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
         permanent: false,
       },
     };
@@ -133,7 +218,10 @@ export async function getStaticProps({
 
 export async function getStaticPaths() {
   return {
-    paths: documentsApi.getStaticDocumentPaths(),
+    paths: [
+      ...packagesApi.getStaticPackagePaths(),
+      ...documentsApi.getStaticDocumentPaths(),
+    ],
     fallback: 'blocking',
   };
 }

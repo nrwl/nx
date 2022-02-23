@@ -2,6 +2,8 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactComponentCypressSpec",
+  "title": "Create component Cypress spec",
+  "description": "Create a Cypress spec for a UI component that has a story.",
   "type": "object",
   "properties": {
     "project": {
@@ -27,7 +29,7 @@
     },
     "cypressProject": {
       "type": "string",
-      "description": "The Cypress project to generate the stories under. By default, inferred from 'project'"
+      "description": "The Cypress project to generate the stories under. By default, inferred from `project`."
     }
   },
   "required": ["project", "componentPath"]

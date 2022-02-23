@@ -1,0 +1,9 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "eslint-plugin-nx",
+  "description": "ESLint Plugin for Nx",
+  "root": "/packages/eslint-plugin-nx",
+  "source": "/packages/eslint-plugin-nx/src",
+  "generators": [],
+  "executors": []
+}

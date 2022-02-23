@@ -1,0 +1,9 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "cli",
+  "description": "Smart, Fast and Extensible Build System",
+  "root": "/packages/cli",
+  "source": "/packages/cli/src",
+  "generators": [],
+  "executors": []
+}

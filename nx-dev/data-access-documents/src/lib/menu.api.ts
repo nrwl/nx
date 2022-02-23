@@ -1,5 +1,5 @@
-import type { DocumentsApi } from './documents.api';
-import { Menu } from './menu.models';
+import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { Menu } from '@nrwl/nx-dev/models-menu';
 import {
   createMenuItems,
   getApiSection,
@@ -10,13 +10,13 @@ import {
 export class MenuApi {
   private menuCache: Menu | null = null;
 
-  constructor(private readonly documentsApi: DocumentsApi) {}
+  constructor(private readonly documents: DocumentMetadata) {}
 
   getMenu(): Menu {
     let menu = this.menuCache;
 
     if (!menu) {
-      const items = createMenuItems(this.documentsApi.getDocuments());
+      const items = createMenuItems(this.documents);
       if (items) {
         menu = {
           sections: [

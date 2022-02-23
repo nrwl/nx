@@ -2,11 +2,12 @@
   "cli": "nx",
   "$id": "SchematicsNxWorkspaceSchematic",
   "title": "Create a custom generator",
+  "description": "Create a custom generator.",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Generator name",
+      "description": "Generator name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -14,7 +15,7 @@
       "x-prompt": "What name would you like to use for the workspace generator?"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     }

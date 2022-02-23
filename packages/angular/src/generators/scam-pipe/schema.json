@@ -31,7 +31,7 @@
     },
     "skipTests": {
       "type": "boolean",
-      "description": "Do not create \"spec.ts\" test files for the new pipe.",
+      "description": "Do not create `spec.ts` test files for the new pipe.",
       "default": false
     },
     "inlineScam": {

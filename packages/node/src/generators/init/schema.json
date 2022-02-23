@@ -3,16 +3,17 @@
   "cli": "nx",
   "$id": "NxNodeInit",
   "title": "Init Node Plugin",
+  "description": "Init Node Plugin.",
   "type": "object",
   "properties": {
     "unitTestRunner": {
-      "description": "Adds the specified unit test runner",
+      "description": "Adds the specified unit test runner.",
       "type": "string",
       "enum": ["jest", "none"],
       "default": "jest"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     }

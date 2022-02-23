@@ -1,12 +1,12 @@
 {
   "title": "Storybook Builder",
   "cli": "nx",
-  "description": "Build storybook in production mode",
+  "description": "Build storybook in production mode.",
   "type": "object",
   "properties": {
     "uiFramework": {
       "type": "string",
-      "description": "Storybook framework npm package",
+      "description": "Storybook framework npm package.",
       "default": "@storybook/angular",
       "hidden": true
     },
@@ -16,7 +16,7 @@
     },
     "projectBuildConfig": {
       "type": "string",
-      "description": "Workspace project where Storybook reads the Webpack config from"
+      "description": "Workspace project where Storybook reads the Webpack config from."
     },
     "styles": {
       "type": "array",
@@ -34,7 +34,7 @@
     },
     "config": {
       "type": "object",
-      "description": ".storybook configuration",
+      "description": "`.storybook` file configuration",
       "properties": {
         "configFolder": {
           "type": "string",
@@ -42,11 +42,11 @@
         },
         "pluginPath": {
           "type": "string",
-          "description": "Path to storybook plugin.js file."
+          "description": "Path to storybook `plugin.js` file."
         },
         "configPath": {
           "type": "string",
-          "description": "Path to storybook preview.js file."
+          "description": "Path to storybook `preview.js` file."
         },
         "srcRoot": {
           "type": "string",

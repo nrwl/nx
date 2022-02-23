@@ -1,6 +1,6 @@
 {
   "title": "Jest Builder",
-  "description": "Jest target options for Build Facade",
+  "description": "Jest target options for Build Facade.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -10,7 +10,7 @@
       "aliases": ["coverage"]
     },
     "config": {
-      "description": "The path to a Jest config file specifying how to find and execute tests. If no rootDir is set in the config, the directory containing the config file is assumed to be the rootDir for the project. This can also be a JSON-encoded value which Jest will use as configuration",
+      "description": "The path to a Jest config file specifying how to find and execute tests. If no `rootDir` is set in the config, the directory containing the config file is assumed to be the `rootDir` for the project. This can also be a JSON-encoded value which Jest will use as configuration.",
       "type": "string"
     },
     "clearCache": {
@@ -58,7 +58,7 @@
     },
     "color": {
       "alias": "colors",
-      "description": "Forces test results output color highlighting (even if stdout is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/cli#--colors)",
+      "description": "Forces test results output color highlighting (even if `stdout` is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/cli#--colors)",
       "type": "boolean"
     },
     "findRelatedTests": {
@@ -66,7 +66,7 @@
       "type": "string"
     },
     "json": {
-      "description": "Prints the test results in JSON. This mode will send all other test output and user messages to stderr. (https://jestjs.io/docs/cli#--json)",
+      "description": "Prints the test results in `JSON`. This mode will send all other test output and user messages to `stderr`. (https://jestjs.io/docs/cli#--json)",
       "type": "boolean"
     },
     "maxWorkers": {
@@ -76,7 +76,7 @@
     },
     "onlyChanged": {
       "alias": "o",
-      "description": "Attempts to identify which tests to run based on which files have changed in the current repository. Only works if you're running tests in a git or hg repository at the moment. (https://jestjs.io/docs/cli#--onlychanged)",
+      "description": "Attempts to identify which tests to run based on which files have changed in the current repository. Only works if you're running tests in a `git` or `hg` repository at the moment. (https://jestjs.io/docs/cli#--onlychanged)",
       "type": "boolean"
     },
     "changedSince": {
@@ -84,7 +84,7 @@
       "type": "string"
     },
     "outputFile": {
-      "description": "Write test results to a file when the --json option is also specified. (https://jestjs.io/docs/cli#--outputfilefilename)",
+      "description": "Write test results to a file when the `--json` option is also specified. (https://jestjs.io/docs/cli#--outputfilefilename)",
       "type": "string"
     },
     "passWithNoTests": {
@@ -129,7 +129,7 @@
       "type": "boolean"
     },
     "reporters": {
-      "description": "Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: jest --reporters=\"default\" --reporters=\"jest-junit\" (https://jestjs.io/docs/cli#--reporters)",
+      "description": "Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: `jest --reporters=\"default\" --reporters=\"jest-junit\"`. (https://jestjs.io/docs/cli#--reporters)",
       "type": "array",
       "items": {
         "type": "string"
@@ -140,7 +140,7 @@
       "type": "boolean"
     },
     "coverageReporters": {
-      "description": "A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter",
+      "description": "A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter.",
       "type": "array",
       "items": {
         "type": "string"
@@ -176,7 +176,8 @@
       "type": "boolean"
     },
     "testTimeout": {
-      "description": "Default timeout of a test in milliseconds. Default value: 5000. (https://jestjs.io/docs/cli#--testtimeoutnumber)",
+      "description": "Default timeout of a test in milliseconds. Default value: `5000`. (https://jestjs.io/docs/cli#--testtimeoutnumber)",
+      "default": 5000,
       "type": "number"
     }
   },

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxUpgradeModuleGenerator",
   "title": "Generates UpgradeModule setup.",
+  "description": "Sets up an Upgrade Module.",
   "cli": "nx",
   "type": "object",
   "properties": {

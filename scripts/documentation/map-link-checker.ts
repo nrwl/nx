@@ -24,6 +24,9 @@ function pathExtractor(
       .map((i: any) => pathExtractor(pathList, i, currentPath))
       .flat();
   }
+  if (item.path) {
+    return pathList;
+  }
   if (item.file) {
     pathList.push(item.file);
     return pathList;

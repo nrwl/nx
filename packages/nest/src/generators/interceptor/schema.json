@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestInterceptorGenerator",
-  "title": "Nest Interceptor Options Schema.",
+  "title": "Nest Interceptor Options Schema",
+  "description": "Nest Interceptor Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

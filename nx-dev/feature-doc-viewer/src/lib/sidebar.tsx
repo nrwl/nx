@@ -110,13 +110,13 @@ function SidebarSectionItems({
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {(item.itemList as MenuItem[]).map((item, index) => {
-          const isActiveLink = item.url === withoutAnchors(router?.asPath);
+          const isActiveLink = item.path === withoutAnchors(router?.asPath);
           return (
             <li
               key={item.id + '-' + index}
               data-testid={`section-li:${item.id}`}
             >
-              <Link href={item.url as string}>
+              <Link href={item.path as string}>
                 <a
                   className={cx(
                     'relative block py-1 text-gray-500 transition-colors duration-200 hover:text-gray-900'

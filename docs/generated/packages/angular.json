@@ -1,0 +1,2775 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "angular",
+  "description": "Angular Plugin for Nx",
+  "root": "/packages/angular",
+  "source": "/packages/angular/src",
+  "generators": [
+    {
+      "name": "add-linting",
+      "factory": "./src/generators/add-linting/add-linting",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularAddLintingGenerator",
+        "title": "Add linting to an Angular project.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The prefix to apply to generated selectors."
+          },
+          "projectName": {
+            "type": "string",
+            "description": "The name of the project."
+          },
+          "projectRoot": {
+            "type": "string",
+            "description": "The path to the root of the selected project."
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files.",
+            "default": false
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["prefix", "projectName", "projectRoot"],
+        "presets": []
+      },
+      "description": "Adds linting configuration to an Angular project.",
+      "hidden": true,
+      "implementation": "/packages/angular/src/generators/add-linting/add-linting.ts",
+      "aliases": [],
+      "path": "/packages/angular/src/generators/add-linting/schema.json"
+    },
+    {
+      "name": "application",
+      "factory": "./src/generators/application/application",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "GeneratorNxApp",
+        "title": "Creates an Angular application.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "name": {
+            "description": "The name of the application.",
+            "type": "string",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the application?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "description": "The directory of the new application.",
+            "type": "string"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "scss", "sass", "less"],
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+                },
+                {
+                  "value": "sass",
+                  "label": "SASS(.sass)  [ http://sass-lang.com   ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS         [ http://lesscss.org     ]"
+                }
+              ]
+            }
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "Generate a routing module.",
+            "default": false,
+            "x-prompt": "Would you like to configure routing for this application?"
+          },
+          "inlineStyle": {
+            "description": "Specifies if the style will be in the ts file.",
+            "type": "boolean",
+            "default": false,
+            "alias": "s"
+          },
+          "inlineTemplate": {
+            "description": "Specifies if the template will be in the ts file.",
+            "type": "boolean",
+            "default": false,
+            "alias": "t"
+          },
+          "viewEncapsulation": {
+            "description": "Specifies the view encapsulation strategy.",
+            "enum": ["Emulated", "None", "ShadowDom"],
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The prefix to apply to generated selectors.",
+            "alias": "p"
+          },
+          "skipTests": {
+            "description": "Skip creating spec files.",
+            "type": "boolean",
+            "default": false,
+            "alias": "S"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["karma", "jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["protractor", "cypress", "none"],
+            "description": "Test runner to use for end to end (E2E) tests.",
+            "default": "cypress"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the application (used for linting)."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "none"],
+            "default": "eslint"
+          },
+          "backendProject": {
+            "type": "string",
+            "description": "Backend project that provides data to this application. This sets up `proxy.config.json`."
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "Create an application with stricter type checking and build optimization options.",
+            "default": true
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          },
+          "mfe": {
+            "description": "Generate a Module Federation configuration for the application",
+            "type": "boolean",
+            "default": false
+          },
+          "mfeType": {
+            "type": "string",
+            "enum": ["host", "remote"],
+            "description": "Type of application to generate the Module Federation configuration for.",
+            "default": "remote"
+          },
+          "port": {
+            "type": "number",
+            "description": "The port at which the remote application should be served."
+          },
+          "remotes": {
+            "type": "array",
+            "description": "A list of remote application names that the host application should consume."
+          },
+          "host": {
+            "type": "string",
+            "description": "The name of the host application that the remote application will be consumed by."
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "addTailwind": {
+            "type": "boolean",
+            "description": "Whether to configure Tailwind CSS for the application.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name"],
+        "presets": []
+      },
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Creates an Angular application.",
+      "implementation": "/packages/angular/src/generators/application/application.ts",
+      "hidden": false,
+      "path": "/packages/angular/src/generators/application/schema.json"
+    },
+    {
+      "name": "component",
+      "factory": "./src/generators/component/component",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "SchematicsAngularComponent",
+        "title": "Angular Component Schema",
+        "cli": "nx",
+        "type": "object",
+        "description": "Creates a new, generic component definition in the given or default project.",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "path",
+            "description": "The path at which to create the component file, relative to the current workspace. Default is a folder with the same name as the component in the project root.",
+            "visible": false
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "projectName" }
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the component.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the component?"
+          },
+          "displayBlock": {
+            "description": "Specifies if the style will contain `:host { display: block; }`.",
+            "type": "boolean",
+            "default": false,
+            "alias": "b"
+          },
+          "inlineStyle": {
+            "description": "Include styles inline in the component.ts file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the component.ts file.",
+            "type": "boolean",
+            "default": false,
+            "alias": "s"
+          },
+          "inlineTemplate": {
+            "description": "Include template inline in the component.ts file. By default, an external template file is created and referenced in the component.ts file.",
+            "type": "boolean",
+            "default": false,
+            "alias": "t"
+          },
+          "viewEncapsulation": {
+            "description": "The view encapsulation strategy to use in the new component.",
+            "enum": ["Emulated", "None", "ShadowDom"],
+            "type": "string",
+            "alias": "v"
+          },
+          "changeDetection": {
+            "description": "The change detection strategy to use in the new component.",
+            "enum": ["Default", "OnPush"],
+            "type": "string",
+            "default": "Default",
+            "alias": "c"
+          },
+          "style": {
+            "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "scss", "sass", "less", "none"]
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "Do not create `spec.ts` test files for the new component.",
+            "default": false
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create the new files at the top level of the current project.",
+            "default": false
+          },
+          "selector": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The HTML selector to use for this component."
+          },
+          "skipSelector": {
+            "type": "boolean",
+            "default": false,
+            "description": "Specifies if the component should have a selector or not."
+          },
+          "type": {
+            "type": "string",
+            "description": "Adds a developer-defined type to the filename, in the format `name.type.ts`.",
+            "default": "component"
+          },
+          "export": {
+            "type": "boolean",
+            "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`).",
+            "default": false
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Generate an Angular Component.",
+      "implementation": "/packages/angular/src/generators/component/component.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/component/schema.json"
+    },
+    {
+      "name": "component-cypress-spec",
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularComponentCypressSpecGenerator",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "projectName": {
+            "type": "string",
+            "description": "The name of the project.",
+            "examples": ["ui-samples"]
+          },
+          "projectPath": {
+            "type": "string",
+            "description": "Path to the project.",
+            "examples": ["libs/ui-samples"]
+          },
+          "componentName": {
+            "type": "string",
+            "description": "Class name of the component.",
+            "examples": ["AwesomeComponent"]
+          },
+          "componentPath": {
+            "type": "string",
+            "description": "Relative path to the component file from the project root.",
+            "examples": ["awesome"]
+          },
+          "componentFileName": {
+            "type": "string",
+            "description": "Component file name without the `.ts` extension.",
+            "examples": ["awesome.component"]
+          },
+          "cypressProject": {
+            "type": "string",
+            "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "projectName",
+          "projectPath",
+          "componentName",
+          "componentPath",
+          "componentFileName"
+        ],
+        "presets": []
+      },
+      "description": "Creates a Cypress spec for a UI component that has a story.",
+      "hidden": true,
+      "implementation": "/packages/angular/src/generators/component-cypress-spec/component-cypress-spec.ts",
+      "aliases": [],
+      "path": "/packages/angular/src/generators/component-cypress-spec/schema.json"
+    },
+    {
+      "name": "component-story",
+      "factory": "./src/generators/component-story/component-story",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularComponentStoryGenerator",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "description": "Path to the project.",
+            "examples": ["libs/ui-samples"]
+          },
+          "componentName": {
+            "type": "string",
+            "description": "Class name of the component.",
+            "examples": ["AwesomeComponent"]
+          },
+          "componentPath": {
+            "type": "string",
+            "description": "Relative path to the component file from the project root.",
+            "examples": ["awesome"]
+          },
+          "componentFileName": {
+            "type": "string",
+            "description": "Component file name without the `.ts` extension.",
+            "examples": ["awesome.component"]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "projectPath",
+          "componentName",
+          "componentPath",
+          "componentFileName"
+        ],
+        "presets": []
+      },
+      "description": "Creates a stories.ts file for a component.",
+      "hidden": true,
+      "implementation": "/packages/angular/src/generators/component-story/component-story.ts",
+      "aliases": [],
+      "path": "/packages/angular/src/generators/component-story/schema.json"
+    },
+    {
+      "name": "convert-tslint-to-eslint",
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularConvertTSLintToESLintGenerator",
+        "cli": "nx",
+        "title": "Convert an Angular project from TSLint to ESLint",
+        "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`",
+        "examples": [
+          {
+            "command": "nx g convert-tslint-to-eslint myapp",
+            "description": "The following will first configure the project, `myapp`, the same way a _new_ project is configured i.e. It will use Nx's new recommended ESLint config. By default, this also adds the existing TSLint configuration on top of the default ESLint config from Nx to continue checking what it checks today. This is done by migrating TSLint rules to their equivalent ESLint rules to the best of its abilities. Some TSLint rules may not have ESLint equivalents and will be reported during the conversion"
+          },
+          {
+            "command": "nx g convert-tslint-to-eslint myapp --ignoreExistingTslintConfig=true",
+            "description": "If your TSLint config isn't extremely important to you, ignoring it makes this process more deterministic. Unlike the prior example, this will discard the existing TSLint configuration, meaning that the project will only have the Nx's latest recommended ESLint configuration which may be good enough for some workspaces"
+          },
+          {
+            "command": "nx g convert-tslint-to-eslint myapp --removeTSLintIfNoMoreTSLintTargets=false",
+            "description": "By default, this process removes the TSLint related dependencies and configuration once no more projects use TSLint. This can be disabled with the following flag to keep TSLint related dependencies and configuration in the repo"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "project": {
+            "description": "The name of the Angular project to convert. Please note, if the project is an Angular app with an associated Cypress e2e project, it will also attempt to convert that.",
+            "type": "string",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "Which Angular project would you like to convert from TSLint to ESLint?"
+          },
+          "ignoreExistingTslintConfig": {
+            "type": "boolean",
+            "description": "If true, it will not use existing TSLint config as a reference, it will just reset the project with the latest recommended ESLint config.",
+            "default": false,
+            "x-prompt": "Would you like to ignore the existing TSLint config? Recommended if the TSLint config has not been altered much as it makes the new ESLint config cleaner."
+          },
+          "removeTSLintIfNoMoreTSLintTargets": {
+            "type": "boolean",
+            "description": "If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.",
+            "default": true,
+            "x-prompt": "Would you like to remove TSLint and its related config if there are no TSLint projects remaining after this conversion?"
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Converts a project from TSLint to ESLint.",
+      "implementation": "/packages/angular/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/convert-tslint-to-eslint/schema.json"
+    },
+    {
+      "name": "downgrade-module",
+      "factory": "./src/generators/downgrade-module/downgrade-module",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxDowngradeModuleGenerator",
+        "title": "Generates downgradeModule setup.",
+        "description": "Sets up a Downgrade Module.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the main AngularJS module.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "angularJsImport": {
+            "type": "string",
+            "description": "Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`)."
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files.",
+            "default": false
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "description": "Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Sets up a Downgrade Module.",
+      "implementation": "/packages/angular/src/generators/downgrade-module/downgrade-module.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/downgrade-module/schema.json"
+    },
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "SchematicsAngularModuleInit",
+        "cli": "nx",
+        "title": "Init Angular Plugin",
+        "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode",
+        "type": "object",
+        "properties": {
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["karma", "jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["protractor", "cypress", "none"],
+            "description": "Test runner to use for end to end (e2e) tests.",
+            "default": "cypress"
+          },
+          "skipInstall": {
+            "type": "boolean",
+            "description": "Skip installing after adding `@nrwl/workspace`.",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "none"],
+            "default": "eslint"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "scss", "sass", "less"],
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+                },
+                {
+                  "value": "sass",
+                  "label": "SASS(.sass)  [ http://sass-lang.com   ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS         [ http://lesscss.org     ]"
+                }
+              ]
+            }
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Initializes the @nrwl/angular plugin.",
+      "hidden": true,
+      "implementation": "/packages/angular/src/generators/init/init.ts",
+      "aliases": [],
+      "path": "/packages/angular/src/generators/init/schema.json"
+    },
+    {
+      "name": "karma",
+      "factory": "./src/generators/karma/karma",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularKarmaGenerator",
+        "title": "Add Karma Configuration to the workspace.",
+        "description": "Add Karma configuration to an Nx workspace.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "additionalProperties": false,
+        "required": [],
+        "presets": []
+      },
+      "description": "Adds Karma configuration to a workspace.",
+      "implementation": "/packages/angular/src/generators/karma/karma.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/karma/schema.json"
+    },
+    {
+      "name": "karma-project",
+      "factory": "./src/generators/karma-project/karma-project",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxKarmaProjectGenerator",
+        "title": "Create Karma Configuration for a project",
+        "description": "Add Karma configuration to an angular project.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "projectName" }
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Adds Karma configuration to a project.",
+      "implementation": "/packages/angular/src/generators/karma-project/karma-project.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/karma-project/schema.json"
+    },
+    {
+      "name": "library",
+      "factory": "./src/generators/library/library",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "GeneratorAngularLibrary",
+        "title": "Create a library",
+        "description": "Creates an Angular library.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the library.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the library?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the library is placed."
+          },
+          "publishable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Generate a publishable library."
+          },
+          "buildable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Generate a buildable library."
+          },
+          "prefix": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The prefix to apply to generated selectors.",
+            "alias": "p"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "simpleModuleName": {
+            "description": "Keep the module name simple (when using `--directory`).",
+            "type": "boolean",
+            "default": false
+          },
+          "addModuleSpec": {
+            "description": "Add a module spec file.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          },
+          "skipTsConfig": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not update `tsconfig.json` for development experience."
+          },
+          "routing": {
+            "type": "boolean",
+            "default": false,
+            "description": "Add router configuration. See `lazy` for more information."
+          },
+          "lazy": {
+            "type": "boolean",
+            "default": false,
+            "description": "Add `RouterModule.forChild` when set to true, and a simple array of routes when set to false."
+          },
+          "parentModule": {
+            "type": "string",
+            "description": "Update the router configuration of the parent module using `loadChildren` or `children`, depending on what `lazy` is set to."
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the library (used for linting)."
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["karma", "jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "importPath": {
+            "type": "string",
+            "description": "The library name used to import it, like `@myorg/my-awesome-lib`. Must be a valid npm name."
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "Create a library with stricter type checking and build optimization options.",
+            "default": true
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "none"],
+            "default": "eslint"
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          },
+          "compilationMode": {
+            "description": "Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.",
+            "type": "string",
+            "enum": ["full", "partial"]
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "addTailwind": {
+            "type": "boolean",
+            "description": "Whether to configure Tailwind CSS for the application. It can only be used with buildable and publishable libraries. Non-buildable libraries will use the application's Tailwind configuration.",
+            "default": false
+          },
+          "skipModule": {
+            "type": "boolean",
+            "description": "Whether to skip the creation of a default module when generating the library.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name"],
+        "presets": []
+      },
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Creates an Angular library.",
+      "implementation": "/packages/angular/src/generators/library/library.ts",
+      "hidden": false,
+      "path": "/packages/angular/src/generators/library/schema.json"
+    },
+    {
+      "name": "library-secondary-entry-point",
+      "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularLibrarySecondaryEntryPoint",
+        "title": "Creates a secondary entry point for a library",
+        "description": "Creates a secondary entry point for an Angular publishable library.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the secondary entry point.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the secondary entry point?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "library": {
+            "type": "string",
+            "description": "The name of the library to create the secondary entry point for.",
+            "x-prompt": "What library would you like to create the secondary entry point for?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "skipModule": {
+            "type": "boolean",
+            "description": "Skip generating a module for the secondary entry point.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name", "library"],
+        "presets": []
+      },
+      "aliases": ["secondary-entry-point", "entry-point"],
+      "description": "Creates a secondary entry point for an Angular publishable library.",
+      "implementation": "/packages/angular/src/generators/library-secondary-entry-point/library-secondary-entry-point.ts",
+      "hidden": false,
+      "path": "/packages/angular/src/generators/library-secondary-entry-point/schema.json"
+    },
+    {
+      "name": "mfe-remote",
+      "factory": "./src/generators/mfe-remote/mfe-remote",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxMFERemote",
+        "cli": "nx",
+        "title": "Nx MFE Remote App",
+        "description": "Create an Angular Remote Micro Frontend Application.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:mfe-remote appName --host=host --port=4201",
+            "description": "Create an Angular app with configuration in place for MFE. If host is provided, attach this remote app to host app's configuration."
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name to give to the remote Angular app.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "host": {
+            "type": "string",
+            "description": "The name of the host app to attach this remote app to."
+          },
+          "port": {
+            "type": "number",
+            "description": "The port on which this app should be served."
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "aliases": ["remote"],
+      "description": "Generate a Remote Angular Micro-Frontend Application.",
+      "implementation": "/packages/angular/src/generators/mfe-remote/mfe-remote.ts",
+      "hidden": false,
+      "path": "/packages/angular/src/generators/mfe-remote/schema.json"
+    },
+    {
+      "name": "move",
+      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularMove",
+        "cli": "nx",
+        "title": "Nx Angular Move",
+        "description": "Move an Angular project to another folder in the workspace.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib",
+            "description": "Move libs/my-feature-lib to libs/shared/my-feature-lib."
+          }
+        ],
+        "properties": {
+          "projectName": {
+            "type": "string",
+            "alias": "project",
+            "description": "The name of the Angular project to move."
+          },
+          "destination": {
+            "type": "string",
+            "description": "The folder to move the Angular project into.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "importPath": {
+            "type": "string",
+            "description": "The new import path to use in the `tsconfig.base.json`."
+          },
+          "updateImportPath": {
+            "type": "boolean",
+            "description": "Update the import path to reflect the new location.",
+            "default": true
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "aliases": ["skip-format"],
+            "description": "Skip formatting files.",
+            "default": false
+          }
+        },
+        "required": ["projectName", "destination"],
+        "presets": []
+      },
+      "aliases": ["mv"],
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+      "implementation": "/packages/angular/src/generators/move/move#angularMoveGenerator.ts",
+      "hidden": false,
+      "path": "/packages/angular/src/generators/move/schema.json"
+    },
+    {
+      "name": "convert-to-with-mf",
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "ConvertToWithMFGenerator",
+        "cli": "nx",
+        "title": "Convert to withModuleFederation Generator Options Schema",
+        "type": "object",
+        "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_",
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the micro frontend project to migrate.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What micro frontend project would you like to migrate?"
+          }
+        },
+        "presets": []
+      },
+      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_",
+      "implementation": "/packages/angular/src/generators/convert-to-with-mf/convert-to-with-mf.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/convert-to-with-mf/schema.json"
+    },
+    {
+      "name": "mfe-host",
+      "factory": "./src/generators/mfe-host/mfe-host",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxMFEHost",
+        "cli": "nx",
+        "title": "Nx MFE Host App",
+        "description": "Create an Angular Host Micro Frontend Application",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:mfe-host appName --remotes=remote1",
+            "description": "Create an Angular app with configuration in place for MFE. If remotes is provided, attach the remote app to this app's configuration."
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name to give to the host Angular app.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "host": {
+            "type": "string",
+            "description": "The name of the host app to attach this host app to."
+          },
+          "port": {
+            "type": "number",
+            "description": "The port on which this app should be served."
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application.",
+      "implementation": "/packages/angular/src/generators/mfe-host/mfe-host.ts",
+      "hidden": false,
+      "path": "/packages/angular/src/generators/mfe-host/schema.json"
+    },
+    {
+      "name": "ng-add",
+      "factory": "./src/generators/ng-add/ng-add",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularNgAddGenerator",
+        "title": "Angular plugin initialization",
+        "cli": "nx",
+        "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace. NOTE: Does not work in the `--dry-run` mode.",
+        "type": "object",
+        "properties": {
+          "npmScope": {
+            "type": "string",
+            "description": "Npm scope for importing libs. NOTE: only used if running the generator in an Angular CLI workspace."
+          },
+          "defaultBase": {
+            "type": "string",
+            "description": "Default base branch for affected. NOTE: only used if running the generator in an Angular CLI workspace."
+          },
+          "skipInstall": {
+            "type": "boolean",
+            "description": "Skip installing added packages.",
+            "default": false
+          },
+          "preserveAngularCliLayout": {
+            "type": "boolean",
+            "description": "Preserve the Angular CLI layout instead of moving the app into apps. NOTE: only used if running the generator in an Angular CLI workspace.",
+            "default": false
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name. NOTE: only used if running the generator in an Angular CLI workspace.",
+            "$default": { "$source": "projectName" }
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["karma", "jest", "none"],
+            "description": "Test runner to use for unit tests. NOTE: only used if running the generator in an Nx workspace.",
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["protractor", "cypress", "none"],
+            "description": "Test runner to use for end to end (e2e) tests. NOTE: only used if running the generator in an Nx workspace.",
+            "default": "cypress"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files. NOTE: only used if running the generator in an Nx workspace.",
+            "type": "boolean",
+            "default": false
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks. NOTE: only used if running the generator in an Nx workspace.",
+            "type": "string",
+            "enum": ["eslint", "none"],
+            "default": "eslint"
+          },
+          "style": {
+            "description": "The file extension to be used for style files. NOTE: only used if running the generator in an Nx workspace.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "scss", "sass", "less"]
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`. NOTE: only used if running the generator in an Nx workspace."
+          }
+        },
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true,
+      "implementation": "/packages/angular/src/generators/ng-add/ng-add.ts",
+      "aliases": [],
+      "path": "/packages/angular/src/generators/ng-add/schema.json"
+    },
+    {
+      "name": "ngrx",
+      "factory": "./src/generators/ngrx/ngrx",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxNgrxGenerator",
+        "title": "Add NgRx support to an application or library.",
+        "description": "Adds NgRx support to an application or library.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the NgRx feature state? An example would be `users`."
+          },
+          "module": {
+            "type": "string",
+            "description": "The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.",
+            "x-prompt": "What is the path to the module where this NgRx state should be registered?"
+          },
+          "directory": {
+            "type": "string",
+            "default": "+state",
+            "description": "The name of the folder used to contain/group the generated NgRx files."
+          },
+          "root": {
+            "type": "boolean",
+            "default": false,
+            "description": "Setup root or feature state management with NgRx.",
+            "x-prompt": "Is this the root state of the application?"
+          },
+          "facade": {
+            "type": "boolean",
+            "default": false,
+            "description": "Create a Facade class for the the feature.",
+            "x-prompt": "Would you like to use a Facade with your NgRx state?"
+          },
+          "skipImport": {
+            "type": "boolean",
+            "default": false,
+            "description": "Generate NgRx feature files without registering the feature in the NgModule."
+          },
+          "minimal": {
+            "type": "boolean",
+            "default": true,
+            "description": "Only register the root state management setup or feature state."
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not update the `package.json` with NgRx dependencies."
+          },
+          "syntax": {
+            "type": "string",
+            "enum": ["classes", "creators"],
+            "default": "creators",
+            "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects."
+          },
+          "useDataPersistence": {
+            "type": "boolean",
+            "default": false,
+            "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators."
+          },
+          "barrels": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use barrels to re-export actions, state and selectors."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["module", "name"],
+        "presets": []
+      },
+      "description": "Adds NgRx support to an application or library.",
+      "implementation": "/packages/angular/src/generators/ngrx/ngrx.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/ngrx/schema.json"
+    },
+    {
+      "name": "scam",
+      "factory": "./src/generators/scam/scam",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "SCAMGenerator",
+        "cli": "nx",
+        "title": "SCAM Generator Options Schema",
+        "type": "object",
+        "description": "Creates a new, generic component definition in the given or default project.",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "path",
+            "description": "The path at which to create the component file, relative to the current workspace. Default is a folder with the same name as the component in the project root.",
+            "visible": false
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "projectName" }
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the component.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the component?"
+          },
+          "displayBlock": {
+            "description": "Specifies if the style will contain `:host { display: block; }`.",
+            "type": "boolean",
+            "default": false,
+            "alias": "b"
+          },
+          "inlineStyle": {
+            "description": "Include styles inline in the `component.ts` file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the `component.ts` file.",
+            "type": "boolean",
+            "default": false,
+            "alias": "s"
+          },
+          "inlineTemplate": {
+            "description": "Include template inline in the `component.ts` file. By default, an external template file is created and referenced in the `component.ts` file.",
+            "type": "boolean",
+            "default": false,
+            "alias": "t"
+          },
+          "viewEncapsulation": {
+            "description": "The view encapsulation strategy to use in the new component.",
+            "enum": ["Emulated", "None", "ShadowDom"],
+            "type": "string",
+            "alias": "v"
+          },
+          "changeDetection": {
+            "description": "The change detection strategy to use in the new component.",
+            "enum": ["Default", "OnPush"],
+            "type": "string",
+            "default": "Default",
+            "alias": "c"
+          },
+          "style": {
+            "description": "The file extension or preprocessor to use for style files, or 'none' to skip generating the style file.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "scss", "sass", "less", "none"]
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "Do not create `spec.ts` test files for the new component.",
+            "default": false
+          },
+          "inlineScam": {
+            "type": "boolean",
+            "description": "Create the `NgModule` in the same file as the component.",
+            "default": true
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create the new files at the top level of the current project.",
+            "default": false
+          },
+          "selector": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The `HTML` selector to use for this component."
+          },
+          "skipSelector": {
+            "type": "boolean",
+            "default": false,
+            "description": "Specifies if the component should have a selector or not."
+          },
+          "type": {
+            "type": "string",
+            "description": "Adds a developer-defined type to the filename, in the format `name.type.ts`.",
+            "default": "component"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "The prefix to apply to the generated component selector.",
+            "alias": "p",
+            "oneOf": [
+              { "maxLength": 0 },
+              { "minLength": 1, "format": "html-selector" }
+            ]
+          },
+          "export": {
+            "type": "boolean",
+            "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
+            "default": true
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM).",
+      "implementation": "/packages/angular/src/generators/scam/scam.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/scam/schema.json"
+    },
+    {
+      "name": "scam-directive",
+      "factory": "./src/generators/scam-directive/scam-directive",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "SCAMDirectiveGenerator",
+        "cli": "nx",
+        "title": "SCAM Directive Generator Options Schema",
+        "type": "object",
+        "description": "Creates a new, generic directive definition in the given or default project.",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "path",
+            "description": "The path at which to create the directive file, relative to the current workspace. Default is a folder with the same name as the directive in the project root.",
+            "visible": false
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "projectName" }
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the directive.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the directive?"
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "Do not create `spec.ts` test files for the new directive.",
+            "default": false
+          },
+          "inlineScam": {
+            "type": "boolean",
+            "description": "Create the `NgModule` in the same file as the Directive.",
+            "default": true
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create the new files at the top level of the current project.",
+            "default": true
+          },
+          "selector": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The `HTML` selector to use for this directive."
+          },
+          "prefix": {
+            "type": "string",
+            "description": "The prefix to apply to the generated directive selector.",
+            "alias": "p",
+            "oneOf": [
+              { "maxLength": 0 },
+              { "minLength": 1, "format": "html-selector" }
+            ]
+          },
+          "export": {
+            "type": "boolean",
+            "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
+            "default": true
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM).",
+      "implementation": "/packages/angular/src/generators/scam-directive/scam-directive.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/scam-directive/schema.json"
+    },
+    {
+      "name": "scam-pipe",
+      "factory": "./src/generators/scam-pipe/scam-pipe",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "SCAMPipeGenerator",
+        "cli": "nx",
+        "title": "SCAM Pipe Generator Options Schema",
+        "type": "object",
+        "description": "Creates a new, generic pipe definition in the given or default project.",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "path",
+            "description": "The path at which to create the pipe file, relative to the current workspace. Default is a folder with the same name as the pipe in the project root.",
+            "visible": false
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "projectName" }
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the pipe.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the pipe?"
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "Do not create `spec.ts` test files for the new pipe.",
+            "default": false
+          },
+          "inlineScam": {
+            "type": "boolean",
+            "description": "Create the NgModule in the same file as the Pipe.",
+            "default": true
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create the new files at the top level of the current project.",
+            "default": true
+          },
+          "export": {
+            "type": "boolean",
+            "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
+            "default": true
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM).",
+      "implementation": "/packages/angular/src/generators/scam-pipe/scam-pipe.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/scam-pipe/schema.json"
+    },
+    {
+      "name": "setup-mfe",
+      "factory": "./src/generators/setup-mfe/setup-mfe",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "GeneratorAngularMFESetup",
+        "cli": "nx",
+        "title": "Generate Module Federation Setup for Angular App",
+        "description": "Create Module Federation configuration files for given Angular Application.",
+        "type": "object",
+        "properties": {
+          "appName": {
+            "type": "string",
+            "description": "The name of the application to generate the Module Federation configuration for.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What app would you like to generate a Module Federation configuration for?"
+          },
+          "mfeType": {
+            "type": "string",
+            "enum": ["host", "remote"],
+            "description": "Type of application to generate the Module Federation configuration for.",
+            "default": "remote"
+          },
+          "port": {
+            "type": "number",
+            "description": "The port at which the remote application should be served."
+          },
+          "remotes": {
+            "type": "array",
+            "description": "A list of remote application names that the host application should consume."
+          },
+          "host": {
+            "type": "string",
+            "description": "The name of the host application that the remote application will be consumed by."
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "Generate a routing setup to allow a host application to route to the remote application."
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting the workspace after the generator completes."
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          },
+          "e2eProjectName": {
+            "type": "string",
+            "description": "The project name of the associated E2E project for the application. This is only required for Cypress E2E projects that do not follow the naming convention `<appName>-e2e`."
+          }
+        },
+        "required": ["appName", "mfeType"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Generate a Module Federation configuration for a given Angular application.",
+      "implementation": "/packages/angular/src/generators/setup-mfe/setup-mfe.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/setup-mfe/schema.json"
+    },
+    {
+      "name": "setup-tailwind",
+      "factory": "./src/generators/setup-tailwind/setup-tailwind",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularTailwindSetupGenerator",
+        "cli": "nx",
+        "title": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+        "description": "Adds the Tailwind CSS configuration files for a given Angular project and installs, if needed, the packages required for Tailwind CSS to work.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add the Tailwind CSS setup for.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What project would you like to add the Tailwind CSS setup?"
+          },
+          "buildTarget": {
+            "type": "string",
+            "description": "The name of the target used to build the project. This option only applies to buildable/publishable libraries.",
+            "default": "build"
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skips formatting the workspace after the generator completes."
+          },
+          "stylesEntryPoint": {
+            "type": "string",
+            "description": "Path to the styles entry point relative to the workspace root. If not provided the generator will do its best to find it and it will error if it can't. This option only applies to applications."
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+      "implementation": "/packages/angular/src/generators/setup-tailwind/setup-tailwind.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/setup-tailwind/schema.json"
+    },
+    {
+      "name": "stories",
+      "factory": "./src/generators/stories/stories",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularStorybookStoriesGenerator",
+        "title": "Create Storybook stories/specs",
+        "description": "Creates Storybook stories/specs for all components declared in a project.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What's the name of the project for which you want to generate stories?"
+          },
+          "generateCypressSpecs": {
+            "type": "boolean",
+            "description": "Specifies whether to automatically generate `*.spec.ts` files in the Cypress e2e app generated by the `cypress-configure` generator.",
+            "x-prompt": "Do you want to generate Cypress specs as well?"
+          },
+          "cypressProject": {
+            "type": "string",
+            "description": "The Cypress project to generate the stories under. This is inferred from `name` by default."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Creates stories/specs for all components declared in a project.",
+      "implementation": "/packages/angular/src/generators/stories/stories.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/stories/schema.json"
+    },
+    {
+      "name": "storybook-configuration",
+      "factory": "./src/generators/storybook-configuration/storybook-configuration",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularStorybookConfigurationGenerator",
+        "title": "Adds Storybook configuration to a project.",
+        "description": "Adds Storybook configuration to a project to be able to use and create stories.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "configureCypress": {
+            "type": "boolean",
+            "description": "Specifies whether to configure Cypress or not.",
+            "x-prompt": "Configure a Cypress e2e app to run against the storybook instance?",
+            "default": true
+          },
+          "generateStories": {
+            "type": "boolean",
+            "description": "Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.",
+            "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
+            "default": true
+          },
+          "generateCypressSpecs": {
+            "type": "boolean",
+            "description": "Specifies whether to automatically generate `*.spec.ts` files in the generated Cypress e2e app.",
+            "x-prompt": "Automatically generate *.spec.ts files in the generated Cypress e2e app?",
+            "default": true
+          },
+          "cypressDirectory": {
+            "type": "string",
+            "description": "A directory where the Cypress project will be placed. Placed at the root by default."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "none"],
+            "default": "eslint"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Adds Storybook configuration to a project.",
+      "implementation": "/packages/angular/src/generators/storybook-configuration/storybook-configuration.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/storybook-configuration/schema.json"
+    },
+    {
+      "name": "storybook-migrate-defaults-5-to-6",
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxStorybookMigrateDefaults5To6Generator",
+        "title": "Storybook migrate default 5 to 6",
+        "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x.`",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "boolean",
+            "description": "Generate new Storybook configurations for all Storybook instances across all applications and libraries.",
+            "default": true
+          },
+          "keepOld": {
+            "type": "boolean",
+            "description": "Keep the old configuration files by placing them in a folder called `.old_storybook`.",
+            "default": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Library or application name for which you want to generate the new Storybook configuration. Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration.",
+            "$default": { "$source": "argv", "index": 0 }
+          }
+        },
+        "additionalProperties": false,
+        "required": [],
+        "presets": []
+      },
+      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "implementation": "/packages/angular/src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/storybook-migrate-defaults-5-to-6/schema.json"
+    },
+    {
+      "name": "storybook-migrate-stories-to-6-2",
+      "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularStorybookMigrateStoriesTo62Generator",
+        "title": "Storybook migrate stories to 6.2",
+        "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {},
+        "additionalProperties": false,
+        "required": [],
+        "presets": []
+      },
+      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
+      "implementation": "/packages/angular/src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/storybook-migrate-stories-to-6-2/schema.json"
+    },
+    {
+      "name": "upgrade-module",
+      "factory": "./src/generators/upgrade-module/upgrade-module",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxUpgradeModuleGenerator",
+        "title": "Generates UpgradeModule setup.",
+        "description": "Sets up an Upgrade Module.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the main AngularJS module.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "angularJsImport": {
+            "type": "string",
+            "description": "Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`)."
+          },
+          "angularJsCmpSelector": {
+            "type": "string",
+            "description": "The selector of an AngularJS component (e.g., `--angularJsCmpSelector=myComponent`)."
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files.",
+            "default": false
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "description": "Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).",
+            "default": false
+          },
+          "router": {
+            "type": "boolean",
+            "description": "Sets up router synchronization (e.g., `--router`).",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Sets up an Upgrade Module.",
+      "implementation": "/packages/angular/src/generators/upgrade-module/upgrade-module.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/upgrade-module/schema.json"
+    },
+    {
+      "name": "web-worker",
+      "factory": "./src/generators/web-worker/web-worker",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "NxAngularWebWorkerGenerator",
+        "title": "Angular Web Worker Options Schema",
+        "description": "Creates a new, generic web worker definition in the given or default project.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "path",
+            "description": "The path at which to create the worker file, relative to the current workspace."
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "$default": { "$source": "projectName" }
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the worker.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the worker?"
+          },
+          "snippet": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add a worker creation snippet in a sibling file of the same name."
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Creates a Web Worker.",
+      "implementation": "/packages/angular/src/generators/web-worker/web-worker.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/web-worker/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "delegate-build",
+      "implementation": "/packages/angular/src/executors/delegate-build/delegate-build.impl.ts",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "title": "Schema for an executor which delegates a build.",
+        "description": "Options for delegating a build to a different target.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "buildTarget": {
+            "description": "Build target used for building the application after its dependencies have been built.",
+            "type": "string"
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "The full path for the output directory, relative to the workspace root."
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The full path for the TypeScript configuration file, relative to the workspace root."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Whether to run a build when any file changes.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["buildTarget", "outputPath", "tsConfig"],
+        "presets": []
+      },
+      "description": "Delegates the build to a different target while supporting incremental builds.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/executors/delegate-build/schema.json"
+    },
+    {
+      "name": "ng-packagr-lite",
+      "implementation": "/packages/angular/src/executors/ng-packagr-lite/ng-packagr-lite.impl.ts",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "title": "ng-packagr Target",
+        "description": "ng-packagr target options for Build Architect. Use to build library projects.",
+        "cli": "nx",
+        "type": "object",
+        "presets": [
+          {
+            "name": "Buildable Library with Tailwind",
+            "keys": ["tailwindConfig"]
+          },
+          {
+            "name": "Updating Project Dependencies for Buildable Library",
+            "keys": [
+              "updateBuildableProjectDepsInPackageJson",
+              "buildableProjectDepsInPackageJsonType"
+            ]
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The file path for the ng-packagr configuration file, relative to the workspace root."
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The full path for the TypeScript configuration file, relative to the workspace root."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Whether to run a build when any file changes.",
+            "default": false
+          },
+          "updateBuildableProjectDepsInPackageJson": {
+            "type": "boolean",
+            "description": "Whether to update the buildable project dependencies in package.json.",
+            "default": true
+          },
+          "buildableProjectDepsInPackageJsonType": {
+            "type": "string",
+            "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+            "enum": ["dependencies", "peerDependencies"],
+            "default": "peerDependencies"
+          },
+          "tailwindConfig": {
+            "type": "string",
+            "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["project"]
+      },
+      "description": "Builds a library with support for incremental builds.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/executors/ng-packagr-lite/schema.json"
+    },
+    {
+      "name": "package",
+      "implementation": "/packages/angular/src/executors/package/package.impl.ts",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "title": "ng-packagr Target",
+        "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
+        "cli": "nx",
+        "type": "object",
+        "presets": [
+          {
+            "name": "Publishable Library with Tailwind",
+            "keys": ["tailwindConfig"]
+          },
+          {
+            "name": "Updating Project Dependencies for Publishable Library",
+            "keys": [
+              "updateBuildableProjectDepsInPackageJson",
+              "buildableProjectDepsInPackageJsonType"
+            ]
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The file path for the ng-packagr configuration file, relative to the workspace root."
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The full path for the TypeScript configuration file, relative to the workspace root."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Whether to run a build when any file changes.",
+            "default": false
+          },
+          "updateBuildableProjectDepsInPackageJson": {
+            "type": "boolean",
+            "description": "Whether to update the buildable project dependencies in package.json.",
+            "default": true
+          },
+          "buildableProjectDepsInPackageJsonType": {
+            "type": "string",
+            "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+            "enum": ["dependencies", "peerDependencies"],
+            "default": "peerDependencies"
+          },
+          "tailwindConfig": {
+            "type": "string",
+            "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["project"]
+      },
+      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/executors/package/schema.json"
+    },
+    {
+      "name": "webpack-browser",
+      "implementation": "/packages/angular/src/builders/webpack-browser/webpack-browser.impl.ts",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "title": "Schema for Webpack Browser",
+        "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
+        "examplesFile": "##### Using a custom webpack configuration\n\nThe executor supports providing a path to a custom webpack configuration. This allows you to customize how your Angular application is built. It currently supports the following types of webpack configurations:\n\n- `object`\n- `Function`\n- `Promise<object|Function>`\n\nThe executor will merge the provided configuration with the webpack configuration that Angular Devkit uses. The merge order is:\n\n- Angular Devkit Configuration\n- Provided Configuration\n\nTo use a custom webpack configuration when building your Angular application, change the `build` target in your `project.json` to match the following:\n\n```ts\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n}\n```\n\n##### Incrementally Building your Application\n\nThe executor supports incrementally building your Angular application by building the workspace libraries it depends on _(that have been marked as buildable)_ and then building your application using the built source of the libraries.\n\nThis can improve build time as the building of the workspace libraries can be cached, meaning they only have to be rebuilt if they have changed.\n\n> Note: There may be some additional overhead in the linking of the built libraries' sources which may reduce the overall improvement in build time. Therefore this approach only benefits large applications and would likely have a negative impact on small and medium applications.  \n> You can read more about when to use incremental builds [here](/ci/incremental-builds#when-should-i-use-incremental-builds).\n\nTo allow your Angular application to take advantage of incremental building, change the `build` target in your `project.json` to match the following:\n\n```ts\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"buildLibsFromSource\": false\n    }\n}\n```\n",
+        "type": "object",
+        "presets": [
+          {
+            "name": "Custom Webpack Configuration",
+            "keys": [
+              "outputs",
+              "outputPath",
+              "index",
+              "main",
+              "polyfills",
+              "tsConfig",
+              "assets",
+              "styles",
+              "scripts",
+              "customWebpackConfig"
+            ]
+          },
+          {
+            "name": "Incremental Builds",
+            "keys": [
+              "outputs",
+              "buildLibsFromSource",
+              "outputPath",
+              "index",
+              "main",
+              "polyfills",
+              "tsConfig",
+              "assets",
+              "styles",
+              "scripts"
+            ]
+          }
+        ],
+        "properties": {
+          "assets": {
+            "type": "array",
+            "description": "List of static application assets.",
+            "default": [],
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "followSymlinks": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Allow glob patterns to follow symlink directories. This allows subdirectories of the symlink to be searched."
+                    },
+                    "glob": {
+                      "type": "string",
+                      "description": "The pattern to match."
+                    },
+                    "input": {
+                      "type": "string",
+                      "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                    },
+                    "ignore": {
+                      "description": "An array of globs to ignore.",
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "output": {
+                      "type": "string",
+                      "description": "Absolute path within the output."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["glob", "input", "output"]
+                },
+                { "type": "string" }
+              ]
+            }
+          },
+          "main": {
+            "type": "string",
+            "description": "The full path for the main entry point to the app, relative to the current workspace."
+          },
+          "polyfills": {
+            "type": "string",
+            "description": "The full path for the polyfills file, relative to the current workspace."
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+          },
+          "scripts": {
+            "description": "Global scripts to be included in the build.",
+            "type": "array",
+            "default": [],
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                      "description": "The file to include."
+                    },
+                    "bundleName": {
+                      "type": "string",
+                      "pattern": "^[\\w\\-.]*$",
+                      "description": "The bundle name for this extra entry point."
+                    },
+                    "inject": {
+                      "type": "boolean",
+                      "description": "If the bundle will be referenced in the HTML file.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["input"]
+                },
+                { "type": "string", "description": "The file to include." }
+              ]
+            }
+          },
+          "styles": {
+            "description": "Global styles to be included in the build.",
+            "type": "array",
+            "default": [],
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                      "description": "The file to include."
+                    },
+                    "bundleName": {
+                      "type": "string",
+                      "pattern": "^[\\w\\-.]*$",
+                      "description": "The bundle name for this extra entry point."
+                    },
+                    "inject": {
+                      "type": "boolean",
+                      "description": "If the bundle will be referenced in the HTML file.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["input"]
+                },
+                { "type": "string", "description": "The file to include." }
+              ]
+            }
+          },
+          "inlineStyleLanguage": {
+            "description": "The stylesheet language to use for the application's inline component styles.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "less", "sass", "scss"]
+          },
+          "stylePreprocessorOptions": {
+            "description": "Options to pass to style preprocessors.",
+            "type": "object",
+            "properties": {
+              "includePaths": {
+                "description": "Paths to include. Paths will be resolved to project root.",
+                "type": "array",
+                "items": { "type": "string" },
+                "default": []
+              }
+            },
+            "additionalProperties": false
+          },
+          "optimization": {
+            "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
+            "x-user-analytics": 16,
+            "default": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "scripts": {
+                    "type": "boolean",
+                    "description": "Enables optimization of the scripts output.",
+                    "default": true
+                  },
+                  "styles": {
+                    "description": "Enables optimization of the styles output.",
+                    "default": true,
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minify": {
+                            "type": "boolean",
+                            "description": "Minify CSS definitions by removing extraneous whitespace and comments, merging identifiers and minimizing values.",
+                            "default": true
+                          },
+                          "inlineCritical": {
+                            "type": "boolean",
+                            "description": "Extract and inline critical CSS definitions to improve first paint time.",
+                            "default": true
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      { "type": "boolean" }
+                    ]
+                  },
+                  "fonts": {
+                    "description": "Enables optimization for fonts. This option requires internet access. `HTTPS_PROXY` environment variable can be used to specify a proxy server.",
+                    "default": true,
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "inline": {
+                            "type": "boolean",
+                            "description": "Reduce render blocking requests by inlining external Google Fonts and Adobe Fonts CSS definitions in the application's HTML index file. This option requires internet access. `HTTPS_PROXY` environment variable can be used to specify a proxy server.",
+                            "default": true
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      { "type": "boolean" }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              { "type": "boolean" }
+            ]
+          },
+          "fileReplacements": {
+            "description": "Replace compilation source files with other compilation source files in the build.",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "src": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    },
+                    "replaceWith": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["src", "replaceWith"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "replace": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    },
+                    "with": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["replace", "with"]
+                }
+              ]
+            },
+            "default": []
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+          },
+          "resourcesOutputPath": {
+            "type": "string",
+            "description": "The path where style resources will be placed, relative to outputPath.",
+            "default": ""
+          },
+          "aot": {
+            "type": "boolean",
+            "description": "Build using Ahead of Time compilation.",
+            "x-user-analytics": 13,
+            "default": true
+          },
+          "sourceMap": {
+            "description": "Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.",
+            "default": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "scripts": {
+                    "type": "boolean",
+                    "description": "Output source maps for all scripts.",
+                    "default": true
+                  },
+                  "styles": {
+                    "type": "boolean",
+                    "description": "Output source maps for all styles.",
+                    "default": true
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Output source maps used for error reporting tools.",
+                    "default": false
+                  },
+                  "vendor": {
+                    "type": "boolean",
+                    "description": "Resolve vendor packages source maps.",
+                    "default": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              { "type": "boolean" }
+            ]
+          },
+          "vendorChunk": {
+            "type": "boolean",
+            "description": "Generate a seperate bundle containing only vendor libraries. This option should only used for development.",
+            "default": false
+          },
+          "commonChunk": {
+            "type": "boolean",
+            "description": "Generate a seperate bundle containing code used across multiple bundles.",
+            "default": true
+          },
+          "baseHref": {
+            "type": "string",
+            "description": "Base url for the application being built."
+          },
+          "deployUrl": {
+            "type": "string",
+            "description": "URL where files will be deployed.",
+            "x-deprecated": "Use `baseHref` option, `APP_BASE_HREF` DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Adds more details to output logging.",
+            "default": false
+          },
+          "progress": {
+            "type": "boolean",
+            "description": "Log progress to the console while building.",
+            "default": true
+          },
+          "i18nMissingTranslation": {
+            "type": "string",
+            "description": "How to handle missing translations for i18n.",
+            "enum": ["warning", "error", "ignore"],
+            "default": "warning"
+          },
+          "i18nDuplicateTranslation": {
+            "type": "string",
+            "description": "How to handle duplicate translations for i18n.",
+            "enum": ["warning", "error", "ignore"],
+            "default": "warning"
+          },
+          "localize": {
+            "description": "Translate the bundles in one or more locales.",
+            "oneOf": [
+              { "type": "boolean", "description": "Translate all locales." },
+              {
+                "type": "array",
+                "description": "List of locales ID's to translate.",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-([a-zA-Z]{2}|[0-9]{3}))?(-[a-zA-Z]{5,8})?(-x(-[a-zA-Z0-9]{1,8})+)?$"
+                }
+              }
+            ]
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Run build when files change.",
+            "default": false
+          },
+          "outputHashing": {
+            "type": "string",
+            "description": "Define the output filename cache-busting hashing mode.",
+            "default": "none",
+            "enum": ["none", "all", "media", "bundles"]
+          },
+          "poll": {
+            "type": "number",
+            "description": "Enable and define the file watching poll time period in milliseconds."
+          },
+          "deleteOutputPath": {
+            "type": "boolean",
+            "description": "Delete the output path before building.",
+            "default": true
+          },
+          "preserveSymlinks": {
+            "type": "boolean",
+            "description": "Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set."
+          },
+          "extractLicenses": {
+            "type": "boolean",
+            "description": "Extract all licenses in a separate file.",
+            "default": true
+          },
+          "showCircularDependencies": {
+            "type": "boolean",
+            "description": "Show circular dependency warnings on builds.",
+            "default": false,
+            "x-deprecated": "The recommended method to detect circular dependencies in project code is to use either a lint rule or other external tooling."
+          },
+          "buildOptimizer": {
+            "type": "boolean",
+            "description": "Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.",
+            "default": true
+          },
+          "namedChunks": {
+            "type": "boolean",
+            "description": "Use file name for lazy loaded chunks.",
+            "default": false
+          },
+          "subresourceIntegrity": {
+            "type": "boolean",
+            "description": "Enables the use of subresource integrity validation.",
+            "default": false
+          },
+          "serviceWorker": {
+            "type": "boolean",
+            "description": "Generates a service worker config for production builds.",
+            "default": false
+          },
+          "ngswConfigPath": {
+            "type": "string",
+            "description": "Path to ngsw-config.json."
+          },
+          "index": {
+            "description": "Configures the generation of the application's HTML index.",
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "The path of a file to use for the application's HTML index. The filename of the specified path will be used for the generated file and will be created in the root of the application's configured output path."
+              },
+              {
+                "type": "object",
+                "description": "",
+                "properties": {
+                  "input": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The path of a file to use for the application's generated HTML index."
+                  },
+                  "output": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "index.html",
+                    "description": "The output path of the application's generated HTML index file. The full provided path will be used and will be considered relative to the application's configured output path."
+                  }
+                },
+                "required": ["input"]
+              }
+            ]
+          },
+          "statsJson": {
+            "type": "boolean",
+            "description": "Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.",
+            "default": false
+          },
+          "budgets": {
+            "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "The type of budget.",
+                  "enum": [
+                    "all",
+                    "allScript",
+                    "any",
+                    "anyScript",
+                    "anyComponentStyle",
+                    "bundle",
+                    "initial"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the bundle."
+                },
+                "baseline": {
+                  "type": "string",
+                  "description": "The baseline size for comparison."
+                },
+                "maximumWarning": {
+                  "type": "string",
+                  "description": "The maximum threshold for warning relative to the baseline."
+                },
+                "maximumError": {
+                  "type": "string",
+                  "description": "The maximum threshold for error relative to the baseline."
+                },
+                "minimumWarning": {
+                  "type": "string",
+                  "description": "The minimum threshold for warning relative to the baseline."
+                },
+                "minimumError": {
+                  "type": "string",
+                  "description": "The minimum threshold for error relative to the baseline."
+                },
+                "warning": {
+                  "type": "string",
+                  "description": "The threshold for warning relative to the baseline (min & max)."
+                },
+                "error": {
+                  "type": "string",
+                  "description": "The threshold for error relative to the baseline (min & max)."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["type"]
+            },
+            "default": []
+          },
+          "webWorkerTsConfig": {
+            "type": "string",
+            "description": "TypeScript configuration for Web Worker modules."
+          },
+          "crossOrigin": {
+            "type": "string",
+            "description": "Define the crossorigin attribute setting of elements that provide CORS support.",
+            "default": "none",
+            "enum": ["none", "anonymous", "use-credentials"]
+          },
+          "allowedCommonJsDependencies": {
+            "description": "A list of CommonJS packages that are allowed to be used without a build time warning.",
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "customWebpackConfig": {
+            "description": "Options for additional webpack configurations.",
+            "type": "object",
+            "properties": {
+              "path": {
+                "description": "Path to additional webpack configuration, relative to the workspace root.",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately.",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "required": ["outputPath", "index", "main", "tsConfig"],
+        "definitions": {
+          "assetPattern": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "followSymlinks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow glob patterns to follow symlink directories. This allows subdirectories of the symlink to be searched."
+                  },
+                  "glob": {
+                    "type": "string",
+                    "description": "The pattern to match."
+                  },
+                  "input": {
+                    "type": "string",
+                    "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                  },
+                  "ignore": {
+                    "description": "An array of globs to ignore.",
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "output": {
+                    "type": "string",
+                    "description": "Absolute path within the output."
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["glob", "input", "output"]
+              },
+              { "type": "string" }
+            ]
+          },
+          "fileReplacement": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "src": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  },
+                  "replaceWith": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["src", "replaceWith"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "replace": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  },
+                  "with": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["replace", "with"]
+              }
+            ]
+          },
+          "extraEntryPoint": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string",
+                    "description": "The file to include."
+                  },
+                  "bundleName": {
+                    "type": "string",
+                    "pattern": "^[\\w\\-.]*$",
+                    "description": "The bundle name for this extra entry point."
+                  },
+                  "inject": {
+                    "type": "boolean",
+                    "description": "If the bundle will be referenced in the HTML file.",
+                    "default": true
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["input"]
+              },
+              { "type": "string", "description": "The file to include." }
+            ]
+          },
+          "budget": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of budget.",
+                "enum": [
+                  "all",
+                  "allScript",
+                  "any",
+                  "anyScript",
+                  "anyComponentStyle",
+                  "bundle",
+                  "initial"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the bundle."
+              },
+              "baseline": {
+                "type": "string",
+                "description": "The baseline size for comparison."
+              },
+              "maximumWarning": {
+                "type": "string",
+                "description": "The maximum threshold for warning relative to the baseline."
+              },
+              "maximumError": {
+                "type": "string",
+                "description": "The maximum threshold for error relative to the baseline."
+              },
+              "minimumWarning": {
+                "type": "string",
+                "description": "The minimum threshold for warning relative to the baseline."
+              },
+              "minimumError": {
+                "type": "string",
+                "description": "The minimum threshold for error relative to the baseline."
+              },
+              "warning": {
+                "type": "string",
+                "description": "The threshold for warning relative to the baseline (min & max)."
+              },
+              "error": {
+                "type": "string",
+                "description": "The threshold for error relative to the baseline (min & max)."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["type"]
+          }
+        }
+      },
+      "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/builders/webpack-browser/schema.json"
+    },
+    {
+      "name": "webpack-server",
+      "implementation": "/packages/angular/src/builders/webpack-server/webpack-server.impl.ts",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "title": "Schema for Webpack Server",
+        "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nrwl/angular:webpack-server\",\n    \"configurations\": {\n        \"production\": {\n            \"browserTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"browserTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
+        "type": "object",
+        "presets": [
+          {
+            "name": "Using a Different Port",
+            "keys": ["browserTarget", "port"]
+          }
+        ],
+        "properties": {
+          "browserTarget": {
+            "type": "string",
+            "description": "A browser builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
+            "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 4200
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          },
+          "proxyConfig": {
+            "type": "string",
+            "description": "Proxy configuration file. For more information, see https://angular.io/guide/build#proxying-to-a-backend-server."
+          },
+          "ssl": {
+            "type": "boolean",
+            "description": "Serve using HTTPS.",
+            "default": false
+          },
+          "sslKey": {
+            "type": "string",
+            "description": "SSL key to use for serving HTTPS."
+          },
+          "sslCert": {
+            "type": "string",
+            "description": "SSL certificate to use for serving HTTPS."
+          },
+          "headers": {
+            "type": "object",
+            "description": "Custom HTTP headers to be added to all responses.",
+            "propertyNames": { "pattern": "^[-_A-Za-z0-9]+$" },
+            "additionalProperties": { "type": "string" }
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Opens the url in default browser.",
+            "default": false,
+            "alias": "o"
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Adds more details to output logging."
+          },
+          "liveReload": {
+            "type": "boolean",
+            "description": "Whether to reload the page on change, using live-reload.",
+            "default": true
+          },
+          "publicHost": {
+            "type": "string",
+            "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+          },
+          "allowedHosts": {
+            "type": "array",
+            "description": "List of hosts that are allowed to access the dev server.",
+            "default": [],
+            "items": { "type": "string" }
+          },
+          "servePath": {
+            "type": "string",
+            "description": "The pathname where the app will be served."
+          },
+          "disableHostCheck": {
+            "type": "boolean",
+            "description": "Don't verify connected clients are part of allowed hosts.",
+            "default": false
+          },
+          "hmr": {
+            "type": "boolean",
+            "description": "Enable hot module replacement.",
+            "default": false
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Rebuild on change.",
+            "default": true
+          },
+          "poll": {
+            "type": "number",
+            "description": "Enable and define the file watching poll time period in milliseconds."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["browserTarget"]
+      },
+      "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/builders/webpack-server/schema.json"
+    }
+  ]
+}

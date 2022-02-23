@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestDecoratorGenerator",
-  "title": "Nest Decorator Options Schema.",
+  "title": "Nest Decorator Options Schema",
+  "description": "Nest Decorator Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxKarmaProjectGenerator",
   "title": "Create Karma Configuration for a project",
+  "description": "Add Karma configuration to an angular project.",
   "cli": "nx",
   "type": "object",
   "properties": {

@@ -3,15 +3,16 @@
   "cli": "nx",
   "$id": "NxReactLibrary",
   "title": "Create a React Library for Nx",
+  "description": "Create a React Library for an Nx workspace.",
   "type": "object",
   "examples": [
     {
-      "command": "g lib mylib --directory=myapp",
-      "description": "Generate libs/myapp/mylib"
+      "command": "nx g lib mylib --directory=myapp",
+      "description": "Generate `libs/myapp/mylib`"
     },
     {
-      "command": "g lib mylib --appProject=myapp",
-      "description": "Generate a library with routes and add them to myapp"
+      "command": "nx g lib mylib --appProject=myapp",
+      "description": "Generate a library with routes and add them to `myapp`"
     }
   ],
   "properties": {
@@ -100,7 +101,7 @@
     },
     "pascalCaseFiles": {
       "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
+      "description": "Use pascal case component file name (e.g. `App.tsx`).",
       "alias": "P",
       "default": false
     },
@@ -124,7 +125,7 @@
     },
     "importPath": {
       "type": "string",
-      "description": "The library name used to import it, like @myorg/my-awesome-lib"
+      "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
     },
     "component": {
       "type": "boolean",
@@ -138,7 +139,7 @@
     },
     "globalCss": {
       "type": "boolean",
-      "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is '*.css' rather than '*.module.css').",
+      "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is `*.css` rather than `*.module.css`).",
       "default": false
     },
     "strict": {
@@ -148,11 +149,11 @@
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
       "type": "boolean"
     }
   },

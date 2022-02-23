@@ -3,22 +3,23 @@
   "cli": "nx",
   "$id": "NxNextNgInit",
   "title": "Init Next Plugin",
+  "description": "Init Next Plugin.",
   "type": "object",
   "properties": {
     "unitTestRunner": {
-      "description": "Adds the specified unit test runner",
+      "description": "Adds the specified unit test runner.",
       "type": "string",
       "enum": ["jest", "none"],
       "default": "jest"
     },
     "e2eTestRunner": {
-      "description": "Adds the specified e2e test runner",
+      "description": "Adds the specified e2e test runner.",
       "type": "string",
       "enum": ["cypress", "none"],
       "default": "cypress"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     }

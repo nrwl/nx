@@ -1,0 +1,282 @@
+[
+  {
+    "name": "add-nx-to-monorepo",
+    "path": "generated/packages/add-nx-to-monorepo.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "angular",
+    "path": "generated/packages/angular.json",
+    "schemas": {
+      "executors": [
+        "delegate-build",
+        "ng-packagr-lite",
+        "package",
+        "webpack-browser",
+        "webpack-server"
+      ],
+      "generators": [
+        "add-linting",
+        "application",
+        "component",
+        "component-cypress-spec",
+        "component-story",
+        "convert-tslint-to-eslint",
+        "downgrade-module",
+        "init",
+        "karma",
+        "karma-project",
+        "library",
+        "library-secondary-entry-point",
+        "mfe-remote",
+        "move",
+        "convert-to-with-mf",
+        "mfe-host",
+        "ng-add",
+        "ngrx",
+        "scam",
+        "scam-directive",
+        "scam-pipe",
+        "setup-mfe",
+        "setup-tailwind",
+        "stories",
+        "storybook-configuration",
+        "storybook-migrate-defaults-5-to-6",
+        "storybook-migrate-stories-to-6-2",
+        "upgrade-module",
+        "web-worker"
+      ]
+    }
+  },
+  {
+    "name": "cli",
+    "path": "generated/packages/cli.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "cra-to-nx",
+    "path": "generated/packages/cra-to-nx.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "create-nx-plugin",
+    "path": "generated/packages/create-nx-plugin.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "create-nx-workspace",
+    "path": "generated/packages/create-nx-workspace.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "cypress",
+    "path": "generated/packages/cypress.json",
+    "schemas": {
+      "executors": ["cypress"],
+      "generators": ["init", "cypress-project"]
+    }
+  },
+  {
+    "name": "detox",
+    "path": "generated/packages/detox.json",
+    "schemas": {
+      "executors": ["build", "test"],
+      "generators": ["init", "application"]
+    }
+  },
+  {
+    "name": "devkit",
+    "path": "generated/packages/devkit.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "eslint-plugin-nx",
+    "path": "generated/packages/eslint-plugin-nx.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "express",
+    "path": "generated/packages/express.json",
+    "schemas": { "executors": [], "generators": ["init", "application"] }
+  },
+  {
+    "name": "jest",
+    "path": "generated/packages/jest.json",
+    "schemas": { "executors": ["jest"], "generators": ["init", "jest-project"] }
+  },
+  {
+    "name": "js",
+    "path": "generated/packages/js.json",
+    "schemas": {
+      "executors": ["tsc", "swc"],
+      "generators": ["library", "convert-to-swc"]
+    }
+  },
+  {
+    "name": "linter",
+    "path": "generated/packages/linter.json",
+    "schemas": {
+      "executors": ["lint", "eslint"],
+      "generators": ["workspace-rules-project", "workspace-rule"]
+    }
+  },
+  {
+    "name": "make-angular-cli-faster",
+    "path": "generated/packages/make-angular-cli-faster.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "nest",
+    "path": "generated/packages/nest.json",
+    "schemas": {
+      "executors": [],
+      "generators": [
+        "application",
+        "convert-tslint-to-eslint",
+        "init",
+        "library",
+        "class",
+        "controller",
+        "decorator",
+        "filter",
+        "gateway",
+        "guard",
+        "interceptor",
+        "interface",
+        "middleware",
+        "module",
+        "pipe",
+        "provider",
+        "resolver",
+        "resource",
+        "service"
+      ]
+    }
+  },
+  {
+    "name": "next",
+    "path": "generated/packages/next.json",
+    "schemas": {
+      "executors": ["build", "server", "export"],
+      "generators": ["init", "application", "page", "component", "library"]
+    }
+  },
+  {
+    "name": "node",
+    "path": "generated/packages/node.json",
+    "schemas": {
+      "executors": ["webpack", "node"],
+      "generators": ["init", "application", "library"]
+    }
+  },
+  {
+    "name": "nx",
+    "path": "generated/packages/nx.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "nx-plugin",
+    "path": "generated/packages/nx-plugin.json",
+    "schemas": {
+      "executors": ["e2e"],
+      "generators": [
+        "plugin",
+        "e2e-project",
+        "migration",
+        "generator",
+        "executor"
+      ]
+    }
+  },
+  {
+    "name": "react",
+    "path": "generated/packages/react.json",
+    "schemas": {
+      "executors": [],
+      "generators": [
+        "init",
+        "application",
+        "library",
+        "component",
+        "redux",
+        "storybook-configuration",
+        "storybook-migrate-defaults-5-to-6",
+        "component-story",
+        "stories",
+        "component-cypress-spec",
+        "hook"
+      ]
+    }
+  },
+  {
+    "name": "react-native",
+    "path": "generated/packages/react-native.json",
+    "schemas": {
+      "executors": [
+        "run-android",
+        "run-ios",
+        "bundle",
+        "build-android",
+        "start",
+        "sync-deps",
+        "ensure-symlink",
+        "storybook"
+      ],
+      "generators": [
+        "init",
+        "application",
+        "library",
+        "component",
+        "storybook-configuration",
+        "component-story",
+        "stories"
+      ]
+    }
+  },
+  {
+    "name": "storybook",
+    "path": "generated/packages/storybook.json",
+    "schemas": {
+      "executors": ["storybook", "build"],
+      "generators": [
+        "init",
+        "configuration",
+        "cypress-project",
+        "migrate-defaults-5-to-6",
+        "migrate-stories-to-6-2"
+      ]
+    }
+  },
+  {
+    "name": "tao",
+    "path": "generated/packages/tao.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "web",
+    "path": "generated/packages/web.json",
+    "schemas": {
+      "executors": ["webpack", "rollup", "dev-server", "file-server"],
+      "generators": ["init", "application"]
+    }
+  },
+  {
+    "name": "workspace",
+    "path": "generated/packages/workspace.json",
+    "schemas": {
+      "executors": ["run-commands", "counter", "run-script"],
+      "generators": [
+        "workspace",
+        "preset",
+        "move",
+        "remove",
+        "new",
+        "library",
+        "workspace-generator",
+        "run-commands",
+        "convert-to-nx-project",
+        "npm-package"
+      ]
+    }
+  }
+]

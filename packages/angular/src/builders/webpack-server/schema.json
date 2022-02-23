@@ -4,6 +4,12 @@
   "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
   "examplesFile": "../../../docs/webpack-server-examples.md",
   "type": "object",
+  "presets": [
+    {
+      "name": "Using a Different Port",
+      "keys": ["browserTarget", "port"]
+    }
+  ],
   "properties": {
     "browserTarget": {
       "type": "string",

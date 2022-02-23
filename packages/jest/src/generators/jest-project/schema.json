@@ -3,6 +3,7 @@
   "$id": "NxJestProject",
   "cli": "nx",
   "title": "Add Jest Configuration to a project",
+  "description": "Add Jest Configuration to a project",
   "type": "object",
   "properties": {
     "project": {
@@ -14,42 +15,42 @@
     },
     "skipSetupFile": {
       "type": "boolean",
-      "description": "[Deprecated]: Skips the setup file required for angular. (Use --setup-file)",
+      "description": "[Deprecated]: Skips the setup file required for angular. (Use `--setup-file`)",
       "default": false,
       "x-deprecated": true
     },
     "setupFile": {
       "type": "string",
       "enum": ["none", "angular", "web-components"],
-      "description": "The setup file to be generated",
+      "description": "The setup file to be generated.",
       "default": "none"
     },
     "skipSerializers": {
       "type": "boolean",
-      "description": "Skips the serializers required to snapshot angular templates",
+      "description": "Skips the serializers required to snapshot angular templates.",
       "default": false
     },
     "supportTsx": {
       "type": "boolean",
-      "description": "Setup tsx support",
+      "description": "Setup `tsx` support.",
       "default": false
     },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
-      "description": "The test environment for jest",
+      "description": "The test environment for jest.",
       "default": "jsdom"
     },
     "compiler": {
       "type": "string",
       "enum": ["tsc", "babel", "swc"],
-      "description": "The compiler to use for source and tests",
+      "description": "The compiler to use for source and tests.",
       "default": "tsc"
     },
     "babelJest": {
       "type": "boolean",
       "alias": "babel-jest",
-      "description": "Use babel-jest instead of ts-jest (Deprecated: Use --compiler=babel instead)",
+      "description": "Use `babel-jest` instead of `ts-jest` (Deprecated: Use `--compiler=babel` instead).",
       "x-deprecated": true,
       "default": false
     },
