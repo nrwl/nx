@@ -8,9 +8,9 @@ using a monorepo approach. If you are currently using an Angular CLI workspace, 
 - The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to. For example, if you're using Angular CLI version 7, you must transition using the latest version 7 release of Nx.
 - Currently, transforming an Angular CLI workspace to an Nx workspace automatically only supports a single project. If you have more than one project in your Angular CLI workspace, you can still migrate manually.
 
-## Using ng add and preserving your existing structure
+## Using the Nx CLI while preserving the existing structure
 
-To add Nx to an existing Angular CLI workspace to an Nx workspace, with keeping your existing file structure in place, use the `ng add` command with the `--preserveAngularCLILayout` option:
+To use the Nx CLI in an existing Angular CLI workspace while keeping your existing file structure in place, use the `ng add` command with the `--preserveAngularCLILayout` option:
 
 ```bash
 ng add @nrwl/workspace --preserveAngularCLILayout
@@ -19,14 +19,14 @@ ng add @nrwl/workspace --preserveAngularCLILayout
 This installs the `@nrwl/workspace` package into your workspace and applies the following changes to your workspace:
 
 - Adds and installs the `@nrwl/workspace` package in your development dependencies.
-- Creates an nx.json file in the root of your workspace.
-- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI(nx) to enable features such as Computation Caching.
+- Creates an `nx.json` file in the root of your workspace.
+- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/using-nx/caching).
 
-After the process completes, you continue using the same serve/build/lint/test commands.
+After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
 
-## Using ng add
+## Transforming an Angular CLI workspace to an Nx workspace
 
-To transform a Angular CLI workspace to an Nx workspace, use the `ng add` command:
+To transform an Angular CLI workspace to an Nx workspace, run the following command:
 
 ```bash
 ng add @nrwl/workspace
@@ -34,8 +34,8 @@ ng add @nrwl/workspace
 
 This installs the `@nrwl/workspace` package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
-- Installs the packages for the `Nx` plugin `@nrwl/angular` in your package.json.
-- Creates an nx.json file in the root of your workspace.
+- Installs the packages for the `Nx` plugin `@nrwl/angular` in your `package.json`.
+- Creates an `nx.json` file in the root of your workspace.
 - Creates configuration files for Prettier.
 - Creates an `apps` folder for generating applications.
 - Creates a `libs` folder for generating libraries.
@@ -45,7 +45,7 @@ This installs the `@nrwl/workspace` package into your workspace and runs a gener
 - Updates your `package.json` with scripts to run various `Nx` workspace commands.
 - Updates your `angular.json` configuration to reflect the new paths.
 
-After the changes are applied, your workspace file structure should look similar to below:
+After the changes are applied, your workspace file structure should look similar to the one below:
 
 ```treeview
 <workspace name>/
@@ -61,20 +61,26 @@ After the changes are applied, your workspace file structure should look similar
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.css
 │   │   │   └── test.ts
-│   │   ├── browserslist
+│   │   ├── .browserslistrc
 │   │   ├── karma.conf.js
 │   │   ├── tsconfig.app.json
 │   │   └── tsconfig.spec.json
 │   └── <app name>-e2e/
 │       ├── src/
-│       ├── protractor.conf.js
+│       ├── protractor.conf.js | cypress.json
 │       └── tsconfig.json
 ├── libs/
 ├── tools/
-├── README.md
+├── .editorconfig
+├── .gitignore
+├── .prettierignore
+├── .prettierrc
 ├── angular.json
+├── decorate-angular-cli.js
+├── karma.conf.js
 ├── nx.json
 ├── package.json
+├── README.md
 └── tsconfig.base.json
 ```
 
