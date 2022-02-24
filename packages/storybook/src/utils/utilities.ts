@@ -4,7 +4,7 @@ import { storybookVersion } from './versions';
 import { StorybookConfig } from '../executors/models';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 import { tmpdir } from 'os';
-import { basename, join, sep } from 'path';
+import { basename, isAbsolute, join, sep } from 'path';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -152,24 +152,41 @@ export function findOrCreateConfig(
   config: StorybookConfig,
   context: ExecutorContext
 ): string {
-  if (config.configFolder && statSync(config.configFolder).isDirectory()) {
-    return config.configFolder;
-  } else if (
-    statSync(config.configPath).isFile() &&
-    statSync(config.pluginPath).isFile() &&
-    statSync(config.srcRoot).isFile()
+  if (config.configFolder) {
+    // users may have set absolute paths prior to complete relative path support
+    if (isAbsolute(config.configFolder)) {
+      return config.configFolder;
+    }
+
+    // support relative path to config from anywhere in the monorepo
+    // "relative" to the context root
+    const relativePath = join(context.root, config.configFolder);
+    if (statSync(relativePath).isDirectory()) {
+      return relativePath;
+    }
+  }
+
+  if (
+    config.configPath &&
+    statSync(join(context.root, config.configPath)).isFile() &&
+    config.pluginPath &&
+    statSync(join(context.root, config.pluginPath)).isFile() &&
+    config.srcRoot &&
+    statSync(join(context.root, config.srcRoot)).isFile()
   ) {
     return createStorybookConfig(
       config.configPath,
       config.pluginPath,
       config.srcRoot
     );
-  } else {
-    const sourceRoot = context.workspace.projects[context.projectName].root;
-    if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
-      return join(context.root, sourceRoot, '.storybook');
-    }
   }
+
+  const sourceRoot = context.workspace.projects[context.projectName].root;
+  const fullPath = join(context.root, sourceRoot, '.storybook');
+  if (statSync(fullPath).isDirectory()) {
+    return fullPath;
+  }
+
   throw new Error('No configuration settings');
 }
 
