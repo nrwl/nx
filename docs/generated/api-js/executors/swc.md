@@ -35,6 +35,16 @@ Type: `array`
 
 List of static assets.
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
+
 ### skipTypeCheck
 
 Default: `false`
@@ -48,6 +58,14 @@ Whether to skip TypeScript type checking.
 Type: `array`
 
 List of SWC Glob/Regex to be excluded from compilation (https://swc.rs/docs/configuration/compilation#exclude)
+
+### updateBuildableProjectDepsInPackageJson
+
+Default: `true`
+
+Type: `boolean`
+
+Whether to update the buildable project dependencies in package.json.
 
 ### watch
 

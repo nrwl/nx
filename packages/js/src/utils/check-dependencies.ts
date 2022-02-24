@@ -1,11 +1,11 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
+  DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { join } from 'path';
 
 export function checkDependencies(
   context: ExecutorContext,
@@ -13,6 +13,8 @@ export function checkDependencies(
 ): {
   tmpTsConfig: string | null;
   projectRoot: string;
+  target: ProjectGraphProjectNode<any>;
+  dependencies: DependentBuildableProjectNode[];
 } {
   const projectGraph = readCachedProjectGraph();
   const { target, dependencies, nonBuildableDependencies } =
@@ -55,11 +57,15 @@ export function checkDependencies(
         dependencies
       ),
       projectRoot,
+      target,
+      dependencies,
     };
   }
 
   return {
     tmpTsConfig: null,
     projectRoot,
+    target,
+    dependencies,
   };
 }

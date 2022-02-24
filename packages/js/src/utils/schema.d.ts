@@ -36,6 +36,8 @@ export interface ExecutorOptions {
   tsConfig: string;
   watch: boolean;
   transformers: TransformerEntry[];
+  updateBuildableProjectDepsInPackageJson?: boolean;
+  buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {

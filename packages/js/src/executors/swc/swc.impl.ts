@@ -1,8 +1,9 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { join, relative, resolve } from 'path';
 
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -18,7 +19,6 @@ import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-cha
 
 function normalizeOptions(
   options: SwcExecutorOptions,
-  layoutDir: string,
   contextRoot: string,
   sourceRoot?: string,
   projectRoot?: string
@@ -71,14 +71,17 @@ function normalizeOptions(
 function processAssetsAndPackageJsonOnce(
   assetHandler: CopyAssetsHandler,
   options: NormalizedSwcExecutorOptions,
-  projectRoot: string
+  context: ExecutorContext,
+  target: ProjectGraphProjectNode<any>,
+  dependencies: DependentBuildableProjectNode[]
 ) {
   return async () => {
     await assetHandler.processAllAssetsOnce();
     updatePackageJson(
-      options.main,
-      options.outputPath,
-      projectRoot,
+      options,
+      context,
+      target,
+      dependencies,
       !options.skipTypeCheck
     );
   };
@@ -88,21 +91,10 @@ export async function* swcExecutor(
   _options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
-  const { sourceRoot, root, projectType } =
-    context.workspace.projects[context.projectName];
-  const layoutDir =
-    projectType === 'library'
-      ? context.workspace.workspaceLayout.libsDir
-      : context.workspace.workspaceLayout.appsDir;
-  const options = normalizeOptions(
-    _options,
-    layoutDir,
-    context.root,
-    sourceRoot,
-    root
-  );
+  const { sourceRoot, root } = context.workspace.projects[context.projectName];
+  const options = normalizeOptions(_options, context.root, sourceRoot, root);
   options.swcCliOptions.swcrcPath = addTempSwcrc(options);
-  const { tmpTsConfig, projectRoot } = checkDependencies(
+  const { tmpTsConfig, projectRoot, target, dependencies } = checkDependencies(
     context,
     options.tsConfig
   );
@@ -126,9 +118,10 @@ export async function* swcExecutor(
       'package.json',
       () =>
         updatePackageJson(
-          options.main,
-          options.outputPath,
-          projectRoot,
+          options,
+          context,
+          target,
+          dependencies,
           !options.skipTypeCheck
         )
     );
@@ -144,13 +137,25 @@ export async function* swcExecutor(
     return yield* compileSwcWatch(
       context,
       options,
-      processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+      processAssetsAndPackageJsonOnce(
+        assetHandler,
+        options,
+        context,
+        target,
+        dependencies
+      )
     );
   } else {
     return yield compileSwc(
       context,
       options,
-      processAssetsAndPackageJsonOnce(assetHandler, options, projectRoot)
+      processAssetsAndPackageJsonOnce(
+        assetHandler,
+        options,
+        context,
+        target,
+        dependencies
+      )
     );
   }
 }

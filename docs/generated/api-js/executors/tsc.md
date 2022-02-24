@@ -35,11 +35,29 @@ Type: `array`
 
 List of static assets.
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
+
 ### transformers
 
 Type: `array`
 
 List of TypeScript Transformer Plugins.
+
+### updateBuildableProjectDepsInPackageJson
+
+Default: `true`
+
+Type: `boolean`
+
+Whether to update the buildable project dependencies in package.json.
 
 ### watch
 
