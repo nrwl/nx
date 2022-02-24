@@ -13,10 +13,11 @@ import {
   readFile,
   runCommandUntil,
   promisifiedTreeKill,
+  createFile,
 } from '@nrwl/e2e/utils';
 import { ChildProcess } from 'child_process';
 
-import { names } from '@nrwl/devkit';
+import { joinPathFragments, names } from '@nrwl/devkit';
 
 describe('Angular Projects', () => {
   let proj: string;
@@ -293,4 +294,57 @@ describe('Angular Projects', () => {
       expect(err).toBeFalsy();
     }
   }, 300000);
+
+  it('should allow additional configurations when building', () => {
+    // ARRANGE
+    const app = uniq('app');
+    runCLI(`generate @nrwl/angular:app ${app} --no-interactive`);
+
+    let pathToStageEnv = '';
+
+    updateProjectConfig(app, (config) => {
+      pathToStageEnv = joinPathFragments(
+        config.sourceRoot,
+        '/environments/environment.stage.ts'
+      );
+
+      config.targets.build.executor = '@nrwl/angular:webpack-browser';
+
+      config.targets.build.configurations['stage'] = {
+        fileReplacements: [
+          {
+            replace: `${joinPathFragments(
+              config.sourceRoot,
+              '/environments/environment.ts'
+            )}`,
+            with: pathToStageEnv,
+          },
+        ],
+      };
+
+      config.targets.build.configurations['nohash'] = {
+        outputHashing: 'none',
+      };
+
+      return config;
+    });
+
+    createFile(
+      pathToStageEnv,
+      `export const environment = {
+      production: false
+    }
+    
+    console.log("This is from the staging env");`
+    );
+
+    // ACT
+    runCLI(`build ${app} --additionalConfigurations=stage,nohash`);
+
+    // ASSERT
+    checkFilesExist(`dist/apps/${app}/main.js`);
+
+    const mainBundle = readFile(`dist/apps/${app}/main.js`);
+    expect(mainBundle).toContain('This is from the staging env');
+  });
 });
