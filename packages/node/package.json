@@ -33,6 +33,7 @@
     "@nrwl/workspace": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
+    "@nrwl/js": "*",
     "@nrwl/linter": "*",
     "chalk": "4.1.0",
     "copy-webpack-plugin": "^9.0.1",

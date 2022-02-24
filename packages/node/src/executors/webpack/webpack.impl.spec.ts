@@ -2,7 +2,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { of } from 'rxjs';
 import * as projectGraph from '@nrwl/workspace/src/core/project-graph';
 import type { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import buildExecutor from './build.impl';
+import webpackExecutor from './webpack.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 
 jest.mock('tsconfig-paths-webpack-plugin');
@@ -51,7 +51,7 @@ describe('Node Build Executor', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('should call webpack', async () => {
-    await buildExecutor(options, context).next();
+    await webpackExecutor(options, context).next();
 
     expect(runWebpack).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -65,7 +65,7 @@ describe('Node Build Executor', () => {
   });
 
   it('should use outputFileName if passed in', async () => {
-    await buildExecutor(
+    await webpackExecutor(
       { ...options, outputFileName: 'index.js' },
       context
     ).next();
@@ -88,7 +88,7 @@ describe('Node Build Executor', () => {
         () => (options) => ({ ...options, prop: 'my-val' }),
         { virtual: true }
       );
-      await buildExecutor(
+      await webpackExecutor(
         { ...options, webpackConfig: 'config.js' },
         context
       ).next();
@@ -120,7 +120,7 @@ describe('Node Build Executor', () => {
         }),
         { virtual: true }
       );
-      await buildExecutor(
+      await webpackExecutor(
         { ...options, webpackConfig: ['config1.js', 'config2.js'] },
         context
       ).next();

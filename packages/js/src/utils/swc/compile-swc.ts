@@ -2,16 +2,15 @@ import { ExecutorContext, logger } from '@nrwl/devkit';
 import { cacheDir } from '@nrwl/workspace/src/utilities/cache-directory';
 import { exec, execSync } from 'child_process';
 import { createAsyncIterable } from '../create-async-iterable/create-async-iteratable';
-import { NormalizedSwcExecutorOptions } from '../schema';
+import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 
 function getSwcCmd(
-  normalizedOptions: NormalizedSwcExecutorOptions,
+  { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  const srcPath = `../${normalizedOptions.swcCliOptions.projectDir}`;
-  let swcCmd = `npx swc ${srcPath} -d ${normalizedOptions.swcCliOptions.destPath} --source-maps --no-swcrc --config-file=${normalizedOptions.swcrcPath}`;
+  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --no-swcrc --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
@@ -40,8 +39,8 @@ export async function compileSwc(
 ) {
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
-  const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
-    cwd: normalizedOptions.projectRoot,
+  const swcCmdLog = execSync(getSwcCmd(normalizedOptions.swcCliOptions), {
+    cwd: normalizedOptions.swcCliOptions.swcCwd,
   }).toString();
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
@@ -85,9 +84,10 @@ export async function* compileSwcWatch(
       let stderrOnData: () => void;
       let watcherOnExit: () => void;
 
-      const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
-        cwd: normalizedOptions.projectRoot,
-      });
+      const swcWatcher = exec(
+        getSwcCmd(normalizedOptions.swcCliOptions, true),
+        { cwd: normalizedOptions.swcCliOptions.swcCwd }
+      );
 
       processOnExit = () => {
         swcWatcher.kill();

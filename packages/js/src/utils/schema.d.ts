@@ -52,19 +52,15 @@ export interface SwcExecutorOptions extends ExecutorOptions {
 }
 
 export interface SwcCliOptions {
-  projectDir: string;
+  srcPath: string;
   destPath: string;
+  swcrcPath: string;
+  swcCwd: string;
 }
 
 export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
   swcExclude: string[];
   skipTypeCheck: boolean;
-  swcrcPath: string;
   swcCliOptions: SwcCliOptions;
-}
-
-export interface ExecutorEvent {
-  outfile: string;
-  success: boolean;
 }

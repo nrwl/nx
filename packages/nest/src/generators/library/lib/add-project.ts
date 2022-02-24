@@ -13,7 +13,7 @@ export function addProject(tree: Tree, options: NormalizedOptions): void {
 
   const project = readProjectConfiguration(tree, options.projectName);
   project.targets.build = {
-    executor: '@nrwl/node:package',
+    executor: '@nrwl/js:tsc',
     outputs: ['{options.outputPath}'],
     options: {
       outputPath: `dist/${getWorkspaceLayout(tree).libsDir}/${

@@ -38,7 +38,13 @@
     "swcExclude": {
       "type": "array",
       "description": "List of SWC Glob/Regex to be excluded from compilation (https://swc.rs/docs/configuration/compilation#exclude)",
-      "default": ["./src/**/.*.spec.ts$", "./**/.*.js$"]
+      "default": [
+        "./src/**/.*.spec.ts$",
+        "./**/.*.spec.ts$",
+        "./src/**/jest-setup.ts$",
+        "./**/jest-setup.ts$",
+        "./**/.*.js$"
+      ]
     }
   },
   "required": ["main", "outputPath", "tsConfig"],
