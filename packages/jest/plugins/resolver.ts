@@ -1,3 +1,8 @@
+// allow tspaths to work within jest global files like setup/teardown
+process.env.TS_NODE_PROJECT =
+  process.env.TS_NODE_PROJECT || 'tsconfig.base.json';
+require('tsconfig-paths/register');
+
 import { dirname, extname } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import type defaultResolver from 'jest-resolve/build/defaultResolver';

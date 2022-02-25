@@ -8,7 +8,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {
-  beforeEach(() => newProject());
+  beforeAll(() => {
+    newProject({ name: uniq('proj') });
+  });
 
   it('should be able test projects using jest', async () => {
     const mylib = uniq('mylib');
@@ -23,7 +25,18 @@ describe('Jest', () => {
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
+    const utilLib = uniq('util-lib');
     runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+    runCLI(
+      `generate @nrwl/workspace:lib ${utilLib} --importPath=@global-fun/globals`
+    );
+    updateFile(
+      `libs/${utilLib}/src/index.ts`,
+      stripIndents`
+      export function setup() {console.log('i am a global setup function')}
+      export function teardown() {console.log('i am a global teardown function')}
+    `
+    );
 
     updateFile(`libs/${mylib}/src/lib/${mylib}.ts`, `export class Test { }`);
 
@@ -34,6 +47,22 @@ describe('Jest', () => {
             expect((global as any).testGlobal).toBe(${testGlobal});
           });
         `
+    );
+
+    updateFile(
+      `libs/${mylib}/setup.ts`,
+      stripIndents`
+      import {setup} from '@global-fun/globals'; 
+      export default async function() {setup();}
+    `
+    );
+
+    updateFile(
+      `libs/${mylib}/teardown.ts`,
+      stripIndents`
+      import {teardown} from '@global-fun/globals'; 
+      export default async function() {teardown();}
+    `
     );
 
     updateFile(
@@ -48,7 +77,9 @@ describe('Jest', () => {
             moduleFileExtensions: ['ts', 'js', 'html'],
             coverageReporters: ['html'],
             passWithNoTests: true,
-            globals: { testGlobal: ${testGlobal} }
+            globals: { testGlobal: ${testGlobal} },
+            globalSetup: '<rootDir>/setup.ts',
+            globalTeardown: '<rootDir>/teardown.ts'
           };`
     );
 

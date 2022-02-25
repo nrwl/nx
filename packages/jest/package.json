@@ -43,6 +43,7 @@
     "@jest/test-result": "27.2.2",
     "chalk": "4.1.0",
     "jest-config": "27.2.2",
-    "jest-util": "27.2.0"
+    "jest-util": "27.2.0",
+    "tsconfig-paths": "^3.9.0"
   }
 }
