@@ -26,7 +26,8 @@ export class TaskOrchestrator {
     this.hasher,
     this.taskGraph,
     this.workspace,
-    this.options
+    this.options,
+    this.projectGraph
   );
 
   // region internal state
