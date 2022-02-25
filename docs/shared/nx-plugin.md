@@ -180,13 +180,13 @@ A Preset is a customization option which you provide when creating a new workspa
 At its core a preset is a generator, which we can create inside of a plugin.
 If you **don't** have an existing plugin you can create one by running
 
-```
+```bash
   npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
 To create our preset inside of our plugin we can run
 
-```
+```bash
   nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
 ```
 
@@ -194,7 +194,7 @@ To create our preset inside of our plugin we can run
 
 You should have a similar structure to this:
 
-```
+```treeview
 happynrwl/
 	├── e2e
 	├── jest.config.js
@@ -220,7 +220,7 @@ The **generator.ts** provides an entry point to the generator. This file contain
 
 Here is the sample generator function which you can customize to meet your needs.
 
-```
+```typescript
 export default async function (tree: Tree, options: PresetGeneratorSchema) {
   const normalizedOptions = normalizeOptions(tree, options);
   addProjectConfiguration(
@@ -254,7 +254,7 @@ Before you are able to use your newly created preset you must package and publis
 
 After you have published your plugin to a registry you can now use your preset when creating a new workspace
 
-```
+```bash
 npx create-nx-workspace my-workspace --preset=my-plugin-name
 ```
 
