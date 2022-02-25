@@ -253,5 +253,10 @@
     "name": "@nxrs/cargo",
     "description": "Nx plugin adding first-class support for Rust applications and libraries.",
     "url": "https://github.com/nxrs/cargo/tree/main/packages/cargo"
+  },
+  {
+    "name": "@cardsort-softwares/nx-angular-component",
+    "description": "Nx Plugin to easily add components to pre-existing modules",
+    "url": "https://github.com/MasterSaberD1996/nx-angular-component"
   }
 ]
