@@ -189,7 +189,7 @@ function showHelp() {
 
     name                      Workspace name (e.g., org name)
 
-    preset                    What to create in a new workspace (options: ${options})
+    preset                    Customizes the initial content of your workspace (options: ${options}). To build your own see https://nx.dev/nx-plugin/overview#preset
 
     appName                   The name of the application created by some presets
 
