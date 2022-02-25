@@ -13,10 +13,12 @@ export default async function run(
   }
   const command = hasher.hashCommand(task);
   const sources = await hasher.hashSource(task);
-  const deps = allDeps(task.id, taskGraph);
+  // TODO: This will be used once we pass hasher's projectGraph
+  // const deps = allDeps(task.id, taskGraph);
   const workspace = new Workspaces(appRootPath).readWorkspaceConfiguration();
   const tags = hasher.hashArray(
-    deps.map((d) => (workspace.projects[d].tags || []).join('|'))
+    // deps.map((d) => (workspace.projects[d].tags || []).join('|'))
+    Object.values(workspace.projects).map((proj) => (proj.tags || []).join('|'))
   );
   const context = await hasher.hashContext();
   return {
