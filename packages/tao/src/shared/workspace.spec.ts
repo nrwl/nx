@@ -2,18 +2,9 @@ import { toProjectName, Workspaces } from './workspace';
 import { NxJsonConfiguration } from './nx';
 import { vol } from 'memfs';
 
-jest.mock('fs', () => require('memfs').fs);
+import * as fastGlob from 'fast-glob';
 
-jest.mock('fast-glob', () => ({
-  sync: () => [
-    'libs/lib1/package.json',
-    'libs/lib1/project.json',
-    'libs/lib2/package.json',
-    'libs/domain/lib3/package.json',
-    'libs/domain/lib4/project.json',
-    'libs/domain/lib4/package.json',
-  ],
-}));
+jest.mock('fs', () => require('memfs').fs);
 
 const libConfig = (name) => ({
   root: `libs/${name}`,
@@ -26,7 +17,21 @@ const packageLibConfig = (root) => ({
 });
 
 describe('Workspaces', () => {
+  let globResults: string[];
+  beforeEach(() => {
+    globResults = [
+      'libs/lib1/package.json',
+      'libs/lib1/project.json',
+      'libs/lib2/package.json',
+      'libs/domain/lib3/package.json',
+      'libs/domain/lib4/project.json',
+      'libs/domain/lib4/package.json',
+    ];
+    jest.spyOn(fastGlob, 'sync').mockImplementation(() => globResults);
+  });
+
   afterEach(() => {
+    jest.resetAllMocks();
     vol.reset();
   });
 
@@ -135,6 +140,28 @@ describe('Workspaces', () => {
       );
       expect(appResults).toEqual('directory-my-app');
       expect(libResults).toEqual('directory-mylib');
+    });
+
+    it('should use the workspace globs in package.json', () => {
+      globResults = ['packages/my-package/package.json'];
+      vol.fromJSON(
+        {
+          'packages/my-package/package.json': JSON.stringify({
+            name: 'my-package',
+          }),
+          'package.json': JSON.stringify({
+            workspaces: ['packages/**'],
+          }),
+        },
+        '/root2'
+      );
+
+      const workspaces = new Workspaces('/root2');
+      const resolved = workspaces.readWorkspaceConfiguration();
+      expect(resolved.projects['my-package']).toEqual({
+        root: 'packages/my-package',
+        sourceRoot: 'packages/my-package',
+      });
     });
   });
 });

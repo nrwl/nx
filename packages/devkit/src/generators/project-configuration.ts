@@ -135,6 +135,7 @@ export function updateWorkspaceConfiguration(
     generators,
     implicitDependencies,
     plugins,
+    pluginsConfig,
     npmScope,
     targetDependencies,
     workspaceLayout,
@@ -146,6 +147,7 @@ export function updateWorkspaceConfiguration(
   const nxJson: Required<NxJsonConfiguration> = {
     implicitDependencies,
     plugins,
+    pluginsConfig,
     npmScope,
     targetDependencies,
     workspaceLayout,
