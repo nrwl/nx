@@ -170,12 +170,7 @@ async function buildProjectGraphUsingContext(
 }
 
 function jsPluginConfig(nxJson: any) {
-  if (
-    nxJson &&
-    nxJson &&
-    nxJson?.pluginsConfig &&
-    nxJson?.pluginsConfig['@nrwl/js']
-  ) {
+  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
     return nxJson?.pluginsConfig['@nrwl/js'];
   } else {
     return {};
