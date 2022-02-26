@@ -13,6 +13,9 @@ import { prettyTime } from './pretty-time';
  * are added. It is therefore intended for use on a user's local machines.
  *
  * In CI environments the static equivalent of this life cycle should be used.
+ *
+ * NOTE: output.dim() should be preferred over output.colors.gray() because it
+ * is much more consistently readable across different terminal color themes.
  */
 export async function createRunManyDynamicOutputRenderer({
   projectNames,
@@ -114,7 +117,7 @@ export async function createRunManyDynamicOutputRenderer({
             output.colors.green(figures.tick) +
             output.dim('  nx run ') +
             task.id
-          }  ${output.colors.gray('[local cache]')}`
+          }  ${output.dim('[local cache]')}`
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -126,9 +129,7 @@ export async function createRunManyDynamicOutputRenderer({
             output.colors.green(figures.tick) +
             output.dim('  nx run ') +
             task.id
-          }  ${output.colors.gray(
-            '[existing outputs match the cache, left as is]'
-          )}`
+          }  ${output.dim('[existing outputs match the cache, left as is]')}`
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -140,7 +141,7 @@ export async function createRunManyDynamicOutputRenderer({
             output.colors.green(figures.tick) +
             output.dim('  nx run ') +
             task.id
-          }  ${output.colors.gray('[remote cache]')}`
+          }  ${output.dim('[remote cache]')}`
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -154,7 +155,7 @@ export async function createRunManyDynamicOutputRenderer({
           output.colors.green(figures.tick) +
             output.dim('  nx run ') +
             task.id +
-            output.dim.gray(` (${timeTakenText})`)
+            output.dim(` (${timeTakenText})`)
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -241,7 +242,7 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push(
         `   ${output.colors.green(
           figures.tick
-        )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.colors.gray(
+        )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
           `[${totalCachedTasks} read from cache]`
         )}`
       );
@@ -344,7 +345,7 @@ export async function createRunManyDynamicOutputRenderer({
       ];
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
-          output.colors.gray(
+          output.dim(
             `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
@@ -385,9 +386,9 @@ export async function createRunManyDynamicOutputRenderer({
           `   ${output.colors.red(
             figures.cross
           )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-          `   ${output.colors.gray(
+          `   ${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.colors.gray(
+          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`,
         ],
