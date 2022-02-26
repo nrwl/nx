@@ -16,7 +16,7 @@ following `package.json`:
 {
   "name": "mylib",
   "scripts": {
-    "test: "jest",
+    "test": "jest",
     "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
   }
 }
