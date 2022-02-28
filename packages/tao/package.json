@@ -30,6 +30,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
+    "@swc/core": "^1.2.146",
     "chalk": "4.1.0",
     "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",
