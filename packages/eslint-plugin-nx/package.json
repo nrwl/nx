@@ -34,16 +34,11 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
+    "@swc/core": "^1.2.146",
     "@swc-node/register": "^1.4.2",
     "@typescript-eslint/experimental-utils": "~5.10.0",
     "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9",
     "tsconfig-paths": "^3.9.0"
-  },
-  "optionalDependencies": {
-    "@swc/core-linux-x64-musl": "^1.2.136",
-    "@swc/core-linux-x64-gnu": "^1.2.136",
-    "@swc/core-linux-arm64-gnu": "^1.2.136",
-    "@swc/core-linux-arm64-musl": "^1.2.136"
   }
 }
