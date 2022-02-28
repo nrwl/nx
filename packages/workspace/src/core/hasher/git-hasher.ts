@@ -67,11 +67,11 @@ function getActualFilesToHash(
 ): { filesToHash: string[]; deleted: string[] } {
   const filesToHash = [];
   const deleted = [];
-  for (let f of potentialFilesToHash) {
-    if (fileExists(joinPathFragments(path, f))) {
-      filesToHash.push(f);
+  for (let file of potentialFilesToHash) {
+    if (fileExists(joinPathFragments(path, file))) {
+      filesToHash.push(file);
     } else {
-      deleted.push(f);
+      deleted.push(file);
     }
   }
   return { filesToHash, deleted };
@@ -83,11 +83,11 @@ async function spawnProcess(command: string, args: string[], cwd: string) {
     shell: false,
     cwd,
   });
-  let s = '';
+  let stdout = '';
   for await (const data of cp.stdout) {
-    s += data;
+    stdout += data;
   }
-  return s;
+  return stdout;
 }
 
 async function getStagedFiles(path: string) {
