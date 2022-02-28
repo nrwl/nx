@@ -1,6 +1,7 @@
 process.env.SELECTED_CLI = 'angular';
 
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   getSelectedPackageManager,
@@ -48,6 +49,12 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     };
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
+  }
+
+  function addCypress() {
+    runCommand(
+      'npx ng add @cypress/schematic --skip-confirmation --e2e-update'
+    );
   }
 
   beforeEach(() => {
@@ -272,7 +279,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // Remove e2e directory
     runCommand('mv e2e e2e-bak');
     expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
-      'An e2e project was specified but e2e/protractor.conf.js could not be found.'
+      'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
     );
     // Restore e2e directory
     runCommand('mv e2e-bak e2e');
@@ -286,6 +293,94 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // // Put src back
     // runCommand('mv src-bak src');
+  });
+
+  it('should handle wrong cypress setup', () => {
+    addCypress();
+
+    // Remove cypress.json
+    runCommand('mv cypress.json cypress.json.bak');
+    expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
+      'An e2e project with Cypress was found but "cypress.json" could not be found.'
+    );
+    // Restore cypress.json
+    runCommand('mv cypress.json.bak cypress.json');
+
+    // Remove cypress directory
+    runCommand('mv cypress cypress-bak');
+    expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
+      'An e2e project with Cypress was found but the "cypress" directory could not be found.'
+    );
+    // Restore cypress.json
+    runCommand('mv cypress-bak cypress');
+  });
+
+  it('should handle a workspace with cypress', () => {
+    addCypress();
+
+    runNgAdd('--npm-scope projscope --skip-install');
+
+    const e2eProject = `${project}-e2e`;
+    //check e2e project files
+    checkFilesDoNotExist(
+      'cypress.json',
+      'cypress/tsconfig.json',
+      'cypress/integration/spec.ts',
+      'cypress/plugins/index.ts',
+      'cypress/support/commands.ts',
+      'cypress/support/index.ts'
+    );
+    checkFilesExist(
+      `apps/${e2eProject}/cypress.json`,
+      `apps/${e2eProject}/tsconfig.json`,
+      `apps/${e2eProject}/src/integration/spec.ts`,
+      `apps/${e2eProject}/src/plugins/index.ts`,
+      `apps/${e2eProject}/src/support/commands.ts`,
+      `apps/${e2eProject}/src/support/index.ts`
+    );
+
+    const angularJson = readJson('angular.json');
+    // check e2e project config
+    expect(
+      angularJson.projects[project].architect['cypress-run']
+    ).toBeUndefined();
+    expect(
+      angularJson.projects[project].architect['cypress-open']
+    ).toBeUndefined();
+    expect(angularJson.projects[project].architect.e2e).toBeUndefined();
+    expect(angularJson.projects[e2eProject].root).toEqual(`apps/${e2eProject}`);
+    expect(angularJson.projects[e2eProject].architect['cypress-run']).toEqual({
+      builder: '@nrwl/cypress:cypress',
+      options: {
+        devServerTarget: `${project}:serve`,
+        cypressConfig: `apps/${e2eProject}/cypress.json`,
+      },
+      configurations: {
+        production: {
+          devServerTarget: `${project}:serve:production`,
+        },
+      },
+    });
+    expect(angularJson.projects[e2eProject].architect['cypress-open']).toEqual({
+      builder: '@nrwl/cypress:cypress',
+      options: {
+        watch: true,
+        cypressConfig: `apps/${e2eProject}/cypress.json`,
+      },
+    });
+    expect(angularJson.projects[e2eProject].architect.e2e).toEqual({
+      builder: '@nrwl/cypress:cypress',
+      options: {
+        devServerTarget: `${project}:serve`,
+        watch: true,
+        cypressConfig: `apps/${e2eProject}/cypress.json`,
+      },
+      configurations: {
+        production: {
+          devServerTarget: `${project}:serve:production`,
+        },
+      },
+    });
   });
 
   it('should support preserveAngularCliLayout', () => {

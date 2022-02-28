@@ -91,19 +91,55 @@ describe('workspace', () => {
           await initGenerator(tree, { name: 'proj1' });
         } catch (e) {
           expect(e.message).toContain(
-            'An e2e project was specified but e2e/protractor.conf.js could not be found.'
+            'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
           );
         }
       });
 
-      it('should not error if project does not use protractor', async () => {
-        tree.delete('/e2e/protractor.conf.js');
+      it('should error when using cypress and cypress.json is not found', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        project.targets.e2e.executor = '@cypress/schematic:cypress';
+        updateProjectConfiguration(tree, 'myApp', project);
 
-        const proj = readProjectConfiguration(tree, 'myApp');
-        proj.targets.e2e.executor = '@nrwl/cypress';
-        updateProjectConfiguration(tree, 'myApp', proj);
+        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+          'An e2e project with Cypress was found but "cypress.json" could not be found.'
+        );
+      });
 
-        await initGenerator(tree, { name: 'myApp' });
+      it('should error when using cypress and the specified cypress config file is not found', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        project.targets.e2e = {
+          executor: '@cypress/schematic:cypress',
+          options: {
+            configFile: 'cypress.config.json',
+          },
+        };
+        updateProjectConfiguration(tree, 'myApp', project);
+
+        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+          'An e2e project with Cypress was found but "cypress.config.json" could not be found.'
+        );
+      });
+
+      it('should error when using cypress and the cypress folder is not found', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        project.targets.e2e.executor = '@cypress/schematic:cypress';
+        updateProjectConfiguration(tree, 'myApp', project);
+        tree.write('cypress.json', '{}');
+
+        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+          'An e2e project with Cypress was found but the "cypress" directory could not be found.'
+        );
+      });
+
+      it('should error when having an e2e project with an unknown executor', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        project.targets.e2e.executor = '@my-org/my-package:my-executor';
+        updateProjectConfiguration(tree, 'myApp', project);
+
+        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+          `An e2e project was found but it's using an unsupported executor "@my-org/my-package:my-executor".`
+        );
       });
 
       it('should error if no angular.json is present', async () => {
@@ -185,6 +221,7 @@ describe('workspace', () => {
                   },
                 },
                 e2e: {
+                  builder: '@angular-devkit/build-angular:protractor',
                   options: {
                     protractorConfig: 'projects/myApp/e2e/protractor.conf.js',
                   },
@@ -264,6 +301,7 @@ describe('workspace', () => {
                   },
                 },
                 e2e: {
+                  builder: '@angular-devkit/build-angular:protractor',
                   options: {
                     protractorConfig: 'e2e/protractor.conf.js',
                   },
@@ -319,6 +357,7 @@ describe('workspace', () => {
                   },
                 },
                 e2e: {
+                  builder: '@angular-devkit/build-angular:protractor',
                   options: {
                     protractorConfig: 'projects/myApp/e2e/protractor.conf.js',
                   },
@@ -396,6 +435,149 @@ describe('workspace', () => {
       await initGenerator(tree, { name: 'myApp' });
 
       expect(tree.exists('/tslint.json')).toBe(false);
+    });
+
+    describe('cypress', () => {
+      beforeEach(() => {
+        tree.write(
+          '/angular.json',
+          JSON.stringify({
+            version: 1,
+            defaultProject: 'myApp',
+            projects: {
+              myApp: {
+                root: '',
+                sourceRoot: 'src',
+                architect: {
+                  build: {
+                    options: {
+                      tsConfig: 'tsconfig.app.json',
+                    },
+                    configurations: {},
+                  },
+                  test: {
+                    options: {
+                      tsConfig: 'tsconfig.spec.json',
+                    },
+                  },
+                  'cypress-run': {
+                    builder: '@cypress/schematic:cypress',
+                    options: {
+                      devServerTarget: 'ng-cypress:serve',
+                    },
+                    configurations: {
+                      production: {
+                        devServerTarget: 'ng-cypress:serve:production',
+                      },
+                    },
+                  },
+                  'cypress-open': {
+                    builder: '@cypress/schematic:cypress',
+                    options: {
+                      watch: true,
+                      headless: false,
+                    },
+                  },
+                  e2e: {
+                    builder: '@cypress/schematic:cypress',
+                    options: {
+                      devServerTarget: 'ng-cypress:serve',
+                      watch: true,
+                      headless: false,
+                    },
+                    configurations: {
+                      production: {
+                        devServerTarget: 'ng-cypress:serve:production',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          })
+        );
+
+        tree.write(
+          'cypress.json',
+          JSON.stringify({
+            integrationFolder: 'cypress/integration',
+            supportFile: 'cypress/support/index.ts',
+            videosFolder: 'cypress/videos',
+            screenshotsFolder: 'cypress/screenshots',
+            pluginsFile: 'cypress/plugins/index.ts',
+            fixturesFolder: 'cypress/fixtures',
+            baseUrl: 'http://localhost:4200',
+          })
+        );
+        tree.write('/cypress/fixtures/example.json', '{}');
+        tree.write('/cypress/integration/spec.ts', '// content');
+        tree.write('/cypress/plugins/index.ts', '// content');
+        tree.write('/cypress/support/commands.ts', '// content');
+        tree.write('/cypress/support/index.ts', '// content');
+        tree.write('/cypress/tsconfig.json', '{"extends": "../tsconfig.json"}');
+      });
+
+      it('should migrate e2e tests correctly', async () => {
+        await initGenerator(tree, { name: 'myApp' });
+
+        expect(tree.exists('cypress.json')).toBe(false);
+        expect(tree.exists('cypress')).toBe(false);
+        expect(tree.exists('/apps/myApp-e2e/tsconfig.json')).toBe(true);
+        expect(
+          readJson(tree, '/apps/myApp-e2e/tsconfig.json')
+        ).toMatchSnapshot();
+        expect(tree.exists('/apps/myApp-e2e/cypress.json')).toBe(true);
+        expect(
+          readJson(tree, '/apps/myApp-e2e/cypress.json')
+        ).toMatchSnapshot();
+        expect(tree.exists('/apps/myApp-e2e/src/fixtures/example.json')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/integration/spec.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/plugins/index.ts')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/support/commands.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/support/index.ts')).toBe(true);
+        expect(readProjectConfiguration(tree, 'myApp-e2e')).toMatchSnapshot();
+      });
+
+      it('should migrate e2e tests when configFile is set to false and there is no cypress.json', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        project.targets.e2e.options.configFile = false;
+        updateProjectConfiguration(tree, 'myApp', project);
+        tree.delete('cypress.json');
+
+        await initGenerator(tree, { name: 'myApp' });
+
+        expect(tree.exists('cypress.json')).toBe(false);
+        expect(tree.exists('cypress')).toBe(false);
+        expect(tree.exists('/apps/myApp-e2e/tsconfig.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/cypress.json')).toBe(true);
+        expect(
+          readJson(tree, '/apps/myApp-e2e/cypress.json')
+        ).toMatchSnapshot();
+        expect(tree.exists('/apps/myApp-e2e/src')).toBe(true);
+        expect(readProjectConfiguration(tree, 'myApp-e2e')).toMatchSnapshot();
+      });
+
+      it('should handle project configuration without cypress-run or cypress-open', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        delete project.targets['cypress-run'];
+        delete project.targets['cypress-open'];
+        updateProjectConfiguration(tree, 'myApp', project);
+
+        await initGenerator(tree, { name: 'myApp' });
+
+        expect(tree.exists('cypress.json')).toBe(false);
+        expect(tree.exists('cypress')).toBe(false);
+        expect(tree.exists('/apps/myApp-e2e/tsconfig.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/cypress.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src')).toBe(true);
+        expect(readProjectConfiguration(tree, 'myApp-e2e')).toMatchSnapshot();
+      });
     });
   });
 

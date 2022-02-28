@@ -21,9 +21,11 @@ import {
   updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
   writeJson,
+  ProjectConfiguration,
+  TargetConfiguration,
 } from '@nrwl/devkit';
 import { readFileSync } from 'fs';
-import { basename } from 'path';
+import { basename, relative } from 'path';
 import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import {
@@ -58,13 +60,12 @@ function updatePackageJson(tree) {
       'workspace-schematic': 'nx workspace-schematic',
       help: 'nx help',
     };
-    packageJson.devDependencies = packageJson.devDependencies || {};
-    if (!packageJson.dependencies) {
-      packageJson.dependencies = {};
-    }
+    packageJson.devDependencies = packageJson.devDependencies ?? {};
+    packageJson.dependencies = packageJson.dependencies ?? {};
     if (!packageJson.dependencies['@nrwl/angular']) {
       packageJson.dependencies['@nrwl/angular'] = nxVersion;
     }
+    delete packageJson.dependencies['@nrwl/workspace'];
     if (!packageJson.devDependencies['@nrwl/workspace']) {
       packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
     }
@@ -187,28 +188,70 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
 
   if (defaultProject.targets.e2e) {
     const lintTargetOptions = lintTarget ? lintTarget.options : {};
-    addProjectConfiguration(host, e2eName, {
-      root: e2eRoot,
-      projectType: 'application',
-      targets: {
-        e2e: {
-          ...defaultProject.targets.e2e,
-          options: {
-            ...defaultProject.targets.e2e.options,
-            protractorConfig: joinPathFragments(e2eRoot, 'protractor.conf.js'),
+
+    if (isProtractorE2eProject(defaultProject)) {
+      addProjectConfiguration(host, e2eName, {
+        root: e2eRoot,
+        projectType: 'application',
+        targets: {
+          e2e: {
+            ...defaultProject.targets.e2e,
+            options: {
+              ...defaultProject.targets.e2e.options,
+              protractorConfig: joinPathFragments(
+                e2eRoot,
+                'protractor.conf.js'
+              ),
+            },
+          },
+          lint: {
+            executor: '@angular-devkit/build-angular:tslint',
+            options: {
+              ...lintTargetOptions,
+              tsConfig: joinPathFragments(e2eRoot, 'tsconfig.json'),
+            },
           },
         },
-        lint: {
-          executor: '@angular-devkit/build-angular:tslint',
-          options: {
-            ...lintTargetOptions,
-            tsConfig: joinPathFragments(e2eRoot, 'tsconfig.json'),
-          },
+        implicitDependencies: [appName],
+        tags: [],
+      });
+    } else if (isCypressE2eProject(defaultProject)) {
+      const cypressConfig = joinPathFragments(
+        e2eRoot,
+        basename(getCypressConfigFile(defaultProject) ?? 'cypress.json')
+      );
+
+      const e2eProjectConfig: ProjectConfiguration = {
+        root: e2eRoot,
+        sourceRoot: joinPathFragments(e2eRoot, 'src'),
+        projectType: 'application',
+        targets: {
+          e2e: updateE2eCypressTarget(
+            defaultProject.targets.e2e,
+            cypressConfig
+          ),
         },
-      },
-      implicitDependencies: [appName],
-      tags: [],
-    });
+        implicitDependencies: [appName],
+        tags: [],
+      };
+
+      if (defaultProject.targets['cypress-run']) {
+        e2eProjectConfig.targets['cypress-run'] = updateE2eCypressTarget(
+          defaultProject.targets['cypress-run'],
+          cypressConfig
+        );
+      }
+      if (defaultProject.targets['cypress-open']) {
+        e2eProjectConfig.targets['cypress-open'] = updateE2eCypressTarget(
+          defaultProject.targets['cypress-open'],
+          cypressConfig
+        );
+      }
+
+      addProjectConfiguration(host, e2eName, e2eProjectConfig);
+      delete defaultProject.targets['cypress-run'];
+      delete defaultProject.targets['cypress-open'];
+    }
     delete defaultProject.targets.e2e;
   }
 
@@ -235,6 +278,48 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
       };
     }
   }
+}
+
+function getCypressConfigFile(
+  e2eProject: ProjectConfiguration
+): string | undefined {
+  let cypressConfig = 'cypress.json';
+  const configFileOption = e2eProject.targets.e2e.options.configFile;
+  if (configFileOption === false) {
+    cypressConfig = undefined;
+  } else if (typeof configFileOption === 'string') {
+    cypressConfig = basename(configFileOption);
+  }
+
+  return cypressConfig;
+}
+
+function updateE2eCypressTarget(
+  target: TargetConfiguration,
+  cypressConfig: string
+): TargetConfiguration {
+  const updatedTarget = {
+    ...target,
+    executor: '@nrwl/cypress:cypress',
+    options: {
+      ...target.options,
+      cypressConfig,
+    },
+  };
+  delete updatedTarget.options.configFile;
+  delete updatedTarget.options.tsConfig;
+
+  if (updatedTarget.options.headless && updatedTarget.options.watch) {
+    updatedTarget.options.headed = false;
+  } else if (
+    updatedTarget.options.headless === false &&
+    !updatedTarget.options.watch
+  ) {
+    updatedTarget.options.headed = true;
+  }
+  delete updatedTarget.options.headless;
+
+  return updatedTarget;
 }
 
 function updateTsConfig(host: Tree) {
@@ -284,7 +369,11 @@ function updateTsConfigsJson(host: Tree, options: Schema) {
   }
 
   if (!!e2eProject) {
-    updateJson(host, e2eProject.targets.lint.options.tsConfig, (json) => {
+    const tsConfig = isProtractorE2eProject(e2eProject)
+      ? e2eProject.targets.lint.options.tsConfig
+      : joinPathFragments(e2eProject.root, 'tsconfig.json');
+
+    updateJson(host, tsConfig, (json) => {
       json.extends = `${offsetFromRoot(e2eProject.root)}${tsConfigPath}`;
       json.compilerOptions = {
         ...json.compilerOptions,
@@ -379,9 +468,19 @@ function getE2eProject(host: Tree) {
   }
 }
 
+function isCypressE2eProject(e2eProject: ProjectConfiguration): boolean {
+  return e2eProject.targets.e2e.executor === '@cypress/schematic:cypress';
+}
+
+function isProtractorE2eProject(e2eProject: ProjectConfiguration): boolean {
+  return (
+    e2eProject.targets.e2e.executor ===
+    '@angular-devkit/build-angular:protractor'
+  );
+}
+
 function moveExistingFiles(host: Tree, options: Schema) {
   const app = readProjectConfiguration(host, options.name);
-  const e2eApp = getE2eProject(host);
 
   // it is not required to have a browserslist
   moveOutOfSrc(host, options.name, 'browserslist', false);
@@ -407,17 +506,126 @@ function moveExistingFiles(host: Tree, options: Schema) {
   const oldAppSourceRoot = app.sourceRoot;
   const newAppSourceRoot = joinPathFragments('apps', options.name, 'src');
   renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot);
-  if (e2eApp) {
-    const oldE2eRoot = joinPathFragments(app.root || '', 'e2e');
-    const newE2eRoot = joinPathFragments('apps', `${getE2eKey(host)}-e2e`);
-    renameDirSyncInTree(host, oldE2eRoot, newE2eRoot);
-  } else {
+
+  moveE2eProjectFiles(host, app, options);
+}
+
+function moveE2eProjectFiles(
+  tree: Tree,
+  app: ProjectConfiguration,
+  options: Schema
+): void {
+  const e2eProject = getE2eProject(tree);
+
+  if (!e2eProject) {
     console.warn(
-      'No e2e project was migrated because there was none declared in angular.json'
+      'No e2e project was migrated because there was none declared in angular.json.'
     );
+    return;
   }
 
-  return host;
+  if (isProtractorE2eProject(e2eProject)) {
+    const oldE2eRoot = joinPathFragments(app.root || '', 'e2e');
+    const newE2eRoot = joinPathFragments('apps', `${getE2eKey(tree)}-e2e`);
+    renameDirSyncInTree(tree, oldE2eRoot, newE2eRoot);
+  } else if (isCypressE2eProject(e2eProject)) {
+    const e2eProjectName = `${options.name}-e2e`;
+    const configFile = getCypressConfigFile(e2eProject);
+    const oldE2eRoot = 'cypress';
+    const newE2eRoot = joinPathFragments('apps', e2eProjectName);
+    if (configFile) {
+      updateCypressConfigFilePaths(tree, configFile, oldE2eRoot, newE2eRoot);
+      moveOutOfSrc(tree, e2eProjectName, configFile);
+    } else {
+      tree.write(
+        joinPathFragments('apps', e2eProjectName, 'cypress.json'),
+        JSON.stringify({
+          fileServerFolder: '.',
+          fixturesFolder: './src/fixtures',
+          integrationFolder: './src/integration',
+          modifyObstructiveCode: false,
+          supportFile: './src/support/index.ts',
+          pluginsFile: './src/plugins/index.ts',
+          video: true,
+          videosFolder: `../../dist/cypress/${newE2eRoot}/videos`,
+          screenshotsFolder: `../../dist/cypress/${newE2eRoot}/screenshots`,
+          chromeWebSecurity: false,
+        })
+      );
+    }
+    moveOutOfSrc(tree, e2eProjectName, `${oldE2eRoot}/tsconfig.json`);
+    renameDirSyncInTree(
+      tree,
+      oldE2eRoot,
+      joinPathFragments('apps', e2eProjectName, 'src')
+    );
+  }
+}
+
+function updateCypressConfigFilePaths(
+  tree: Tree,
+  configFile: string,
+  oldE2eRoot: string,
+  newE2eRoot: string
+): void {
+  const srcFoldersAndFiles = [
+    'integrationFolder',
+    'supportFile',
+    'pluginsFile',
+    'fixturesFolder',
+  ];
+  const distFolders = ['videosFolder', 'screenshotsFolder'];
+  const stringOrArrayGlobs = ['ignoreTestFiles', 'testFiles'];
+
+  const cypressConfig = readJson(tree, configFile);
+
+  cypressConfig.fileServerFolder = '.';
+  srcFoldersAndFiles.forEach((folderOrFile) => {
+    if (cypressConfig[folderOrFile]) {
+      cypressConfig[folderOrFile] = `./src/${relative(
+        oldE2eRoot,
+        cypressConfig[folderOrFile]
+      )}`;
+    }
+  });
+
+  distFolders.forEach((folder) => {
+    if (cypressConfig[folder]) {
+      cypressConfig[folder] = `../../dist/cypress/${newE2eRoot}/${relative(
+        oldE2eRoot,
+        cypressConfig[folder]
+      )}`;
+    }
+  });
+
+  stringOrArrayGlobs.forEach((stringOrArrayGlob) => {
+    if (!cypressConfig[stringOrArrayGlob]) {
+      return;
+    }
+
+    if (Array.isArray(cypressConfig[stringOrArrayGlob])) {
+      cypressConfig[stringOrArrayGlob] = cypressConfig[stringOrArrayGlob].map(
+        (glob: string) => replaceCypressGlobConfig(glob, oldE2eRoot)
+      );
+    } else {
+      cypressConfig[stringOrArrayGlob] = replaceCypressGlobConfig(
+        cypressConfig[stringOrArrayGlob],
+        oldE2eRoot
+      );
+    }
+  });
+
+  writeJson(tree, configFile, cypressConfig);
+}
+
+function replaceCypressGlobConfig(
+  globPattern: string,
+  oldE2eRoot: string
+): string {
+  return globPattern.replace(
+    new RegExp(`^(\\.\\/|\\/)?${oldE2eRoot}\\/`),
+    './src/'
+  );
 }
 
 async function createAdditionalFiles(host: Tree, options: Schema) {
@@ -495,23 +703,47 @@ function checkCanConvertToWorkspace(host: Tree) {
     if (Object.keys(workspaceJson.projects).length > 2 || hasLibraries) {
       throw new Error('Can only convert projects with one app');
     }
+
     const e2eKey = getE2eKey(host);
     const e2eApp = getE2eProject(host);
-    if (
-      e2eApp &&
-      e2eApp.targets.e2e.executor ===
-        '@angular-devkit/build-angular:protractor' &&
-      !host.exists(e2eApp.targets.e2e.options.protractorConfig)
-    ) {
+
+    if (!e2eApp) {
+      return;
+    }
+
+    if (isProtractorE2eProject(e2eApp)) {
+      if (host.exists(e2eApp.targets.e2e.options.protractorConfig)) {
+        return;
+      }
+
       console.info(
-        `Make sure the ${e2eKey}.architect.e2e.options.protractorConfig is valid or the ${e2eKey} project is removed from angular.json.`
+        `Make sure the "${e2eKey}.architect.e2e.options.protractorConfig" is valid or the "${e2eKey}" project is removed from "angular.json".`
       );
       throw new Error(
-        `An e2e project was specified but ${e2eApp.targets.e2e.options.protractorConfig} could not be found.`
+        `An e2e project with Protractor was found but "${e2eApp.targets.e2e.options.protractorConfig}" could not be found.`
       );
     }
 
-    return host;
+    if (isCypressE2eProject(e2eApp)) {
+      const configFile = getCypressConfigFile(e2eApp);
+      if (configFile && !host.exists(configFile)) {
+        throw new Error(
+          `An e2e project with Cypress was found but "${configFile}" could not be found.`
+        );
+      }
+
+      if (!host.exists('cypress')) {
+        throw new Error(
+          `An e2e project with Cypress was found but the "cypress" directory could not be found.`
+        );
+      }
+
+      return;
+    }
+
+    throw new Error(
+      `An e2e project was found but it's using an unsupported executor "${e2eApp.targets.e2e.executor}".`
+    );
   } catch (e) {
     console.error(e.message);
     console.error(
@@ -631,9 +863,7 @@ function renameDirSyncInTree(tree: Tree, from: string, to: string) {
 export async function initGenerator(tree: Tree, schema: Schema) {
   if (schema.preserveAngularCliLayout) {
     updateJson(tree, 'package.json', (json) => {
-      if (json.dependencies?.['@nrwl/workspace']) {
-        delete json.dependencies['@nrwl/workspace'];
-      }
+      delete json.dependencies?.['@nrwl/workspace'];
       return json;
     });
     addDependenciesToPackageJson(tree, {}, { '@nrwl/workspace': nxVersion });
