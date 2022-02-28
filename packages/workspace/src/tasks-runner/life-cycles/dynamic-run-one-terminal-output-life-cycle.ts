@@ -25,6 +25,9 @@ type State =
  * are added. It is therefore intended for use on a user's local machines.
  *
  * In CI environments the static equivalent of this life cycle should be used.
+ *
+ * NOTE: output.dim() should be preferred over output.colors.gray() because it
+ * is much more consistently readable across different terminal color themes.
  */
 export async function createRunOneDynamicOutputRenderer({
   initiatingProject,
@@ -154,10 +157,10 @@ export async function createRunOneDynamicOutputRenderer({
 
     if (totalSuccessfulTasks > 0) {
       linesToRender.push(
-        output.colors.gray(
-          `   ${output.colors.gray(
+        output.dim(
+          `   ${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.colors.gray.dim(
+          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`
         )
@@ -195,9 +198,9 @@ export async function createRunOneDynamicOutputRenderer({
         if (totalDependentTasksNotFromInitiatingProject > 0) {
           output.addNewline();
           process.stdout.write(
-            `   ${output.colors.gray(
+            `   ${output.dim(
               'Hint: you can run the command with'
-            )} --verbose ${output.colors.gray(
+            )} --verbose ${output.dim(
               'to see the full dependent project outputs'
             )}` + EOL
           );
@@ -299,7 +302,7 @@ export async function createRunOneDynamicOutputRenderer({
       ];
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
-          output.colors.gray(
+          output.dim(
             `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
@@ -342,9 +345,9 @@ export async function createRunOneDynamicOutputRenderer({
           `   ${output.colors.red(
             figures.cross
           )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-          `   ${output.colors.gray(
+          `   ${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.colors.gray(
+          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`,
         ],
