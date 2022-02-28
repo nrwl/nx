@@ -823,6 +823,7 @@ function decorateAngularClI(host: Tree) {
 function addFiles(host: Tree) {
   generateFiles(host, joinPathFragments(__dirname, './files/root'), '.', {
     tmpl: '',
+    dot: '.',
   });
 
   if (!host.exists('.prettierignore')) {
