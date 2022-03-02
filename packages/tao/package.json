@@ -31,6 +31,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@swc/core": "^1.2.146",
+    "@swc-node/register": "^1.4.2",
     "chalk": "4.1.0",
     "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",
@@ -42,6 +43,7 @@
     "semver": "7.3.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
+    "tsconfig-paths": "^3.9.0",
     "yargs-parser": "20.0.0"
   }
 }
