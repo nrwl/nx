@@ -1,6 +1,4 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { exec, execSync } from 'child_process';
-import * as http from 'http';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -18,6 +16,8 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { exec, execSync } from 'child_process';
+import * as http from 'http';
 
 function getData(port): Promise<any> {
   return new Promise((resolve) => {
@@ -291,8 +291,7 @@ describe('Build Node apps', () => {
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
-      // TODO: update to v5 when Nest8 is supported
-      packageInstall('@nestjs/swagger', undefined, '4.8.2');
+      packageInstall('@nestjs/swagger', undefined, '~5.0.0');
 
       updateProjectConfig(nestapp, (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
@@ -370,9 +369,9 @@ describe('nest libraries', function () {
                 },
                 testEnvironment: 'node',
                  transform: {
-                '^.+\\.[tj]sx?$': 'ts-jest',
+                '^.+\\.[tj]s?$': 'ts-jest',
                 },
-                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+                moduleFileExtensions: ['ts', 'js', 'html'],
                 coverageDirectory: '../../coverage/libs/${nestlib}',
             };
             `
@@ -424,13 +423,12 @@ describe('nest libraries', function () {
     );
   }, 200000);
 
-  it('should have plugin output if specified in `tsPlugins`', async () => {
+  it('should have plugin output if specified in `transformers`', async () => {
     newProject();
     const nestlib = uniq('nestlib');
     runCLI(`generate @nrwl/nest:lib ${nestlib} --buildable`);
 
-    // TODO: update to v5 when Nest8 is supported
-    packageInstall('@nestjs/swagger', undefined, '4.8.2');
+    packageInstall('@nestjs/swagger', undefined, '~5.0.0');
 
     updateProjectConfig(nestlib, (config) => {
       config.targets.build.options.transformers = [
