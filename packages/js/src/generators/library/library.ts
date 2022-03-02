@@ -21,7 +21,10 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 
-export async function libraryGenerator(tree: Tree, schema: LibraryGeneratorSchema) {
+export async function libraryGenerator(
+  tree: Tree,
+  schema: LibraryGeneratorSchema
+) {
   const { libsDir } = getWorkspaceLayout(tree);
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
@@ -227,7 +230,7 @@ function normalizeOptions(
   if (options.publishable) {
     if (!options.importPath) {
       throw new Error(
-          `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+        `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );
     }
     options.buildable = true;
