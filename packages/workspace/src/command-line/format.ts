@@ -49,7 +49,13 @@ export async function format(
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
-      chunkList.forEach((chunk) => check(chunk));
+      const pass = chunkList.reduce(
+        (pass, chunk) => check(chunk) && pass,
+        true
+      );
+      if (!pass) {
+        process.exit(1);
+      }
       break;
   }
 }
@@ -142,18 +148,17 @@ function write(patterns: string[]) {
   }
 }
 
-function check(patterns: string[]) {
-  if (patterns.length > 0) {
-    try {
-      execSync(
-        `node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`,
-        {
-          stdio: [0, 1, 2],
-        }
-      );
-    } catch {
-      process.exit(1);
-    }
+function check(patterns: string[]): boolean {
+  if (patterns.length === 0) {
+    return true;
+  }
+  try {
+    execSync(`node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`, {
+      stdio: [0, 1, 2],
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 
