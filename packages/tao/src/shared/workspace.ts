@@ -666,22 +666,58 @@ export function toProjectName(
 
 let projectGlobCache: string[];
 let projectGlobCacheKey: string;
-export function globForProjectFiles(root, nxJson?: NxJsonConfiguration) {
+
+function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
+  const plugins = loadNxPlugins(nxJson?.plugins);
+
+  const patterns = [];
+  for (const plugin of plugins) {
+    if (!plugin.projectFilePatterns) {
+      continue;
+    }
+    for (const filePattern of plugin.projectFilePatterns) {
+      patterns.push('**/' + filePattern);
+    }
+  }
+
+  return patterns;
+}
+
+/**
+ * Get the package.json globs from package manager workspaces
+ */
+function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
+  // TODO: add support for pnpm
+  try {
+    const { workspaces } = readJsonFile(join(root, 'package.json'));
+
+    return (
+      workspaces?.map((pattern) => pattern + '/package.json') ?? [
+        '**/package.json',
+      ]
+    );
+  } catch {
+    return ['**/package.json'];
+  }
+}
+
+export function globForProjectFiles(
+  root: string,
+  nxJson?: NxJsonConfiguration
+) {
   // Deal w/ Caching
   const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
   if (projectGlobCache && cacheKey === projectGlobCacheKey)
     return projectGlobCache;
   projectGlobCacheKey = cacheKey;
 
-  // Load plugins
-  const plugins = loadNxPlugins(nxJson?.plugins).filter(
-    (x) => !!x.projectFilePatterns
-  );
-  let combinedProjectGlobPattern = `**/+(project.json|package.json${
-    plugins.length
-      ? '|' + plugins.map((x) => x.projectFilePatterns.join('|')).join('|')
-      : ''
-  })`;
+  const projectGlobPatterns: string[] = [
+    '**/project.json',
+    ...getGlobPatternsFromPackageManagerWorkspaces(root),
+    ...getGlobPatternsFromPlugins(nxJson),
+  ];
+
+  const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
 
   performance.mark('start-glob-for-projects');
   /**

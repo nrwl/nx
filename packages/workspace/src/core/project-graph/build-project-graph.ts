@@ -169,12 +169,13 @@ async function buildProjectGraphUsingContext(
   return r;
 }
 
-function jsPluginConfig(nxJson: any) {
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig['@nrwl/js'];
-  } else {
-    return {};
-  }
+interface NrwlJsPluginConfig {
+  analyzeSourceFiles?: boolean;
+  analyzePackageJson?: boolean;
+}
+
+function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
+  return nxJson?.pluginsConfig?.['@nrwl/js'] ?? {};
 }
 
 function buildExplicitDependencies(
