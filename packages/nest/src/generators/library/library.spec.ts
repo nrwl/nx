@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';

@@ -1,7 +1,8 @@
 import type { Tree } from '@nrwl/devkit';
 import { getWorkspaceLayout, joinPathFragments, names } from '@nrwl/devkit';
+// import type { Schema as NodeLibraryGeneratorOptions } from '@nrwl/node/src/generators/library/schema';
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nrwl/js/src/utils/schema';
 import { Linter } from '@nrwl/linter';
-import type { Schema as NodeLibraryGeneratorOptions } from '@nrwl/node/src/generators/library/schema';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 
 export function normalizeOptions(
@@ -42,9 +43,9 @@ export function normalizeOptions(
   return normalized;
 }
 
-export function toNodeLibraryGeneratorOptions(
+export function toJsLibraryGeneratorOptions(
   options: LibraryGeneratorOptions
-): NodeLibraryGeneratorOptions {
+): JsLibraryGeneratorSchema {
   return {
     name: options.name,
     buildable: options.buildable,
@@ -58,7 +59,7 @@ export function toNodeLibraryGeneratorOptions(
     tags: options.tags,
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
-    standaloneConfig: options.standaloneConfig,
+    config: options.standaloneConfig ? 'project' : 'workspace',
     setParserOptionsProject: options.setParserOptionsProject,
   };
 }
