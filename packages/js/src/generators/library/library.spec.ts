@@ -6,12 +6,12 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { GeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema } from '../../utils/schema';
 import libraryGenerator from './library';
 
 describe('lib', () => {
   let tree: Tree;
-  const defaultOptions: Omit<GeneratorSchema, 'name'> = {
+  const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,

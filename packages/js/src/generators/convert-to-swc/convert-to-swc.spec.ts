@@ -1,14 +1,14 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { join } from 'path';
-import { GeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema } from '../../utils/schema';
 import { libraryGenerator } from '../library/library';
 import { convertToSwcGenerator } from './convert-to-swc';
 
 describe('convert to swc', () => {
   let tree: Tree;
 
-  const defaultLibGenerationOptions: Omit<GeneratorSchema, 'name'> = {
+  const defaultLibGenerationOptions: Omit<LibraryGeneratorSchema, 'name'> = {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,

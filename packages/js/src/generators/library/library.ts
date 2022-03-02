@@ -14,21 +14,21 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
-import { GeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema } from '../../utils/schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 
-export async function libraryGenerator(tree: Tree, schema: GeneratorSchema) {
+export async function libraryGenerator(tree: Tree, schema: LibraryGeneratorSchema) {
   const { libsDir } = getWorkspaceLayout(tree);
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
 
 export async function projectGenerator(
   tree: Tree,
-  schema: GeneratorSchema,
+  schema: LibraryGeneratorSchema,
   destinationDir: string,
   filesDir: string
 ) {
@@ -60,7 +60,7 @@ export async function projectGenerator(
   return runTasksInSerial(...tasks);
 }
 
-export interface NormalizedSchema extends GeneratorSchema {
+export interface NormalizedSchema extends LibraryGeneratorSchema {
   name: string;
   fileName: string;
   projectRoot: string;
@@ -221,9 +221,18 @@ async function addJest(
 
 function normalizeOptions(
   tree: Tree,
-  options: GeneratorSchema,
+  options: LibraryGeneratorSchema,
   destinationDir: string
 ): NormalizedSchema {
+  if (options.publishable) {
+    if (!options.importPath) {
+      throw new Error(
+          `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      );
+    }
+    options.buildable = true;
+  }
+
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
