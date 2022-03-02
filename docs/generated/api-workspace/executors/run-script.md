@@ -59,3 +59,11 @@ By default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/di
 Type: `string`
 
 An npm script name in the package.json file of the project (e.g., build)
+
+### color
+
+Default: `false`
+
+Type: `boolean`
+
+Use colors when showing output of command
