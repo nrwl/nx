@@ -369,7 +369,7 @@ describe('nest libraries', function () {
                 },
                 testEnvironment: 'node',
                  transform: {
-                '^.+\\.[tj]s?$': 'ts-jest',
+                '^.+\\.[tj]s$': 'ts-jest',
                 },
                 moduleFileExtensions: ['ts', 'js', 'html'],
                 coverageDirectory: '../../coverage/libs/${nestlib}',
