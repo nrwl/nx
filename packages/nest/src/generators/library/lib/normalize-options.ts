@@ -1,6 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
 import { getWorkspaceLayout, joinPathFragments, names } from '@nrwl/devkit';
-// import type { Schema as NodeLibraryGeneratorOptions } from '@nrwl/node/src/generators/library/schema';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nrwl/js/src/utils/schema';
 import { Linter } from '@nrwl/linter';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
