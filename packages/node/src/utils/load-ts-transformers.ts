@@ -3,12 +3,12 @@ import { join } from 'path';
 import {
   CompilerPlugin,
   CompilerPluginHooks,
-  TsPlugin,
-  TsPluginEntry,
+  TransformerEntry,
+  TransformerPlugin,
 } from './types';
 
-export function loadTsPlugins(
-  plugins: TsPluginEntry[],
+export function loadTsTransformers(
+  plugins: TransformerEntry[],
   moduleResolver: typeof require.resolve = require.resolve
 ): {
   compilerPluginHooks: CompilerPluginHooks;
@@ -29,7 +29,7 @@ export function loadTsPlugins(
       hasPlugin: false,
     };
 
-  const normalizedPlugins: TsPlugin[] = plugins.map((plugin) =>
+  const normalizedPlugins: TransformerPlugin[] = plugins.map((plugin) =>
     typeof plugin === 'string' ? { name: plugin, options: {} } : plugin
   );
 
