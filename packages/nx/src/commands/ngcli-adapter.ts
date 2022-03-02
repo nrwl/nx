@@ -54,7 +54,7 @@ export async function scheduleTarget(
   } = require('@angular-devkit/architect/node');
 
   const logger = getTargetLogger(opts.executor, verbose);
-  const fsHost = new NxScopedHost(normalize(root));
+  const fsHost = new NxScopedHost(root);
   const { workspace } = await workspaces.readWorkspace(
     workspaceConfigName(root),
     workspaces.createWorkspaceHost(fsHost)
@@ -214,8 +214,8 @@ type AngularJsonConfiguration = WorkspaceJsonConfiguration &
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
   protected __nxInMemoryWorkspace: WorkspaceJsonConfiguration | null;
 
-  constructor(root: Path) {
-    super(new NodeJsSyncHost(), root);
+  constructor(private root: string) {
+    super(new NodeJsSyncHost(), normalize(root));
   }
 
   protected __readWorkspaceConfiguration = (
@@ -243,7 +243,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             .read(configFileName)
             .pipe(map((data) => parseJson(Buffer.from(data).toString())));
         } else {
-          const staticProjects = globForProjectFiles(this._root);
+          const staticProjects = globForProjectFiles(this.root);
           this.__nxInMemoryWorkspace = buildWorkspaceConfigurationFromGlobs(
             nxJson,
             staticProjects.filter((x) => basename(x) !== 'package.json')
@@ -569,33 +569,8 @@ type ChangeContext = {
   isNewFormat: boolean;
 };
 
-/**
- * This host contains the workaround needed to run Angular migrations
- */
-export class NxScopedHostForMigrations extends NxScopedHost {
-  constructor(root: Path) {
-    super(root);
-  }
-
-  read(path: Path): Observable<FileBuffer> {
-    if (isWorkspaceConfigPath(path)) {
-      return super.read(path).pipe(map(processConfigWhenReading));
-    } else {
-      return super.read(path);
-    }
-  }
-
-  write(path: Path, content: FileBuffer) {
-    if (isWorkspaceConfigPath(path)) {
-      return super.write(path, processConfigWhenWriting(content));
-    } else {
-      return super.write(path, content);
-    }
-  }
-}
-
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
-  constructor(root: Path, private readonly host: Tree) {
+  constructor(root: string, private readonly host: Tree) {
     super(root);
   }
 
@@ -835,7 +810,7 @@ export async function generate(
   verbose: boolean
 ) {
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHost(normalize(root));
+  const fsHost = new NxScopedHost(root);
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
@@ -921,7 +896,7 @@ export async function runMigration(
   isVerbose: boolean
 ) {
   const logger = getLogger(isVerbose);
-  const fsHost = new NxScopedHost(normalize(root));
+  const fsHost = new NxScopedHost(root);
   const workflow = createWorkflow(fsHost, root, {});
   const collection = resolveMigrationsCollection(packageName);
   return workflow
@@ -1131,10 +1106,7 @@ export function wrapAngularDevkitSchematic(
       }
     };
 
-    const fsHost = new NxScopeHostUsedForWrappedSchematics(
-      normalize(host.root),
-      host
-    );
+    const fsHost = new NxScopeHostUsedForWrappedSchematics(host.root, host);
 
     const options = {
       generatorOptions,
@@ -1186,7 +1158,7 @@ export async function invokeNew(
   verbose: boolean
 ) {
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHost(normalize(root));
+  const fsHost = new NxScopedHost(root);
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic('new', true);
