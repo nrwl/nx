@@ -94,6 +94,8 @@ export function getBaseWebpackPartial(
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
+        // For watch mode, type errors should result in failure.
+        async: false,
         typescript: {
           enabled: true,
           configFile: options.tsConfig,
@@ -103,6 +105,9 @@ export function getBaseWebpackPartial(
     ],
     watch: options.watch,
     watchOptions: {
+      // Delay the next rebuild from first file change, otherwise can lead to
+      // two builds on a single file change.
+      aggregateTimeout: 200,
       poll: options.poll,
     },
     stats: getStatsConfig(options),

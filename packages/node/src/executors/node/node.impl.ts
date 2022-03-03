@@ -5,12 +5,12 @@ import {
   parseTargetString,
   runExecutor,
 } from '@nrwl/devkit';
+import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { ChildProcess, fork } from 'child_process';
 import * as treeKill from 'tree-kill';
 import { promisify } from 'util';
 import { InspectType, NodeExecutorOptions } from './schema';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
 let subProcess: ChildProcess = null;
 
@@ -24,15 +24,15 @@ export async function* nodeExecutor(
   context: ExecutorContext
 ) {
   process.on('SIGTERM', async () => {
-    await killProcess();
+    await killCurrentProcess();
     process.exit(128 + 15);
   });
   process.on('SIGINT', async () => {
-    await killProcess();
+    await killCurrentProcess();
     process.exit(128 + 2);
   });
   process.on('SIGHUP', async () => {
-    await killProcess();
+    await killCurrentProcess();
     process.exit(128 + 1);
   });
 
@@ -80,7 +80,7 @@ function calculateResolveMappings(
   }, {});
 }
 
-function runProcess(
+async function runProcess(
   event: ExecutorEvent,
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
@@ -98,6 +98,18 @@ function runProcess(
       },
     }
   );
+
+  if (!options.watch) {
+    return new Promise<void>((resolve, reject) => {
+      subProcess.on('exit', (code) => {
+        if (code === 0) {
+          resolve(undefined);
+        } else {
+          reject();
+        }
+      });
+    });
+  }
 }
 
 function getExecArgv(options: NodeExecutorOptions) {
@@ -123,17 +135,22 @@ async function handleBuildEvent(
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
 ) {
-  if ((!event.success || options.watch) && subProcess) {
-    await killProcess();
+  // Don't kill previous run unless new build is successful.
+  if (options.watch && event.success) {
+    await killCurrentProcess();
   }
+
   if (event.success) {
-    runProcess(event, options, mappings);
+    await runProcess(event, options, mappings);
   }
 }
 
-async function killProcess() {
-  const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
-    promisify(treeKill);
+const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
+  promisify(treeKill);
+
+async function killCurrentProcess() {
+  if (!subProcess) return;
+
   try {
     await promisifiedTreeKill(subProcess.pid, 'SIGTERM');
   } catch (err) {
