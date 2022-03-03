@@ -12,7 +12,7 @@ import type {
 } from 'typescript';
 import { createAsyncIterable } from '../create-async-iterable/create-async-iteratable';
 import { NormalizedExecutorOptions } from '../schema';
-import { loadTsPlugins } from './load-ts-plugins';
+import { loadTsTransformers } from './load-ts-transformers';
 
 export async function* compileTypeScriptFiles(
   normalizedOptions: NormalizedExecutorOptions,
@@ -24,7 +24,9 @@ export async function* compileTypeScriptFiles(
     outfile: normalizedOptions.mainOutputPath,
   });
 
-  const { compilerPluginHooks } = loadTsPlugins(normalizedOptions.transformers);
+  const { compilerPluginHooks } = loadTsTransformers(
+    normalizedOptions.transformers
+  );
 
   const getCustomTransformers = (program: Program): CustomTransformers => ({
     before: compilerPluginHooks.beforeHooks.map(

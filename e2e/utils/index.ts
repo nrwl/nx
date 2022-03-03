@@ -1,4 +1,12 @@
+import {
+  joinPathFragments,
+  parseJson,
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
@@ -14,21 +22,12 @@ import {
 } from 'fs-extra';
 import * as path from 'path';
 import { join } from 'path';
-import { dirSync } from 'tmp';
-import { check as portCheck } from 'tcp-port-used';
-import {
-  joinPathFragments,
-  parseJson,
-  ProjectConfiguration,
-  WorkspaceJsonConfiguration,
-} from '@nrwl/devkit';
-import { promisify } from 'util';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { coerce } from 'semver';
-import isCI = require('is-ci');
-
+import { check as portCheck } from 'tcp-port-used';
+import { dirSync } from 'tmp';
+import { promisify } from 'util';
 import chalk = require('chalk');
+import isCI = require('is-ci');
 import treeKill = require('tree-kill');
 
 const kill = require('kill-port');

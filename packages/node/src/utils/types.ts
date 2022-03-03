@@ -26,12 +26,12 @@ type TransformerFactory =
   | TypescriptTransformerFactory<Node>
   | CustomTransformerFactory;
 
-export interface TsPlugin {
+export interface TransformerPlugin {
   name: string;
   options: Record<string, unknown>;
 }
 
-export type TsPluginEntry = string | TsPlugin;
+export type TransformerEntry = string | TransformerPlugin;
 
 export interface CompilerPlugin {
   before?: (
@@ -84,7 +84,7 @@ export interface BuildBuilderOptions {
   sourceRoot?: string;
   projectRoot?: string;
 
-  tsPlugins?: TsPluginEntry[];
+  transformers?: TransformerEntry[];
 
   additionalEntryPoints?: AdditionalEntryPoint[];
   outputFileName?: string;

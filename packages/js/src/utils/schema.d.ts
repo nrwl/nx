@@ -8,7 +8,7 @@ import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
 
-export interface GeneratorSchema {
+export interface LibraryGeneratorSchema {
   name: string;
   directory?: string;
   skipFormat?: boolean;
@@ -22,6 +22,7 @@ export interface GeneratorSchema {
   js?: boolean;
   pascalCaseFiles?: boolean;
   strict?: boolean;
+  publishable?: boolean;
   buildable?: boolean;
   setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';

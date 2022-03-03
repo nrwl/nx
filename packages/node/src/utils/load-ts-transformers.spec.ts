@@ -1,22 +1,22 @@
-import { loadTsPlugins } from './load-ts-plugins';
+import { loadTsTransformers } from './load-ts-transformers';
 
 jest.mock('plugin-a');
 jest.mock('plugin-b');
 const mockRequireResolve = jest.fn((path) => path);
 
-describe('loadTsPlugins', () => {
+describe('loadTsTransformers', () => {
   it('should return empty hooks if plugins is falsy', () => {
-    const result = loadTsPlugins(undefined);
+    const result = loadTsTransformers(undefined);
     assertEmptyResult(result);
   });
 
   it('should return empty hooks if plugins is []', () => {
-    const result = loadTsPlugins([]);
+    const result = loadTsTransformers([]);
     assertEmptyResult(result);
   });
 
   it('should return correct compiler hooks', () => {
-    const result = loadTsPlugins(
+    const result = loadTsTransformers(
       ['plugin-a', 'plugin-b'],
       mockRequireResolve as any
     );
@@ -29,7 +29,7 @@ describe('loadTsPlugins', () => {
     });
   });
 
-  function assertEmptyResult(result: ReturnType<typeof loadTsPlugins>) {
+  function assertEmptyResult(result: ReturnType<typeof loadTsTransformers>) {
     expect(result.hasPlugin).toEqual(false);
     expect(result.compilerPluginHooks).toEqual({
       beforeHooks: [],
