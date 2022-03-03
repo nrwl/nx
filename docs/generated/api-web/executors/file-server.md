@@ -73,10 +73,12 @@ Type: `string`
 
 SSL key to use for serving HTTPS.
 
-### withDeps
+### ~~withDeps~~
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** "withDeps" is deprecatedand it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson.
 
 Build the target and all its deps

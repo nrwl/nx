@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 import { Schema } from './schema';
