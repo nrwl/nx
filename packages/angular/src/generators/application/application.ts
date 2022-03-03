@@ -86,9 +86,10 @@ export async function applicationGenerator(
   await angularComponentSchematic(host, {
     name: 'NxWelcome',
     inlineTemplate: true,
+    inlineStyle: true,
     prefix: options.prefix,
     skipTests: true,
-    style: 'none',
+    style: options.style,
     flat: true,
     viewEncapsulation: 'None',
     project: options.name,
