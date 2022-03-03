@@ -6,6 +6,7 @@ import {
   logger,
   offsetFromRoot,
 } from '@nrwl/devkit';
+import { getRootTsConfigPath } from '../../utils/typescript';
 
 const SHARED_SINGLETON_LIBRARIES = [
   '@angular/core',
@@ -42,6 +43,7 @@ export function generateWebpackConfig(
       sourceRoot: appRoot,
       sharedLibraries: SHARED_SINGLETON_LIBRARIES,
       offsetFromRoot: offsetFromRoot(appRoot),
+      rootTsConfigPath: getRootTsConfigPath(host),
     }
   );
 }

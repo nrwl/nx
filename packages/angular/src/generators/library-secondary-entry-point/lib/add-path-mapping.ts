@@ -1,11 +1,12 @@
 import { Tree, updateJson } from '@nrwl/devkit';
+import { getRootTsConfigPath } from '../../utils/typescript';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function addPathMapping(
   tree: Tree,
   options: NormalizedGeneratorOptions
 ): void {
-  updateJson(tree, 'tsconfig.base.json', (json) => {
+  updateJson(tree, getRootTsConfigPath(tree), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     c.paths[options.secondaryEntryPoint] = [

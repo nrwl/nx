@@ -185,6 +185,27 @@ describe('app', () => {
       const workspaceJson = readJson(appTree, '/workspace.json');
       expect(workspaceJson.projects['app'].projectType).toEqual('application');
     });
+
+    it('should extend from tsconfig.base.json', async () => {
+      // ACT
+      await generateApp(appTree, 'app');
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.base.json');
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      appTree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await generateApp(appTree, 'app');
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.json');
+    });
   });
 
   describe('nested', () => {
@@ -257,6 +278,27 @@ describe('app', () => {
           expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
+    });
+
+    it('should extend from tsconfig.base.json', async () => {
+      // ACT
+      await generateApp(appTree, 'app', { directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/my-dir/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.base.json');
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      appTree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await generateApp(appTree, 'app', { directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/my-dir/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

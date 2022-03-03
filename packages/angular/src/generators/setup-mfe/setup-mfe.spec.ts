@@ -47,6 +47,35 @@ describe('Init MFE', () => {
     ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
+    'should support a root tsconfig.json instead of tsconfig.base.json',
+    async (app, type: 'host' | 'remote') => {
+      // ARRANGE
+      host.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await setupMfe(host, {
+        appName: app,
+        mfeType: type,
+      });
+
+      // ASSERT
+      expect(host.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
+      expect(host.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
+
+      const webpackContents = host.read(
+        `apps/${app}/webpack.config.js`,
+        'utf-8'
+      );
+      expect(webpackContents).toContain(
+        "const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.json');"
+      );
+    }
+  );
+
+  test.each([
+    ['app1', 'host'],
+    ['remote1', 'remote'],
+  ])(
     'create bootstrap file with the contents of main.ts',
     async (app, type: 'host' | 'remote') => {
       // ARRANGE

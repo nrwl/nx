@@ -10,6 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace';
 import * as path from 'path';
+import { getRootTsConfigPath } from '../../utils/typescript';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
 
@@ -118,7 +119,9 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     options.projectRoot,
     {
       ...options,
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
+      rootTsConfigPath: `${offsetFromRoot(
+        options.projectRoot
+      )}${getRootTsConfigPath(host)}`,
       tpl: '',
     }
   );
