@@ -38,12 +38,13 @@ The generated buildable library uses the `@nrwl/angular:ng-packagr-lite` executo
 "mylib": {
     "projectType": "library",
     ...
-    "architect": {
+    "targets": {
         "build": {
-            "builder": "@nrwl/angular:ng-packagr-lite",
+            "executor": "@nrwl/angular:ng-packagr-lite",
             "outputs": ["dist/libs/mylib"],
             "options": {...},
-            "configurations": {...}
+            "configurations": {...},
+            "defaultConfiguration": "production"
         },
         "lint": {...},
         "test": {...}
@@ -62,15 +63,16 @@ Change your Angular app’s “build” target executor to `@nrwl/angular:webpac
 "app0": {
     "projectType": "application",
     ...
-    "architect": {
+    "targets": {
         "build": {
-            "builder": "@nrwl/angular:webpack-browser",
+            "executor": "@nrwl/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
-            "options": { ... }
-            "configurations": { ... }
+            "options": { ... },
+            "configurations": { ... },
+            "defaultConfiguration": "production"
         },
         "serve": {
-            "builder": "@nrwl/web:file-server",
+            "executor": "@nrwl/web:file-server",
             "options": {
                 "buildTarget": "app0:build"
             },
@@ -90,16 +92,16 @@ Change your Angular app’s “build” target executor to `@nrwl/angular:webpac
 To build an app incrementally use the following command:
 
 ```bash
-nx build myapp --with-deps --parallel
+nx build myapp --parallel
 ```
 
 To serve an app incrementally use this command:
 
 ```bash
-nx serve myapp --with-deps --parallel
+nx serve myapp --parallel
 ```
 
-Note: you can specify the `--with-deps` and `--parallel` flags as part of the options property on the file-server executor in your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
+Note: you can specify the `--parallel` flags as part of the options property on the file-server executor in your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
 
 ```json
 {
@@ -109,14 +111,13 @@ Note: you can specify the `--with-deps` and `--parallel` flags as part of the op
         "build": {
             "executor": "@nrwl/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
-            "options": { ... }
+            "options": { ... },
             "configurations": { ... }
         },
         "serve": {
             "executor": "@nrwl/web:file-server",
             "options": {
                 "buildTarget": "app0:build",
-                "withDeps": true,
                 "parallel": true
             },
             "configurations": {
