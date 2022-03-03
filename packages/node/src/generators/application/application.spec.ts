@@ -67,7 +67,7 @@ describe('app', () => {
             },
           },
           serve: {
-            builder: '@nrwl/node:execute',
+            builder: '@nrwl/node:node',
             options: {
               buildTarget: 'my-node-app:build',
             },

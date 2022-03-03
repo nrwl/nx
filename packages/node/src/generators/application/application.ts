@@ -74,7 +74,7 @@ function getBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/node:execute',
+    executor: '@nrwl/node:node',
     options: {
       buildTarget: `${options.name}:build`,
     },
