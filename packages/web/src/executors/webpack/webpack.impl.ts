@@ -1,7 +1,13 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
-import { bufferCount, mergeScan, switchMap, tap } from 'rxjs/operators';
+import {
+  bufferCount,
+  mergeScan,
+  switchMap,
+  tap,
+  mergeMap,
+} from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
@@ -188,6 +194,7 @@ export async function* run(
   const configs = getWebpackConfigs(options, context);
   return yield* eachValueFrom(
     from(configs).pipe(
+      mergeMap((config) => (Array.isArray(config) ? from(config) : of(config))),
       // Run build sequentially and bail when first one fails.
       mergeScan(
         (acc, config) => {
