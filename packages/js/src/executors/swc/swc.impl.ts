@@ -12,7 +12,6 @@ import {
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
-import { addTempSwcrc } from '../../utils/swc/add-temp-swcrc';
 import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
@@ -49,7 +48,7 @@ function normalizeOptions(
     srcPath: projectDir,
     destPath: relative(join(contextRoot, swcCwd), outputPath),
     swcCwd,
-    swcrcPath: join(projectRoot, '.swcrc'),
+    swcrcPath: join(contextRoot, projectRoot, '.lib.swcrc'),
   };
 
   return {
@@ -93,7 +92,6 @@ export async function* swcExecutor(
 ) {
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
-  options.swcCliOptions.swcrcPath = addTempSwcrc(options);
   const { tmpTsConfig, projectRoot, target, dependencies } = checkDependencies(
     context,
     options.tsConfig

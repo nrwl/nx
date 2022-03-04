@@ -1,4 +1,10 @@
-module.exports = {
+<% if (transformer === '@swc/jest') { %>const fs = require('fs');
+
+// Reading the SWC compilation config and remove the "exclude"
+// for the test files to be compiled by SWC
+const { exclude:_, ...swcJestConfig } = JSON.parse(fs.readFileSync(`${__dirname}/.lib.swcrc`, 'utf-8'));
+
+<% } %>module.exports = {
   displayName: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.preset.js',<% if(setupFile !== 'none') { %>
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if (transformer === 'ts-jest') { %>
@@ -9,7 +15,7 @@ module.exports = {
   },<% } %><% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
   transform: {
-    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (supportTsx && transformer === '@swc/jest') { %>['<%= transformer %>', { jsc: { transform: { react: { runtime: 'automatic' } } } }]<% } else { %>'<%= transformer %>'<% } %>
+    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (supportTsx && transformer === '@swc/jest') { %>['<%= transformer %>', { jsc: { transform: { react: { runtime: 'automatic' } } } }]<% } else { %><% if (transformer === '@swc/jest') { %>['<%= transformer %>', swcJestConfig]<% } else { %>'<%= transformer %>'<% } %><% } %>
   },
   <% if (supportTsx) { %>moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'

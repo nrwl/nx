@@ -706,7 +706,7 @@ describe('lib', () => {
           compiler: 'swc',
         });
 
-        expect(tree.exists('libs/my-lib/.swcrc')).toBeTruthy();
+        expect(tree.exists('libs/my-lib/.lib.swcrc')).toBeTruthy();
       });
 
       it('should setup jest project using swc', async () => {

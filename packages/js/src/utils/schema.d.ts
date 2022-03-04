@@ -51,6 +51,9 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
 
 export interface SwcExecutorOptions extends ExecutorOptions {
   skipTypeCheck?: boolean;
+  /**
+   * @deprecated
+   */
   swcExclude?: string[];
 }
 

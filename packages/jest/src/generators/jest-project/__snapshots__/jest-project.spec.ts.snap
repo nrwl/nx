@@ -1,7 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
-"module.exports = {
+"const fs = require('fs');
+
+// Reading the SWC compilation config and remove the \\"exclude\\"
+// for the test files to be compiled by SWC
+const { exclude:_, ...swcJestConfig } = JSON.parse(fs.readFileSync(\`\${__dirname}/.lib.swcrc\`, 'utf-8'));
+
+module.exports = {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {

@@ -43,7 +43,7 @@ describe('convert to swc', () => {
     ).toEqual('@nrwl/js:swc');
     expect(
       tree.exists(
-        join(readProjectConfiguration(tree, 'tsc-lib').root, '.swcrc')
+        join(readProjectConfiguration(tree, 'tsc-lib').root, '.lib.swcrc')
       )
     ).toEqual(true);
     expect(tree.read('package.json', 'utf-8')).toContain('@swc/core');
