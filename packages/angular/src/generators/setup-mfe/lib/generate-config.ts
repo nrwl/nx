@@ -1,11 +1,12 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from '../schema';
 import {
   generateFiles,
   joinPathFragments,
   logger,
   offsetFromRoot,
 } from '@nrwl/devkit';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import type { Schema } from '../schema';
 
 const SHARED_SINGLETON_LIBRARIES = [
   '@angular/core',
@@ -30,6 +31,8 @@ export function generateWebpackConfig(
       If this was not the outcome you expected, you can discard the changes we have made, create a backup of your current webpack config, and run the command again.`
     );
   }
+
+  const rootOffset = offsetFromRoot(appRoot);
   generateFiles(
     host,
     joinPathFragments(__dirname, '../files/webpack'),
@@ -41,7 +44,8 @@ export function generateWebpackConfig(
       remotes: remotesWithPorts ?? [],
       sourceRoot: appRoot,
       sharedLibraries: SHARED_SINGLETON_LIBRARIES,
-      offsetFromRoot: offsetFromRoot(appRoot),
+      offsetFromRoot: rootOffset,
+      rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(host),
     }
   );
 }

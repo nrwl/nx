@@ -61,6 +61,30 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.module.css')).toBeTruthy();
     });
+
+    it('should extend from root tsconfig.base.json', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        standaloneConfig: false,
+      });
+
+      const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');
+      expect(tsConfig.extends).toBe('../../tsconfig.base.json');
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        standaloneConfig: false,
+      });
+
+      const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');
+      expect(tsConfig.extends).toBe('../../tsconfig.json');
+    });
   });
 
   describe('--style scss', () => {

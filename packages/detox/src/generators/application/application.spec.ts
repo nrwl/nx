@@ -117,4 +117,34 @@ describe('detox application generator', () => {
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
     });
   });
+
+  describe('tsconfig', () => {
+    beforeEach(async () => {
+      addProjectConfiguration(tree, 'my-app', { root: 'my-app' });
+    });
+
+    it('should extend from tsconfig.base.json', async () => {
+      await detoxApplicationGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.None,
+      });
+
+      const tsConfig = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
+      expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await detoxApplicationGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.None,
+      });
+
+      const tsConfig = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
+      expect(tsConfig.extends).toEqual('../../tsconfig.json');
+    });
+  });
 });

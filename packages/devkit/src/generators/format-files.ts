@@ -116,16 +116,28 @@ function ensurePropertiesAreInNewLocations(tree: Tree) {
 
 function sortTsConfig(tree: Tree) {
   try {
-    const tsconfig = readJson(tree, 'tsconfig.base.json');
-    const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
-    writeJson(tree, 'tsconfig.base.json', {
+    const tsConfigPath = getRootTsConfigPath(tree);
+    if (!tsConfigPath) {
+      return;
+    }
+    updateJson(tree, tsConfigPath, (tsconfig) => ({
       ...tsconfig,
       compilerOptions: {
         ...tsconfig.compilerOptions,
-        paths: sortedPaths,
+        paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
       },
-    });
+    }));
   } catch (e) {
     // catch noop
   }
+}
+
+function getRootTsConfigPath(tree: Tree): string | undefined {
+  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
+    if (tree.exists(path)) {
+      return path;
+    }
+  }
+
+  return undefined;
 }

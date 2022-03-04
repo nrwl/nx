@@ -4,6 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { Schema } from '../schema';
 
 /**
@@ -18,7 +19,7 @@ export function updateTsconfig(
 ) {
   const { appsDir, libsDir, npmScope } = getWorkspaceLayout(tree);
 
-  const tsConfigPath = 'tsconfig.base.json';
+  const tsConfigPath = getRootTsConfigPathInTree(tree, false);
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (json) => {
       delete json.compilerOptions.paths[

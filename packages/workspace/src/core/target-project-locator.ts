@@ -1,5 +1,7 @@
-import { resolveModuleByImport } from '../utilities/typescript';
-import { readFileIfExisting } from './file-utils';
+import {
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from '../utilities/typescript';
 import {
   parseJson,
   ProjectGraphExternalNode,
@@ -8,6 +10,7 @@ import {
 import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { readFileSync } from 'fs';
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
@@ -164,22 +167,21 @@ export class TargetProjectLocator {
   }
 
   private getRootTsConfig() {
-    let path = 'tsconfig.base.json';
-    let absolutePath = this.getAbsolutePath(path);
-    let content = readFileIfExisting(absolutePath);
-    if (!content) {
-      path = 'tsconfig.json';
-      absolutePath = this.getAbsolutePath(path);
-      content = readFileIfExisting(absolutePath);
-    }
-    if (!content) {
+    const path = getRootTsConfigFileName();
+    if (!path) {
       return {
         path: null,
         absolutePath: null,
         config: null,
       };
     }
-    return { path, absolutePath, config: parseJson(content) };
+
+    const absolutePath = this.getAbsolutePath(path);
+    return {
+      absolutePath,
+      path,
+      config: parseJson(readFileSync(absolutePath, 'utf8')),
+    };
   }
 
   private findMatchingProjectFiles(file: string) {

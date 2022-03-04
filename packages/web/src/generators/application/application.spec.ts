@@ -59,6 +59,7 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/src/app/app.element.css')).toBeTruthy();
 
       const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../tsconfig.base.json');
       expect(tsconfig.references).toEqual([
         {
           path: './tsconfig.app.json',
@@ -129,6 +130,18 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        standaloneConfig: false,
+      });
+
+      const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../tsconfig.json');
     });
   });
 
@@ -208,6 +221,30 @@ describe('app', () => {
           expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
+    });
+
+    it('should extend from root tsconfig.base.json', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        directory: 'myDir',
+        standaloneConfig: false,
+      });
+
+      const tsconfig = readJson(tree, 'apps/my-dir/my-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../../tsconfig.base.json');
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        directory: 'myDir',
+        standaloneConfig: false,
+      });
+
+      const tsconfig = readJson(tree, 'apps/my-dir/my-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../../tsconfig.json');
     });
 
     it('should create Nx specific template', async () => {

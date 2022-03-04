@@ -9,6 +9,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 function updateTsConfig(host: Tree, options: NormalizedSchema) {
   updateJson(
@@ -46,11 +47,13 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     styleSolutionSpecificAppFiles = '../files/css-module';
   }
 
+  const rootOffset = offsetFromRoot(options.appProjectRoot);
   const templateVariables = {
     ...names(options.name),
     ...options,
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    offsetFromRoot: rootOffset,
+    rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(host),
   };
 
   generateFiles(

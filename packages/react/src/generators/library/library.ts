@@ -20,6 +20,7 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import * as ts from 'typescript';
 import { assertValidStyle } from '../../utils/assertion';
 import {
@@ -239,7 +240,7 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
 }
 
 function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];
@@ -264,6 +265,7 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
+  const rootOffset = offsetFromRoot(options.projectRoot);
   generateFiles(
     host,
     joinPathFragments(__dirname, './files/lib'),
@@ -272,7 +274,8 @@ function createFiles(host: Tree, options: NormalizedSchema) {
       ...options,
       ...names(options.name),
       tmpl: '',
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
+      offsetFromRoot: rootOffset,
+      rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(host),
     }
   );
 

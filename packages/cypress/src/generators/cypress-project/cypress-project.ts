@@ -16,6 +16,7 @@ import {
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 import { join } from 'path';
 // app
@@ -33,12 +34,14 @@ export interface CypressProjectSchema extends Schema {
 }
 
 function createFiles(tree: Tree, options: CypressProjectSchema) {
+  const rootOffset = offsetFromRoot(options.projectRoot);
   generateFiles(tree, join(__dirname, './files'), options.projectRoot, {
     tmpl: '',
     ...options,
     project: options.project || 'Project',
     ext: options.js ? 'js' : 'ts',
-    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    offsetFromRoot: rootOffset,
+    rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(tree),
   });
 
   const cypressVersion = installedCypressVersion();

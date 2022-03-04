@@ -28,6 +28,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 
 import { Schema } from './schema';
 import { initGenerator } from '../init/init';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -108,11 +109,13 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 }
 
 function addAppFiles(tree: Tree, options: NormalizedSchema) {
+  const offset = offsetFromRoot(options.appProjectRoot);
   generateFiles(tree, join(__dirname, './files/app'), options.appProjectRoot, {
     tmpl: '',
     name: options.name,
     root: options.appProjectRoot,
-    offset: offsetFromRoot(options.appProjectRoot),
+    offset,
+    rootTsConfigPath: offset + getRootTsConfigPathInTree(tree),
   });
   if (options.js) {
     toJS(tree);

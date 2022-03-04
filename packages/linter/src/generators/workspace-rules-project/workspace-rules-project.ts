@@ -11,6 +11,7 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { addPropertyToJestConfig, jestProjectGenerator } from '@nrwl/jest';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
@@ -33,9 +34,11 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
   });
 
   // Generate the required files
+  const rootOffset = offsetFromRoot(WORKSPACE_PLUGIN_DIR);
   generateFiles(tree, join(__dirname, 'files'), workspaceLintPluginDir, {
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(WORKSPACE_PLUGIN_DIR),
+    offsetFromRoot: rootOffset,
+    rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(tree),
   });
 
   /**

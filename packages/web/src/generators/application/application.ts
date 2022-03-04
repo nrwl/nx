@@ -20,6 +20,7 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 import { join } from 'path';
 
@@ -38,11 +39,13 @@ interface NormalizedSchema extends Schema {
 }
 
 function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
+  const rootOffset = offsetFromRoot(options.appProjectRoot);
   generateFiles(tree, join(__dirname, './files/app'), options.appProjectRoot, {
     ...options,
     ...names(options.name),
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    offsetFromRoot: rootOffset,
+    rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(tree),
   });
   if (options.unitTestRunner === 'none') {
     tree.delete(join(options.appProjectRoot, './src/app/app.element.spec.ts'));

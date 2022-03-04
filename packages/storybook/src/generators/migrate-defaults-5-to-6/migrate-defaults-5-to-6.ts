@@ -16,6 +16,7 @@ import { StorybookMigrateDefault5to6Schema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { join } from 'path';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 export function migrateDefaultsGenerator(
   tree: Tree,
@@ -239,6 +240,7 @@ function migrateProjectLevelStorybookInstance(
       tmpl: '',
       uiFramework,
       offsetFromRoot: offsetFromRoot(root),
+      rootTsConfigPath: getRootTsConfigPathInTree(tree),
       projectType: projectDirectory,
       useWebpack5: uiFramework === '@storybook/angular',
       existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
@@ -263,7 +265,7 @@ function migrateRootLevelStorybookInstance(tree: Tree, keepOld: boolean) {
     tree,
     join(__dirname, '../configuration/root-files/.storybook'),
     '.storybook',
-    {}
+    { rootTsConfigPath: getRootTsConfigPathInTree(tree) }
   );
 }
 

@@ -21,6 +21,10 @@ import {
   writeJsonFile,
 } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import {
+  getRootTsConfigFileName,
+  getRootTsConfigPath,
+} from '../utilities/typescript';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -121,7 +125,9 @@ function addRootConfigFiles(
   if (workspaceJsonPath) {
     addToChunkIfNeeded(workspaceJsonPath);
   }
-  ['nx.json', 'tsconfig.base.json'].forEach(addToChunkIfNeeded);
+  ['nx.json', getRootTsConfigFileName()]
+    .filter(Boolean)
+    .forEach(addToChunkIfNeeded);
 
   if (chunk.length > 0) {
     chunkList.push(chunk);
@@ -190,7 +196,7 @@ function sortWorkspaceJson(workspaceJsonPath: string) {
 
 function sortTsConfig() {
   try {
-    const tsconfigPath = path.join(appRootPath, 'tsconfig.base.json');
+    const tsconfigPath = getRootTsConfigPath();
     const tsconfig = readJsonFile(tsconfigPath);
     const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
     tsconfig.compilerOptions.paths = sortedPaths;
