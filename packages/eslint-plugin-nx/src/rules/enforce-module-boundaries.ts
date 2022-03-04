@@ -393,9 +393,10 @@ export default createESLintRule<Options, MessageIds>({
 
         for (let constraint of constraints) {
           if (
+            constraint.onlyDependOnLibsWithTags &&
             hasNoneOfTheseTags(
               targetProject,
-              constraint.onlyDependOnLibsWithTags || []
+              constraint.onlyDependOnLibsWithTags
             )
           ) {
             const allowedTags = constraint.onlyDependOnLibsWithTags
