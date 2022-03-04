@@ -1198,7 +1198,10 @@ Circular file chain:
 Circular file chain:
 - libs/mylib/src/main.ts
 - libs/badcirclelib/src/main.ts
-- [libs/anotherlib/src/main.ts,libs/anotherlib/src/index.ts]`;
+- [
+    libs/anotherlib/src/main.ts,
+    libs/anotherlib/src/index.ts
+  ]`;
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
