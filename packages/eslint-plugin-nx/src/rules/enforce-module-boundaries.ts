@@ -17,6 +17,7 @@ import {
   hasBannedImport,
   isDirectDependency,
   isTerminalRun,
+  stringifyTags,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -403,42 +404,34 @@ export default createESLintRule<Options, MessageIds>({
 
         for (let constraint of constraints) {
           if (
-            constraint.onlyDependOnLibsWithTags &&
             hasNoneOfTheseTags(
               targetProject,
               constraint.onlyDependOnLibsWithTags
             )
           ) {
-            const tags = constraint.onlyDependOnLibsWithTags
-              .map((s) => `"${s}"`)
-              .join(', ');
             context.report({
               node,
               messageId: 'onlyTagsConstraintViolation',
               data: {
                 sourceTag: constraint.sourceTag,
-                tags,
+                tags: stringifyTags(constraint.onlyDependOnLibsWithTags),
               },
             });
             return;
           }
           if (
-            constraint.notDependOnLibsWithTags &&
             hasAnyOfTheseTags(
               projectGraph,
               targetProject.name,
               constraint.notDependOnLibsWithTags
             )
           ) {
-            const tags = constraint.notDependOnLibsWithTags
-              .map((s) => `"${s}"`)
-              .join(', ');
             context.report({
               node,
               messageId: 'notTagsConstraintViolation',
               data: {
                 sourceTag: constraint.sourceTag,
-                tags,
+                tags: stringifyTags(constraint.notDependOnLibsWithTags),
               },
             });
             return;

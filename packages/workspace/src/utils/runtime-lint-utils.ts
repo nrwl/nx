@@ -30,30 +30,46 @@ export type DepConstraint = {
   bannedExternalImports?: string[];
 };
 
+export function stringifyTags(tags: string[]): string {
+  return tags.map((t) => `"${t}"`).join(', ');
+}
+
 export function hasNoneOfTheseTags(
-  proj: ProjectGraphProjectNode,
-  tags: string[]
-) {
+  proj: ProjectGraphProjectNode<any>,
+  tags?: string[]
+): boolean {
+  if (!tags) {
+    return false;
+  }
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
 }
 
 export function hasAnyOfTheseTags(
   graph: ProjectGraph,
   projectName: string,
-  tags: string[],
+  tags?: string[],
   visited?: string[]
-) {
-  visited = visited ?? [];
-
-  let found =
+): boolean {
+  if (!tags) {
+    return false;
+  }
+  const found =
     tags.filter((tag) => hasTag(graph.nodes[projectName], tag)).length !== 0;
 
-  if (found) return true;
+  if (found) {
+    return true;
+  }
+
+  visited = visited ?? [];
 
   for (let d of graph.dependencies[projectName] || []) {
-    if (visited.indexOf(d.target) > -1) continue;
+    if (visited.indexOf(d.target) > -1) {
+      continue;
+    }
     visited.push(d.target);
-    if (hasAnyOfTheseTags(graph, d.target, tags, visited)) return true;
+    if (hasAnyOfTheseTags(graph, d.target, tags, visited)) {
+      return true;
+    }
   }
 
   return false;
