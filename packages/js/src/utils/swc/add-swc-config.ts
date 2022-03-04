@@ -33,7 +33,7 @@ const swcOptionsString = () => `{
     "noInterop": true
   },
   "sourceMaps": true,
-  "exclude": ${defaultExclude}
+  "exclude": ${JSON.stringify(defaultExclude)}
 }`;
 
 export function addSwcConfig(tree: Tree, projectDir: string) {
