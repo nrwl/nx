@@ -21,7 +21,8 @@
     "./generators": "./generators.js",
     "./executors": "./executors.js",
     "./tailwind": "./tailwind.js",
-    "./src/generators/utils": "./src/generators/utils/index.js"
+    "./src/generators/utils": "./src/generators/utils/index.js",
+    "./mfe-utils": "./src/utils/mfe-webpack.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
