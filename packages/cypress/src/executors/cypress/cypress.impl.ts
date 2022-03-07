@@ -50,7 +50,6 @@ export default async function cypressExecutor(
 
   if (options.testingType === 'component') {
     // cypress handles all the dev server stuff
-    // TODO(caleb): is this going to hold the process hostage or exit early?
     success = await runCypress(options.baseUrl, options, context);
   } else {
     for await (const baseUrl of startDevServer(options, context)) {
@@ -80,6 +79,7 @@ function normalizeOptions(
   }
   checkSupportedBrowser(options);
   warnDeprecatedHeadless(options);
+  warnDeprecatedCypressVersion();
   return options;
 }
 
@@ -124,6 +124,15 @@ function warnDeprecatedHeadless({ headless }: CypressExecutorOptions) {
     You can now remove the use of the '--headless' flag during 'cypress run' as this is the default for all browsers.`;
 
     logger.warn(deprecatedMsg);
+  }
+}
+
+function warnDeprecatedCypressVersion() {
+  if (installedCypressVersion() < 10) {
+    logger.warn(stripIndents`
+NOTE:
+Support for Cypress versions < 10 is deperated. Please upgrade to at least Cypress version 10. A generator to migrate from v9 to v10 is provided. See https://nx.dev/cypress
+`);
   }
 }
 
@@ -211,10 +220,8 @@ async function runCypress(
   options.parallel = opts.parallel;
   options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
-  // TODO(caleb): is this supposed to be ignoreSpecPatterns now?
-  // @ts-ignore
+
   options.ignoreTestFiles = opts.ignoreTestFiles;
-  options.ignoreSpecPatterns = opts.ignoreSpecPatterns;
 
   if (opts.reporter) {
     options.reporter = opts.reporter;

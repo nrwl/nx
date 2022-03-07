@@ -24,13 +24,13 @@ describe('Cypress E2E Test runner', () => {
     expect(packageJson.devDependencies['cypress']).toBeTruthy();
 
     // Making sure the cypress folders & files are created
-    checkFilesExist(`apps/${myapp}-e2e/cypress.json`);
+    checkFilesExist(`apps/${myapp}-e2e/cypress.config.ts`);
     checkFilesExist(`apps/${myapp}-e2e/tsconfig.json`);
 
     checkFilesExist(`apps/${myapp}-e2e/src/fixtures/example.json`);
-    checkFilesExist(`apps/${myapp}-e2e/src/integration/app.spec.ts`);
+    checkFilesExist(`apps/${myapp}-e2e/src/e2e/app.cy.ts`);
     checkFilesExist(`apps/${myapp}-e2e/src/support/app.po.ts`);
-    checkFilesExist(`apps/${myapp}-e2e/src/support/index.ts`);
+    checkFilesExist(`apps/${myapp}-e2e/src/support/e2e.ts`);
     checkFilesExist(`apps/${myapp}-e2e/src/support/commands.ts`);
   }, 1000000);
 
@@ -45,13 +45,10 @@ describe('Cypress E2E Test runner', () => {
       'All specs passed!'
     );
     await killPorts(4200);
-    const originalContents = JSON.parse(
-      readFile(`apps/${myapp}-e2e/cypress.json`)
-    );
-    delete originalContents.fixturesFolder;
+    const originalContents = readFile(`apps/${myapp}-e2e/cypress.config.ts`);
     updateFile(
-      `apps/${myapp}-e2e/cypress.json`,
-      JSON.stringify(originalContents)
+      `apps/${myapp}-e2e/cypress.config.ts`,
+      originalContents.replace(/(fixturesFolder).+/i, '')
     );
 
     expect(runCLI(`e2e ${myapp}-e2e --no-watch`)).toContain(
