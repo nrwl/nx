@@ -512,8 +512,10 @@ describe('Enforce Module Boundaries (eslint)', () => {
         graph
       );
 
-      const message =
-        'A project tagged with "public" can not depend on libs tagged with "private"';
+      const message = `A project tagged with "public" can not depend on libs tagged with "private"
+
+Violation detected in:
+- privateName`;
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -532,8 +534,10 @@ describe('Enforce Module Boundaries (eslint)', () => {
 
       expect(failures.length).toEqual(2);
       // TODO: Add project dependency path to message
-      const message =
-        'A project tagged with "public" can not depend on libs tagged with "private"';
+      const message = `A project tagged with "public" can not depend on libs tagged with "private"
+
+Violation detected in:
+- dependsOnPrivateName -> privateName`;
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
     });

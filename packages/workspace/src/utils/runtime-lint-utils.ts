@@ -35,44 +35,52 @@ export function stringifyTags(tags: string[]): string {
 }
 
 export function hasNoneOfTheseTags(
-  proj: ProjectGraphProjectNode<any>,
-  tags?: string[]
+  proj: ProjectGraphProjectNode,
+  tags: string[]
 ): boolean {
-  if (!tags) {
-    return false;
-  }
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
 }
 
-export function hasAnyOfTheseTags(
+/**
+ * Check if any of the given tags is included in the project
+ * @param proj ProjectGraphProjectNode
+ * @param tags
+ * @returns
+ */
+export function findDependenciesWithTags(
+  proj: ProjectGraphProjectNode,
+  tags: string[],
   graph: ProjectGraph,
-  projectName: string,
-  tags?: string[],
-  visited?: string[]
-): boolean {
-  if (!tags) {
-    return false;
+  foundPath: Array<ProjectGraphProjectNode> = [],
+  visited: string[] = []
+): Array<ProjectGraphProjectNode> {
+  if (!hasNoneOfTheseTags(proj, tags)) {
+    return [...foundPath, proj];
   }
-  const found =
-    tags.filter((tag) => hasTag(graph.nodes[projectName], tag)).length !== 0;
-
-  if (found) {
-    return true;
+  if (!graph.dependencies[proj.name]) {
+    return foundPath;
   }
 
-  visited = visited ?? [];
-
-  for (let d of graph.dependencies[projectName] || []) {
+  for (let d of graph.dependencies[proj.name]) {
     if (visited.indexOf(d.target) > -1) {
       continue;
     }
     visited.push(d.target);
-    if (hasAnyOfTheseTags(graph, d.target, tags, visited)) {
-      return true;
+    if (graph.nodes[d.target]) {
+      const tempPath = [...foundPath, proj];
+      const newPath = findDependenciesWithTags(
+        graph.nodes[d.target],
+        tags,
+        graph,
+        tempPath,
+        visited
+      );
+      if (newPath !== tempPath) {
+        return newPath;
+      }
     }
   }
-
-  return false;
+  return foundPath;
 }
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {

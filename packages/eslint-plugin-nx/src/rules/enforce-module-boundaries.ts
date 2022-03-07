@@ -6,8 +6,7 @@ import {
   findSourceProject,
   getSourceFilePath,
   hasBuildExecutor,
-  hasNoneOfTheseTags,
-  hasAnyOfTheseTags,
+  findDependenciesWithTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
   mapProjectGraphFiles,
@@ -18,6 +17,7 @@ import {
   isDirectDependency,
   isTerminalRun,
   stringifyTags,
+  hasNoneOfTheseTags,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -109,7 +109,7 @@ export default createESLintRule<Options, MessageIds>({
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
-      notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}`,
+      notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}\n\nViolation detected in:\n{{projects}}`,
     },
   },
   defaultOptions: [
@@ -309,7 +309,7 @@ export default createESLintRule<Options, MessageIds>({
 
         // spacer text used for indirect dependencies when printing one line per file.
         // without this, we can end up with a very long line that does not display well in the terminal.
-        const spacer = '\n    ';
+        const spacer = '  ';
 
         context.report({
           node,
@@ -324,7 +324,9 @@ export default createESLintRule<Options, MessageIds>({
             filePaths: circularFilePath
               .map((files) =>
                 files.length > 1
-                  ? `[${spacer}${files.join(`,${spacer}`)}\n  ]`
+                  ? `[${files
+                      .map((f) => `\n${spacer}${spacer}${f}`)
+                      .join(',')}\n${spacer}]`
                   : files[0]
               )
               .reduce(
@@ -404,6 +406,8 @@ export default createESLintRule<Options, MessageIds>({
 
         for (let constraint of constraints) {
           if (
+            constraint.onlyDependOnLibsWithTags &&
+            constraint.onlyDependOnLibsWithTags.length &&
             hasNoneOfTheseTags(
               targetProject,
               constraint.onlyDependOnLibsWithTags
@@ -420,21 +424,26 @@ export default createESLintRule<Options, MessageIds>({
             return;
           }
           if (
-            hasAnyOfTheseTags(
-              projectGraph,
-              targetProject.name,
-              constraint.notDependOnLibsWithTags
-            )
+            constraint.notDependOnLibsWithTags &&
+            constraint.notDependOnLibsWithTags.length
           ) {
-            context.report({
-              node,
-              messageId: 'notTagsConstraintViolation',
-              data: {
-                sourceTag: constraint.sourceTag,
-                tags: stringifyTags(constraint.notDependOnLibsWithTags),
-              },
-            });
-            return;
+            const projects = findDependenciesWithTags(
+              targetProject,
+              constraint.notDependOnLibsWithTags,
+              projectGraph
+            );
+            if (projects.length > 0) {
+              context.report({
+                node,
+                messageId: 'notTagsConstraintViolation',
+                data: {
+                  sourceTag: constraint.sourceTag,
+                  tags: stringifyTags(constraint.notDependOnLibsWithTags),
+                  projects: `- ${projects.map((p) => p.name).join(' -> ')}`,
+                },
+              });
+              return;
+            }
           }
         }
       }
