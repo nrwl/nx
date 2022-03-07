@@ -36,6 +36,7 @@ const tsconfig = {
       '@mycompany/mylibName': ['libs/mylibName/src/index.ts'],
       '@mycompany/public': ['libs/public/src/index.ts'],
       '@mycompany/dependsOnPrivate': ['libs/dependsOnPrivate/src/index.ts'],
+      '@mycompany/dependsOnPrivate2': ['libs/dependsOnPrivate2/src/index.ts'],
       '@mycompany/private': ['libs/private/src/index.ts'],
       '@mycompany/anotherlibName': ['libs/anotherlibName/src/index.ts'],
       '@mycompany/badcirclelib': ['libs/badcirclelib/src/index.ts'],
@@ -83,6 +84,7 @@ const fileSys = {
   './libs/nonBuildableLib/src/main.ts': '',
   './libs/public/src/index.ts': '',
   './libs/dependsOnPrivate/src/index.ts': '',
+  './libs/dependsOnPrivate2/src/index.ts': '',
   './libs/private/src/index.ts': '',
   './tsconfig.base.json': JSON.stringify(tsconfig),
   './package.json': JSON.stringify(packageJson),
@@ -279,6 +281,21 @@ describe('Enforce Module Boundaries (eslint)', () => {
             ],
           },
         },
+        dependsOnPrivateName2: {
+          name: 'dependsOnPrivateName2',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/dependsOnPrivate2',
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            files: [
+              createFile(`libs/dependsOnPrivate2/src/index.ts`, [
+                'privateName',
+              ]),
+            ],
+          },
+        },
         privateName: {
           name: 'privateName',
           type: ProjectType.lib,
@@ -344,6 +361,13 @@ describe('Enforce Module Boundaries (eslint)', () => {
         dependsOnPrivateName: [
           {
             source: 'dependsOnPrivateName',
+            target: 'privateName',
+            type: DependencyType.static,
+          },
+        ],
+        dependsOnPrivateName2: [
+          {
+            source: 'dependsOnPrivateName2',
             target: 'privateName',
             type: DependencyType.static,
           },
@@ -509,7 +533,19 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '@mycompany/private';
           import('@mycompany/private');
         `,
-        graph
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            publicName: [
+              {
+                source: 'publicName',
+                target: 'privateName',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        }
       );
 
       const message = `A project tagged with "public" can not depend on libs tagged with "private"
@@ -527,19 +563,45 @@ Violation detected in:
         `${process.cwd()}/proj/libs/public/src/index.ts`,
         `
           import '@mycompany/dependsOnPrivate';
-          import('@mycompany/dependsOnPrivate');
+          import '@mycompany/dependsOnPrivate2';
+          import '@mycompany/private';
         `,
-        graph
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            publicName: [
+              {
+                source: 'publicName',
+                target: 'dependsOnPrivateName',
+                type: DependencyType.static,
+              },
+              {
+                source: 'publicName',
+                target: 'dependsOnPrivateName2',
+                type: DependencyType.static,
+              },
+              {
+                source: 'publicName',
+                target: 'privateName',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        }
       );
 
-      expect(failures.length).toEqual(2);
+      expect(failures.length).toEqual(3);
       // TODO: Add project dependency path to message
-      const message = `A project tagged with "public" can not depend on libs tagged with "private"
+      const message = (
+        prefix
+      ) => `A project tagged with "public" can not depend on libs tagged with "private"
 
 Violation detected in:
-- dependsOnPrivateName -> privateName`;
-      expect(failures[0].message).toEqual(message);
-      expect(failures[1].message).toEqual(message);
+- ${prefix}privateName`;
+      expect(failures[0].message).toEqual(message('dependsOnPrivateName -> '));
+      expect(failures[1].message).toEqual(message('dependsOnPrivateName2 -> '));
+      expect(failures[2].message).toEqual(message(''));
     });
 
     it('should error when the source library is untagged', () => {

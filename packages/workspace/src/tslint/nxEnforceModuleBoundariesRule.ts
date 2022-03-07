@@ -289,19 +289,22 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
           constraint.notDependOnLibsWithTags &&
           constraint.notDependOnLibsWithTags.length
         ) {
-          const projects = findDependenciesWithTags(
+          const projectPaths = findDependenciesWithTags(
             targetProject,
             constraint.notDependOnLibsWithTags,
             this.projectGraph
           );
-          if (projects.length > 0) {
+          if (projectPaths.length > 0) {
             const error = `A project tagged with "${
               constraint.sourceTag
             }" can not depend on libs tagged with ${stringifyTags(
               constraint.notDependOnLibsWithTags
-            )}\n\nViolation detected in:\n${projects
-              .map((p) => p.name)
-              .join(' -> ')}`;
+            )}\n\nViolation detected in:\n${projectPaths
+              .map(
+                (projectPath) =>
+                  `- ${projectPath.map((p) => p.name).join(' -> ')}`
+              )
+              .join('\n')}`;
             this.addFailureAt(node.getStart(), node.getWidth(), error);
             return;
           }

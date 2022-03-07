@@ -427,19 +427,24 @@ export default createESLintRule<Options, MessageIds>({
             constraint.notDependOnLibsWithTags &&
             constraint.notDependOnLibsWithTags.length
           ) {
-            const projects = findDependenciesWithTags(
+            const projectPaths = findDependenciesWithTags(
               targetProject,
               constraint.notDependOnLibsWithTags,
               projectGraph
             );
-            if (projects.length > 0) {
+            if (projectPaths.length > 0) {
               context.report({
                 node,
                 messageId: 'notTagsConstraintViolation',
                 data: {
                   sourceTag: constraint.sourceTag,
                   tags: stringifyTags(constraint.notDependOnLibsWithTags),
-                  projects: `- ${projects.map((p) => p.name).join(' -> ')}`,
+                  projects: projectPaths
+                    .map(
+                      (projectPath) =>
+                        `- ${projectPath.map((p) => p.name).join(' -> ')}`
+                    )
+                    .join('\n'),
                 },
               });
               return;

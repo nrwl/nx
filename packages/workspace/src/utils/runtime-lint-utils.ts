@@ -12,6 +12,7 @@ import {
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { join } from 'path';
 import { appRootPath } from './app-root';
+import { getPath, pathExists } from './graph-utils';
 
 export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
   data: {
@@ -48,39 +49,24 @@ export function hasNoneOfTheseTags(
  * @returns
  */
 export function findDependenciesWithTags(
-  proj: ProjectGraphProjectNode,
+  targetProject: ProjectGraphProjectNode,
   tags: string[],
-  graph: ProjectGraph,
-  foundPath: Array<ProjectGraphProjectNode> = [],
-  visited: string[] = []
-): Array<ProjectGraphProjectNode> {
-  if (!hasNoneOfTheseTags(proj, tags)) {
-    return [...foundPath, proj];
-  }
-  if (!graph.dependencies[proj.name]) {
-    return foundPath;
-  }
+  graph: ProjectGraph
+): ProjectGraphProjectNode[][] {
+  // find all reachable projects that have one of the tags and
+  // are reacheable from the targetProject (including self)
+  const allReachableProjects = Object.keys(graph.nodes).filter(
+    (projectName) =>
+      pathExists(graph, targetProject.name, projectName) &&
+      tags.some((tag) => hasTag(graph.nodes[projectName], tag))
+  );
 
-  for (let d of graph.dependencies[proj.name]) {
-    if (visited.indexOf(d.target) > -1) {
-      continue;
-    }
-    visited.push(d.target);
-    if (graph.nodes[d.target]) {
-      const tempPath = [...foundPath, proj];
-      const newPath = findDependenciesWithTags(
-        graph.nodes[d.target],
-        tags,
-        graph,
-        tempPath,
-        visited
-      );
-      if (newPath !== tempPath) {
-        return newPath;
-      }
-    }
-  }
-  return foundPath;
+  // return path from targetProject to reachable project
+  return allReachableProjects.map((project) =>
+    targetProject.name === project
+      ? [targetProject]
+      : getPath(graph, targetProject.name, project)
+  );
 }
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {
