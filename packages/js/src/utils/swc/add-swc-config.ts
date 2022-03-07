@@ -3,6 +3,14 @@
 import { Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
+export const defaultExclude = [
+  './src/**/.*.spec.ts$',
+  './**/.*.spec.ts$',
+  './src/**/jest-setup.ts$',
+  './**/jest-setup.ts$',
+  './**/.*.js$',
+];
+
 const swcOptionsString = () => `{
   "jsc": {
     "target": "es2017",
@@ -23,13 +31,14 @@ const swcOptionsString = () => `{
     "type": "commonjs",
     "strict": true,
     "noInterop": true
-  }
+  },
+  "sourceMaps": true,
+  "exclude": ${JSON.stringify(defaultExclude)}
 }`;
 
 export function addSwcConfig(tree: Tree, projectDir: string) {
-  const swcrcPath = join(projectDir, '.swcrc');
-  const isSwcConfigExist = tree.exists(swcrcPath);
-  if (isSwcConfigExist) return;
+  const swcrcPath = join(projectDir, '.lib.swcrc');
+  if (tree.exists(swcrcPath)) return;
 
   tree.write(swcrcPath, swcOptionsString());
 }
