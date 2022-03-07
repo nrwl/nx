@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 import { Schema } from './schema';
@@ -25,6 +25,12 @@ function getHttpServerArgs(options: Schema) {
   }
   if (options.proxyUrl) {
     args.push(`-P ${options.proxyUrl}`);
+  }
+
+  if (options.proxyOptions) {
+    Object.keys(options.proxyOptions).forEach((key) => {
+      args.push(`--proxy-options.${key}`, options.proxyOptions[key]);
+    });
   }
   return args;
 }
