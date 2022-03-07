@@ -16,7 +16,10 @@ import {
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
@@ -162,7 +165,6 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
 
-  const rootOffset = offsetFromRoot(options.projectRoot);
   generateFiles(tree, filesDir, options.projectRoot, {
     ...options,
     dot: '.',
@@ -173,8 +175,8 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     cliCommand: 'nx',
     strict: undefined,
     tmpl: '',
-    offsetFromRoot: rootOffset,
-    rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(tree),
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     buildable: options.buildable === true,
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });

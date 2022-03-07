@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { offsetFromRoot, Tree } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -93,24 +93,24 @@ function getCompilerHost(tsConfigPath: string) {
   return { options, host, moduleResolutionCache };
 }
 
-export function getRootTsConfigPathInTree(
-  tree: Tree,
-  throwIfNotFound: boolean = true
-): string {
+export function getRootTsConfigPathInTree(tree: Tree): string | null {
   for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
     if (tree.exists(path)) {
       return path;
     }
   }
 
-  if (throwIfNotFound) {
-    throw new Error(
-      'Could not find root tsconfig file. Tried with "tsconfig.base.json" and "tsconfig.json".'
-    );
-  }
+  return 'tsconfig.base.json';
 }
 
-export function getRootTsConfigFileName(): string | undefined {
+export function getRelativePathToRootTsConfig(
+  tree: Tree,
+  targetPath: string
+): string {
+  return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
+}
+
+export function getRootTsConfigFileName(): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
     const tsConfigPath = join(appRootPath, tsConfigName);
     if (existsSync(tsConfigPath)) {
@@ -118,11 +118,11 @@ export function getRootTsConfigFileName(): string | undefined {
     }
   }
 
-  return undefined;
+  return null;
 }
 
-export function getRootTsConfigPath(): string | undefined {
+export function getRootTsConfigPath(): string | null {
   const tsConfigFileName = getRootTsConfigFileName();
 
-  return tsConfigFileName ? join(appRootPath, tsConfigFileName) : undefined;
+  return tsConfigFileName ? join(appRootPath, tsConfigFileName) : null;
 }

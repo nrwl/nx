@@ -19,7 +19,10 @@ import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -156,7 +159,6 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
-  const rootOffset = offsetFromRoot(options.projectRoot);
   generateFiles(
     host,
     joinPathFragments(__dirname, './files/lib'),
@@ -165,8 +167,11 @@ function createFiles(host: Tree, options: NormalizedSchema) {
       ...options,
       ...names(options.name),
       tmpl: '',
-      offsetFromRoot: rootOffset,
-      rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(host),
+      offsetFromRoot: offsetFromRoot(options.projectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        host,
+        options.projectRoot
+      ),
     }
   );
 

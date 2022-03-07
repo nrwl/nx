@@ -5,7 +5,7 @@ import {
   logger,
   offsetFromRoot,
 } from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import type { Schema } from '../schema';
 
 const SHARED_SINGLETON_LIBRARIES = [
@@ -32,7 +32,6 @@ export function generateWebpackConfig(
     );
   }
 
-  const rootOffset = offsetFromRoot(appRoot);
   generateFiles(
     host,
     joinPathFragments(__dirname, '../files/webpack'),
@@ -44,8 +43,8 @@ export function generateWebpackConfig(
       remotes: remotesWithPorts ?? [],
       sourceRoot: appRoot,
       sharedLibraries: SHARED_SINGLETON_LIBRARIES,
-      offsetFromRoot: rootOffset,
-      rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(host),
+      offsetFromRoot: offsetFromRoot(appRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(host, appRoot),
     }
   );
 }

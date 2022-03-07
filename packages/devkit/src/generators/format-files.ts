@@ -132,12 +132,12 @@ function sortTsConfig(tree: Tree) {
   }
 }
 
-function getRootTsConfigPath(tree: Tree): string | undefined {
+function getRootTsConfigPath(tree: Tree): string | null {
   for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
     if (tree.exists(path)) {
       return path;
     }
   }
 
-  return undefined;
+  return null;
 }

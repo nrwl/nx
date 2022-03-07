@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
-import { generateFiles, joinPathFragments, offsetFromRoot } from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { generateFiles, joinPathFragments } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createFiles(
@@ -16,9 +16,10 @@ export function createFiles(
     options.appProjectRoot,
     {
       ...options,
-      rootTsConfigPath: `${offsetFromRoot(
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        host,
         options.appProjectRoot
-      )}${getRootTsConfigPathInTree(host)}`,
+      ),
       tpl: '',
     }
   );

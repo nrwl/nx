@@ -19,7 +19,7 @@ export function updateTsconfig(
 ) {
   const { appsDir, libsDir, npmScope } = getWorkspaceLayout(tree);
 
-  const tsConfigPath = getRootTsConfigPathInTree(tree, false);
+  const tsConfigPath = getRootTsConfigPathInTree(tree);
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (json) => {
       delete json.compilerOptions.paths[

@@ -16,7 +16,10 @@ import {
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
-import { getRootTsConfigPathInTree } from '../../utilities/typescript';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '../../utilities/typescript';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -139,7 +142,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     strict: undefined,
     tmpl: '',
     offsetFromRoot: rootOffset,
-    rootTsConfigPath: rootOffset + getRootTsConfigPathInTree(tree),
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 
