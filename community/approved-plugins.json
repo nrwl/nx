@@ -253,5 +253,10 @@
     "name": "@nxrs/cargo",
     "description": "Nx plugin adding first-class support for Rust applications and libraries.",
     "url": "https://github.com/nxrs/cargo/tree/main/packages/cargo"
+  },
+  {
+    "name": "nx-uvu",
+    "description": "An nx executor for the uvu test library",
+    "url": "https://github.com/jmcdo29/nx-uvu"
   }
 ]
