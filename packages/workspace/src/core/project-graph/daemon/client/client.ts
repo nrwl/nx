@@ -1,4 +1,5 @@
 import { ProjectGraph } from '@nrwl/devkit';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
@@ -23,7 +24,7 @@ export async function startInBackground(): Promise<ChildProcess['pid']> {
   const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
   const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
   const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
-    cwd: __dirname,
+    cwd: appRootPath,
     stdio: ['ignore', out, err],
     detached: true,
     windowsHide: true,
@@ -84,7 +85,7 @@ export function startInCurrentProcess(): void {
   });
 
   spawnSync(process.execPath, ['../server/start.js'], {
-    cwd: __dirname,
+    cwd: appRootPath,
     stdio: 'inherit',
   });
 }
