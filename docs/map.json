@@ -639,6 +639,11 @@
             "file": "generated/api-angular/generators/library-secondary-entry-point"
           },
           {
+            "name": "mfe-host generator",
+            "id": "mfe-host",
+            "file": "generated/api-angular/generators/mfe-host"
+          },
+          {
             "name": "move generator",
             "id": "move",
             "file": "generated/api-angular/generators/move"
