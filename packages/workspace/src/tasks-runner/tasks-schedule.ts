@@ -1,4 +1,4 @@
-import { ProjectGraph, Task, TaskGraph } from '@nrwl/devkit';
+import { Task, TaskGraph } from '@nrwl/devkit';
 
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
@@ -31,8 +31,7 @@ export class TasksSchedule {
     private readonly hasher: Hasher,
     private taskGraph: TaskGraph,
     private workspace: Workspaces,
-    private options: DefaultTasksRunnerOptions,
-    private readonly projectGraph: ProjectGraph
+    private options: DefaultTasksRunnerOptions
   ) {}
 
   public async scheduleNextTasks() {
@@ -164,7 +163,7 @@ export class TasksSchedule {
   private async hashTask(task: Task) {
     const customHasher = getCustomHasher(task, this.workspace);
     const { value, details } = await (customHasher
-      ? customHasher(task, this.taskGraph, this.hasher, this.projectGraph)
+      ? customHasher(task, this.taskGraph, this.hasher)
       : this.hasher.hashTaskWithDepsAndContext(task));
     task.hash = value;
     task.hashDetails = details;

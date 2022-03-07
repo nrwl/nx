@@ -1,5 +1,5 @@
 import { TasksSchedule } from './tasks-schedule';
-import { ProjectGraph, Task, TaskGraph } from '@nrwl/devkit';
+import { Task, TaskGraph } from '@nrwl/devkit';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { removeTasksFromTaskGraph } from '@nrwl/workspace/src/tasks-runner/utils';
 
@@ -82,11 +82,6 @@ describe('TasksSchedule', () => {
       },
     };
 
-    const projectGraph: ProjectGraph = {
-      nodes: {},
-      dependencies: {},
-    };
-
     const hasher = {
       hashTaskWithDepsAndContext: () => 'hash',
     } as any;
@@ -101,8 +96,7 @@ describe('TasksSchedule', () => {
           endTask: jest.fn(),
           scheduleTask: jest.fn(),
         },
-      },
-      projectGraph
+      }
     );
   });
 
