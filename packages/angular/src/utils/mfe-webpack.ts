@@ -1,5 +1,5 @@
 import { readTsConfig } from '@nrwl/workspace';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
 import { appRootPath as rootPath } from '@nrwl/tao/src/utils/app-root';
 import { normalizePath, joinPathFragments } from '@nrwl/devkit';
@@ -70,4 +70,27 @@ export function shareWorkspaceLibraries(
         }
       }),
   };
+}
+
+export function sharePackages(packages: string[]) {
+  const pkgJsonPath = joinPathFragments(rootPath, 'package.json');
+  if (!existsSync(pkgJsonPath)) {
+    throw new Error(
+      'NX MFE: Could not find root package.json to determine dependency versions.'
+    );
+  }
+
+  const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
+
+  return packages.reduce(
+    (shared, pkgName) => ({
+      ...shared,
+      [pkgName]: {
+        singleton: true,
+        strictVersion: true,
+        requiredVersion: pkgJson.dependencies[pkgName],
+      },
+    }),
+    {}
+  );
 }
