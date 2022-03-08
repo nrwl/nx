@@ -21,8 +21,7 @@
     "./generators": "./generators.js",
     "./executors": "./executors.js",
     "./tailwind": "./tailwind.js",
-    "./src/generators/utils": "./src/generators/utils/index.js",
-    "./mfe-utils": "./src/utils/mfe-webpack.js"
+    "./src/generators/utils": "./src/generators/utils/index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -51,6 +50,7 @@
     "webpack-merge": "5.7.3",
     "ts-node": "~9.1.1",
     "tsconfig-paths": "^3.9.0",
-    "semver": "7.3.4"
+    "semver": "7.3.4",
+    "webpack": "^5.58.1"
   }
 }
