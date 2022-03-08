@@ -79,6 +79,6 @@ Default: `false`
 
 Type: `boolean`
 
-**Deprecated:** "withDeps" is deprecatedand it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson.
+**Deprecated:** "withDeps" is deprecated and it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson.
 
 Build the target and all its deps

@@ -12,7 +12,7 @@
       "type": "boolean",
       "description": "Build the target and all its deps",
       "default": false,
-      "x-deprecated": "\"withDeps\" is deprecatedand it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
+      "x-deprecated": "\"withDeps\" is deprecated and it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
     },
     "parallel": {
       "type": "boolean",
