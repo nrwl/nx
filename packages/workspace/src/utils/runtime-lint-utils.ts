@@ -12,6 +12,7 @@ import {
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { join } from 'path';
 import { appRootPath } from './app-root';
+import { getPath, pathExists } from './graph-utils';
 
 export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
   data: {
@@ -26,14 +27,46 @@ export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags: string[];
+  notDependOnLibsWithTags: string[];
   bannedExternalImports?: string[];
 };
 
+export function stringifyTags(tags: string[]): string {
+  return tags.map((t) => `"${t}"`).join(', ');
+}
+
 export function hasNoneOfTheseTags(
-  proj: ProjectGraphProjectNode<any>,
+  proj: ProjectGraphProjectNode,
   tags: string[]
-) {
+): boolean {
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
+}
+
+/**
+ * Check if any of the given tags is included in the project
+ * @param proj ProjectGraphProjectNode
+ * @param tags
+ * @returns
+ */
+export function findDependenciesWithTags(
+  targetProject: ProjectGraphProjectNode,
+  tags: string[],
+  graph: ProjectGraph
+): ProjectGraphProjectNode[][] {
+  // find all reachable projects that have one of the tags and
+  // are reacheable from the targetProject (including self)
+  const allReachableProjects = Object.keys(graph.nodes).filter(
+    (projectName) =>
+      pathExists(graph, targetProject.name, projectName) &&
+      tags.some((tag) => hasTag(graph.nodes[projectName], tag))
+  );
+
+  // return path from targetProject to reachable project
+  return allReachableProjects.map((project) =>
+    targetProject.name === project
+      ? [targetProject]
+      : getPath(graph, targetProject.name, project)
+  );
 }
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {

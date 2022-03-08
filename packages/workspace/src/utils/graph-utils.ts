@@ -29,9 +29,9 @@ function buildMatrix(graph: ProjectGraph) {
     };
   }, {});
 
-  nodes.forEach((v, i) => {
-    adjList[nodes[i]] = [];
-    matrix[nodes[i]] = { ...initMatrixValues };
+  nodes.forEach((v) => {
+    adjList[v] = [];
+    matrix[v] = { ...initMatrixValues };
   });
 
   for (let proj in dependencies) {
@@ -42,7 +42,7 @@ function buildMatrix(graph: ProjectGraph) {
     }
   }
 
-  const traverse = (s, v) => {
+  const traverse = (s: string, v: string) => {
     matrix[s][v] = true;
 
     for (let adj of adjList[v]) {
@@ -52,8 +52,8 @@ function buildMatrix(graph: ProjectGraph) {
     }
   };
 
-  nodes.forEach((v, i) => {
-    traverse(nodes[i], nodes[i]);
+  nodes.forEach((v) => {
+    traverse(v, v);
   });
 
   return {
@@ -106,11 +106,28 @@ export function getPath(
   }
 }
 
+export function pathExists(
+  graph: ProjectGraph,
+  sourceProjectName: string,
+  targetProjectName: string
+): boolean {
+  if (sourceProjectName === targetProjectName) return true;
+
+  if (reach.graph !== graph) {
+    const { matrix, adjList } = buildMatrix(graph);
+    reach.graph = graph;
+    reach.matrix = matrix;
+    reach.adjList = adjList;
+  }
+
+  return reach.matrix[sourceProjectName][targetProjectName];
+}
+
 export function checkCircularPath(
   graph: ProjectGraph,
   sourceProject: ProjectGraphProjectNode,
   targetProject: ProjectGraphProjectNode
-): Array<ProjectGraphProjectNode> {
+): ProjectGraphProjectNode[] {
   if (!graph.nodes[targetProject.name]) return [];
 
   return getPath(graph, targetProject.name, sourceProject.name);
