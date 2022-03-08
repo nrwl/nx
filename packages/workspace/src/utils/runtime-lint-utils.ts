@@ -168,12 +168,12 @@ export function isAbsoluteImportIntoAnotherProject(
 }
 
 export function findProjectUsingImport(
-  projectGraph: ProjectGraph,
+  projectGraph: MappedProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string,
   npmScope: string
-) {
+): MappedProjectGraphNode | ProjectGraphExternalNode {
   const target = targetProjectLocator.findProjectWithImport(
     imp,
     filePath,

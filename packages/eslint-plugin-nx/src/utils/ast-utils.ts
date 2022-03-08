@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, readJsonFile } from '@nrwl/devkit';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
 import { MappedProjectGraphNode } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { existsSync, readFileSync } from 'fs';
@@ -9,13 +9,9 @@ import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 function tryReadBaseJson() {
   try {
-    return JSON.parse(
-      readFileSync(
-        joinPathFragments(appRootPath, 'tsconfig.base.json')
-      ).toString('utf-8')
-    );
+    return readJsonFile(joinPathFragments(appRootPath, 'tsconfig.base.json'));
   } catch (e) {
-    logger.warn(`Error reading tsconfig.base.json: \n${JSON.stringify(e)}`);
+    logger.warn(`Error reading "tsconfig.base.json": \n${JSON.stringify(e)}`);
     return null;
   }
 }
@@ -29,14 +25,7 @@ export function getBarrelEntryPointByImportScope(
   importScope: string
 ): string[] | null {
   const tsConfigBase = tryReadBaseJson();
-
-  if (tsConfigBase?.compilerOptions?.paths) {
-    const entryPoints = tsConfigBase.compilerOptions.paths[importScope];
-    if (entryPoints) {
-      return entryPoints;
-    }
-  }
-  return null;
+  return tsConfigBase?.compilerOptions?.paths[importScope] || null;
 }
 
 export function getBarrelEntryPointProjectNode(
@@ -157,7 +146,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
              * starting from `SOME_CONSTANT` identifier usages.
              */
             if (parent.kind === ts.SyntaxKind.FunctionDeclaration) {
-              const parentName = (parent as any)?.name?.text;
+              const parentName = (parent as any).name?.text;
               if (parentName === exportedMember) {
                 hasExport = true;
                 break;

@@ -19,13 +19,18 @@ import {
   stringifyTags,
   hasNoneOfTheseTags,
   groupImports,
+  MappedProjectGraphNode,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { joinPathFragments, normalizePath } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  normalizePath,
+  ProjectGraphExternalNode,
+} from '@nrwl/devkit';
 import {
   ProjectType,
   readCachedProjectGraph,
@@ -39,10 +44,7 @@ import {
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
 import * as chalk from 'chalk';
-import { existsSync, readFileSync } from 'fs';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
-import ts = require('typescript');
-import { basename, dirname, join, relative, resolve } from 'path';
+import { basename, dirname, relative } from 'path';
 import {
   getBarrelEntryPointByImportScope,
   getBarrelEntryPointProjectNode,
@@ -225,19 +227,22 @@ export default createESLintRule<Options, MessageIds>({
         projectPath
       );
 
-      // check for relative and absolute imports
       const sourceProject = findSourceProject(projectGraph, sourceFilePath);
-      const targetImportProject = getTargetProjectBasedOnRelativeImport(
-        imp,
-        projectPath,
-        projectGraph,
-        sourceFilePath
-      );
+      // If source is not part of an nx workspace, return.
+      if (!sourceProject) {
+        return;
+      }
 
+      // check for relative and absolute imports
+      let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+        getTargetProjectBasedOnRelativeImport(
+          imp,
+          projectPath,
+          projectGraph,
+          sourceFilePath
+        );
       if (
-        (sourceProject &&
-          targetImportProject &&
-          sourceProject !== targetImportProject) ||
+        (targetProject && sourceProject !== targetProject) ||
         isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
       ) {
         context.report({
@@ -247,19 +252,18 @@ export default createESLintRule<Options, MessageIds>({
             npmScope,
           },
           fix(fixer) {
-            if (targetImportProject) {
-              const indexTsPaths =
-                getBarrelEntryPointProjectNode(targetImportProject);
+            if (targetProject) {
+              const indexTsPaths = getBarrelEntryPointProjectNode(
+                targetProject as MappedProjectGraphNode
+              );
 
               if (indexTsPaths && indexTsPaths.length > 0) {
-                const imports = ((node as any).specifiers || []).map(
-                  (specifier) => specifier.imported.name
-                );
-
-                // ignore non-named imports for now, like "import '../../some-other-lib/src'"
-                if (imports.length === 0) {
+                const specifiers = (node as any).specifiers;
+                if (!specifiers || specifiers.length === 0) {
                   return;
                 }
+
+                const imports = specifiers.map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -272,18 +276,10 @@ export default createESLintRule<Options, MessageIds>({
                       sourceProject.data.sourceRoot
                     );
 
-                    if (importPath) {
-                      importsToRemap.push({
-                        member: importMember,
-                        importPath: entryPointPath.importScope,
-                      });
-                    } else {
-                      // we cannot remap, so leave it as is
-                      importsToRemap.push({
-                        member: importMember,
-                        importPath: imp,
-                      });
-                    }
+                    importsToRemap.push({
+                      member: importMember,
+                      importPath: importPath ? entryPointPath.importScope : imp, // we cannot remap, so leave it as is
+                    });
                   }
                 }
 
@@ -302,24 +298,24 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      const targetProject = findProjectUsingImport(
-        projectGraph,
-        targetProjectLocator,
-        sourceFilePath,
-        imp,
-        npmScope
-      );
+      targetProject =
+        targetProject ||
+        findProjectUsingImport(
+          projectGraph,
+          targetProjectLocator,
+          sourceFilePath,
+          imp,
+          npmScope
+        );
 
-      // If source or target are not part of an nx workspace, return.
-      if (!sourceProject || !targetProject) {
+      // If target is not part of an nx workspace, return.
+      if (!targetProject) {
         return;
       }
 
-      // same project => allow
+      // we only allow relative paths within the same project
+      // and if it's not a secondary entrypoint in an angular lib
       if (sourceProject === targetProject) {
-        // we only allow relative paths within the same project
-        // and if it's not a secondary entrypoint in an angular lib
-
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
@@ -332,18 +328,15 @@ export default createESLintRule<Options, MessageIds>({
               imp,
             },
             fix(fixer) {
-              // imp is equal to @myorg/someproject
+              // imp has form of @myorg/someproject/some/path
               const indexTsPaths = getBarrelEntryPointByImportScope(imp);
               if (indexTsPaths && indexTsPaths.length > 0) {
-                // imported JS functions to remap
-                const imports = (
-                  (node.source.parent as any).specifiers || []
-                ).map((specifier) => specifier.imported.name);
-
-                // ignore non-named imports for now, like "import '../../some-other-lib/src'"
-                if (imports.length === 0) {
+                const specifiers = (node as any).specifiers;
+                if (!specifiers || specifiers.length === 0) {
                   return;
                 }
+                // imported JS functions to remap
+                const imports = specifiers.map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -357,17 +350,17 @@ export default createESLintRule<Options, MessageIds>({
                     );
                     if (importPath) {
                       // resolve the import path
-                      let importPathResolved = relative(
+                      const relativePath = relative(
                         dirname(context.getFilename()),
                         dirname(importPath)
                       );
 
                       // if the string is empty, it's the current file
-                      importPathResolved =
-                        importPathResolved === ''
+                      const importPathResolved =
+                        relativePath === ''
                           ? `./${basename(importPath)}`
                           : joinPathFragments(
-                              importPathResolved,
+                              relativePath,
                               basename(importPath)
                             );
 
