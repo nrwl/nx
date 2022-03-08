@@ -4,6 +4,7 @@ import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../../../utilities/output';
 import {
@@ -23,13 +24,17 @@ export async function startInBackground(): Promise<ChildProcess['pid']> {
 
   const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
   const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-  const backgroundProcess = spawn(process.execPath, ['../server/start.js'], {
-    cwd: appRootPath,
-    stdio: ['ignore', out, err],
-    detached: true,
-    windowsHide: true,
-    shell: false,
-  });
+  const backgroundProcess = spawn(
+    process.execPath,
+    [join(__dirname, '../server/start.js')],
+    {
+      cwd: appRootPath,
+      stdio: ['ignore', out, err],
+      detached: true,
+      windowsHide: true,
+      shell: false,
+    }
+  );
   backgroundProcess.unref();
 
   // Persist metadata about the background process so that it can be cleaned up later if needed
@@ -84,7 +89,7 @@ export function startInCurrentProcess(): void {
     title: `Daemon Server - Starting in the current process...`,
   });
 
-  spawnSync(process.execPath, ['../server/start.js'], {
+  spawnSync(process.execPath, [join(__dirname, '../server/start.js')], {
     cwd: appRootPath,
     stdio: 'inherit',
   });
