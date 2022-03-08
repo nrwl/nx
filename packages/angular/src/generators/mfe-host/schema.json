@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxMFEHost",
+  "cli": "nx",
+  "title": "Nx MFE Host App",
+  "description": "Create an Angular Host Micro Frontend Application",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g @nrwl/angular:mfe-host appName --remotes=remote1",
+      "description": "Create an Angular app with configuration in place for MFE. If remotes is provided, attach the remote app to this app's configuration."
+    }
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name to give to the host Angular app.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "host": {
+      "type": "string",
+      "description": "The name of the host app to attach this host app to."
+    },
+    "port": {
+      "type": "string",
+      "description": "The port on which this app should be served."
+    }
+  },
+  "required": ["name"]
+}

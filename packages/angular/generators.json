@@ -74,6 +74,12 @@
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
     },
+    "mfe-host": {
+      "factory": "./src/generators/mfe-host/mfe-host.compat",
+      "schema": "./src/generators/mfe-host/schema.json",
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application."
+    },
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
       "schema": "./src/generators/ngrx/schema.json",
@@ -206,6 +212,12 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "mfe-host": {
+      "factory": "./src/generators/mfe-host/mfe-host",
+      "schema": "./src/generators/mfe-host/schema.json",
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application."
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",
