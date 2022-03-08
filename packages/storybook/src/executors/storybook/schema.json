@@ -50,8 +50,18 @@
     "staticDir": {
       "type": "array",
       "description": "Directory where to load static files from, array of strings",
+      "default": [],
       "items": {
         "type": "string"
+      },
+      "x-deprecated": "This field has been renamed to staticDirs."
+    },
+    "staticDirs": {
+      "type": "array",
+      "description": "Directory where to load static files from, array of strings or object with from, to keys",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/staticDirPattern"
       }
     },
     "projectBuildConfig": {
@@ -132,6 +142,28 @@
         {
           "type": "string",
           "description": "The file to include."
+        }
+      ]
+    },
+    "staticDirPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "From path"
+            },
+            "to": {
+              "type": "string",
+              "description": "To path"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["from", "to"]
+        },
+        {
+          "type": "string"
         }
       ]
     }

@@ -79,11 +79,19 @@ Type: `string`
 
 SSL key to use for serving HTTPS.
 
-### staticDir
+### ~~staticDir~~
 
 Type: `array`
 
+**Deprecated:** This field has been renamed to staticDirs.
+
 Directory where to load static files from, array of strings
+
+### staticDirs
+
+Type: `array`
+
+Directory where to load static files from, array of strings or object with from, to keys
 
 ### stylePreprocessorOptions.includePaths
 
