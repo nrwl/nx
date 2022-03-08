@@ -38,11 +38,11 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
 
     const bodyLines = this.projectNames.map(
-      (affectedProject) => ` ${output.colors.gray('-')} ${affectedProject}`
+      (affectedProject) => ` ${output.dim('-')} ${affectedProject}`
     );
     if (Object.keys(this.taskOverrides).length > 0) {
       bodyLines.push('');
-      bodyLines.push(`${output.colors.gray('With flags:')}`);
+      bodyLines.push(`${output.dim('With flags:')}`);
       Object.entries(this.taskOverrides)
         .map(([flag, value]) => `  --${flag}=${value}`)
         .forEach((arg) => bodyLines.push(arg));
@@ -77,7 +77,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       const bodyLines =
         this.cachedTasks.length > 0
           ? [
-              output.colors.gray(
+              output.dim(
                 `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
               ),
             ]
@@ -96,21 +96,17 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       const skippedTasks = this.skippedTasks();
       if (skippedTasks.length > 0) {
         bodyLines.push(
-          output.colors.gray(
-            'Tasks not run because their dependencies failed:'
-          ),
+          output.dim('Tasks not run because their dependencies failed:'),
           '',
-          ...skippedTasks.map(
-            (task) => `${output.colors.gray('-')} ${task.id}`
-          ),
+          ...skippedTasks.map((task) => `${output.dim('-')} ${task.id}`),
           ''
         );
       }
       bodyLines.push(
-        output.colors.gray('Failed tasks:'),
+        output.dim('Failed tasks:'),
         '',
         ...[...this.failedTasks.values()].map(
-          (task) => `${output.colors.gray('-')} ${task.id}`
+          (task) => `${output.dim('-')} ${task.id}`
         )
       );
       output.error({

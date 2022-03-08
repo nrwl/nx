@@ -58,7 +58,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       const bodyLines =
         this.cachedTasks.length > 0
           ? [
-              output.colors.gray(
+              output.dim(
                 `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
               ),
             ]
@@ -74,15 +74,13 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       output.addVerticalSeparatorWithoutNewLines('red');
 
       const bodyLines = [
-        output.colors.gray('Failed tasks:'),
+        output.dim('Failed tasks:'),
         '',
-        ...this.failedTasks.map(
-          (task) => `${output.colors.gray('-')} ${task.id}`
-        ),
+        ...this.failedTasks.map((task) => `${output.dim('-')} ${task.id}`),
         '',
-        `${output.colors.gray(
-          'Hint: run the command with'
-        )} --verbose ${output.colors.gray('for more details.')}`,
+        `${output.dim('Hint: run the command with')} --verbose ${output.dim(
+          'for more details.'
+        )}`,
       ];
       output.error({
         title: `Running target "${this.initiatingProject}:${this.args.target}" failed`,

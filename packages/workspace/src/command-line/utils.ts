@@ -130,9 +130,9 @@ export function splitArgsIntoNxArgsAndOverrides(
             '--all'
           )} is not meant to be used for any sizable project or to be used in CI.`,
           '',
-          `${output.colors.gray(
-            'Learn more about checking only what is affected: '
-          )}https://nx.dev/latest/angular/cli/affected#affected.`,
+          `${output.dim(
+            'Learn more about checking only what is affected: https://nx.dev/latest/angular/cli/affected#affected'
+          )}`,
         ],
       });
     }

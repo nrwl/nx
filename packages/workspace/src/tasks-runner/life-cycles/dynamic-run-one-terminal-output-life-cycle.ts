@@ -134,9 +134,9 @@ export async function createRunOneDynamicOutputRenderer({
           linesToRender.push(
             `   ${output.colors.cyan(
               dots.frames[dependentTargetsCurrentFrame]
-            )}    ${output.colors.white.dim(
+            )}    ${output.dim(
               `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`
-            )} ${output.colors.white(`${initiatingProject}`)}...`
+            )} ${initiatingProject}${output.dim('...')}`
           );
           if (totalSuccessfulTasks > 0) {
             linesToRender.push('');
@@ -296,7 +296,7 @@ export async function createRunOneDynamicOutputRenderer({
       const pinnedFooterLines = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.green(text) + output.dim(` (${timeTakenText})`)
         ),
         ...taskOverridesLines,
       ];
@@ -338,7 +338,7 @@ export async function createRunOneDynamicOutputRenderer({
         [
           output.applyNxPrefix(
             'red',
-            output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+            output.colors.red(text) + output.dim(` (${timeTakenText})`)
           ),
           ...taskOverridesLines,
           '',

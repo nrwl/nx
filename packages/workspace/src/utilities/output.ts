@@ -219,11 +219,11 @@ class CLIOutput {
     this.addNewline();
     let commandOutput = `${chalk.dim('> nx run')} ${message}`;
     if (taskStatus === 'local-cache') {
-      commandOutput += `  ${chalk.grey('[local cache]')}`;
+      commandOutput += `  ${chalk.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {
-      commandOutput += `  ${chalk.grey('[remote cache]')}`;
+      commandOutput += `  ${chalk.dim('[remote cache]')}`;
     } else if (taskStatus === 'local-cache-kept-existing') {
-      commandOutput += `  ${chalk.grey(
+      commandOutput += `  ${chalk.dim(
         '[existing outputs match the cache, left as is]'
       )}`;
     }
