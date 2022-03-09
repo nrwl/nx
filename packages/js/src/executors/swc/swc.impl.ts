@@ -42,7 +42,9 @@ function normalizeOptions(
   // We pop the last part of the `projectRoot` to pass
   // the last part (projectDir) and the remainder (projectRootParts) to swc
   const projectDir = projectRootParts.pop();
-  const swcCwd = projectRootParts.join('/');
+  // default to current directory if projectRootParts is [].
+  // Eg: when a project is at the root level, outside of layout dir
+  const swcCwd = projectRootParts.join('/') || '.';
 
   const swcCliOptions = {
     srcPath: projectDir,
