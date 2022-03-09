@@ -8,23 +8,29 @@ import {
   hasBuildExecutor,
   findDependenciesWithTags,
   isAbsoluteImportIntoAnotherProject,
-  isRelativeImportIntoAnotherProject,
   mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
   MappedProjectGraph,
   hasBannedImport,
   isDirectDependency,
+  getTargetProjectBasedOnRelativeImport,
   isTerminalRun,
   stringifyTags,
   hasNoneOfTheseTags,
+  groupImports,
+  MappedProjectGraphNode,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { normalizePath } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  normalizePath,
+  ProjectGraphExternalNode,
+} from '@nrwl/devkit';
 import {
   ProjectType,
   readCachedProjectGraph,
@@ -38,6 +44,12 @@ import {
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
 import * as chalk from 'chalk';
+import { basename, dirname, relative } from 'path';
+import {
+  getBarrelEntryPointByImportScope,
+  getBarrelEntryPointProjectNode,
+  getRelativeImportPath,
+} from '../utils/ast-utils';
 
 type Options = [
   {
@@ -215,16 +227,22 @@ export default createESLintRule<Options, MessageIds>({
         projectPath
       );
 
-      // check for relative and absolute imports
       const sourceProject = findSourceProject(projectGraph, sourceFilePath);
-      if (
-        isRelativeImportIntoAnotherProject(
+      // If source is not part of an nx workspace, return.
+      if (!sourceProject) {
+        return;
+      }
+
+      // check for relative and absolute imports
+      let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+        getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
           projectGraph,
-          sourceFilePath,
-          sourceProject
-        ) ||
+          sourceFilePath
+        );
+      if (
+        (targetProject && sourceProject !== targetProject) ||
         isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
       ) {
         context.report({
@@ -233,28 +251,71 @@ export default createESLintRule<Options, MessageIds>({
           data: {
             npmScope,
           },
+          fix(fixer) {
+            if (targetProject) {
+              const indexTsPaths = getBarrelEntryPointProjectNode(
+                targetProject as MappedProjectGraphNode
+              );
+
+              if (indexTsPaths && indexTsPaths.length > 0) {
+                const specifiers = (node as any).specifiers;
+                if (!specifiers || specifiers.length === 0) {
+                  return;
+                }
+
+                const imports = specifiers.map((s) => s.imported.name);
+
+                // process each potential entry point and try to find the imports
+                const importsToRemap = [];
+
+                for (const entryPointPath of indexTsPaths) {
+                  for (const importMember of imports) {
+                    const importPath = getRelativeImportPath(
+                      importMember,
+                      entryPointPath.path,
+                      sourceProject.data.sourceRoot
+                    );
+
+                    importsToRemap.push({
+                      member: importMember,
+                      importPath: importPath ? entryPointPath.importScope : imp, // we cannot remap, so leave it as is
+                    });
+                  }
+                }
+
+                const adjustedRelativeImports = groupImports(importsToRemap);
+
+                if (adjustedRelativeImports !== '') {
+                  return fixer.replaceTextRange(
+                    node.range,
+                    adjustedRelativeImports
+                  );
+                }
+              }
+            }
+          },
         });
         return;
       }
 
-      const targetProject = findProjectUsingImport(
-        projectGraph,
-        targetProjectLocator,
-        sourceFilePath,
-        imp,
-        npmScope
-      );
+      targetProject =
+        targetProject ||
+        findProjectUsingImport(
+          projectGraph,
+          targetProjectLocator,
+          sourceFilePath,
+          imp,
+          npmScope
+        );
 
-      // If source or target are not part of an nx workspace, return.
-      if (!sourceProject || !targetProject) {
+      // If target is not part of an nx workspace, return.
+      if (!targetProject) {
         return;
       }
 
-      // same project => allow
+      // we only allow relative paths within the same project
+      // and if it's not a secondary entrypoint in an angular lib
       if (sourceProject === targetProject) {
-        // we only allow relative paths within the same project
-        // and if it's not a secondary entrypoint in an angular lib
-
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
@@ -265,6 +326,60 @@ export default createESLintRule<Options, MessageIds>({
             messageId: 'noSelfCircularDependencies',
             data: {
               imp,
+            },
+            fix(fixer) {
+              // imp has form of @myorg/someproject/some/path
+              const indexTsPaths = getBarrelEntryPointByImportScope(imp);
+              if (indexTsPaths && indexTsPaths.length > 0) {
+                const specifiers = (node as any).specifiers;
+                if (!specifiers || specifiers.length === 0) {
+                  return;
+                }
+                // imported JS functions to remap
+                const imports = specifiers.map((s) => s.imported.name);
+
+                // process each potential entry point and try to find the imports
+                const importsToRemap = [];
+
+                for (const entryPointPath of indexTsPaths) {
+                  for (const importMember of imports) {
+                    const importPath = getRelativeImportPath(
+                      importMember,
+                      entryPointPath,
+                      sourceProject.data.sourceRoot
+                    );
+                    if (importPath) {
+                      // resolve the import path
+                      const relativePath = relative(
+                        dirname(context.getFilename()),
+                        dirname(importPath)
+                      );
+
+                      // if the string is empty, it's the current file
+                      const importPathResolved =
+                        relativePath === ''
+                          ? `./${basename(importPath)}`
+                          : joinPathFragments(
+                              relativePath,
+                              basename(importPath)
+                            );
+
+                      importsToRemap.push({
+                        member: importMember,
+                        importPath: importPathResolved.replace('.ts', ''),
+                      });
+                    }
+                  }
+                }
+
+                const adjustedRelativeImports = groupImports(importsToRemap);
+                if (adjustedRelativeImports !== '') {
+                  return fixer.replaceTextRange(
+                    node.range,
+                    adjustedRelativeImports
+                  );
+                }
+              }
             },
           });
         }
