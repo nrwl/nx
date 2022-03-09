@@ -22,6 +22,7 @@ import { join } from 'path';
 import {
   isFramework,
   readCurrentWorkspaceStorybookVersionFromGenerator,
+  showStorybookV5Warning,
   TsConfig,
 } from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
@@ -78,6 +79,10 @@ export async function configurationGenerator(
     }
   }
 
+  if (workspaceStorybookVersion !== '6') {
+    showStorybookV5Warning(rawSchema.uiFramework);
+  }
+
   await formatFiles(tree);
 
   return runTasksInSerial(...tasks);
@@ -112,6 +117,7 @@ function createRootStorybookDir(
     `adding .storybook folder to the root directory - 
      based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
   );
+
   const templatePath = join(
     __dirname,
     workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
