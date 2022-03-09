@@ -38,7 +38,9 @@ async function getTerminalOutputLifeCycle(
   overrides: Record<string, unknown>,
   runnerOptions: any
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
-  const showVerboseOutput = !!overrides.verbose;
+  const showVerboseOutput =
+    !!overrides.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
+
   if (terminalOutputStrategy === 'run-one') {
     if (
       shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
