@@ -18,6 +18,7 @@ import {
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
+  webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -63,6 +64,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       !packageJson.devDependencies['@storybook/manager-webpack5']
     ) {
       devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+      devDependencies['webpack'] = webpack5Version;
     }
 
     if (
