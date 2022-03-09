@@ -16,6 +16,10 @@ import {
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
@@ -172,6 +176,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     strict: undefined,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     buildable: options.buildable === true,
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
@@ -318,7 +323,7 @@ function getCaseAwareFileName(options: {
 }
 
 function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];

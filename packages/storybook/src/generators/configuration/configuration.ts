@@ -30,6 +30,7 @@ import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
 import { findStorybookAndBuildTargets } from '../../executors/utils';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -115,7 +116,9 @@ function createRootStorybookDir(
     __dirname,
     workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
   );
-  generateFiles(tree, templatePath, '', {});
+  generateFiles(tree, templatePath, '', {
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
+  });
 
   if (js) {
     toJS(tree);
@@ -160,6 +163,7 @@ function createProjectStorybookDir(
     tmpl: '',
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectType: projectDirectory,
     useWebpack5:
       uiFramework === '@storybook/angular' ||

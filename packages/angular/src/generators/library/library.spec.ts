@@ -305,6 +305,18 @@ describe('lib', () => {
       });
     });
 
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.json');
+    });
+
     it('should check for existence of spec files before deleting them', async () => {
       // ARRANGE
       updateJson<NxJsonConfiguration, NxJsonConfiguration>(
@@ -632,6 +644,18 @@ describe('lib', () => {
           },
         ],
       });
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

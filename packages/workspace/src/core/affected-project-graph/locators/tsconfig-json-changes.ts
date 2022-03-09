@@ -4,15 +4,19 @@ import {
   isJsonChange,
   JsonChange,
 } from '../../../utilities/json-diff';
+import { getRootTsConfigFileName } from '../../../utilities/typescript';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { ProjectGraphProjectNode } from '../../project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, _a, _b, _c, graph): string[] => {
+  const rootTsConfig = getRootTsConfigFileName();
+  if (!rootTsConfig) {
+    return [];
+  }
   const tsConfigJsonChanges = touchedFiles.find(
-    (change) =>
-      change.file === 'tsconfig.json' || change.file === 'tsconfig.base.json'
+    (change) => change.file === rootTsConfig
   );
   if (!tsConfigJsonChanges) {
     return [];

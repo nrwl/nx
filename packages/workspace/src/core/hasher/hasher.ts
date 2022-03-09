@@ -11,6 +11,7 @@ import { existsSync } from 'fs';
 import * as minimatch from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { getRootTsConfigFileName } from '../../utilities/typescript';
 import { appRootPath } from '../../utils/app-root';
 import { workspaceFileName } from '../file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
@@ -412,7 +413,7 @@ class ProjectHasher {
 
   private readTsConfig() {
     try {
-      const res = readJsonFile('tsconfig.base.json');
+      const res = readJsonFile(getRootTsConfigFileName());
       res.compilerOptions.paths ??= {};
       return res;
     } catch {

@@ -265,6 +265,30 @@ describe('schematic:cypress-project', () => {
       expect(tsconfigJson).toMatchSnapshot();
     });
 
+    it('should extend from tsconfig.base.json', async () => {
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-app-e2e',
+        project: 'my-app',
+      });
+
+      const tsConfig = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
+      expect(tsConfig.extends).toBe('../../tsconfig.base.json');
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-app-e2e',
+        project: 'my-app',
+      });
+
+      const tsConfig = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
+      expect(tsConfig.extends).toBe('../../tsconfig.json');
+    });
+
     describe('nested', () => {
       it('should update workspace.json', async () => {
         await cypressProjectGenerator(tree, {
@@ -342,6 +366,32 @@ describe('schematic:cypress-project', () => {
         );
 
         expect(tsconfigJson).toMatchSnapshot();
+      });
+
+      it('should extend from tsconfig.base.json', async () => {
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-app',
+          directory: 'my-dir',
+        });
+
+        const tsConfig = readJson(tree, 'apps/my-dir/my-app-e2e/tsconfig.json');
+        expect(tsConfig.extends).toBe('../../../tsconfig.base.json');
+      });
+
+      it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+        tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-app',
+          directory: 'my-dir',
+        });
+
+        const tsConfig = readJson(tree, 'apps/my-dir/my-app-e2e/tsconfig.json');
+        expect(tsConfig.extends).toBe('../../../tsconfig.json');
       });
     });
 

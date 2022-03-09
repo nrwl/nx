@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "../<%= rootTsConfigPath %>",
   "compilerOptions": {
     "outDir": "../dist/out-tsc/tools",
     "rootDir": ".",

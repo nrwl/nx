@@ -1,14 +1,15 @@
 import {
   generateFiles,
+  getWorkspaceLayout,
+  joinPathFragments,
+  offsetFromRoot,
   readProjectConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
-  getWorkspaceLayout,
-  offsetFromRoot,
-  joinPathFragments,
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
@@ -118,7 +119,10 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     options.projectRoot,
     {
       ...options,
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        host,
+        options.projectRoot
+      ),
       tpl: '',
     }
   );

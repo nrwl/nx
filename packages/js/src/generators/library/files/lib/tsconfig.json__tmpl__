@@ -1,5 +1,5 @@
 {
-  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
     "module": "CommonJS"<% if (js) { %>,
     "allowJs": true<% } %>

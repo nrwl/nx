@@ -6,14 +6,16 @@ jest.doMock('../../utils/app-root', () => {
 });
 
 import fs = require('fs');
+import tsUtils = require('../../utilities/typescript');
 import { DependencyType } from '@nrwl/devkit';
 import { Hasher } from './hasher';
 
 jest.mock('fs');
+jest.mock('../../utilities/typescript');
 
 fs.existsSync = () => true;
 
-fdescribe('Hasher', () => {
+describe('Hasher', () => {
   const nxJson = {
     npmScope: 'nrwl',
   };
@@ -65,6 +67,8 @@ fdescribe('Hasher', () => {
       }
       return file;
     };
+
+    tsUtils.getRootTsConfigFileName = () => 'tsconfig.base.json';
   });
 
   it('should create project hash', async () => {

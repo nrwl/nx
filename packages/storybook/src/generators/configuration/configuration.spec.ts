@@ -44,6 +44,7 @@ describe('@nrwl/storybook:configuration', () => {
       tree,
       '.storybook/tsconfig.json'
     );
+    expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.base.json');
     expect(rootStorybookTsconfigJson.exclude).toEqual([
       '../**/*.spec.js',
       '../**/*.test.js',
@@ -79,6 +80,22 @@ describe('@nrwl/storybook:configuration', () => {
     expect(
       storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
     ).toBeFalsy();
+  });
+
+  it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    const rootStorybookTsconfigJson = readJson<TsConfig>(
+      tree,
+      '.storybook/tsconfig.json'
+    );
+    expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.json');
   });
 
   it('should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition', async () => {

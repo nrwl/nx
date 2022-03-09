@@ -18,7 +18,7 @@ describe('updateTsconfig', () => {
     };
   });
 
-  it('should delete project ref from the tsconfig', async () => {
+  it('should delete project ref from the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       standaloneConfig: false,
@@ -28,6 +28,20 @@ describe('updateTsconfig', () => {
     updateTsconfig(tree, schema, project);
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({});
+  });
+
+  it('should delete project ref from the root tsconfig.json when no tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      standaloneConfig: false,
+    });
+    const project = readProjectConfiguration(tree, 'my-lib');
+
+    updateTsconfig(tree, schema, project);
+
+    const tsConfig = readJson(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({});
   });
 });

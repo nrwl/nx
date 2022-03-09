@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import * as ts from 'typescript';
+import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { findNodes } from '../../../utilities/typescript/find-nodes';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
@@ -34,7 +35,7 @@ export function updateImports(
 
   // use the source root to find the from location
   // this attempts to account for libs that have been created with --importPath
-  const tsConfigPath = 'tsconfig.base.json';
+  const tsConfigPath = getRootTsConfigPathInTree(tree);
   let tsConfig: any;
   let fromPath: string;
   if (tree.exists(tsConfigPath)) {

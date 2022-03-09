@@ -4,14 +4,18 @@ import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
-import { generateFiles, names, offsetFromRoot, toJS, Tree } from '@nrwl/devkit';
+import { generateFiles, names, toJS, Tree } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
     ...names(options.name),
     ...options,
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(
+      host,
+      options.appProjectRoot
+    ),
     appContent: createAppJsx(options.name),
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,

@@ -29,6 +29,16 @@ describe('webWorker generator', () => {
     ).toContain('"extends": "../../tsconfig.base.json"');
   });
 
+  it('should extend from tsconfig.json when used instead of tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+
+    expect(
+      tree.read(`apps/${appName}/tsconfig.worker.json`, 'utf-8')
+    ).toContain('"extends": "../../tsconfig.json"');
+  });
+
   it('should format files', async () => {
     jest.spyOn(devkit, 'formatFiles');
 
