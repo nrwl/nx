@@ -159,11 +159,7 @@ describe('app', () => {
       expect(appE2eSpec).toContain('Welcome my-app-with-prefix');
     });
 
-    // TODO: this should work
-    // This has been carried over from the Angular Devkit Schematic
-    // It seems like Jest is failing as it's trying to look for the
-    // tsconfig in the incorrect place
-    xit('should work if the new project root is changed', async () => {
+    it('should work if the new project root is changed', async () => {
       // ARRANGE
       updateJson(appTree, '/workspace.json', (json) => ({
         ...json,
@@ -171,7 +167,9 @@ describe('app', () => {
       }));
 
       // ACT
-      await generateApp(appTree);
+      await generateApp(appTree, 'my-app', {
+        e2eTestRunner: E2eTestRunner.Protractor,
+      });
 
       // ASSERT
       expect(appTree.exists('apps/my-app/src/main.ts')).toEqual(true);

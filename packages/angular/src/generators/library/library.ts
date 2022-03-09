@@ -63,7 +63,13 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     skipTsConfig: true,
   });
 
-  moveFilesToNewDirectory(host, options.name, options.projectRoot);
+  if (options.ngCliSchematicLibRoot !== options.projectRoot) {
+    moveFilesToNewDirectory(
+      host,
+      options.ngCliSchematicLibRoot,
+      options.projectRoot
+    );
+  }
   await updateProject(host, options);
   updateTsConfig(host, options);
   await addUnitTestRunner(host, options);
