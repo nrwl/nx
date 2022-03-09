@@ -1,9 +1,11 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import * as build from '@storybook/core/standalone';
 import 'dotenv/config';
+import { showStorybookV5Warning } from '../../utils/utilities';
 import { CommonNxStorybookConfig } from '../models';
 import {
   getStorybookFrameworkPath,
+  isStorybookLT6,
   normalizeAngularBuilderStylesOptions,
   resolveCommonStorybookOptionMapper,
   runStorybookSetupCheck,
@@ -29,6 +31,10 @@ export default async function buildStorybookExecutor(
 
   // print warnings
   runStorybookSetupCheck(options);
+
+  if (isStorybookLT6()) {
+    showStorybookV5Warning(options.uiFramework);
+  }
 
   logger.info(`NX Storybook builder starting ...`);
   await runInstance(option);
