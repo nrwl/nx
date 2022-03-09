@@ -54,6 +54,7 @@ export async function* compileTypeScriptFiles(
       if (normalizedOptions.watch) {
         compileTypeScriptWatcher(tscOptions, async (d: Diagnostic) => {
           if (d.code === 6194) {
+            await postCompilationCallback();
             next(getResult(true));
           }
         });
