@@ -19,6 +19,7 @@ interface BaseTypeCheckOptions {
   tsConfigPath: string;
   cacheDir?: string;
   incremental?: boolean;
+  rootDir?: string;
 }
 
 type Mode = NoEmitMode | EmitDeclarationOnlyMode;
@@ -116,7 +117,8 @@ export async function runTypeCheck(
 
 async function setupTypeScript(options: TypeCheckOptions) {
   const ts = await import('typescript');
-  const { workspaceRoot, tsConfigPath, cacheDir, incremental } = options;
+  const { workspaceRoot, tsConfigPath, cacheDir, incremental, rootDir } =
+    options;
   const config = readTsConfig(tsConfigPath);
   if (config.errors.length) {
     throw new Error(`Invalid config file: ${config.errors}`);
@@ -132,6 +134,7 @@ async function setupTypeScript(options: TypeCheckOptions) {
     skipLibCheck: true,
     ...emitOptions,
     incremental,
+    rootDir: rootDir || config.options.rootDir,
   };
 
   return { ts, workspaceRoot, cacheDir, config, compilerOptions };
