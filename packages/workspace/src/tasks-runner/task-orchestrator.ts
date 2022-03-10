@@ -24,6 +24,7 @@ export class TaskOrchestrator {
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
   private tasksSchedule = new TasksSchedule(
     this.hasher,
+    this.projectGraph,
     this.taskGraph,
     this.workspace,
     this.options
