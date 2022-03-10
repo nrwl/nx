@@ -26,6 +26,12 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
 
   const selectedConfiguration = parsedBrowserTarget.configuration
     ? buildTarget.configurations[parsedBrowserTarget.configuration]
+    ? Object.assign(
+        {},
+        ...parsedBrowserTarget.configuration
+          .split(',')
+          .map((config) => buildTarget.configurations[config])
+      )
     : buildTarget.defaultConfiguration
     ? buildTarget.configurations[buildTarget.defaultConfiguration]
     : buildTarget.options;
