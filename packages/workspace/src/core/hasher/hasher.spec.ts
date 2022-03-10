@@ -72,7 +72,6 @@ describe('Hasher', () => {
   });
 
   it('should create project hash', async () => {
-    hashes['/file'] = 'file.hash';
     const hasher = new Hasher(
       {
         nodes: {
@@ -128,7 +127,6 @@ describe('Hasher', () => {
   });
 
   it('should create project hash with tsconfig.base.json cache', async () => {
-    hashes['/file'] = 'file.hash';
     const hasher = new Hasher(
       {
         nodes: {
@@ -227,8 +225,6 @@ describe('Hasher', () => {
   });
 
   it('should hash projects with dependencies', async () => {
-    hashes['/filea'] = 'a.hash';
-    hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
       {
         nodes: {
@@ -237,7 +233,10 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              files: [
+                { file: '/filea.ts', hash: 'a.hash' },
+                { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+              ],
             },
           },
           child: {
@@ -245,7 +244,10 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/fileb.ts', hash: 'b.hash' }],
+              files: [
+                { file: '/fileb.ts', hash: 'b.hash' },
+                { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+              ],
             },
           },
         },
@@ -267,6 +269,114 @@ describe('Hasher', () => {
     // note that the parent hash is based on parent source files only!
     expect(hash.details.nodes).toEqual({
       child:
+        '/fileb.ts|/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      parent:
+        '/filea.ts|/filea.spec.ts|a.hash|a.spec.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+    });
+  });
+
+  it('should hash projects with dependencies (exclude spec files of dependencies)', async () => {
+    const hasher = new Hasher(
+      {
+        nodes: {
+          parent: {
+            name: 'parent',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [
+                { file: '/filea.ts', hash: 'a.hash' },
+                { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+              ],
+            },
+          },
+          child: {
+            name: 'child',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [
+                { file: '/fileb.ts', hash: 'b.hash' },
+                { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+              ],
+            },
+          },
+        },
+        dependencies: {
+          parent: [{ source: 'parent', target: 'child', type: 'static' }],
+        },
+      },
+      {} as any,
+      {},
+      createHashing()
+    );
+
+    const hash = await hasher.hashTaskWithDepsAndContext(
+      {
+        target: { project: 'parent', target: 'build' },
+        id: 'parent-build',
+        overrides: { prop: 'prop-value' },
+      },
+      'exclude-tests-of-deps'
+    );
+
+    // note that the parent hash is based on parent source files only!
+    expect(hash.details.nodes).toEqual({
+      child:
+        '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+      parent:
+        '/filea.ts|/filea.spec.ts|a.hash|a.spec.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+    });
+  });
+
+  it('should hash projects with dependencies (exclude spec files of all projects)', async () => {
+    const hasher = new Hasher(
+      {
+        nodes: {
+          parent: {
+            name: 'parent',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [
+                { file: '/filea.ts', hash: 'a.hash' },
+                { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+              ],
+            },
+          },
+          child: {
+            name: 'child',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [
+                { file: '/fileb.ts', hash: 'b.hash' },
+                { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+              ],
+            },
+          },
+        },
+        dependencies: {
+          parent: [{ source: 'parent', target: 'child', type: 'static' }],
+        },
+      },
+      {} as any,
+      {},
+      createHashing()
+    );
+
+    const hash = await hasher.hashTaskWithDepsAndContext(
+      {
+        target: { project: 'parent', target: 'build' },
+        id: 'parent-build',
+        overrides: { prop: 'prop-value' },
+      },
+      'exclude-tests-of-all'
+    );
+
+    // note that the parent hash is based on parent source files only!
+    expect(hash.details.nodes).toEqual({
+      child:
         '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       parent:
         '/filea.ts|a.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
@@ -274,8 +384,6 @@ describe('Hasher', () => {
   });
 
   it('should hash dependent npm project versions', async () => {
-    hashes['/filea'] = 'a.hash';
-    hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
       {
         nodes: {
@@ -324,8 +432,6 @@ describe('Hasher', () => {
   });
 
   it('should hash when circular dependencies', async () => {
-    hashes['/filea'] = 'a.hash';
-    hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
       {
         nodes: {
@@ -396,8 +502,6 @@ describe('Hasher', () => {
   });
 
   it('should hash implicit deps', async () => {
-    hashes['/filea'] = 'a.hash';
-    hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
       {
         nodes: {
@@ -442,8 +546,6 @@ describe('Hasher', () => {
   });
 
   it('should hash missing dependent npm project versions', async () => {
-    hashes['/filea'] = 'a.hash';
-    hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
       {
         nodes: {

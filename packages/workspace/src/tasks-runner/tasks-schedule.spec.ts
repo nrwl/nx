@@ -82,12 +82,15 @@ describe('TasksSchedule', () => {
       },
     };
 
+    const projectGraph = {} as any;
+
     const hasher = {
       hashTaskWithDepsAndContext: () => 'hash',
     } as any;
 
     taskSchedule = new TasksSchedule(
       hasher,
+      projectGraph,
       taskGraph,
       workspace as Workspaces,
       {

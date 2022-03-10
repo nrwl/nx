@@ -263,6 +263,9 @@ export interface ExecutorContext {
 }
 
 export class Workspaces {
+  private cachedWorkspaceConfig: WorkspaceJsonConfiguration &
+    NxJsonConfiguration;
+
   constructor(private root: string) {}
 
   relativeCwd(cwd: string) {
@@ -289,6 +292,7 @@ export class Workspaces {
 
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
     NxJsonConfiguration {
+    if (this.cachedWorkspaceConfig) return this.cachedWorkspaceConfig;
     const nxJsonPath = path.join(this.root, 'nx.json');
     const nxJson = readNxJson(nxJsonPath);
     const workspaceFile = workspaceConfigName(this.root);
@@ -305,7 +309,8 @@ export class Workspaces {
           );
 
     assertValidWorkspaceConfiguration(nxJson);
-    return { ...workspace, ...nxJson };
+    this.cachedWorkspaceConfig = { ...workspace, ...nxJson };
+    return this.cachedWorkspaceConfig;
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
