@@ -24,6 +24,7 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectDirectory: string;
   parsedTags: string[];
+  compiler: 'swc' | 'tsc';
 }
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
@@ -137,7 +138,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
 
   project.targets = project.targets || {};
   project.targets.build = {
-    executor: '@nrwl/node:package',
+    executor: `@nrwl/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
       outputPath: `dist/${libsDir}/${options.projectDirectory}`,
