@@ -58,7 +58,7 @@
             "ignore": ["**/tsconfig*.json"],
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

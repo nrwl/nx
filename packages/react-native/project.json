@@ -63,6 +63,11 @@
             "input": "packages/react-native",
             "glob": "**/*.d.ts",
             "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
           }
         ]
       },
