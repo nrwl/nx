@@ -12,4 +12,5 @@ export interface NormalizedSchema extends Schema {
   moduleName: string;
   projectDirectory: string;
   parsedTags: string[];
+  ngCliSchematicLibRoot: string;
 }

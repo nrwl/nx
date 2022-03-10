@@ -457,6 +457,31 @@ describe('lib', () => {
       ).toBeFalsy();
     });
 
+    it('should work if the new project root is changed', async () => {
+      // ARRANGE
+      updateJson(tree, 'workspace.json', (json) => ({
+        ...json,
+        newProjectRoot: 'newProjectRoot',
+      }));
+
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeFalsy();
+    });
+
     it('should default the prefix to npmScope', async () => {
       // ACT
       await runLibraryGeneratorWithOpts();
