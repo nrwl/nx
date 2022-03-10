@@ -25,10 +25,15 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
     ];
 
   const selectedConfiguration = parsedBrowserTarget.configuration
-    ? Object.assign({}, ...parsedBrowserTarget.configuration.split(',').map(config => buildTarget.configurations[config]))
+    ? Object.assign(
+        {},
+        ...parsedBrowserTarget.configuration
+          .split(',')
+          .map((config) => buildTarget.configurations[config])
+      )
     : buildTarget.defaultConfiguration
-      ? buildTarget.configurations[buildTarget.defaultConfiguration]
-      : buildTarget.options;
+    ? buildTarget.configurations[buildTarget.defaultConfiguration]
+    : buildTarget.options;
 
   const customWebpackConfig: { path: string } =
     selectedConfiguration.customWebpackConfig ??
