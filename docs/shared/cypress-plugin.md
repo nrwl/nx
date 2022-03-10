@@ -59,7 +59,7 @@ With, `nx e2e frontend-e2e --watch` Cypress will start in the application mode.
 
 Running Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application running and Cypress will re-run those tests as you enhance and add to the suite.
 
-Cypress doesn't currently re-run your tests after changes are made to application code when it runs in “headed” mode. There is an [open feature request](https://github.com/nrwl/nx/issues/870) to add this behaviour.
+Cypress doesn't currently re-run your tests after changes are made to application code when it runs in “headed” mode.
 
 ### Using Cypress in the Headless Mode
 
