@@ -61,11 +61,9 @@ Running Cypress with `--watch` is a great way to enhance dev workflow - you can 
 
 Cypress doesn't currently re-run your tests after changes are made to application code when it runs in “headed” mode. There is an [open feature request](https://github.com/nrwl/nx/issues/870) to add this behaviour.
 
-### Using Cypress in the Headless Mode
+### Using Cypress in the Headed Mode
 
-If you want to run the Cypress tests in headless mode (e.g., on CI), you can do so by passing `--headless`. You will see all the test results live in the terminal. Videos and screenshots will be available for debugging.
-
-In headless mode your tests **will** be re-run every time you make a change to your application code.
+Cypress runs in headless mode by default (the `headless` option is deprecated). In order to run the Cypress in Headed mode, you can set `browser` option to select the specific browser to be used or set `headed` option to run tests using the default browser.
 
 ### Testing Against Prod Build
 
