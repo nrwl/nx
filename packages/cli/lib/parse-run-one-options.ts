@@ -127,8 +127,7 @@ export function parseRunOneOptions(
   }
 
   // we need both to be able to run a target, no tasks runner
-  const p =
-    workspaceConfiguration.projects?.[project];
+  const p = workspaceConfiguration.projects?.[project];
   if (!p) return false;
 
   let targets;
@@ -151,10 +150,7 @@ export function parseRunOneOptions(
     configuration = parsedArgs.configuration;
   } else if (parsedArgs.prod) {
     configuration = 'production';
-  } else if (
-    !configuration &&
-    targets?.[target]?.defaultConfiguration
-  ) {
+  } else if (!configuration && targets?.[target]?.defaultConfiguration) {
     configuration = targets[target].defaultConfiguration;
   }
 
