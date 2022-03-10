@@ -63,7 +63,7 @@ describe('WorkspaceIntegrityChecks', () => {
       expect(errors).toEqual([
         {
           bodyLines: [
-            `${chalk.grey(
+            `${chalk.dim(
               '-'
             )} Cannot find project 'project1' in 'libs/project1'`,
           ],
@@ -96,7 +96,7 @@ describe('WorkspaceIntegrityChecks', () => {
       const errors = c.run();
       expect(errors).toEqual([
         {
-          bodyLines: [`${chalk.grey('-')} libs/project2/src/index.ts`],
+          bodyLines: [`${chalk.dim('-')} libs/project2/src/index.ts`],
           title: 'The following file(s) do not belong to any projects:',
         },
       ]);
