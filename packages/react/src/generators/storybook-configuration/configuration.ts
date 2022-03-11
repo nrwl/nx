@@ -22,6 +22,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
       schema.configureCypress && schema.generateCypressSpecs,
     js: schema.js,
     cypressProject,
+    rootPath: schema.rootPath,
   });
 }
 
