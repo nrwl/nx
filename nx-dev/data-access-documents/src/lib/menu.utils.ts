@@ -43,6 +43,7 @@ export function getBasicSection(items: MenuItem[]): MenuSection {
           m.id === 'migration' ||
           m.id === 'configuration' ||
           m.id === 'using-nx' ||
+          m.id === 'core-tutorial' ||
           m.id === 'react-tutorial' ||
           m.id === 'angular-tutorial' ||
           m.id === 'node-tutorial'
