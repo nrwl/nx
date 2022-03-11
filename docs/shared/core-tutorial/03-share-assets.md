@@ -106,7 +106,7 @@ func main() {
 
 ## Tell Nx About the Dependencies
 
-Nx without plugins is unable to automatically detect dependencies in Go code or markdown, so you'll have to tell Nx about the dependencies manually.
+Nx without plugins is unable to automatically detect dependencies in Go code or markdown, so you'll have to tell Nx about the dependencies manually. (For Go code, there is [@nx-go/nx-go](https://github.com/nx-go/nx-go) which will automatically detect dependencies between Go projects.)
 
 For the blog project, you'll need to add `ascii` as a `dependency` (or `devDependency`) in the `package.json` file.
 

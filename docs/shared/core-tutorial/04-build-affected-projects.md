@@ -34,7 +34,7 @@ func main() {
 }
 ```
 
-**Run `nx affected:apps`**, and you should see `cli` printed out. The `affected:apps` looks at what you have changed and uses the project graph to figure out which apps are affected by this change.
+**Run `nx print-affected --select=projects`**, and you should see `cli` printed out. The `nx print-affected` looks at what you have changed and uses the project graph to figure out which projects are affected by this change.
 
 **Now revert those changes**
 
@@ -57,15 +57,13 @@ Update `packages/ascii/assets/cow.txt`:
                 ||     ||
 ```
 
-**Run `nx affected:apps`**, and this time you should see `cli` and `blog` printed out.
-
-**Run `nx affected:libs`**, and you should see `ascii` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
+**Run `nx print-affected --select=projects`**, and this time you should see `cli`, `blog` and `ascii` printed out.
 
 ## Build Affected Projects
 
 Printing the affected projects can be handy, but usually you want to do something with them. For instance, you may want to build everything that has been affected.
 
-**Run `nx affected:build` to rebuild only the projects affected by the change.**
+**Run `nx affected --target=build` to rebuild only the projects affected by the change.**
 
 ```bash
     ✔  nx run blog:build (1s)
@@ -80,12 +78,10 @@ Printing the affected projects can be handy, but usually you want to do somethin
 
 Note that Nx only built `blog` and `cli`. It didn't build `ascii` because there is no build script created for it.
 
-## Affected:\*
+## Affected --target=\*
 
 You can run any target against the affected projects in the graph like this:
 
 ```bash
-# The following are equivalent
 nx affected --target=test
-nx affected:test
 ```

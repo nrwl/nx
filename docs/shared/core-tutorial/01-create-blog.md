@@ -105,7 +105,7 @@ The main value of Nx at this stage of the project is that it doesn't require any
 
 ## Build a Basic Blog
 
-To actually create a blog, we'll have to change a few more files. This is all Eleventy specific configuration, so if you questions consult [their documentation]() or [this tutorial](https://www.filamentgroup.com/lab/build-a-blog/).
+To actually create a blog, we'll have to change a few more files. This is all Eleventy specific configuration, so if you have questions consult [their documentation](https://www.11ty.dev/docs/config/) or [this tutorial](https://www.filamentgroup.com/lab/build-a-blog/).
 
 Update `index.html`:
 

@@ -61,7 +61,7 @@ There are a few reasons to choose `project.json` for the CLI project.
 2. As the scripts in the project get more complex, `project.json` tends to have a flatter structure - rather than a long horizontal line in `package.json` with all the cli flags.
 3. The easiest method to run scripts provided in Nx plugins is to use a `project.json` file.
 
-All of these reasons are matters of preference. After this tutorial, you should have enough of a taste of both styles to make an informed decision about which format you prefer.
+All of these reasons are matters of preference. After this tutorial, you should have enough of a taste of both styles to make an informed decision about which format you prefer. Read more about [package.json configuration](/configuration/packagejson) and [project.json configuration](configuration/projectjson) in their respective guides.
 
 ### Project.json syntax
 
@@ -143,6 +143,13 @@ Hello, World!
 
 ```
 
-This CLI only took 2 seconds to run, but if you run the same command again, Nx will use a cached version of the output and take about 70 milliseconds. Obviously, this performance improvement doesn't matter for such a small project, but it doesn't take long before it makes a big difference.
+Nx only caches the targets that you tell it to cache. `serve` is not in the default list of cached targets, so running this command a second time will take the same amount of time. You can see the current list of `cacheableOperations` in `nx.json`.
 
-Also, notice that Nx is able to cache the commands even though they're entirely written in Go.
+```json
+{
+  //...
+  "cacheableOperations": ["build", "lint", "test", "e2e"]
+}
+```
+
+If you run `nx build cli` twice, you'll see that Nx is able to cache the commands even though they're entirely written in Go.
