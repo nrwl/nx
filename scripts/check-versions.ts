@@ -3,22 +3,25 @@
  * It uses naming conventions to transform constants to matching node module name.
  *
  * Usage:
- *   yarn check-versions [file]
+ *   yarn check-versions [file|package]
  *
  * Positional arg:
  *   - [file]: relative or absolute file path to the versions file.
  *
  * Example:
- *   yarn check-versions packages/react/src/utils/versions
+ *   yarn check-versions react
  */
 
-import { join } from 'path';
+import { join, relative } from 'path';
 import { gt } from 'semver';
+import { readJsonSync, writeJsonSync } from 'fs-extra';
 import * as chalk from 'chalk';
 import { dasherize } from '../packages/workspace/src/utils/strings';
 import * as glob from 'glob';
 import { execSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
 
+const root = join(__dirname, '..');
 const excluded = ['nxVersion'];
 const scoped = [
   'babel',
@@ -31,12 +34,20 @@ const scoped = [
 
 try {
   const files = process.argv[2]
-    ? [process.argv[2]]
-    : glob.sync('packages/**/*/versions.ts');
+    ? [normalize(process.argv[2])]
+    : glob.sync('packages/**/*/versions.ts').map((x) => relative(root, x));
   checkFiles(files);
 } catch (e) {
   console.log(chalk.red(e.message));
   process.exitCode = 1;
+}
+
+function normalize(x: string) {
+  if (x.endsWith('.ts')) {
+    return x;
+  } else {
+    return join('packages', x, 'src/utils/versions.ts');
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -49,10 +60,16 @@ function checkFiles(files: string[]) {
   let hasError = false;
 
   files.forEach((f) => {
+    const projectRoot = f.split('/src/')[0];
+    const migrationsPath = join(projectRoot, 'migrations.json');
+    const migrationsJson = readJsonSync(migrationsPath);
+    let versionsContent = readFileSync(f).toString();
     const versions = getVersions(f);
     const npmPackages = getPackages(versions);
-    const results = npmPackages.map(([p, v]) => getVersionData(p, v));
+    const results = npmPackages.map(([p, v, o]) => getVersionData(p, v, o));
     const logContext = `${f.padEnd(maxFileNameLength)}`;
+    const packageUpdates = {};
+
     results.forEach((r) => {
       if (r.outdated) {
         console.log(
@@ -60,6 +77,14 @@ function checkFiles(files: string[]) {
             r.package
           )} has new version ${chalk.bold(r.latest)} (current: ${r.prev})`
         );
+        versionsContent = versionsContent.replace(
+          `${r.variable} = '${r.prev}'`,
+          `${r.variable} = '${r.latest}'`
+        );
+        packageUpdates[r.package] = {
+          version: r.latest,
+          alwaysAddToPackageJson: false,
+        };
       }
       if (r.invalid) {
         hasError = true;
@@ -70,10 +95,20 @@ function checkFiles(files: string[]) {
         );
       }
     });
+
+    if (Object.keys(packageUpdates).length > 0) {
+      migrationsJson.packageJsonUpdates['x.y.z'] = {
+        version: 'x.y.z',
+        packages: packageUpdates,
+      };
+      writeFileSync(f, versionsContent);
+      writeJsonSync(migrationsPath, migrationsJson, { spaces: 2 });
+    }
   });
 
-  if (hasError)
+  if (hasError) {
     throw new Error('Invalid versions of packages found (please see above).');
+  }
 }
 
 function getVersions(path: string) {
@@ -92,7 +127,7 @@ function getPackages(versions: Record<string, string>): string[][] {
   return Object.entries(versions).reduce((acc, [name, version]) => {
     if (!excluded.includes(name)) {
       const npmName = getNpmName(name);
-      acc.push([npmName, version]);
+      acc.push([npmName, version, name]);
     }
     return acc;
   }, [] as string[][]);
@@ -112,8 +147,10 @@ function getNpmName(name: string): string {
 
 function getVersionData(
   p: string,
-  v: string
+  v: string,
+  o: string
 ): {
+  variable: string;
   package: string;
   outdated: boolean;
   invalid: boolean;
@@ -127,13 +164,33 @@ function getVersionData(
       }).toString('utf-8')
     );
     if (gt(latest, v)) {
-      return { package: p, outdated: true, invalid: false, latest, prev: v };
+      return {
+        variable: o,
+        package: p,
+        outdated: true,
+        invalid: false,
+        latest,
+        prev: v,
+      };
     }
     if (gt(v, latest)) {
-      return { package: p, outdated: false, invalid: true, latest, prev: v };
+      return {
+        variable: o,
+        package: p,
+        outdated: false,
+        invalid: true,
+        latest,
+        prev: v,
+      };
     }
   } catch {
     // ignored
   }
-  return { package: p, outdated: false, invalid: false, latest: v };
+  return {
+    variable: o,
+    package: p,
+    outdated: false,
+    invalid: false,
+    latest: v,
+  };
 }
