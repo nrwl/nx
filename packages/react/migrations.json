@@ -606,6 +606,67 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.8.8": {
+      "version": "13.8.8-beta.1",
+      "packages": {
+        "@types/react": {
+          "version": "17.0.40",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "17.0.13",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "17.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "5.1.24",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.8.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.8.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-plugin": {
+          "version": "11.7.2",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-router-dom": {
+          "version": "5.3.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "12.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "7.2.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-import": {
+          "version": "2.25.4",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.29.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

@@ -1,13 +1,6 @@
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
-import {
-  ProgressPlugin,
-  ContextReplacementPlugin,
-  sources,
-  ids,
-  Compiler,
-  Configuration,
-} from 'webpack';
+import { Compiler, Configuration, ids, ProgressPlugin, sources } from 'webpack';
 import { ScriptsWebpackPlugin } from '../plugins/scripts-webpack-plugin';
 import { ExtraEntryPoint, WebpackConfigOptions } from '../../shared-models';
 import { BuildBrowserFeatures } from '../build-browser-features';
@@ -265,12 +258,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       moduleIds: 'deterministic',
       minimizer: [new ids.HashedModuleIdsPlugin(), ...extraMinimizers],
     },
-    plugins: [
-      // Always replace the context for the System.import in angular/core to prevent warnings.
-      // https://github.com/angular/angular/issues/11580
-      // With VE the correct context is added in @ngtools/webpack, but Ivy doesn't need it at all.
-      new ContextReplacementPlugin(/@angular([\\/])core([\\/])/),
-      ...extraPlugins,
-    ],
+    plugins: extraPlugins,
   };
 }
