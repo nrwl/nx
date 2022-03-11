@@ -19,7 +19,7 @@ describe('MFE Webpack Utils', () => {
       } catch (error) {
         // ASSERT
         expect(error.message).toEqual(
-          'NX MFE: TsConfig Path for workspace libraries does not exist! (undefined)'
+          'NX MFE: TsConfig Path for workspace libraries does not exist! (null)'
         );
       }
     });

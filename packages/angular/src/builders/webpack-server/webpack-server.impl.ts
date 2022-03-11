@@ -55,22 +55,21 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
               pathToWebpackConfig,
               buildTarget.options.tsConfig
             );
+            // The extra Webpack configuration file can also export a Promise, for instance:
+            // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
+            // then await will just resolve that object.
+            const config = await customWebpackConfiguration;
+
             // The extra Webpack configuration file can export a synchronous or asynchronous function,
             // for instance: `module.exports = async config => { ... }`.
-            if (typeof customWebpackConfiguration === 'function') {
-              return customWebpackConfiguration(
+            if (typeof config === 'function') {
+              return config(
                 baseWebpackConfig,
                 selectedConfiguration,
                 context.target
               );
             } else {
-              return merge(
-                baseWebpackConfig,
-                // The extra Webpack configuration file can also export a Promise, for instance:
-                // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
-                // then await will just resolve that object.
-                await customWebpackConfiguration
-              );
+              return merge(baseWebpackConfig, config);
             }
           },
         }
