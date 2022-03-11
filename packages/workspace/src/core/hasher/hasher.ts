@@ -49,6 +49,13 @@ interface TsconfigJsonConfiguration {
   compilerOptions: CompilerOptions;
 }
 
+export const HashFilter = {
+  AllFiles: 'all-files',
+  ExcludeTestsOfAll: 'exclude-tests-of-all',
+  ExcludeTestsOfDeps: 'exclude-tests-of-deps',
+};
+export type HashFilter = typeof HashFilter[keyof typeof HashFilter];
+
 export class Hasher {
   static version = '2.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
@@ -75,10 +82,7 @@ export class Hasher {
 
   async hashTaskWithDepsAndContext(
     task: Task,
-    filter:
-      | 'all-files'
-      | 'exclude-tests-of-all'
-      | 'exclude-tests-of-deps' = 'all-files'
+    filter: HashFilter = HashFilter.AllFiles
   ): Promise<Hash> {
     const command = this.hashCommand(task);
 
@@ -141,7 +145,7 @@ export class Hasher {
   async hashSource(task: Task): Promise<string> {
     return this.projectHashes.hashProjectNodeSource(
       task.target.project,
-      'all-files'
+      HashFilter.AllFiles
     );
   }
 
@@ -318,7 +322,7 @@ class ProjectHasher {
   async hashProject(
     projectName: string,
     visited: string[],
-    filter: 'all-files' | 'exclude-tests-of-all' | 'exclude-tests-of-deps'
+    filter: HashFilter
   ): Promise<ProjectHashResult> {
     return Promise.resolve().then(async () => {
       const deps = this.projectGraph.dependencies[projectName] ?? [];
@@ -335,11 +339,10 @@ class ProjectHasher {
         )
       ).filter((r) => !!r);
       const filterForProject =
-        filter === 'all-files'
-          ? 'all-files'
-          : filter === 'exclude-tests-of-deps' && visited[0] === projectName
-          ? 'all-files'
-          : 'exclude-tests';
+        filter === HashFilter.AllFiles ||
+        (filter === HashFilter.ExcludeTestsOfDeps && visited[0] === projectName)
+          ? HashFilter.AllFiles
+          : HashFilter.ExcludeTestsOfAll;
       const projectHash = await this.hashProjectNodeSource(
         projectName,
         filterForProject
@@ -358,10 +361,7 @@ class ProjectHasher {
     });
   }
 
-  async hashProjectNodeSource(
-    projectName: string,
-    filter: 'all-files' | 'exclude-tests'
-  ) {
+  async hashProjectNodeSource(projectName: string, filter: HashFilter) {
     const mapKey = `${projectName}-${filter}`;
     if (!this.sourceHashes[mapKey]) {
       this.sourceHashes[mapKey] = new Promise(async (res) => {
@@ -392,7 +392,7 @@ class ProjectHasher {
         }
 
         const filteredFiles =
-          filter === 'all-files'
+          filter === HashFilter.AllFiles
             ? p.data.files
             : p.data.files.filter((f) => !this.isSpec(f.file));
 
