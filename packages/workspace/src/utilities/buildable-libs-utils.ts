@@ -1,13 +1,13 @@
 import { isNpmProject, ProjectType } from '../core/project-graph';
-import { join, resolve, dirname, relative } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 import { directoryExists } from './fileutils';
-import {
-  stripIndents,
-  readJsonFile,
-  writeJsonFile,
-  ProjectGraphExternalNode,
-} from '@nrwl/devkit';
 import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
+import {
+  ProjectGraphExternalNode,
+  readJsonFile,
+  stripIndents,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
@@ -32,7 +32,8 @@ export function calculateProjectDependencies(
   root: string,
   projectName: string,
   targetName: string,
-  configurationName: string
+  configurationName: string,
+  shallow?: boolean
 ): {
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
@@ -41,11 +42,7 @@ export function calculateProjectDependencies(
   const target = projGraph.nodes[projectName];
   // gather the library dependencies
   const nonBuildableDependencies = [];
-  const dependencies = recursivelyCollectDependencies(
-    projectName,
-    projGraph,
-    []
-  )
+  const dependencies = collectDependencies(projectName, projGraph, [], shallow)
     .map((dep) => {
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (depNode.type === ProjectType.lib) {
@@ -86,15 +83,18 @@ export function calculateProjectDependencies(
   return { target, dependencies, nonBuildableDependencies };
 }
 
-function recursivelyCollectDependencies(
+function collectDependencies(
   project: string,
   projGraph: ProjectGraph,
-  acc: string[]
+  acc: string[],
+  shallow?: boolean
 ) {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
     if (acc.indexOf(dependency.target) === -1) {
       acc.push(dependency.target);
-      recursivelyCollectDependencies(dependency.target, projGraph, acc);
+      if (!shallow) {
+        collectDependencies(dependency.target, projGraph, acc);
+      }
     }
   });
   return acc;
