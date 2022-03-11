@@ -422,8 +422,8 @@ export function runNgAdd(
   }
 ): string {
   try {
-    packageInstall('@nrwl/workspace');
-    return execSync(`npx ng add @nrwl/workspace ${command}`, {
+    packageInstall('@nrwl/angular');
+    return execSync(`npx ng add @nrwl/angular ${command}`, {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
       encoding: 'utf-8',

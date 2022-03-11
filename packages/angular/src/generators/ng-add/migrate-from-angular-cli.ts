@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -12,30 +11,26 @@ import {
   normalizePath,
   NxJsonConfiguration,
   offsetFromRoot,
+  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
+  TargetConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
   writeJson,
-  ProjectConfiguration,
-  TargetConfiguration,
 } from '@nrwl/devkit';
-import { readFileSync } from 'fs';
+import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/workspace/workspace';
+import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
+import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
 import { basename, relative } from 'path';
-import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
-import { deduceDefaultBase } from '../../utilities/default-base';
-import {
-  angularCliVersion,
-  nxVersion,
-  prettierVersion,
-} from '../../utils/versions';
-import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
+import { angularDevkitVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { getRootTsConfigPathInTree } from '../../utilities/typescript';
 
 function updatePackageJson(tree) {
   updateJson(tree, 'package.json', (packageJson) => {
@@ -66,12 +61,17 @@ function updatePackageJson(tree) {
     if (!packageJson.dependencies['@nrwl/angular']) {
       packageJson.dependencies['@nrwl/angular'] = nxVersion;
     }
-    delete packageJson.dependencies['@nrwl/workspace'];
+    if (!packageJson.devDependencies['@angular/cli']) {
+      packageJson.devDependencies['@angular/cli'] = angularDevkitVersion;
+    }
+    if (!packageJson.devDependencies['@nrwl/cli']) {
+      packageJson.devDependencies['@nrwl/cli'] = nxVersion;
+    }
+    if (!packageJson.devDependencies['@nrwl/tao']) {
+      packageJson.devDependencies['@nrwl/tao'] = nxVersion;
+    }
     if (!packageJson.devDependencies['@nrwl/workspace']) {
       packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
-    }
-    if (!packageJson.devDependencies['@angular/cli']) {
-      packageJson.devDependencies['@angular/cli'] = angularCliVersion;
     }
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
@@ -623,25 +623,7 @@ function replaceCypressGlobConfig(
   );
 }
 
-async function createAdditionalFiles(host: Tree, options: Schema) {
-  const nxJson: NxJsonConfiguration = {
-    npmScope: options.npmScope,
-    affected: {
-      defaultBase: options.defaultBase
-        ? `${options.defaultBase}`
-        : deduceDefaultBase(),
-    },
-    implicitDependencies: {
-      'angular.json': '*',
-      'package.json': '*',
-      'tslint.json': '*',
-      '.eslintrc.json': '*',
-      'nx.json': '*',
-    },
-  };
-  writeJson(host, 'nx.json', nxJson);
-  host.write('libs/.gitkeep', '');
-
+async function createAdditionalFiles(host: Tree) {
   const recommendations = [
     'nrwl.angular-console',
     'angular.ng-template',
@@ -749,8 +731,7 @@ function checkCanConvertToWorkspace(host: Tree) {
 }
 
 function createNxJson(host: Tree) {
-  const json = JSON.parse(host.read('angular.json').toString());
-  const projects = json.projects || {};
+  const { projects = {}, newProjectRoot = '' } = readJson(host, 'angular.json');
   const hasLibraries = Object.keys(projects).find(
     (project) =>
       projects[project].projectType &&
@@ -782,19 +763,17 @@ function createNxJson(host: Tree) {
         },
       },
     },
+    workspaceLayout: { appsDir: newProjectRoot, libsDir: newProjectRoot },
   });
 }
 
-function decorateAngularClI(host: Tree) {
-  const decorateCli = readFileSync(
-    joinPathFragments(
-      __dirname as any,
-      '..',
-      'utils',
-      'decorate-angular-cli.js__tmpl__'
-    )
-  ).toString();
-  host.write('decorate-angular-cli.js', decorateCli);
+function decorateAngularCli(host: Tree) {
+  generateFiles(
+    host,
+    joinPathFragments(__dirname, 'files', 'decorate-angular-cli'),
+    '.',
+    { tmpl: '' }
+  );
   updateJson(host, 'package.json', (json) => {
     if (
       json.scripts &&
@@ -815,11 +794,13 @@ function decorateAngularClI(host: Tree) {
   });
 }
 
-function addFiles(host: Tree) {
+function addFiles(host: Tree, options: Schema) {
   generateFiles(host, joinPathFragments(__dirname, './files/root'), '.', {
     tmpl: '',
     dot: '.',
     rootTsConfigPath: getRootTsConfigPathInTree(host),
+    npmScope: options.npmScope,
+    defaultBase: options.defaultBase ?? deduceDefaultBase(),
   });
 
   if (!host.exists('.prettierignore')) {
@@ -857,15 +838,19 @@ function renameDirSyncInTree(tree: Tree, from: string, to: string) {
   });
 }
 
-export async function initGenerator(tree: Tree, schema: Schema) {
+export async function migrateFromAngularCli(tree: Tree, schema: Schema) {
   if (schema.preserveAngularCliLayout) {
-    updateJson(tree, 'package.json', (json) => {
-      delete json.dependencies?.['@nrwl/workspace'];
-      return json;
-    });
-    addDependenciesToPackageJson(tree, {}, { '@nrwl/workspace': nxVersion });
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@nrwl/cli': nxVersion,
+        '@nrwl/tao': nxVersion,
+        '@nrwl/workspace': nxVersion,
+      }
+    );
     createNxJson(tree);
-    decorateAngularClI(tree);
+    decorateAngularCli(tree);
   } else {
     const options = {
       ...schema,
@@ -874,15 +859,15 @@ export async function initGenerator(tree: Tree, schema: Schema) {
 
     checkCanConvertToWorkspace(tree);
     moveExistingFiles(tree, options);
-    addFiles(tree);
-    await createAdditionalFiles(tree, options);
+    addFiles(tree, options);
+    await createAdditionalFiles(tree);
     updatePackageJson(tree);
     updateAngularCLIJson(tree, options);
     updateTsLint(tree);
     updateProjectTsLint(tree, options);
     updateTsConfig(tree);
     updateTsConfigsJson(tree, options);
-    decorateAngularClI(tree);
+    decorateAngularCli(tree);
     await formatFiles(tree);
   }
   if (!schema.skipInstall) {
@@ -891,7 +876,3 @@ export async function initGenerator(tree: Tree, schema: Schema) {
     };
   }
 }
-
-export const initSchematic = convertNxGenerator(initGenerator);
-
-export default initGenerator;

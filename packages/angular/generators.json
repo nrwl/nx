@@ -47,7 +47,6 @@
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the @nrwl/angular plugin.",
-      "aliases": ["ng-add"],
       "hidden": true
     },
     "karma": {
@@ -90,6 +89,12 @@
       "schema": "./src/generators/mfe-host/schema.json",
       "aliases": ["host"],
       "description": "Generate a Host Angular Micro Frontend Application."
+    },
+    "ng-add": {
+      "factory": "./src/generators/ng-add/compat",
+      "schema": "./src/generators/ng-add/schema.json",
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
@@ -197,7 +202,6 @@
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the @nrwl/angular plugin.",
-      "aliases": ["ng-add"],
       "hidden": true
     },
     "karma": {
@@ -240,6 +244,12 @@
       "schema": "./src/generators/mfe-host/schema.json",
       "aliases": ["host"],
       "description": "Generate a Host Angular Micro Frontend Application."
+    },
+    "ng-add": {
+      "factory": "./src/generators/ng-add/ng-add",
+      "schema": "./src/generators/ng-add/schema.json",
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",
