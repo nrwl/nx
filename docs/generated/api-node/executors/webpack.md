@@ -159,11 +159,13 @@ Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
 
-### tsPlugins
+### transformers
+
+Alias(es): tsPlugins
 
 Type: `array`
 
-List of TypeScript Compiler Plugins.
+List of TypeScript Compiler Transfomers Plugins.
 
 ### verbose
 

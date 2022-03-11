@@ -585,6 +585,7 @@ describe('workspace', () => {
     beforeEach(() => {
       tree.write('/package.json', JSON.stringify({ devDependencies: {} }));
       tree.write('/angular.json', JSON.stringify({ projects: { myproj: {} } }));
+      tree.write('/tsconfig.json', '{"compilerOptions": {}}');
     });
 
     it('should update package.json', async () => {

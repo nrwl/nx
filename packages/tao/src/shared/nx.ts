@@ -92,6 +92,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Plugins for extending the project graph
    */
   plugins?: string[];
+
+  /**
+   * Configuration for Nx Plugins
+   */
+  pluginsConfig?: Record<string, unknown>;
+
   /**
    * Default project. When project isn't provided, the default project
    * will be used. Convenient for small workspaces with one main application.

@@ -54,6 +54,32 @@ describe('NxPlugin e2e-project Generator', () => {
     ).toBeTruthy();
   });
 
+  it('should extend from root tsconfig.base.json', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      standaloneConfig: false,
+    });
+
+    const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
+    expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
+  });
+
+  it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      standaloneConfig: false,
+    });
+
+    const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
+    expect(tsConfig.extends).toEqual('../../tsconfig.json');
+  });
+
   it('should set project root with the directory option', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',

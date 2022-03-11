@@ -10,11 +10,13 @@ using a monorepo approach. If you are currently using an Angular CLI workspace, 
 
 ## Using the Nx CLI while preserving the existing structure
 
-To use the Nx CLI in an existing Angular CLI workspace while keeping your existing file structure in place, use the `ng add` command with the `--preserveAngularCLILayout` option:
+To use the Nx CLI in an existing Angular CLI workspace while keeping your existing file structure in place, use the `ng add` command with the `--preserve-angular-cli-layout` option:
 
 ```bash
-ng add @nrwl/workspace --preserveAngularCLILayout
+ng add @nrwl/workspace --preserve-angular-cli-layout
 ```
+
+> **Note**: If you are migrating to an Nx versions previous to `v13.8.4` (e.g. `ng add @nrwl/workspace@12`) use the `--preserveAngularCLILayout` option instead.
 
 This installs the `@nrwl/workspace` package into your workspace and applies the following changes to your workspace:
 

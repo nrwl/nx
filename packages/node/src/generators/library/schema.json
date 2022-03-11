@@ -66,6 +66,12 @@
       "default": false,
       "description": "Generate a buildable library."
     },
+    "compiler": {
+      "type": "string",
+      "enum": ["tsc", "swc"],
+      "default": "tsc",
+      "description": "The compiler used by the build and test targets"
+    },
     "importPath": {
       "type": "string",
       "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."

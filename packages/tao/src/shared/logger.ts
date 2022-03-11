@@ -21,7 +21,7 @@ export const logger = {
     if (typeof s === 'string' && s.startsWith('NX ')) {
       console.info(`\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`);
     } else {
-      console.info(chalk.white(s));
+      console.info(s);
     }
   },
   log: (...s) => {

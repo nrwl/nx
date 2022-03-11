@@ -13,28 +13,35 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { join } from 'path';
-import { GeneratorSchema } from '../../utils/schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
+import { join } from 'path';
+import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
+import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 
-export async function libraryGenerator(tree: Tree, schema: GeneratorSchema) {
+export async function libraryGenerator(
+  tree: Tree,
+  schema: LibraryGeneratorSchema
+) {
   const { libsDir } = getWorkspaceLayout(tree);
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
 
 export async function projectGenerator(
   tree: Tree,
-  schema: GeneratorSchema,
+  schema: LibraryGeneratorSchema,
   destinationDir: string,
   filesDir: string
 ) {
   const options = normalizeOptions(tree, schema, destinationDir);
 
-  createFiles(tree, options, filesDir);
+  createFiles(tree, options, `${filesDir}/lib`);
 
   addProject(tree, options, destinationDir);
 
@@ -51,6 +58,9 @@ export async function projectGenerator(
   if (options.unitTestRunner === 'jest') {
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
+    if (options.compiler === 'swc') {
+      replaceJestConfig(tree, options, `${filesDir}/jest-config`);
+    }
   }
 
   if (!options.skipFormat) {
@@ -60,7 +70,7 @@ export async function projectGenerator(
   return runTasksInSerial(...tasks);
 }
 
-export interface NormalizedSchema extends GeneratorSchema {
+export interface NormalizedSchema extends LibraryGeneratorSchema {
   name: string;
   fileName: string;
   projectRoot: string;
@@ -166,6 +176,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     strict: undefined,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     buildable: options.buildable === true,
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
@@ -219,11 +230,37 @@ async function addJest(
   });
 }
 
+function replaceJestConfig(
+  tree: Tree,
+  options: NormalizedSchema,
+  filesDir: string
+) {
+  // remove the generated jest config by Jest generator
+  tree.delete(join(options.projectRoot, 'jest.config.js'));
+
+  // replace with JS:SWC specific jest config
+  generateFiles(tree, filesDir, options.projectRoot, {
+    tmpl: '',
+    project: options.name,
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    projectRoot: options.projectRoot,
+  });
+}
+
 function normalizeOptions(
   tree: Tree,
-  options: GeneratorSchema,
+  options: LibraryGeneratorSchema,
   destinationDir: string
 ): NormalizedSchema {
+  if (options.publishable) {
+    if (!options.importPath) {
+      throw new Error(
+        `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      );
+    }
+    options.buildable = true;
+  }
+
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
@@ -286,7 +323,7 @@ function getCaseAwareFileName(options: {
 }
 
 function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];

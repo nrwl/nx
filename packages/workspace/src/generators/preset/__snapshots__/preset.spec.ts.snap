@@ -2,12 +2,12 @@
 
 exports[`preset should create files (preset = angular) 1`] = `
 Array [
-  "src",
-  "tsconfig.editor.json",
-  "tsconfig.json",
   ".browserslistrc",
   "tsconfig.app.json",
   "tsconfig.spec.json",
+  "src",
+  "tsconfig.editor.json",
+  "tsconfig.json",
   ".eslintrc.json",
   "jest.config.js",
 ]

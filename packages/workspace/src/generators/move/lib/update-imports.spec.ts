@@ -268,7 +268,7 @@ export MyExtendedClass extends MyClass {};`
     );
   });
 
-  it('should update project ref in the tsconfig file', async () => {
+  it('should update project ref in the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
       standaloneConfig: false,
@@ -278,6 +278,22 @@ export MyExtendedClass extends MyClass {};`
     updateImports(tree, schema, projectConfig);
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+    });
+  });
+
+  it('should update project ref in the root tsconfig.json when no tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(tree, schema, projectConfig);
+
+    const tsConfig = readJson(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-destination': ['libs/my-destination/src/index.ts'],
     });

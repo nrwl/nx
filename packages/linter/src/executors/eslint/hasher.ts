@@ -1,50 +1,56 @@
-import { Task, TaskGraph } from '@nrwl/devkit';
+import {
+  ProjectGraph,
+  Task,
+  TaskGraph,
+  WorkspaceJsonConfiguration,
+} from '@nrwl/devkit';
 import { Hash, Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 export default async function run(
   task: Task,
-  taskGraph: TaskGraph,
-  hasher: Hasher
+  context: {
+    hasher: Hasher;
+    projectGraph: ProjectGraph;
+    taskGraph: TaskGraph;
+    workspaceConfig: WorkspaceJsonConfiguration;
+  }
 ): Promise<Hash> {
   if (task.overrides['hasTypeAwareRules'] === true) {
-    return hasher.hashTaskWithDepsAndContext(task);
+    return context.hasher.hashTaskWithDepsAndContext(task);
   }
-  const command = hasher.hashCommand(task);
-  const sources = await hasher.hashSource(task);
-  // TODO: This will be used once we pass hasher's projectGraph
-  // const deps = allDeps(task.id, taskGraph);
-  const workspace = new Workspaces(appRootPath).readWorkspaceConfiguration();
-  const tags = hasher.hashArray(
-    // deps.map((d) => (workspace.projects[d].tags || []).join('|'))
-    Object.values(workspace.projects).map((proj) => (proj.tags || []).join('|'))
+
+  const command = context.hasher.hashCommand(task);
+  const source = await context.hasher.hashSource(task);
+  const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
+  const tags = context.hasher.hashArray(
+    deps.map((d) => (context.workspaceConfig.projects[d].tags || []).join('|'))
   );
-  const context = await hasher.hashContext();
+  const taskContext = await context.hasher.hashContext();
   return {
-    value: hasher.hashArray([
+    value: context.hasher.hashArray([
       command,
-      sources,
+      source,
       tags,
-      context.implicitDeps.value,
-      context.runtime.value,
+      taskContext.implicitDeps.value,
+      taskContext.runtime.value,
     ]),
     details: {
       command,
-      nodes: { [task.target.project]: sources, tags },
-      implicitDeps: context.implicitDeps.files,
-      runtime: context.runtime.runtime,
+      nodes: { [task.target.project]: source, tags },
+      implicitDeps: taskContext.implicitDeps.files,
+      runtime: taskContext.runtime.runtime,
     },
   };
 }
 
-function allDeps(taskId: string, taskGraph: TaskGraph): string[] {
-  return [
-    ...taskGraph.dependencies[taskId].map(
-      (task) => taskGraph.tasks[task].target.project
-    ),
-    ...taskGraph.dependencies[taskId].flatMap((task) =>
-      allDeps(task, taskGraph)
-    ),
-  ];
+function allDeps(
+  taskId: string,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph
+): string[] {
+  const project = taskGraph.tasks[taskId].target.project;
+  const dependencies = projectGraph.dependencies[project]
+    .filter((d) => !!projectGraph.nodes[d.target])
+    .map((d) => d.target);
+  return dependencies;
 }

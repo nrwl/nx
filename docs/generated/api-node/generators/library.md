@@ -63,6 +63,16 @@ Type: `boolean`
 
 Generate a buildable library.
 
+### compiler
+
+Default: `tsc`
+
+Type: `string`
+
+Possible values: `tsc`, `swc`
+
+The compiler used by the build and test targets
+
 ### directory
 
 Alias(es): dir

@@ -12,24 +12,11 @@ import { convertToNxProjectGenerator } from '@nrwl/workspace';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { getWorkspaceLayout, joinPathFragments } from '@nrwl/devkit';
 
-/**
- * Add E2E Config
- *
- * @param tree Nx Devkit Virtual Tree
- * @param options Normalized Schema
- * @param e2eProjectRoot Raw E2E Project Root that Angular tries to write to
- *
- * @returns Function to run to add Cypres config after intial app files have been moved to correct location
- */
-export async function addE2e(
-  tree: Tree,
-  options: NormalizedSchema,
-  e2eProjectRoot: string
-) {
+export async function addE2e(tree: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
     await addProtractor(tree, options);
   } else {
-    removeScaffoldedE2e(tree, options, e2eProjectRoot);
+    removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
   }
 
   if (options.e2eTestRunner === 'cypress') {

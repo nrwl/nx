@@ -22,6 +22,7 @@ import { join } from 'path';
 import {
   isFramework,
   readCurrentWorkspaceStorybookVersionFromGenerator,
+  showStorybookV5Warning,
   TsConfig,
 } from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
@@ -30,6 +31,7 @@ import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
 import { findStorybookAndBuildTargets } from '../../executors/utils';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -77,6 +79,10 @@ export async function configurationGenerator(
     }
   }
 
+  if (workspaceStorybookVersion !== '6') {
+    showStorybookV5Warning(rawSchema.uiFramework);
+  }
+
   await formatFiles(tree);
 
   return runTasksInSerial(...tasks);
@@ -111,11 +117,14 @@ function createRootStorybookDir(
     `adding .storybook folder to the root directory - 
      based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
   );
+
   const templatePath = join(
     __dirname,
     workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
   );
-  generateFiles(tree, templatePath, '', {});
+  generateFiles(tree, templatePath, '', {
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
+  });
 
   if (js) {
     toJS(tree);
@@ -160,6 +169,7 @@ function createProjectStorybookDir(
     tmpl: '',
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectType: projectDirectory,
     useWebpack5:
       uiFramework === '@storybook/angular' ||

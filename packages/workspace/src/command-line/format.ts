@@ -21,6 +21,10 @@ import {
   writeJsonFile,
 } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import {
+  getRootTsConfigFileName,
+  getRootTsConfigPath,
+} from '../utilities/typescript';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -49,7 +53,13 @@ export async function format(
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
-      chunkList.forEach((chunk) => check(chunk));
+      const pass = chunkList.reduce(
+        (pass, chunk) => check(chunk) && pass,
+        true
+      );
+      if (!pass) {
+        process.exit(1);
+      }
       break;
   }
 }
@@ -115,7 +125,9 @@ function addRootConfigFiles(
   if (workspaceJsonPath) {
     addToChunkIfNeeded(workspaceJsonPath);
   }
-  ['nx.json', 'tsconfig.base.json'].forEach(addToChunkIfNeeded);
+  ['nx.json', getRootTsConfigFileName()]
+    .filter(Boolean)
+    .forEach(addToChunkIfNeeded);
 
   if (chunk.length > 0) {
     chunkList.push(chunk);
@@ -142,18 +154,17 @@ function write(patterns: string[]) {
   }
 }
 
-function check(patterns: string[]) {
-  if (patterns.length > 0) {
-    try {
-      execSync(
-        `node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`,
-        {
-          stdio: [0, 1, 2],
-        }
-      );
-    } catch {
-      process.exit(1);
-    }
+function check(patterns: string[]): boolean {
+  if (patterns.length === 0) {
+    return true;
+  }
+  try {
+    execSync(`node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`, {
+      stdio: [0, 1, 2],
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -185,7 +196,7 @@ function sortWorkspaceJson(workspaceJsonPath: string) {
 
 function sortTsConfig() {
   try {
-    const tsconfigPath = path.join(appRootPath, 'tsconfig.base.json');
+    const tsconfigPath = getRootTsConfigPath();
     const tsconfig = readJsonFile(tsconfigPath);
     const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
     tsconfig.compilerOptions.paths = sortedPaths;

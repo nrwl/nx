@@ -79,6 +79,13 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
   if (isLocal) {
     pkgFiles = pkgFiles.filter((f) => f !== 'package.json');
   }
+  for (const pkgFile of pkgFiles) {
+    const pkgDir = path.dirname(pkgFile);
+    const licensePath = path.join(pkgDir, 'LICENSE');
+    if (!fs.existsSync(licensePath)) {
+      throw new Error('Missing License: ' + licensePath);
+    }
+  }
   pkgFiles.forEach((p) => {
     const content = JSON.parse(fs.readFileSync(p).toString());
     content.version = parsedVersion.version;

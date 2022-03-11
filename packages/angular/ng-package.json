@@ -15,7 +15,8 @@
     "webpack-merge",
     "ts-node",
     "tsconfig-paths",
-    "semver"
+    "semver",
+    "webpack"
   ],
   "keepLifecycleScripts": true
 }

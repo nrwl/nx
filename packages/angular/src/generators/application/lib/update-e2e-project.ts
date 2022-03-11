@@ -6,6 +6,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
@@ -60,7 +61,7 @@ export function updateE2eProject(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, `${options.e2eProjectRoot}/tsconfig.json`, (json) => {
     return {
       ...json,
-      extends: `${offsetFromRoot(options.e2eProjectRoot)}tsconfig.base.json`,
+      extends: getRelativePathToRootTsConfig(tree, options.e2eProjectRoot),
     };
   });
 }

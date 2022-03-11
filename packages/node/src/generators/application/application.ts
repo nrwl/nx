@@ -28,6 +28,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 
 import { Schema } from './schema';
 import { initGenerator } from '../init/init';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -74,7 +75,7 @@ function getBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/node:execute',
+    executor: '@nrwl/node:node',
     options: {
       buildTarget: `${options.name}:build`,
     },
@@ -113,6 +114,10 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
     name: options.name,
     root: options.appProjectRoot,
     offset: offsetFromRoot(options.appProjectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(
+      tree,
+      options.appProjectRoot
+    ),
   });
   if (options.js) {
     toJS(tree);

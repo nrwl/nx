@@ -3,11 +3,11 @@ import { join } from 'path';
 import {
   CompilerPlugin,
   CompilerPluginHooks,
-  TransformerPlugin,
   TransformerEntry,
+  TransformerPlugin,
 } from './types';
 
-export function loadTsPlugins(
+export function loadTsTransformers(
   plugins: TransformerEntry[],
   moduleResolver: typeof require.resolve = require.resolve
 ): {

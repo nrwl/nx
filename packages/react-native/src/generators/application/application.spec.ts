@@ -62,4 +62,18 @@ describe('app', () => {
 
     expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
   });
+
+  it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+    appTree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'myApp',
+      displayName: 'myApp',
+      linter: Linter.EsLint,
+      e2eTestRunner: 'none',
+    });
+
+    const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
+    expect(tsconfig.extends).toEqual('../../tsconfig.json');
+  });
 });

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import {
   checkFilesExist,
+  createFile,
   newProject,
   readFile,
   readJson,
@@ -9,6 +10,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import * as ts from 'typescript';
+import { names } from '@nrwl/devkit';
 
 describe('Linter', () => {
   describe('linting errors', () => {
@@ -190,6 +192,249 @@ describe('Linter', () => {
       expect(lintOutput).toContain(newRuleNameForUsage);
       expect(lintOutput).toContain(knownLintErrorMessage);
     }, 1000000);
+  });
+
+  it('lint plugin should ensure module boundaries', () => {
+    const proj = newProject();
+    const myapp = uniq('myapp');
+    const myapp2 = uniq('myapp2');
+    const mylib = uniq('mylib');
+    const lazylib = uniq('lazylib');
+    const invalidtaglib = uniq('invalidtaglib');
+    const validtaglib = uniq('validtaglib');
+
+    runCLI(`generate @nrwl/angular:app ${myapp} --tags=validtag`);
+    runCLI(`generate @nrwl/angular:app ${myapp2}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
+    runCLI(`generate @nrwl/angular:lib ${lazylib}`);
+    runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
+    runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
+
+    const eslint = readJson('.eslintrc.json');
+    eslint.overrides[0].rules[
+      '@nrwl/nx/enforce-module-boundaries'
+    ][1].depConstraints = [
+      { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
+      ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
+        .depConstraints,
+    ];
+    updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
+
+    const tsConfig = readJson('tsconfig.base.json');
+
+    /**
+     * apps do not add themselves to the tsconfig file.
+     *
+     * Let's add it so that we can trigger the lint failure
+     */
+    tsConfig.compilerOptions.paths[`@${proj}/${myapp2}`] = [
+      `apps/${myapp2}/src/main.ts`,
+    ];
+
+    tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
+      tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
+    delete tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
+    updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
+
+    updateFile(
+      `apps/${myapp}/src/main.ts`,
+      `
+      import '../../../libs/${mylib}';
+      import '@secondScope/${lazylib}';
+      import '@${proj}/${myapp2}';
+      import '@${proj}/${invalidtaglib}';
+      import '@${proj}/${validtaglib}';
+
+      const s = {loadChildren: '@${proj}/${lazylib}'};
+    `
+    );
+
+    const out = runCLI(`lint ${myapp}`, { silenceError: true });
+    expect(out).toContain(
+      'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
+    );
+    expect(out).toContain('Imports of apps are forbidden');
+    expect(out).toContain(
+      'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
+    );
+  }, 1000000);
+
+  describe('workspace boundary rules', () => {
+    const libA = uniq('tslib-a');
+    const libB = uniq('tslib-b');
+    const libC = uniq('tslib-c');
+    let projScope;
+
+    beforeAll(() => {
+      projScope = newProject();
+      runCLI(`generate @nrwl/workspace:lib ${libA}`);
+      runCLI(`generate @nrwl/workspace:lib ${libB}`);
+      runCLI(`generate @nrwl/workspace:lib ${libC}`);
+
+      /**
+       * create tslib-a structure
+       */
+      createFile(
+        `libs/${libA}/src/lib/tslib-a.ts`,
+        `
+      export function libASayHello(): string {
+        return 'Hi from tslib-a';
+      }
+      `
+      );
+
+      createFile(
+        `libs/${libA}/src/lib/some-non-exported-function.ts`,
+        `
+      export function someNonPublicLibFunction() {
+        return 'this function is exported, but not via the libs barrel file';
+      }
+      
+      export function someSelectivelyExportedFn() {
+        return 'this fn is exported selectively in the barrel file';
+      }
+      `
+      );
+
+      createFile(
+        `libs/${libA}/src/index.ts`,
+        `
+      export * from './lib/tslib-a';
+
+      export { someSelectivelyExportedFn } from './lib/some-non-exported-function';
+      `
+      );
+
+      /**
+       * create tslib-b structure
+       */
+      createFile(
+        `libs/${libB}/src/index.ts`,
+        `
+      export * from './lib/tslib-b';
+      `
+      );
+
+      createFile(
+        `libs/${libB}/src/lib/tslib-b.ts`,
+        `
+        import { libASayHello } from '../../../${libA}/src/lib/tslib-a';
+        // import { someNonPublicLibFunction } from '../../../${libA}/src/lib/some-non-exported-function';
+        import { someSelectivelyExportedFn } from '../../../${libA}/src/lib/some-non-exported-function';
+        
+        export function tslibB(): string {
+          // someNonPublicLibFunction();
+          someSelectivelyExportedFn();
+          libASayHello();
+          return 'hi there';
+        }
+      `
+      );
+
+      /**
+       * create tslib-c structure
+       */
+
+      createFile(
+        `libs/${libC}/src/index.ts`,
+        `
+      export * from './lib/tslib-c';
+      export * from './lib/constant';
+       
+      `
+      );
+
+      createFile(
+        `libs/${libC}/src/lib/constant.ts`,
+        `
+      export const SOME_CONSTANT = 'some constant value';
+      export const someFunc1 = () => 'hi';
+      export function someFunc2() {
+        return 'hi2';
+      }
+      `
+      );
+
+      createFile(
+        `libs/${libC}/src/lib/tslib-c-another.ts`,
+        `
+import { tslibC, SOME_CONSTANT, someFunc1, someFunc2 } from '@${projScope}/${libC}';
+
+export function someStuff() {
+  someFunc1();
+  someFunc2();
+  tslibC();
+  console.log(SOME_CONSTANT);
+  return 'hi';
+}
+
+      `
+      );
+
+      createFile(
+        `libs/${libC}/src/lib/tslib-c.ts`,
+        `
+import { someFunc1, someFunc2, SOME_CONSTANT } from '@${projScope}/${libC}';
+
+export function tslibC(): string {
+  someFunc1();
+  someFunc2();
+  console.log(SOME_CONSTANT);
+  return 'tslib-c';
+}
+
+      `
+      );
+    });
+
+    it('should fix noSelfCircularDependencies', () => {
+      const stdout = runCLI(`lint ${libC}`, {
+        silenceError: true,
+      });
+      expect(stdout).toContain(
+        'Projects should use relative imports to import from other files within the same project'
+      );
+
+      // fix them
+      const fixedStout = runCLI(`lint ${libC} --fix`, {
+        silenceError: true,
+      });
+      expect(fixedStout).toContain('Successfully ran target lint for project');
+
+      const fileContent = readFile(`libs/${libC}/src/lib/tslib-c-another.ts`);
+      expect(fileContent).toContain(`import { tslibC } from './tslib-c';`);
+      expect(fileContent).toContain(
+        `import { SOME_CONSTANT, someFunc1, someFunc2 } from './constant';`
+      );
+
+      const fileContentTslibC = readFile(`libs/${libC}/src/lib/tslib-c.ts`);
+      expect(fileContentTslibC).toContain(
+        `import { someFunc1, someFunc2, SOME_CONSTANT } from './constant';`
+      );
+    });
+
+    it('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
+      const stdout = runCLI(`lint ${libB}`, {
+        silenceError: true,
+      });
+      expect(stdout).toContain(
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
+      );
+
+      // fix them
+      const fixedStout = runCLI(`lint ${libB} --fix`, {
+        silenceError: true,
+      });
+      expect(fixedStout).toContain('Successfully ran target lint for project');
+
+      const fileContent = readFile(`libs/${libB}/src/lib/tslib-b.ts`);
+      expect(fileContent).toContain(
+        `import { libASayHello } from '@${projScope}/${libA}';`
+      );
+      expect(fileContent).toContain(
+        `import { someSelectivelyExportedFn } from '@${projScope}/${libA}';`
+      );
+    });
   });
 });
 

@@ -15,6 +15,7 @@ export * from './src/generators/storybook-migrate-defaults-5-to-6/storybook-migr
 export * from './src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2';
 export * from './src/generators/upgrade-module/upgrade-module';
 export * from './src/generators/setup-mfe/setup-mfe';
+export * from './src/generators/mfe-host/mfe-host';
 export * from './src/generators/scam/scam';
 export * from './src/generators/scam-directive/scam-directive';
 export * from './src/generators/scam-pipe/scam-pipe';
@@ -22,3 +23,4 @@ export * from './src/generators/add-linting/add-linting';
 export * from './src/generators/component-cypress-spec/component-cypress-spec';
 export * from './src/generators/component-story/component-story';
 export * from './src/generators/web-worker/web-worker';
+export * from './src/generators/mfe-remote/mfe-remote';

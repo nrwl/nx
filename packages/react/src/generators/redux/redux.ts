@@ -20,6 +20,7 @@ import {
   toJS,
   Tree,
 } from '@nrwl/devkit';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 export async function reduxGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
@@ -139,7 +140,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const project = projects.get(options.project);
   const { sourceRoot, projectType } = project;
 
-  const tsConfigJson = readJson(host, 'tsconfig.base.json');
+  const tsConfigJson = readJson(host, getRootTsConfigPathInTree(host));
   const tsPaths: { [module: string]: string[] } = tsConfigJson.compilerOptions
     ? tsConfigJson.compilerOptions.paths || {}
     : {};

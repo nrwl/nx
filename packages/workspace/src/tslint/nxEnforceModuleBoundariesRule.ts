@@ -1,7 +1,10 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type {
+  NxJsonConfiguration,
+  ProjectGraphExternalNode,
+} from '@nrwl/devkit';
 import { ProjectType, readCachedProjectGraph } from '../core/project-graph';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
@@ -10,14 +13,17 @@ import {
   findProjectUsingImport,
   findSourceProject,
   getSourceFilePath,
+  getTargetProjectBasedOnRelativeImport,
   hasBuildExecutor,
-  hasNoneOfTheseTags,
+  findDependenciesWithTags,
   isAbsoluteImportIntoAnotherProject,
-  isRelativeImportIntoAnotherProject,
   MappedProjectGraph,
   mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
+  stringifyTags,
+  hasNoneOfTheseTags,
+  MappedProjectGraphNode,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
 import { readNxJson } from '../core/file-utils';
@@ -134,16 +140,21 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       this.projectPath
     );
     const sourceProject = findSourceProject(this.projectGraph, filePath);
-
-    // check for relative and absolute imports
-    if (
-      isRelativeImportIntoAnotherProject(
+    if (!sourceProject) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+    let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+      getTargetProjectBasedOnRelativeImport(
         imp,
         this.projectPath,
         this.projectGraph,
-        filePath,
-        sourceProject
-      ) ||
+        filePath
+      );
+
+    // check for relative and absolute imports
+    if (
+      (targetProject && sourceProject !== targetProject) ||
       isAbsoluteImportIntoAnotherProject(imp, this.workspaceLayout)
     ) {
       this.addFailureAt(
@@ -154,16 +165,18 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const targetProject = findProjectUsingImport(
-      this.projectGraph,
-      this.targetProjectLocator,
-      filePath,
-      imp,
-      this.npmScope
-    );
+    targetProject =
+      targetProject ||
+      findProjectUsingImport(
+        this.projectGraph,
+        this.targetProjectLocator,
+        filePath,
+        imp,
+        this.npmScope
+      );
 
     // If source or target are not part of an nx workspace, return.
-    if (!sourceProject || !targetProject || targetProject.type === 'npm') {
+    if (!targetProject || targetProject.type === 'npm') {
       super.visitImportDeclaration(node);
       return;
     }
@@ -272,17 +285,40 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       for (let constraint of constraints) {
         if (
-          hasNoneOfTheseTags(
-            targetProject,
-            constraint.onlyDependOnLibsWithTags || []
-          )
+          constraint.onlyDependOnLibsWithTags &&
+          hasNoneOfTheseTags(targetProject, constraint.onlyDependOnLibsWithTags)
         ) {
-          const allowedTags = constraint.onlyDependOnLibsWithTags
-            .map((s) => `"${s}"`)
-            .join(', ');
-          const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
+          const error = `A project tagged with "${
+            constraint.sourceTag
+          }" can only depend on libs tagged with ${stringifyTags(
+            constraint.onlyDependOnLibsWithTags
+          )}`;
           this.addFailureAt(node.getStart(), node.getWidth(), error);
           return;
+        }
+        if (
+          constraint.notDependOnLibsWithTags &&
+          constraint.notDependOnLibsWithTags.length
+        ) {
+          const projectPaths = findDependenciesWithTags(
+            targetProject,
+            constraint.notDependOnLibsWithTags,
+            this.projectGraph
+          );
+          if (projectPaths.length > 0) {
+            const error = `A project tagged with "${
+              constraint.sourceTag
+            }" can not depend on libs tagged with ${stringifyTags(
+              constraint.notDependOnLibsWithTags
+            )}\n\nViolation detected in:\n${projectPaths
+              .map(
+                (projectPath) =>
+                  `- ${projectPath.map((p) => p.name).join(' -> ')}`
+              )
+              .join('\n')}`;
+            this.addFailureAt(node.getStart(), node.getWidth(), error);
+            return;
+          }
         }
       }
     }

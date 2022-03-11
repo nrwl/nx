@@ -1,4 +1,8 @@
-import { ExecutorContext, offsetFromRoot } from '@nrwl/devkit';
+import {
+  ExecutorContext,
+  offsetFromRoot,
+  joinPathFragments,
+} from '@nrwl/devkit';
 // ignoring while we support both Next 11.1.0 and versions before it
 // @ts-ignore
 import type { NextConfig } from 'next/dist/server/config-shared';
@@ -165,7 +169,7 @@ export async function prepareConfig(
   config.distDir =
     config.distDir && config.distDir !== '.next'
       ? config.distDir
-      : join(config.outdir, '.next');
+      : joinPathFragments(config.outdir, '.next');
   config.webpack = (a, b) =>
     createWebpackConfig(
       context.root,

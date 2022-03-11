@@ -50,6 +50,22 @@ describe('@nrwl/linter:workspace-rules-project', () => {
     ).toMatchSnapshot();
   });
 
+  it('should extend from root tsconfig.base.json', async () => {
+    await lintWorkspaceRulesProjectGenerator(tree);
+
+    const tsConfig = readJson(tree, 'tools/eslint-rules/tsconfig.json');
+    expect(tsConfig.extends).toBe('../../tsconfig.base.json');
+  });
+
+  it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    await lintWorkspaceRulesProjectGenerator(tree);
+
+    const tsConfig = readJson(tree, 'tools/eslint-rules/tsconfig.json');
+    expect(tsConfig.extends).toBe('../../tsconfig.json');
+  });
+
   it('should create a project with a test target', async () => {
     await lintWorkspaceRulesProjectGenerator(tree);
 

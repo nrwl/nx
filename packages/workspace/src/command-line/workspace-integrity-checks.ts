@@ -15,9 +15,7 @@ export class WorkspaceIntegrityChecks {
       .filter((n) => n.data.files.length === 0)
       .map((p) => `Cannot find project '${p.name}' in '${p.data.root}'`);
 
-    const errorGroupBodyLines = errors.map(
-      (f) => `${output.colors.gray('-')} ${f}`
-    );
+    const errorGroupBodyLines = errors.map((f) => `${output.dim('-')} ${f}`);
 
     return errors.length === 0
       ? []
@@ -42,7 +40,7 @@ export class WorkspaceIntegrityChecks {
         : allFilesWithoutProjects;
 
     const errorGroupBodyLines = first5FilesWithoutProjects.map(
-      (f) => `${output.colors.gray('-')} ${f}`
+      (f) => `${output.dim('-')} ${f}`
     );
 
     return first5FilesWithoutProjects.length === 0

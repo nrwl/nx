@@ -159,11 +159,7 @@ describe('app', () => {
       expect(appE2eSpec).toContain('Welcome my-app-with-prefix');
     });
 
-    // TODO: this should work
-    // This has been carried over from the Angular Devkit Schematic
-    // It seems like Jest is failing as it's trying to look for the
-    // tsconfig in the incorrect place
-    xit('should work if the new project root is changed', async () => {
+    it('should work if the new project root is changed', async () => {
       // ARRANGE
       updateJson(appTree, '/workspace.json', (json) => ({
         ...json,
@@ -171,7 +167,9 @@ describe('app', () => {
       }));
 
       // ACT
-      await generateApp(appTree);
+      await generateApp(appTree, 'my-app', {
+        e2eTestRunner: E2eTestRunner.Protractor,
+      });
 
       // ASSERT
       expect(appTree.exists('apps/my-app/src/main.ts')).toEqual(true);
@@ -184,6 +182,27 @@ describe('app', () => {
       await generateApp(appTree, 'app');
       const workspaceJson = readJson(appTree, '/workspace.json');
       expect(workspaceJson.projects['app'].projectType).toEqual('application');
+    });
+
+    it('should extend from tsconfig.base.json', async () => {
+      // ACT
+      await generateApp(appTree, 'app');
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.base.json');
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      appTree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await generateApp(appTree, 'app');
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.json');
     });
   });
 
@@ -257,6 +276,27 @@ describe('app', () => {
           expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
+    });
+
+    it('should extend from tsconfig.base.json', async () => {
+      // ACT
+      await generateApp(appTree, 'app', { directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/my-dir/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.base.json');
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      appTree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await generateApp(appTree, 'app', { directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(appTree, 'apps/my-dir/app/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

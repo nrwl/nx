@@ -128,6 +128,22 @@ Object {
 }
 `);
     });
+
+    it('should extend from root tsconfig.base.json', async () => {
+      await applicationGenerator(appTree, schema);
+
+      const tsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
+      expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      appTree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await applicationGenerator(appTree, schema);
+
+      const tsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
+      expect(tsConfig.extends).toEqual('../../tsconfig.json');
+    });
   });
 
   describe('nested', () => {

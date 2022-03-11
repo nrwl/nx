@@ -108,9 +108,20 @@ describe('lib', () => {
       });
     });
 
-    it('should update root tsconfig.json', async () => {
+    it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'libs/my-lib/src/index.ts',
+      ]);
+    });
+
+    it('should update root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
+
+      const tsconfigJson = readJson(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -153,6 +164,15 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
+
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
+      expect(tsconfigJson.extends).toBe('../../tsconfig.json');
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -301,13 +321,31 @@ describe('lib', () => {
       });
     });
 
-    it('should update tsconfig.json', async () => {
+    it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib',
         directory: 'myDir',
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
+        ['libs/my-dir/my-lib/src/index.ts']
+      );
+      expect(
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+      ).toBeUndefined();
+    });
+
+    it('should update root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        directory: 'myDir',
+      });
+
+      const tsconfigJson = readJson(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['libs/my-dir/my-lib/src/index.ts']
       );
@@ -324,6 +362,7 @@ describe('lib', () => {
       });
 
       const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(tsconfigJson.extends).toBe('../../../tsconfig.base.json');
       expect(tsconfigJson.references).toEqual([
         {
           path: './tsconfig.lib.json',
@@ -332,6 +371,19 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        directory: 'myDir',
+      });
+
+      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(tsconfigJson.extends).toBe('../../../tsconfig.json');
     });
   });
 

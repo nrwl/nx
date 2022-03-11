@@ -13,7 +13,7 @@ import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-u
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { gte } from 'semver';
+import { gte, lt } from 'semver';
 import {
   findOrCreateConfig,
   readCurrentWorkspaceStorybookVersionFromExecutor,
@@ -293,6 +293,15 @@ function isStorybookGTE6_4() {
   return gte(
     checkAndCleanWithSemver('@storybook/core', storybookVersion),
     '6.4.0-rc.1'
+  );
+}
+
+export function isStorybookLT6() {
+  const storybookVersion = readCurrentWorkspaceStorybookVersionFromExecutor();
+
+  return lt(
+    checkAndCleanWithSemver('@storybook/core', storybookVersion),
+    '6.0.0'
   );
 }
 

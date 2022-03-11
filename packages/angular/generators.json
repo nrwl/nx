@@ -68,11 +68,23 @@
       "aliases": ["secondary-entry-point", "entry-point"],
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
+    "mfe-remote": {
+      "factory": "./src/generators/mfe-remote/mfe-remote.compat",
+      "schema": "./src/generators/mfe-remote/schema.json",
+      "aliases": ["remote"],
+      "description": "Generate a Remote Angular Micro-Frontend Application."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveSchematic",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "mfe-host": {
+      "factory": "./src/generators/mfe-host/mfe-host.compat",
+      "schema": "./src/generators/mfe-host/schema.json",
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application."
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
@@ -201,11 +213,23 @@
       "aliases": ["secondary-entry-point", "entry-point"],
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
+    "mfe-remote": {
+      "factory": "./src/generators/mfe-remote/mfe-remote",
+      "schema": "./src/generators/mfe-remote/schema.json",
+      "aliases": ["remote"],
+      "description": "Generate a Remote Angular Micro-Frontend Application."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "mfe-host": {
+      "factory": "./src/generators/mfe-host/mfe-host",
+      "schema": "./src/generators/mfe-host/schema.json",
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application."
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",

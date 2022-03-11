@@ -7,10 +7,11 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { register } from 'ts-node';
 
 import { getNodeWebpackConfig } from '../../utils/node.config';
@@ -18,9 +19,6 @@ import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
 import { runWebpack } from '../../utils/run-webpack';
-
-import { existsSync } from 'fs';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export type NodeBuildEvent = {
   outfile: string;
@@ -110,9 +108,9 @@ export async function* webpackExecutor(
 }
 
 function registerTsNode() {
-  const rootTsConfig = join(appRootPath, 'tsconfig.base.json');
+  const rootTsConfig = getRootTsConfigPath();
   register({
-    ...(existsSync(rootTsConfig) ? { project: rootTsConfig } : null),
+    ...(rootTsConfig ? { project: rootTsConfig } : null),
   });
 }
 

@@ -35,6 +35,7 @@ import {
 } from '../../utils/versions';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { Schema } from './schema';
+import { getRootTsConfigPathInTree } from '../../utilities/typescript';
 
 function updatePackageJson(tree) {
   updateJson(tree, 'package.json', (packageJson) => {
@@ -78,12 +79,6 @@ function updatePackageJson(tree) {
 
     return packageJson;
   });
-}
-
-function getRootTsConfigPath(host: Tree) {
-  return host.exists('tsconfig.base.json')
-    ? 'tsconfig.base.json'
-    : 'tsconfig.json';
 }
 
 function convertPath(name: string, originalPath: string) {
@@ -330,7 +325,7 @@ function updateTsConfig(host: Tree) {
   writeJson(
     host,
     'tsconfig.base.json',
-    setUpCompilerOptions(readJson(host, getRootTsConfigPath(host)))
+    setUpCompilerOptions(readJson(host, getRootTsConfigPathInTree(host)))
   );
   if (host.exists('tsconfig.json')) {
     host.delete('tsconfig.json');
@@ -340,7 +335,7 @@ function updateTsConfig(host: Tree) {
 function updateTsConfigsJson(host: Tree, options: Schema) {
   const app = readProjectConfiguration(host, options.name);
   const e2eProject = getE2eProject(host);
-  const tsConfigPath = getRootTsConfigPath(host);
+  const tsConfigPath = getRootTsConfigPathInTree(host);
   const appOffset = offsetFromRoot(app.root);
 
   updateJson(host, app.targets.build.options.tsConfig, (json) => {
@@ -768,7 +763,7 @@ function createNxJson(host: Tree) {
     );
   }
   const name = Object.keys(projects)[0];
-  const tsConfigPath = getRootTsConfigPath(host);
+  const tsConfigPath = getRootTsConfigPathInTree(host);
   writeJson<NxJsonConfiguration>(host, 'nx.json', {
     npmScope: name,
     implicitDependencies: {
@@ -824,6 +819,7 @@ function addFiles(host: Tree) {
   generateFiles(host, joinPathFragments(__dirname, './files/root'), '.', {
     tmpl: '',
     dot: '.',
+    rootTsConfigPath: getRootTsConfigPathInTree(host),
   });
 
   if (!host.exists('.prettierignore')) {

@@ -305,6 +305,18 @@ describe('lib', () => {
       });
     });
 
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.json');
+    });
+
     it('should check for existence of spec files before deleting them', async () => {
       // ARRANGE
       updateJson<NxJsonConfiguration, NxJsonConfiguration>(
@@ -442,6 +454,31 @@ describe('lib', () => {
       ).toBeFalsy();
       expect(
         tree.exists('libs/my-lib2/src/lib/my-lib2.service.spec.ts')
+      ).toBeFalsy();
+    });
+
+    it('should work if the new project root is changed', async () => {
+      // ARRANGE
+      updateJson(tree, 'workspace.json', (json) => ({
+        ...json,
+        newProjectRoot: 'newProjectRoot',
+      }));
+
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
     });
 
@@ -632,6 +669,18 @@ describe('lib', () => {
           },
         ],
       });
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

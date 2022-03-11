@@ -13,6 +13,11 @@ import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export function webpackServer(schema: Schema, context: BuilderContext) {
+  process.env.NX_TSCONFIG_PATH = joinPathFragments(
+    context.workspaceRoot,
+    'tsconfig.base.json'
+  );
+
   const options = normalizeOptions(schema);
   const workspaceConfig = new Workspaces(
     context.workspaceRoot

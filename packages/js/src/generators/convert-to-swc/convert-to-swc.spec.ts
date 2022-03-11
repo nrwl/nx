@@ -1,14 +1,14 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { join } from 'path';
-import { GeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema } from '../../utils/schema';
 import { libraryGenerator } from '../library/library';
 import { convertToSwcGenerator } from './convert-to-swc';
 
 describe('convert to swc', () => {
   let tree: Tree;
 
-  const defaultLibGenerationOptions: Omit<GeneratorSchema, 'name'> = {
+  const defaultLibGenerationOptions: Omit<LibraryGeneratorSchema, 'name'> = {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,
@@ -43,7 +43,7 @@ describe('convert to swc', () => {
     ).toEqual('@nrwl/js:swc');
     expect(
       tree.exists(
-        join(readProjectConfiguration(tree, 'tsc-lib').root, '.swcrc')
+        join(readProjectConfiguration(tree, 'tsc-lib').root, '.lib.swcrc')
       )
     ).toEqual(true);
     expect(tree.read('package.json', 'utf-8')).toContain('@swc/core');

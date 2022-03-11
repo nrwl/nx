@@ -135,6 +135,7 @@ export function updateWorkspaceConfiguration(
     generators,
     implicitDependencies,
     plugins,
+    pluginsConfig,
     npmScope,
     targetDependencies,
     workspaceLayout,
@@ -146,6 +147,7 @@ export function updateWorkspaceConfiguration(
   const nxJson: Required<NxJsonConfiguration> = {
     implicitDependencies,
     plugins,
+    pluginsConfig,
     npmScope,
     targetDependencies,
     workspaceLayout,
@@ -187,7 +189,9 @@ export function updateWorkspaceConfiguration(
         ...json,
         version: workspaceConfig.version,
       };
-      delete (config as any).newProjectRoot;
+      if (!(workspaceConfig as any).newProjectRoot) {
+        delete (config as any).newProjectRoot;
+      }
       return config;
     });
   }

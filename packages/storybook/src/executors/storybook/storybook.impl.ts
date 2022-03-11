@@ -1,12 +1,14 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { buildDevStandalone } from '@storybook/core/server';
 import 'dotenv/config';
+import { showStorybookV5Warning } from '../../utils/utilities';
 import { CommonNxStorybookConfig } from '../models';
 import {
   getStorybookFrameworkPath,
   normalizeAngularBuilderStylesOptions,
   resolveCommonStorybookOptionMapper,
   runStorybookSetupCheck,
+  isStorybookLT6,
 } from '../utils';
 export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   host?: string;
@@ -16,6 +18,7 @@ export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   sslCert?: string;
   sslKey?: string;
   staticDir?: string[];
+  staticDirs?: string[] | { from: string; to: string }[];
   watch?: boolean;
   docsMode?: boolean;
 }
@@ -32,6 +35,10 @@ export default async function* storybookExecutor(
 
   // print warnings
   runStorybookSetupCheck(options);
+
+  if (isStorybookLT6()) {
+    showStorybookV5Warning(options.uiFramework);
+  }
 
   await runInstance(option);
 

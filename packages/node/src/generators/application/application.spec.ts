@@ -67,7 +67,7 @@ describe('app', () => {
             },
           },
           serve: {
-            builder: '@nrwl/node:execute',
+            builder: '@nrwl/node:node',
             options: {
               buildTarget: 'my-node-app:build',
             },
@@ -164,6 +164,18 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        standaloneConfig: false,
+      });
+
+      const tsconfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../tsconfig.json');
     });
   });
 

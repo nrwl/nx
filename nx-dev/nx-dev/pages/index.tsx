@@ -56,7 +56,7 @@ export function Index(): ReactComponentElement<any> {
           {/*INTRO COMPONENT*/}
           <header
             id="animated-background"
-            className="bg-blue-nx-base transform-gpu bg-clip-border bg-right bg-no-repeat bg-origin-border text-white lg:bg-contain"
+            className="bg-blue-nx-base transform-gpu bg-clip-border bg-right bg-no-repeat bg-origin-border text-white lg:bg-cover"
             style={{
               backgroundImage: 'url(/images/background/hero-bg-large.svg)',
             }}

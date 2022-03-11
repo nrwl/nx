@@ -77,6 +77,11 @@
       "description": "Whether to enable tsconfig strict mode or not.",
       "default": true
     },
+    "publishable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate a publishable library."
+    },
     "buildable": {
       "type": "boolean",
       "default": true,

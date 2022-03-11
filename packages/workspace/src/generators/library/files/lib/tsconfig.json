@@ -1,5 +1,5 @@
 {
-  "extends": "<%= offsetFromRoot %>tsconfig.base.json",<% if (js) { %>
+  "extends": "<%= rootTsConfigPath %>",<% if (js) { %>
   "compilerOptions": {
     "allowJs": true
   },<% } %>

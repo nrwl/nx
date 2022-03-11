@@ -1,14 +1,13 @@
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { LicenseWebpackPlugin } from 'license-webpack-plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import * as ts from 'typescript';
 import type { Configuration, WebpackPluginInstance } from 'webpack';
 import * as webpack from 'webpack';
-import * as ts from 'typescript';
-import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { loadTsTransformers } from './load-ts-transformers';
 import { BuildBuilderOptions } from './types';
-import { loadTsPlugins } from './load-ts-plugins';
 import CopyWebpackPlugin = require('copy-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 export const OUT_FILENAME_TEMPLATE = '[name].js';
 
@@ -22,7 +21,9 @@ export function getBaseWebpackPartial(
   const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 
-  const { compilerPluginHooks, hasPlugin } = loadTsPlugins(options.tsPlugins);
+  const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
+    options.transformers
+  );
 
   const additionalEntryPoints =
     options.additionalEntryPoints?.reduce(
@@ -94,6 +95,8 @@ export function getBaseWebpackPartial(
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
+        // For watch mode, type errors should result in failure.
+        async: false,
         typescript: {
           enabled: true,
           configFile: options.tsConfig,
@@ -103,6 +106,9 @@ export function getBaseWebpackPartial(
     ],
     watch: options.watch,
     watchOptions: {
+      // Delay the next rebuild from first file change, otherwise can lead to
+      // two builds on a single file change.
+      aggregateTimeout: 200,
       poll: options.poll,
     },
     stats: getStatsConfig(options),

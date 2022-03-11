@@ -115,6 +115,14 @@ Type: `boolean`
 
 Use pascal case file names.
 
+### publishable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a publishable library.
+
 ### setParserOptionsProject
 
 Default: `false`

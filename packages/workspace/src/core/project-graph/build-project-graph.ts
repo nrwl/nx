@@ -30,12 +30,12 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import { existsSync } from 'fs';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 import { loadNxPlugins } from '@nrwl/tao/src/shared/nx-plugin';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { createProjectFileMap } from '../file-map-utils';
+import { getRootTsConfigPath } from '../../utilities/typescript';
 
 export async function buildProjectGraph() {
   const workspaceJson = readWorkspaceJson();
@@ -169,12 +169,13 @@ async function buildProjectGraphUsingContext(
   return r;
 }
 
-function jsPluginConfig(nxJson: any) {
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig['@nrwl/js'];
-  } else {
-    return {};
-  }
+interface NrwlJsPluginConfig {
+  analyzeSourceFiles?: boolean;
+  analyzePackageJson?: boolean;
+}
+
+function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
+  return nxJson?.pluginsConfig?.['@nrwl/js'] ?? {};
 }
 
 function buildExplicitDependencies(
@@ -396,10 +397,8 @@ function updateProjectGraphWithPlugins(
 }
 
 function readRootTsConfig() {
-  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(appRootPath, tsConfigName);
-    if (existsSync(tsConfigPath)) {
-      return readJsonFile(tsConfigPath);
-    }
+  const tsConfigPath = getRootTsConfigPath();
+  if (tsConfigPath) {
+    return readJsonFile(tsConfigPath);
   }
 }
