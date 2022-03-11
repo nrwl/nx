@@ -53,8 +53,14 @@ export const HashFilter = {
   AllFiles: 'all-files',
   ExcludeTestsOfAll: 'exclude-tests-of-all',
   ExcludeTestsOfDeps: 'exclude-tests-of-deps',
-};
+} as const;
 export type HashFilter = typeof HashFilter[keyof typeof HashFilter];
+
+export const NodeHashFilter = {
+  AllFiles: 'all-files',
+  ExcludeTests: 'exclude-tests',
+} as const;
+export type NodeHashFilter = typeof NodeHashFilter[keyof typeof NodeHashFilter];
 
 export class Hasher {
   static version = '2.0';
@@ -145,7 +151,7 @@ export class Hasher {
   async hashSource(task: Task): Promise<string> {
     return this.projectHashes.hashProjectNodeSource(
       task.target.project,
-      HashFilter.AllFiles
+      NodeHashFilter.AllFiles
     );
   }
 
@@ -338,11 +344,11 @@ class ProjectHasher {
           })
         )
       ).filter((r) => !!r);
-      const filterForProject =
+      const filterForProject: NodeHashFilter =
         filter === HashFilter.AllFiles ||
         (filter === HashFilter.ExcludeTestsOfDeps && visited[0] === projectName)
-          ? HashFilter.AllFiles
-          : HashFilter.ExcludeTestsOfAll;
+          ? NodeHashFilter.AllFiles
+          : NodeHashFilter.ExcludeTests;
       const projectHash = await this.hashProjectNodeSource(
         projectName,
         filterForProject
@@ -361,7 +367,7 @@ class ProjectHasher {
     });
   }
 
-  async hashProjectNodeSource(projectName: string, filter: HashFilter) {
+  async hashProjectNodeSource(projectName: string, filter: NodeHashFilter) {
     const mapKey = `${projectName}-${filter}`;
     if (!this.sourceHashes[mapKey]) {
       this.sourceHashes[mapKey] = new Promise(async (res) => {
