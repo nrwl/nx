@@ -86,7 +86,12 @@ export class TargetProjectLocator {
     return null;
   }
 
-  private findPaths(normalizedImportExpr: string): string[] | undefined {
+  /**
+   * Return file paths matching the import relative to the repo root
+   * @param normalizedImportExpr
+   * @returns
+   */
+  findPaths(normalizedImportExpr: string): string[] | undefined {
     if (!this.paths) {
       return undefined;
     }

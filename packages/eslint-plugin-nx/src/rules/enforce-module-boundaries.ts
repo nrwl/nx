@@ -20,6 +20,7 @@ import {
   hasNoneOfTheseTags,
   groupImports,
   MappedProjectGraphNode,
+  isAngularSecondaryEntrypoint,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -42,7 +43,6 @@ import {
   findFilesInCircularPath,
 } from '@nrwl/workspace/src/utils/graph-utils';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
-import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
 import * as chalk from 'chalk';
 import { basename, dirname, relative } from 'path';
 import {
@@ -319,7 +319,7 @@ export default createESLintRule<Options, MessageIds>({
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !isAngularSecondaryEntrypoint(sourceFilePath)
+          !isAngularSecondaryEntrypoint(targetProjectLocator, imp)
         ) {
           context.report({
             node,

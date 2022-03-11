@@ -24,6 +24,7 @@ import {
   stringifyTags,
   hasNoneOfTheseTags,
   MappedProjectGraphNode,
+  isAngularSecondaryEntrypoint,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
 import { readNxJson } from '../core/file-utils';
@@ -183,7 +184,11 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     // same project => allow
     if (sourceProject === targetProject) {
-      if (!this.allowCircularSelfDependency && !isRelativePath(imp)) {
+      if (
+        !this.allowCircularSelfDependency &&
+        !isRelativePath(imp) &&
+        !isAngularSecondaryEntrypoint(this.targetProjectLocator, imp)
+      ) {
         const error = `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "${imp}"`;
         this.addFailureAt(node.getStart(), node.getWidth(), error);
       } else {

@@ -8,11 +8,13 @@ import {
   DependencyType,
   parseJson,
   ProjectGraphExternalNode,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { join } from 'path';
 import { appRootPath } from './app-root';
 import { getPath, pathExists } from './graph-utils';
+import { existsSync } from 'fs';
 
 export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
   data: {
@@ -339,4 +341,25 @@ export function groupImports(
   return importsToRemapGrouped
     .map((entry) => `import { ${entry.member} } from '${entry.importPath}';`)
     .join('\n');
+}
+
+/**
+ * Checks if import points to a secondary entry point in Angular project
+ * @param targetProjectLocator
+ * @param importExpr
+ * @returns
+ */
+export function isAngularSecondaryEntrypoint(
+  targetProjectLocator: TargetProjectLocator,
+  importExpr: string
+): boolean {
+  const targetFiles = targetProjectLocator.findPaths(importExpr);
+  return (
+    targetFiles &&
+    targetFiles.some(
+      (file) =>
+        file.endsWith('src/index.ts') &&
+        existsSync(joinPathFragments(file, '../../', 'ng-package.json'))
+    )
+  );
 }
