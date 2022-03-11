@@ -17,6 +17,7 @@
         "outputPath": "build/packages/jest",
         "tsConfig": "packages/jest/tsconfig.lib.json",
         "main": "packages/jest/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/jest",

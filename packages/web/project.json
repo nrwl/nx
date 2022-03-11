@@ -17,6 +17,7 @@
         "outputPath": "build/packages/web",
         "tsConfig": "packages/web/tsconfig.lib.json",
         "main": "packages/web/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/web",

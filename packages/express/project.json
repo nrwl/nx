@@ -17,6 +17,7 @@
         "outputPath": "build/packages/express",
         "tsConfig": "packages/express/tsconfig.lib.json",
         "main": "packages/express/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/express",

@@ -17,6 +17,7 @@
         "outputPath": "build/packages/eslint-plugin-nx",
         "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
         "main": "packages/eslint-plugin-nx/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/eslint-plugin-nx",

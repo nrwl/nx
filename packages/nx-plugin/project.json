@@ -17,6 +17,7 @@
         "outputPath": "build/packages/nx-plugin",
         "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
         "main": "packages/nx-plugin/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/nx-plugin",

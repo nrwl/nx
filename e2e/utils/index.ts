@@ -522,7 +522,7 @@ export function runCommand(command: string): string {
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    return e.stdout.toString() + e.stderr.toString();
+    return e.stdout?.toString() + e.stderr?.toString();
   }
 }
 

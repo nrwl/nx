@@ -17,6 +17,7 @@
         "outputPath": "build/packages/node",
         "tsConfig": "packages/node/tsconfig.lib.json",
         "main": "packages/node/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/node",
