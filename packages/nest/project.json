@@ -17,6 +17,7 @@
         "outputPath": "build/packages/nest",
         "tsConfig": "packages/nest/tsconfig.lib.json",
         "main": "packages/nest/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/nest",

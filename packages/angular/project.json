@@ -17,6 +17,7 @@
         "outputPath": "build/packages/angular",
         "tsConfig": "packages/angular/tsconfig.lib.json",
         "main": "packages/angular/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/angular",

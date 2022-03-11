@@ -17,6 +17,7 @@
         "outputPath": "build/packages/cypress",
         "tsConfig": "packages/cypress/tsconfig.lib.json",
         "main": "packages/cypress/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/cypress",

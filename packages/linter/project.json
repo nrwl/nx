@@ -17,6 +17,7 @@
         "outputPath": "build/packages/linter",
         "tsConfig": "packages/linter/tsconfig.lib.json",
         "main": "packages/linter/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/linter",

@@ -17,6 +17,7 @@
         "outputPath": "build/packages/cli",
         "tsConfig": "packages/cli/tsconfig.lib.json",
         "main": "packages/cli/bin/nx.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/cli",

@@ -24,6 +24,7 @@
         "outputPath": "build/packages/js",
         "tsConfig": "packages/js/tsconfig.lib.json",
         "main": "packages/js/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/js",

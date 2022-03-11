@@ -69,5 +69,13 @@
       }
     }
   },
+  "pluginsConfig": {
+    "@nrwl/jest": {
+      "hashingExcludesTestsOfDeps": true
+    },
+    "@nrwl/cypress": {
+      "hashingExcludesTestsOfDeps": true
+    }
+  },
   "defaultProject": "dep-graph-client"
 }

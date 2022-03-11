@@ -17,6 +17,7 @@
         "outputPath": "build/packages/devkit",
         "tsConfig": "packages/devkit/tsconfig.lib.json",
         "main": "packages/devkit/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/devkit",
