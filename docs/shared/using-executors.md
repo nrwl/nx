@@ -259,7 +259,7 @@ You can use the [`rxjs-for-await`](https://www.npmjs.com/package/rxjs-for-await)
 
 ```ts
 import { of } from 'rxjs';
-import { eachValueFrom } from 'rxjs-for-await-async';
+import { eachValueFrom } from 'rxjs-for-await';
 
 export default async function (opts) {
   return eachValueFrom(of({ success: true }));
