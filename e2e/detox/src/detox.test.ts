@@ -31,11 +31,7 @@ describe('Detox', () => {
 
   describe('React Native Detox MACOS-Tests', () => {
     if (isOSX()) {
-      it('should build and test ios MACOS-Tests', async () => {
-        expect(runCLI(`build-ios ${appName}-e2e --prod`)).toContain(
-          'Successfully ran target build-ios'
-        );
-
+      it('should test ios MACOS-Tests', async () => {
         expect(
           runCLI(
             `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`

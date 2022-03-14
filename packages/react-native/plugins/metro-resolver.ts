@@ -32,16 +32,14 @@ export function getResolveRequest(extensions: string[]) {
       return resolvedPath;
     }
 
-    if (detectPackageManager(appRootPath) === 'pnpm') {
-      resolvedPath = pnpmResolver(
-        extensions,
-        context,
-        realModuleName,
-        moduleName
-      );
-      if (resolvedPath) {
-        return resolvedPath;
-      }
+    resolvedPath = pnpmResolver(
+      extensions,
+      context,
+      realModuleName,
+      moduleName
+    );
+    if (resolvedPath) {
+      return resolvedPath;
     }
 
     return tsconfigPathsResolver(

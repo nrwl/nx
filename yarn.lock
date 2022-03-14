@@ -16993,10 +16993,10 @@ methods@~1.1.2:
   resolved "https://registry.npmjs.org/methods/-/methods-1.1.2.tgz"
   integrity sha1-VSmk1nZUE07cxSZmVoNbD4Ua/O4=
 
-metro-resolver@^0.67.0:
-  version "0.67.0"
-  resolved "https://registry.yarnpkg.com/metro-resolver/-/metro-resolver-0.67.0.tgz#8143c716f77e468d1d42eca805243706eb349959"
-  integrity sha512-d2KS/zAyOA/z/q4/ff41rAp+1txF4H6qItwpsls/RHStV2j6PqgRHUzq/3ga+VIeoUJntYJ8nGW3+3qSrhFlig==
+metro-resolver@^0.69.1:
+  version "0.69.1"
+  resolved "https://registry.yarnpkg.com/metro-resolver/-/metro-resolver-0.69.1.tgz#0f01285e9e2683debf6599b91e7bf179f94990dd"
+  integrity sha512-sTUp8n3hP+K6Jm3beqnadPZWj53trzDi0wqLKC2iKNy1+UoBZkiqmHY0dZKaoF8XoOsksoph+aghlBZkchgEng==
   dependencies:
     absolute-path "^0.0.0"
 
