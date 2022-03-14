@@ -34,7 +34,7 @@ export function normalizeOptions(
 
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
+    ? `${names(options.directory).fileName}/${name}`.replace(/\/+/g, '/')
     : name;
 
   const { libsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
