@@ -25,6 +25,7 @@ export const packagesWeCareAbout = [
   '@nrwl/next',
   '@nrwl/node',
   '@nrwl/nx-cloud',
+  '@nrwl/nx-plugin',
   '@nrwl/react',
   '@nrwl/react-native',
   '@nrwl/schematics',
@@ -36,11 +37,12 @@ export const packagesWeCareAbout = [
   'rxjs',
 ];
 
-export const packagesWeIgnoreInCommunityReport = new Set([
+export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
   ...packagesWeCareAbout,
   '@schematics/angular',
+  new RegExp('@angular/*'),
   '@nestjs/schematics',
-]);
+];
 
 export const report = {
   command: 'report',
@@ -119,7 +121,13 @@ export function findInstalledCommunityPlugins(): {
 
   return deps.reduce(
     (arr: any[], nextDep: string): { project: string; version: string }[] => {
-      if (packagesWeIgnoreInCommunityReport.has(nextDep)) {
+      if (
+        patternsWeIgnoreInCommunityReport.some((pattern) =>
+          typeof pattern === 'string'
+            ? pattern === nextDep
+            : pattern.test(nextDep)
+        )
+      ) {
         return arr;
       }
       try {

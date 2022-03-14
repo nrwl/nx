@@ -30,6 +30,7 @@ function check() {
     'packages/create-nx-plugin/bin/create-nx-plugin.ts',
     'packages/workspace/src/command-line/affected.ts',
     'packages/workspace/src/command-line/report.ts',
+    'packages/workspace/src/command-line/report.spec.ts',
     'packages/workspace/src/core/file-utils.ts',
     'packages/workspace/src/generators/preset/preset.ts',
     'packages/workspace/src/generators/init/init.ts',
