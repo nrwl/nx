@@ -5,7 +5,7 @@ import {
   Task,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
+import { resolveNewFormatWithInlineProjects } from 'nx/src/shared/workspace';
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import * as minimatch from 'minimatch';

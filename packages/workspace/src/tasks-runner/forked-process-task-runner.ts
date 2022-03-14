@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork } from 'child_process';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task } from './tasks-runner';
 import { output } from '../utilities/output';

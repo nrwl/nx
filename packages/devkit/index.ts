@@ -12,7 +12,7 @@
 /**
  * @category Tree
  */
-export type { Tree, FileChange } from '@nrwl/tao/src/shared/tree';
+export type { Tree, FileChange } from 'nx/src/shared/tree';
 
 /**
  * @category Workspace
@@ -29,17 +29,17 @@ export type {
   ExecutorContext,
   TaskGraphExecutor,
   Workspace,
-} from '@nrwl/tao/src/shared/workspace';
+} from 'nx/src/shared/workspace';
 
 export type {
   NxPlugin,
   ProjectTargetConfigurator,
-} from '@nrwl/tao/src/shared/nx-plugin';
+} from 'nx/src/shared/nx-plugin';
 
 /**
  * @category Workspace
  */
-export type { Task, TaskGraph } from '@nrwl/tao/src/shared/tasks';
+export type { Task, TaskGraph } from 'nx/src/shared/tasks';
 
 /**
  * @category Workspace
@@ -50,17 +50,17 @@ export type {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
   NxAffectedConfig,
-} from '@nrwl/tao/src/shared/nx';
+} from 'nx/src/shared/nx';
 
 /**
  * @category Logger
  */
-export { logger } from '@nrwl/tao/src/shared/logger';
+export { logger } from 'nx/src/shared/logger';
 
 /**
  * @category Package Manager
  */
-export type { PackageManager } from '@nrwl/tao/src/shared/package-manager';
+export type { PackageManager } from 'nx/src/shared/package-manager';
 
 /**
  * @category Package Manager
@@ -69,16 +69,16 @@ export {
   getPackageManagerCommand,
   detectPackageManager,
   getPackageManagerVersion,
-} from '@nrwl/tao/src/shared/package-manager';
+} from 'nx/src/shared/package-manager';
 
 /**
  * @category Commands
  */
-export type { Target } from '@nrwl/tao/src/commands/run';
+export type { Target } from 'nx/src/commands/run';
 /**
  * @category Commands
  */
-export { runExecutor } from '@nrwl/tao/src/commands/run';
+export { runExecutor } from 'nx/src/commands/run';
 
 /**
  * @category Generators
@@ -170,24 +170,17 @@ export { readJson, writeJson, updateJson } from './src/utils/json';
 /**
  * @category Utils
  */
-export {
-  parseJson,
-  serializeJson,
-  stripJsonComments,
-} from '@nrwl/tao/src/utils/json';
+export { parseJson, serializeJson, stripJsonComments } from 'nx/src/utils/json';
 
 /**
  * @category Utils
  */
-export type {
-  JsonParseOptions,
-  JsonSerializeOptions,
-} from '@nrwl/tao/src/utils/json';
+export type { JsonParseOptions, JsonSerializeOptions } from 'nx/src/utils/json';
 
 /**
  * @category Utils
  */
-export { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+export { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
 /**
  * @category Utils

@@ -7,7 +7,6 @@ import {
 } from '@nrwl/devkit';
 
 import { join } from 'path';
-import { getJestObject } from '../update-10-0-0/require-jest-config';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
@@ -20,9 +19,7 @@ function updateJestConfig(tree: Tree) {
     tree,
     '@nrwl/jest:jest',
     (options, projectName) => {
-      const config = getJestObject(
-        join(tree.root, options.jestConfig as string)
-      );
+      const config = require(join(tree.root, options.jestConfig as string));
 
       // migrate serializers
       if (

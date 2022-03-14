@@ -75,7 +75,9 @@
       "@nrwl/web/*": ["./packages/web/*"],
       "@nrwl/workspace": ["./packages/workspace"],
       "@nrwl/workspace/*": ["./packages/workspace/*"],
-      "@nrwl/workspace/testing": ["./packages/workspace/testing"]
+      "@nrwl/workspace/testing": ["./packages/workspace/testing"],
+      "nx": ["./packages/nx"],
+      "nx/*": ["./packages/nx/*"]
     }
   }
 }

@@ -10,7 +10,6 @@ import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '../../executors/jest/schema';
-import { getJestObject } from '../update-10-0-0/require-jest-config';
 import { addPropertyToJestConfig } from '../../utils/config/update-config';
 
 function updateJestConfig(tree: Tree) {
@@ -23,7 +22,7 @@ function updateJestConfig(tree: Tree) {
       }
 
       const jestConfigPath = options.jestConfig;
-      const jestConfig = getJestObject(join(tree.root, jestConfigPath));
+      const jestConfig = require(join(tree.root, jestConfigPath));
       const projectConfig = readProjectConfiguration(tree, project);
       const testEnvironment = jestConfig.testEnvironment;
 

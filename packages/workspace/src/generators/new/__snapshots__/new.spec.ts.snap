@@ -6,10 +6,9 @@ Object {
     "@nrwl/angular": "*",
   },
   "devDependencies": Object {
-    "@nrwl/cli": "*",
-    "@nrwl/tao": "*",
     "@nrwl/workspace": "*",
     "@types/node": "16.11.7",
+    "nx": "*",
     "prettier": "^2.5.1",
     "typescript": "~4.5.2",
   },
@@ -29,10 +28,9 @@ exports[`new --preset empty should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/cli": "*",
-    "@nrwl/tao": "*",
     "@nrwl/workspace": "*",
     "@types/node": "16.11.7",
+    "nx": "*",
     "prettier": "^2.5.1",
     "typescript": "~4.5.2",
   },
@@ -52,11 +50,10 @@ exports[`new --preset react should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/cli": "*",
     "@nrwl/react": "*",
-    "@nrwl/tao": "*",
     "@nrwl/workspace": "*",
     "@types/node": "16.11.7",
+    "nx": "*",
     "prettier": "^2.5.1",
     "typescript": "~4.5.2",
   },

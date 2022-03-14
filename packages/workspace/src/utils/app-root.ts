@@ -1,1 +1,1 @@
-export { appRootPath } from '@nrwl/tao/src/utils/app-root';
+export { appRootPath } from 'nx/src/utils/app-root';

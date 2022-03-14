@@ -2,7 +2,7 @@ import * as depcheck from 'depcheck';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': ['@nrwl/tao', '@nrwl/workspace', 'prettier', 'typescript', 'dotenv'],
+  '*': ['nx', '@nrwl/workspace', 'prettier', 'typescript', 'dotenv'],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -82,7 +82,7 @@ const IGNORE_MATCHES = {
     '@storybook/core',
     'rxjs',
   ],
-  tao: [
+  nx: [
     '@angular-devkit/build-angular',
     '@angular-devkit/schematics',
     '@angular-devkit/core',

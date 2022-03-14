@@ -1,5 +1,5 @@
 import { createTree } from '../tests/create-tree';
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 
 describe('visitNotIgnoredFiles', () => {

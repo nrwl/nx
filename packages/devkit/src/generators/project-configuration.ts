@@ -7,7 +7,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
   WorkspaceJsonConfiguration,
-} from '@nrwl/tao/src/shared/workspace';
+} from 'nx/src/shared/workspace';
 import { basename, dirname, relative } from 'path';
 
 import {
@@ -17,8 +17,8 @@ import {
 import { readJson, updateJson, writeJson } from '../utils/json';
 import { joinPathFragments } from '../utils/path';
 
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
+import type { Tree } from 'nx/src/shared/tree';
+import type { NxJsonConfiguration } from 'nx/src/shared/nx';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -385,8 +385,8 @@ export function readWorkspace(tree: Tree): WorkspaceJsonConfiguration {
 }
 
 /**
- * This has to be separate from the inline functionality inside tao,
- * as the functionality in tao does not use a Tree. Changes made during
+ * This has to be separate from the inline functionality inside nx,
+ * as the functionality in nx does not use a Tree. Changes made during
  * a generator would not be present during runtime execution.
  * @returns
  */

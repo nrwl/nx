@@ -1,5 +1,5 @@
 import { joinPathFragments, readJsonFile } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
 import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';

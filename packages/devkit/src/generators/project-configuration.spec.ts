@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { ProjectConfiguration } from '@nrwl/tao/src/shared/workspace';
+import { Tree } from 'nx/src/shared/tree';
+import { ProjectConfiguration } from 'nx/src/shared/workspace';
 
 import { createTreeWithEmptyWorkspace } from '../tests/create-tree-with-empty-workspace';
 import { readJson, updateJson } from '../utils/json';

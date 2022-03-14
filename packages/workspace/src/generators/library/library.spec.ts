@@ -9,7 +9,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
-import { toNewFormat } from '@nrwl/tao/src/shared/workspace';
+import { toNewFormat } from 'nx/src/shared/workspace';
 
 describe('lib', () => {
   let tree: Tree;

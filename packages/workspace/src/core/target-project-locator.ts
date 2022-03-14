@@ -9,7 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { readFileSync } from 'fs';
 
 export class TargetProjectLocator {

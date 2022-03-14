@@ -6,7 +6,7 @@ import type {
   ProjectGraphExternalNode,
 } from '@nrwl/devkit';
 import { ProjectType, readCachedProjectGraph } from '../core/project-graph';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import {
   DepConstraint,
   findConstraintsFor,

@@ -32,8 +32,7 @@ package.json
   "scripts": {},
   "private": true,
   "devDependencies": {
-    "@nrwl/cli": "12.8.0",
-    "@nrwl/tao": "12.8.0",
+    "nx": "12.8.0",
     "@nrwl/workspace": "12.8.0",
     "@types/node": "14.14.33",
     "typescript": "~4.3.5"

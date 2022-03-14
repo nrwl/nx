@@ -1,6 +1,6 @@
 import { NxJsonConfiguration, readJsonFile } from '@nrwl/devkit';
 import { join, isAbsolute } from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {

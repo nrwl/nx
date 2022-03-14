@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import {
   detectPackageManager,
   getPackageManagerVersion,
@@ -12,7 +12,6 @@ import { resolve } from '../utilities/fileutils';
 export const packagesWeCareAbout = [
   'nx',
   '@nrwl/angular',
-  '@nrwl/cli',
   '@nrwl/cypress',
   '@nrwl/detox',
   '@nrwl/devkit',
@@ -29,7 +28,6 @@ export const packagesWeCareAbout = [
   '@nrwl/react-native',
   '@nrwl/schematics',
   '@nrwl/storybook',
-  '@nrwl/tao',
   '@nrwl/web',
   '@nrwl/workspace',
   'typescript',

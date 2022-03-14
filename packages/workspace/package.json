@@ -37,7 +37,7 @@
     "packageGroup": [
       "@nrwl/workspace",
       "@nrwl/angular",
-      "@nrwl/cli",
+      "nx",
       "@nrwl/cypress",
       "@nrwl/devkit",
       "@nrwl/eslint-plugin-nx",
@@ -50,7 +50,6 @@
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
-      "@nrwl/tao",
       "@nrwl/web"
     ]
   },

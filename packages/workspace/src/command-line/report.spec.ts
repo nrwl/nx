@@ -3,7 +3,7 @@ import * as devkit from '@nrwl/devkit';
 import * as fileUtils from '../utilities/fileutils';
 import { join } from 'path';
 
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '',
 }));
 

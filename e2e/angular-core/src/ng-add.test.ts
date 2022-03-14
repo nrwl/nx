@@ -1,3 +1,5 @@
+import { PackageManager } from 'nx/src/shared/package-manager';
+
 process.env.SELECTED_CLI = 'angular';
 
 import {
@@ -13,7 +15,6 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { PackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {
   let project: string;

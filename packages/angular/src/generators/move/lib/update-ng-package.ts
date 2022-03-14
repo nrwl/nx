@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
 import { join, relative } from 'path';
 import { Schema } from '../schema';

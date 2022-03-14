@@ -11,7 +11,7 @@ import {
   readJsonFile,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
@@ -32,7 +32,7 @@ import {
 } from './build-nodes';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
-import { loadNxPlugins } from '@nrwl/tao/src/shared/nx-plugin';
+import { loadNxPlugins } from 'nx/src/shared/nx-plugin';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { createProjectFileMap } from '../file-map-utils';
 import { getRootTsConfigPath } from '../../utilities/typescript';

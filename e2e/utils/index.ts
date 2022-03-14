@@ -4,8 +4,6 @@ import {
   ProjectConfiguration,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
@@ -29,6 +27,8 @@ import { promisify } from 'util';
 import chalk = require('chalk');
 import isCI = require('is-ci');
 import treeKill = require('tree-kill');
+import { Workspaces } from '../../packages/nx/src/shared/workspace';
+import { detectPackageManager } from '../../packages/create-nx-workspace/bin/package-manager';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');

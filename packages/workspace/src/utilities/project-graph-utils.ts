@@ -5,10 +5,7 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nrwl/devkit';
-import {
-  buildTargetFromScript,
-  PackageJson,
-} from '@nrwl/tao/src/shared/package-json';
+import { buildTargetFromScript, PackageJson } from 'nx/src/shared/package-json';
 import { join, relative } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 

@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { readWorkspace } from '@nrwl/workspace';
 
-import * as taoWorkspace from '@nrwl/tao/src/shared/workspace';
+import * as nxWorkspace from 'nx/src/shared/workspace';
 
 import * as path from 'path';
 
@@ -12,7 +12,7 @@ describe('Update 8-5-0', () => {
 
   beforeAll(() => {
     jest
-      .spyOn(taoWorkspace, 'workspaceConfigName')
+      .spyOn(nxWorkspace, 'workspaceConfigName')
       .mockReturnValue('workspace.json');
   });
 

@@ -15,7 +15,7 @@ import {
 describe('Cli', () => {
   beforeEach(() => newProject());
 
-  it('vvvshould execute long running tasks', () => {
+  it('vvvshould execute long running tasks', async () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
     updateProjectConfig(myapp, (c) => {
@@ -210,15 +210,13 @@ describe('migrate', () => {
       })
     );
 
-    updateFile(
-      './node_modules/@nrwl/tao/src/commands/migrate.js',
-      (content) => {
-        const start = content.indexOf('// testing-fetch-start');
-        const end = content.indexOf('// testing-fetch-end');
+    updateFile('./node_modules/nx/src/commands/migrate.js', (content) => {
+      const start = content.indexOf('// testing-fetch-start');
+      const end = content.indexOf('// testing-fetch-end');
 
-        const before = content.substring(0, start);
-        const after = content.substring(end);
-        const newFetch = `
+      const before = content.substring(0, start);
+      const after = content.substring(end);
+      const newFetch = `
              function createFetcher(logger) {
               return function fetch(packageName) {
                 if (packageName === 'migrate-parent-package') {
@@ -250,9 +248,8 @@ describe('migrate', () => {
             }
             `;
 
-        return `${before}${newFetch}${after}`;
-      }
-    );
+      return `${before}${newFetch}${after}`;
+    });
 
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',

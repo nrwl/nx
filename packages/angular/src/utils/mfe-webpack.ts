@@ -1,7 +1,7 @@
 import { readTsConfig } from '@nrwl/workspace';
 import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { appRootPath as rootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath as rootPath } from 'nx/src/utils/app-root';
 import { normalizePath, joinPathFragments } from '@nrwl/devkit';
 import { dirname } from 'path';
 import { ParsedCommandLine } from 'typescript';

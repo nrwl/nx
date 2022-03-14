@@ -1,6 +1,6 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { performance } from 'perf_hooks';
-import { FileData } from '@nrwl/tao/src/shared/project-graph';
+import { FileData } from 'nx/src/shared/project-graph';
 import { join, relative } from 'path';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';

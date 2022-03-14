@@ -2,14 +2,14 @@ import {
   toOldFormatOrNull,
   WorkspaceJsonConfiguration,
   Workspaces,
-} from '@nrwl/tao/src/shared/workspace';
+} from 'nx/src/shared/workspace';
 import type { FileData, NxJsonConfiguration } from '@nrwl/devkit';
 import { readJsonFile } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import type { NxArgs } from '../command-line/utils';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { fileExists } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import type { Environment } from './shared-interfaces';

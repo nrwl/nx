@@ -49,6 +49,9 @@
       "options": {
         "commands": [
           {
+            "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
+          },
+          {
             "command": "node ./scripts/copy-readme.js nx"
           }
         ],

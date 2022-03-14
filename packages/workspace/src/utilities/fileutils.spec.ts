@@ -3,7 +3,6 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createDirectory, isRelativePath } from './fileutils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('./app-root', () => ({ appRootPath: '/root' }));
 
 describe('fileutils', () => {
   beforeEach(() => {

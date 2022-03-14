@@ -1,6 +1,6 @@
 import { ProjectGraphBuilder, readJsonFile } from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
   const packageJson = readJsonFile(join(appRootPath, 'package.json'));

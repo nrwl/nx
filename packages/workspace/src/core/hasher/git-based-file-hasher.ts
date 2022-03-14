@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { getFileHashes, getGitHashForFiles } from './git-hasher';
 import { existsSync, readFileSync } from 'fs';

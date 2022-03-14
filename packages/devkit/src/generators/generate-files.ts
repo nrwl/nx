@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { logger } from '@nrwl/tao/src/shared/logger';
+import type { Tree } from 'nx/src/shared/tree';
+import { logger } from 'nx/src/shared/logger';
 
 const binaryExts = new Set([
   // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js
