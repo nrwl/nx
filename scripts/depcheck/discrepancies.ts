@@ -13,7 +13,7 @@ export default function getDiscrepancies(
   devDependencies: JSON
 ) {
   return Object.keys(projectDependencies)
-    .filter((p) => !p.startsWith('@nrwl/'))
+    .filter((p) => !p.startsWith('@nrwl/') && p !== 'nx')
     .filter((p) =>
       !IGNORE_MATCHES['*'].includes(p) && IGNORE_MATCHES[name]
         ? !IGNORE_MATCHES[name].includes(p)

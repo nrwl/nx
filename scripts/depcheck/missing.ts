@@ -2,7 +2,14 @@ import * as depcheck from 'depcheck';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': ['nx', '@nrwl/workspace', 'prettier', 'typescript', 'dotenv'],
+  '*': [
+    'nx',
+    '@nrwl/cli',
+    '@nrwl/workspace',
+    'prettier',
+    'typescript',
+    'dotenv',
+  ],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -36,7 +43,7 @@ const IGNORE_MATCHES = {
     'stylus',
     'tailwindcss',
   ],
-  cli: ['@nrwl/cli'],
+  cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],

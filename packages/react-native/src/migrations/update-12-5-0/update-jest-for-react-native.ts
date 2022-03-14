@@ -8,7 +8,6 @@ import {
 import { join } from 'path';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
-import { getJestObject } from '@nrwl/jest/src/migrations/update-10-0-0/require-jest-config';
 
 /**
  * This function update jest.config.js and test.setup.ts for react native project for Jest 27.
@@ -26,7 +25,7 @@ function updateJestConfig(tree: Tree) {
       }
 
       const jestConfigPath = options.jestConfig;
-      const jestConfig = getJestObject(join(tree.root, jestConfigPath));
+      const jestConfig = require(join(tree.root, jestConfigPath));
       const testEnvironment = jestConfig.testEnvironment;
       const preset = jestConfig.preset;
 
