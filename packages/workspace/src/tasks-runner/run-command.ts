@@ -1,6 +1,6 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import type {
   NxJsonConfiguration,
   ProjectGraph,
@@ -9,7 +9,7 @@ import type {
   Task,
 } from '@nrwl/devkit';
 import { logger } from '@nrwl/devkit';
-import { stripIndent } from '@nrwl/tao/src/shared/logger';
+import { stripIndent } from 'nx/src/shared/logger';
 import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '../command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';

@@ -1,5 +1,5 @@
-import { FsTree } from '@nrwl/tao/src/shared/tree';
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import { FsTree } from 'nx/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 
 /**
  * Creates a host for testing.

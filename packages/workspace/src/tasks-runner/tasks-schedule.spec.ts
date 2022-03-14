@@ -1,6 +1,6 @@
 import { TasksSchedule } from './tasks-schedule';
 import { Task, TaskGraph } from '@nrwl/devkit';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
 import { removeTasksFromTaskGraph } from '@nrwl/workspace/src/tasks-runner/utils';
 
 function createMockTask(id: string): Task {

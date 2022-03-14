@@ -1,5 +1,5 @@
 import { ProjectGraph } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';

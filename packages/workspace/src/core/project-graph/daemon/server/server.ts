@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';

@@ -5,7 +5,7 @@ import {
   WorkspaceConfiguration,
 } from '@nrwl/devkit';
 
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
 
 import {
   calculateReverseDeps,

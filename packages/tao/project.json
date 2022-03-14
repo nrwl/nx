@@ -61,9 +61,6 @@
           },
           {
             "command": "node ./scripts/copy-readme.js tao"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js tao nx"
           }
         ],
         "parallel": false

@@ -1,5 +1,5 @@
 import { GitBasedFileHasher } from './git-based-file-hasher';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { NodeBasedFileHasher } from './node-based-file-hasher';
 import { FileHasherBase } from './file-hasher-base';
 import { execSync } from 'child_process';

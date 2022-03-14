@@ -6,7 +6,7 @@ import { detectPackageManager } from '@nrwl/devkit';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';
 import * as fs from 'fs';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 
 /*
  * Use tsconfig to resolve additional workspace libs.

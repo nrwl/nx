@@ -1,7 +1,7 @@
-import type { Target } from '@nrwl/tao/src/commands/run';
-import type { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { combineOptionsForExecutor } from '@nrwl/tao/src/shared/params';
+import type { Target } from 'nx/src/commands/run';
+import type { ExecutorContext } from 'nx/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
+import { combineOptionsForExecutor } from 'nx/src/shared/params';
 
 /**
  * Reads and combines options for a given target.

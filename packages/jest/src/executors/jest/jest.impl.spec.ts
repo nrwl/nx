@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
+import { ExecutorContext } from 'nx/src/shared/workspace';
 
 let runCLI = jest.fn();
 let readConfig = jest.fn(() =>

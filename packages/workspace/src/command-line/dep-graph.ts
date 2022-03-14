@@ -1,5 +1,5 @@
 import { joinPathFragments } from '@nrwl/devkit/src/utils/path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';

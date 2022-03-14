@@ -1,7 +1,7 @@
 import { createProjectFileMap } from '@nrwl/workspace/src/core/file-map-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 

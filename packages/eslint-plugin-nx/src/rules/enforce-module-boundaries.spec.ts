@@ -12,7 +12,7 @@ import enforceModuleBoundaries, {
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 

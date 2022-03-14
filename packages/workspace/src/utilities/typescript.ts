@@ -1,5 +1,5 @@
 import { offsetFromRoot, Tree } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';

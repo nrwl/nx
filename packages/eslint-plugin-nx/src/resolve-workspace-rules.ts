@@ -1,7 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/experimental-utils';
 import { existsSync } from 'fs';
 import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
-import { registerTsProject } from '@nrwl/tao/src/utils/register';
+import { registerTsProject } from 'nx/src/utils/register';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
 

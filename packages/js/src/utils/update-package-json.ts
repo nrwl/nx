@@ -3,7 +3,7 @@ import {
   normalizePath,
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
-import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,

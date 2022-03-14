@@ -1,9 +1,9 @@
-import { RawWorkspaceJsonConfiguration } from '@nrwl/tao/src/shared/workspace';
+import { RawWorkspaceJsonConfiguration } from 'nx/src/shared/workspace';
 
 import { readNxJson } from '../generators/project-configuration';
 import { readJson } from './json';
 
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,

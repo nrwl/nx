@@ -3,10 +3,10 @@ import { Tree } from '@angular-devkit/schematics';
 
 import * as prettier from 'prettier';
 import * as path from 'path';
-import * as taoWorkspace from '@nrwl/tao/src/shared/workspace';
+import * as nxWorkspace from 'nx/src/shared/workspace';
 
 import { formatFiles } from './format-files';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 
 describe('formatFiles', () => {
   let tree: Tree;
@@ -14,7 +14,7 @@ describe('formatFiles', () => {
 
   beforeAll(() => {
     jest
-      .spyOn(taoWorkspace, 'workspaceConfigName')
+      .spyOn(nxWorkspace, 'workspaceConfigName')
       .mockReturnValue('workspace.json');
   });
 

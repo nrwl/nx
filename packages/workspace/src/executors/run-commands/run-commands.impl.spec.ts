@@ -350,43 +350,6 @@ describe('Command Runner Builder', () => {
   });
 
   describe('cwd', () => {
-    it('should use local installed package when cwd is specified', async () => {
-      const root = dirSync().name;
-      const childFolder = dirSync({ dir: root }).name;
-      const cwd = relative(root, childFolder);
-      const f = fileSync().name;
-
-      const result = await runCommands(
-        {
-          commands: [
-            {
-              command: `yarn init -y`,
-            },
-            {
-              command: `yarn add nx@12.0.0 @nrwl/workspace@12.0.0 @nrwl/cli@12.0.0 --save --registry=https://registry.yarnpkg.com/`,
-            },
-            {
-              command: `echo '{"name":"tmp","scripts":{"nx":"nx"}}' >> package.json`,
-            },
-            {
-              command: `echo '{}' >> nx.json`,
-            },
-            {
-              command: `echo '{}' >> workspace.json`,
-            },
-            {
-              command: `nx --version >> ${f}`,
-            },
-          ],
-          parallel: false,
-          cwd,
-        },
-        { root } as any
-      );
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      // expect(normalize(readFile(f))).toBe('12.0.0');
-    });
-
     it('should use workspace root package when cwd is not specified', async () => {
       const root = dirSync().name;
       const f = fileSync().name;

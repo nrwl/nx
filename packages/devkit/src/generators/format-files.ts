@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { readJson, updateJson, writeJson } from '../utils/json';
-import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,

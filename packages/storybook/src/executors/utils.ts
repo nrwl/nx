@@ -5,10 +5,7 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
-import {
-  TargetConfiguration,
-  Workspaces,
-} from '@nrwl/tao/src/shared/workspace';
+import { TargetConfiguration, Workspaces } from 'nx/src/shared/workspace';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';

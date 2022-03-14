@@ -8,14 +8,14 @@ import {
 } from '@nrwl/devkit';
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
 import { mergeNpmScriptsWithTargets } from '../utilities/project-graph-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
-} from '@nrwl/tao/src/shared/nx-plugin';
+} from 'nx/src/shared/nx-plugin';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -232,7 +232,7 @@ export function calculateReverseDeps(
 }
 
 export function getCliPath(workspaceRoot: string) {
-  const cli = require.resolve(`@nrwl/cli/lib/run-cli.js`, {
+  const cli = require.resolve(`nx/src/cli/run-cli.js`, {
     paths: [workspaceRoot],
   });
   return `${cli}`;

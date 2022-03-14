@@ -6,7 +6,7 @@
  * See https://github.com/parcel-bundler/watcher for more details.
  */
 import { normalizePath } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
 import { readFileSync } from 'fs';
 import { join, relative } from 'path';

@@ -5,7 +5,7 @@ import * as fse from 'fs-extra';
 import ignore, { Ignore } from 'ignore';
 import * as fg from 'fast-glob';
 import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
-import { logger } from '@nrwl/tao/src/shared/logger';
+import { logger } from 'nx/src/shared/logger';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 

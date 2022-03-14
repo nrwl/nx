@@ -1,11 +1,10 @@
 import {
   createNonNxProjectDirectory,
-  readProjectConfig,
   runCommand,
   tmpProjPath,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
 
 describe('add-nx-to-monorepo', () => {
   it('should not throw', () => {

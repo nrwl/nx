@@ -1,9 +1,6 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import { parseJson, serializeJson } from '@nrwl/tao/src/utils/json';
-import type {
-  JsonParseOptions,
-  JsonSerializeOptions,
-} from '@nrwl/tao/src/utils/json';
+import type { Tree } from 'nx/src/shared/tree';
+import { parseJson, serializeJson } from 'nx/src/utils/json';
+import type { JsonParseOptions, JsonSerializeOptions } from 'nx/src/utils/json';
 
 /**
  * Reads a json file, removes all comments and parses JSON.

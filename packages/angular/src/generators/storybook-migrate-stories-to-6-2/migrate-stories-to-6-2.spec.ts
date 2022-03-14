@@ -6,7 +6,7 @@ import { storybookVersion } from '@nrwl/storybook';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
-} from '@nrwl/tao/src/commands/ngcli-adapter';
+} from 'nx/src/commands/ngcli-adapter';
 import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';

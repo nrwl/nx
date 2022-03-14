@@ -6,7 +6,7 @@ import type {
 } from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
 
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);

@@ -1,7 +1,7 @@
 import { webpack } from './index';
 import { join } from 'path';
-import { writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { writeJsonFile } from 'nx/src/utils/fileutils';
+import { appRootPath } from 'nx/src/utils/app-root';
 jest.mock('@nrwl/web/src/utils/web.config', () => {
   return {
     getStylesPartial: () => ({}),

@@ -10,7 +10,7 @@ import * as yargs from 'yargs';
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import type { ListArgs } from './list';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
@@ -280,16 +280,16 @@ npx nx daemon
     () => {
       const runLocalMigrate = () => {
         const pmc = getPackageManagerCommand();
-        execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
+        execSync(`${pmc.exec} nx _migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
         });
       };
       if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-        const p = taoPath();
+        const p = nxCliPath();
         if (p === null) {
           runLocalMigrate();
         } else {
-          execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
+          execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
             stdio: ['inherit', 'inherit', 'inherit'],
           });
         }
@@ -586,7 +586,7 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
-function taoPath() {
+function nxCliPath() {
   try {
     const packageManager = getPackageManagerCommand();
 
@@ -594,7 +594,7 @@ function taoPath() {
     const tmpDir = dirSync().name;
     writeJsonFile(path.join(tmpDir, 'package.json'), {
       dependencies: {
-        '@nrwl/tao': 'latest',
+        nx: 'latest',
       },
       license: 'MIT',
     });
@@ -608,7 +608,7 @@ function taoPath() {
     addToNodePath(path.join(tmpDir, 'node_modules'));
     addToNodePath(path.join(appRootPath, 'node_modules'));
 
-    return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+    return path.join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {
     console.error(
       'Failed to install the latest version of the migration script. Using the current version.'

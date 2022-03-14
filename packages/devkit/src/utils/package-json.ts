@@ -1,7 +1,7 @@
 import { readJson, updateJson } from './json';
 import { installPackagesTask } from '../tasks/install-packages-task';
-import type { Tree } from '@nrwl/tao/src/shared/tree';
-import type { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import type { Tree } from 'nx/src/shared/tree';
+import type { GeneratorCallback } from 'nx/src/shared/workspace';
 
 /**
  * Add Dependencies and Dev Dependencies to package.json

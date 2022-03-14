@@ -1,7 +1,7 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { defaultHashing } from './hashing-impl';
-import { FileData } from '@nrwl/tao/src/shared/project-graph';
+import { FileData } from 'nx/src/shared/project-graph';
 import { joinPathFragments } from '@nrwl/devkit';
 
 export abstract class FileHasherBase {

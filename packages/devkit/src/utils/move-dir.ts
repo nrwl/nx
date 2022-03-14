@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
+import { Tree } from 'nx/src/shared/tree';
 import { relative } from 'path';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
 import { normalizePath } from './path';
