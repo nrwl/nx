@@ -40,7 +40,7 @@ exports[`lib --testEnvironment should set target jest testEnvironment to node by
 exports[`lib --unit-test-runner none should not generate test configuration 1`] = `
 Object {
   "compilerOptions": Object {
-    "module": "CommonJS",
+    "module": "commonjs",
   },
   "extends": "../../tsconfig.base.json",
   "files": Array [],
@@ -70,7 +70,7 @@ Object {
 exports[`lib nested should create a local tsconfig.json 1`] = `
 Object {
   "compilerOptions": Object {
-    "module": "CommonJS",
+    "module": "commonjs",
   },
   "extends": "../../../tsconfig.base.json",
   "files": Array [],
@@ -102,7 +102,7 @@ export class MyLibModule {}
 exports[`lib not nested should create a local tsconfig.json 1`] = `
 Object {
   "compilerOptions": Object {
-    "module": "CommonJS",
+    "module": "commonjs",
   },
   "extends": "../../tsconfig.base.json",
   "files": Array [],

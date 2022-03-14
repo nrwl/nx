@@ -140,7 +140,7 @@ describe('lib', () => {
                   Object {
                     "compilerOptions": Object {
                       "forceConsistentCasingInFileNames": true,
-                      "module": "CommonJS",
+                      "module": "commonjs",
                       "noFallthroughCasesInSwitch": true,
                       "noImplicitOverride": true,
                       "noImplicitReturns": true,
