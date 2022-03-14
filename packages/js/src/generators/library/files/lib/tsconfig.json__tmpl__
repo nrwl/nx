@@ -1,7 +1,7 @@
 {
   "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
-    "module": "CommonJS"<% if (js) { %>,
+    "module": "commonjs"<% if (js) { %>,
     "allowJs": true<% } %>
   },
   "files": [],
