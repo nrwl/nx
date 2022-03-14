@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxReactNativeApplication",
   "$schema": "http://json-schema.org/schema",
-  "title": "Create a React Component for Nx",
+  "title": "Create a React Native Component for Nx",
   "type": "object",
   "examples": [
     {

@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxReactNativeInit",
   "$schema": "http://json-schema.org/schema",
-  "title": "Add Nx React Schematics",
+  "title": "Add Nx React Native Schematics",
   "type": "object",
   "properties": {
     "unitTestRunner": {

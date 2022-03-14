@@ -407,6 +407,39 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.9.3": {
+      "version": "13.9.3-beta.0",
+      "packages": {
+        "@types/react-native": {
+          "version": "0.67.3",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.69.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.69.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.69.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.69.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.17.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-async-storage/async-storage": {
+          "version": "1.16.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
