@@ -18,7 +18,6 @@ export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
   sslCert?: string;
   sslKey?: string;
   staticDir?: string[];
-  staticDirs?: string[] | { from: string; to: string }[];
   watch?: boolean;
   docsMode?: boolean;
 }
