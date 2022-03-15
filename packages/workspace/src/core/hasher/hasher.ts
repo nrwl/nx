@@ -398,7 +398,7 @@ class ProjectHasher {
         }
 
         const filteredFiles =
-          filter === HashFilter.AllFiles
+          filter === NodeHashFilter.AllFiles
             ? p.data.files
             : p.data.files.filter((f) => !this.isSpec(f.file));
 
