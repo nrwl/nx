@@ -44,7 +44,12 @@ Replacing `<project-name>` with the name of the project you're wanting to add Je
 
 ### Testing Applications
 
-Run the Jest test with
+The recommended way to run/debug Jest tests via an editor
+
+- [VSCode](https://marketplace.visualstudio.com/items?itemName=firsttris.vscode-jest-runner)
+- [Webstorm](https://blog.jetbrains.com/webstorm/2018/10/testing-with-jest-in-webstorm/)
+
+To run Jest tests via nx use
 
 ```shell
 nx test frontend
@@ -82,6 +87,12 @@ nx test frontend -u
 ```
 
 Snapshot files should be checked in with your code.
+
+### Performance in CI
+
+Typically, in CI it's recommended to use `nx affected --target=test --parallel=[# CPUs] -- --runInBand` for the best performance.
+
+This is because each [jest process creates a workers based on system resources](https://jestjs.io/docs/cli#--maxworkersnumstring), running multiple projects via nx and using jest workers will create too many process overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process.
 
 ## Configurations
 
