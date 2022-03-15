@@ -1,9 +1,11 @@
 jest.mock('fs');
 jest.mock('@nrwl/workspace/src/core/project-graph');
-jest.mock('@nrwl/workspace');
+jest.mock('@nrwl/workspace/src/utilities/typescript');
+jest.mock('@nrwl/workspace/src/core/file-utils');
 jest.mock('nx/src/shared/workspace');
 import * as graph from '@nrwl/workspace/src/core/project-graph';
-import * as workspace from '@nrwl/workspace';
+import * as typescriptUtils from '@nrwl/workspace/src/utilities/typescript';
+import * as workspace from '@nrwl/workspace/src/core/file-utils';
 import * as taoWorkspace from 'nx/src/shared/workspace';
 import * as fs from 'fs';
 
@@ -46,7 +48,7 @@ describe('withModuleFederation', () => {
       })
     );
 
-    (workspace.readTsConfig as jest.Mock).mockReturnValue({
+    (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
         paths: {
           shared: ['/libs/shared/src/index.ts'],
@@ -97,7 +99,7 @@ describe('withModuleFederation', () => {
       })
     );
 
-    (workspace.readTsConfig as jest.Mock).mockReturnValue({
+    (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
         paths: {
           shared: ['/libs/shared/src/index.ts'],
@@ -149,7 +151,7 @@ describe('withModuleFederation', () => {
       })
     );
 
-    (workspace.readTsConfig as jest.Mock).mockReturnValue({
+    (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
         paths: {
           shared: ['/libs/shared/src/index.ts'],
@@ -205,7 +207,7 @@ describe('withModuleFederation', () => {
       })
     );
 
-    (workspace.readTsConfig as jest.Mock).mockImplementation(() => ({
+    (typescriptUtils.readTsConfig as jest.Mock).mockImplementation(() => ({
       options: {
         paths: {
           shared: ['/libs/shared/src/index.ts'],

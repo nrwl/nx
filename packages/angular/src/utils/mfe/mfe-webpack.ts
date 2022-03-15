@@ -1,11 +1,13 @@
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
 import { appRootPath as rootPath } from 'nx/src/utils/app-root';
 import { normalizePath, joinPathFragments } from '@nrwl/devkit';
 import { dirname } from 'path';
 import { ParsedCommandLine } from 'typescript';
-import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  getRootTsConfigPath,
+  readTsConfig,
+} from '@nrwl/workspace/src/utilities/typescript';
 
 export interface SharedLibraryConfig {
   singleton: boolean;
