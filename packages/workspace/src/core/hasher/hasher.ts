@@ -426,6 +426,10 @@ class ProjectHasher {
 
   private isSpec(file: string) {
     return (
+      file.endsWith('.spec.tsx') ||
+      file.endsWith('.test.tsx') ||
+      file.endsWith('-test.tsx') ||
+      file.endsWith('-spec.tsx') ||
       file.endsWith('.spec.ts') ||
       file.endsWith('.test.ts') ||
       file.endsWith('-test.ts') ||
