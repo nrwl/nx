@@ -14,7 +14,10 @@ But they come with their own technical challenges. The more code you add into yo
 
 ## Setting GitHub Actions
 
-Below is an example of a GitHub Actions setup for an Nx workspace only building and testing what is affected.
+The `GitHub` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides conventient implementation of this functionality which you can drop into you existing CI config.
+To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation at Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
+
+Below is an example of a GitHub setup for an Nx workspace only building and testing what is affected. For more details on how the orb is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
 
 ```yaml
 name: CI
@@ -60,8 +63,6 @@ jobs:
 ```
 
 The `pr` and `main` jobs implement the CI workflow. Setting `timeout-minutes` is needed only if you have very slow tasks.
-
-You can find more information about using GitHub Actions on the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) repos.
 
 ## Distributed CI with Nx Cloud
 
