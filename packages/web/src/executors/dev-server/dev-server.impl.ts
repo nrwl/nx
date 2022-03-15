@@ -1,7 +1,6 @@
 import * as webpack from 'webpack';
 import {
   ExecutorContext,
-  joinPathFragments,
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
@@ -51,6 +50,23 @@ export default async function* devServerExecutor(
     context.root,
     sourceRoot
   );
+
+  if (!buildOptions.buildLibsFromSource) {
+    const { target, dependencies } = calculateProjectDependencies(
+      readCachedProjectGraph(),
+      context.root,
+      context.projectName,
+      'build', // should be generalized
+      context.configurationName
+    );
+    buildOptions.tsConfig = createTmpTsConfig(
+      buildOptions.tsConfig,
+      context.root,
+      target.data.root,
+      dependencies
+    );
+  }
+
   let webpackConfig = getDevServerConfig(
     context.root,
     projectRoot,
@@ -69,22 +85,6 @@ export default async function* devServerExecutor(
       buildOptions,
       configuration: serveOptions.buildTarget.split(':')[2],
     });
-  }
-
-  if (!buildOptions.buildLibsFromSource) {
-    const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
-      context.root,
-      context.projectName,
-      'build', // should be generalized
-      context.configurationName
-    );
-    buildOptions.tsConfig = createTmpTsConfig(
-      joinPathFragments(context.root, buildOptions.tsConfig),
-      context.root,
-      target.data.root,
-      dependencies
-    );
   }
 
   return yield* eachValueFrom(
