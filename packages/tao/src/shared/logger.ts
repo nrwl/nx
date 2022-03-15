@@ -1,1 +1,1 @@
-require('nx/src/shared/logger');
+export * from 'nx/src/shared/logger';

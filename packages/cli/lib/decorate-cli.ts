@@ -1,1 +1,1 @@
-require('nx/src/cli/decorate-cli');
+export * from 'nx/src/cli/decorate-cli';
