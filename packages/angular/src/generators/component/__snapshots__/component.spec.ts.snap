@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`component Generator should create the component correctly and export it 1`] = `
+"import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'example',
+  templateUrl: './example.component.html',
+  styleUrls: ['./example.component.css']
+})
+export class ExampleComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`component Generator should create the component correctly and export it 2`] = `
+"
+    export * from \\"./lib/example/example.component\\";"
+`;

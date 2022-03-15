@@ -645,6 +645,11 @@
             "file": "generated/api-angular/generators/application"
           },
           {
+            "name": "component generator",
+            "id": "component",
+            "file": "generated/api-angular/generators/component"
+          },
+          {
             "name": "convert-tslint-to-eslint",
             "id": "convert-tslint-to-eslint",
             "file": "generated/api-angular/generators/convert-tslint-to-eslint"
