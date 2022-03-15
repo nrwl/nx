@@ -14,6 +14,13 @@
     {
       "files": ["*.js", "*.jsx"],
       "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": ["error", "@nrwl/workspace"]
+      }
     }
   ]
 }

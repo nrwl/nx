@@ -5,7 +5,7 @@ import {
   ngrxVersion,
   rxjsVersion as defaultRxjsVersion,
 } from '../../../utils/versions';
-import { checkAndCleanWithSemver } from '@nrwl/workspace';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 
 export function addNgRxToPackageJson(tree: Tree): GeneratorCallback {
   let rxjsVersion: string;

@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';

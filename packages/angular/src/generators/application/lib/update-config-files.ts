@@ -9,7 +9,7 @@ import {
   removeProjectConfiguration,
   offsetFromRoot,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace';
+import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {

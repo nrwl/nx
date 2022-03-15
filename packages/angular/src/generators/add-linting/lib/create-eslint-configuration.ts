@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, offsetFromRoot, writeJson } from '@nrwl/devkit';
-import { stringUtils } from '@nrwl/workspace';
+import { camelize, dasherize } from '@nrwl/workspace/src/utils/strings';
 import type { AddLintingGeneratorSchema } from '../schema';
 
 export function createEsLintConfiguration(
@@ -44,7 +44,7 @@ export function createEsLintConfiguration(
             'error',
             {
               type: 'attribute',
-              prefix: stringUtils.camelize(options.prefix),
+              prefix: camelize(options.prefix),
               style: 'camelCase',
             },
           ],
@@ -52,7 +52,7 @@ export function createEsLintConfiguration(
             'error',
             {
               type: 'element',
-              prefix: stringUtils.dasherize(options.prefix),
+              prefix: dasherize(options.prefix),
               style: 'kebab-case',
             },
           ],
