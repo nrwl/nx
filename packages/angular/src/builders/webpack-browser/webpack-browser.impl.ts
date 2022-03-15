@@ -12,10 +12,11 @@ import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
+  DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { from, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';
@@ -24,13 +25,15 @@ export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
     path: string;
   };
+  buildLibsFromSource?: boolean;
 };
 
 function buildApp(
   options: BrowserBuilderSchema,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const { customWebpackConfig, ...delegateOptions } = options;
+  const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
+    options;
   // If there is a path to custom webpack config
   // Invoke our own support for custom webpack config
   if (customWebpackConfig && customWebpackConfig.path) {
@@ -91,29 +94,37 @@ function run(
   options: BrowserBuilderSchema,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const { target, dependencies } = calculateProjectDependencies(
-    readCachedProjectGraph(),
-    context.workspaceRoot,
-    context.target.project,
-    context.target.target,
-    context.target.configuration
-  );
+  options.buildLibsFromSource ??= true;
+  let dependencies: DependentBuildableProjectNode[];
 
-  options.tsConfig = createTmpTsConfig(
-    join(context.workspaceRoot, options.tsConfig),
-    context.workspaceRoot,
-    target.data.root,
-    dependencies
-  );
-  process.env.NX_TSCONFIG_PATH = options.tsConfig;
-
-  return of(
-    checkDependentProjectsHaveBeenBuilt(
+  if (!options.buildLibsFromSource) {
+    const result = calculateProjectDependencies(
+      readCachedProjectGraph(),
       context.workspaceRoot,
       context.target.project,
       context.target.target,
+      context.target.configuration
+    );
+    dependencies = result.dependencies;
+
+    options.tsConfig = createTmpTsConfig(
+      join(context.workspaceRoot, options.tsConfig),
+      context.workspaceRoot,
+      result.target.data.root,
       dependencies
-    )
+    );
+  }
+  process.env.NX_TSCONFIG_PATH = options.tsConfig;
+
+  return of(
+    !options.buildLibsFromSource
+      ? checkDependentProjectsHaveBeenBuilt(
+          context.workspaceRoot,
+          context.target.project,
+          context.target.target,
+          dependencies
+        )
+      : true
   ).pipe(
     switchMap((result) => {
       if (result) {
