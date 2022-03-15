@@ -64,14 +64,11 @@ function updatePackageJson(tree) {
     if (!packageJson.devDependencies['@angular/cli']) {
       packageJson.devDependencies['@angular/cli'] = angularDevkitVersion;
     }
-    if (!packageJson.devDependencies['@nrwl/cli']) {
-      packageJson.devDependencies['@nrwl/cli'] = nxVersion;
-    }
-    if (!packageJson.devDependencies['@nrwl/tao']) {
-      packageJson.devDependencies['@nrwl/tao'] = nxVersion;
-    }
     if (!packageJson.devDependencies['@nrwl/workspace']) {
       packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
+    }
+    if (!packageJson.devDependencies['nx']) {
+      packageJson.devDependencies['nx'] = nxVersion;
     }
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
@@ -844,8 +841,7 @@ export async function migrateFromAngularCli(tree: Tree, schema: Schema) {
       tree,
       {},
       {
-        '@nrwl/cli': nxVersion,
-        '@nrwl/tao': nxVersion,
+        nx: nxVersion,
         '@nrwl/workspace': nxVersion,
       }
     );
