@@ -45,6 +45,8 @@ export async function jestConfigParser(
     ci: options.ci,
     color: options.color,
     detectOpenHandles: options.detectOpenHandles,
+    logHeapUsage: options.logHeapUsage,
+    detectLeaks: options.detectLeaks,
     json: options.json,
     maxWorkers: options.maxWorkers,
     onlyChanged: options.onlyChanged,
