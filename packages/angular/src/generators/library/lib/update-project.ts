@@ -8,7 +8,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace';
+import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';

@@ -1,7 +1,7 @@
 jest.mock('fs');
-jest.mock('@nrwl/workspace');
+jest.mock('@nrwl/workspace/src/utilities/typescript');
 import * as fs from 'fs';
-import * as workspace from '@nrwl/workspace';
+import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
 
 import { sharePackages, shareWorkspaceLibraries } from './mfe-webpack';
 
@@ -27,7 +27,7 @@ describe('MFE Webpack Utils', () => {
     it('should create an object with correct setup', () => {
       // ARRANGE
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (workspace.readTsConfig as jest.Mock).mockReturnValue({
+      (tsUtils.readTsConfig as jest.Mock).mockReturnValue({
         options: {
           paths: {
             '@myorg/shared': ['/libs/shared/src/index.ts'],
@@ -53,7 +53,7 @@ describe('MFE Webpack Utils', () => {
     it('should create an object with empty setup when tsconfig does not contain the shared lib', () => {
       // ARRANGE
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (workspace.readTsConfig as jest.Mock).mockReturnValue({
+      (tsUtils.readTsConfig as jest.Mock).mockReturnValue({
         options: {
           paths: {},
         },
