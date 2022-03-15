@@ -16,6 +16,11 @@
       "x-type": "application",
       "description": "Creates an Angular application."
     },
+    "component": {
+      "factory": "./src/generators/component/component.compat",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Generate an Angular Component."
+    },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/compat",
       "schema": "./src/generators/component-cypress-spec/schema.json",
@@ -160,6 +165,11 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Creates an Angular application."
+    },
+    "component": {
+      "factory": "./src/generators/component/component",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec",

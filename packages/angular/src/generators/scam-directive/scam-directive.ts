@@ -9,6 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { createScamDirective } from './lib/create-module';
 import { normalize } from 'path';
+import { pathStartsWith } from '../utils/path';
 
 export async function scamDirectiveGenerator(tree: Tree, schema: Schema) {
   const { inlineScam, ...options } = schema;
@@ -44,7 +45,7 @@ function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
     ? pathToDirective.slice(1)
     : pathToDirective;
 
-  if (!pathToDirective.startsWith(normalize(root))) {
+  if (!pathStartsWith(pathToDirective, root)) {
     throw new Error(
       `The path provided for the SCAM (${options.path}) does not exist under the project root (${root}).`
     );
