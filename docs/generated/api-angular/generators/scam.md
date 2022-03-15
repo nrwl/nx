@@ -59,7 +59,7 @@ Specifies if the style will contain `:host { display: block; }`.
 
 ### export
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
