@@ -46,6 +46,13 @@ describe('lib', () => {
       tree = createTreeWithEmptyWorkspace(2);
     });
 
+    it('should run the library generator without erroring if the directory has a trailing slash', async () => {
+      // ACT & ASSERT
+      await expect(
+        runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
+      ).resolves.not.toThrow();
+    });
+
     it('should default to standalone project for first project', async () => {
       await runLibraryGeneratorWithOpts();
       const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
