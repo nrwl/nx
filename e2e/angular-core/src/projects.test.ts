@@ -155,6 +155,10 @@ describe('Angular Projects', () => {
     // update the angular.json
     updateProjectConfig(app, (config) => {
       config.targets.build.executor = '@nrwl/angular:webpack-browser';
+      config.targets.build.options = {
+        ...config.targets.build.options,
+        buildLibsFromSource: false,
+      };
       return config;
     });
 

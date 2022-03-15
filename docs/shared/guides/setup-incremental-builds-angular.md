@@ -67,7 +67,10 @@ Change your Angular app’s “build” target executor to `@nrwl/angular:webpac
         "build": {
             "executor": "@nrwl/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
-            "options": { ... },
+            "options": {
+                "buildLibsFromSource": false
+                ...
+            },
             "configurations": { ... },
             "defaultConfiguration": "production"
         },
@@ -111,7 +114,10 @@ Note: you can specify the `--parallel` flags as part of the options property on 
         "build": {
             "executor": "@nrwl/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
-            "options": { ... },
+            "options": {
+                "buildLibsFromSource": false
+                ...
+            },
             "configurations": { ... }
         },
         "serve": {
