@@ -37,7 +37,7 @@ The name of the directive.
 
 ### export
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
