@@ -40,7 +40,7 @@ jobs:
         uses: nrwl/nx-set-shas@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: '14'
+          node-version: '16'
       - run: npm install
       - run: npx nx affected --target=build --parallel=3
       - run: npx nx affected --target=test --parallel=2
@@ -56,7 +56,7 @@ jobs:
         uses: nrwl/nx-set-shas@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: '14'
+          node-version: '16'
       - run: npm install
       - run: npx nx affected --target=build --parallel=3
       - run: npx nx affected --target=test --parallel=2
