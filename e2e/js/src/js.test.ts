@@ -5,7 +5,6 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
-  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
@@ -14,8 +13,13 @@ import {
 } from '../../utils';
 
 describe('js e2e', () => {
+  let scope: string;
+
+  beforeEach(() => {
+    scope = newProject();
+  });
+
   it('should create libs with npm scripts', () => {
-    const scope = newProject();
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(`generate @nrwl/js:lib ${npmScriptsLib} --config=npm-scripts`);
     const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
@@ -31,7 +35,6 @@ describe('js e2e', () => {
   }, 120000);
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
-    const scope = newProject();
     const lib = uniq('lib');
     runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=tsc`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
@@ -123,10 +126,35 @@ describe('js e2e', () => {
     const output = runCLI(`build ${parentLib}`);
     expect(output).toContain('1 task(s) it depends on');
     expect(output).toContain('Done compiling TypeScript files');
+
+    updateJson(`libs/${lib}/tsconfig.json`, (json) => {
+      json.compilerOptions = { ...json.compilerOptions, importHelpers: true };
+      return json;
+    });
+
+    runCLI(`build ${lib}`);
+
+    const rootPackageJson = readJson(`package.json`);
+
+    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
+      'peerDependencies.tslib',
+      rootPackageJson.dependencies.tslib ??
+        rootPackageJson.devDependencies.tslib
+    );
+
+    updateJson(`libs/${lib}/tsconfig.json`, (json) => {
+      json.compilerOptions = { ...json.compilerOptions, importHelpers: false };
+      return json;
+    });
+
+    runCLI(`build ${lib}`);
+
+    expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
+      'peerDependencies.tslib'
+    );
   }, 120000);
 
   it('should create libs with js executors (--compiler=swc)', async () => {
-    const scope = newProject();
     const lib = uniq('lib');
     runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=swc`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
