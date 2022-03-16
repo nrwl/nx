@@ -7,6 +7,7 @@ import { join, resolve } from 'path';
 import { checkDependencies } from '../../utils/check-dependencies';
 import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
+import { addTslibDependencyIfNeeded } from '../../utils/tslib-dependency';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
@@ -59,6 +60,8 @@ export async function* tscExecutor(
   if (tmpTsConfig) {
     options.tsConfig = tmpTsConfig;
   }
+
+  addTslibDependencyIfNeeded(options, context, dependencies);
 
   const assetHandler = new CopyAssetsHandler({
     projectDir: projectRoot,

@@ -10,7 +10,7 @@ export { getSourceNodes } from './typescript/get-source-nodes';
 
 const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
 
-let tsModule: any;
+let tsModule: typeof import('typescript');
 
 export function readTsConfig(tsConfigPath: string) {
   if (!tsModule) {
@@ -31,18 +31,21 @@ function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
     tsModule = require('typescript');
   }
+
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
     tsModule.sys.readFile
   );
+
   // we don't need to scan the files, we only care about options
-  const host = {
+  const host: Partial<ts.ParseConfigHost> = {
     readDirectory: () => [],
     fileExists: tsModule.sys.fileExists,
   };
+
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
-    host,
+    host as ts.ParseConfigHost,
     dirname(tsConfigPath)
   ).options;
 }
