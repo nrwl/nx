@@ -126,3 +126,7 @@ Now that the application is set up, run it locally via:
 ```bash
 nx serve todos
 ```
+
+## What's Next
+
+- Continue to [Step 2: Display todos](/node-tutorial/02-display-todos)

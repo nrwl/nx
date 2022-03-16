@@ -87,3 +87,7 @@ export default App;
 ```
 
 The tests should pass now.
+
+## What's Next
+
+- Continue to [Step 4: Connect to an API](/react-tutorial/04-connect-to-api)

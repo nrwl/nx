@@ -173,3 +173,7 @@ Art courtesy of [cowsay](https://www.npmjs.com/package/cowsay).
 ```
 
 Once these files are in place, run `nx serve blog` again. Navigate to `http://localhost:8080/posts/ascii/` in a browser and you should see the blog post.
+
+## What's Next
+
+- Continue to [Step 2: Create cli](/core-tutorial/02-create-cli)

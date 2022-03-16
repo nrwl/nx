@@ -116,3 +116,7 @@ If you want Nx to do more for you, you can install the `@nrwl/js` plugin to help
 - Typescript alias paths
 - Build with `tsc` or `swc`
 - Jest and ESLint configuration
+
+## What's Next
+
+- Continue to [Step 6: Summary](/core-tutorial/06-summary)

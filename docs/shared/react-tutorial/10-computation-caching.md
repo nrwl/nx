@@ -55,3 +55,7 @@ Nx read the output from the cache instead of running the command for 1 out of 2 
 Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/using-nx/caching).
 
 > Add --parallel to any command, and Nx does most of the work in parallel.
+
+## What's Next
+
+- Continue to [Step 11: Test Affected Projects](/react-tutorial/11-test-affected-projects)

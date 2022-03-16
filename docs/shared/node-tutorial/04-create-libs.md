@@ -85,3 +85,7 @@ export class AppModule {}
 ```
 
 **Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`**
+
+## What's Next
+
+- Continue to [Step 5: Dep graph](/node-tutorial/05-dep-graph)

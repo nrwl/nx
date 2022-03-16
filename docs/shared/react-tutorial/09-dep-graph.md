@@ -15,3 +15,7 @@ npx nx graph
 ```
 
 The project graph page opens in a new browser window. Click on "Show all projects" to see all the apps and libraries in the workspace.
+
+## What's Next
+
+- Continue to [Step 10: Using Computation Caching](/react-tutorial/10-computation-caching)

@@ -126,3 +126,7 @@ or
 ```bash
 yarn nx serve todos
 ```
+
+## What's Next
+
+- Continue to [Step 2: Add E2E Tests](/react-tutorial/02-add-e2e-test)
