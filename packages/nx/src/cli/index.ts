@@ -51,6 +51,7 @@ export async function invokeCommand(
         commandArgs,
         isVerbose
       );
+    case 'migrate':
     case '_migrate':
       return (await import('../commands/migrate')).migrate(
         root,

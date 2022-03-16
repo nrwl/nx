@@ -6,7 +6,11 @@ import { output } from '../src/cli/output';
 import { detectPackageManager } from '../src/shared/package-manager';
 import { Workspace } from '../src/cli/workspace';
 
-if (process.argv[2] === 'new' || process.argv[2] === '_migrate') {
+if (
+  process.argv[2] === 'new' ||
+  process.argv[2] === '_migrate' ||
+  process.argv[2] === 'migrate'
+) {
   require('../src/cli/index');
 } else {
   const workspace = findWorkspaceRoot(process.cwd());
