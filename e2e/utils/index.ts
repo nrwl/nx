@@ -49,7 +49,7 @@ export function currentCli() {
   return process.env.SELECTED_CLI || 'nx';
 }
 
-export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `/tmp/e2e`;
+export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
 export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 

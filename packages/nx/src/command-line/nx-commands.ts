@@ -86,6 +86,62 @@ ${daemonHelpOutput}
       (await import('./affected')).affected('affected', { ...args }),
   })
   .command({
+    command: 'affected:test',
+    describe: false,
+    builder: (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallelOption(yargs)),
+        'affected'
+      ),
+    handler: async (args) =>
+      (await import('./affected')).affected('affected', {
+        ...args,
+        target: 'test',
+      }),
+  })
+  .command({
+    command: 'affected:build',
+    describe: false,
+    builder: (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallelOption(yargs)),
+        'affected'
+      ),
+    handler: async (args) =>
+      (await import('./affected')).affected('affected', {
+        ...args,
+        target: 'build',
+      }),
+  })
+  .command({
+    command: 'affected:lint',
+    describe: false,
+    builder: (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallelOption(yargs)),
+        'affected'
+      ),
+    handler: async (args) =>
+      (await import('./affected')).affected('affected', {
+        ...args,
+        target: 'lint',
+      }),
+  })
+  .command({
+    command: 'affected:e2e',
+    describe: false,
+    builder: (yargs) =>
+      linkToNxDevAndExamples(
+        withAffectedOptions(withParallelOption(yargs)),
+        'affected'
+      ),
+    handler: async (args) =>
+      (await import('./affected')).affected('affected', {
+        ...args,
+        target: 'e2e',
+      }),
+  })
+  .command({
     command: 'affected:apps',
     describe: 'Print applications affected by changes',
     builder: (yargs) =>
