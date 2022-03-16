@@ -11,6 +11,14 @@ Options can be configured in `workspace.json` when defining the executor, or whe
 
 ## Options
 
+### interactive
+
+Default: `true`
+
+Type: `boolean`
+
+Run packager server in interactive mode.
+
 ### port
 
 Default: `8081`

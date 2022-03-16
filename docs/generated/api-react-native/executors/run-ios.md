@@ -25,13 +25,21 @@ Type: `boolean`
 
 Runs 'pod install' for native modules before building iOS app.
 
+### interactive
+
+Default: `true`
+
+Type: `boolean`
+
+Run packager server in interactive mode.
+
 ### packager
 
 Default: `true`
 
 Type: `boolean`
 
-Starts the packager server
+Starts the packager server.
 
 ### port
 
@@ -47,7 +55,7 @@ Default: `false`
 
 Type: `boolean`
 
-Resets metro cache
+Resets metro cache.
 
 ### scheme
 

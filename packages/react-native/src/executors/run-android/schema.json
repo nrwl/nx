@@ -53,13 +53,18 @@
     },
     "packager": {
       "type": "boolean",
-      "description": "Starts the packager server",
+      "description": "Starts the packager server.",
       "default": true
     },
     "resetCache": {
       "type": "boolean",
-      "description": "Resets metro cache",
+      "description": "Resets metro cache.",
       "default": false
+    },
+    "interactive": {
+      "type": "boolean",
+      "description": "Run packager server in interactive mode.",
+      "default": true
     }
   }
 }
