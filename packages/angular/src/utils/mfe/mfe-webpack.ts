@@ -1,14 +1,24 @@
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
 import { appRootPath as rootPath } from 'nx/src/utils/app-root';
 import { normalizePath, joinPathFragments } from '@nrwl/devkit';
 import { dirname } from 'path';
 import { ParsedCommandLine } from 'typescript';
+import {
+  getRootTsConfigPath,
+  readTsConfig,
+} from '@nrwl/workspace/src/utilities/typescript';
+
+export interface SharedLibraryConfig {
+  singleton: boolean;
+  strictVersion: boolean;
+  requiredVersion: string;
+  eager: boolean;
+}
 
 export function shareWorkspaceLibraries(
   libraries: string[],
-  tsConfigPath = process.env.NX_TSCONFIG_PATH
+  tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ) {
   if (!existsSync(tsConfigPath)) {
     throw new Error(
@@ -22,7 +32,7 @@ export function shareWorkspaceLibraries(
   if (!tsconfigPathAliases) {
     return {
       getAliases: () => [],
-      getLibraries: () => [],
+      getLibraries: () => {},
       getReplacementPlugin: () =>
         new NormalModuleReplacementPlugin(/./, () => {}),
     };
@@ -45,7 +55,7 @@ export function shareWorkspaceLibraries(
         (aliases, library) => ({ ...aliases, [library.name]: library.path }),
         {}
       ),
-    getLibraries: (eager?: boolean) =>
+    getLibraries: (eager?: boolean): Record<string, SharedLibraryConfig> =>
       pathMappings.reduce(
         (libraries, library) => ({
           ...libraries,
@@ -72,7 +82,9 @@ export function shareWorkspaceLibraries(
   };
 }
 
-export function sharePackages(packages: string[]) {
+export function sharePackages(
+  packages: string[]
+): Record<string, SharedLibraryConfig> {
   const pkgJsonPath = joinPathFragments(rootPath, 'package.json');
   if (!existsSync(pkgJsonPath)) {
     throw new Error(

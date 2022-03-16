@@ -18,8 +18,8 @@ describe('MFE Webpack Utils', () => {
         shareWorkspaceLibraries(['@myorg/shared']);
       } catch (error) {
         // ASSERT
-        expect(error.message).toEqual(
-          'NX MFE: TsConfig Path for workspace libraries does not exist! (undefined)'
+        expect(error.message).toContain(
+          'NX MFE: TsConfig Path for workspace libraries does not exist!'
         );
       }
     });
