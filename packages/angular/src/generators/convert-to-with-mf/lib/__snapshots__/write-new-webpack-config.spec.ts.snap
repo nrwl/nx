@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`writeNewWebpackConfig should convert config that is both remote and host correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+    module.exports = withModuleFederation({
+      name: 'both1',
+      remotes: [['remote1', 'http://localhost:4201']],
+      exposes: {
+                    './Module': 'apps/both/src/app/remote-entry/entry.module.ts'
+                },
+    });"
+`;
+
+exports[`writeNewWebpackConfig should convert config that is neither remote and host correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+        module.exports = withModuleFederation({
+          name: 'neither',
+        });"
+`;
+
+exports[`writeNewWebpackConfig should convert host config correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+        module.exports = withModuleFederation({
+          name: 'host1',
+          remotes: [['remote1', 'http://localhost:4201']],
+        });"
+`;
+
+exports[`writeNewWebpackConfig should convert remote config correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+        module.exports = withModuleFederation({
+          name: 'remote1',
+          exposes: {
+                    './Module': 'apps/remote1/src/app/remote-entry/entry.module.ts'
+                },
+        });"
+`;
