@@ -148,7 +148,7 @@ function exportScam(tree: Tree, schema: Schema, scamFilePath: string) {
     .split(sourceRoot)[1]
     .replace('.ts', '')}`;
 
-  const updateEntryPointContent = `${tree.read(projectEntryPoint)}
+  const updateEntryPointContent = `${tree.read(projectEntryPoint, 'utf-8')}
   export * from "${relativePathFromEntryPoint}";`;
 
   tree.write(projectEntryPoint, updateEntryPointContent);
