@@ -304,10 +304,14 @@ export function mapProjectGraphFiles<T>(
   };
 }
 
+const ESLINT_REGEX = /node_modules.*\/eslint$/;
+const NRWL_CLI_REGEX = /@nrwl\/cli\/lib\/run-cli\.js$/;
+
 export function isTerminalRun(): boolean {
   return (
     process.argv.length > 1 &&
-    !!process.argv[1].match(/@nrwl\/cli\/lib\/run-cli\.js$/)
+    (!!process.argv[1].match(NRWL_CLI_REGEX) ||
+      !!process.argv[1].match(ESLINT_REGEX))
   );
 }
 
