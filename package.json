@@ -87,10 +87,11 @@
     "@storybook/addon-knobs": "~6.3.0",
     "@storybook/angular": "~6.4.12",
     "@storybook/core": "~6.4.12",
+    "@storybook/core-server": "^6.4.19",
     "@storybook/react": "~6.4.12",
     "@svgr/webpack": "^6.1.2",
-    "@swc/core": "^1.2.146",
     "@swc-node/register": "^1.4.2",
+    "@swc/core": "^1.2.146",
     "@testing-library/react": "11.2.6",
     "@testing-library/react-hooks": "7.0.1",
     "@tippyjs/react": "^4.2.6",
@@ -303,4 +304,3 @@
     "immer": "~9.0.6"
   }
 }
-

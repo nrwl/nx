@@ -3,10 +3,10 @@ import * as fs from 'fs';
 
 import { ExecutorContext } from '@nrwl/devkit';
 
-jest.mock('@storybook/core/server', () => ({
+jest.mock('@storybook/core-server', () => ({
   buildDevStandalone: jest.fn().mockImplementation(() => Promise.resolve()),
 }));
-import { buildDevStandalone } from '@storybook/core/server';
+import { buildDevStandalone } from '@storybook/core-server';
 import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 import storybookExecutor, { StorybookExecutorOptions } from './storybook.impl';
