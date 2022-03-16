@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
-import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import type { StorybookConfigurationOptions } from './schema';
@@ -35,12 +34,6 @@ describe('StorybookConfiguration generator', () => {
     jest.doMock('@storybook/angular/package.json', () => ({
       version: '6.4.0-rc.1',
     }));
-    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-      devDependencies: {
-        '@storybook/addon-essentials': '~6.2.9',
-        '@storybook/react': '~6.2.9',
-      },
-    });
   });
 
   it('should throw when the @storybook/angular version is lower than 6.4.0-rc.1', async () => {

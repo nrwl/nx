@@ -4,12 +4,9 @@ import {
   Task,
   TaskGraph,
   WorkspaceJsonConfiguration,
-} from '@nrwl/devkit';
-import {
-  Hash,
   Hasher,
-  HashFilter,
-} from '@nrwl/workspace/src/core/hasher/hasher';
+  Hash,
+} from '@nrwl/devkit';
 
 export default async function run(
   task: Task,
@@ -25,7 +22,7 @@ export default async function run(
     : undefined;
   const filter =
     jestPluginConfig && jestPluginConfig.hashingExcludesTestsOfDeps
-      ? HashFilter.ExcludeTestsOfDeps
-      : HashFilter.AllFiles;
+      ? 'exclude-tests-of-deps'
+      : 'all-files';
   return context.hasher.hashTaskWithDepsAndContext(task, filter);
 }

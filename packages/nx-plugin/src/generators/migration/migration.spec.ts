@@ -19,7 +19,7 @@ describe('NxPlugin migration generator', () => {
   it('should update the workspace.json file', async () => {
     await migrationGenerator(tree, {
       project: projectName,
-      version: '1.0.0',
+      packageVersion: '1.0.0',
     });
 
     const project = readProjectConfiguration(tree, projectName);
@@ -36,7 +36,7 @@ describe('NxPlugin migration generator', () => {
       project: projectName,
       name: 'my-migration',
       description: 'my-migration description',
-      version: '1.0.0',
+      packageVersion: '1.0.0',
     });
 
     const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
@@ -64,7 +64,7 @@ describe('NxPlugin migration generator', () => {
     await migrationGenerator(tree, {
       project: projectName,
       description: 'my-migration description',
-      version: '1.0.0',
+      packageVersion: '1.0.0',
     });
 
     const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
@@ -82,7 +82,7 @@ describe('NxPlugin migration generator', () => {
     await migrationGenerator(tree, {
       project: projectName,
       name: 'my-migration',
-      version: '1.0.0',
+      packageVersion: '1.0.0',
     });
 
     const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
@@ -96,7 +96,7 @@ describe('NxPlugin migration generator', () => {
     await migrationGenerator(tree, {
       project: projectName,
       name: 'my-migration',
-      version: '1.0.0',
+      packageVersion: '1.0.0',
       packageJsonUpdates: true,
     });
 

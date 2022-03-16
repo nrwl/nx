@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import { getPackageManagerCommand } from 'nx/src/shared/package-manager';
-import type { NxJsonConfiguration } from 'nx/src/shared/nx';
-import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
-import { output } from '@nrwl/workspace/src/utilities/output';
+import {
+  getPackageManagerCommand,
+  NxJsonConfiguration,
+  readJsonFile,
+  writeJsonFile,
+  output,
+} from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 import * as path from 'path';

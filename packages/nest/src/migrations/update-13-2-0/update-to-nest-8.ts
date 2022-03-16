@@ -1,5 +1,4 @@
 import { formatFiles, logger, readJson, Tree, updateJson } from '@nrwl/devkit';
-import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import { checkAndCleanWithSemver } from '@nrwl/workspace';
 import { satisfies } from 'semver';
 import {
@@ -7,6 +6,7 @@ import {
   nestJsVersion8,
   rxjsVersion7,
 } from '../../utils/versions';
+import { sortObjectByKeys } from '@nrwl/workspace/src/utils/ast-utils';
 
 export default async function update(tree: Tree) {
   const shouldUpdate = await isUpdatable(tree);

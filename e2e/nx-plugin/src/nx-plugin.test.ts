@@ -78,7 +78,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nrwl/nx-plugin:migration --project=${plugin} --version=${version} --packageJsonUpdates=false`
+      `generate @nrwl/nx-plugin:migration --project=${plugin} --packageVersion=${version} --packageJsonUpdates=false`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);

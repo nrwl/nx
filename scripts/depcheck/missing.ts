@@ -94,6 +94,7 @@ const IGNORE_MATCHES = {
     '@angular-devkit/schematics',
     '@angular-devkit/core',
     '@angular-devkit/architect',
+    '@angular/cli',
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
@@ -114,6 +115,8 @@ const IGNORE_MATCHES = {
     '@nrwl/jest',
     '@nrwl/linter',
     '@nrwl/devkit',
+    'tsconfig-paths',
+    '@swc-node/register',
   ],
   nest: ['semver'],
   'make-angular-cli-faster': ['@angular/core'],

@@ -8,7 +8,6 @@ import * as storybook from '@storybook/core/standalone';
 import storybookBuilder, {
   StorybookBuilderOptions,
 } from './build-storybook.impl';
-import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 describe('Build storybook', () => {
   let context: ExecutorContext;
@@ -18,12 +17,6 @@ describe('Build storybook', () => {
   let config: StorybookBuilderOptions['config'];
 
   beforeEach(async () => {
-    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-      devDependencies: {
-        '@storybook/addon-essentials': '~6.2.9',
-        '@storybook/angular': '~6.2.9',
-      },
-    });
     uiFramework = '@storybook/angular';
     outputPath = '/root/dist/storybook';
     config = {

@@ -1,43 +1,40 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import {
+  appRootPath,
+  joinPathFragments,
+  normalizePath,
+  ProjectGraphExternalNode,
+  readCachedProjectGraph,
+  readNxJson,
+} from '@nrwl/devkit';
 import {
   DepConstraint,
   findConstraintsFor,
+  findDependenciesWithTags,
   findProjectUsingImport,
   findSourceProject,
   getSourceFilePath,
+  getTargetProjectBasedOnRelativeImport,
+  groupImports,
+  hasBannedImport,
   hasBuildExecutor,
-  findDependenciesWithTags,
+  hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
+  isAngularSecondaryEntrypoint,
+  isDirectDependency,
+  isTerminalRun,
+  MappedProjectGraph,
+  MappedProjectGraphNode,
   mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
-  MappedProjectGraph,
-  hasBannedImport,
-  isDirectDependency,
-  getTargetProjectBasedOnRelativeImport,
-  isTerminalRun,
   stringifyTags,
-  hasNoneOfTheseTags,
-  groupImports,
-  MappedProjectGraphNode,
-  isAngularSecondaryEntrypoint,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import {
-  joinPathFragments,
-  normalizePath,
-  ProjectGraphExternalNode,
-} from '@nrwl/devkit';
-import {
-  ProjectType,
-  readCachedProjectGraph,
-} from '@nrwl/workspace/src/core/project-graph';
-import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
-import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
 import {
   checkCircularPath,
   findFilesInCircularPath,
@@ -454,7 +451,7 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // cannot import apps
-      if (targetProject.type === ProjectType.app) {
+      if (targetProject.type === 'app') {
         context.report({
           node,
           messageId: 'noImportsOfApps',
@@ -463,7 +460,7 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // cannot import e2e projects
-      if (targetProject.type === ProjectType.e2e) {
+      if (targetProject.type === 'e2e') {
         context.report({
           node,
           messageId: 'noImportsOfE2e',
@@ -474,8 +471,8 @@ export default createESLintRule<Options, MessageIds>({
       // buildable-lib is not allowed to import non-buildable-lib
       if (
         enforceBuildableLibDependency === true &&
-        sourceProject.type === ProjectType.lib &&
-        targetProject.type === ProjectType.lib
+        sourceProject.type === 'lib' &&
+        targetProject.type === 'lib'
       ) {
         if (
           hasBuildExecutor(sourceProject) &&

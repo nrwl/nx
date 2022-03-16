@@ -33,7 +33,7 @@
       "description": "Migration description",
       "alias": "d"
     },
-    "version": {
+    "packageVersion": {
       "type": "string",
       "description": "Version to use for the migration",
       "alias": "v",

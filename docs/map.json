@@ -356,7 +356,6 @@
           }
         ]
       },
-
       {
         "name": "CLI",
         "id": "cli",
@@ -415,26 +414,6 @@
             "name": "affected",
             "id": "affected",
             "file": "generated/cli/affected"
-          },
-          {
-            "name": "affected:build",
-            "id": "affected-build",
-            "file": "generated/cli/affected-build"
-          },
-          {
-            "name": "affected:test",
-            "id": "affected-test",
-            "file": "generated/cli/affected-test"
-          },
-          {
-            "name": "affected:lint",
-            "id": "affected-lint",
-            "file": "generated/cli/affected-lint"
-          },
-          {
-            "name": "affected:e2e",
-            "id": "affected-e2e",
-            "file": "generated/cli/affected-e2e"
           },
           {
             "name": "affected:graph",
@@ -943,7 +922,6 @@
             "id": "migrate-stories-to-6-2",
             "file": "generated/api-storybook/generators/migrate-stories-to-6-2"
           },
-
           {
             "name": "Executors: Build",
             "id": "executors-build",

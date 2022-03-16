@@ -5,8 +5,7 @@ import type {
   NxJsonConfiguration,
   ProjectGraphExternalNode,
 } from '@nrwl/devkit';
-import { ProjectType, readCachedProjectGraph } from '../core/project-graph';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -27,13 +26,13 @@ import {
   isAngularSecondaryEntrypoint,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
-import { readNxJson } from '../core/file-utils';
-import { TargetProjectLocator } from '../core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
 import {
   checkCircularPath,
   findFilesInCircularPath,
 } from '../utils/graph-utils';
 import { isRelativePath } from '../utilities/fileutils';
+import { readNxJson, readCachedProjectGraph } from '@nrwl/devkit';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -220,7 +219,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     // cannot import apps
-    if (targetProject.type === ProjectType.app) {
+    if (targetProject.type === 'app') {
       this.addFailureAt(
         node.getStart(),
         node.getWidth(),
@@ -230,7 +229,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     // cannot import e2e projects
-    if (targetProject.type === ProjectType.e2e) {
+    if (targetProject.type === 'e2e') {
       this.addFailureAt(
         node.getStart(),
         node.getWidth(),
@@ -242,8 +241,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     // buildable-lib is not allowed to import non-buildable-lib
     if (
       this.enforceBuildableLibDependency === true &&
-      sourceProject.type === ProjectType.lib &&
-      targetProject.type === ProjectType.lib
+      sourceProject.type === 'lib' &&
+      targetProject.type === 'lib'
     ) {
       if (hasBuildExecutor(sourceProject) && !hasBuildExecutor(targetProject)) {
         this.addFailureAt(

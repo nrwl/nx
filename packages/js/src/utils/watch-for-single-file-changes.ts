@@ -1,4 +1,4 @@
-import { logger } from 'nx/src/shared/logger';
+import { logger } from '@nrwl/devkit';
 import { join } from 'path';
 
 export async function watchForSingleFileChanges(

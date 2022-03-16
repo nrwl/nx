@@ -1,3 +1,5 @@
+import { PackageManager } from 'nx/src/utils/package-manager';
+
 process.env.SELECTED_CLI = 'angular';
 
 import {
@@ -13,7 +15,6 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { PackageManager } from 'nx/src/shared/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {
   let project: string;
@@ -143,7 +144,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       'update:check': 'ng update',
       lint: 'nx workspace-lint && ng lint',
       graph: 'nx graph',
-      'workspace-schematic': 'nx workspace-schematic',
+      'workspace-generator': 'nx workspace-generator',
       help: 'nx help',
       postinstall: 'node ./decorate-angular-cli.js',
     });
@@ -153,33 +154,38 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check nx.json
     const nxJson = readJson('nx.json');
     expect(nxJson).toEqual({
-      npmScope: 'projscope',
-      affected: { defaultBase: 'main' },
+      affected: {
+        defaultBase: 'main',
+      },
+      cli: {
+        defaultCollection: '@nrwl/angular',
+        packageManager: packageManager,
+      },
+      defaultProject: project,
       implicitDependencies: {
+        '.eslintrc.json': '*',
         'package.json': {
           dependencies: '*',
           devDependencies: '*',
         },
-        '.eslintrc.json': '*',
       },
-      tasksRunnerOptions: {
-        default: {
-          runner: '@nrwl/workspace/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
-        },
-      },
+      npmScope: 'projscope',
       targetDependencies: {
         build: [
           {
-            target: 'build',
             projects: 'dependencies',
+            target: 'build',
           },
         ],
       },
-      cli: { defaultCollection: '@nrwl/angular', packageManager },
-      defaultProject: project,
+      tasksRunnerOptions: {
+        default: {
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+          runner: 'nx/tasks-runners/default',
+        },
+      },
     });
 
     // check angular.json

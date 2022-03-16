@@ -45,14 +45,6 @@ Type: `string`
 
 The name of the project.
 
-### version (_**required**_)
-
-Alias(es): v
-
-Type: `string`
-
-Version to use for the migration
-
 ### description
 
 Alias(es): d
@@ -76,3 +68,11 @@ Default: `false`
 Type: `boolean`
 
 Whether or not to include package.json updates
+
+### packageVersion
+
+Alias(es): v
+
+Type: `string`
+
+Version to use for the migration

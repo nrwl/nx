@@ -1,7 +1,7 @@
-import type { Target } from 'nx/src/commands/run';
+import type { Target } from 'nx/src/command-line/run';
 import type { ExecutorContext } from 'nx/src/shared/workspace';
 import { Workspaces } from 'nx/src/shared/workspace';
-import { combineOptionsForExecutor } from 'nx/src/shared/params';
+import { combineOptionsForExecutor } from 'nx/src/utils/params';
 
 /**
  * Reads and combines options for a given target.

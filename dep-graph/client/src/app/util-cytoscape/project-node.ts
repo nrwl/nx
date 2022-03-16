@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 import { parseParentDirectoriesFromPilePath } from '../util';

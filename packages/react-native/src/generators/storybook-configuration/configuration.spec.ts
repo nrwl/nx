@@ -1,4 +1,3 @@
-import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -13,14 +12,14 @@ describe('react-native:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-      devDependencies: {
-        '@storybook/addon-essentials': '*',
-        '@storybook/react-native': '*',
-        '@storybook/addon-ondevice-actions': '*',
-        '@storybook/addon-ondevice-knobs': '*',
-      },
-    });
+    // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+    //   devDependencies: {
+    //     '@storybook/addon-essentials': '*',
+    //     '@storybook/react-native': '*',
+    //     '@storybook/addon-ondevice-actions': '*',
+    //     '@storybook/addon-ondevice-knobs': '*',
+    //   },
+    // });
 
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});

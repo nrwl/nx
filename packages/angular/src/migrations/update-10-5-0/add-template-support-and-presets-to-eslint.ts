@@ -11,7 +11,7 @@ import {
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { offsetFromRoot } from '@nrwl/devkit';
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/devkit';
 
 /**
  * It was decided with Jason that we would do a simple replacement in this migration

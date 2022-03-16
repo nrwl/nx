@@ -1,4 +1,4 @@
-jest.mock('@nrwl/workspace/src/core/project-graph');
+jest.mock('@nrwl/devkit');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 jest.mock('ng-packagr');
 jest.mock('./ng-packagr-adjustments/ng-package/options.di');

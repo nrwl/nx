@@ -3,8 +3,9 @@ import {
   Task,
   TaskGraph,
   WorkspaceJsonConfiguration,
+  Hasher,
+  Hash,
 } from '@nrwl/devkit';
-import { Hash, Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
 
 export default async function run(
   task: Task,

@@ -22,7 +22,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   if (options.name) {
     name = names(options.name).fileName;
   } else {
-    name = names(`update-${options.version}`).fileName;
+    name = names(`update-${options.packageVersion}`).fileName;
   }
 
   const description: string = options.description ?? name;
@@ -63,7 +63,7 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
 
   const generators = migrations.generators ?? {};
   generators[options.name] = {
-    version: options.version,
+    version: options.packageVersion,
     description: options.description,
     cli: 'nx',
     implementation: `./src/migrations/${options.name}/${options.name}`,
@@ -72,9 +72,9 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
 
   if (options.packageJsonUpdates) {
     const packageJsonUpdatesObj = migrations.packageJsonUpdates ?? {};
-    if (!packageJsonUpdatesObj[options.version]) {
-      packageJsonUpdatesObj[options.version] = {
-        version: options.version,
+    if (!packageJsonUpdatesObj[options.packageVersion]) {
+      packageJsonUpdatesObj[options.packageVersion] = {
+        version: options.packageVersion,
         packages: {},
       };
     }

@@ -1,15 +1,12 @@
 import {
+  Hash,
+  Hasher,
   NxJsonConfiguration,
   ProjectGraph,
   Task,
   TaskGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import {
-  Hash,
-  Hasher,
-  HashFilter,
-} from '@nrwl/workspace/src/core/hasher/hasher';
 
 export default async function run(
   task: Task,
@@ -25,7 +22,7 @@ export default async function run(
     : undefined;
   const filter =
     cypressPluginConfig && cypressPluginConfig.hashingExcludesTestsOfDeps
-      ? HashFilter.ExcludeTestsOfDeps
-      : HashFilter.AllFiles;
+      ? 'exclude-tests-of-deps'
+      : 'all-files';
   return context.hasher.hashTaskWithDepsAndContext(task, filter);
 }

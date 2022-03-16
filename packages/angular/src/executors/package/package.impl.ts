@@ -1,5 +1,5 @@
 import type { ExecutorContext } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,

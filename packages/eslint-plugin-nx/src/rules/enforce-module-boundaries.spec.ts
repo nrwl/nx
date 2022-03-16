@@ -1,18 +1,21 @@
 import type { FileData, ProjectGraph } from '@nrwl/devkit';
-import {
-  DependencyType,
-  ProjectType,
-} from '@nrwl/workspace/src/core/project-graph';
+import { DependencyType } from '@nrwl/devkit';
 import { TSESLint } from '@typescript-eslint/experimental-utils';
 import * as parser from '@typescript-eslint/parser';
 import { vol } from 'memfs';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
-import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
+
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
+  appRootPath: '/root',
+}));
+
 jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
@@ -113,7 +116,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         nodes: {
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'libs/myapp',
               tags: [],
@@ -127,7 +130,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           },
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -159,7 +162,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         nodes: {
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'libs/myapp',
               tags: [],
@@ -173,7 +176,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           },
           myapp2Name: {
             name: 'myapp2Name',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'libs/myapp2',
               tags: [],
@@ -184,7 +187,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           },
           'myapp2-mylib': {
             name: 'myapp2-mylib',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/myapp2/mylib',
               tags: [],
@@ -206,7 +209,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       nodes: {
         apiName: {
           name: 'apiName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/api',
             tags: ['api', 'domain1'],
@@ -217,7 +220,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         'impl-both-domainsName': {
           name: 'impl-both-domainsName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl-both-domains',
             tags: ['impl', 'domain1', 'domain2'],
@@ -228,7 +231,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         'impl-domain2Name': {
           name: 'impl-domain2Name',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl-domain2',
             tags: ['impl', 'domain2'],
@@ -239,7 +242,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         impl2Name: {
           name: 'impl2Name',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl2',
             tags: ['impl', 'domain1'],
@@ -250,7 +253,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         implName: {
           name: 'implName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/impl',
             tags: ['impl', 'domain1'],
@@ -261,7 +264,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         publicName: {
           name: 'publicName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/public',
             tags: ['public'],
@@ -272,7 +275,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         dependsOnPrivateName: {
           name: 'dependsOnPrivateName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/dependsOnPrivate',
             tags: [],
@@ -285,7 +288,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         dependsOnPrivateName2: {
           name: 'dependsOnPrivateName2',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/dependsOnPrivate2',
             tags: [],
@@ -300,7 +303,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         privateName: {
           name: 'privateName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/private',
             tags: ['private'],
@@ -315,7 +318,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         untaggedName: {
           name: 'untaggedName',
-          type: ProjectType.lib,
+          type: 'lib',
           data: {
             root: 'libs/untagged',
             tags: [],
@@ -714,7 +717,7 @@ Violation detected in:
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -745,7 +748,7 @@ Violation detected in:
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -776,7 +779,7 @@ Violation detected in:
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -787,7 +790,7 @@ Violation detected in:
             },
             otherName: {
               name: 'otherName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/other',
                 tags: [],
@@ -820,7 +823,7 @@ Violation detected in:
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -831,7 +834,7 @@ Violation detected in:
             },
             otherName: {
               name: 'otherName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/other',
                 tags: [],
@@ -865,7 +868,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -901,7 +904,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -912,7 +915,7 @@ Violation detected in:
           },
           utils: {
             name: 'utils',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/utils',
               tags: [],
@@ -946,7 +949,7 @@ Violation detected in:
           nodes: {
             mylibName: {
               name: 'mylibName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/mylib',
                 tags: [],
@@ -957,7 +960,7 @@ Violation detected in:
             },
             otherName: {
               name: 'otherName',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/other',
                 tags: [],
@@ -1000,7 +1003,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -1011,7 +1014,7 @@ Violation detected in:
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -1043,7 +1046,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -1054,7 +1057,7 @@ Violation detected in:
           },
           myappE2eName: {
             name: 'myappE2eName',
-            type: ProjectType.e2e,
+            type: 'e2e',
             data: {
               root: 'apps/myapp-e2e',
               tags: [],
@@ -1086,7 +1089,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -1097,7 +1100,7 @@ Violation detected in:
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
@@ -1108,7 +1111,7 @@ Violation detected in:
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -1151,7 +1154,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -1162,7 +1165,7 @@ Violation detected in:
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
@@ -1173,7 +1176,7 @@ Violation detected in:
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -1210,7 +1213,7 @@ Violation detected in:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -1221,7 +1224,7 @@ Violation detected in:
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
@@ -1232,7 +1235,7 @@ Violation detected in:
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -1276,7 +1279,7 @@ Circular file chain:
         nodes: {
           mylibName: {
             name: 'mylibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/mylib',
               tags: [],
@@ -1289,7 +1292,7 @@ Circular file chain:
           },
           anotherlibName: {
             name: 'anotherlibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/anotherlib',
               tags: [],
@@ -1303,7 +1306,7 @@ Circular file chain:
           },
           badcirclelibName: {
             name: 'badcirclelibName',
-            type: ProjectType.lib,
+            type: 'lib',
             data: {
               root: 'libs/badcirclelib',
               tags: [],
@@ -1316,7 +1319,7 @@ Circular file chain:
           },
           myappName: {
             name: 'myappName',
-            type: ProjectType.app,
+            type: 'app',
             data: {
               root: 'apps/myapp',
               tags: [],
@@ -1381,7 +1384,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1397,7 +1400,7 @@ Circular file chain:
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1428,7 +1431,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1444,7 +1447,7 @@ Circular file chain:
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1479,7 +1482,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1495,7 +1498,7 @@ Circular file chain:
             },
             anotherBuildableLib: {
               name: 'anotherBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/anotherBuildableLib',
                 tags: [],
@@ -1531,7 +1534,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1541,7 +1544,7 @@ Circular file chain:
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1570,7 +1573,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1586,7 +1589,7 @@ Circular file chain:
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1618,7 +1621,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1634,7 +1637,7 @@ Circular file chain:
             },
             anotherBuildableLib: {
               name: 'anotherBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/anotherBuildableLib',
                 tags: [],
@@ -1669,7 +1672,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1685,7 +1688,7 @@ Circular file chain:
             },
             nonBuildableLib: {
               name: 'nonBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/nonBuildableLib',
                 tags: [],
@@ -1717,7 +1720,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1733,7 +1736,7 @@ Circular file chain:
             },
             anotherBuildableLib: {
               name: 'anotherBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/anotherBuildableLib',
                 tags: [],
@@ -1768,7 +1771,7 @@ Circular file chain:
           nodes: {
             buildableLib: {
               name: 'buildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/buildableLib',
                 tags: [],
@@ -1784,7 +1787,7 @@ Circular file chain:
             },
             anotherBuildableLib: {
               name: 'anotherBuildableLib',
-              type: ProjectType.lib,
+              type: 'lib',
               data: {
                 root: 'libs/anotherBuildableLib',
                 tags: [],

@@ -1,5 +1,8 @@
-import { ExecutorContext, getPackageManagerCommand } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  ExecutorContext,
+  getPackageManagerCommand,
+  readCachedProjectGraph,
+} from '@nrwl/devkit';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { NormalizedExecutorOptions } from './schema';

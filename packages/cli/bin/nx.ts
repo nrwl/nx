@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { logger } from 'nx/src/shared/logger';
-import { getPackageManagerCommand } from 'nx/src/shared/package-manager';
+import { logger } from 'nx/src/utils/logger';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 
 logger.warn('Please update your global install of Nx');
 logger.warn(`- ${getPackageManagerCommand().addGlobal} nx`);

@@ -2,8 +2,9 @@ import {
   ExecutorContext,
   normalizePath,
   ProjectGraphProjectNode,
+  readJsonFile,
+  writeJsonFile,
 } from '@nrwl/devkit';
-import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,

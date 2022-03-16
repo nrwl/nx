@@ -26,7 +26,7 @@ export function createTreeWithEmptyWorkspace(version = 1): Tree {
       },
       tasksRunnerOptions: {
         default: {
-          runner: '@nrwl/workspace/tasks-runners/default',
+          runner: 'nx/tasks-runners/default',
           options: {
             cacheableOperations: ['build', 'lint', 'test', 'e2e'],
           },

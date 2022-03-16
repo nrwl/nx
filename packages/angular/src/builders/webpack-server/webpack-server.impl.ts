@@ -4,8 +4,7 @@ import {
   serveWebpackBrowser,
 } from '@angular-devkit/build-angular/src/builders/dev-server';
 import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments, parseTargetString } from '@nrwl/devkit';
-import { Workspaces } from 'nx/src/shared/workspace';
+import { joinPathFragments, parseTargetString, Workspaces } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';

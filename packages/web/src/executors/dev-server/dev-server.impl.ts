@@ -16,7 +16,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import { getEmittedFiles, runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 
