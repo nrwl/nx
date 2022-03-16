@@ -42,11 +42,11 @@
       "cli": "nx",
       "implementation": "./src/migrations/update-13-9-0/update-decorate-cli"
     },
-    "13-9-0-replace-tao-and-cli-with-nx": {
+    "13-9-0-replace-tao-with-nx": {
       "version": "13.9.0-beta.0",
-      "description": "Replace @nrwl/tao and @nrwl/cli with nx",
+      "description": "Replace @nrwl/tao with nx",
       "cli": "nx",
-      "implementation": "./src/migrations/update-13-9-0/replace-tao-and-cli-with-nx"
+      "implementation": "./src/migrations/update-13-9-0/replace-tao-with-nx"
     }
   },
   "packageJsonUpdates": {
