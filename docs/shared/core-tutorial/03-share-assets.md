@@ -181,3 +181,7 @@ nx graph
 ```
 
 When the graph opens in your browser, click the `Show all projects` button in the left sidebar. You should see dependency lines drawn from `blog` and `cli` to `ascii`.
+
+## What's Next
+
+- Continue to [Step 4: Build affected projects](/core-tutorial/04-build-affected-projects)

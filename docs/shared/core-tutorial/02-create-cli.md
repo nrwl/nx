@@ -153,3 +153,7 @@ Nx only caches the targets that you tell it to cache. `serve` is not in the defa
 ```
 
 If you run `nx build cli` twice, you'll see that Nx is able to cache the commands even though they're entirely written in Go.
+
+## What's Next
+
+- Continue to [Step 3: Share assets](/core-tutorial/03-share-assets)

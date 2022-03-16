@@ -85,3 +85,7 @@ You can run any target against the affected projects in the graph like this:
 ```bash
 nx affected --target=test
 ```
+
+## What's Next
+
+- Continue to [Step 5: Auto detect dependencies](/core-tutorial/05-auto-detect-dependencies)

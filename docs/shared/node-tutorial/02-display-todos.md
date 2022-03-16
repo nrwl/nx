@@ -145,3 +145,7 @@ You changed the `@Get` decorator for the `getData` function to point to the `api
 Then you added the `root` function which renders the `index` file from our `views` directory.
 
 > The serve process should still be running. If it isn't, restart the process with `nx serve todos`
+
+## What's Next
+
+- Continue to [Step 3: Share code](/node-tutorial/03-share-code)

@@ -72,3 +72,7 @@ You can run any target against the affected projects in the graph like this:
 npx nx affected --target=build
 npx nx affected:build
 ```
+
+## What's Next
+
+- Continue to [Step 12: Summary](/react-tutorial/12-summary)

@@ -147,3 +147,7 @@ server.on('error', console.error);
 **Now run `npx nx serve api` to run the api server**
 
 Refresh the application in the browser. The React app is now able to fetch and create todos by calling the API.
+
+## What's Next
+
+- Continue to [Step 6: Proxy](/react-tutorial/06-proxy)
