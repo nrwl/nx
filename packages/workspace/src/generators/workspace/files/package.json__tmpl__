@@ -10,6 +10,7 @@
   "devDependencies": {
      <% if(cli === 'angular') { %>"@angular/cli": "<%= angularCliVersion %>",<% } %>
     "nx": "<%= nxVersion %>",
+    "@nrwl/cli": "<%= nxVersion %>",
     "@nrwl/workspace": "<%= nxVersion %>",
     "@types/node": "16.11.7",
     "typescript": "<%= typescriptVersion %>",
