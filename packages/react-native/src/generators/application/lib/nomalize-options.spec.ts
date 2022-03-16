@@ -1,23 +1,15 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
 describe('Normalize Options', () => {
-  let appTree: Tree;
-
-  beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
-  });
-
   it('should normalize options with name in kebab case', () => {
     const schema: Schema = {
       name: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = normalizeOptions(schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -29,8 +21,8 @@ describe('Normalize Options', () => {
       parsedTags: [],
       projectName: 'my-app',
       linter: Linter.EsLint,
-      entryFile: 'apps/my-app/src/main.tsx',
-      entryFileAbsolutePath: '/virtual/apps/my-app/src/main.tsx',
+      entryFile: '/src/main.tsx',
+      entryFileRelativeToRoot: 'apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -41,7 +33,7 @@ describe('Normalize Options', () => {
       name: 'myApp',
       e2eTestRunner: 'none',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = normalizeOptions(schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -52,8 +44,8 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      entryFile: 'apps/my-app/src/main.tsx',
-      entryFileAbsolutePath: '/virtual/apps/my-app/src/main.tsx',
+      entryFile: '/src/main.tsx',
+      entryFileRelativeToRoot: 'apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -65,7 +57,7 @@ describe('Normalize Options', () => {
       directory: 'directory',
       e2eTestRunner: 'none',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = normalizeOptions(schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -77,8 +69,8 @@ describe('Normalize Options', () => {
       directory: 'directory',
       parsedTags: [],
       projectName: 'directory-my-app',
-      entryFile: 'apps/directory/my-app/src/main.tsx',
-      entryFileAbsolutePath: '/virtual/apps/directory/my-app/src/main.tsx',
+      entryFile: '/src/main.tsx',
+      entryFileRelativeToRoot: 'apps/directory/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -89,7 +81,7 @@ describe('Normalize Options', () => {
       name: 'directory/my-app',
       e2eTestRunner: 'none',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = normalizeOptions(schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -100,8 +92,8 @@ describe('Normalize Options', () => {
       name: 'directory/my-app',
       parsedTags: [],
       projectName: 'directory-my-app',
-      entryFile: 'apps/directory/my-app/src/main.tsx',
-      entryFileAbsolutePath: '/virtual/apps/directory/my-app/src/main.tsx',
+      entryFile: '/src/main.tsx',
+      entryFileRelativeToRoot: 'apps/directory/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -113,7 +105,7 @@ describe('Normalize Options', () => {
       displayName: 'My App',
       e2eTestRunner: 'none',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = normalizeOptions(schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -124,8 +116,8 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      entryFile: 'apps/my-app/src/main.tsx',
-      entryFileAbsolutePath: '/virtual/apps/my-app/src/main.tsx',
+      entryFile: '/src/main.tsx',
+      entryFileRelativeToRoot: 'apps/my-app/src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
