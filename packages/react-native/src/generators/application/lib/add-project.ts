@@ -56,7 +56,7 @@ function getTargets(options: NormalizedSchema) {
     executor: '@nrwl/react-native:bundle',
     outputs: [`${options.appProjectRoot}/build`],
     options: {
-      entryFile: options.entryFile,
+      entryFile: options.entryFileRelativeToRoot,
       platform: 'ios',
       bundleOutput: `dist/${options.appProjectRoot}/ios/main.jsbundle`,
     },
@@ -79,7 +79,7 @@ function getTargets(options: NormalizedSchema) {
   architect['bundle-android'] = {
     executor: '@nrwl/react-native:bundle',
     options: {
-      entryFile: options.entryFile,
+      entryFile: options.entryFileRelativeToRoot,
       platform: 'android',
       bundleOutput: `dist/${options.appProjectRoot}/android/main.jsbundle`,
     },
