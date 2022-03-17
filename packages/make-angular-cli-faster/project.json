@@ -1,0 +1,43 @@
+{
+  "root": "packages/make-angular-cli-faster",
+  "sourceRoot": "packages/make-angular-cli-faster/src",
+  "projectType": "library",
+  "generators": {},
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/make-angular-cli-faster",
+        "tsConfig": "packages/make-angular-cli-faster/tsconfig.lib.json",
+        "packageJson": "packages/make-angular-cli-faster/package.json",
+        "main": "packages/make-angular-cli-faster/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          },
+          "packages/make-angular-cli-faster/*.md"
+        ],
+        "srcRootForCompilationRoot": "packages/make-angular-cli-faster/src"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/make-angular-cli-faster"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/make-angular-cli-faster/src/make-angular-cli-faster.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js make-angular-cli-faster"
+          }
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

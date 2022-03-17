@@ -1,8 +1,10 @@
 {
   "version": 2,
   "projects": {
+    "add-nx-to-monorepo": "packages/add-nx-to-monorepo",
     "angular": "packages/angular",
     "cli": "packages/cli",
+    "cra-to-nx": "packages/cra-to-nx",
     "create-nx-plugin": "packages/create-nx-plugin",
     "create-nx-workspace": "packages/create-nx-workspace",
     "cypress": "packages/cypress",
@@ -36,6 +38,7 @@
     "jest": "packages/jest",
     "js": "packages/js",
     "linter": "packages/linter",
+    "make-angular-cli-faster": "packages/make-angular-cli-faster",
     "nest": "packages/nest",
     "next": "packages/next",
     "node": "packages/node",

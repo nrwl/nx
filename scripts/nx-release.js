@@ -52,6 +52,8 @@ if (!parsedArgs.local) {
 function updatePackageJsonFiles(parsedVersion, isLocal) {
   let pkgFiles = [
     'package.json',
+    'build/npm/add-nx-to-monorepo/package.json',
+    'build/npm/cra-to-nx/package.json',
     'build/npm/create-nx-workspace/package.json',
     'build/npm/create-nx-plugin/package.json',
     'build/npm/jest/package.json',
@@ -70,6 +72,7 @@ function updatePackageJsonFiles(parsedVersion, isLocal) {
     'build/npm/devkit/package.json',
     'build/npm/eslint-plugin-nx/package.json',
     'build/npm/linter/package.json',
+    'build/npm/make-angular-cli-faster/package.json',
     'build/npm/nx-plugin/package.json',
     'build/npm/nx/package.json',
     'build/npm/react-native/package.json',

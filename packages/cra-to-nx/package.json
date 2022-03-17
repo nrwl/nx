@@ -1,0 +1,23 @@
+{
+  "name": "cra-to-nx",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/add-nx.git"
+  },
+  "main": "src/index.js",
+  "typings": "src/index.d.ts",
+  "bin": {
+    "cra-to-nx": "src/index.js"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/add-nx/issues"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@nrwl/workspace": "*",
+    "fs-extra": "^9.1.0",
+    "yargs-parser": "^20.0.0"
+  }
+}
