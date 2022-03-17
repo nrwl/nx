@@ -60,7 +60,7 @@ export class Workspaces {
   }
 
   readWorkspaceConfiguration(opts?: {
-    ignorePluginInference?: boolean;
+    _ignorePluginInference?: boolean;
   }): WorkspaceJsonConfiguration & NxJsonConfiguration {
     if (this.cachedWorkspaceConfig) return this.cachedWorkspaceConfig;
     const nxJsonPath = path.join(this.root, 'nx.json');
@@ -74,7 +74,11 @@ export class Workspaces {
         ? this.readFromWorkspaceJson()
         : buildWorkspaceConfigurationFromGlobs(
             nxJson,
-            globForProjectFiles(this.root, nxJson, opts?.ignorePluginInference),
+            globForProjectFiles(
+              this.root,
+              nxJson,
+              opts?._ignorePluginInference
+            ),
             (path) => readJsonFile(join(this.root, path))
           );
 
