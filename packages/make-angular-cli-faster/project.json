@@ -11,6 +11,7 @@
         "tsConfig": "packages/make-angular-cli-faster/tsconfig.lib.json",
         "packageJson": "packages/make-angular-cli-faster/package.json",
         "main": "packages/make-angular-cli-faster/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "",

@@ -26,7 +26,6 @@ describe.each(['npx', 'pnpx --yes'])('%s add-nx-to-monorepo', (command) => {
 
     // Act
     const output = runCommand(`${command} add-nx-to-monorepo --nx-cloud false`);
-    console.log(output);
     // Assert
     expect(output).toContain('🎉 Done!');
     expect(readWorkspaceConfig().projects['package-a']).toBeTruthy();

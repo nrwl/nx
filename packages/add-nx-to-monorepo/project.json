@@ -25,6 +25,7 @@
         "tsConfig": "packages/add-nx-to-monorepo/tsconfig.lib.json",
         "packageJson": "packages/add-nx-to-monorepo/package.json",
         "main": "packages/add-nx-to-monorepo/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/add-nx-to-monorepo/*.md",
           {
