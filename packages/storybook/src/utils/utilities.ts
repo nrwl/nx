@@ -119,7 +119,7 @@ function determineStorybookWorkspaceVersion(packageJsonContents) {
     }
     if (packageJsonContents['devDependencies']['@storybook/react-native']) {
       workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react-native'];
+        packageJsonContents['devDependencies']['@storybook/react-native'];
     }
   }
 
