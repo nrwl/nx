@@ -1,0 +1,34 @@
+{
+  "name": "make-angular-cli-faster",
+  "version": "0.0.1",
+  "description": "Make Angular CLI faster by enabling distributed computation caching",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/add-nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "make-angular-cli-faster": "./make-angular-cli-faster.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/add-nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "yargs-parser": "20.0.0",
+    "yargs": "15.4.1",
+    "enquirer": "^2.3.6",
+    "@nrwl/workspace": "*"
+  }
+}

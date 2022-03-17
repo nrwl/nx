@@ -1,0 +1,61 @@
+{
+  "root": "packages/cra-to-nx",
+  "sourceRoot": "packages/cra-to-nx/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["packages/cra-to-nx/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/cra-to-nx"],
+      "options": {
+        "jestConfig": "packages/cra-to-nx/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "build/packages/cra-to-nx",
+        "tsConfig": "packages/cra-to-nx/tsconfig.lib.json",
+        "packageJson": "packages/cra-to-nx/package.json",
+        "main": "packages/cra-to-nx/src/index.ts",
+        "assets": [
+          "packages/cra-to-nx/*.md",
+          "packages/cra-to-nx/package.json",
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/cra-to-nx"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/cra-to-nx/src/index.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js cra-to-nx"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "publish": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.js cra-to-nx {args.ver} {args.tag} {args.local}"
+      }
+    }
+  }
+}

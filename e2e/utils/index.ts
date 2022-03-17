@@ -5,7 +5,7 @@ import {
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
-import { ChildProcess, exec, execSync } from 'child_process';
+import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
   createFileSync,
@@ -503,7 +503,10 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).not.toContain('fail');
 }
 
-export function runCommand(command: string): string {
+export function runCommand(
+  command: string,
+  options?: Partial<ExecSyncOptions>
+): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -514,12 +517,14 @@ export function runCommand(command: string): string {
         NX_INVOKED_BY_RUNNER: undefined,
       },
       encoding: 'utf-8',
+      ...options,
     }).toString();
     if (process.env.NX_VERBOSE_LOGGING) {
       console.log(r);
     }
     return r;
   } catch (e) {
+    console.log('ERROR CAUGHT', e);
     // this is intentional
     // npm ls fails if package is not found
     return e.stdout?.toString() + e.stderr?.toString();

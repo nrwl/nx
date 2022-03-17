@@ -1,12 +1,13 @@
 import {
   createNonNxProjectDirectory,
+  runCLI,
   runCommand,
   tmpProjPath,
   updateFile,
 } from '@nrwl/e2e/utils';
 import { Workspaces } from 'nx/src/shared/workspace';
 
-describe('add-nx-to-monorepo', () => {
+describe.each(['npx', 'pnpx --yes'])('%s add-nx-to-monorepo', (command) => {
   it('should not throw', () => {
     // Arrange
     createNonNxProjectDirectory();
@@ -24,11 +25,32 @@ describe('add-nx-to-monorepo', () => {
     );
 
     // Act
-    const output = runCommand('npx add-nx-to-monorepo');
+    const output = runCommand(`${command} add-nx-to-monorepo --nx-cloud false`);
+    console.log(output);
     // Assert
-    expect(output).toBeTruthy();
+    expect(output).toContain('🎉 Done!');
     expect(readWorkspaceConfig().projects['package-a']).toBeTruthy();
     expect(readWorkspaceConfig().projects['package-b']).toBeTruthy();
+  });
+
+  it('should build', () => {
+    // Arrange
+    createNonNxProjectDirectory();
+    updateFile(
+      'packages/package-a/package.json',
+      JSON.stringify({
+        name: 'package-a',
+        scripts: {
+          build: 'echo "build successful"',
+        },
+      })
+    );
+
+    // Act
+    runCommand(`${command} add-nx-to-monorepo --nx-cloud false`);
+    const output = runCLI('build package-a');
+    // Assert
+    expect(output).toContain('build successful');
   });
 });
 
