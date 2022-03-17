@@ -2,7 +2,6 @@ import * as metroResolver from 'metro-resolver';
 import type { MatchPath } from 'tsconfig-paths';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
 import * as chalk from 'chalk';
-import { detectPackageManager } from '@nrwl/devkit';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';
 import * as fs from 'fs';
@@ -32,16 +31,14 @@ export function getResolveRequest(extensions: string[]) {
       return resolvedPath;
     }
 
-    if (detectPackageManager(appRootPath) === 'pnpm') {
-      resolvedPath = pnpmResolver(
-        extensions,
-        context,
-        realModuleName,
-        moduleName
-      );
-      if (resolvedPath) {
-        return resolvedPath;
-      }
+    resolvedPath = pnpmResolver(
+      extensions,
+      context,
+      realModuleName,
+      moduleName
+    );
+    if (resolvedPath) {
+      return resolvedPath;
     }
 
     return tsconfigPathsResolver(

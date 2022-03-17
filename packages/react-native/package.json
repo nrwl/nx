@@ -35,7 +35,7 @@
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^9.1.0",
     "ignore": "^5.0.4",
-    "metro-resolver": "^0.67.0",
+    "metro-resolver": "^0.69.1",
     "node-fetch": "^2.6.7",
     "tsconfig-paths": "^3.9.0"
   },
