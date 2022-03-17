@@ -24,10 +24,10 @@ The `ngrx` schematic generates an NgRx feature set containing the following file
 The following command is used to run the `ngrx` schematic:
 
 ```bash
-nx g @nrwl/angular:ngrx <featurename> --module=<path-to-module> --defaults [options]
+nx g @nrwl/angular:ngrx <featurename> --module=<path-to-module> --no-interactive [options]
 ```
 
-> Note: the `name` and the `--module=` arguments are required. The `defaults` option chooses the recommended defaults for the schematic, unless you override them.
+> Note: the `name` and the `--module=` arguments are required. The `no-interactive` option chooses the recommended defaults for the schematic, unless you override them.
 
 The most common additional options are:
 
@@ -75,7 +75,7 @@ To manage the feature state:
 - Provide a path to the `products` library module.
 
 ```bash
-nx g @nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --defaults
+nx g @nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --no-interactive
 ```
 
 > Use the `--facade` option to generate an injectable Facade class along with the feature.
