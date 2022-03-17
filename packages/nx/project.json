@@ -78,6 +78,14 @@
         ]
       },
       "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/nx"]
     }
   }
 }

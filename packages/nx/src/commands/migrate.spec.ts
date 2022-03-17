@@ -369,7 +369,6 @@ describe('Migration', () => {
         migrations: [],
         packageJson: {
           '@nrwl/workspace': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/cli': { version: '2.0.0', addToPackageJson: false },
           '@nrwl/angular': { version: '2.0.0', addToPackageJson: false },
           '@nrwl/cypress': { version: '2.0.0', addToPackageJson: false },
           '@nrwl/devkit': { addToPackageJson: false, version: '2.0.0' },
