@@ -2,6 +2,8 @@ export interface JestExecutorOptions {
   codeCoverage?: boolean;
   config?: string;
   detectOpenHandles?: boolean;
+  logHeapUsage?: boolean;
+  detectLeaks?: boolean;
   jestConfig: string;
   testFile?: string;
   setupFile?: string;

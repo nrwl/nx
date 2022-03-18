@@ -21,6 +21,14 @@
       "description": "Attempt to collect and print open handles preventing Jest from exiting cleanly (https://jestjs.io/docs/cli#--detectopenhandles)",
       "type": "boolean"
     },
+    "logHeapUsage": {
+      "description": "Logs the heap usage after every test. Useful to debug memory leaks. Use together with --runInBand and --expose-gc in node.",
+      "type": "boolean"
+    },
+    "detectLeaks": {
+      "description": "**EXPERIMENTAL**: Detect memory leaks in tests. After executing a test, it will try to garbage collect the global object used, and fail if it was leaked",
+      "type": "boolean"
+    },
     "jestConfig": {
       "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)",
       "type": "string"
