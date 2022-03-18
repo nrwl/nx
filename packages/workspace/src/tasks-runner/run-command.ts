@@ -3,6 +3,7 @@ import { join } from 'path';
 import { appRootPath } from 'nx/src/utils/app-root';
 import type {
   NxJsonConfiguration,
+  ProjectConfiguration,
   ProjectGraph,
   ProjectGraphProjectNode,
   TargetDependencyConfig,
@@ -347,7 +348,7 @@ export function createTask({
 }
 
 function addTasksForProjectDependencyConfig(
-  project: ProjectGraphProjectNode,
+  project: ProjectGraphProjectNode<ProjectConfiguration>,
   {
     target,
     configuration,
@@ -428,7 +429,7 @@ function addTasksForProjectDependencyConfig(
         }
       }
     }
-  } else {
+  } else if (projectHasTarget(project, dependencyConfig.target)) {
     addTasksForProjectTarget(
       {
         project,
