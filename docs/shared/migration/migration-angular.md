@@ -24,7 +24,7 @@ ng add @nrwl/angular --preserve-angular-cli-layout
 | >= 13.8.4 < 13.9.0 | `@nrwl/workspace` | `--preserve-angular-cli-layout` | `ng add @nrwl/workspace@13.8.4 --preserve-angular-cli-layout` |
 | < 13.8.4           | `@nrwl/workspace` | `--preserveAngularCLILayout`    | `ng add @nrwl/workspace@13.5.0 --preserveAngularCLILayout`    |
 
-This installs the `@nrwl/angular` (or `nrwl/workspace`) package into your workspace and runs a generator (or schematic) to make following changes:
+This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to make following changes:
 
 - Installs the `nx` and `@nrwl/workspace` packages.
 - Creates an `nx.json` file in the root of your workspace.
