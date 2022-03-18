@@ -26,7 +26,7 @@ ng add @nrwl/angular --preserve-angular-cli-layout
 
 This installs the `@nrwl/angular` (or `nrwl/workspace`) package into your workspace and runs a generator (or schematic) to make following changes:
 
-- Installs the `nx` and `nrwl/workspace` packages.
+- Installs the `nx` and `@nrwl/workspace` packages.
 - Creates an `nx.json` file in the root of your workspace.
 - Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/using-nx/caching).
 
