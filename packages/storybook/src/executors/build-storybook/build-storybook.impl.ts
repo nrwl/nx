@@ -44,7 +44,13 @@ export default async function buildStorybookExecutor(
 }
 
 function runInstance(options: StorybookBuilderOptions): Promise<void> {
-  return build({ ...options, ci: true });
+  const env = process.env.NODE_ENV ?? 'production';
+  process.env.NODE_ENV = env;
+  return build({
+    ...options,
+    ci: true,
+    configType: env.toUpperCase(),
+  });
 }
 
 function storybookOptionMapper(
