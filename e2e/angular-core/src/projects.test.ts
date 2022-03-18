@@ -297,4 +297,28 @@ describe('Angular Projects', () => {
       expect(err).toBeFalsy();
     }
   }, 300000);
+
+  it('MFE - should build the host app successfully', async () => {
+    // ARRANGE
+    const port1 = 4205;
+    const port2 = 4206;
+    const hostApp = uniq('app');
+    const remoteApp1 = uniq('remote');
+
+    // generate host app
+    runCLI(
+      `generate @nrwl/angular:host ${hostApp} -- --port=${port1} --no-interactive`
+    );
+
+    // generate remote apps
+    runCLI(
+      `generate @nrwl/angular:remote ${remoteApp1} -- --host=${hostApp} --port=${port2} --no-interactive`
+    );
+
+    // ACT
+    const buildOutput = runCLI(`build ${hostApp}`);
+
+    // ASSERT
+    expect(buildOutput).toContain('Successfully ran target build');
+  }, 300000);
 });
