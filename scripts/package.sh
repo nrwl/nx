@@ -28,7 +28,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i "" "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
     sed -i "" "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
     sed -i "" "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
-    sed -i "" "s|NX_VERSION|$NX_VERSION|g" make-angular-cli-faster/src/make-angular-cli-faster.js
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" add-nx-to-monorepo/src/add-nx-to-monorepo.js
 else
     sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {react,next,web,jest,node,linter,express,nest,cypress,storybook,angular,workspace,nx-plugin,react-native,detox,js}/src/utils/versions.js
@@ -41,7 +40,6 @@ else
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
     sed -i "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
     sed -i "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
-    sed -i "s|NX_VERSION|$NX_VERSION|g" make-angular-cli-faster/src/make-angular-cli-faster.js
     sed -i "s|NX_VERSION|$NX_VERSION|g" add-nx-to-monorepo/src/add-nx-to-monorepo.js
 fi
 

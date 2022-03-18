@@ -30,7 +30,7 @@
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod build/packages/make-angular-cli-faster/src/make-angular-cli-faster.js"
+            "command": "node ./scripts/chmod build/packages/make-angular-cli-faster/src/index.js"
           },
           {
             "command": "node ./scripts/copy-readme.js make-angular-cli-faster"

@@ -189,7 +189,6 @@ function build(nxVersion: string) {
     ].map((f) => `${f}/package.json`),
     'create-nx-workspace/bin/create-nx-workspace.js',
     'create-nx-plugin/bin/create-nx-plugin.js',
-    'make-angular-cli-faster/src/make-angular-cli-faster.js',
     'add-nx-to-monorepo/src/add-nx-to-monorepo.js',
   ].map((f) => `${BUILD_DIR}/${f}`);
 
