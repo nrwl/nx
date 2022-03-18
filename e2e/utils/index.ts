@@ -731,6 +731,7 @@ export function getPackageManagerCommand({
   createWorkspace: string;
   runNx: string;
   runNxSilent: string;
+  runUninstalledPackage?: string | undefined;
   addDev: string;
   list: string;
 } {
@@ -743,6 +744,7 @@ export function getPackageManagerCommand({
       } create-nx-workspace@${publishedVersion}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
+      runUninstalledPackage: `npx`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
@@ -751,6 +753,7 @@ export function getPackageManagerCommand({
       createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
+      runUninstalledPackage: 'npx',
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
@@ -759,6 +762,7 @@ export function getPackageManagerCommand({
       createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
       runNx: `pnpx nx`,
       runNxSilent: `pnpx nx`,
+      runUninstalledPackage: 'pnpx --yes',
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
