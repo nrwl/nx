@@ -803,6 +803,12 @@ function buildProjectConfigurationFromPackageJson(
     root: directory,
     sourceRoot: directory,
     name,
+    projectType:
+      nxJson.workspaceLayout?.appsDir != nxJson.workspaceLayout?.libsDir &&
+      nxJson.workspaceLayout?.appsDir &&
+      directory.startsWith(nxJson.workspaceLayout.appsDir)
+        ? 'application'
+        : 'library',
   };
 }
 
