@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { execFile, execFileSync } from 'child_process';
 import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
@@ -9,34 +9,34 @@ import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 function getHttpServerArgs(options: Schema) {
   const args = ['-c-1'];
   if (options.port) {
-    args.push(`-p ${options.port}`);
+    args.push(`-p=${options.port}`);
   }
   if (options.host) {
-    args.push(`-a ${options.host}`);
+    args.push(`-a=${options.host}`);
   }
   if (options.ssl) {
     args.push(`-S`);
   }
   if (options.sslCert) {
-    args.push(`-C ${options.sslCert}`);
+    args.push(`-C=${options.sslCert}`);
   }
   if (options.sslKey) {
-    args.push(`-K ${options.sslKey}`);
+    args.push(`-K=${options.sslKey}`);
   }
   if (options.proxyUrl) {
-    args.push(`-P ${options.proxyUrl}`);
+    args.push(`-P=${options.proxyUrl}`);
   }
 
   if (options.proxyOptions) {
     Object.keys(options.proxyOptions).forEach((key) => {
-      args.push(`--proxy-options.${key}`, options.proxyOptions[key]);
+      args.push(`--proxy-options.${key}=options.proxyOptions[key]`);
     });
   }
   return args;
 }
 
 function getBuildTargetCommand(options: Schema) {
-  const cmd = [`npx nx run ${options.buildTarget}`];
+  const cmd = ['npx', 'nx', 'run', options.buildTarget];
   if (options.withDeps) {
     cmd.push(`--with-deps`);
   }
@@ -46,7 +46,7 @@ function getBuildTargetCommand(options: Schema) {
   if (options.maxParallel) {
     cmd.push(`--maxParallel=${options.maxParallel}`);
   }
-  return cmd.join(' ');
+  return cmd;
 }
 
 function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
@@ -115,7 +115,8 @@ export default async function* fileServerExecutor(
     if (!running) {
       running = true;
       try {
-        execSync(getBuildTargetCommand(options), {
+        const [cmd, ...args] = getBuildTargetCommand(options);
+        execFileSync(cmd, args, {
           stdio: [0, 1, 2],
         });
       } catch {}
@@ -131,8 +132,12 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
 
-  const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
+  const serve = execFile('npx', ['http-server', outputPath, ...args], {
     cwd: context.root,
+    env: {
+      FORCE_COLOR: 'true',
+      ...process.env,
+    },
   });
   const processExitListener = () => {
     serve.kill();
