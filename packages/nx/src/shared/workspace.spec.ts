@@ -14,6 +14,7 @@ const libConfig = (name) => ({
 const packageLibConfig = (root) => ({
   root,
   sourceRoot: root,
+  projectType: 'library',
 });
 
 describe('Workspaces', () => {
@@ -102,7 +103,7 @@ describe('Workspaces', () => {
       expect(libResults).toEqual('directory-my-lib');
     });
 
-    it('should custom directories from beginning', () => {
+    it('should trim custom directories from beginning', () => {
       const nxJson: NxJsonConfiguration = {
         npmScope: '',
         workspaceLayout: {
@@ -161,6 +162,7 @@ describe('Workspaces', () => {
       expect(resolved.projects['my-package']).toEqual({
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
+        projectType: 'library',
       });
     });
   });
