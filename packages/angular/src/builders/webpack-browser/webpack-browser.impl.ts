@@ -112,8 +112,8 @@ function run(
       result.target.data.root,
       dependencies
     );
+    process.env.NX_TSCONFIG_PATH = options.tsConfig;
   }
-  process.env.NX_TSCONFIG_PATH = options.tsConfig;
 
   return of(
     !options.buildLibsFromSource
