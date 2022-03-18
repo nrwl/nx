@@ -74,6 +74,12 @@ Secondly, this script only compares changes introduced in a single latest commit
 
 Once you've saved this script in your Nx workspace, for example in `tools/ignore-vercel-build.sh`, we need to point Vercel to use this script.
 
+Remember to add `sh` before the script to avoid `Permission denied`.
+
+```sh
+sh ./tools/ignore-vercel-build.sh
+```
+
 ![Ignore build step](/shared/guides/next-deploy-vercel-3.png)
 
 Naturally, you can continue on and set any additional Environment Variables etc that may be appropriate for your projects, but we have now covered the key points needed to deploy Next.js projects from Nx workspaces on Vercel!
