@@ -1,159 +1,25 @@
+import { sync as globSync } from 'fast-glob';
 import { existsSync, readFileSync } from 'fs';
+import ignore, { Ignore } from 'ignore';
 import * as path from 'path';
+import { performance } from 'perf_hooks';
+
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
-import type { NxJsonConfiguration } from './nx';
-import { TaskGraph } from './tasks';
 import { logger } from './logger';
-import { sync as globSync } from 'fast-glob';
-import ignore, { Ignore } from 'ignore';
+import { loadNxPlugins, readPluginPackageJson } from './nx-plugin';
+import {
+  Executor,
+  ExecutorConfig,
+  Generator,
+  ProjectConfiguration,
+  TaskGraphExecutor,
+  WorkspaceJsonConfiguration,
+} from './workspace.model';
+
+import type { NxJsonConfiguration } from './nx';
 import { basename, dirname, join } from 'path';
-import { performance } from 'perf_hooks';
-import { loadNxPlugins } from './nx-plugin';
-
-export interface Workspace
-  extends WorkspaceJsonConfiguration,
-    NxJsonConfiguration {
-  projects: Record<string, ProjectConfiguration>;
-}
-
-/**
- * Workspace configuration
- */
-export interface WorkspaceJsonConfiguration {
-  /**
-   * Version of the configuration format
-   */
-  version: number;
-  /**
-   * Projects' projects
-   */
-  projects: {
-    [projectName: string]: ProjectConfiguration;
-  };
-}
-
-export interface RawWorkspaceJsonConfiguration
-  extends Omit<WorkspaceJsonConfiguration, 'projects'> {
-  projects: { [projectName: string]: ProjectConfiguration | string };
-}
-
-/**
- * Type of project supported
- */
-export type ProjectType = 'library' | 'application';
-
-/**
- * Project configuration
- */
-export interface ProjectConfiguration {
-  /**
-   * Project's name. Optional if specified in workspace.json
-   */
-  name?: string;
-
-  /**
-   * Project's targets
-   */
-  targets?: { [targetName: string]: TargetConfiguration };
-
-  /**
-   * Project's location relative to the root of the workspace
-   */
-  root: string;
-
-  /**
-   * The location of project's sources relative to the root of the workspace
-   */
-  sourceRoot?: string;
-
-  /**
-   * Project type
-   */
-  projectType?: ProjectType;
-
-  /**
-   * List of default values used by generators.
-   *
-   * These defaults are project specific.
-   *
-   * Example:
-   *
-   * ```
-   * {
-   *   "@nrwl/react": {
-   *     "library": {
-   *       "style": "scss"
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  generators?: { [collectionName: string]: { [generatorName: string]: any } };
-
-  /**
-   * List of projects which are added as a dependency
-   */
-  implicitDependencies?: string[];
-
-  /**
-   * List of tags used by nx-enforce-module-boundaries / project graph
-   */
-  tags?: string[];
-}
-
-export interface TargetDependencyConfig {
-  /**
-   * This the projects that the targets belong to
-   *
-   * 'self': This target depends on another target of the same project
-   * 'deps': This target depends on targets of the projects of it's deps.
-   */
-  projects: 'self' | 'dependencies';
-
-  /**
-   * The name of the target
-   */
-  target: string;
-}
-
-/**
- * Target's configuration
- */
-export interface TargetConfiguration {
-  /**
-   * The executor/builder used to implement the target.
-   *
-   * Example: '@nrwl/web:rollup'
-   */
-  executor: string;
-
-  /**
-   * List of the target's outputs. The outputs will be cached by the Nx computation
-   * caching engine.
-   */
-  outputs?: string[];
-
-  /**
-   * This describes other targets that a target depends on.
-   */
-  dependsOn?: TargetDependencyConfig[];
-
-  /**
-   * Target's options. They are passed in to the executor.
-   */
-  options?: any;
-
-  /**
-   * Sets of options
-   */
-  configurations?: { [config: string]: any };
-
-  /**
-   * A default named configuration to use when a target configuration is not provided.
-   */
-  defaultConfiguration?: string;
-}
+export * from './workspace.model';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -163,103 +29,6 @@ export function workspaceConfigName(root: string) {
   } else {
     return null;
   }
-}
-
-/**
- * A callback function that is executed after changes are made to the file system
- */
-export type GeneratorCallback = () => void | Promise<void>;
-
-/**
- * A function that schedules updates to the filesystem to be done atomically
- */
-export type Generator<T = unknown> = (
-  tree,
-  schema: T
-) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
-
-export interface ExecutorConfig {
-  schema: any;
-  hasherFactory?: () => any;
-  implementationFactory: () => Executor;
-  batchImplementationFactory?: () => TaskGraphExecutor;
-}
-
-/**
- * Implementation of a target of a project
- */
-export type Executor<T = any> = (
-  /**
-   * Options that users configure or pass via the command line
-   */
-  options: T,
-  context: ExecutorContext
-) =>
-  | Promise<{ success: boolean }>
-  | AsyncIterableIterator<{ success: boolean }>;
-
-/**
- * Implementation of a target of a project that handles multiple projects to be batched
- */
-export type TaskGraphExecutor<T = any> = (
-  /**
-   * Graph of Tasks to be executed
-   */
-  taskGraph: TaskGraph,
-  /**
-   * Map of Task IDs to options for the task
-   */
-  options: Record<string, T>,
-  /**
-   * Set of overrides for the overall execution
-   */
-  overrides: T,
-  context: ExecutorContext
-) => Promise<Record<string, { success: boolean; terminalOutput: string }>>;
-
-/**
- * Context that is passed into an executor
- */
-export interface ExecutorContext {
-  /**
-   * The root of the workspace
-   */
-  root: string;
-
-  /**
-   * The name of the project being executed on
-   */
-  projectName?: string;
-
-  /**
-   * The name of the target being executed
-   */
-  targetName?: string;
-
-  /**
-   * The name of the configuration being executed
-   */
-  configurationName?: string;
-
-  /**
-   * The configuration of the target being executed
-   */
-  target?: TargetConfiguration;
-
-  /**
-   * The full workspace configuration
-   */
-  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration;
-
-  /**
-   * The current working directory
-   */
-  cwd: string;
-
-  /**
-   * Enable verbose logging
-   */
-  isVerbose: boolean;
 }
 
 export class Workspaces {
@@ -290,8 +59,9 @@ export class Workspaces {
     return wc.defaultProject;
   }
 
-  readWorkspaceConfiguration(): WorkspaceJsonConfiguration &
-    NxJsonConfiguration {
+  readWorkspaceConfiguration(opts?: {
+    _ignorePluginInference?: boolean;
+  }): WorkspaceJsonConfiguration & NxJsonConfiguration {
     if (this.cachedWorkspaceConfig) return this.cachedWorkspaceConfig;
     const nxJsonPath = path.join(this.root, 'nx.json');
     const nxJson = readNxJson(nxJsonPath);
@@ -304,7 +74,11 @@ export class Workspaces {
         ? this.readFromWorkspaceJson()
         : buildWorkspaceConfigurationFromGlobs(
             nxJson,
-            globForProjectFiles(this.root, nxJson),
+            globForProjectFiles(
+              this.root,
+              nxJson,
+              opts?._ignorePluginInference
+            ),
             (path) => readJsonFile(join(this.root, path))
           );
 
@@ -407,10 +181,10 @@ export class Workspaces {
   }
 
   private readExecutorsJson(nodeModule: string, executor: string) {
-    const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
-      paths: this.resolvePaths(),
-    });
-    const packageJson = readJsonFile(packageJsonPath);
+    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
+      nodeModule,
+      this.resolvePaths()
+    );
     const executorsFile = packageJson.executors ?? packageJson.builders;
 
     if (!executorsFile) {
@@ -445,13 +219,8 @@ export class Workspaces {
         paths: this.resolvePaths(),
       });
     } else {
-      const packageJsonPath = require.resolve(
-        `${collectionName}/package.json`,
-        {
-          paths: this.resolvePaths(),
-        }
-      );
-      const packageJson = readJsonFile(packageJsonPath);
+      const { json: packageJson, path: packageJsonPath } =
+        readPluginPackageJson(collectionName, this.resolvePaths());
       const generatorsFile = packageJson.generators ?? packageJson.schematics;
 
       if (!generatorsFile) {
@@ -707,8 +476,9 @@ function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
 }
 
 export function globForProjectFiles(
-  root: string,
-  nxJson?: NxJsonConfiguration
+  root,
+  nxJson?: NxJsonConfiguration,
+  ignorePluginInference = false
 ) {
   // Deal w/ Caching
   const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
@@ -719,8 +489,11 @@ export function globForProjectFiles(
   const projectGlobPatterns: string[] = [
     '**/project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(root),
-    ...getGlobPatternsFromPlugins(nxJson),
   ];
+
+  if (!ignorePluginInference) {
+    projectGlobPatterns.push(...getGlobPatternsFromPlugins(nxJson));
+  }
 
   const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
 
@@ -820,7 +593,7 @@ export function inferProjectFromNonStandardFile(
 
 export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
-  projectFiles: string[] = globForProjectFiles(appRootPath, nxJson), // making this parameter allows devkit to pick up newly created projects
+  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
 ): WorkspaceJsonConfiguration {
   const projects: Record<string, ProjectConfiguration> = {};
