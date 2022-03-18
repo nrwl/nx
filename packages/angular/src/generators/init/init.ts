@@ -8,6 +8,7 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
+import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -22,8 +23,9 @@ import { Schema } from './schema';
 
 export async function angularInitGenerator(
   host: Tree,
-  options: Schema
+  rawOptions: Schema
 ): Promise<GeneratorCallback> {
+  const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
   addPostInstall(host);
 
@@ -39,6 +41,18 @@ export async function angularInitGenerator(
   }
 
   return runTasksInSerial(depsTask, unitTestTask, e2eTask);
+}
+
+function normalizeOptions(options: Schema): Required<Schema> {
+  return {
+    e2eTestRunner: options.e2eTestRunner ?? E2eTestRunner.Cypress,
+    linter: options.linter ?? Linter.EsLint,
+    skipFormat: options.skipFormat ?? false,
+    skipInstall: options.skipInstall ?? false,
+    skipPackageJson: options.skipPackageJson ?? false,
+    style: options.style ?? 'css',
+    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+  };
 }
 
 function setDefaults(host: Tree, options: Schema) {

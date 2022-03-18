@@ -16,8 +16,10 @@
     "Cypress",
     "CLI"
   ],
+  "main": "src/index.js",
+  "typings": "src/index.d.ts",
   "bin": {
-    "make-angular-cli-faster": "./make-angular-cli-faster.js"
+    "make-angular-cli-faster": "./src/index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -26,9 +28,13 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "yargs-parser": "20.0.0",
-    "yargs": "15.4.1",
+    "@nrwl/devkit": "*",
+    "@nrwl/workspace": "*",
     "enquirer": "^2.3.6",
-    "@nrwl/workspace": "*"
+    "nx": "*",
+    "semver": "7.3.4",
+    "tmp": "~0.2.1",
+    "yargs": "15.4.1",
+    "yargs-parser": "20.0.0"
   }
 }

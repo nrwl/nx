@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
 
-import { initGenerator } from './init';
+import { migrateFromAngularCli } from './migrate-from-angular-cli';
 
 describe('workspace', () => {
   let tree: Tree;
@@ -77,7 +77,7 @@ describe('workspace', () => {
       it('should error if no package.json is present', async () => {
         tree.delete('package.json');
         try {
-          await initGenerator(tree, { name: 'myApp' });
+          await migrateFromAngularCli(tree, { name: 'myApp' });
           fail('should throw');
         } catch (e) {
           expect(e.message).toContain('Cannot find package.json');
@@ -88,7 +88,7 @@ describe('workspace', () => {
         tree.delete('/e2e/protractor.conf.js');
 
         try {
-          await initGenerator(tree, { name: 'proj1' });
+          await migrateFromAngularCli(tree, { name: 'proj1' });
         } catch (e) {
           expect(e.message).toContain(
             'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
@@ -101,7 +101,9 @@ describe('workspace', () => {
         project.targets.e2e.executor = '@cypress/schematic:cypress';
         updateProjectConfiguration(tree, 'myApp', project);
 
-        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow(
           'An e2e project with Cypress was found but "cypress.json" could not be found.'
         );
       });
@@ -116,7 +118,9 @@ describe('workspace', () => {
         };
         updateProjectConfiguration(tree, 'myApp', project);
 
-        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow(
           'An e2e project with Cypress was found but "cypress.config.json" could not be found.'
         );
       });
@@ -127,7 +131,9 @@ describe('workspace', () => {
         updateProjectConfiguration(tree, 'myApp', project);
         tree.write('cypress.json', '{}');
 
-        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow(
           'An e2e project with Cypress was found but the "cypress" directory could not be found.'
         );
       });
@@ -137,7 +143,9 @@ describe('workspace', () => {
         project.targets.e2e.executor = '@my-org/my-package:my-executor';
         updateProjectConfiguration(tree, 'myApp', project);
 
-        await expect(initGenerator(tree, { name: 'myApp' })).rejects.toThrow(
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow(
           `An e2e project was found but it's using an unsupported executor "@my-org/my-package:my-executor".`
         );
       });
@@ -145,7 +153,7 @@ describe('workspace', () => {
       it('should error if no angular.json is present', async () => {
         try {
           tree.delete('angular.json');
-          await initGenerator(tree, { name: 'myApp' });
+          await migrateFromAngularCli(tree, { name: 'myApp' });
         } catch (e) {
           expect(e.message).toContain('Cannot find angular.json');
         }
@@ -164,7 +172,7 @@ describe('workspace', () => {
           })
         );
         try {
-          await initGenerator(tree, { name: 'myApp' });
+          await migrateFromAngularCli(tree, { name: 'myApp' });
         } catch (e) {
           expect(e.message).toContain('Can only convert projects with one app');
         }
@@ -183,7 +191,7 @@ describe('workspace', () => {
         })
       );
       try {
-        await initGenerator(tree, { name: 'myApp' });
+        await migrateFromAngularCli(tree, { name: 'myApp' });
       } catch (e) {
         expect(e.message).toContain('Can only convert projects with one app');
       }
@@ -239,7 +247,7 @@ describe('workspace', () => {
       tree.write('/projects/myApp/e2e/protractor.conf.js', '// content');
       tree.write('/projects/myApp/src/app/app.module.ts', '// content');
 
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
 
       const a = readJson(tree, '/angular.json');
 
@@ -247,30 +255,30 @@ describe('workspace', () => {
     });
 
     it('should set the default collection to @nrwl/angular', async () => {
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
       expect(readJson(tree, 'nx.json').cli.defaultCollection).toBe(
         '@nrwl/angular'
       );
     });
 
     it('should create nx.json', async () => {
-      await initGenerator(tree, { name: 'myApp', defaultBase: 'main' });
+      await migrateFromAngularCli(tree, { name: 'myApp', defaultBase: 'main' });
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 
     it('should work if angular-cli workspace had tsconfig.base.json', async () => {
       tree.rename('tsconfig.json', 'tsconfig.base.json');
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
       expect(readJson(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
 
     it('should update tsconfig.base.json if present', async () => {
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
       expect(readJson(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
 
     it('should work without nested tsconfig files', async () => {
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
     });
 
@@ -321,7 +329,7 @@ describe('workspace', () => {
         '/src/tsconfig.spec.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
     });
 
@@ -374,7 +382,7 @@ describe('workspace', () => {
       tree.write('/projects/myApp/e2e/protractor.conf.js', '// content');
       tree.write('/projects/myApp/src/app/app.module.ts', '// content');
 
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
 
       expect(tree.exists('/tslint.json')).toBe(true);
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
@@ -406,7 +414,7 @@ describe('workspace', () => {
       );
       tree.write('/karma.conf.js', '// content');
 
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
 
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
       expect(tree.exists('/apps/myApp/karma.conf.js')).toBe(true);
@@ -416,7 +424,7 @@ describe('workspace', () => {
 
     it('should work with existing .prettierignore file', async () => {
       tree.write('/.prettierignore', '# existing ignore rules');
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
 
       const prettierIgnore = tree.read('/.prettierignore').toString();
       expect(prettierIgnore).toBe('# existing ignore rules');
@@ -424,7 +432,7 @@ describe('workspace', () => {
 
     it('should update tsconfigs', async () => {
       tree.write('/.prettierignore', '# existing ignore rules');
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
 
       const prettierIgnore = tree.read('/.prettierignore').toString();
       expect(prettierIgnore).toBe('# existing ignore rules');
@@ -432,7 +440,7 @@ describe('workspace', () => {
 
     it('should work with no root tslint.json', async () => {
       tree.delete('/tslint.json');
-      await initGenerator(tree, { name: 'myApp' });
+      await migrateFromAngularCli(tree, { name: 'myApp' });
 
       expect(tree.exists('/tslint.json')).toBe(false);
     });
@@ -518,7 +526,7 @@ describe('workspace', () => {
       });
 
       it('should migrate e2e tests correctly', async () => {
-        await initGenerator(tree, { name: 'myApp' });
+        await migrateFromAngularCli(tree, { name: 'myApp' });
 
         expect(tree.exists('cypress.json')).toBe(false);
         expect(tree.exists('cypress')).toBe(false);
@@ -550,7 +558,7 @@ describe('workspace', () => {
         updateProjectConfiguration(tree, 'myApp', project);
         tree.delete('cypress.json');
 
-        await initGenerator(tree, { name: 'myApp' });
+        await migrateFromAngularCli(tree, { name: 'myApp' });
 
         expect(tree.exists('cypress.json')).toBe(false);
         expect(tree.exists('cypress')).toBe(false);
@@ -569,7 +577,7 @@ describe('workspace', () => {
         delete project.targets['cypress-open'];
         updateProjectConfiguration(tree, 'myApp', project);
 
-        await initGenerator(tree, { name: 'myApp' });
+        await migrateFromAngularCli(tree, { name: 'myApp' });
 
         expect(tree.exists('cypress.json')).toBe(false);
         expect(tree.exists('cypress')).toBe(false);
@@ -589,7 +597,7 @@ describe('workspace', () => {
     });
 
     it('should update package.json', async () => {
-      await initGenerator(tree, {
+      await migrateFromAngularCli(tree, {
         name: 'myApp',
         preserveAngularCliLayout: true,
       });
@@ -600,7 +608,7 @@ describe('workspace', () => {
     });
 
     it('should create nx.json', async () => {
-      await initGenerator(tree, {
+      await migrateFromAngularCli(tree, {
         name: 'myApp',
         preserveAngularCliLayout: true,
       });
@@ -610,7 +618,7 @@ describe('workspace', () => {
     });
 
     it('should create decorate-angular-cli.js', async () => {
-      await initGenerator(tree, {
+      await migrateFromAngularCli(tree, {
         name: 'myApp',
         preserveAngularCliLayout: true,
       });

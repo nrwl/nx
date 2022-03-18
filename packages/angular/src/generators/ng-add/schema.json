@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularNgAddGenerator",
+  "title": "Angular plugin initialization",
+  "cli": "nx",
+  "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace. NOTE: Does not work in the `--dry-run` mode.",
+  "type": "object",
+  "properties": {
+    "npmScope": {
+      "type": "string",
+      "description": "Npm scope for importing libs. NOTE: only used if running the generator in an Angular CLI workspace."
+    },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default base branch for affected. NOTE: only used if running the generator in an Angular CLI workspace."
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Skip installing added packages.",
+      "default": false
+    },
+    "preserveAngularCliLayout": {
+      "type": "boolean",
+      "description": "Preserve the Angular CLI layout instead of moving the app into apps. NOTE: only used if running the generator in an Angular CLI workspace.",
+      "default": false
+    },
+    "name": {
+      "type": "string",
+      "description": "Project name. NOTE: only used if running the generator in an Angular CLI workspace.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["karma", "jest", "none"],
+      "description": "Test runner to use for unit tests. NOTE: only used if running the generator in an Nx workspace.",
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "enum": ["protractor", "cypress", "none"],
+      "description": "Test runner to use for end to end (e2e) tests. NOTE: only used if running the generator in an Nx workspace.",
+      "default": "cypress"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files. NOTE: only used if running the generator in an Nx workspace.",
+      "type": "boolean",
+      "default": false
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks. NOTE: only used if running the generator in an Nx workspace.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
+    "style": {
+      "description": "The file extension to be used for style files. NOTE: only used if running the generator in an Nx workspace.",
+      "type": "string",
+      "default": "css",
+      "enum": ["css", "scss", "sass", "less"]
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`. NOTE: only used if running the generator in an Nx workspace."
+    }
+  },
+  "additionalProperties": false
+}

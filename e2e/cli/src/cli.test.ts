@@ -125,8 +125,8 @@ describe('list', () => {
 
     // check for schematics
     expect(listOutput).toContain('workspace');
-    expect(listOutput).toContain('ng-add');
     expect(listOutput).toContain('library');
+    expect(listOutput).toContain('workspace-generator');
 
     // check for builders
     expect(listOutput).toContain('run-commands');

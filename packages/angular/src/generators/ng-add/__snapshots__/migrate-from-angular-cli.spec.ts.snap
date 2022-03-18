@@ -167,13 +167,34 @@ Object {
   "defaultProject": "myApp",
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
-    "angular.json": "*",
-    "nx.json": "*",
-    "package.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
     "tsconfig.base.json": "*",
-    "tslint.json": "*",
   },
   "npmScope": "my-app",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
 }
 `;
 

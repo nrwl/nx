@@ -116,6 +116,7 @@ const IGNORE_MATCHES = {
     '@nrwl/devkit',
   ],
   nest: ['semver'],
+  'make-angular-cli-faster': ['@angular/core'],
 };
 
 export default async function getMissingDependencies(
