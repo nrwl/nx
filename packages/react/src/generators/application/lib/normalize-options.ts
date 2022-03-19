@@ -45,5 +45,6 @@ export function normalizeOptions(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
+    devServerPort: options.devServerPort ?? 4200,
   };
 }

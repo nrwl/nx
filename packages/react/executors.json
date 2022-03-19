@@ -1,0 +1,16 @@
+{
+  "builders": {
+    "mfe-dev-server": {
+      "implementation": "./src/executors/mfe-dev-server/compat",
+      "schema": "./src/executors/mfe-dev-server/schema.json",
+      "description": "Serve an MFE host or remote application."
+    }
+  },
+  "executors": {
+    "mfe-dev-server": {
+      "implementation": "./src/executors/mfe-dev-server/mfe-dev-server.impl",
+      "schema": "./src/executors/mfe-dev-server/schema.json",
+      "description": "Serve an MFE host or remote application."
+    }
+  }
+}

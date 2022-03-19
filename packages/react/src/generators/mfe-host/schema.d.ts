@@ -1,5 +1,5 @@
+import { SupportedStyles } from '@nrwl/react';
 import { Linter } from '@nrwl/linter';
-import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   name: string;
@@ -16,7 +16,6 @@ export interface Schema {
   linter: Linter;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
-  routing?: boolean;
   skipWorkspaceJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
@@ -24,16 +23,6 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   compiler?: 'babel' | 'swc';
+  port?: number;
   remotes?: string[];
-  devServerPort?: number;
-}
-
-export interface NormalizedSchema extends Schema {
-  projectName: string;
-  appProjectRoot: string;
-  e2eProjectName: string;
-  parsedTags: string[];
-  fileName: string;
-  styledModule: null | SupportedStyles;
-  hasStyles: boolean;
 }

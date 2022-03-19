@@ -1,0 +1,6 @@
+module.exports = {
+    name: '<%= projectName %>',
+    remotes: [
+    <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
+    ],
+}

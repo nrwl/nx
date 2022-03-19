@@ -2,7 +2,7 @@ import type { Configuration } from 'webpack';
 import ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 // Add React-specific configuration
-function getWebpackConfig(config: Configuration) {
+export function getWebpackConfig(config: Configuration) {
   config.module.rules.push({
     test: /\.svg$/,
     oneOf: [
