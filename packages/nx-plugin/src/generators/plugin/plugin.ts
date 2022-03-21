@@ -46,7 +46,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-  const npmPackageName = `@${npmScope}/${name}`;
+
+  const npmPackageName = options.importPath || `@${npmScope}/${name}`;
 
   return {
     ...options,
@@ -128,8 +129,9 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     ...schema,
     config: options.standaloneConfig !== false ? 'project' : 'workspace',
     buildable: true,
-    importPath: schema.importPath ?? options.npmPackageName,
+    importPath: options.npmPackageName,
   });
+
   tasks.push(libraryTask);
 
   const installTask = addDependenciesToPackageJson(

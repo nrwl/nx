@@ -1,5 +1,10 @@
 import { pluginGenerator } from './plugin';
-import { Tree, readProjectConfiguration } from '@nrwl/devkit';
+import {
+  Tree,
+  readProjectConfiguration,
+  readJson,
+  joinPathFragments,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from './schema';
 import { Linter } from '@nrwl/linter';
@@ -166,6 +171,35 @@ describe('NxPlugin Plugin Generator', () => {
       const { build } = readProjectConfiguration(tree, 'my-plugin').targets;
 
       expect(build.executor).toEqual('@nrwl/js:swc');
+    });
+  });
+
+  describe('--importPath', () => {
+    it('should use the workspace npmScope by default for the package.json', async () => {
+      await pluginGenerator(tree, getSchema());
+
+      const { root } = readProjectConfiguration(tree, 'my-plugin');
+      const { name } = readJson<{ name: string }>(
+        tree,
+        joinPathFragments(root, 'package.json')
+      );
+
+      expect(name).toEqual('@proj/my-plugin');
+    });
+
+    it('should use importPath as the package.json name', async () => {
+      await pluginGenerator(
+        tree,
+        getSchema({ importPath: '@my-company/my-plugin' })
+      );
+
+      const { root } = readProjectConfiguration(tree, 'my-plugin');
+      const { name } = readJson<{ name: string }>(
+        tree,
+        joinPathFragments(root, 'package.json')
+      );
+
+      expect(name).toEqual('@my-company/my-plugin');
     });
   });
 });
