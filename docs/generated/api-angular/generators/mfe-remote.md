@@ -55,6 +55,6 @@ The name of the host app to attach this remote app to.
 
 ### port
 
-Type: `string`
+Type: `number`
 
 The port on which this app should be served.
