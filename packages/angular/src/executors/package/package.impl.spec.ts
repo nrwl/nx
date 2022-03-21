@@ -31,6 +31,7 @@ describe('Package executor', () => {
     ).mockImplementation(() => ({
       target: {},
       dependencies: [],
+      topLevelDependencies: [],
     }));
     ngPackagrBuildMock = jest.fn(() => Promise.resolve());
     ngPackagerWatchSubject = new BehaviorSubject<void>(undefined);

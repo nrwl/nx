@@ -31,6 +31,7 @@ describe('NgPackagrLite executor', () => {
     ).mockImplementation(() => ({
       target: {},
       dependencies: [],
+      topLevelDependencies: [],
     }));
 
     ngPackagrBuildMock = jest.fn(() => Promise.resolve());
