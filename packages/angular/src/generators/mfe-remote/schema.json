@@ -25,7 +25,7 @@
       "description": "The name of the host app to attach this remote app to."
     },
     "port": {
-      "type": "string",
+      "type": "number",
       "description": "The port on which this app should be served."
     }
   },
