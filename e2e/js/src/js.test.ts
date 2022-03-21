@@ -48,7 +48,9 @@ describe('js e2e', () => {
       `dist/libs/${lib}/README.md`,
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/src/index.js`,
-      `dist/libs/${lib}/src/lib/${lib}.js`
+      `dist/libs/${lib}/src/lib/${lib}.js`,
+      `dist/libs/${lib}/src/index.d.ts`,
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`
     );
 
     updateJson(`libs/${lib}/project.json`, (json) => {
@@ -105,7 +107,9 @@ describe('js e2e', () => {
     checkFilesExist(
       `dist/libs/${parentLib}/package.json`,
       `dist/libs/${parentLib}/src/index.js`,
-      `dist/libs/${parentLib}/src/lib/${parentLib}.js`
+      `dist/libs/${parentLib}/src/lib/${parentLib}.js`,
+      `dist/libs/${parentLib}/src/index.d.ts`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`
     );
 
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -117,6 +121,7 @@ describe('js e2e', () => {
     updateFile(`libs/${parentLib}/src/index.ts`, () => {
       return `
         import { ${lib} } from '@${scope}/${lib}'
+        export * from './lib/${parentLib}';
       `;
     });
 
@@ -144,7 +149,9 @@ describe('js e2e', () => {
     checkFilesExist(
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/src/index.js`,
-      `dist/libs/${lib}/src/lib/${lib}.js`
+      `dist/libs/${lib}/src/lib/${lib}.js`,
+      `dist/libs/${lib}/src/index.d.ts`,
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`
     );
 
     const parentLib = uniq('parentlib');
@@ -164,7 +171,9 @@ describe('js e2e', () => {
     checkFilesExist(
       `dist/libs/${parentLib}/package.json`,
       `dist/libs/${parentLib}/src/index.js`,
-      `dist/libs/${parentLib}/src/lib/${parentLib}.js`
+      `dist/libs/${parentLib}/src/lib/${parentLib}.js`,
+      `dist/libs/${parentLib}/src/index.d.ts`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`
     );
 
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -175,7 +184,8 @@ describe('js e2e', () => {
 
     updateFile(`libs/${parentLib}/src/index.ts`, () => {
       return `
-        import { ${lib} } from '@${scope}/${lib}'
+        import { ${lib} } from '@${scope}/${lib}';
+        export * from './lib/${parentLib}';
       `;
     });
 

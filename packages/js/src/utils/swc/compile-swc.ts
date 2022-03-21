@@ -20,8 +20,9 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',
     tsConfigPath: tsConfig,
-    outDir: outputPath.replace(`/${projectRoot}`, ''),
+    outDir: outputPath,
     workspaceRoot: root,
+    rootDir: projectRoot,
   };
 
   if (watch) {
