@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import mfeRemote from './mfe-remote';
 import applicationGenerator from '../application/application';
+import { readProjectConfiguration } from '@nrwl/devkit';
 
 describe('MFE Remote App Generator', () => {
   it('should generate a remote mfe app with no host', async () => {
@@ -57,5 +58,23 @@ describe('MFE Remote App Generator', () => {
         'The name of the application to be used as the host app does not exist. (host)'
       );
     }
+  });
+
+  it('should generate a remote mfe app and automatically find the next port available', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    await mfeRemote(tree, {
+      name: 'existing',
+      port: 4201,
+    });
+
+    // ACT
+    await mfeRemote(tree, {
+      name: 'test',
+    });
+
+    // ASSERT
+    const project = readProjectConfiguration(tree, 'test');
+    expect(project.targets.serve.options.port).toEqual(4202);
   });
 });
