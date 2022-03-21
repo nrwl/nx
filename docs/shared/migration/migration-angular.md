@@ -47,7 +47,7 @@ ng add @nrwl/angular
 | >= 13.10.0 | `ng add @nrwl/angular`   |
 | < 13.10.0  | `ng add @nrwl/workspace` |
 
-This installs the `@nrwl/angular` (or `nrwl/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
+This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the `nx` and `@nrwl/workspace` packages.
 - Creates an `nx.json` file in the root of your workspace.
