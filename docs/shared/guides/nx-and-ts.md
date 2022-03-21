@@ -31,7 +31,7 @@ happynrwl/
 └── tsconfig.base.json
 ```
 
-As with most Nx plugins, `@nrwl/js` comes with a set of generators to quickly scaffold new TypeScript libraries as well as TypeScript applications. Let’s have a look at an example.
+As with most Nx plugins, `@nrwl/js` comes with a set of generators to quickly scaffold new TypeScript libraries. Let’s have a look at an example.
 
 ## Create a new TypeScript based library
 
@@ -55,12 +55,18 @@ The output of the build step is placed into the `dist/packages/hello-tsc` by def
 
 ## Create a TypeScript based application
 
-Apart from setting up TypeScript libraries, you can also setup a plain TypeScript application that is framework agnostic and consists of an entry point script that can be easily run with Node, to develop a CLI or framework agnostic backend application.
+Using either @nrwl/node or @nrwl/web, you can also setup a plain TypeScript application that is framework agnostic.
 
-To generate a new framework agnostic TS application, run
+To generate a new framework agnostic TS node application, run
 
 ```bash
-nx generate @nrwl/js:app demoapp
+nx generate @nrwl/node:app demoapp
+```
+
+To generate a new framework agnostic TS web application, run
+
+```bash
+nx generate @nrwl/js:web demoapp
 ```
 
 Applications also come with a “serve” target, that allow you to run the app in watch mode:
