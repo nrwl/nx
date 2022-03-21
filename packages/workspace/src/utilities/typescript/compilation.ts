@@ -171,7 +171,7 @@ function createProgram(
       }
     );
     logger.error(diagnostics);
-    throw new Error(diagnostics);
+    return { success: false };
   } else {
     logger.info(
       `Done compiling TypeScript files for project "${projectName}".`
