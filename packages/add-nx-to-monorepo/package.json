@@ -4,7 +4,8 @@
   "description": "Make any monorepo faster by adding Nx to it",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/add-nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/add-nx-to-monorepo"
   },
   "keywords": [
     "Monorepo",
@@ -22,7 +23,7 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nrwl/add-nx/issues"
+    "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
   "dependencies": {
