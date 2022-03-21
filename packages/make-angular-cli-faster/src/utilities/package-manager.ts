@@ -8,7 +8,7 @@ import { copyFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 import { appRootPath } from 'nx/src/utils/app-root';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import { dirname, join } from 'path';
-import { gte, lt, major } from 'semver';
+import { gte, major } from 'semver';
 import { dirSync } from 'tmp';
 import { MigrationDefinition } from './types';
 

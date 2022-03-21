@@ -171,7 +171,6 @@ Object {
       "dependencies": "*",
       "devDependencies": "*",
     },
-    "tsconfig.base.json": "*",
   },
   "npmScope": "my-app",
   "targetDependencies": Object {

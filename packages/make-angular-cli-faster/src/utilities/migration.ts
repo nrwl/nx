@@ -8,7 +8,8 @@ import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
 
 // up to this version the generator was in the @nrwl/workspace package
-const latestWorkspaceVersionWithMigration = '13.9.3';
+const latestWorkspaceRangeVersionWithMigration = '~13.9.3';
+let latestWorkspaceVersionWithMigration: string;
 // up to this version the preserveAngularCLILayout option was used
 const latestVersionWithOldFlag = '13.8.3';
 // map of Angular major versions to the versions of Nx that are compatible with them,
@@ -28,6 +29,10 @@ export async function determineMigration(
 ): Promise<MigrationDefinition> {
   const angularVersion = getInstalledAngularVersion();
   const majorAngularVersion = major(angularVersion);
+  latestWorkspaceVersionWithMigration = resolvePackageVersion(
+    '@nrwl/angular',
+    latestWorkspaceRangeVersionWithMigration
+  );
 
   if (version) {
     const normalizedVersion = normalizeVersion(version);
