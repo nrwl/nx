@@ -16,8 +16,6 @@
     "Cypress",
     "CLI"
   ],
-  "main": "src/index.js",
-  "typings": "src/index.d.ts",
   "bin": {
     "make-angular-cli-faster": "./src/index.js"
   },

@@ -315,10 +315,6 @@ function updateE2eCypressTarget(
 }
 
 function updateTsConfig(host: Tree) {
-  updateJson(host, 'nx.json', (json) => {
-    json.implicitDependencies['tsconfig.base.json'] = '*';
-    return json;
-  });
   writeJson(
     host,
     'tsconfig.base.json',
@@ -741,7 +737,6 @@ function createNxJson(host: Tree) {
     );
   }
   const name = Object.keys(projects)[0];
-  const tsConfigPath = getRootTsConfigPathInTree(host);
   writeJson<NxJsonConfiguration>(host, 'nx.json', {
     npmScope: name,
     implicitDependencies: {
@@ -749,7 +744,6 @@ function createNxJson(host: Tree) {
         dependencies: '*',
         devDependencies: '*',
       },
-      [tsConfigPath]: '*',
       '.eslintrc.json': '*',
     },
     tasksRunnerOptions: {
