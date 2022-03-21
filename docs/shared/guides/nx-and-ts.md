@@ -66,7 +66,7 @@ nx generate @nrwl/node:app demoapp
 To generate a new framework agnostic TS web application, run
 
 ```bash
-nx generate @nrwl/js:web demoapp
+nx generate @nrwl/web:app demoapp
 ```
 
 Applications also come with a “serve” target, that allow you to run the app in watch mode:
