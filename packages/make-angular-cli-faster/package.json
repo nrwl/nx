@@ -4,7 +4,8 @@
   "description": "Make Angular CLI faster by enabling distributed computation caching",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/add-nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/make-angular-cli-faster"
   },
   "keywords": [
     "Monorepo",
@@ -22,7 +23,7 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nrwl/add-nx/issues"
+    "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
   "dependencies": {

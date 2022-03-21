@@ -3,17 +3,23 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/add-nx.git"
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/cra-to-nx"
   },
-  "main": "src/index.js",
-  "typings": "src/index.d.ts",
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "CLI"
+  ],
   "bin": {
     "cra-to-nx": "src/index.js"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nrwl/add-nx/issues"
+    "url": "https://github.com/nrwl/nx/issues"
   },
+  "homepage": "https://nx.dev",
   "dependencies": {
     "tslib": "^2.3.0",
     "@nrwl/workspace": "*",
