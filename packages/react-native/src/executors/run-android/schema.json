@@ -9,7 +9,8 @@
     "variant": {
       "type": "string",
       "description": "Specify your app's build variant (e.g. debug, release).",
-      "default": "debug"
+      "default": "debug",
+      "examples": ["debug", "release"]
     },
     "appId": {
       "type": "string",
