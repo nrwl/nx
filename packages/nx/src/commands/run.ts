@@ -47,7 +47,6 @@ function throwInvalidInvocation() {
 }
 
 function parseRunOpts(
-  cwd: string,
   args: string[],
   defaultProjectName: string | null
 ): RunOptions {
@@ -341,7 +340,7 @@ export async function run(
   return handleErrors(isVerbose, async () => {
     const workspace = ws.readWorkspaceConfiguration();
     const defaultProjectName = ws.calculateDefaultProjectName(cwd, workspace);
-    const opts = parseRunOpts(cwd, args, defaultProjectName);
+    const opts = parseRunOpts(args, defaultProjectName);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
         opts,
