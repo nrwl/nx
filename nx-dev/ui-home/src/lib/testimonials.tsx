@@ -12,6 +12,17 @@ export function Testimonials(): ReactComponentElement<any> {
         "I can't recommend @NxDevTools enough! Go use it, your future self says thanks ;-). Have a doubt or a question? Reach out to @nrwl_io, they are kind, smart, and willing to help",
     },
     {
+      link: 'https://twitter.com/danm_t/status/1504832834271330313',
+      title: 'Developer',
+      author: 'Daniel Marin',
+      imageUrl: '/images/testimonials/daniel-marin.jpg',
+      content: [
+        "I'd def invest in @nrwl_io - Our whole platform for @HeavyDutyBuild is powered by it.",
+        "We're using Nx in a monorepo with an @angular Dapp, a @nestframework API and a @solana Rust Program.",
+        "A year ago I used Nx for my Angular stuff, now it's a core piece of everything I build.",
+      ].join(' '),
+    },
+    {
       link: 'https://twitter.com/241Dev/status/1487531051484278791',
       title: 'Web Engineer',
       author: 'Akira Tsuboi',
@@ -26,6 +37,14 @@ export function Testimonials(): ReactComponentElement<any> {
       imageUrl: '/images/testimonials/kent-c-dodds.jpg',
       link: 'https://twitter.com/kentcdodds/status/1487079957536788480',
       title: 'Co-founder and Director of Developer Experience at Remix.run',
+    },
+    {
+      author: 'Tejas Kumar',
+      content:
+        "There is a lot to be learned from @nrwl_io's Nx developer experience. It is exemplary.",
+      imageUrl: '/images/testimonials/tejas-kumar.jpg',
+      link: 'https://twitter.com/TejasKumar_/status/1503676694208655361',
+      title: 'Director of Developer Relations, @xatabase',
     },
     {
       author: 'Alan Montgomery',
