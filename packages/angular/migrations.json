@@ -1382,8 +1382,8 @@
         }
       }
     },
-    "13.9.3": {
-      "version": "13.9.3-beta.0",
+    "13.10.0": {
+      "version": "13.10.0-beta.1",
       "packages": {
         "@angular/cli": {
           "version": "~13.3.0",
