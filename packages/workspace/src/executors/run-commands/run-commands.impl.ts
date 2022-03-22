@@ -290,9 +290,6 @@ function interpolateCommand(template: string, data: any) {
       let value = data;
       let path = match.slice(1, -1).trim().split('.');
       for (let idx = 0; idx < path.length; idx++) {
-          if (!value[path[idx]]) {
-              return;
-          }
           value = value[camelCase(path[idx])];
       }
 
