@@ -15,7 +15,7 @@ async function loadEnvVars(path?: string) {
   } else {
     try {
       (await import('dotenv')).config();
-    } catch {}
+    } catch { }
   }
 }
 
@@ -24,14 +24,14 @@ export interface RunCommandsBuilderOptions extends Json {
   command?: string;
   commands?: (
     | {
-        command: string;
-        forwardAllArgs?: boolean;
-        /**
-         * description was added to allow users to document their commands inline,
-         * it is not intended to be used as part of the execution of the command.
-         */
-        description?: string;
-      }
+      command: string;
+      forwardAllArgs?: boolean;
+      /**
+       * description was added to allow users to document their commands inline,
+       * it is not intended to be used as part of the execution of the command.
+       */
+      description?: string;
+    }
     | string
   )[];
   color?: boolean;
@@ -287,13 +287,13 @@ function camelCase(input) {
 
 function interpolateCommand(template: string, data: any) {
   return template.replace(/{([\s\S]+?)}/g, (match) => {
-      let value = data;
-      let path = match.slice(1, -1).trim().split('.');
-      for (let idx = 0; idx < path.length; idx++) {
-          value = value[camelCase(path[idx])];
-      }
+    let value = data;
+    let path = match.slice(1, -1).trim().split('.');
+    for (let idx = 0; idx < path.length; idx++) {
+      value = value[camelCase(path[idx])];
+    }
 
-      return value;
+    return value;
   });
 }
 
