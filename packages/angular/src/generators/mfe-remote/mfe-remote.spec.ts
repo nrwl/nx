@@ -77,4 +77,18 @@ describe('MFE Remote App Generator', () => {
     const project = readProjectConfiguration(tree, 'test');
     expect(project.targets.serve.options.port).toEqual(4202);
   });
+
+  it('should generate a remote mfe app and automatically find the next port available even when there are no other targets', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+
+    // ACT
+    await mfeRemote(tree, {
+      name: 'test',
+    });
+
+    // ASSERT
+    const project = readProjectConfiguration(tree, 'test');
+    expect(project.targets.serve.options.port).toEqual(4201);
+  });
 });
