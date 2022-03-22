@@ -89,7 +89,7 @@ export const getSummary = (
     runTime = Math.floor(runTime);
   }
 
-  const valuesForCurrentTestCases = getValuesCurrentTestCases(
+  const {numFailingTests,numPendingTests,numTodoTests,numPassingTests,numTotalTests} = getValuesCurrentTestCases(
     options?.currentTestCases
   );
 
@@ -128,14 +128,14 @@ export const getSummary = (
     ` total`;
 
   const updatedTestsFailed =
-    testsFailed + valuesForCurrentTestCases.numFailingTests;
+    testsFailed + numFailingTests;
   const updatedTestsPending =
-    testsPending + valuesForCurrentTestCases.numPendingTests;
-  const updatedTestsTodo = testsTodo + valuesForCurrentTestCases.numTodoTests;
+    testsPending + numPendingTests;
+  const updatedTestsTodo = testsTodo + numTodoTests;
   const updatedTestsPassed =
-    testsPassed + valuesForCurrentTestCases.numPassingTests;
+    testsPassed + numPassingTests;
   const updatedTestsTotal =
-    testsTotal + valuesForCurrentTestCases.numTotalTests;
+    testsTotal + numTotalTests;
 
   const tests =
     chalk.bold('Tests:       ') +
