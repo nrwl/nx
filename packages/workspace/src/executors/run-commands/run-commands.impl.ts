@@ -15,7 +15,7 @@ async function loadEnvVars(path?: string) {
   } else {
     try {
       (await import('dotenv')).config();
-    } catch { }
+    } catch {}
   }
 }
 
@@ -24,14 +24,14 @@ export interface RunCommandsBuilderOptions extends Json {
   command?: string;
   commands?: (
     | {
-      command: string;
-      forwardAllArgs?: boolean;
-      /**
-       * description was added to allow users to document their commands inline,
-       * it is not intended to be used as part of the execution of the command.
-       */
-      description?: string;
-    }
+        command: string;
+        forwardAllArgs?: boolean;
+        /**
+         * description was added to allow users to document their commands inline,
+         * it is not intended to be used as part of the execution of the command.
+         */
+        description?: string;
+      }
     | string
   )[];
   color?: boolean;
@@ -150,7 +150,7 @@ function normalizeOptions(
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
       c.command,
-      (options as NormalizedRunCommandsBuilderOptions),
+      options as NormalizedRunCommandsBuilderOptions,
       c.forwardAllArgs ?? true
     );
   });
@@ -296,4 +296,3 @@ function interpolateCommand(template: string, data: any) {
     return value;
   });
 }
-
