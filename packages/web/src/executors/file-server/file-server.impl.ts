@@ -5,6 +5,10 @@ import { readFileSync } from 'fs';
 import { Schema } from './schema';
 import { watch } from 'chokidar';
 import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import { platform } from 'os';
+
+// platform specific command name
+const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
   const args = ['-c-1'];
@@ -36,7 +40,7 @@ function getHttpServerArgs(options: Schema) {
 }
 
 function getBuildTargetCommand(options: Schema) {
-  const cmd = ['npx', 'nx', 'run', options.buildTarget];
+  const cmd = ['nx', 'run', options.buildTarget];
   if (options.withDeps) {
     cmd.push(`--with-deps`);
   }
@@ -115,8 +119,8 @@ export default async function* fileServerExecutor(
     if (!running) {
       running = true;
       try {
-        const [cmd, ...args] = getBuildTargetCommand(options);
-        execFileSync(cmd, args, {
+        const args = getBuildTargetCommand(options);
+        execFileSync(pmCmd, args, {
           stdio: [0, 1, 2],
         });
       } catch {}
@@ -132,7 +136,7 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
 
-  const serve = execFile('npx', ['http-server', outputPath, ...args], {
+  const serve = execFile(pmCmd, ['http-server', outputPath, ...args], {
     cwd: context.root,
     env: {
       FORCE_COLOR: 'true',
