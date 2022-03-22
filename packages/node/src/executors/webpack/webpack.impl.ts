@@ -9,7 +9,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
 
-import { map, tap } from 'rxjs/operators';
+import { map, mergeMap, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import { resolve } from 'path';
 import { register } from 'ts-node';
@@ -19,6 +19,8 @@ import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
 import { runWebpack } from '../../utils/run-webpack';
+import { from, of } from 'rxjs';
+import { Configuration } from 'webpack';
 
 export type NodeBuildEvent = {
   outfile: string;
@@ -81,17 +83,24 @@ export async function* webpackExecutor(
   if (options.generatePackageJson) {
     generatePackageJson(context.projectName, projGraph, options);
   }
-  const config = options.webpackConfig.reduce((currentConfig, plugin) => {
-    return require(plugin)(currentConfig, {
-      options,
-      configuration: context.configurationName,
-    });
-  }, getNodeWebpackConfig(options));
+  const config: Configuration | Configuration[] = options.webpackConfig.reduce(
+    (currentConfig, plugin) => {
+      return require(plugin)(currentConfig, {
+        options,
+        configuration: context.configurationName,
+      });
+    },
+    getNodeWebpackConfig(options)
+  );
 
   return yield* eachValueFrom(
-    runWebpack(config).pipe(
-      tap((stats) => {
-        console.info(stats.toString(config.stats));
+    (Array.isArray(config) ? from(config) : of(config)).pipe(
+      mergeMap((conf) => {
+        return runWebpack(conf).pipe(
+          tap((stats) => {
+            console.info(stats.toString(conf.stats));
+          })
+        );
       }),
       map((stats) => {
         return {
