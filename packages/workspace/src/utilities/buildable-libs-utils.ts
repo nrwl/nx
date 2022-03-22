@@ -1,5 +1,5 @@
 import { dirname, join, relative, resolve } from 'path';
-import { directoryExists } from './fileutils';
+import { directoryExists, fileExists } from './fileutils';
 import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
 import {
   ProjectGraphExternalNode,
@@ -50,12 +50,12 @@ export function calculateProjectDependencies(
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
-          const libPackageJson = readJsonFile(
-            join(root, depNode.data.root, 'package.json')
-          );
+          const libPackageJsonFile = join(depNode.data.root, 'package.json');
 
           project = {
-            name: libPackageJson.name, // i.e. @workspace/mylib
+            name: fileExists(libPackageJsonFile)
+              ? readJsonFile(libPackageJsonFile).name // i.e. @workspace/mylib
+              : dep,
             outputs: getOutputsForTargetAndConfiguration(
               {
                 overrides: {},
