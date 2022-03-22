@@ -77,11 +77,7 @@ function buildAppWithCustomWebpackConfiguration(
       // The extra Webpack configuration file can export a synchronous or asynchronous function,
       // for instance: `module.exports = async config => { ... }`.
       if (typeof config === 'function') {
-        return customWebpackConfiguration(
-          baseWebpackConfig,
-          options,
-          context.target
-        );
+        return config(baseWebpackConfig, options, context.target);
       } else {
         return merge(baseWebpackConfig, config);
       }
