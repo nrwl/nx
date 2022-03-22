@@ -646,8 +646,7 @@ function getGeneratorDefaults(
   let defaults = {};
   if (wc?.generators) {
     if (
-      wc.generators[collectionName] &&
-      wc.generators[collectionName][generatorName]
+      wc.generators[collectionName]?.[generatorName]
     ) {
       defaults = {
         ...defaults,
