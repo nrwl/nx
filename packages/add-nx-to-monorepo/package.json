@@ -1,0 +1,36 @@
+{
+  "name": "add-nx-to-monorepo",
+  "version": "0.0.1",
+  "description": "Make any monorepo faster by adding Nx to it",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/add-nx-to-monorepo"
+  },
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Lerna",
+    "Yarn",
+    "CLI"
+  ],
+  "bin": {
+    "add-nx-to-monorepo": "./src/add-nx-to-monorepo.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "strip-json-comments": "^3.1.1",
+    "ignore": "^5.0.4",
+    "@nrwl/workspace": "*",
+    "enquirer": "~2.3.6",
+    "yargs-parser": "20.0.0"
+  }
+}

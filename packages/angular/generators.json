@@ -16,6 +16,11 @@
       "x-type": "application",
       "description": "Creates an Angular application."
     },
+    "component": {
+      "factory": "./src/generators/component/component.compat",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Generate an Angular Component."
+    },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/compat",
       "schema": "./src/generators/component-cypress-spec/schema.json",
@@ -42,7 +47,6 @@
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the @nrwl/angular plugin.",
-      "aliases": ["ng-add"],
       "hidden": true
     },
     "karma": {
@@ -68,11 +72,29 @@
       "aliases": ["secondary-entry-point", "entry-point"],
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
+    "mfe-remote": {
+      "factory": "./src/generators/mfe-remote/mfe-remote.compat",
+      "schema": "./src/generators/mfe-remote/schema.json",
+      "aliases": ["remote"],
+      "description": "Generate a Remote Angular Micro-Frontend Application."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveSchematic",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "mfe-host": {
+      "factory": "./src/generators/mfe-host/mfe-host.compat",
+      "schema": "./src/generators/mfe-host/schema.json",
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application."
+    },
+    "ng-add": {
+      "factory": "./src/generators/ng-add/compat",
+      "schema": "./src/generators/ng-add/schema.json",
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
@@ -149,6 +171,11 @@
       "x-type": "application",
       "description": "Creates an Angular application."
     },
+    "component": {
+      "factory": "./src/generators/component/component",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Generate an Angular Component."
+    },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
       "schema": "./src/generators/component-cypress-spec/schema.json",
@@ -175,7 +202,6 @@
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the @nrwl/angular plugin.",
-      "aliases": ["ng-add"],
       "hidden": true
     },
     "karma": {
@@ -201,11 +227,29 @@
       "aliases": ["secondary-entry-point", "entry-point"],
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
+    "mfe-remote": {
+      "factory": "./src/generators/mfe-remote/mfe-remote",
+      "schema": "./src/generators/mfe-remote/schema.json",
+      "aliases": ["remote"],
+      "description": "Generate a Remote Angular Micro-Frontend Application."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "mfe-host": {
+      "factory": "./src/generators/mfe-host/mfe-host",
+      "schema": "./src/generators/mfe-host/schema.json",
+      "aliases": ["host"],
+      "description": "Generate a Host Angular Micro Frontend Application."
+    },
+    "ng-add": {
+      "factory": "./src/generators/ng-add/ng-add",
+      "schema": "./src/generators/ng-add/schema.json",
+      "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+      "hidden": true
     },
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",

@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import type { Server } from 'net';
 import { serverLogger } from './logger';
 import type { WatcherSubscription } from './watcher';

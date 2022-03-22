@@ -9,6 +9,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Tailwind support', () => {
@@ -357,6 +358,14 @@ describe('Tailwind support', () => {
       runCLI(
         `generate @nrwl/angular:app ${appWithTailwind} --add-tailwind --no-interactive`
       );
+      updateProjectConfig(appWithTailwind, (config) => {
+        config.targets.build.executor = '@nrwl/angular:webpack-browser';
+        config.targets.build.options = {
+          ...config.targets.build.options,
+          buildLibsFromSource: false,
+        };
+        return config;
+      });
       updateTailwindConfig(
         `apps/${appWithTailwind}/tailwind.config.js`,
         spacing.projectVariant1

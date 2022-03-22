@@ -53,7 +53,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -70,7 +70,7 @@
             "command": "node ./scripts/copy-readme.js workspace"
           },
           {
-            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/cli"
+            "command": "node ./scripts/add-dependency-to-build.js workspace nx"
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/devkit"

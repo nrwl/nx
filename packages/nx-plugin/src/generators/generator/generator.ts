@@ -1,14 +1,15 @@
+import type { Tree } from '@nrwl/devkit';
 import {
-  readProjectConfiguration,
-  names,
   convertNxGenerator,
   generateFiles,
-  updateJson,
   getWorkspaceLayout,
+  names,
+  readJson,
+  readProjectConfiguration,
+  updateJson,
 } from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
 import * as path from 'path';
+import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   fileName: string;
@@ -26,7 +27,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
     readProjectConfiguration(host, options.project);
 
-  const npmPackageName = `@${npmScope}/${options.project}`;
+  const npmPackageName = readJson<{ name: string }>(
+    host,
+    path.join(projectRoot, 'package.json')
+  ).name;
 
   let description: string;
   if (options.description) {

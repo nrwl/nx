@@ -87,3 +87,7 @@ export default App;
 Every time you add a new library, you have to restart `npx nx serve`.
 
 **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+
+## What's Next
+
+- Continue to [Step 8: Create Libraries](/react-tutorial/08-create-libs)

@@ -38,10 +38,6 @@
         "detox": {
           "version": "18.22.2",
           "alwaysAddToPackageJson": false
-        },
-        "@types/detox": {
-          "version": "17.14.3",
-          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -65,10 +61,6 @@
           "version": "19.4.1",
           "alwaysAddToPackageJson": false
         },
-        "@types/detox": {
-          "version": "18.1.0",
-          "alwaysAddToPackageJson": false
-        },
         "@testing-library/jest-dom": {
           "version": "5.16.1",
           "alwaysAddToPackageJson": false
@@ -84,6 +76,24 @@
         },
         "@testing-library/jest-dom": {
           "version": "5.16.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.8.6": {
+      "version": "13.8.6-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.9.3": {
+      "version": "13.9.3-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.5.7",
           "alwaysAddToPackageJson": false
         }
       }

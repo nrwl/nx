@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { readJson, updateJson, writeJson } from '../utils/json';
-import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
@@ -116,16 +116,28 @@ function ensurePropertiesAreInNewLocations(tree: Tree) {
 
 function sortTsConfig(tree: Tree) {
   try {
-    const tsconfig = readJson(tree, 'tsconfig.base.json');
-    const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
-    writeJson(tree, 'tsconfig.base.json', {
+    const tsConfigPath = getRootTsConfigPath(tree);
+    if (!tsConfigPath) {
+      return;
+    }
+    updateJson(tree, tsConfigPath, (tsconfig) => ({
       ...tsconfig,
       compilerOptions: {
         ...tsconfig.compilerOptions,
-        paths: sortedPaths,
+        paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
       },
-    });
+    }));
   } catch (e) {
     // catch noop
   }
+}
+
+function getRootTsConfigPath(tree: Tree): string | null {
+  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
+    if (tree.exists(path)) {
+      return path;
+    }
+  }
+
+  return null;
 }

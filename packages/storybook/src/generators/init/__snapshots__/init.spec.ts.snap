@@ -13,6 +13,7 @@ Object {
     "@storybook/builder-webpack5": "~6.4.12",
     "@storybook/manager-webpack5": "~6.4.12",
     "existing": "1.0.0",
+    "webpack": "^5.64.0",
   },
   "name": "test-name",
 }

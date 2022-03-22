@@ -13,13 +13,17 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { jestProjectGenerator } from '@nrwl/jest';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
 import { LibraryGeneratorSchema } from '../../utils/schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
+import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -37,7 +41,7 @@ export async function projectGenerator(
 ) {
   const options = normalizeOptions(tree, schema, destinationDir);
 
-  createFiles(tree, options, filesDir);
+  createFiles(tree, options, `${filesDir}/lib`);
 
   addProject(tree, options, destinationDir);
 
@@ -54,6 +58,9 @@ export async function projectGenerator(
   if (options.unitTestRunner === 'jest') {
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
+    if (options.compiler === 'swc') {
+      replaceJestConfig(tree, options, `${filesDir}/jest-config`);
+    }
   }
 
   if (!options.skipFormat) {
@@ -169,6 +176,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     strict: undefined,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     buildable: options.buildable === true,
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
@@ -219,6 +227,23 @@ async function addJest(
     testEnvironment: options.testEnvironment,
     skipFormat: true,
     compiler: options.compiler,
+  });
+}
+
+function replaceJestConfig(
+  tree: Tree,
+  options: NormalizedSchema,
+  filesDir: string
+) {
+  // remove the generated jest config by Jest generator
+  tree.delete(join(options.projectRoot, 'jest.config.js'));
+
+  // replace with JS:SWC specific jest config
+  generateFiles(tree, filesDir, options.projectRoot, {
+    tmpl: '',
+    project: options.name,
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    projectRoot: options.projectRoot,
   });
 }
 
@@ -298,7 +323,7 @@ function getCaseAwareFileName(options: {
 }
 
 function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];

@@ -17,6 +17,7 @@
         "outputPath": "build/packages/cypress",
         "tsConfig": "packages/cypress/tsconfig.lib.json",
         "main": "packages/cypress/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/cypress",
@@ -45,7 +46,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

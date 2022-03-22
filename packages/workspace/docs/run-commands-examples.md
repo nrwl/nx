@@ -16,7 +16,7 @@
 ```
 
 ```bash
-<%= cli %> run frontend:ls-project-root
+nx run frontend:ls-project-root
 ```
 
 ##### Chaining commands, interpolating args and setting the cwd
@@ -49,13 +49,13 @@ By setting the `cwd` option, each command will run in the `apps/frontend` folder
 We run the above with:
 
 ```bash
-<%= cli %> run frontend:create-script --args="--name=example"
+nx run frontend:create-script --args="--name=example"
 ```
 
 or simply with:
 
 ```bash
-<%= cli %> run frontend:create-script --name=example
+nx run frontend:create-script --name=example
 ```
 
 ##### Arguments forwarding
@@ -66,7 +66,7 @@ This is useful when you need to pass raw argument strings to your command.
 
 For example, when you run:
 
-<%= cli %> run frontend:webpack --args="--config=example.config.js"
+nx run frontend:webpack --args="--config=example.config.js"
 
 ```json
 "webpack": {
@@ -115,7 +115,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 ```
 
 ```bash
-<%= cli %> run frontend:finish-when-ready
+nx run frontend:finish-when-ready
 ```
 
 The above commands will finish immediately, instead of waiting for 5 seconds.

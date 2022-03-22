@@ -55,18 +55,9 @@ export default async function* rollupExecutor(
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName
+    context.configurationName,
+    true
   );
-  if (
-    !checkDependentProjectsHaveBeenBuilt(
-      context.root,
-      context.projectName,
-      context.targetName,
-      dependencies
-    )
-  ) {
-    throw new Error();
-  }
 
   const options = normalizeWebRollupOptions(
     rawOptions,

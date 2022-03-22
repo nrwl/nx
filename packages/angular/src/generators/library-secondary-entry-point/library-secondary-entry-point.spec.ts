@@ -123,6 +123,28 @@ describe('librarySecondaryEntryPoint generator', () => {
     ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
   });
 
+  it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      projectType: 'library',
+    });
+    tree.write(
+      'libs/lib1/package.json',
+      JSON.stringify({ name: '@my-org/lib1' })
+    );
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'testing',
+      library: 'lib1',
+    });
+
+    const tsConfig = readJson(tree, 'tsconfig.json');
+    expect(
+      tsConfig.compilerOptions.paths['@my-org/lib1/testing']
+    ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
+  });
+
   it('should add the entry point file patterns to the lint target', async () => {
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',

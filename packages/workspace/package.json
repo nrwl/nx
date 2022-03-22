@@ -2,6 +2,9 @@
   "name": "@nrwl/workspace",
   "version": "0.0.1",
   "description": "Smart, Fast and Extensible Build System",
+  "scripts": {
+    "postinstall": "node ./src/init/init"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -34,7 +37,7 @@
     "packageGroup": [
       "@nrwl/workspace",
       "@nrwl/angular",
-      "@nrwl/cli",
+      "nx",
       "@nrwl/cypress",
       "@nrwl/devkit",
       "@nrwl/eslint-plugin-nx",
@@ -47,7 +50,6 @@
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
-      "@nrwl/tao",
       "@nrwl/web"
     ]
   },

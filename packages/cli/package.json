@@ -18,9 +18,6 @@
     "Cypress",
     "CLI"
   ],
-  "bin": {
-    "nx": "./bin/nx.js"
-  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -28,10 +25,6 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "yargs-parser": "20.0.0",
-    "@nrwl/tao": "*",
-    "chalk": "4.1.0",
-    "enquirer": "~2.3.6",
-    "v8-compile-cache": "2.3.0"
+    "nx": "*"
   }
 }

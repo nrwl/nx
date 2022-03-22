@@ -16,6 +16,10 @@ import {
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
+import {
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '../../utilities/typescript';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -100,7 +104,7 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
 }
 
 function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];
@@ -126,6 +130,7 @@ function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
 function createFiles(tree: Tree, options: NormalizedSchema) {
   const { className, name, propertyName } = names(options.name);
 
+  const rootOffset = offsetFromRoot(options.projectRoot);
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     dot: '.',
@@ -136,7 +141,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     cliCommand: 'nx',
     strict: undefined,
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    offsetFromRoot: rootOffset,
+    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 

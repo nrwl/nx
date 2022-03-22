@@ -43,6 +43,16 @@ Type: `string`
 
 Plugin name
 
+### compiler
+
+Default: `tsc`
+
+Type: `string`
+
+Possible values: `tsc`, `swc`
+
+The compiler used by the build and test targets
+
 ### directory
 
 Alias(es): d

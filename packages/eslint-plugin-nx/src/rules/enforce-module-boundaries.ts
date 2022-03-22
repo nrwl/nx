@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -6,23 +6,32 @@ import {
   findSourceProject,
   getSourceFilePath,
   hasBuildExecutor,
-  hasNoneOfTheseTags,
+  findDependenciesWithTags,
   isAbsoluteImportIntoAnotherProject,
-  isRelativeImportIntoAnotherProject,
   mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
   MappedProjectGraph,
   hasBannedImport,
   isDirectDependency,
+  getTargetProjectBasedOnRelativeImport,
   isTerminalRun,
+  stringifyTags,
+  hasNoneOfTheseTags,
+  groupImports,
+  MappedProjectGraphNode,
+  isAngularSecondaryEntrypoint,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { normalizePath } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  normalizePath,
+  ProjectGraphExternalNode,
+} from '@nrwl/devkit';
 import {
   ProjectType,
   readCachedProjectGraph,
@@ -34,8 +43,13 @@ import {
   findFilesInCircularPath,
 } from '@nrwl/workspace/src/utils/graph-utils';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
-import { isSecondaryEntrypoint as isAngularSecondaryEntrypoint } from '../utils/angular';
 import * as chalk from 'chalk';
+import { basename, dirname, relative } from 'path';
+import {
+  getBarrelEntryPointByImportScope,
+  getBarrelEntryPointProjectNode,
+  getRelativeImportPath,
+} from '../utils/ast-utils';
 
 type Options = [
   {
@@ -55,9 +69,10 @@ export type MessageIds =
   | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
-  | 'tagConstraintViolation'
   | 'bannedExternalImportsViolation'
-  | 'noTransitiveDependencies';
+  | 'noTransitiveDependencies'
+  | 'onlyTagsConstraintViolation'
+  | 'notTagsConstraintViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
 export default createESLintRule<Options, MessageIds>({
@@ -84,6 +99,7 @@ export default createESLintRule<Options, MessageIds>({
                 sourceTag: { type: 'string' },
                 onlyDependOnLibsWithTags: [{ type: 'string' }],
                 bannedExternalImports: [{ type: 'string' }],
+                notDependOnLibsWithTags: [{ type: 'string' }],
               },
               additionalProperties: false,
             },
@@ -102,9 +118,10 @@ export default createESLintRule<Options, MessageIds>({
         'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
-      tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
+      onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
+      notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}\n\nViolation detected in:\n{{projects}}`,
     },
   },
   defaultOptions: [
@@ -210,16 +227,22 @@ export default createESLintRule<Options, MessageIds>({
         projectPath
       );
 
-      // check for relative and absolute imports
       const sourceProject = findSourceProject(projectGraph, sourceFilePath);
-      if (
-        isRelativeImportIntoAnotherProject(
+      // If source is not part of an nx workspace, return.
+      if (!sourceProject) {
+        return;
+      }
+
+      // check for relative and absolute imports
+      let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+        getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
           projectGraph,
-          sourceFilePath,
-          sourceProject
-        ) ||
+          sourceFilePath
+        );
+      if (
+        (targetProject && sourceProject !== targetProject) ||
         isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
       ) {
         context.report({
@@ -228,38 +251,135 @@ export default createESLintRule<Options, MessageIds>({
           data: {
             npmScope,
           },
+          fix(fixer) {
+            if (targetProject) {
+              const indexTsPaths = getBarrelEntryPointProjectNode(
+                targetProject as MappedProjectGraphNode
+              );
+
+              if (indexTsPaths && indexTsPaths.length > 0) {
+                const specifiers = (node as any).specifiers;
+                if (!specifiers || specifiers.length === 0) {
+                  return;
+                }
+
+                const imports = specifiers.map((s) => s.imported.name);
+
+                // process each potential entry point and try to find the imports
+                const importsToRemap = [];
+
+                for (const entryPointPath of indexTsPaths) {
+                  for (const importMember of imports) {
+                    const importPath = getRelativeImportPath(
+                      importMember,
+                      entryPointPath.path,
+                      sourceProject.data.sourceRoot
+                    );
+
+                    importsToRemap.push({
+                      member: importMember,
+                      importPath: importPath ? entryPointPath.importScope : imp, // we cannot remap, so leave it as is
+                    });
+                  }
+                }
+
+                const adjustedRelativeImports = groupImports(importsToRemap);
+
+                if (adjustedRelativeImports !== '') {
+                  return fixer.replaceTextRange(
+                    node.range,
+                    adjustedRelativeImports
+                  );
+                }
+              }
+            }
+          },
         });
         return;
       }
 
-      const targetProject = findProjectUsingImport(
-        projectGraph,
-        targetProjectLocator,
-        sourceFilePath,
-        imp,
-        npmScope
-      );
+      targetProject =
+        targetProject ||
+        findProjectUsingImport(
+          projectGraph,
+          targetProjectLocator,
+          sourceFilePath,
+          imp,
+          npmScope
+        );
 
-      // If source or target are not part of an nx workspace, return.
-      if (!sourceProject || !targetProject) {
+      // If target is not part of an nx workspace, return.
+      if (!targetProject) {
         return;
       }
 
-      // same project => allow
+      // we only allow relative paths within the same project
+      // and if it's not a secondary entrypoint in an angular lib
       if (sourceProject === targetProject) {
-        // we only allow relative paths within the same project
-        // and if it's not a secondary entrypoint in an angular lib
-
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !isAngularSecondaryEntrypoint(sourceFilePath)
+          !isAngularSecondaryEntrypoint(targetProjectLocator, imp)
         ) {
           context.report({
             node,
             messageId: 'noSelfCircularDependencies',
             data: {
               imp,
+            },
+            fix(fixer) {
+              // imp has form of @myorg/someproject/some/path
+              const indexTsPaths = getBarrelEntryPointByImportScope(imp);
+              if (indexTsPaths && indexTsPaths.length > 0) {
+                const specifiers = (node as any).specifiers;
+                if (!specifiers || specifiers.length === 0) {
+                  return;
+                }
+                // imported JS functions to remap
+                const imports = specifiers.map((s) => s.imported.name);
+
+                // process each potential entry point and try to find the imports
+                const importsToRemap = [];
+
+                for (const entryPointPath of indexTsPaths) {
+                  for (const importMember of imports) {
+                    const importPath = getRelativeImportPath(
+                      importMember,
+                      entryPointPath,
+                      sourceProject.data.sourceRoot
+                    );
+                    if (importPath) {
+                      // resolve the import path
+                      const relativePath = relative(
+                        dirname(context.getFilename()),
+                        dirname(importPath)
+                      );
+
+                      // if the string is empty, it's the current file
+                      const importPathResolved =
+                        relativePath === ''
+                          ? `./${basename(importPath)}`
+                          : joinPathFragments(
+                              relativePath,
+                              basename(importPath)
+                            );
+
+                      importsToRemap.push({
+                        member: importMember,
+                        importPath: importPathResolved.replace('.ts', ''),
+                      });
+                    }
+                  }
+                }
+
+                const adjustedRelativeImports = groupImports(importsToRemap);
+                if (adjustedRelativeImports !== '') {
+                  return fixer.replaceTextRange(
+                    node.range,
+                    adjustedRelativeImports
+                  );
+                }
+              }
             },
           });
         }
@@ -302,6 +422,10 @@ export default createESLintRule<Options, MessageIds>({
       if (circularPath.length !== 0) {
         const circularFilePath = findFilesInCircularPath(circularPath);
 
+        // spacer text used for indirect dependencies when printing one line per file.
+        // without this, we can end up with a very long line that does not display well in the terminal.
+        const spacer = '  ';
+
         context.report({
           node,
           messageId: 'noCircularDependencies',
@@ -314,7 +438,11 @@ export default createESLintRule<Options, MessageIds>({
             ),
             filePaths: circularFilePath
               .map((files) =>
-                files.length > 1 ? `[${files.join(',')}]` : files[0]
+                files.length > 1
+                  ? `[${files
+                      .map((f) => `\n${spacer}${spacer}${f}`)
+                      .join(',')}\n${spacer}]`
+                  : files[0]
               )
               .reduce(
                 (acc, files) => `${acc}\n- ${files}`,
@@ -393,23 +521,49 @@ export default createESLintRule<Options, MessageIds>({
 
         for (let constraint of constraints) {
           if (
+            constraint.onlyDependOnLibsWithTags &&
+            constraint.onlyDependOnLibsWithTags.length &&
             hasNoneOfTheseTags(
               targetProject,
-              constraint.onlyDependOnLibsWithTags || []
+              constraint.onlyDependOnLibsWithTags
             )
           ) {
-            const allowedTags = constraint.onlyDependOnLibsWithTags
-              .map((s) => `"${s}"`)
-              .join(', ');
             context.report({
               node,
-              messageId: 'tagConstraintViolation',
+              messageId: 'onlyTagsConstraintViolation',
               data: {
                 sourceTag: constraint.sourceTag,
-                allowedTags,
+                tags: stringifyTags(constraint.onlyDependOnLibsWithTags),
               },
             });
             return;
+          }
+          if (
+            constraint.notDependOnLibsWithTags &&
+            constraint.notDependOnLibsWithTags.length
+          ) {
+            const projectPaths = findDependenciesWithTags(
+              targetProject,
+              constraint.notDependOnLibsWithTags,
+              projectGraph
+            );
+            if (projectPaths.length > 0) {
+              context.report({
+                node,
+                messageId: 'notTagsConstraintViolation',
+                data: {
+                  sourceTag: constraint.sourceTag,
+                  tags: stringifyTags(constraint.notDependOnLibsWithTags),
+                  projects: projectPaths
+                    .map(
+                      (projectPath) =>
+                        `- ${projectPath.map((p) => p.name).join(' -> ')}`
+                    )
+                    .join('\n'),
+                },
+              });
+              return;
+            }
           }
         }
       }

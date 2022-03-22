@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 import { updateJson } from '../utils/json';
 
 export function updateTsConfigsToJs(

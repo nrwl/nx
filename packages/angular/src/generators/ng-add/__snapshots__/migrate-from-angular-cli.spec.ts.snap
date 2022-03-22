@@ -1,0 +1,218 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`workspace move to nx layout cypress should handle project configuration without cypress-run or cypress-open 1`] = `
+Object {
+  "implicitDependencies": Array [
+    "myApp",
+  ],
+  "projectType": "application",
+  "root": "apps/myApp-e2e",
+  "sourceRoot": "apps/myApp-e2e/src",
+  "tags": Array [],
+  "targets": Object {
+    "e2e": Object {
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "ng-cypress:serve:production",
+        },
+      },
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "devServerTarget": "ng-cypress:serve",
+        "watch": true,
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout cypress should migrate e2e tests correctly 1`] = `
+Object {
+  "compilerOptions": Object {
+    "outDir": "../../dist/out-tsc",
+  },
+  "extends": "../../tsconfig.base.json",
+}
+`;
+
+exports[`workspace move to nx layout cypress should migrate e2e tests correctly 2`] = `
+Object {
+  "baseUrl": "http://localhost:4200",
+  "fileServerFolder": ".",
+  "fixturesFolder": "./src/fixtures",
+  "integrationFolder": "./src/integration",
+  "pluginsFile": "./src/plugins/index.ts",
+  "screenshotsFolder": "../../dist/cypress/apps/myApp-e2e/screenshots",
+  "supportFile": "./src/support/index.ts",
+  "videosFolder": "../../dist/cypress/apps/myApp-e2e/videos",
+}
+`;
+
+exports[`workspace move to nx layout cypress should migrate e2e tests correctly 3`] = `
+Object {
+  "implicitDependencies": Array [
+    "myApp",
+  ],
+  "projectType": "application",
+  "root": "apps/myApp-e2e",
+  "sourceRoot": "apps/myApp-e2e/src",
+  "tags": Array [],
+  "targets": Object {
+    "cypress-open": Object {
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "watch": true,
+      },
+    },
+    "cypress-run": Object {
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "ng-cypress:serve:production",
+        },
+      },
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "devServerTarget": "ng-cypress:serve",
+      },
+    },
+    "e2e": Object {
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "ng-cypress:serve:production",
+        },
+      },
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "devServerTarget": "ng-cypress:serve",
+        "watch": true,
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout cypress should migrate e2e tests when configFile is set to false and there is no cypress.json 1`] = `
+Object {
+  "chromeWebSecurity": false,
+  "fileServerFolder": ".",
+  "fixturesFolder": "./src/fixtures",
+  "integrationFolder": "./src/integration",
+  "modifyObstructiveCode": false,
+  "pluginsFile": "./src/plugins/index.ts",
+  "screenshotsFolder": "../../dist/cypress/apps/myApp-e2e/screenshots",
+  "supportFile": "./src/support/index.ts",
+  "video": true,
+  "videosFolder": "../../dist/cypress/apps/myApp-e2e/videos",
+}
+`;
+
+exports[`workspace move to nx layout cypress should migrate e2e tests when configFile is set to false and there is no cypress.json 2`] = `
+Object {
+  "implicitDependencies": Array [
+    "myApp",
+  ],
+  "projectType": "application",
+  "root": "apps/myApp-e2e",
+  "sourceRoot": "apps/myApp-e2e/src",
+  "tags": Array [],
+  "targets": Object {
+    "cypress-open": Object {
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "watch": true,
+      },
+    },
+    "cypress-run": Object {
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "ng-cypress:serve:production",
+        },
+      },
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "devServerTarget": "ng-cypress:serve",
+      },
+    },
+    "e2e": Object {
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "ng-cypress:serve:production",
+        },
+      },
+      "executor": "@nrwl/cypress:cypress",
+      "options": Object {
+        "cypressConfig": "apps/myApp-e2e/cypress.json",
+        "devServerTarget": "ng-cypress:serve",
+        "watch": true,
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "cli": Object {
+    "defaultCollection": "@nrwl/angular",
+  },
+  "defaultProject": "myApp",
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "my-app",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "@nrwl/workspace/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+}
+`;
+
+exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+}
+`;

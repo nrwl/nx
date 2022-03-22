@@ -10,7 +10,7 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --source-maps --no-swcrc --config-file=${swcrcPath}`;
+  let swcCmd = `npx swc ${srcPath} -d ${destPath} --no-swcrc --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
@@ -20,8 +20,9 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',
     tsConfigPath: tsConfig,
-    outDir: outputPath.replace(`/${projectRoot}`, ''),
+    outDir: outputPath,
     workspaceRoot: root,
+    rootDir: projectRoot,
   };
 
   if (watch) {

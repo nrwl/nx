@@ -1,5 +1,5 @@
 import { formatFiles, logger, readJson, Tree, updateJson } from '@nrwl/devkit';
-import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import { checkAndCleanWithSemver } from '@nrwl/workspace';
 import { satisfies } from 'semver';
 import {

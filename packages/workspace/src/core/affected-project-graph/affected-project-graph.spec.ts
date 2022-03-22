@@ -11,7 +11,7 @@ import type {
 import { defaultFileHasher } from '../hasher/file-hasher';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 

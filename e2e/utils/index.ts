@@ -4,10 +4,8 @@ import {
   ProjectConfiguration,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
-import { ChildProcess, exec, execSync } from 'child_process';
+import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
   createFileSync,
@@ -29,6 +27,8 @@ import { promisify } from 'util';
 import chalk = require('chalk');
 import isCI = require('is-ci');
 import treeKill = require('tree-kill');
+import { Workspaces } from '../../packages/nx/src/shared/workspace';
+import { detectPackageManager } from '../../packages/create-nx-workspace/bin/package-manager';
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');
@@ -422,8 +422,8 @@ export function runNgAdd(
   }
 ): string {
   try {
-    packageInstall('@nrwl/workspace');
-    return execSync(`npx ng add @nrwl/workspace ${command}`, {
+    packageInstall('@nrwl/angular');
+    return execSync(`npx ng add @nrwl/angular ${command}`, {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
       encoding: 'utf-8',
@@ -503,7 +503,10 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).not.toContain('fail');
 }
 
-export function runCommand(command: string): string {
+export function runCommand(
+  command: string,
+  options?: Partial<ExecSyncOptions>
+): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -514,15 +517,17 @@ export function runCommand(command: string): string {
         NX_INVOKED_BY_RUNNER: undefined,
       },
       encoding: 'utf-8',
+      ...options,
     }).toString();
     if (process.env.NX_VERBOSE_LOGGING) {
       console.log(r);
     }
     return r;
   } catch (e) {
+    console.log('ERROR CAUGHT', e);
     // this is intentional
     // npm ls fails if package is not found
-    return e.stdout.toString() + e.stderr.toString();
+    return e.stdout?.toString() + e.stderr?.toString();
   }
 }
 
@@ -726,6 +731,7 @@ export function getPackageManagerCommand({
   createWorkspace: string;
   runNx: string;
   runNxSilent: string;
+  runUninstalledPackage?: string | undefined;
   addDev: string;
   list: string;
 } {
@@ -738,6 +744,7 @@ export function getPackageManagerCommand({
       } create-nx-workspace@${publishedVersion}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
+      runUninstalledPackage: `npx`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
@@ -746,6 +753,7 @@ export function getPackageManagerCommand({
       createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
+      runUninstalledPackage: 'npx',
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
@@ -754,10 +762,11 @@ export function getPackageManagerCommand({
       createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
       runNx: `pnpx nx`,
       runNxSilent: `pnpx nx`,
+      runUninstalledPackage: 'pnpx --yes',
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
-  }[packageManager];
+  }[packageManager.trim()];
 }
 
 function getNpmMajorVersion(): string {

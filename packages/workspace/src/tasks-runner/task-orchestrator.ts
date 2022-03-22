@@ -1,9 +1,9 @@
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
 import type { ProjectGraph, Task, TaskGraph } from '@nrwl/devkit';
 import { performance } from 'perf_hooks';
 import { Hasher } from '../core/hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -24,6 +24,7 @@ export class TaskOrchestrator {
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
   private tasksSchedule = new TasksSchedule(
     this.hasher,
+    this.projectGraph,
     this.taskGraph,
     this.workspace,
     this.options

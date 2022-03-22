@@ -9,6 +9,7 @@
         "outputPath": "build/packages/nx",
         "tsConfig": "packages/nx/tsconfig.lib.json",
         "main": "packages/nx/bin/nx.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/nx",
@@ -37,7 +38,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -48,7 +49,16 @@
       "options": {
         "commands": [
           {
+            "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
+          },
+          {
             "command": "node ./scripts/copy-readme.js nx"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
           }
         ],
         "parallel": false
@@ -68,6 +78,14 @@
         ]
       },
       "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx/jest.config.js",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/nx"]
     }
   }
 }

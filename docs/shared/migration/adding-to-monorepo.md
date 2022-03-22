@@ -148,7 +148,7 @@ Nx + Lerna:
   "devDependencies": {
     "lerna": "*",
     "@nrwl/workspace": "*",
-    "@nrwl/tao": "*"
+    "nx": "*"
   }
 }
 ```

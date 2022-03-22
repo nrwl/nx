@@ -61,7 +61,9 @@ function checkSwcDependencies(
   tree: Tree,
   projectConfiguration: ProjectConfiguration
 ) {
-  const isSwcrcPresent = tree.exists(join(projectConfiguration.root, '.swcrc'));
+  const isSwcrcPresent = tree.exists(
+    join(projectConfiguration.root, '.lib.swcrc')
+  );
 
   const packageJson = readJson(tree, 'package.json');
   const hasSwcDependency =

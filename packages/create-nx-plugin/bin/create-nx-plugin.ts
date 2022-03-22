@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
-import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+import { getPackageManagerCommand } from 'nx/src/shared/package-manager';
+import type { NxJsonConfiguration } from 'nx/src/shared/nx';
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
@@ -38,7 +38,7 @@ function createSandbox(packageManager: string) {
   writeJsonFile(path.join(tmpDir, 'package.json'), {
     dependencies: {
       '@nrwl/workspace': nxVersion,
-      '@nrwl/tao': cliVersion,
+      nx: cliVersion,
       typescript: tsVersion,
       prettier: prettierVersion,
     },
@@ -77,7 +77,7 @@ function createWorkspace(
   execSync(
     `${
       pmc.exec
-    } tao ${command}/generators.json --nxWorkspaceRoot="${process.cwd()}"`,
+    } nx ${command}/generators.json --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,

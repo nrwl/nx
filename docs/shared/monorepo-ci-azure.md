@@ -16,7 +16,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 Below is an example of an Azure Pipelines setup for an Nx workspace only building and testing what is affected.
 
-Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1`, but a more robust solution would be to tag a SHA in the main job once it succeeds, and then use this tag as a base. See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) repos for more information.
+Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag a SHA in the main job once it succeeds, and then use this tag as a base. See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repos for more information.
 
 We also have to set `NX_BRANCH` explicitly.
 
@@ -27,32 +27,31 @@ pr:
   - main
 
 variables:
-  ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
-    NX_BRANCH: 'main'
-  ${{ if ne(variables['Build.SourceBranchName'], 'main') }}:
-    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+  - name: NX_BRANCH
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(System.PullRequest.PullRequestNumber) # Pull request Number
+    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(Build.SourceBranchName)
+  - name: TARGET_BRANCH
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+  - name: BASE_SHA
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(git merge-base $(TARGET_BRANCH) HEAD)
+    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(git rev-parse HEAD~1)
 
 jobs:
   - job: main
     pool:
       vmImage: 'ubuntu-latest'
-    condition: ne(variables['Build.Reason'], 'PullRequest')
-    steps:
-      - script: npm i
-      - script: npx nx affected --base=HEAD~1 --target=build --parallel=3
-      - script: npx nx affected --base=HEAD~1 --target=test --parallel=2
-
-  - job: pr
-    pool:
-      vmImage: 'ubuntu-latest'
-    condition: eq(variables['Build.Reason'], 'PullRequest')
     steps:
       - script: npm i
       - script: npx nx affected --target=build --parallel=3
       - script: npx nx affected --target=test --parallel=2
 ```
 
-The `pr` and `main` jobs implement the CI workflow.
+The `main` job implements the CI workflow.
 
 ## Distributed CI with Nx Cloud
 

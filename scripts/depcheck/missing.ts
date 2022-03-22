@@ -2,7 +2,14 @@ import * as depcheck from 'depcheck';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': ['@nrwl/tao', '@nrwl/workspace', 'prettier', 'typescript', 'dotenv'],
+  '*': [
+    'nx',
+    '@nrwl/cli',
+    '@nrwl/workspace',
+    'prettier',
+    'typescript',
+    'dotenv',
+  ],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -36,7 +43,7 @@ const IGNORE_MATCHES = {
     'stylus',
     'tailwindcss',
   ],
-  cli: ['@nrwl/cli'],
+  cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
@@ -82,7 +89,7 @@ const IGNORE_MATCHES = {
     '@storybook/core',
     'rxjs',
   ],
-  tao: [
+  nx: [
     '@angular-devkit/build-angular',
     '@angular-devkit/schematics',
     '@angular-devkit/core',
@@ -109,6 +116,7 @@ const IGNORE_MATCHES = {
     '@nrwl/devkit',
   ],
   nest: ['semver'],
+  'make-angular-cli-faster': ['@angular/core'],
 };
 
 export default async function getMissingDependencies(

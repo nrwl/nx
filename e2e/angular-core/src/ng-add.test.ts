@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { PackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { PackageManager } from 'nx/src/shared/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {
   let project: string;
@@ -156,12 +156,27 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       npmScope: 'projscope',
       affected: { defaultBase: 'main' },
       implicitDependencies: {
-        'angular.json': '*',
-        'package.json': '*',
-        'tslint.json': '*',
+        'package.json': {
+          dependencies: '*',
+          devDependencies: '*',
+        },
         '.eslintrc.json': '*',
-        'tsconfig.base.json': '*',
-        'nx.json': '*',
+      },
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
+      targetDependencies: {
+        build: [
+          {
+            target: 'build',
+            projects: 'dependencies',
+          },
+        ],
       },
       cli: { defaultCollection: '@nrwl/angular', packageManager },
       defaultProject: project,

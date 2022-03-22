@@ -1,4 +1,10 @@
-import { getWorkspaceLayout, joinPathFragments, Tree } from '@nrwl/devkit';
+import {
+  getWorkspaceLayout,
+  getWorkspacePath,
+  joinPathFragments,
+  readJson,
+  Tree,
+} from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';
@@ -28,7 +34,7 @@ export function normalizeOptions(
 
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
+    ? `${names(options.directory).fileName}/${name}`.replace(/\/+/g, '/')
     : name;
 
   const { libsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
@@ -51,6 +57,17 @@ export function normalizeOptions(
   const importPath =
     options.importPath || `@${defaultPrefix}/${projectDirectory}`;
 
+  // Determine the roots where @schematics/angular will place the projects
+  // This might not be where the projects actually end up
+  const workspaceJsonPath = getWorkspacePath(host);
+  let newProjectRoot = null;
+  if (workspaceJsonPath) {
+    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
+  }
+  const ngCliSchematicLibRoot = newProjectRoot
+    ? `${newProjectRoot}/${projectName}`
+    : projectName;
+
   return {
     ...options,
     linter: options.linter ?? Linter.EsLint,
@@ -65,5 +82,6 @@ export function normalizeOptions(
     parsedTags,
     fileName,
     importPath,
+    ngCliSchematicLibRoot,
   };
 }

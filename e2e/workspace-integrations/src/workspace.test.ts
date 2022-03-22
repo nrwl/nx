@@ -402,11 +402,18 @@ describe('affected:*', () => {
     expect(affectedLibs).not.toContain(mylib2);
 
     const implicitlyAffectedLibs = runCLI(
-      'affected:libs --files="tsconfig.json"'
+      'affected:libs --files="tsconfig.base.json"'
     );
     expect(implicitlyAffectedLibs).toContain(mypublishablelib);
     expect(implicitlyAffectedLibs).toContain(mylib);
     expect(implicitlyAffectedLibs).toContain(mylib2);
+
+    const noAffectedLibsNonExistentFile = runCLI(
+      'affected:libs --files="tsconfig.json"'
+    );
+    expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
+    expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
+    expect(noAffectedLibsNonExistentFile).not.toContain(mylib2);
 
     const noAffectedLibs = runCLI('affected:libs --files="README.md"');
     expect(noAffectedLibs).not.toContain(mypublishablelib);

@@ -9,4 +9,5 @@ export interface Schema {
   parallel: boolean;
   maxParallel?: number;
   withDeps: boolean;
+  proxyOptions?: object;
 }

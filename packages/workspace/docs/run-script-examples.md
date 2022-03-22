@@ -15,7 +15,7 @@
 ```
 
 ```bash
-<%= cli %> run frontend:build
+nx run frontend:build
 ```
 
 The `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.

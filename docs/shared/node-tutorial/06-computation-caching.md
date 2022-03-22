@@ -71,3 +71,7 @@ All files pass linting.
 ```
 
 > Add --parallel to any command, and Nx does most of the work in parallel.
+
+## What's Next
+
+- Continue to [Step 7: Test affected projects](/node-tutorial/07-test-affected-projects)

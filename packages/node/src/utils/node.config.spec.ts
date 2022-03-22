@@ -4,7 +4,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { BuildNodeBuilderOptions } from './types';
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   get appRootPath() {
     return join(__dirname, '../../../..');
   },

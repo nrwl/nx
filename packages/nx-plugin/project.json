@@ -17,6 +17,7 @@
         "outputPath": "build/packages/nx-plugin",
         "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
         "main": "packages/nx-plugin/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/nx-plugin",
@@ -45,7 +46,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

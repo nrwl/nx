@@ -21,7 +21,8 @@
     "./generators": "./generators.js",
     "./executors": "./executors.js",
     "./tailwind": "./tailwind.js",
-    "./src/generators/utils": "./src/generators/utils/index.js"
+    "./src/generators/utils": "./src/generators/utils/index.js",
+    "./module-federation": "./module-federation/index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -36,13 +37,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~13.2.0",
+    "@angular-devkit/schematics": "~13.3.0",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/storybook": "*",
-    "@schematics/angular": "~13.2.0",
+    "@schematics/angular": "~13.3.0",
     "@phenomnomnominal/tsquery": "4.1.1",
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
@@ -50,6 +51,7 @@
     "webpack-merge": "5.7.3",
     "ts-node": "~9.1.1",
     "tsconfig-paths": "^3.9.0",
-    "semver": "7.3.4"
+    "semver": "7.3.4",
+    "webpack": "^5.58.1"
   }
 }

@@ -37,7 +37,7 @@ The name of the pipe.
 
 ### export
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 

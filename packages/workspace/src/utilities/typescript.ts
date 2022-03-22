@@ -1,15 +1,16 @@
-import { dirname } from 'path';
+import { offsetFromRoot, Tree } from '@nrwl/devkit';
+import { appRootPath } from 'nx/src/utils/app-root';
+import { existsSync } from 'fs';
+import { dirname, join } from 'path';
 import type * as ts from 'typescript';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-
-export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { compileTypeScript } from './typescript/compilation';
+export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { findNodes } from './typescript/find-nodes';
 export { getSourceNodes } from './typescript/get-source-nodes';
 
 const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
 
-let tsModule: any;
+let tsModule: typeof import('typescript');
 
 export function readTsConfig(tsConfigPath: string) {
   if (!tsModule) {
@@ -30,18 +31,21 @@ function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
     tsModule = require('typescript');
   }
+
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
     tsModule.sys.readFile
   );
+
   // we don't need to scan the files, we only care about options
-  const host = {
+  const host: Partial<ts.ParseConfigHost> = {
     readDirectory: () => [],
     fileExists: tsModule.sys.fileExists,
   };
+
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
-    host,
+    host as ts.ParseConfigHost,
     dirname(tsConfigPath)
   ).options;
 }
@@ -90,4 +94,38 @@ function getCompilerHost(tsConfigPath: string) {
     host.getCanonicalFileName
   );
   return { options, host, moduleResolutionCache };
+}
+
+export function getRootTsConfigPathInTree(tree: Tree): string | null {
+  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
+    if (tree.exists(path)) {
+      return path;
+    }
+  }
+
+  return 'tsconfig.base.json';
+}
+
+export function getRelativePathToRootTsConfig(
+  tree: Tree,
+  targetPath: string
+): string {
+  return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
+}
+
+export function getRootTsConfigFileName(): string | null {
+  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(appRootPath, tsConfigName);
+    if (existsSync(tsConfigPath)) {
+      return tsConfigName;
+    }
+  }
+
+  return null;
+}
+
+export function getRootTsConfigPath(): string | null {
+  const tsConfigFileName = getRootTsConfigFileName();
+
+  return tsConfigFileName ? join(appRootPath, tsConfigFileName) : null;
 }

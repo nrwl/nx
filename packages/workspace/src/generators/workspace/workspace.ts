@@ -16,7 +16,7 @@ import {
 } from '../../utils/versions';
 import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
+import { reformattedWorkspaceJsonOrNull } from 'nx/src/shared/workspace';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 

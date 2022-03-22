@@ -4,9 +4,9 @@ import {
   BatchMessageType,
 } from './batch-messages';
 import { TaskGraph } from '@nrwl/devkit';
-import { ExecutorContext, Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
-import { combineOptionsForExecutor } from '@nrwl/tao/src/shared/params';
+import { ExecutorContext, Workspaces } from 'nx/src/shared/workspace';
+import { appRootPath } from 'nx/src/utils/app-root';
+import { combineOptionsForExecutor } from 'nx/src/shared/params';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(appRootPath);

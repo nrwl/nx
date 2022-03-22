@@ -1,4 +1,4 @@
-import { PackageJson } from '@nrwl/tao/src/shared/package-json';
+import { PackageJson } from 'nx/src/shared/package-json';
 import { ProjectGraph } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,

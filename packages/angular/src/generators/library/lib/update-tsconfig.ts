@@ -4,10 +4,11 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { NormalizedSchema } from './normalized-schema';
 
 function updateRootConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
+  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     delete c.paths[options.name];

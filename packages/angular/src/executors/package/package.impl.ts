@@ -66,13 +66,14 @@ export function createLibraryExecutor(
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
-    const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName
-    );
+    const { target, dependencies, topLevelDependencies } =
+      calculateProjectDependencies(
+        readCachedProjectGraph(),
+        context.root,
+        context.projectName,
+        context.targetName,
+        context.configurationName
+      );
     if (
       !checkDependentProjectsHaveBeenBuilt(
         context.root,
@@ -86,7 +87,7 @@ export function createLibraryExecutor(
 
     function updatePackageJson(): void {
       if (
-        dependencies.length > 0 &&
+        topLevelDependencies.length > 0 &&
         options.updateBuildableProjectDepsInPackageJson
       ) {
         updateBuildableProjectPackageJsonDependencies(
@@ -95,7 +96,7 @@ export function createLibraryExecutor(
           context.targetName,
           context.configurationName,
           target,
-          dependencies,
+          topLevelDependencies,
           options.buildableProjectDepsInPackageJsonType
         );
       }

@@ -11,7 +11,8 @@
     "withDeps": {
       "type": "boolean",
       "description": "Build the target and all its deps",
-      "default": true
+      "default": false,
+      "x-deprecated": "\"withDeps\" is deprecated and it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
     },
     "parallel": {
       "type": "boolean",
@@ -48,6 +49,18 @@
     "proxyUrl": {
       "type": "string",
       "description": "URL to proxy unhandled requests to."
+    },
+    "proxyOptions": {
+      "type": "object",
+      "description": "Options for the proxy used by http-server",
+      "default": {},
+      "properties": {
+        "secure": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": false,

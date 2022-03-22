@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import {
   detectPackageManager,
   getPackageManagerVersion,
@@ -12,7 +12,6 @@ import { resolve } from '../utilities/fileutils';
 export const packagesWeCareAbout = [
   'nx',
   '@nrwl/angular',
-  '@nrwl/cli',
   '@nrwl/cypress',
   '@nrwl/detox',
   '@nrwl/devkit',
@@ -25,22 +24,23 @@ export const packagesWeCareAbout = [
   '@nrwl/next',
   '@nrwl/node',
   '@nrwl/nx-cloud',
+  '@nrwl/nx-plugin',
   '@nrwl/react',
   '@nrwl/react-native',
   '@nrwl/schematics',
   '@nrwl/storybook',
-  '@nrwl/tao',
   '@nrwl/web',
   '@nrwl/workspace',
   'typescript',
   'rxjs',
 ];
 
-export const packagesWeIgnoreInCommunityReport = new Set([
+export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
   ...packagesWeCareAbout,
   '@schematics/angular',
+  new RegExp('@angular/*'),
   '@nestjs/schematics',
-]);
+];
 
 export const report = {
   command: 'report',
@@ -119,7 +119,13 @@ export function findInstalledCommunityPlugins(): {
 
   return deps.reduce(
     (arr: any[], nextDep: string): { project: string; version: string }[] => {
-      if (packagesWeIgnoreInCommunityReport.has(nextDep)) {
+      if (
+        patternsWeIgnoreInCommunityReport.some((pattern) =>
+          typeof pattern === 'string'
+            ? pattern === nextDep
+            : pattern.test(nextDep)
+        )
+      ) {
         return arr;
       }
       try {

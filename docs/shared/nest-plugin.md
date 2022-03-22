@@ -75,9 +75,9 @@ nx g @nrwl/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest
 
 ### Nest Generators
 
-The Nest plugin for Nx extends the generators provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--sourceRoot` flag should be used for all Nest generators.
+The Nest plugin for Nx extends the generators provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--project` flag should be used for all Nest generators.
 
-> The `--sourceRoot` command should point to the source directory of a Nest library or application within an Nx workspace.
+> `--project` is used to infer the root of the project where the generators will generate the files.
 
 ## Using Nest
 

@@ -83,6 +83,12 @@ Type: `array`
 
 A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter
 
+### detectLeaks
+
+Type: `boolean`
+
+**EXPERIMENTAL**: Detect memory leaks in tests. After executing a test, it will try to garbage collect the global object used, and fail if it was leaked
+
 ### detectOpenHandles
 
 Type: `boolean`
@@ -100,6 +106,12 @@ Find and run the tests that cover a comma separated list of source files that we
 Type: `boolean`
 
 Prints the test results in JSON. This mode will send all other test output and user messages to stderr. (https://jestjs.io/docs/cli#--json)
+
+### logHeapUsage
+
+Type: `boolean`
+
+Logs the heap usage after every test. Useful to debug memory leaks. Use together with --runInBand and --expose-gc in node.
 
 ### maxWorkers
 

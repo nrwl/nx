@@ -24,9 +24,8 @@ export default async function (tree: Tree) {
         angularProjects[projectName] = [jestConfigPath, jestConfig];
       }
     }
-
-    await formatFiles(tree);
   }
+  await formatFiles(tree);
 
   for (const [_, [jestConfigPath, jestFileContents]] of Object.entries(
     angularProjects

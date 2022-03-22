@@ -42,11 +42,10 @@ export const defaultTasksRunner: TasksRunner<
     (options as any)['parallel'] = 1;
   } else if (
     (options as any)['parallel'] === 'true' ||
-    (options as any)['parallel'] === true
+    (options as any)['parallel'] === true ||
+    (options as any)['parallel'] === undefined
   ) {
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
-  } else if (options.parallel === undefined) {
-    options.parallel = Number((options as any)['maxParallel'] || 3);
   }
 
   options.lifeCycle.startCommand();

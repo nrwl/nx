@@ -1,5 +1,5 @@
 {
-  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
     "jsx": "preserve",
     <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>

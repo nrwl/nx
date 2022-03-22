@@ -31,6 +31,7 @@
         "outputPath": "build/packages/detox",
         "tsConfig": "packages/detox/tsconfig.lib.json",
         "main": "packages/detox/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/detox",
@@ -58,7 +59,7 @@
             "ignore": ["**/tsconfig*.json"],
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

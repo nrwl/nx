@@ -8,7 +8,7 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import init from '../../generators/init/init';
 import { postcssVersion } from '../../utils/versions';
 import addLintingGenerator from '../add-linting/add-linting';
@@ -63,7 +63,13 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     skipTsConfig: true,
   });
 
-  moveFilesToNewDirectory(host, options.name, options.projectRoot);
+  if (options.ngCliSchematicLibRoot !== options.projectRoot) {
+    moveFilesToNewDirectory(
+      host,
+      options.ngCliSchematicLibRoot,
+      options.projectRoot
+    );
+  }
   await updateProject(host, options);
   updateTsConfig(host, options);
   await addUnitTestRunner(host, options);

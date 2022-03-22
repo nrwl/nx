@@ -1,4 +1,4 @@
-import type { Target } from '@nrwl/tao/src/commands/run';
+import type { Target } from 'nx/src/commands/run';
 
 /**
  * Parses a target string into {project, target, configuration}

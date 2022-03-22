@@ -17,6 +17,7 @@
         "outputPath": "build/packages/next",
         "tsConfig": "packages/next/tsconfig.lib.json",
         "main": "packages/next/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/next",
@@ -50,7 +51,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

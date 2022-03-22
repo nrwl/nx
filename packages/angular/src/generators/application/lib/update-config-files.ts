@@ -9,7 +9,7 @@ import {
   removeProjectConfiguration,
   offsetFromRoot,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace';
+import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
@@ -38,42 +38,44 @@ function updateAppAndE2EProjectConfigurations(
   options: NormalizedSchema
 ) {
   // workspace.json
-  const project = readProjectConfiguration(host, options.name);
+  let project = readProjectConfiguration(host, options.name);
 
-  let fixedProject = replaceAppNameWithPath(
-    project,
-    options.name,
-    options.appProjectRoot
-  );
+  if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
+    project = replaceAppNameWithPath(
+      project,
+      options.ngCliSchematicAppRoot,
+      options.appProjectRoot
+    );
+  }
 
-  delete fixedProject.targets.test;
+  delete project.targets.test;
 
   // Ensure the outputs property comes after the executor for
   // better readability.
-  const { executor, ...rest } = fixedProject.targets.build;
-  fixedProject.targets.build = {
+  const { executor, ...rest } = project.targets.build;
+  project.targets.build = {
     executor,
     outputs: ['{options.outputPath}'],
     ...rest,
   };
 
-  if (fixedProject.generators) {
-    delete fixedProject.generators;
+  if (project.generators) {
+    delete project.generators;
   }
 
   if (options.port) {
-    fixedProject.targets.serve = {
-      ...fixedProject.targets.serve,
+    project.targets.serve = {
+      ...project.targets.serve,
       options: {
-        ...fixedProject.targets.serve.options,
+        ...project.targets.serve.options,
         port: options.port,
       },
     };
   }
 
-  fixedProject.tags = options.parsedTags;
+  project.tags = options.parsedTags;
 
-  updateProjectConfiguration(host, options.name, fixedProject);
+  updateProjectConfiguration(host, options.name, project);
 
   if (options.unitTestRunner === UnitTestRunner.None) {
     host.delete(`${options.appProjectRoot}/src/app/app.component.spec.ts`);

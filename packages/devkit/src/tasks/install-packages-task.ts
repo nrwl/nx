@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from 'nx/src/shared/tree';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerCommand,
-} from '@nrwl/tao/src/shared/package-manager';
-import type { PackageManager } from '@nrwl/tao/src/shared/package-manager';
+} from 'nx/src/shared/package-manager';
+import type { PackageManager } from 'nx/src/shared/package-manager';
 import { joinPathFragments } from '../utils/path';
 
 let storedPackageJsonValue: string;

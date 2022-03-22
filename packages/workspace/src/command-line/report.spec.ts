@@ -3,7 +3,7 @@ import * as devkit from '@nrwl/devkit';
 import * as fileUtils from '../utilities/fileutils';
 import { join } from 'path';
 
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '',
 }));
 
@@ -49,6 +49,30 @@ describe('report', () => {
         { package: 'plugin-one', version: '1.0.0' },
         { package: 'plugin-two', version: '2.0.0' },
       ]);
+    });
+
+    it('should exclude misc @angluar packages', () => {
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((path) => {
+        if (path === 'package.json') {
+          return {
+            dependencies: {
+              '@angular/cdk': '1.0.0',
+            },
+            devDependencies: {
+              'plugin-two': '2.0.0',
+            },
+          };
+        } else if (
+          path.includes(join('node_modules', 'plugin-two', 'package.json'))
+        ) {
+          return {
+            schematics: {},
+            version: '1.0.0',
+          };
+        }
+      });
+      const plugins = findInstalledCommunityPlugins();
+      expect(plugins).toEqual([{ package: 'plugin-two', version: '1.0.0' }]);
     });
 
     it('should read nx devkit plugins', () => {

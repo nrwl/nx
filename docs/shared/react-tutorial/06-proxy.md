@@ -76,3 +76,7 @@ Options:
 It helps with good editor integration (see [VSCode Support](/using-nx/console#nx-console-for-vscode)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed [computation caching](/using-nx/caching) and [distributed builds](/using-nx/dte).
+
+## What's Next
+
+- Continue to [Step 7: Share Code](/react-tutorial/07-share-code)

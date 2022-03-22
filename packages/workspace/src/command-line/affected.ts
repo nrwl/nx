@@ -50,7 +50,7 @@ export async function affected(
           if (apps.length) {
             output.log({
               title: 'Affected apps:',
-              bodyLines: apps.map((app) => `${output.colors.gray('-')} ${app}`),
+              bodyLines: apps.map((app) => `${output.dim('-')} ${app}`),
             });
           }
         }
@@ -66,7 +66,7 @@ export async function affected(
           if (libs.length) {
             output.log({
               title: 'Affected libs:',
-              bodyLines: libs.map((lib) => `${output.colors.gray('-')} ${lib}`),
+              bodyLines: libs.map((lib) => `${output.dim('-')} ${lib}`),
             });
           }
         }

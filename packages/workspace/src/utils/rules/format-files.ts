@@ -9,11 +9,11 @@ import {
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
-} from '@nrwl/tao/src/shared/workspace';
+} from 'nx/src/shared/workspace';
 import { parseJson, serializeJson } from '@nrwl/devkit';
 
 export function formatFiles(

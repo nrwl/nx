@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/tao/src/shared/logger';
+import { logger } from 'nx/src/shared/logger';
 import { join } from 'path';
 
 export async function watchForSingleFileChanges(

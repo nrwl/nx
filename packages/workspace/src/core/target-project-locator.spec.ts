@@ -6,7 +6,7 @@ import type {
 } from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
 
-jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);
@@ -343,6 +343,19 @@ describe('findTargetProjectWithImport', () => {
   });
 
   it('should be able to resolve nested files using tsConfig paths', () => {
+    const proj2deep = targetProjectLocator.findProjectWithImport(
+      '@proj/my-second-proj/deep',
+      'libs/proj1/index.ts',
+      ctx.workspace.npmScope
+    );
+
+    expect(proj2deep).toEqual('proj2');
+  });
+
+  it('should be able to resolve nested files using tsConfig paths when having a root tsconfig.json instead of tsconfig.base.json', () => {
+    fsJson['./tsconfig.json'] = fsJson['./tsconfig.base.json'];
+    delete fsJson['./tsconfig.base.json'];
+
     const proj2deep = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj/deep',
       'libs/proj1/index.ts',

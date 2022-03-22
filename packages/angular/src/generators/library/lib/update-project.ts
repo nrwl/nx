@@ -1,14 +1,15 @@
 import {
   generateFiles,
+  getWorkspaceLayout,
+  joinPathFragments,
+  offsetFromRoot,
   readProjectConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
-  getWorkspaceLayout,
-  offsetFromRoot,
-  joinPathFragments,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace';
+import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
@@ -118,30 +119,35 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     options.projectRoot,
     {
       ...options,
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        host,
+        options.projectRoot
+      ),
       tpl: '',
     }
   );
 }
 
 function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
-  const project = readProjectConfiguration(host, options.name);
+  let project = readProjectConfiguration(host, options.name);
   project.tags = options.parsedTags;
 
-  const fixedProject = replaceAppNameWithPath(
-    project,
-    options.name,
-    options.projectRoot
-  );
+  if (options.ngCliSchematicLibRoot !== options.projectRoot) {
+    project = replaceAppNameWithPath(
+      project,
+      options.ngCliSchematicLibRoot,
+      options.projectRoot
+    );
+  }
 
   if (!options.publishable && !options.buildable) {
-    delete fixedProject.targets.build;
+    delete project.targets.build;
   } else {
     // Set the right builder for the type of library.
     // Ensure the outputs property comes after the builder for
     // better readability.
-    const { executor, ...rest } = fixedProject.targets.build;
-    fixedProject.targets.build = {
+    const { executor, ...rest } = project.targets.build;
+    project.targets.build = {
       executor: options.publishable
         ? '@nrwl/angular:package'
         : '@nrwl/angular:ng-packagr-lite',
@@ -156,9 +162,9 @@ function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  delete fixedProject.targets.test;
+  delete project.targets.test;
 
-  updateProjectConfiguration(host, options.name, fixedProject);
+  updateProjectConfiguration(host, options.name, project);
 }
 
 function updateProjectTsConfig(host: Tree, options: NormalizedSchema) {

@@ -1,5 +1,5 @@
 import { joinPathFragments } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { relative, resolve } from 'path';
 import { readCachedProjectGraph } from '../core/project-graph';
 import {

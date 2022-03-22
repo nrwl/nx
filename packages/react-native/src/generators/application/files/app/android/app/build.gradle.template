@@ -79,7 +79,7 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
-    entryFile: "<%= entryFile %>",
+    entryFile: "<%= entryFileRelativeToRoot %>",
     enableHermes: false,  // clean and rebuild if changing
 ]
 

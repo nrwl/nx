@@ -20,6 +20,7 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { join } from 'path';
 
@@ -43,6 +44,10 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
     ...names(options.name),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(
+      tree,
+      options.appProjectRoot
+    ),
   });
   if (options.unitTestRunner === 'none') {
     tree.delete(join(options.appProjectRoot, './src/app/app.element.spec.ts'));

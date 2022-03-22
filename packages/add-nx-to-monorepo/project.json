@@ -1,0 +1,71 @@
+{
+  "root": "packages/add-nx-to-monorepo",
+  "sourceRoot": "packages/add-nx-to-monorepo/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["packages/add-nx-to-monorepo/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/add-nx-to-monorepo"],
+      "options": {
+        "jestConfig": "packages/add-nx-to-monorepo/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "build/packages/add-nx-to-monorepo",
+        "tsConfig": "packages/add-nx-to-monorepo/tsconfig.lib.json",
+        "packageJson": "packages/add-nx-to-monorepo/package.json",
+        "main": "packages/add-nx-to-monorepo/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/add-nx-to-monorepo/*.md",
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["build/packages/add-nx-to-monorepo"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/add-nx-to-monorepo/src/add-nx-to-monorepo.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js add-nx-to-monorepo"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "test-against-repo": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx build add-nx-to-monorepo",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "export JS_SCRIPT=$PWD/dist/packages/add-nx-to-monorepo/src/add-nx-to-monorepo.js && cd {args.repo} && echo $PWD && node $JS_SCRIPT",
+            "forwardAllArgs": false
+          }
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

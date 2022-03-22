@@ -3,7 +3,6 @@ import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '../../executors/jest/schema';
-import { getJestObject } from '../update-10-0-0/require-jest-config';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
@@ -19,7 +18,7 @@ function updateJestConfig(tree: Tree) {
       }
 
       const jestConfigPath = options.jestConfig;
-      const config = getJestObject(join(tree.root, jestConfigPath));
+      const config = require(join(tree.root, jestConfigPath));
       const tsJestConfig = config.globals?.['ts-jest'];
       if (!(tsJestConfig && tsJestConfig.tsConfig)) {
         return;

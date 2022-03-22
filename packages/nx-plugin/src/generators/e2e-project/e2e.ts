@@ -7,12 +7,12 @@ import {
   generateFiles,
   addProjectConfiguration,
   updateProjectConfiguration,
-  offsetFromRoot,
 } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
 import { jestProjectGenerator } from '@nrwl/jest';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;
@@ -51,7 +51,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(host, path.join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
   });
 }
 

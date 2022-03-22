@@ -1,13 +1,13 @@
 import { isNpmProject, ProjectType } from '../core/project-graph';
-import { join, resolve, dirname, relative } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 import { directoryExists } from './fileutils';
-import {
-  stripIndents,
-  readJsonFile,
-  writeJsonFile,
-  ProjectGraphExternalNode,
-} from '@nrwl/devkit';
 import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
+import {
+  ProjectGraphExternalNode,
+  readJsonFile,
+  stripIndents,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
@@ -32,21 +32,21 @@ export function calculateProjectDependencies(
   root: string,
   projectName: string,
   targetName: string,
-  configurationName: string
+  configurationName: string,
+  shallow?: boolean
 ): {
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
   nonBuildableDependencies: string[];
+  topLevelDependencies: DependentBuildableProjectNode[];
 } {
   const target = projGraph.nodes[projectName];
   // gather the library dependencies
   const nonBuildableDependencies = [];
-  const dependencies = recursivelyCollectDependencies(
-    projectName,
-    projGraph,
-    []
-  )
-    .map((dep) => {
+  const topLevelDependencies: DependentBuildableProjectNode[] = [];
+  const dependencies = collectDependencies(projectName, projGraph, [], shallow)
+    .map(({ name: dep, isTopLevel }) => {
+      let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (depNode.type === ProjectType.lib) {
         if (isBuildable(targetName, depNode)) {
@@ -54,7 +54,7 @@ export function calculateProjectDependencies(
             join(root, depNode.data.root, 'package.json')
           );
 
-          return {
+          project = {
             name: libPackageJson.name, // i.e. @workspace/mylib
             outputs: getOutputsForTargetAndConfiguration(
               {
@@ -73,28 +73,41 @@ export function calculateProjectDependencies(
           nonBuildableDependencies.push(dep);
         }
       } else if (depNode.type === 'npm') {
-        return {
+        project = {
           name: depNode.data.packageName,
           outputs: [],
           node: depNode,
         };
-      } else {
-        return null;
       }
+
+      if (project && isTopLevel) {
+        topLevelDependencies.push(project);
+      }
+
+      return project;
     })
     .filter((x) => !!x);
-  return { target, dependencies, nonBuildableDependencies };
+  return {
+    target,
+    dependencies,
+    nonBuildableDependencies,
+    topLevelDependencies,
+  };
 }
 
-function recursivelyCollectDependencies(
+function collectDependencies(
   project: string,
   projGraph: ProjectGraph,
-  acc: string[]
-) {
+  acc: { name: string; isTopLevel: boolean }[],
+  shallow?: boolean,
+  areTopLevelDeps = true
+): { name: string; isTopLevel: boolean }[] {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
-    if (acc.indexOf(dependency.target) === -1) {
-      acc.push(dependency.target);
-      recursivelyCollectDependencies(dependency.target, projGraph, acc);
+    if (!acc.some((dep) => dep.name === dependency.target)) {
+      acc.push({ name: dependency.target, isTopLevel: areTopLevelDeps });
+      if (!shallow) {
+        collectDependencies(dependency.target, projGraph, acc, shallow, false);
+      }
     }
   });
   return acc;

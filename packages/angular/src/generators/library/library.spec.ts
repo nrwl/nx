@@ -9,7 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { toNewFormat } from '@nrwl/tao/src/shared/workspace';
+import { toNewFormat } from 'nx/src/shared/workspace';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -44,6 +44,13 @@ describe('lib', () => {
   describe('workspace v2', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace(2);
+    });
+
+    it('should run the library generator without erroring if the directory has a trailing slash', async () => {
+      // ACT & ASSERT
+      await expect(
+        runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
+      ).resolves.not.toThrow();
     });
 
     it('should default to standalone project for first project', async () => {
@@ -305,6 +312,18 @@ describe('lib', () => {
       });
     });
 
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.json');
+    });
+
     it('should check for existence of spec files before deleting them', async () => {
       // ARRANGE
       updateJson<NxJsonConfiguration, NxJsonConfiguration>(
@@ -442,6 +461,31 @@ describe('lib', () => {
       ).toBeFalsy();
       expect(
         tree.exists('libs/my-lib2/src/lib/my-lib2.service.spec.ts')
+      ).toBeFalsy();
+    });
+
+    it('should work if the new project root is changed', async () => {
+      // ARRANGE
+      updateJson(tree, 'workspace.json', (json) => ({
+        ...json,
+        newProjectRoot: 'newProjectRoot',
+      }));
+
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
     });
 
@@ -632,6 +676,18 @@ describe('lib', () => {
           },
         ],
       });
+    });
+
+    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
+      // ARRANGE
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
+
+      // ASSERT
+      const appTsConfig = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

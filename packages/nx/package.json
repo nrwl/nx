@@ -28,6 +28,21 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/cli": "*"
+    "@swc/core": "^1.2.152",
+    "@swc-node/register": "^1.4.2",
+    "chalk": "4.1.0",
+    "enquirer": "~2.3.6",
+    "fast-glob": "3.2.7",
+    "fs-extra": "^9.1.0",
+    "ignore": "^5.0.4",
+    "jsonc-parser": "3.0.0",
+    "rxjs-for-await": "0.0.2",
+    "rxjs": "^6.5.4",
+    "semver": "7.3.4",
+    "tmp": "~0.2.1",
+    "tslib": "^2.3.0",
+    "tsconfig-paths": "^3.9.0",
+    "yargs-parser": "20.0.0",
+    "v8-compile-cache": "2.3.0"
   }
 }

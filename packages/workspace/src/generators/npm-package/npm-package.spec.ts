@@ -105,6 +105,7 @@ describe('@nrwl/workspace:npm-package', () => {
       expect(tree.exists('packages/my-package/project.json')).toBeFalsy();
       expect(tree.exists('packages/my-package/package.json')).toBeTruthy();
       expect(readProjectConfiguration(tree, 'my-package')).toEqual({
+        projectType: 'library',
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
       });

@@ -2,6 +2,7 @@ import { WholeFileChange } from '../../file-utils';
 import { jsonDiff } from '../../../utilities/json-diff';
 import { getTouchedProjectsFromTsConfig } from './tsconfig-json-changes';
 import { DependencyType, ProjectGraph } from '../../project-graph';
+import * as tsUtils from '../../../utilities/typescript';
 
 describe('getTouchedProjectsFromTsConfig', () => {
   let graph: ProjectGraph;
@@ -40,6 +41,13 @@ describe('getTouchedProjectsFromTsConfig', () => {
 
   ['tsconfig.json', 'tsconfig.base.json'].forEach((tsConfig) => {
     describe(`(${tsConfig})`, () => {
+      beforeEach(() => {
+        jest
+          .spyOn(tsUtils, 'getRootTsConfigFileName')
+          .mockReturnValue(tsConfig);
+        jest.clearAllMocks();
+      });
+
       it(`should not return changes when ${tsConfig} is not touched`, () => {
         const result = getTouchedProjectsFromTsConfig(
           [

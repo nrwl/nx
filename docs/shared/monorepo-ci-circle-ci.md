@@ -14,12 +14,15 @@ But they come with their own technical challenges. The more code you add into yo
 
 ## Setting up CircleCI
 
-Below is an example of a Circle CI setup for an Nx workspace only building and testing what is affected.
+The `CircleCI` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Orb` provides conventient implementation of this functionality which you can drop into you existing CI config.
+To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation at Orb's docs](https://github.com/nrwl/nx-orb#background).
+
+Below is an example of a Circle CI setup for an Nx workspace only building and testing what is affected. For more details on how the orb is used, head over to the [official docs](https://circleci.com/developer/orbs/orb/nrwl/nx).
 
 ```yaml
 version: 2.1
 orbs:
-  nx: nrwl/nx@1.0.0
+  nx: nrwl/nx@1.2.0
 jobs:
   main:
     steps:
@@ -49,6 +52,12 @@ workflows:
 ```
 
 The `pr` and `main` jobs implement the CI workflow.
+
+### Using CircleCI on private repository
+
+To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on your main branch, you need to grant the orb access to your CircleCI API. You can do this by creating an environment variable called `CIRCLE_API_TOKEN` in the context or the project.
+
+> Note: It should be a user token, not project token.
 
 ## Distributed CI with Nx Cloud
 

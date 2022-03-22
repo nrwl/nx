@@ -1,6 +1,11 @@
-import { Task, TaskGraph } from '@nrwl/devkit';
+import {
+  ProjectGraph,
+  Task,
+  TaskGraph,
+  WorkspaceConfiguration,
+} from '@nrwl/devkit';
 
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from 'nx/src/shared/workspace';
 
 import {
   calculateReverseDeps,
@@ -29,9 +34,10 @@ export class TasksSchedule {
 
   constructor(
     private readonly hasher: Hasher,
-    private taskGraph: TaskGraph,
-    private workspace: Workspaces,
-    private options: DefaultTasksRunnerOptions
+    private readonly projectGraph: ProjectGraph,
+    private readonly taskGraph: TaskGraph,
+    private readonly workspaces: Workspaces,
+    private readonly options: DefaultTasksRunnerOptions
   ) {}
 
   public async scheduleNextTasks() {
@@ -97,7 +103,7 @@ export class TasksSchedule {
     const batchMap: Record<string, TaskGraph> = {};
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
-      const executorName = getExecutorNameForTask(rootTask, this.workspace);
+      const executorName = getExecutorNameForTask(rootTask, this.workspaces);
       this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -123,9 +129,9 @@ export class TasksSchedule {
   ) {
     const { batchImplementationFactory } = getExecutorForTask(
       task,
-      this.workspace
+      this.workspaces
     );
-    const executorName = getExecutorNameForTask(task, this.workspace);
+    const executorName = getExecutorNameForTask(task, this.workspaces);
     if (rootExecutorName !== executorName) {
       return;
     }
@@ -161,9 +167,14 @@ export class TasksSchedule {
   }
 
   private async hashTask(task: Task) {
-    const customHasher = getCustomHasher(task, this.workspace);
+    const customHasher = getCustomHasher(task, this.workspaces);
     const { value, details } = await (customHasher
-      ? customHasher(task, this.taskGraph, this.hasher)
+      ? customHasher(task, {
+          hasher: this.hasher,
+          projectGraph: this.projectGraph,
+          taskGraph: this.taskGraph,
+          workspaceConfig: this.workspaces.readWorkspaceConfiguration(),
+        })
       : this.hasher.hashTaskWithDepsAndContext(task));
     task.hash = value;
     task.hashDetails = details;

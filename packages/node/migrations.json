@@ -18,21 +18,21 @@
     },
     "rename-build-to-webpack": {
       "cli": "nx",
-      "version": "13.9.0-beta.1",
+      "version": "13.8.5-beta.1",
       "description": "Renames @nrwl/node:build to @nrwl/node:webpack",
-      "factory": "./src/migrations/update-13-9-0/rename-build-to-webpack"
+      "factory": "./src/migrations/update-13-8-5/rename-build-to-webpack"
     },
     "rename-execute-to-node": {
       "cli": "nx",
-      "version": "13.9.0-beta.1",
+      "version": "13.8.5-beta.1",
       "description": "Renames @nrwl/node:execute to @nrwl/node:node",
-      "factory": "./src/migrations/update-13-9-0/rename-execute-to-node"
+      "factory": "./src/migrations/update-13-8-5/rename-execute-to-node"
     },
     "update-package-to-tsc": {
       "cli": "nx",
-      "version": "13.9.0-beta.1",
+      "version": "13.8.5-beta.1",
       "description": "Renames @nrwl/node:package to @nrwl/js:tsc",
-      "factory": "./src/migrations/update-13-9-0/update-package-to-tsc"
+      "factory": "./src/migrations/update-13-8-5/update-package-to-tsc"
     }
   }
 }

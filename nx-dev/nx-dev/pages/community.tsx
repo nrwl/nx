@@ -111,7 +111,7 @@ export function Community(props: CommunityProps): ReactComponentElement<any> {
     },
     {
       description:
-        'Nest.js is a framework designed for building scalable server-side applications.',
+        'The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace.',
       name: '@nrwl/next',
       url: 'https://nx.dev/next/overview',
       isOfficial: true,

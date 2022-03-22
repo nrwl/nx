@@ -99,6 +99,9 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     );
   }
 
+  // output fixes to disk, if applicable based on the options
+  await projectESLint.ESLint.outputFixes(lintResults);
+
   // if quiet, only show errors
   if (options.quiet) {
     console.debug('Quiet mode enabled - filtering out warnings\n');
@@ -109,9 +112,6 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   let totalErrors = 0;
   let totalWarnings = 0;
-
-  // output fixes to disk, if applicable based on the options
-  await projectESLint.ESLint.outputFixes(lintResults);
 
   for (const result of lintResults) {
     if (result.errorCount || result.warningCount) {

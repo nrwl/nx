@@ -17,6 +17,7 @@
         "outputPath": "build/packages/devkit",
         "tsConfig": "packages/devkit/tsconfig.lib.json",
         "main": "packages/devkit/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/devkit",
@@ -45,7 +46,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

@@ -1,5 +1,5 @@
 import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
-import { moveGenerator } from '@nrwl/workspace';
+import { moveGenerator } from '@nrwl/workspace/generators';
 import { updateModuleName } from './lib/update-module-name';
 import { updateNgPackage } from './lib/update-ng-package';
 import { Schema } from './schema';

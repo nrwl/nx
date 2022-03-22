@@ -8,7 +8,7 @@ import {
   normalizePath,
 } from '@nrwl/devkit';
 import { createScam } from './lib/create-module';
-import { normalize } from 'path';
+import { pathStartsWith } from '../utils/path';
 
 export async function scamGenerator(tree: Tree, schema: Schema) {
   const { inlineScam, ...options } = schema;
@@ -44,7 +44,7 @@ function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
     ? pathToComponent.slice(1)
     : pathToComponent;
 
-  if (!pathToComponent.startsWith(normalize(root))) {
+  if (!pathStartsWith(pathToComponent, root)) {
     throw new Error(
       `The path provided for the SCAM (${options.path}) does not exist under the project root (${root}).`
     );

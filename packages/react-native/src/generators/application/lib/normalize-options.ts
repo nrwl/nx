@@ -11,13 +11,10 @@ export interface NormalizedSchema extends Schema {
   androidProjectRoot: string;
   parsedTags: string[];
   entryFile: string;
-  entryFileAbsolutePath: string;
+  entryFileRelativeToRoot: string;
 }
 
-export function normalizeOptions(
-  host: Tree,
-  options: Schema
-): NormalizedSchema {
+export function normalizeOptions(options: Schema): NormalizedSchema {
   const { fileName, className } = names(options.name);
 
   const directoryName = options.directory
@@ -37,12 +34,8 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const entryFile = join(
-    appProjectRoot,
-    options.js ? '/src/main.js' : '/src/main.tsx'
-  );
-
-  const entryFileAbsolutePath = join(host.root, entryFile);
+  const entryFile = options.js ? '/src/main.js' : '/src/main.tsx';
+  const entryFileRelativeToRoot = join(appProjectRoot, entryFile);
 
   /**
    * if options.name is "my-app"
@@ -64,6 +57,6 @@ export function normalizeOptions(
     androidProjectRoot,
     parsedTags,
     entryFile,
-    entryFileAbsolutePath,
+    entryFileRelativeToRoot,
   };
 }

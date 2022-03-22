@@ -1,13 +1,11 @@
 import {
   formatFiles,
-  getWorkspacePath,
   installPackagesTask,
   moveFilesToNewDirectory,
-  readJson,
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
@@ -36,20 +34,6 @@ export async function applicationGenerator(
 ) {
   const options = normalizeOptions(host, schema);
 
-  // Determine the roots where @schematics/angular will place the projects
-  // This is not where the projects actually end up
-  const workspaceJsonPath = getWorkspacePath(host);
-  let newProjectRoot = null;
-  if (workspaceJsonPath) {
-    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
-  }
-  const appProjectRoot = newProjectRoot
-    ? `${newProjectRoot}/${options.name}`
-    : options.name;
-  const e2eProjectRoot = newProjectRoot
-    ? `${newProjectRoot}/${options.e2eProjectName}`
-    : `${options.name}/e2e`;
-
   await angularInitGenerator(host, {
     ...options,
     skipFormat: true,
@@ -72,9 +56,15 @@ export async function applicationGenerator(
     skipPackageJson: options.skipPackageJson,
   });
 
-  createFiles(host, options, appProjectRoot);
+  if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
+    moveFilesToNewDirectory(
+      host,
+      options.ngCliSchematicAppRoot,
+      options.appProjectRoot
+    );
+  }
 
-  moveFilesToNewDirectory(host, appProjectRoot, options.appProjectRoot);
+  createFiles(host, options);
   updateConfigFiles(host, options);
   updateAppComponentTemplate(host, options);
 
@@ -114,7 +104,7 @@ export async function applicationGenerator(
 
   addLinting(host, options);
   await addUnitTestRunner(host, options);
-  await addE2e(host, options, e2eProjectRoot);
+  await addE2e(host, options);
   updateEditorTsConfig(host, options);
 
   if (options.backendProject) {

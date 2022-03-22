@@ -107,7 +107,6 @@ Your `package.json` should now look like this:
     "@nrwl/cli": "13.4.6",
     "@nrwl/eslint-plugin-nx": "13.4.6",
     "@nrwl/linter": "13.4.6",
-    "@nrwl/tao": "13.4.6",
     "@nrwl/workspace": "13.4.6",
     "@types/jasmine": "~3.5.0",
     "@types/jasminewd2": "~2.0.3",

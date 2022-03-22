@@ -79,9 +79,11 @@ Type: `string`
 
 SSL key to use for serving HTTPS.
 
-### staticDir
+### ~~staticDir~~
 
 Type: `array`
+
+**Deprecated:** In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0.
 
 Directory where to load static files from, array of strings
 

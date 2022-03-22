@@ -156,6 +156,12 @@
       "version": "13.8.4",
       "description": "Karma coverage is broken since Angular 13 upgarde and the karma config is severely out of date. Bring it up to date fixing the coverage issue.",
       "factory": "./src/migrations/update-13-8-4/migrate-karma-conf"
+    },
+    "set-build-libs-from-source": {
+      "cli": "nx",
+      "version": "13.9.0-beta.4",
+      "description": "Set buildLibsFromSource property to false to not break existing usage.",
+      "factory": "./src/migrations/update-13-9-0/set-build-libs-from-source"
     }
   },
   "packageJsonUpdates": {
@@ -1372,6 +1378,95 @@
         },
         "jasmine-core": {
           "version": "~3.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.9.3": {
+      "version": "13.9.3-beta.0",
+      "packages": {
+        "@angular/cli": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/common": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/elements": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/localize": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-server": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/material": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~13.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~4.6.2",
           "alwaysAddToPackageJson": false
         }
       }

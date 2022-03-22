@@ -1,39 +1,9 @@
 import type { TSESLint } from '@typescript-eslint/experimental-utils';
 import { existsSync } from 'fs';
-import { join } from 'path';
 import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
-import { readDefaultTsConfig } from '@swc-node/register/read-default-tsconfig';
-import { register } from '@swc-node/register/register';
+import { registerTsProject } from 'nx/src/utils/register';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
-
-/**
- * Optionally, if ts-node and tsconfig-paths are available in the current workspace, apply the require
- * register hooks so that .ts files can be used for writing workspace lint rules.
- *
- * If ts-node and tsconfig-paths are not available, the user can still provide an index.js file in
- * tools/eslint-rules and write their rules in JavaScript and the fundamentals will still work (but
- * workspace path mapping will not, for example).
- */
-function registerTSWorkspaceLint() {
-  try {
-    register(readDefaultTsConfig(join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')));
-
-    const tsconfigPaths = require('tsconfig-paths');
-
-    // Load the tsconfig from tools/eslint-rules/tsconfig.json
-    const tsConfigResult = tsconfigPaths.loadConfig(WORKSPACE_PLUGIN_DIR);
-
-    /**
-     * Register the custom workspace path mappings with node so that workspace libraries
-     * can be imported and used within custom workspace lint rules.
-     */
-    return tsconfigPaths.register({
-      baseUrl: tsConfigResult.absoluteBaseUrl,
-      paths: tsConfigResult.paths,
-    });
-  } catch (err) {}
-}
 
 export const workspaceRules = ((): ESLintRules => {
   // If `tools/eslint-rules` folder doesn't exist, there is no point trying to register and load it
@@ -41,7 +11,7 @@ export const workspaceRules = ((): ESLintRules => {
     return {};
   }
   // Register `tools/eslint-rules` for TS transpilation
-  const registrationCleanup = registerTSWorkspaceLint();
+  const registrationCleanup = registerTsProject(WORKSPACE_PLUGIN_DIR);
   try {
     /**
      * Currently we only support applying the rules from the user's workspace plugin object

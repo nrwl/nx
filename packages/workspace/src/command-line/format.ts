@@ -11,8 +11,8 @@ import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
   WorkspaceJsonConfiguration,
-} from '@nrwl/tao/src/shared/workspace';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+} from 'nx/src/shared/workspace';
+import { appRootPath } from 'nx/src/utils/app-root';
 import * as prettier from 'prettier';
 import {
   NxJsonConfiguration,
@@ -20,7 +20,11 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '@nrwl/devkit';
-import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import {
+  getRootTsConfigFileName,
+  getRootTsConfigPath,
+} from '../utilities/typescript';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -121,7 +125,9 @@ function addRootConfigFiles(
   if (workspaceJsonPath) {
     addToChunkIfNeeded(workspaceJsonPath);
   }
-  ['nx.json', 'tsconfig.base.json'].forEach(addToChunkIfNeeded);
+  ['nx.json', getRootTsConfigFileName()]
+    .filter(Boolean)
+    .forEach(addToChunkIfNeeded);
 
   if (chunk.length > 0) {
     chunkList.push(chunk);
@@ -190,7 +196,7 @@ function sortWorkspaceJson(workspaceJsonPath: string) {
 
 function sortTsConfig() {
   try {
-    const tsconfigPath = path.join(appRootPath, 'tsconfig.base.json');
+    const tsconfigPath = getRootTsConfigPath();
     const tsconfig = readJsonFile(tsconfigPath);
     const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
     tsconfig.compilerOptions.paths = sortedPaths;

@@ -143,6 +143,42 @@
         ]
       },
       {
+        "name": "Core Tutorial",
+        "id": "core-tutorial",
+        "itemList": [
+          {
+            "name": "1 - Create Blog",
+            "id": "01-create-blog",
+            "file": "shared/core-tutorial/01-create-blog"
+          },
+          {
+            "name": "2 - Create CLI",
+            "id": "02-create-cli",
+            "file": "shared/core-tutorial/02-create-cli"
+          },
+          {
+            "name": "3 - Share Assets",
+            "id": "03-share-assets",
+            "file": "shared/core-tutorial/03-share-assets"
+          },
+          {
+            "name": "4 - Build Affected Projects",
+            "id": "04-build-affected-projects",
+            "file": "shared/core-tutorial/04-build-affected-projects"
+          },
+          {
+            "name": "5 - Automatically Detect Dependencies",
+            "id": "05-auto-detect-dependencies",
+            "file": "shared/core-tutorial/05-auto-detect-dependencies"
+          },
+          {
+            "name": "6 - Summary",
+            "id": "06-summary",
+            "file": "shared/core-tutorial/06-summary"
+          }
+        ]
+      },
+      {
         "name": "React Tutorial",
         "id": "react-tutorial",
         "itemList": [
@@ -609,6 +645,11 @@
             "file": "generated/api-angular/generators/application"
           },
           {
+            "name": "component generator",
+            "id": "component",
+            "file": "generated/api-angular/generators/component"
+          },
+          {
             "name": "convert-tslint-to-eslint",
             "id": "convert-tslint-to-eslint",
             "file": "generated/api-angular/generators/convert-tslint-to-eslint"
@@ -637,6 +678,16 @@
             "name": "library-secondary-entry-point generator",
             "id": "library-secondary-entry-point",
             "file": "generated/api-angular/generators/library-secondary-entry-point"
+          },
+          {
+            "name": "mfe-host generator",
+            "id": "mfe-host",
+            "file": "generated/api-angular/generators/mfe-host"
+          },
+          {
+            "name": "mfe-remote generator",
+            "id": "mfe-remote",
+            "file": "generated/api-angular/generators/mfe-remote"
           },
           {
             "name": "move generator",

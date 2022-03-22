@@ -5,12 +5,13 @@ import {
   Task,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
+import { resolveNewFormatWithInlineProjects } from 'nx/src/shared/workspace';
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import * as minimatch from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { getRootTsConfigFileName } from '../../utilities/typescript';
 import { appRootPath } from '../../utils/app-root';
 import { workspaceFileName } from '../file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
@@ -48,6 +49,19 @@ interface TsconfigJsonConfiguration {
   compilerOptions: CompilerOptions;
 }
 
+export const HashFilter = {
+  AllFiles: 'all-files',
+  ExcludeTestsOfAll: 'exclude-tests-of-all',
+  ExcludeTestsOfDeps: 'exclude-tests-of-deps',
+} as const;
+export type HashFilter = typeof HashFilter[keyof typeof HashFilter];
+
+export const NodeHashFilter = {
+  AllFiles: 'all-files',
+  ExcludeTests: 'exclude-tests',
+} as const;
+export type NodeHashFilter = typeof NodeHashFilter[keyof typeof NodeHashFilter];
+
 export class Hasher {
   static version = '2.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
@@ -72,13 +86,18 @@ export class Hasher {
     });
   }
 
-  async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
+  async hashTaskWithDepsAndContext(
+    task: Task,
+    filter: HashFilter = HashFilter.AllFiles
+  ): Promise<Hash> {
     const command = this.hashCommand(task);
 
     const values = (await Promise.all([
-      this.projectHashes.hashProject(task.target.project, [
+      this.projectHashes.hashProject(
         task.target.project,
-      ]),
+        [task.target.project],
+        filter
+      ),
       this.implicitDepsHash(),
       this.runtimeInputsHash(),
     ])) as [
@@ -130,7 +149,10 @@ export class Hasher {
   }
 
   async hashSource(task: Task): Promise<string> {
-    return this.projectHashes.hashProjectNodeSource(task.target.project);
+    return this.projectHashes.hashProjectNodeSource(
+      task.target.project,
+      NodeHashFilter.AllFiles
+    );
   }
 
   hashArray(values: string[]): string {
@@ -305,7 +327,8 @@ class ProjectHasher {
 
   async hashProject(
     projectName: string,
-    visited: string[]
+    visited: string[],
+    filter: HashFilter
   ): Promise<ProjectHashResult> {
     return Promise.resolve().then(async () => {
       const deps = this.projectGraph.dependencies[projectName] ?? [];
@@ -316,12 +339,20 @@ class ProjectHasher {
               return null;
             } else {
               visited.push(d.target);
-              return await this.hashProject(d.target, visited);
+              return await this.hashProject(d.target, visited, filter);
             }
           })
         )
       ).filter((r) => !!r);
-      const projectHash = await this.hashProjectNodeSource(projectName);
+      const filterForProject: NodeHashFilter =
+        filter === HashFilter.AllFiles ||
+        (filter === HashFilter.ExcludeTestsOfDeps && visited[0] === projectName)
+          ? NodeHashFilter.AllFiles
+          : NodeHashFilter.ExcludeTests;
+      const projectHash = await this.hashProjectNodeSource(
+        projectName,
+        filterForProject
+      );
       const nodes = depHashes.reduce(
         (m, c) => {
           return { ...m, ...c.nodes };
@@ -336,9 +367,10 @@ class ProjectHasher {
     });
   }
 
-  async hashProjectNodeSource(projectName: string) {
-    if (!this.sourceHashes[projectName]) {
-      this.sourceHashes[projectName] = new Promise(async (res) => {
+  async hashProjectNodeSource(projectName: string, filter: NodeHashFilter) {
+    const mapKey = `${projectName}-${filter}`;
+    if (!this.sourceHashes[mapKey]) {
+      this.sourceHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
 
         if (!p) {
@@ -365,8 +397,13 @@ class ProjectHasher {
           return;
         }
 
-        const fileNames = p.data.files.map((f) => f.file);
-        const values = p.data.files.map((f) => f.hash);
+        const filteredFiles =
+          filter === NodeHashFilter.AllFiles
+            ? p.data.files
+            : p.data.files.filter((f) => !this.isSpec(f.file));
+
+        const fileNames = filteredFiles.map((f) => f.file);
+        const values = filteredFiles.map((f) => f.hash);
 
         const workspaceJson = JSON.stringify(
           this.workspaceJson.projects[projectName] ?? ''
@@ -390,7 +427,24 @@ class ProjectHasher {
         );
       });
     }
-    return this.sourceHashes[projectName];
+    return this.sourceHashes[mapKey];
+  }
+
+  private isSpec(file: string) {
+    return (
+      file.endsWith('.spec.tsx') ||
+      file.endsWith('.test.tsx') ||
+      file.endsWith('-test.tsx') ||
+      file.endsWith('-spec.tsx') ||
+      file.endsWith('.spec.ts') ||
+      file.endsWith('.test.ts') ||
+      file.endsWith('-test.ts') ||
+      file.endsWith('-spec.ts') ||
+      file.endsWith('.spec.js') ||
+      file.endsWith('.test.js') ||
+      file.endsWith('-test.js') ||
+      file.endsWith('-spec.js')
+    );
   }
 
   private removeOtherProjectsPathRecords(projectName: string) {
@@ -412,7 +466,7 @@ class ProjectHasher {
 
   private readTsConfig() {
     try {
-      const res = readJsonFile('tsconfig.base.json');
+      const res = readJsonFile(getRootTsConfigFileName());
       res.compilerOptions.paths ??= {};
       return res;
     } catch {

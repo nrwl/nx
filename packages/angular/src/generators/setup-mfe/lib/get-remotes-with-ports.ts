@@ -15,7 +15,7 @@ export function getRemotesWithPorts(host: Tree, options: Schema) {
       const remoteConfig = readProjectConfiguration(host, remote);
       remotesWithPort.push({
         remoteName: remote,
-        port: remoteConfig.targets['mfe-serve']?.options.port ?? 4200,
+        port: remoteConfig.targets['serve']?.options?.port ?? 4200,
       });
     }
   }

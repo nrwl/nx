@@ -1,6 +1,6 @@
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { moveGenerator } from '@nrwl/workspace';
+import { moveGenerator } from '@nrwl/workspace/generators';
 import { Schema } from '../schema';
 import { updateModuleName } from './update-module-name';
 import libraryGenerator from '../../library/library';

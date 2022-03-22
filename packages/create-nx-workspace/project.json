@@ -17,6 +17,7 @@
         "outputPath": "build/packages/create-nx-workspace",
         "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
         "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/create-nx-workspace",
@@ -45,7 +46,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

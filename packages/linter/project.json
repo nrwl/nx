@@ -17,6 +17,7 @@
         "outputPath": "build/packages/linter",
         "tsConfig": "packages/linter/tsconfig.lib.json",
         "main": "packages/linter/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/linter",
@@ -45,7 +46,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]

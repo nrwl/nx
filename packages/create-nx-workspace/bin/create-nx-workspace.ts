@@ -481,7 +481,7 @@ async function createSandbox(packageManager: string) {
       JSON.stringify({
         dependencies: {
           '@nrwl/workspace': nxVersion,
-          '@nrwl/tao': cliVersion,
+          nx: cliVersion,
           typescript: tsVersion,
           prettier: prettierVersion,
         },
@@ -540,8 +540,7 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
-  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/generators.json --cli=${cli}`;
-
+  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} nx ${command}/generators.json --cli=${cli}`;
   let workspaceSetupSpinner = ora('Creating your workspace').start();
 
   try {

@@ -1,5 +1,5 @@
 import { joinPathFragments, logger } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import { getSourceDirOfDependentProjects } from '@nrwl/workspace/src/utilities/project-graph-utils';
 import { resolve } from 'path';
 

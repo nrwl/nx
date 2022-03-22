@@ -69,6 +69,14 @@ Type: `array`
 
 Budget thresholds to ensure parts of your application stay within boundaries which you set.
 
+### buildLibsFromSource
+
+Default: `true`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### buildOptimizer
 
 Default: `true`

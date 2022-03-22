@@ -1,16 +1,12 @@
-import { logger, stripIndent } from '@nrwl/tao/src/shared/logger';
-import type {
-  FileChange,
-  Tree,
-  TreeWriteOptions,
-} from '@nrwl/tao/src/shared/tree';
+import { logger, stripIndent } from 'nx/src/shared/logger';
+import type { FileChange, Tree, TreeWriteOptions } from 'nx/src/shared/tree';
 import {
   Generator,
   GeneratorCallback,
   toNewFormat,
   toOldFormatOrNull,
-} from '@nrwl/tao/src/shared/workspace';
-import { parseJson, serializeJson } from '@nrwl/tao/src/utils/json';
+} from 'nx/src/shared/workspace';
+import { parseJson, serializeJson } from 'nx/src/utils/json';
 import { join, relative } from 'path';
 
 class RunCallbackTask {

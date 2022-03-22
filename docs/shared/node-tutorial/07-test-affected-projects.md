@@ -71,3 +71,7 @@ You can run any target against the affected projects in the graph like this:
 nx affected --target=build
 nx affected:build
 ```
+
+## What's Next
+
+- Continue to [Step 8: Summary](/node-tutorial/08-summary)

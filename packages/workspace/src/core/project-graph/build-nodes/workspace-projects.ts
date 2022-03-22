@@ -5,11 +5,11 @@ import {
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { mergeNpmScriptsWithTargets } from '../../../utilities/project-graph-utils';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from 'nx/src/utils/app-root';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
-} from '@nrwl/tao/src/shared/nx-plugin';
+} from 'nx/src/shared/nx-plugin';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,

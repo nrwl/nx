@@ -17,6 +17,7 @@
         "outputPath": "build/packages/tao",
         "tsConfig": "packages/tao/tsconfig.lib.json",
         "main": "packages/tao/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/tao",
@@ -45,7 +46,7 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          "LICENSE"
+          { "input": "", "glob": "LICENSE", "output": "/" }
         ]
       },
       "outputs": ["{options.outputPath}"]
@@ -60,9 +61,6 @@
           },
           {
             "command": "node ./scripts/copy-readme.js tao"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js tao nx"
           }
         ],
         "parallel": false
