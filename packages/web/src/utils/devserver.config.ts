@@ -20,8 +20,9 @@ export function getDevServerConfig(
   serveOptions: WebDevServerOptions
 ): Partial<WebpackDevServerConfiguration> {
   const optimizationFields = Object.keys(buildOptions.optimization);
-  const isScriptOptimizeOn = optimizationFields.length > 0 
-    && optimizationFields.some(key => buildOptions.optimization[key] === true);
+  const isScriptOptimizeOn =
+    optimizationFields.length > 0 &&
+    optimizationFields.some((key) => buildOptions.optimization[key] === true);
 
   const webpackConfig = getWebConfig(
     workspaceRoot,
