@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "title": "Webpack browser schema for Build Facade.",
-  "description": "Browser target options",
+  "title": "Schema for Webpack Browser",
+  "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
+  "examplesFile": "../../../docs/webpack-browser-examples.md",
   "type": "object",
   "properties": {
     "assets": {
