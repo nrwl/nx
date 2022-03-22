@@ -143,7 +143,14 @@ export async function* run(
     );
   }
 
-  process.env.NODE_ENV ||= 'production';
+  const isScriptOptimizeOn =
+    typeof options.optimization === 'boolean'
+      ? options.optimization
+      : options.optimization && options.optimization.scripts
+      ? options.optimization.scripts
+      : false;
+
+  process.env.NODE_ENV ||= isScriptOptimizeOn ? 'production' : 'development';
 
   const metadata = context.workspace.projects[context.projectName];
 
