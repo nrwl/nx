@@ -150,7 +150,7 @@ function normalizeOptions(
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
       c.command,
-      (options as NormalizedRunCommandsBuilderOptions).parsedArgs,
+      (options as NormalizedRunCommandsBuilderOptions),
       c.forwardAllArgs ?? true
     );
   });
@@ -241,12 +241,13 @@ function processEnv(color: boolean) {
 
 function transformCommand(
   command: string,
-  args: { [key: string]: string },
+  options: NormalizedRunCommandsBuilderOptions,
   forwardAllArgs: boolean
 ) {
-  if (command.indexOf('{args.') > -1) {
-    const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) => args[camelCase(group)]);
+  const { parsedArgs } = options;
+  const args: { [key: string]: string } = parsedArgs;
+  if (/{([\s\S]+?)}/g.test(command)) {
+    return interpolateCommand(command, { ...options, args });
   } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
       .map((a) =>
@@ -283,3 +284,19 @@ function camelCase(input) {
     return input;
   }
 }
+
+function interpolateCommand(template: string, data: any) {
+  return template.replace(/{([\s\S]+?)}/g, (match) => {
+      let value = data;
+      let path = match.slice(1, -1).trim().split('.');
+      for (let idx = 0; idx < path.length; idx++) {
+          if (!value[path[idx]]) {
+              return;
+          }
+          value = value[camelCase(path[idx])];
+      }
+
+      return value;
+  });
+}
+
