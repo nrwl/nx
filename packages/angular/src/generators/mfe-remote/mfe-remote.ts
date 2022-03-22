@@ -7,7 +7,7 @@ import { getMfeProjects } from '../../utils/get-mfe-projects';
 function findNextAvailablePort(tree: Tree) {
   const mfeProjects = getMfeProjects(tree);
 
-  const ports = new Set<number>();
+  const ports = new Set<number>([4200]);
   for (const mfeProject of mfeProjects) {
     const { targets } = readProjectConfiguration(tree, mfeProject);
     const port = targets?.serve?.options?.port ?? 4200;
