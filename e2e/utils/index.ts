@@ -766,7 +766,7 @@ export function getPackageManagerCommand({
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
-  }[packageManager];
+  }[packageManager.trim()];
 }
 
 function getNpmMajorVersion(): string {
