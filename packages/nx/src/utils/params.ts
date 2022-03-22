@@ -661,10 +661,7 @@ function getGeneratorDefaults(
     }
   }
   if (
-    projectName &&
-    wc &&
-    wc.projects[projectName] &&
-    wc.projects[projectName].generators
+    projectName && wc?.projects[projectName]?.generators
   ) {
     const g = wc.projects[projectName].generators;
     if (g[collectionName] && g[collectionName][generatorName]) {
