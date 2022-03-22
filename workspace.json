@@ -51,7 +51,6 @@
     "nx-dev-feature-doc-viewer": "nx-dev/feature-doc-viewer",
     "nx-dev-feature-search": "nx-dev/feature-search",
     "nx-dev-feature-storage": "nx-dev/feature-storage",
-    "nx-dev-feature-versions-and-flavors": "nx-dev/feature-versions-and-flavors",
     "nx-dev-ui-commands": "nx-dev/ui-commands",
     "nx-dev-ui-common": "nx-dev/ui-common",
     "nx-dev-ui-community": "nx-dev/ui-community",

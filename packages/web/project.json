@@ -51,7 +51,11 @@
             "glob": "**/*.d.ts",
             "output": "/"
           },
-          { "input": "", "glob": "LICENSE", "output": "/" }
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       },
       "outputs": ["{options.outputPath}"]
