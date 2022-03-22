@@ -131,11 +131,11 @@ export const getSummary = (
       : suitesTotal) +
     ` total`;
 
-  const updatedTestsFailed  = testsFailed + numFailingTests;
+  const updatedTestsFailed = testsFailed + numFailingTests;
   const updatedTestsPending = testsPending + numPendingTests;
-  const updatedTestsTodo    = testsTodo + numTodoTests;
-  const updatedTestsPassed  = testsPassed + numPassingTests;
-  const updatedTestsTotal   = testsTotal + numTotalTests;
+  const updatedTestsTodo = testsTodo + numTodoTests;
+  const updatedTestsPassed = testsPassed + numPassingTests;
+  const updatedTestsTotal = testsTotal + numTotalTests;
 
   const tests =
     chalk.bold('Tests:       ') +
