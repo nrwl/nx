@@ -85,7 +85,7 @@ export const getSummary = (
   }
 ): string => {
   let runTime = (Date.now() - aggregatedResults.startTime) / 1000;
-  if (options && options.roundTime) {
+  if (options?.roundTime) {
     runTime = Math.floor(runTime);
   }
 
