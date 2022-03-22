@@ -113,7 +113,7 @@ export const getSummary = (
   const testsPending = aggregatedResults.numPendingTests;
   const testsTodo = aggregatedResults.numTodoTests;
   const testsTotal = aggregatedResults.numTotalTests;
-  const width = (options && options.width) || 0;
+  const width = (options?.width) || 0;
 
   const suites =
     chalk.bold('Test Suites: ') +
