@@ -47,5 +47,8 @@ describe('convert to swc', () => {
       )
     ).toEqual(true);
     expect(tree.read('package.json', 'utf-8')).toContain('@swc/core');
+    expect(tree.read('libs/tsc-lib/package.json', 'utf-8')).toContain(
+      '@swc/helpers'
+    );
   });
 });
