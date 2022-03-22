@@ -89,9 +89,13 @@ export const getSummary = (
     runTime = Math.floor(runTime);
   }
 
-  const {numFailingTests,numPendingTests,numTodoTests,numPassingTests,numTotalTests} = getValuesCurrentTestCases(
-    options?.currentTestCases
-  );
+  const {
+    numFailingTests,
+    numPendingTests,
+    numTodoTests,
+    numPassingTests,
+    numTotalTests,
+  } = getValuesCurrentTestCases(options?.currentTestCases);
 
   const estimatedTime = (options && options.estimatedTime) || 0;
   const snapshotResults = aggregatedResults.snapshot;
@@ -127,15 +131,11 @@ export const getSummary = (
       : suitesTotal) +
     ` total`;
 
-  const updatedTestsFailed =
-    testsFailed + numFailingTests;
-  const updatedTestsPending =
-    testsPending + numPendingTests;
+  const updatedTestsFailed = testsFailed + numFailingTests;
+  const updatedTestsPending = testsPending + numPendingTests;
   const updatedTestsTodo = testsTodo + numTodoTests;
-  const updatedTestsPassed =
-    testsPassed + numPassingTests;
-  const updatedTestsTotal =
-    testsTotal + numTotalTests;
+  const updatedTestsPassed = testsPassed + numPassingTests;
+  const updatedTestsTotal = testsTotal + numTotalTests;
 
   const tests =
     chalk.bold('Tests:       ') +
