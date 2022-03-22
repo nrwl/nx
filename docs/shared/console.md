@@ -27,8 +27,9 @@ If you are using [VSCode](https://code.visualstudio.com/), you can install the [
 ### WebStorm
 
 If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can install one of the available plugins:
-[nx-webstorm](https://plugins.jetbrains.com/plugin/15000-nx-webstorm)
-[Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
+
+- [nx-webstorm](https://plugins.jetbrains.com/plugin/15000-nx-webstorm)
+- [Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
 
 These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
 
