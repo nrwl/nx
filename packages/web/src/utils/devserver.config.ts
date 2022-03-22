@@ -19,13 +19,17 @@ export function getDevServerConfig(
   buildOptions: WebWebpackExecutorOptions,
   serveOptions: WebDevServerOptions
 ): Partial<WebpackDevServerConfiguration> {
+  const optimizationFields = Object.keys(buildOptions.optimization);
+  const isScriptOptimizeOn = optimizationFields.length > 0 
+    && optimizationFields.some(key => buildOptions.optimization[key] === true);
+
   const webpackConfig = getWebConfig(
     workspaceRoot,
     projectRoot,
     sourceRoot,
     buildOptions,
     true, // Don't need to support legacy browsers for dev.
-    false
+    isScriptOptimizeOn
   );
 
   (webpackConfig as any).devServer = getDevServerPartial(
