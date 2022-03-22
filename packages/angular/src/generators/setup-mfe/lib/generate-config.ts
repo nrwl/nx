@@ -1,20 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  generateFiles,
-  joinPathFragments,
-  logger,
-  offsetFromRoot,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { generateFiles, joinPathFragments, logger } from '@nrwl/devkit';
 import type { Schema } from '../schema';
-
-const SHARED_SINGLETON_LIBRARIES = [
-  '@angular/core',
-  '@angular/common',
-  '@angular/common/http',
-  '@angular/router',
-  'rxjs',
-];
 
 export function generateWebpackConfig(
   host: Tree,
@@ -41,10 +27,7 @@ export function generateWebpackConfig(
       type: options.mfeType,
       name: options.appName,
       remotes: remotesWithPorts ?? [],
-      sourceRoot: appRoot,
-      sharedLibraries: SHARED_SINGLETON_LIBRARIES,
-      offsetFromRoot: offsetFromRoot(appRoot),
-      rootTsConfigPath: getRelativePathToRootTsConfig(host, appRoot),
+      projectRoot: appRoot,
     }
   );
 }

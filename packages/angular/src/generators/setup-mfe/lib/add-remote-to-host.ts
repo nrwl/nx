@@ -3,10 +3,19 @@ import type { Schema } from '../schema';
 
 import { readProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { ObjectLiteralExpression } from 'typescript';
+import { ArrayLiteralExpression } from 'typescript';
 import { addRoute } from '../../../utils/nx-devkit/ast-utils';
 
 import * as ts from 'typescript';
+
+export function checkIsCommaNeeded(mfeRemoteText: string) {
+  const remoteText = mfeRemoteText.replace(/\s+/g, '');
+  return !remoteText.endsWith(',]')
+    ? remoteText === '[]'
+      ? false
+      : true
+    : false;
+}
 
 export function addRemoteToHost(host: Tree, options: Schema) {
   if (options.mfeType === 'remote' && options.host) {
@@ -24,16 +33,16 @@ export function addRemoteToHost(host: Tree, options: Schema) {
     const webpackAst = tsquery.ast(hostWebpackConfig);
     const mfRemotesNode = tsquery(
       webpackAst,
-      'Identifier[name=remotes] ~ ObjectLiteralExpression',
+      'Identifier[name=remotes] ~ ArrayLiteralExpression',
       { visitAllChildren: true }
-    )[0] as ObjectLiteralExpression;
+    )[0] as ArrayLiteralExpression;
 
-    const endOfPropertiesPos = mfRemotesNode.properties.end;
+    const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;
+    const isCommaNeeded = checkIsCommaNeeded(mfRemotesNode.getText());
 
-    const updatedConfig = `${hostWebpackConfig.slice(0, endOfPropertiesPos)}
-    \t\t"${options.appName}": 'http://localhost:${
-      options.port ?? 4200
-    }/remoteEntry.js',${hostWebpackConfig.slice(endOfPropertiesPos)}`;
+    const updatedConfig = `${hostWebpackConfig.slice(0, endOfPropertiesPos)}${
+      isCommaNeeded ? ',' : ''
+    }'${options.appName}',${hostWebpackConfig.slice(endOfPropertiesPos)}`;
 
     host.write(hostWebpackPath, updatedConfig);
 
