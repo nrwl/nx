@@ -93,7 +93,7 @@ export const getSummary = (
     options?.currentTestCases
   );
 
-  const estimatedTime = (options?.estimatedTime) || 0;
+  const estimatedTime = options?.estimatedTime || 0;
   const snapshotResults = aggregatedResults.snapshot;
   const snapshotsAdded = snapshotResults.added;
   const snapshotsFailed = snapshotResults.unmatched;
