@@ -29,6 +29,14 @@ Type: `string`
 
 Builds your app and starts it on a specific device/simulator with the given device id (listed by running "adb devices" on the command line).
 
+### interactive
+
+Default: `true`
+
+Type: `boolean`
+
+Run packager server in interactive mode.
+
 ### jetifier
 
 Default: `true`
@@ -51,7 +59,7 @@ Default: `true`
 
 Type: `boolean`
 
-Starts the packager server
+Starts the packager server.
 
 ### port
 
@@ -67,7 +75,7 @@ Default: `false`
 
 Type: `boolean`
 
-Resets metro cache
+Resets metro cache.
 
 ### sync
 

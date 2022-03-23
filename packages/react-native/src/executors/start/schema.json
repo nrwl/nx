@@ -15,6 +15,11 @@
       "type": "boolean",
       "description": "Resets metro cache.",
       "default": false
+    },
+    "interactive": {
+      "type": "boolean",
+      "description": "Run packager server in interactive mode.",
+      "default": true
     }
   }
 }

@@ -5,9 +5,10 @@ export interface ReactNativeRunIosOptions {
   scheme: string;
   simulator: string;
   device: string;
-  packager: boolean;
+  packager: boolean; // default is true
   install?: boolean;
   sync?: boolean;
   terminal?: string;
-  resetCache?: boolean;
+  resetCache: boolean; // default is false
+  interactive: boolean; // default is true
 }
