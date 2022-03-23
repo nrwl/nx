@@ -42,6 +42,7 @@ describe('AssetInputOutputHandler', () => {
           output: 'docs',
           ignore: ['ignore.md', '**/nested-ignore.md'],
         },
+        'LICENSE',
       ],
     });
   });
@@ -49,6 +50,8 @@ describe('AssetInputOutputHandler', () => {
   test('watchAndProcessOnAssetChange', async () => {
     const dispose = await sut.watchAndProcessOnAssetChange();
 
+    fse.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
+    await wait(100);
     fse.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
     await wait(100); // give watch time to react
     fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
@@ -72,6 +75,15 @@ describe('AssetInputOutputHandler', () => {
     await wait(100);
 
     expect(callback.mock.calls).toEqual([
+      [
+        [
+          {
+            type: 'create',
+            src: path.join(rootDir, 'LICENSE'),
+            dest: path.join(rootDir, 'dist/mylib/LICENSE'),
+          },
+        ],
+      ],
       [
         [
           {
@@ -130,6 +142,7 @@ describe('AssetInputOutputHandler', () => {
   });
 
   test('processAllAssetsOnce', async () => {
+    fse.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
     fse.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
     fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
     fse.writeFileSync(path.join(projectDir, 'docs/test2.md'), 'test');
@@ -144,6 +157,15 @@ describe('AssetInputOutputHandler', () => {
     await sut.processAllAssetsOnce();
 
     expect(callback.mock.calls).toEqual([
+      [
+        [
+          {
+            type: 'create',
+            src: path.join(rootDir, 'LICENSE'),
+            dest: path.join(rootDir, 'dist/mylib/LICENSE'),
+          },
+        ],
+      ],
       [
         [
           {
