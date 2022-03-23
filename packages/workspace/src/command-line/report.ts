@@ -97,12 +97,8 @@ export function readPackageJson(p: string) {
   }
 }
 
-export function readPackageVersion(p: string) {
-  let status = 'Not Found';
-  try {
-    status = readPackageJson(p).version;
-  } catch {}
-  return status;
+export function readPackageVersion(p: string): string {
+  return readPackageJson(p).version || 'Not Found';
 }
 
 export function findInstalledCommunityPlugins(): {
