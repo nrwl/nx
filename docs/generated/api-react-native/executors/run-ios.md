@@ -57,8 +57,6 @@ Explicitly set the Xcode scheme to use
 
 ### simulator
 
-Default: `iPhone X`
-
 Type: `string`
 
 Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: "iPhone X (12.1)"
