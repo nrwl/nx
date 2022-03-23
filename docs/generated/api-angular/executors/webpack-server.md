@@ -1,13 +1,45 @@
 ---
 title: '@nrwl/angular:webpack-server executor'
-description: 'Serves a browser application with support for a custom webpack configuration.'
+description: 'The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.'
 ---
 
 # @nrwl/angular:webpack-server
 
-Serves a browser application with support for a custom webpack configuration.
+The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.
 
 Options can be configured in `workspace.json` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: https://nx.dev/configuration/projectjson#targets.
+
+## Examples
+
+##### Seving an application with a custom webpack configuration
+
+This executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.
+
+Your `project.json` file should contain a `build` and `serve` target that matches the following:
+
+```json
+"build": {
+    "executor": "@nrwl/angular:webpack-browser",
+    "options": {
+        ...
+        "customWebpackConfig": {
+          "path": "apps/appName/webpack.config.js"
+        }
+    }
+},
+"serve": {
+    "executor": "@nrwl/angular:webpack-server",
+    "configurations": {
+        "production": {
+            "browserTarget": "appName:build:production"
+        },
+        "development": {
+            "browserTarget": "appName:build:development"
+        }
+    },
+    "defaultConfiguration": "development",
+}
+```
 
 ## Options
 
