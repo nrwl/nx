@@ -343,7 +343,10 @@ export function normalizeAngularBuilderStylesOptions(
     | '@storybook/svelte'
     | '@storybook/react-native'
 ): StorybookBuilderOptions | StorybookExecutorOptions {
-  if (uiFramework !== '@storybook/angular') {
+  if (
+    uiFramework !== '@storybook/angular' &&
+    uiFramework !== '@storybook/react'
+  ) {
     if (builderOptions.styles) {
       delete builderOptions.styles;
     }
