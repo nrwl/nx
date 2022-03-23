@@ -65,6 +65,12 @@ Type: `boolean`
 
 When true, forces removal even if the project is still in use.
 
+### importPath
+
+Type: `string`
+
+The library name used at creation time
+
 ### skipFormat
 
 Alias(es): skip-format
