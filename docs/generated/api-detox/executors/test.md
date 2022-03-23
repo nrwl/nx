@@ -43,6 +43,8 @@ Target which builds the application
 
 Type: `string`
 
+Possible values: `enabled`, `disabled`
+
 [iOS Only] Capture \*.uihierarchy snapshots on view action errors and device.captureViewHierarchy() calls.
 
 ### cleanup
@@ -63,7 +65,7 @@ Specify Detox config file path. If not supplied, detox searches for .detoxrc[.js
 
 Alias(es): d
 
-Type: `string`
+Type: `boolean`
 
 Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete.
 
@@ -117,6 +119,8 @@ Alias(es): l
 
 Type: `string`
 
+Possible values: `fatal`, `error`, `warn`, `info`, `verbose`, `trace`
+
 Log level: fatal, error, warn, info, verbose, trace
 
 ### noColor
@@ -129,11 +133,15 @@ Disable colors in log output
 
 Type: `string`
 
+Possible values: `failing`, `all`, `none`
+
 Save logs during each test to artifacts directory. Pass "failing" to save logs of failing tests only.
 
 ### recordPerformance
 
 Type: `string`
+
+Possible values: `all`, `none`
 
 [iOS Only] Save Detox Instruments performance recordings of each test to artifacts directory.
 
@@ -141,11 +149,15 @@ Type: `string`
 
 Type: `string`
 
+Possible values: `all`, `none`
+
 [Jest Only] Record tests and events timeline, for visual display on the chrome://tracing tool.
 
 ### recordVideos
 
 Type: `string`
+
+Possible values: `failing`, `all`, `none`
 
 Save screen recordings of each test to artifacts directory. Pass "failing" to save recordings of failing tests only.
 
@@ -172,6 +184,8 @@ Test runner config file, defaults to 'e2e/mocha.opts' for mocha and 'e2e/config.
 ### takeScreenshots
 
 Type: `string`
+
+Possible values: `manual`, `failing`, `all`, `none`
 
 Save screenshots before and after each test to artifacts directory. Pass "failing" to save screenshots of failing tests only.
 

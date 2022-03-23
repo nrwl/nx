@@ -9,7 +9,8 @@
     "xcodeConfiguration": {
       "type": "string",
       "description": "Explicitly set the Xcode configuration to use",
-      "default": "Debug"
+      "default": "Debug",
+      "examples": ["Debug", "Release"]
     },
     "scheme": {
       "type": "string",
@@ -18,7 +19,7 @@
     "simulator": {
       "type": "string",
       "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone X (12.1)\"",
-      "default": "iPhone X"
+      "examples": ["iPhone X"]
     },
     "device": {
       "type": "string",

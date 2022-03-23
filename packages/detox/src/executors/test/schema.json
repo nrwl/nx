@@ -7,7 +7,13 @@
     "detoxConfiguration": {
       "type": "string",
       "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it",
-      "alias": "C"
+      "alias": "C",
+      "examples": [
+        "ios.sim.debug",
+        "ios.sim.release",
+        "android.emu.debug",
+        "android.emu.release"
+      ]
     },
     "buildTarget": {
       "type": "string",
@@ -30,11 +36,12 @@
     },
     "loglevel": {
       "type": "string",
+      "enum": ["fatal", "error", "warn", "info", "verbose", "trace"],
       "description": "Log level: fatal, error, warn, info, verbose, trace",
       "alias": "l"
     },
     "debugSynchronization": {
-      "type": "string",
+      "type": "boolean",
       "description": "Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete.",
       "alias": "d"
     },
@@ -45,26 +52,32 @@
     },
     "recordLogs": {
       "type": "string",
+      "enum": ["failing", "all", "none"],
       "description": "Save logs during each test to artifacts directory. Pass \"failing\" to save logs of failing tests only."
     },
     "takeScreenshots": {
       "type": "string",
+      "enum": ["manual", "failing", "all", "none"],
       "description": "Save screenshots before and after each test to artifacts directory. Pass \"failing\" to save screenshots of failing tests only. "
     },
     "recordVideos": {
       "type": "string",
+      "enum": ["failing", "all", "none"],
       "description": "Save screen recordings of each test to artifacts directory. Pass \"failing\" to save recordings of failing tests only."
     },
     "recordPerformance": {
       "type": "string",
+      "enum": ["all", "none"],
       "description": "[iOS Only] Save Detox Instruments performance recordings of each test to artifacts directory."
     },
     "recordTimeline": {
       "type": "string",
+      "enum": ["all", "none"],
       "description": "[Jest Only] Record tests and events timeline, for visual display on the chrome://tracing tool."
     },
     "captureViewHierarchy": {
       "type": "string",
+      "enum": ["enabled", "disabled"],
       "description": "[iOS Only] Capture *.uihierarchy snapshots on view action errors and device.captureViewHierarchy() calls."
     },
     "retries": {
