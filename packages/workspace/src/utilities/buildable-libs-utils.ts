@@ -208,7 +208,7 @@ export function checkDependentProjectsHaveBeenBuilt(
     targetName,
     projectDependencies
   );
-  if (missing.length === projectDependencies.length) {
+if (missing.length === projectDependencies.length && missing.length > 0) {
     console.error(stripIndents`
       It looks like all of ${projectName}'s dependencies have not been built yet:
       ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
