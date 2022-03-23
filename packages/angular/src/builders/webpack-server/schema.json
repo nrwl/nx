@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "title": "Webpack Server Target",
-  "description": "Dev Server target options for Build Facade.",
+  "title": "Schema for Webpack Server",
+  "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+  "examplesFile": "../../../docs/webpack-server-examples.md",
   "type": "object",
   "properties": {
     "browserTarget": {
