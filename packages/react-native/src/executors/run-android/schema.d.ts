@@ -10,6 +10,7 @@ export interface ReactNativeRunAndroidOptions {
   sync: boolean;
   port: number;
   terminal?: string;
-  packager: boolean;
-  resetCache?: boolean;
+  packager: boolean; // default is true
+  resetCache: boolean; // default is false
+  interactive: boolean; // default is true
 }

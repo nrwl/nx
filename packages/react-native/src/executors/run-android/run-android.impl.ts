@@ -40,6 +40,7 @@ export default async function* runAndroidExecutor(
         runCliStart(context.root, projectRoot, {
           port: options.port,
           resetCache: options.resetCache,
+          interactive: options.interactive,
         })
       );
     }
@@ -90,7 +91,14 @@ function runCliRunAndroid(
   });
 }
 
-const nxOrStartOptions = ['sync', 'install', 'packager', 'port', 'resetCache'];
+const nxOrStartOptions = [
+  'sync',
+  'install',
+  'packager',
+  'port',
+  'resetCache',
+  'interactive',
+];
 
 function createRunAndroidOptions(options) {
   return Object.keys(options).reduce((acc, k) => {

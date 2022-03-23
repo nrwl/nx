@@ -44,6 +44,7 @@ export default async function* runIosExecutor(
         runCliStart(context.root, projectRoot, {
           port: options.port,
           resetCache: options.resetCache,
+          interactive: options.interactive,
         })
       );
     }
@@ -94,7 +95,14 @@ function runCliRunIOS(
   });
 }
 
-const nxOrStartOptions = ['sync', 'install', 'packager', 'port', 'resetCache'];
+const nxOrStartOptions = [
+  'sync',
+  'install',
+  'packager',
+  'port',
+  'resetCache',
+  'interactive',
+];
 
 function createRunIOSOptions(options) {
   return Object.keys(options).reduce((acc, k) => {

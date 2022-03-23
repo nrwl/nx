@@ -107,6 +107,10 @@ function createStartOptions(options) {
       if (options[k] === true) {
         acc.push(`--reset-cache`);
       }
+    } else if (k === 'interactive') {
+      if (options[k] === false) {
+        acc.push(`--no-interactive`);
+      }
     } else {
       acc.push(`--${k}`, options[k]);
     }
