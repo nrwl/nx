@@ -175,6 +175,8 @@ We will then verify the plugin, offer suggestions or merge the pull request!
 
 A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some of the internal presets that Nx provides by default.
 
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/yGUrF0-uqaU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+ 
 ### Custom Preset
 
 At its core a preset is a generator, which we can create inside of a plugin.
@@ -257,8 +259,3 @@ After you have published your plugin to a registry you can now use your preset w
 ```bash
 npx create-nx-workspace my-workspace --preset=my-plugin-name
 ```
-
-### Useful links
-
-- [Preset Video by Juri](https://www.youtube.com/watch?v=yGUrF0-uqaU)
-- [Preset release docs](https://blog.nrwl.io/single-file-monorepo-config-custom-workspace-presets-improved-tailwind-support-and-more-in-nx-13-1bc88da334c9)
