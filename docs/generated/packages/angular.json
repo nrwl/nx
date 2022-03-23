@@ -661,6 +661,11 @@
             "description": "Skip formatting files.",
             "type": "boolean",
             "default": false
+          },
+          "skipPackageJson": {
+            "description": "Skip updating package.json.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,

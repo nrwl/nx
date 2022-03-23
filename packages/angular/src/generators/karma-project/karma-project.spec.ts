@@ -41,11 +41,13 @@ describe('karmaProject', () => {
   });
 
   it('should generate files', async () => {
+    expect(tree.exists('karma.conf.js')).toBeFalsy();
     await karmaProjectGenerator(tree, { project: 'lib1' });
 
     expect(tree.exists('/libs/lib1/karma.conf.js')).toBeTruthy();
     expect(tree.exists('/libs/lib1/tsconfig.spec.json')).toBeTruthy();
     expect(tree.exists('/libs/lib1/src/test.ts')).toBeTruthy();
+    expect(tree.exists('karma.conf.js')).toBeTruthy();
   });
 
   it('should create a karma.conf.js', async () => {
