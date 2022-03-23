@@ -35,6 +35,8 @@ export enum Preset {
   Express = 'express',
 }
 
+const deprecatedPresets: Preset[] = [Preset.Empty, Preset.NPM];
+
 const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.Apps,
@@ -177,6 +179,7 @@ if (parsedArgs.help) {
 
 function showHelp() {
   const options = Object.values(Preset)
+    .filter((preset) => !deprecatedPresets.includes(preset))
     .map((preset) => `"${preset}"`)
     .join(', ');
 

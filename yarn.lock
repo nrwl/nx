@@ -2672,6 +2672,13 @@
     node-gyp "^8.2.0"
     read-package-json-fast "^2.0.1"
 
+"@nrwl/cli@13.10.0-beta.1":
+  version "13.10.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-13.10.0-beta.1.tgz#965edd7dd2e5289bca010751cf60b6515d14991e"
+  integrity sha512-oqkrG0wbrhQbSTS+RQMEikI4UFWPUpdIJhqccdGot46ku699m5S3UwaDCae54iu7+HWBCP0PUUA958mEUX8Ahg==
+  dependencies:
+    nx "13.10.0-beta.1"
+
 "@nrwl/cli@13.10.0-beta.6":
   version "13.10.0-beta.6"
   resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-13.10.0-beta.6.tgz#f8a1e77ab72e3aad31a283d2c215c268ed0a7ef7"
@@ -2875,6 +2882,13 @@
     semver "7.3.4"
     ts-loader "^9.2.6"
     tsconfig-paths-webpack-plugin "3.5.2"
+
+"@nrwl/tao@13.10.0-beta.1":
+  version "13.10.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-13.10.0-beta.1.tgz#ecfd6763d5f1f4c5381302f14413be634becb791"
+  integrity sha512-w6E+11UBMFajXReCJOuIj1DumiUAZhfHrLlqB1lbk3cuWkMI5u95xb/KzIR3fYSotG3HpoZ9FHEoiVuUFHmKCg==
+  dependencies:
+    nx "13.10.0-beta.1"
 
 "@nrwl/tao@13.10.0-beta.6":
   version "13.10.0-beta.6"
@@ -7748,6 +7762,22 @@ cli-table3@^0.6.1, cli-table3@~0.6.1:
     string-width "^4.2.0"
   optionalDependencies:
     colors "1.4.0"
+
+cli-testing-library@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/cli-testing-library/-/cli-testing-library-1.0.2.tgz#14245e81e6b93734977b5c429f89fbdd3e52086a"
+  integrity sha512-QFc0NEBRGn5iVQ7ClCq6EJm6Hv47uRX336f8++Klt8RAXOhafzVvUwMZpXYQejUshnwpDyxZagRtFCxMGS31vA==
+  dependencies:
+    "@babel/code-frame" "^7.10.4"
+    "@babel/runtime" "^7.12.5"
+    jest-matcher-utils "^27.4.2"
+    lz-string "^1.4.4"
+    pretty-format "^27.0.2"
+    redent "^3.0.0"
+    slice-ansi "^4.0.0"
+    strip-ansi "^6.0.1"
+    strip-final-newline "^2.0.0"
+    tree-kill "^1.2.2"
 
 cli-truncate@^2.1.0:
   version "2.1.0"
@@ -14073,7 +14103,7 @@ jest-leak-detector@^27.5.1:
     jest-get-type "^27.5.1"
     pretty-format "^27.5.1"
 
-jest-matcher-utils@^27.2.3, jest-matcher-utils@^27.5.1:
+jest-matcher-utils@^27.2.3, jest-matcher-utils@^27.4.2, jest-matcher-utils@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-27.5.1.tgz#9c0cdbda8245bc22d2331729d1091308b40cf8ab"
   integrity sha512-z2uTx/T6LBaCoNWNFWwChLBKYxTMcGBRjAt+2SbP929/Fflb9aa5LGma654Rz8z9HLxsrUaYzxE9T/EFIL/PAw==
@@ -14083,7 +14113,22 @@ jest-matcher-utils@^27.2.3, jest-matcher-utils@^27.5.1:
     jest-get-type "^27.5.1"
     pretty-format "^27.5.1"
 
-jest-message-util@^27.2.3, jest-message-util@^27.5.1:
+jest-message-util@^27.2.3:
+  version "27.3.1"
+  resolved "https://registry.npmjs.org/jest-message-util/-/jest-message-util-27.3.1.tgz"
+  integrity sha512-bh3JEmxsTZ/9rTm0jQrPElbY2+y48Rw2t47uMfByNyUVR+OfPh4anuyKsGqsNkXk/TI4JbLRZx+7p7Hdt6q1yg==
+  dependencies:
+    "@babel/code-frame" "^7.12.13"
+    "@jest/types" "^27.2.5"
+    "@types/stack-utils" "^2.0.0"
+    chalk "^4.0.0"
+    graceful-fs "^4.2.4"
+    micromatch "^4.0.4"
+    pretty-format "^27.3.1"
+    slash "^3.0.0"
+    stack-utils "^2.0.3"
+
+jest-message-util@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/jest-message-util/-/jest-message-util-27.5.1.tgz#bdda72806da10d9ed6425e12afff38cd1458b6cf"
   integrity sha512-rMyFe1+jnyAAf+NHwTclDz0eAaLkVDdKVHHBFWsBWHnnh5YeJMNWWsv7AbFYXfK3oTqvL7VTWkhNLu1jX24D+g==
@@ -14924,9 +14969,6 @@ levn@~0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/levn/-/levn-0.3.0.tgz#3b09924edf9f083c0490fdd4c0bc4421e04764ee"
   integrity sha1-OwmSTt+fCDwEkP3UwLxEIeBHZO4=
-  dependencies:
-    prelude-ls "~1.1.2"
-    type-check "~0.3.2"
 
 license-webpack-plugin@4.0.2, license-webpack-plugin@^4.0.2:
   version "4.0.2"
@@ -16673,6 +16715,30 @@ nwsapi@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.0.tgz#204879a9e3d068ff2a55139c2c772780681a38b7"
   integrity sha512-h2AatdwYH+JHiZpv7pt/gSX1XoRGb7L/qSIeuqA6GwYoF9w1vP1cw42TO0aI2pNyshRK5893hNSl+1//vHK7hQ==
+
+nx@13.10.0-beta.1:
+  version "13.10.0-beta.1"
+  resolved "https://registry.yarnpkg.com/nx/-/nx-13.10.0-beta.1.tgz#4b5252271f8b1f41d8049c6216e71afd662b1f1d"
+  integrity sha512-qw6s1+FKpsUgc//DtKZeskenxnhpCO3UUDMVV+b8qKn5+WRICj4Y/Roc+nYnanNWqR+Demabw3Gz2+IOnu0Qfg==
+  dependencies:
+    "@nrwl/cli" "13.10.0-beta.1"
+    "@nrwl/tao" "13.10.0-beta.1"
+    "@swc-node/register" "^1.4.2"
+    "@swc/core" "^1.2.152"
+    chalk "4.1.0"
+    enquirer "~2.3.6"
+    fast-glob "3.2.7"
+    fs-extra "^9.1.0"
+    ignore "^5.0.4"
+    jsonc-parser "3.0.0"
+    rxjs "^6.5.4"
+    rxjs-for-await "0.0.2"
+    semver "7.3.4"
+    tmp "~0.2.1"
+    tsconfig-paths "^3.9.0"
+    tslib "^2.3.0"
+    v8-compile-cache "2.3.0"
+    yargs-parser "20.0.0"
 
 nx@13.10.0-beta.6:
   version "13.10.0-beta.6"
@@ -18642,7 +18708,7 @@ pretty-format@^26.6.2:
     ansi-styles "^4.0.0"
     react-is "^17.0.1"
 
-pretty-format@^27.0.0, pretty-format@^27.2.2, pretty-format@^27.2.3, pretty-format@^27.5.1:
+pretty-format@^27.0.0, pretty-format@^27.0.2, pretty-format@^27.2.2, pretty-format@^27.2.3, pretty-format@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-27.5.1.tgz#2181879fdea51a7a5851fb39d920faa63f01d88e"
   integrity sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==
@@ -21953,7 +22019,7 @@ tr46@~0.0.3:
   resolved "https://registry.yarnpkg.com/traverse/-/traverse-0.3.9.tgz#717b8f220cc0bb7b44e40514c22b2e8bbc70d8b9"
   integrity sha1-cXuPIgzAu3tE5AUUwisui7xw2Lk=
 
-tree-kill@1.2.2:
+tree-kill@1.2.2, tree-kill@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/tree-kill/-/tree-kill-1.2.2.tgz#4ca09a9092c88b73a7cdc5e8a01b507b0790a0cc"
   integrity sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
