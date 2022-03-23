@@ -10,7 +10,7 @@ of Nx are completely generic and can be used with any technology or tool.
 
 ### Creating a New Workspace
 
-Running `npx create-nx-workspace@latest --preset=core` creates an empty workspace.
+Running `npx create-nx-workspace@latest --preset=empty` creates an empty workspace.
 
 This is what is generated:
 
