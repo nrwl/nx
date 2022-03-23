@@ -50,15 +50,15 @@ export function calculateProjectDependencies(
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
-          const libPackageJsonFile = join(
+          const libPackageJsonPath = join(
             root,
             depNode.data.root,
             'package.json'
           );
 
           project = {
-            name: fileExists(libPackageJsonFile)
-              ? readJsonFile(libPackageJsonFile).name // i.e. @workspace/mylib
+            name: fileExists(libPackageJsonPath)
+              ? readJsonFile(libPackageJsonPath).name // i.e. @workspace/mylib
               : dep,
             outputs: getOutputsForTargetAndConfiguration(
               {
