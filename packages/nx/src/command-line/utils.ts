@@ -275,7 +275,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs['parallel'] = Number(args['parallel']);
   }
 
-  return { nxArgs, overrides };
+  return { nxArgs, overrides } as any;
 }
 
 export function getAffectedConfig(): NxAffectedConfig {
