@@ -27,7 +27,7 @@ export function CodeBlock({
     };
   }, [copied]);
   return (
-    <div className="group code-block relative">
+    <div className="code-block group relative">
       <CopyToClipboard
         text={text}
         onCopy={() => {
