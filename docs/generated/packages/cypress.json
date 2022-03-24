@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "cypress",
-  "description": "Cypress plugin for Nx",
+  "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
   "root": "/packages/cypress",
   "source": "/packages/cypress/src",
   "generators": [
@@ -24,7 +24,7 @@
         },
         "presets": []
       },
-      "description": "Initialize the @nrwl/cypress plugin",
+      "description": "Initialize the `@nrwl/cypress` plugin.",
       "aliases": ["ng-add"],
       "hidden": true,
       "implementation": "/packages/cypress/src/generators/init/init#cypressInitGenerator.ts",
@@ -94,7 +94,7 @@
         "required": ["name"],
         "presets": []
       },
-      "description": "Add a Cypress E2E Project",
+      "description": "Add a Cypress E2E Project.",
       "hidden": true,
       "implementation": "/packages/cypress/src/generators/cypress-project/cypress-project#cypressProjectGenerator.ts",
       "aliases": [],
@@ -222,7 +222,7 @@
         "presets": []
       },
       "hasher": "./src/executors/cypress/hasher",
-      "description": "Run Cypress e2e tests",
+      "description": "Run Cypress E2E tests.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/cypress/src/executors/cypress/schema.json"

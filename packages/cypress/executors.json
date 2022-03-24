@@ -3,7 +3,7 @@
     "cypress": {
       "implementation": "./src/executors/cypress/compat",
       "schema": "./src/executors/cypress/schema.json",
-      "description": "Run Cypress e2e tests"
+      "description": "Run Cypress E2E tests."
     }
   },
   "executors": {
@@ -11,7 +11,7 @@
       "implementation": "./src/executors/cypress/cypress.impl",
       "schema": "./src/executors/cypress/schema.json",
       "hasher": "./src/executors/cypress/hasher",
-      "description": "Run Cypress e2e tests"
+      "description": "Run Cypress E2E tests."
     }
   }
 }
