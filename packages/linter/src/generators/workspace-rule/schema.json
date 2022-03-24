@@ -3,22 +3,22 @@
   "$id": "NxWorkspaceRule",
   "cli": "nx",
   "title": "Create a new Workspace Lint Rule",
-  "description": "Create a new Workspace Lint Rule",
+  "description": "Create a new Workspace Lint Rule.",
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/linter:workspace-rule my-custom-rule",
+      "command": "nx g @nrwl/linter:workspace-rule my-custom-rule",
       "description": "Create a new workspace lint rule called my-custom-rule"
     },
     {
-      "command": "g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=a/b/c",
-      "description": "Create a new workspace lint rule located at tools/eslint-rules/a/b/c/my-custom-rule.ts"
+      "command": "nx g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=a/b/c",
+      "description": "Create a new workspace lint rule located at `tools/eslint-rules/a/b/c/my-custom-rule.ts`"
     }
   ],
   "properties": {
     "name": {
       "type": "string",
-      "description": "The name of the new rule",
+      "description": "The name of the new rule.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -26,7 +26,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the rule under this directory within tools/eslint-rules/ (can be nested).",
+      "description": "Create the rule under this directory within `tools/eslint-rules/` (can be nested).",
       "alias": "dir",
       "default": "rules"
     }

@@ -3,6 +3,7 @@
   "cli": "nx",
   "$id": "SchematicsNxExpressApp",
   "title": "Nx Application Options Schema",
+  "description": "Nx Application Options Schema.",
   "type": "object",
   "properties": {
     "name": {
@@ -20,14 +21,14 @@
       "type": "string"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to package.json."
+      "description": "Do not add dependencies to `package.json`."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -38,12 +39,12 @@
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests",
+      "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the application (used for linting)"
+      "description": "Add tags to the application (used for linting)."
     },
     "frontendProject": {
       "type": "string",
@@ -51,7 +52,7 @@
     },
     "babelJest": {
       "type": "boolean",
-      "description": "Use babel instead ts-jest",
+      "description": "Use `babel` instead `ts-jest`.",
       "default": false
     },
     "pascalCaseFiles": {
@@ -66,12 +67,12 @@
       "default": false
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

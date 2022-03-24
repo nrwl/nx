@@ -1,27 +1,27 @@
 {
   "title": "File Server",
-  "description": "File Server",
+  "description": "Serve a web application from a folder.",
   "type": "object",
   "cli": "nx",
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application"
+      "description": "Target which builds the application."
     },
     "withDeps": {
       "type": "boolean",
       "description": "Build the target and all its deps",
       "default": false,
-      "x-deprecated": "\"withDeps\" is deprecated and it will be removed in v14. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
+      "x-deprecated": "\"withDeps\" is deprecated and it will be removed in `v14`. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
     },
     "parallel": {
       "type": "boolean",
-      "description": "Build the target in parallel",
+      "description": "Build the target in parallel.",
       "default": true
     },
     "maxParallel": {
       "type": "number",
-      "description": "Max number of parallel jobs"
+      "description": "Max number of parallel jobs."
     },
     "port": {
       "type": "number",
@@ -35,16 +35,16 @@
     },
     "ssl": {
       "type": "boolean",
-      "description": "Serve using HTTPS.",
+      "description": "Serve using `HTTPS`.",
       "default": false
     },
     "sslKey": {
       "type": "string",
-      "description": "SSL key to use for serving HTTPS."
+      "description": "SSL key to use for serving `HTTPS`."
     },
     "sslCert": {
       "type": "string",
-      "description": "SSL certificate to use for serving HTTPS."
+      "description": "SSL certificate to use for serving `HTTPS`."
     },
     "proxyUrl": {
       "type": "string",
@@ -52,7 +52,7 @@
     },
     "proxyOptions": {
       "type": "object",
-      "description": "Options for the proxy used by http-server",
+      "description": "Options for the proxy used by `http-server`.",
       "default": {},
       "properties": {
         "secure": {

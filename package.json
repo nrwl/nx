@@ -269,7 +269,9 @@
     "@docsearch/react": "1.0.0-alpha.27",
     "@headlessui/react": "^1.1.1",
     "@heroicons/react": "^1.0.1",
+    "@monaco-editor/react": "^4.3.1",
     "@napi-rs/canvas": "^0.1.19",
+    "@nrwl/next": "13.8.3",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@tailwindcss/forms": "^0.4.0",
     "@tailwindcss/typography": "^0.5.0",
@@ -280,6 +282,9 @@
     "framer-motion": "^4.1.17",
     "glob": "7.1.4",
     "gray-matter": "^4.0.2",
+    "json-schema-to-typescript": "^10.1.5",
+    "jsonpointer": "^5.0.0",
+    "next": "12.1.0",
     "next-seo": "^4.28.1",
     "npm-run-path": "^4.0.1",
     "preact": "10.6.4",
@@ -304,4 +309,3 @@
     "immer": "~9.0.6"
   }
 }
-

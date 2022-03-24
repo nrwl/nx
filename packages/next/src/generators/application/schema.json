@@ -5,8 +5,8 @@
   "title": "Create a Next.js Application for Nx",
   "examples": [
     {
-      "command": "g app myapp --directory=myorg",
-      "description": "Generate apps/myorg/myapp and apps/myorg/myapp-e2e"
+      "command": "nx g app myapp --directory=myorg",
+      "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
     }
   ],
   "type": "object",
@@ -74,30 +74,30 @@
       "default": "eslint"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "skipWorkspaceJson": {
-      "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style)",
+      "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. `babel`, `style`).",
       "type": "boolean",
       "default": false
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests",
+      "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
       "enum": ["cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests",
+      "description": "Test runner to use for end to end (E2E) tests.",
       "default": "cypress"
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the application (used for linting)",
+      "description": "Add tags to the application (used for linting).",
       "alias": "t"
     },
     "js": {
@@ -107,11 +107,11 @@
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
       "type": "boolean"
     },
     "swc": {

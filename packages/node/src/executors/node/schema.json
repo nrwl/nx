@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "title": "Node executor",
-  "description": "Execute Nodejs applications",
+  "description": "Execute Nodejs applications.",
   "type": "object",
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "The target to run to build you the app"
+      "description": "The target to run to build you the app."
     },
     "buildTargetOptions": {
       "type": "object",
@@ -16,7 +16,7 @@
     },
     "waitUntilTargets": {
       "type": "array",
-      "description": "The targets to run to before starting the node app",
+      "description": "The targets to run to before starting the node app.",
       "default": [],
       "items": {
         "type": "string"
@@ -25,7 +25,7 @@
     "host": {
       "type": "string",
       "default": "localhost",
-      "description": "The host to inspect the process on"
+      "description": "The host to inspect the process on."
     },
     "port": {
       "type": "number",
@@ -42,12 +42,12 @@
           "type": "boolean"
         }
       ],
-      "description": "Ensures the app is starting with debugging",
+      "description": "Ensures the app is starting with debugging.",
       "default": "inspect"
     },
     "runtimeArgs": {
       "type": "array",
-      "description": "Extra args passed to the node process",
+      "description": "Extra args passed to the node process.",
       "default": [],
       "items": {
         "type": "string"
@@ -55,7 +55,7 @@
     },
     "args": {
       "type": "array",
-      "description": "Extra args when starting the app",
+      "description": "Extra args when starting the app.",
       "default": [],
       "items": {
         "type": "string"

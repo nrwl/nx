@@ -1,0 +1,340 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "nx-plugin",
+  "description": "Plugin for creating plugins for Nx :)",
+  "root": "/packages/nx-plugin",
+  "source": "/packages/nx-plugin/src",
+  "generators": [
+    {
+      "name": "plugin",
+      "factory": "./src/generators/plugin/plugin",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxPluginPlugin",
+        "title": "Create a Plugin for Nx",
+        "description": "Create a Plugin for Nx.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin",
+            "description": "Generate `libs/plugins/my-plugin`"
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Plugin name",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the plugin?"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the plugin is placed.",
+            "alias": "d"
+          },
+          "importPath": {
+            "type": "string",
+            "description": "How the plugin will be published, like `@myorg/my-awesome-plugin`. Note this must be a valid NPM name."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the library (used for linting).",
+            "alias": "t"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipTsConfig": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not update tsconfig.json for development experience."
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "compiler": {
+            "type": "string",
+            "enum": ["tsc", "swc"],
+            "default": "tsc",
+            "description": "The compiler used by the build and test targets."
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Create a Nx Plugin",
+      "implementation": "/packages/nx-plugin/src/generators/plugin/plugin.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/generators/plugin/schema.json"
+    },
+    {
+      "name": "e2e-project",
+      "factory": "./src/generators/e2e-project/e2e",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxPluginE2E",
+        "title": "Create an E2E app for a Nx Plugin",
+        "description": "Create an E2E app for a Nx Plugin.",
+        "type": "object",
+        "properties": {
+          "pluginName": {
+            "type": "string",
+            "description": "the name of the plugin to be tested."
+          },
+          "npmPackageName": {
+            "type": "string",
+            "description": "the name of the package that would be published to NPM."
+          },
+          "projectDirectory": {
+            "type": "string",
+            "description": "the directory where the plugin is placed."
+          },
+          "pluginOutputPath": {
+            "type": "string",
+            "description": "the output path of the plugin after it builds."
+          },
+          "jestConfig": {
+            "type": "string",
+            "description": "Jest config file."
+          },
+          "tsSpecConfig": {
+            "type": "string",
+            "description": "Spec `tsconfig` file.",
+            "x-deprecated": true
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          }
+        },
+        "required": ["pluginName", "npmPackageName"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Create a e2e application for a Nx Plugin",
+      "hidden": true,
+      "implementation": "/packages/nx-plugin/src/generators/e2e-project/e2e.ts",
+      "aliases": [],
+      "path": "/packages/nx-plugin/src/generators/e2e-project/schema.json"
+    },
+    {
+      "name": "migration",
+      "factory": "./src/generators/migration/migration",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxPluginMigration",
+        "title": "Create a Migration for an Nx Plugin",
+        "description": "Create a Migration for an Nx Plugin.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g migration my-migration --project=my-plugin --version=1.0.0",
+            "description": "Generate `libs/my-plugin/src/migrations/my-migration`"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for the migration?"
+          },
+          "name": {
+            "type": "string",
+            "description": "Migration name.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "description": {
+            "type": "string",
+            "description": "Migration description.",
+            "alias": "d"
+          },
+          "packageVersion": {
+            "type": "string",
+            "description": "Version to use for the migration.",
+            "alias": "v",
+            "x-prompt": "What version would you like to use for the migration?"
+          },
+          "packageJsonUpdates": {
+            "type": "boolean",
+            "description": "Whether or not to include `package.json` updates.",
+            "alias": "p",
+            "default": false
+          }
+        },
+        "required": ["project", "packageVersion"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Create a migration for an Nx Plugin",
+      "implementation": "/packages/nx-plugin/src/generators/migration/migration.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/generators/migration/schema.json"
+    },
+    {
+      "name": "generator",
+      "factory": "./src/generators/generator/generator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxPluginGenerator",
+        "title": "Create a Generator for an Nx Plugin",
+        "description": "Create a Generator for an Nx Plugin.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g generator my-generator --project=my-plugin",
+            "description": "Generate `libs/my-plugin/src/generators/my-generator`"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for the generator?"
+          },
+          "name": {
+            "type": "string",
+            "description": "Generator name.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the generator?"
+          },
+          "description": {
+            "type": "string",
+            "description": "Generator description.",
+            "alias": "d"
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          }
+        },
+        "required": ["project", "name"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Create a generator for an Nx Plugin",
+      "implementation": "/packages/nx-plugin/src/generators/generator/generator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/generators/generator/schema.json"
+    },
+    {
+      "name": "executor",
+      "factory": "./src/generators/executor/executor",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxPluginExecutor",
+        "title": "Create a Executor for an Nx Plugin",
+        "description": "Create a Executor for an Nx Plugin.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g executor my-executor --project=my-plugin",
+            "description": "Generate `libs/my-plugin/src/executors/my-executor`"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for the executor?"
+          },
+          "name": {
+            "type": "string",
+            "description": "Executor name.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the executor?"
+          },
+          "description": {
+            "type": "string",
+            "description": "Executor description.",
+            "alias": "d"
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          }
+        },
+        "required": ["project", "name"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Create a executor for an Nx Plugin",
+      "implementation": "/packages/nx-plugin/src/generators/executor/executor.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/generators/executor/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "e2e",
+      "implementation": "/packages/nx-plugin/src/executors/e2e/e2e.impl.ts",
+      "schema": {
+        "title": "Nx Plugin Playground Target",
+        "description": "Creates a playground for a Nx Plugin.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "target": {
+            "description": "The build target for the Nx Plugin project.",
+            "type": "string"
+          },
+          "jestConfig": {
+            "type": "string",
+            "description": "Jest config file."
+          },
+          "tsSpecConfig": {
+            "type": "string",
+            "description": "The tsconfig file for specs.",
+            "x-deprecated": "Use the `tsconfig` property for `ts-jest` in the e2e project `jest.config.js` file. It will be removed in the next major release."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["target", "jestConfig"],
+        "presets": []
+      },
+      "description": "Creates and runs the e2e tests for an Nx Plugin.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/executors/e2e/schema.json"
+    }
+  ]
+}

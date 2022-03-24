@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "title": "ESLint Lint Target",
-  "description": "ESLint Lint Target",
+  "description": "ESLint Lint Target.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -11,7 +11,7 @@
     },
     "lintFilePatterns": {
       "type": "array",
-      "description": "One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.",
+      "description": "One or more files/dirs/globs to pass directly to ESLint's `lintFiles()` method.",
       "default": [],
       "items": {
         "type": "string"
@@ -74,26 +74,26 @@
     },
     "maxWarnings": {
       "type": "number",
-      "description": "Number of warnings to trigger nonzero exit code - default: -1",
+      "description": "Number of warnings to trigger nonzero exit code - default: `-1`.",
       "default": -1
     },
     "quiet": {
       "type": "boolean",
-      "description": "Report errors only - default: false",
+      "description": "Report errors only - default: `false`.",
       "default": false
     },
     "ignorePath": {
       "type": "string",
-      "description": "The path of the .eslintignore file."
+      "description": "The path of the `.eslintignore` file."
     },
     "noEslintrc": {
       "type": "boolean",
-      "description": "The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default",
+      "description": "The equivalent of the `--no-eslintrc` flag on the ESLint CLI, it is `false` by default.",
       "default": false
     },
     "hasTypeAwareRules": {
       "type": "boolean",
-      "description": "When set to true, the linter will invalidate its cache when any of its dependencies changes."
+      "description": "When set to `true`, the linter will invalidate its cache when any of its dependencies changes."
     }
   },
   "additionalProperties": false,

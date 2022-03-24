@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "title": "Lint Target",
-  "description": "Linter",
+  "description": "Linter.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -98,12 +98,12 @@
     },
     "maxWarnings": {
       "type": "number",
-      "description": "Number of warnings to trigger nonzero exit code - default: -1",
+      "description": "Number of warnings to trigger nonzero exit code - default: `-1`.",
       "default": -1
     },
     "quiet": {
       "type": "boolean",
-      "description": "Report errors only - default: false",
+      "description": "Report errors only - default: `false`.",
       "default": false
     }
   },

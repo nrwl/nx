@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxReactNgInit",
   "title": "Init React Plugin",
+  "description": "Initialize a React Plugin",
   "cli": "nx",
   "type": "object",
   "properties": {

@@ -1,0 +1,271 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "detox",
+  "description": "Detox Plugin for Nx",
+  "root": "/packages/detox",
+  "source": "/packages/detox/src",
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init#detoxInitGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "title": "Add Detox Schematics",
+        "description": "Add Detox Schematics.",
+        "type": "object",
+        "properties": {
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Initialize the @nrwl/detox plugin",
+      "hidden": true,
+      "implementation": "/packages/detox/src/generators/init/init#detoxInitGenerator.ts",
+      "aliases": [],
+      "path": "/packages/detox/src/generators/init/schema.json"
+    },
+    {
+      "name": "application",
+      "factory": "./src/generators/application/application#detoxApplicationGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "title": "Create Detox Configuration for the workspace",
+        "description": "Create Detox Configuration for the workspace.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the frontend project to test.",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the frontend project to test?"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the E2E Project.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the E2E project?"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the project is placed."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint", "none"],
+            "default": "eslint"
+          },
+          "js": {
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          }
+        },
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create a detox application",
+      "implementation": "/packages/detox/src/generators/application/application#detoxApplicationGenerator.ts",
+      "hidden": false,
+      "path": "/packages/detox/src/generators/application/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "build",
+      "implementation": "/packages/detox/src/executors/build/build.impl.ts",
+      "schema": {
+        "title": "Run detox build",
+        "description": "Run detox build options.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "detoxConfiguration": {
+            "type": "string",
+            "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it.",
+            "alias": "C"
+          },
+          "configPath": {
+            "type": "string",
+            "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in `package.json`.",
+            "alias": "cp"
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Run the command defined in build property of the specified configuration.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/detox/src/executors/build/schema.json"
+    },
+    {
+      "name": "test",
+      "implementation": "/packages/detox/src/executors/test/test.impl.ts",
+      "schema": {
+        "title": "Run detox test",
+        "description": "Run detox test options.",
+        "type": "object",
+        "cli": "nx",
+        "presets": [
+          {
+            "name": "Run tests",
+            "keys": ["detoxConfiguration", "loglevel", "reuse"]
+          }
+        ],
+        "properties": {
+          "detoxConfiguration": {
+            "type": "string",
+            "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it.",
+            "alias": "C",
+            "examples": [
+              "ios.sim.debug",
+              "ios.sim.release",
+              "android.emu.debug",
+              "android.emu.release"
+            ]
+          },
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application."
+          },
+          "configPath": {
+            "type": "string",
+            "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in package.json.",
+            "alias": "cp"
+          },
+          "runnerConfig": {
+            "type": "string",
+            "description": "Test runner config file, defaults to `e2e/mocha.opts` for mocha and `e2e/config.json` for Jest.",
+            "alias": "o"
+          },
+          "deviceName": {
+            "type": "string",
+            "description": "Override the device name specified in a configuration. Useful for running a single build configuration on multiple devices.",
+            "alias": "n"
+          },
+          "loglevel": {
+            "type": "string",
+            "enum": ["fatal", "error", "warn", "info", "verbose", "trace"],
+            "description": "Log level: `fatal`, `error`, `warn`, `info`, `verbose`, `trace`.",
+            "alias": "l"
+          },
+          "debugSynchronization": {
+            "type": "boolean",
+            "description": "Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete.",
+            "alias": "d"
+          },
+          "artifactsLocation": {
+            "type": "string",
+            "description": "Artifacts (logs, screenshots, etc) root directory.",
+            "alias": "a"
+          },
+          "recordLogs": {
+            "type": "string",
+            "enum": ["failing", "all", "none"],
+            "description": "Save logs during each test to artifacts directory. Pass `failing` to save logs of failing tests only."
+          },
+          "takeScreenshots": {
+            "type": "string",
+            "enum": ["manual", "failing", "all", "none"],
+            "description": "Save screenshots before and after each test to artifacts directory. Pass `failing` to save screenshots of failing tests only. "
+          },
+          "recordVideos": {
+            "type": "string",
+            "enum": ["failing", "all", "none"],
+            "description": "Save screen recordings of each test to artifacts directory. Pass `failing` to save recordings of failing tests only."
+          },
+          "recordPerformance": {
+            "type": "string",
+            "enum": ["all", "none"],
+            "description": "[iOS Only] Save Detox Instruments performance recordings of each test to artifacts directory."
+          },
+          "recordTimeline": {
+            "type": "string",
+            "enum": ["all", "none"],
+            "description": "[Jest Only] Record tests and events timeline, for visual display on the `chrome://tracing` tool."
+          },
+          "captureViewHierarchy": {
+            "type": "string",
+            "enum": ["enabled", "disabled"],
+            "description": "[iOS Only] Capture `*.uihierarchy` snapshots on view action errors and `device.captureViewHierarchy()` calls."
+          },
+          "retries": {
+            "type": "number",
+            "description": "[Jest Circus Only] Re-spawn the test runner for individual failing suite files until they pass, or `<N>` times at least."
+          },
+          "reuse": {
+            "type": "boolean",
+            "description": "Reuse existing installed app (do not delete + reinstall) for a faster run."
+          },
+          "cleanup": {
+            "type": "boolean",
+            "description": "Shutdown simulator when test is over, useful for CI scripts, to make sure detox exists cleanly with no residue"
+          },
+          "workers": {
+            "type": "number",
+            "description": "Specifies number of workers the test runner should spawn, requires a test runner with parallel execution support (Detox CLI currently supports Jest)."
+          },
+          "jestReportSpecs": {
+            "type": "boolean",
+            "description": "[Jest Only] Whether to output logs per each running spec, in real-time. By default, disabled with multiple workers."
+          },
+          "headless": {
+            "type": "boolean",
+            "description": "Android Only] Launch Emulator in headless mode. Useful when running on CI."
+          },
+          "gpu": {
+            "type": "boolean",
+            "description": "[Android Only] Launch Emulator with the specific `-gpu [gpu mode]` parameter."
+          },
+          "deviceLaunchArgs": {
+            "type": "string",
+            "description": "A list of passthrough-arguments to use when (if) devices (Android emulator / iOS simulator) are launched by Detox."
+          },
+          "appLaunchArgs": {
+            "type": "number",
+            "description": "Custom arguments to pass (through) onto the app every time it is launched."
+          },
+          "noColor": {
+            "type": "boolean",
+            "description": "Disable colors in log output"
+          },
+          "useCustomLogger": {
+            "type": "boolean",
+            "description": "Use Detox' custom console-logging implementation, for logging Detox (non-device) logs. Disabling will fallback to Node.js / test-runner's implementation (e.g. Jest / Mocha)."
+          },
+          "forceAdbInstall": {
+            "type": "boolean",
+            "description": "Due to problems with the adb install command on Android, Detox resorts to a different scheme for install APK's. Setting true will disable that and force usage of `adb install`, instead."
+          },
+          "inspectBrk": {
+            "type": "boolean",
+            "description": "Uses node's `--inspect-brk` flag to let users debug the jest/mocha test runner"
+          }
+        },
+        "required": ["detoxConfiguration"]
+      },
+      "description": "Initiating your detox test suite.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/detox/src/executors/test/schema.json"
+    }
+  ]
+}

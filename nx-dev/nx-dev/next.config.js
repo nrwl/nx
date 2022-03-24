@@ -2,6 +2,7 @@
 const withNx = require('@nrwl/next/plugins/with-nx');
 const { copy } = require('fs-extra');
 const path = require('path');
+const redirectRules = require('./redirect-rules.config');
 
 /**
  * TODO@ben: Temporary solution before Nextjs' assets management tasks is up and running
@@ -11,19 +12,6 @@ copy(
   path.resolve(__dirname + '/public/documentation'),
   { overwrite: true }
 );
-
-const redirects = {
-  '/core-concepts/configuration': '/configuration/projectjson',
-  '/core-concepts/mental-model': '/using-nx/mental-model',
-  '/core-concepts/updating-nx': '/using-nx/updating-nx',
-  '/core-concepts/ci-overview': '/using-nx/ci-overview',
-  '/using-nx/nx-devkit': '/getting-started/nx-devkit',
-  '/getting-started/nx-cli': '/using-nx/nx-cli',
-  '/getting-started/console': '/using-nx/console',
-  '/core-extended/affected': '/using-nx/affected',
-  '/core-extended/computation-caching': '/using-nx/caching',
-  '/guides/nextjs': '/next/overview',
-};
 
 module.exports = withNx({
   // For both client and server
@@ -75,28 +63,37 @@ module.exports = withNx({
     });
 
     // Customs
-    for (let s of Object.keys(redirects)) {
+    for (let s of Object.keys(redirectRules.guideUrls)) {
       rules.push({
         source: `/l/n${s}`,
-        destination: redirects[s],
+        destination: redirectRules.guideUrls[s],
         permanent: true,
       });
 
       rules.push({
         source: `/l/r${s}`,
-        destination: redirects[s],
+        destination: redirectRules.guideUrls[s],
         permanent: true,
       });
 
       rules.push({
         source: `/l/a${s}`,
-        destination: redirects[s],
+        destination: redirectRules.guideUrls[s],
         permanent: true,
       });
 
       rules.push({
         source: s,
-        destination: redirects[s],
+        destination: redirectRules.guideUrls[s],
+        permanent: true,
+      });
+    }
+
+    // Schemas (generators & executors)
+    for (let s of Object.keys(redirectRules.schemaUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.schemaUrls[s],
         permanent: true,
       });
     }

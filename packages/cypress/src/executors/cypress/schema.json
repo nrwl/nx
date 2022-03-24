@@ -1,6 +1,6 @@
 {
   "title": "Cypress Target",
-  "description": "Cypress target option for Build Facade",
+  "description": "Cypress target option for Build Facade.",
   "type": "object",
   "outputCapture": "pipe",
   "cli": "nx",
@@ -24,7 +24,7 @@
     },
     "headed": {
       "type": "boolean",
-      "description": "Displays the browser instead of running headlessly. Set this to 'true' if your run depends on a Chrome extension being loaded.",
+      "description": "Displays the browser instead of running headlessly. Set this to `true` if your run depends on a Chrome extension being loaded.",
       "default": false
     },
     "headless": {
@@ -35,26 +35,26 @@
     },
     "exit": {
       "type": "boolean",
-      "description": "Whether or not the Cypress Test Runner will stay open after running tests in a spec file",
+      "description": "Whether or not the Cypress Test Runner will stay open after running tests in a spec file.",
       "default": true
     },
     "key": {
       "type": "string",
-      "description": "The key cypress should use to run tests in parallel/record the run (CI only)"
+      "description": "The key cypress should use to run tests in parallel/record the run (CI only)."
     },
     "record": {
       "type": "boolean",
-      "description": "Whether or not Cypress should record the results of the tests",
+      "description": "Whether or not Cypress should record the results of the tests.",
       "default": false
     },
     "parallel": {
       "type": "boolean",
-      "description": "Whether or not Cypress should run its tests in parallel (CI only)",
+      "description": "Whether or not Cypress should run its tests in parallel (CI only).",
       "default": false
     },
     "baseUrl": {
       "type": "string",
-      "description": "The address (with the port) which your application is running on"
+      "description": "The address (with the port) which your application is running on."
     },
     "browser": {
       "type": "string",
@@ -62,15 +62,15 @@
     },
     "env": {
       "type": "object",
-      "description": "A key-value Pair of environment variables to pass to Cypress runner"
+      "description": "A key-value Pair of environment variables to pass to Cypress runner."
     },
     "spec": {
       "type": "string",
-      "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**"
+      "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. `**examples/**,**actions.spec**`."
     },
     "copyFiles": {
       "type": "string",
-      "description": "A regex string that is used to choose what additional integration files to copy to the dist folder",
+      "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
       "x-deprecated": true
     },
     "ciBuildId": {
@@ -90,11 +90,11 @@
     },
     "ignoreTestFiles": {
       "type": "string",
-      "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: {dot: true, matchBase: true}. We suggest using https://globster.xyz to test what files would match."
+      "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: `{dot: true, matchBase: true}`. We suggest using https://globster.xyz to test what files would match."
     },
     "reporter": {
       "type": "string",
-      "description": "The reporter used during cypress run"
+      "description": "The reporter used during cypress run."
     },
     "reporterOptions": {
       "type": "string",
@@ -107,13 +107,13 @@
     },
     "testingType": {
       "type": "string",
-      "description": "Specify the type of tests to execute",
+      "description": "Specify the type of tests to execute.",
       "enum": ["component", "e2e"],
       "default": "e2e"
     },
     "tag": {
       "type": "string",
-      "description": "A comma delimited list to identify a run with",
+      "description": "A comma delimited list to identify a run with.",
       "aliases": ["t"]
     }
   },

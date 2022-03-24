@@ -4,6 +4,19 @@
   "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
   "cli": "nx",
   "type": "object",
+  "presets": [
+    {
+      "name": "Publishable Library with Tailwind",
+      "keys": ["tailwindConfig"]
+    },
+    {
+      "name": "Updating Project Dependencies for Publishable Library",
+      "keys": [
+        "updateBuildableProjectDepsInPackageJson",
+        "buildableProjectDepsInPackageJsonType"
+      ]
+    }
+  ],
   "properties": {
     "project": {
       "type": "string",

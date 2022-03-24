@@ -1,7 +1,7 @@
 {
   "title": "React Native Storybook Load Stories",
   "cli": "nx",
-  "description": "Load stories for react native",
+  "description": "Load stories for react native.",
   "type": "object",
   "properties": {
     "searchDir": {
@@ -15,7 +15,7 @@
     },
     "pattern": {
       "type": "string",
-      "description": "The pattern of files to look at. It can be a specific file, or any valid glob. Note: if using the CLI, globs with **/*... must be escaped with quotes",
+      "description": "The pattern of files to look at. It can be a specific file, or any valid glob. Note: if using the CLI, globs with `**/*...` must be escaped with quotes",
       "default": "**/*.stories.@(js|jsx|ts|tsx|md)"
     },
     "silent": {

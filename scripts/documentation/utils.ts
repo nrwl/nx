@@ -43,7 +43,8 @@ export async function generateJsonFile(
 ): Promise<void> {
   outputFileSync(
     filePath,
-    await formatWithPrettier(filePath, JSON.stringify(json))
+    await formatWithPrettier(filePath, JSON.stringify(json)),
+    { encoding: 'utf8' }
   );
 }
 

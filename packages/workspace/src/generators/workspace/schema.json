@@ -3,6 +3,7 @@
   "$id": "SchematicsNxNgNew",
   "cli": "nx",
   "title": "Create an empty workspace",
+  "description": "Create an empty workspace.",
   "type": "object",
   "properties": {
     "name": {
@@ -46,7 +47,7 @@
     },
     "preset": {
       "type": "string",
-      "description": "Preset of the workspace"
+      "description": "Preset of the workspace."
     },
     "npmScope": {
       "type": "string",

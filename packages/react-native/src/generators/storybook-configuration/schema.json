@@ -2,11 +2,13 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactNativeStorybookConfigure",
+  "title": "React native Storybook configuration",
+  "description": "Set up Storybook for a React-Native app or library",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Project name",
+      "description": "Project name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -30,7 +32,7 @@
       "default": "eslint"
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     }
   },

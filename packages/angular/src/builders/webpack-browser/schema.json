@@ -4,6 +4,38 @@
   "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
   "examplesFile": "../../../docs/webpack-browser-examples.md",
   "type": "object",
+  "presets": [
+    {
+      "name": "Custom Webpack Configuration",
+      "keys": [
+        "outputs",
+        "outputPath",
+        "index",
+        "main",
+        "polyfills",
+        "tsConfig",
+        "assets",
+        "styles",
+        "scripts",
+        "customWebpackConfig"
+      ]
+    },
+    {
+      "name": "Incremental Builds",
+      "keys": [
+        "outputs",
+        "buildLibsFromSource",
+        "outputPath",
+        "index",
+        "main",
+        "polyfills",
+        "tsConfig",
+        "assets",
+        "styles",
+        "scripts"
+      ]
+    }
+  ],
   "properties": {
     "assets": {
       "type": "array",
@@ -203,7 +235,7 @@
     "deployUrl": {
       "type": "string",
       "description": "URL where files will be deployed.",
-      "x-deprecated": "Use \"baseHref\" option, \"APP_BASE_HREF\" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
+      "x-deprecated": "Use `baseHref` option, `APP_BASE_HREF` DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
     },
     "verbose": {
       "type": "boolean",

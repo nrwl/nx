@@ -1,6 +1,6 @@
 {
   "title": "Typescript Build Target",
-  "description": "Builds using TypeScript",
+  "description": "Builds using TypeScript.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -39,7 +39,7 @@
     },
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
-      "description": "Whether to update the buildable project dependencies in package.json.",
+      "description": "Whether to update the buildable project dependencies in `package.json`.",
       "default": true
     },
     "buildableProjectDepsInPackageJsonType": {

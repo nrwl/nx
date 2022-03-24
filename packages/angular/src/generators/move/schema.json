@@ -3,12 +3,12 @@
   "$id": "NxAngularMove",
   "cli": "nx",
   "title": "Nx Angular Move",
-  "description": "Move an Angular project to another folder in the workspace",
+  "description": "Move an Angular project to another folder in the workspace.",
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib",
-      "description": "Move libs/my-feature-lib to libs/shared/my-feature-lib"
+      "command": "nx g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib",
+      "description": "Move libs/my-feature-lib to libs/shared/my-feature-lib."
     }
   ],
   "properties": {

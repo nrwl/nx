@@ -2,12 +2,13 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxWorkspaceNpmPackage",
   "title": "Add a minimal npm package",
+  "description": "Add a minimal npm package.",
   "cli": "nx",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Package name",
+      "description": "Package name.",
       "$default": {
         "$source": "argv",
         "index": 0

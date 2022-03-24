@@ -1,17 +1,17 @@
 {
   "title": "Counter",
-  "description": "A dummy executor useful for e2e tests",
+  "description": "A dummy executor useful for E2E tests.",
   "type": "object",
   "cli": "nx",
   "outputCapture": "pipe",
   "properties": {
     "to": {
       "type": "number",
-      "description": "Count to this number"
+      "description": "Count to this number."
     },
     "result": {
       "type": "boolean",
-      "description": "Final result"
+      "description": "Final result."
     }
   },
   "additionalProperties": true,

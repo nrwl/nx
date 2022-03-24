@@ -7,7 +7,7 @@
   "properties": {
     "script": {
       "type": "string",
-      "description": "An npm script name in the package.json file of the project (e.g., build)"
+      "description": "An npm script name in the `package.json` file of the project (e.g., `build`)."
     }
   },
   "additionalProperties": true,

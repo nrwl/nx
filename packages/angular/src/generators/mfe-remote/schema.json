@@ -3,11 +3,11 @@
   "$id": "NxMFERemote",
   "cli": "nx",
   "title": "Nx MFE Remote App",
-  "description": "Create an Angular Remote Micro Frontend Application",
+  "description": "Create an Angular Remote Micro Frontend Application.",
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/angular:mfe-remote appName --host=host --port=4201",
+      "command": "nx g @nrwl/angular:mfe-remote appName --host=host --port=4201",
       "description": "Create an Angular app with configuration in place for MFE. If host is provided, attach this remote app to host app's configuration."
     }
   ],

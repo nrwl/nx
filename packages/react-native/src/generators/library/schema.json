@@ -3,17 +3,18 @@
   "$id": "NxReactNativeLibrary",
   "$schema": "http://json-schema.org/schema",
   "title": "Create a React Native Library for Nx",
+  "description": "Create a React Native Library for Nx.",
   "type": "object",
   "examples": [
     {
-      "command": "g lib mylib --directory=myapp",
-      "description": "Generate libs/myapp/mylib"
+      "command": "nx g lib mylib --directory=myapp",
+      "description": "Generate `libs/myapp/mylib`"
     }
   ],
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library name",
+      "description": "Library name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -51,11 +52,11 @@
     "skipTsConfig": {
       "type": "boolean",
       "default": false,
-      "description": "Do not update tsconfig.json for development experience."
+      "description": "Do not update `tsconfig.json` for development experience."
     },
     "pascalCaseFiles": {
       "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
+      "description": "Use pascal case component file name (e.g. `App.tsx`).",
       "alias": "P",
       "default": false
     },
@@ -70,7 +71,7 @@
     },
     "importPath": {
       "type": "string",
-      "description": "The library name used to import it, like @myorg/my-awesome-lib"
+      "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
     },
     "js": {
       "type": "boolean",
@@ -79,7 +80,7 @@
     },
     "globalCss": {
       "type": "boolean",
-      "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is '*.css' rather than '*.module.css').",
+      "description": "When `true`, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is `*.css` rather than `*.module.css`).",
       "default": false
     },
     "strict": {
@@ -89,7 +90,7 @@
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

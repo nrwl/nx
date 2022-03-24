@@ -1,0 +1,9 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "devkit",
+  "description": "Smart, Fast and Extensible Build System",
+  "root": "/packages/devkit",
+  "source": "/packages/devkit/src",
+  "generators": [],
+  "executors": []
+}

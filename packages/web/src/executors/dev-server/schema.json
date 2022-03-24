@@ -1,12 +1,12 @@
 {
   "title": "Web Dev Server",
-  "description": "Web Dev Server",
+  "description": "Serve a web application.",
   "cli": "nx",
   "type": "object",
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application"
+      "description": "Target which builds the application."
     },
     "port": {
       "type": "number",
@@ -20,20 +20,20 @@
     },
     "ssl": {
       "type": "boolean",
-      "description": "Serve using HTTPS.",
+      "description": "Serve using `HTTPS`.",
       "default": false
     },
     "sslKey": {
       "type": "string",
-      "description": "SSL key to use for serving HTTPS."
+      "description": "SSL key to use for serving `HTTPS`."
     },
     "sslCert": {
       "type": "string",
-      "description": "SSL certificate to use for serving HTTPS."
+      "description": "SSL certificate to use for serving `HTTPS`."
     },
     "watch": {
       "type": "boolean",
-      "description": "Watches for changes and rebuilds application",
+      "description": "Watches for changes and rebuilds application.",
       "default": true
     },
     "liveReload": {
@@ -48,7 +48,7 @@
     },
     "publicHost": {
       "type": "string",
-      "description": "Public URL where the application will be served"
+      "description": "Public URL where the application will be served."
     },
     "open": {
       "type": "boolean",
@@ -61,7 +61,7 @@
     },
     "memoryLimit": {
       "type": "number",
-      "description": "Memory limit for type checking service process in MB."
+      "description": "Memory limit for type checking service process in `MB`."
     },
     "maxWorkers": {
       "type": "number",

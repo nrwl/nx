@@ -3,10 +3,11 @@
   "cli": "nx",
   "$id": "NxReactHook",
   "title": "Create a React Hook for Nx",
+  "description": "Create a React component using Hooks in a dedicated React project.",
   "type": "object",
   "examples": [
     {
-      "command": "g hook my-hook --project=mylib",
+      "command": "nx g hook my-hook --project=mylib",
       "description": "Generate a hook in the mylib library"
     }
   ],
@@ -36,7 +37,7 @@
     },
     "skipTests": {
       "type": "boolean",
-      "description": "When true, does not create \"spec.ts\" test files for the new hook.",
+      "description": "When true, does not create `spec.ts` test files for the new hook.",
       "default": false
     },
     "directory": {
@@ -51,20 +52,20 @@
     },
     "export": {
       "type": "boolean",
-      "description": "When true, the hook is exported from the project index.ts (if it exists).",
+      "description": "When true, the hook is exported from the project `index.ts` (if it exists).",
       "alias": "e",
       "default": false,
       "x-prompt": "Should this hook be exported in the project?"
     },
     "pascalCaseFiles": {
       "type": "boolean",
-      "description": "Use pascal case hook file name (e.g. useHook.ts).",
+      "description": "Use pascal case hook file name (e.g. `useHook.ts`).",
       "alias": "P",
       "default": false
     },
     "pascalCaseDirectory": {
       "type": "boolean",
-      "description": "Use pascal case directory name (e.g. useHook/useHook.ts).",
+      "description": "Use pascal case directory name (e.g. `useHook/useHook.ts`).",
       "alias": "R",
       "default": false
     }
