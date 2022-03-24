@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convertToWithMF should migrate a standard previous generated host config correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+        module.exports = withModuleFederation({
+          name: 'host1',
+          remotes: [['remote1', 'http://localhost:4201']],
+        });"
+`;
+
+exports[`convertToWithMF should migrate a standard previous generated remote config correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+        module.exports = withModuleFederation({
+          name: 'remote1',
+          exposes: {
+        './Module': 'apps/remote1/src/app/remote-entry/entry.module.ts',
+      },
+        });"
+`;
+
+exports[`convertToWithMF should migrate a standard previous generated remote config using object shared syntax correctly 1`] = `
+"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+        module.exports = withModuleFederation({
+          name: 'remote1',
+          exposes: {
+        './Module': 'apps/remote1/src/app/remote-entry/entry.module.ts',
+      },
+        });"
+`;

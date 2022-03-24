@@ -84,6 +84,11 @@
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
     },
+    "convert-to-with-mf": {
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf.compat",
+      "schema": "./src/generators/convert-to-with-mf/schema.json",
+      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_"
+    },
     "mfe-host": {
       "factory": "./src/generators/mfe-host/mfe-host.compat",
       "schema": "./src/generators/mfe-host/schema.json",
@@ -238,6 +243,11 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "convert-to-with-mf": {
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
+      "schema": "./src/generators/convert-to-with-mf/schema.json",
+      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_"
     },
     "mfe-host": {
       "factory": "./src/generators/mfe-host/mfe-host",

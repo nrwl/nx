@@ -674,6 +674,11 @@
             "file": "generated/api-angular/generators/move"
           },
           {
+            "name": "convert-to-with-mf generator",
+            "id": "convert-to-with-mf",
+            "file": "generated/api-angular/generators/convert-to-with-mf"
+          },
+          {
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "generated/api-angular/generators/ngrx"
