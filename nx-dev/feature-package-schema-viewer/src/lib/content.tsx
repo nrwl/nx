@@ -85,6 +85,7 @@ export function Content({
         <div className="mb-8 flex w-full items-center space-x-2">
           <div className="w-full flex-grow">
             <div
+              aria-hidden="true"
               data-tooltip="Schema type"
               className="relative inline-flex rounded-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium uppercase text-gray-600"
             >
@@ -95,15 +96,13 @@ export function Content({
             {/* TODO@ben: update to package schemas list link when available */}
             <Link href={schemaViewModel.packageUrl}>
               <a
-                aria-hidden="true"
-                title="See package on Github"
+                title="See package information"
                 className="focus:ring-blue-nx-base focus:border-blue-nx-base relative inline-flex items-center rounded-l-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
               >
                 {schemaViewModel.packageName}
               </a>
             </Link>
             <a
-              aria-hidden="true"
               href={schemaViewModel.schemaGithubUrl}
               target="_blank"
               rel="noreferrer"
@@ -139,7 +138,7 @@ export function Content({
 
         {/*TODO@ben: create new component*/}
         {schemaViewModel.type === 'executors' && !schemaViewModel.subReference && (
-          <div className="mt-8">
+          <div className="mt-8 hidden md:block">
             <Heading2 title="Options playground" />
             <p className="my-6">
               This is an example of what the properties looks like and their
