@@ -25,6 +25,7 @@ describe('affected:*', () => {
   afterEach(() => cleanupProject());
 
   it('should print, build, and test affected apps', async () => {
+    process.env.CI = 'true';
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     const mylib = uniq('mylib');
@@ -150,10 +151,9 @@ describe('affected:*', () => {
       `affected:test --files="libs/${mylib}/src/index.ts"`,
       { silenceError: true }
     );
-    expect(failedTests).toContain(`Running target test for 3 project(s):`);
-    expect(failedTests).toContain(`- ${mylib}`);
-    expect(failedTests).toContain(`- ${myapp}`);
-    expect(failedTests).toContain(`- ${mypublishablelib}`);
+    expect(failedTests).toContain(mylib);
+    expect(failedTests).toContain(myapp);
+    expect(failedTests).toContain(mypublishablelib);
     expect(failedTests).toContain(`Failed tasks:`);
 
     // Fix failing Unit Test
