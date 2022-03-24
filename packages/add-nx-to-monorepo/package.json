@@ -33,6 +33,6 @@
     "@nrwl/devkit": "*",
     "nx": "*",
     "enquirer": "~2.3.6",
-    "yargs-parser": "20.0.0"
+    "yargs-parser": "21.0.1"
   }
 }

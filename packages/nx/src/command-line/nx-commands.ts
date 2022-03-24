@@ -6,7 +6,6 @@ import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/ge
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
 import { appRootPath } from 'nx/src/utils/app-root';
-import type { ListArgs } from './list';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 
@@ -45,6 +44,8 @@ ${daemonHelpOutput}
     aliases: ['g'],
     builder: (yargs) => withGenerateOptions(yargs),
     handler: async (args) => {
+      // Remove the command from the args
+      args._ = args._.slice(1);
       process.exit(
         await (await import('./generate')).generate(process.cwd(), args)
       );
@@ -237,9 +238,9 @@ ${daemonHelpOutput}
     command: 'workspace-generator [name]',
     describe: 'Runs a workspace generator from the tools/generators directory',
     aliases: ['workspace-schematic [name]'],
-    builder: (yargs) =>
+    builder: async (yargs) =>
       linkToNxDevAndExamples(
-        withWorkspaceGeneratorOptions(yargs),
+        await withWorkspaceGeneratorOptions(yargs),
         'workspace-generator'
       ),
     handler: async () =>
@@ -288,11 +289,13 @@ ${daemonHelpOutput}
     command: 'new [_..]',
     describe: false,
     builder: (yargs) => withNewOptions(yargs),
-    handler: async (args) =>
-      (await import('./generate')).newWorkspace(
+    handler: async (args) => {
+      args._ = args._.slice(1);
+      return (await import('./generate')).newWorkspace(
         args['nxWorkspaceRoot'] as string,
         args
-      ),
+      );
+    },
   })
   .command(
     '_migrate [packageAndVersion]',
@@ -612,20 +615,23 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
-function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
-  yargs.option('list-generators', {
-    describe: 'List the available workspace-generators',
-    type: 'boolean',
-  });
+async function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
+  yargs
+    .option('list-generators', {
+      describe: 'List the available workspace-generators',
+      type: 'boolean',
+    })
+    .positional('name', {
+      type: 'string',
+      describe: 'The name of your generator`',
+    });
+
   /**
    * Don't require `name` if only listing available
    * schematics
    */
-  if (yargs.argv.listGenerators !== true) {
-    yargs.demandOption(['name']).positional('name', {
-      type: 'string',
-      describe: 'The name of your generator`',
-    });
+  if ((await yargs.argv).listGenerators !== true) {
+    yargs.demandOption('name');
   }
   return yargs;
 }
@@ -653,6 +659,9 @@ function withMigrationOptions(yargs: yargs.Argv) {
 }
 
 function parseCSV(args: string[]) {
+  if (!args) {
+    return args;
+  }
   return args
     .map((arg) => arg.split(','))
     .reduce((acc, value) => {
