@@ -1,33 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Update Cypress Config Properties should add a property 1`] = `
-"import { defineConfig } from 'cypress';
-import { componentDevServer } from '@nrwl/cypress/plugins/next';
-export default defineConfig({
-    baseUrl: 'http://localhost:8080',
-    component: {
-        devServer: componentDevServer('tsconfig.cy.json', 'babel'),
-        pluginsFile: false,
-        video: true,
-        chromeWebSecurity: false,
-        fixturesFolder: 'cypress/fixtures',
-        specPattern: '**/*.cy.{js,jsx,ts,tsx}',
-        supportFile: 'cypress/support/component.ts',
-        videosFolder: ''../../dist/cypress/apps/n/videos',
-        screenshotsFolder: '../../dist/cypress/apps/n/screenshots',
+exports[`Update Cypress Config should read existing config object 1`] = `
+Object {
+  "baseUrl": "blah its me",
+  "component": Object {
+    "chromeWebSecurity": false,
+    "devServer": Object {
+      "compiler": "babel",
+      "tsConfig": "tsconfig.cy.json",
     },
-    e2e: {
-        fileServerFolder: '.',
-        fixturesFolder: './src/fixtures',
-        integrationFolder: './src/e2e',
-        supportFile: './src/support/e2e.ts',
-        specPattern: '**/*.cy.{js,ts}',
-        pluginsFile: false,
-        video: true,
-        videosFolder: '../../dist/cypress/apps/myapp4299814-e2e/videos',
-        screenshotsFolder: '../../dist/cypress/apps/myapp4299814-e2e/screenshots',
-        chromeWebSecurity: false,
-    }
-});
-"
+    "fixturesFolder": "cypress/fixtures",
+    "pluginsFile": false,
+    "screenshotsFolder": "../../dist/cypress/apps/n/screenshots",
+    "specPattern": "**/*.cy.{js,jsx,ts,tsx}",
+    "supportFile": "cypress/support/component.ts",
+    "video": true,
+    "videosFolder": "../../dist/cypress/apps/n/videos",
+  },
+  "e2e": Object {
+    "chromeWebSecurity": false,
+    "fileServerFolder": ".",
+    "fixturesFolder": "./src/fixtures",
+    "integrationFolder": "./src/e2e",
+    "pluginsFile": false,
+    "screenshotsFolder": "../../dist/cypress/apps/myapp4299814-e2e/screenshots",
+    "specPattern": "**/*.cy.{js,ts}",
+    "supportFile": "./src/support/e2e.ts",
+    "video": true,
+    "videosFolder": "../../dist/cypress/apps/myapp4299814-e2e/videos",
+  },
+}
 `;

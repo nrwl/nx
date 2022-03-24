@@ -1,4 +1,14 @@
 import {
+  cypressInitGenerator as _cypressInitGenerator,
+  cypressProjectGenerator as _cypressProjectGenerator,
+} from '@nrwl/cypress';
+import { CypressConfigTransformer } from '@nrwl/cypress/src/utils/config/change-config-transformer';
+
+import {
+  getE2eProjectName,
+  getUnscopedLibName,
+} from '@nrwl/cypress/src/utils/project-name';
+import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
@@ -9,17 +19,9 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
-import {
-  cypressProjectGenerator as _cypressProjectGenerator,
-  cypressInitGenerator as _cypressInitGenerator,
-} from '@nrwl/cypress';
-
-import {
-  getE2eProjectName,
-  getUnscopedLibName,
-} from '@nrwl/cypress/src/utils/project-name';
-import { safeFileDelete } from '../../utils/utilities';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { join } from 'path';
+import { safeFileDelete } from '../../utils/utilities';
 
 export interface CypressConfigureSchema {
   name: string;
@@ -77,13 +79,29 @@ function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {
 }
 
 function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
-  const cypressConfigPath = `${
-    readProjectConfiguration(tree, projectName).root
-  }/cypress.json`;
-  updateJson(tree, cypressConfigPath, (cypressConfig) => {
-    cypressConfig.baseUrl = 'http://localhost:4400';
-    return cypressConfig;
-  });
+  const projectRoot = readProjectConfiguration(tree, projectName).root;
+  const cypressJson = join(projectRoot, 'cypress.json');
+  const cypressTs = join(projectRoot, 'cypress.config.ts');
+  // TODO(caleb): remove this when cypress < v10 is deprecated
+
+  if (tree.exists(cypressJson)) {
+    // cypress < v10
+    updateJson(tree, cypressJson, (json) => {
+      json.baseUrl = 'http://localhost:4400';
+      return json;
+    });
+  } else if (tree.exists(cypressTs)) {
+    // cypress >= v10
+    const result = CypressConfigTransformer.addOrUpdateProperties(
+      tree.read(cypressTs, 'utf-8'),
+      {
+        e2e: {
+          baseUrl: 'http://localhost:4400',
+        },
+      }
+    );
+    tree.write(cypressTs, result);
+  }
 }
 
 function updateAngularJsonBuilder(

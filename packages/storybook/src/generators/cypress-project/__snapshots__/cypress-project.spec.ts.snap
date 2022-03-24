@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/storybook:cypress-project should generate files 1`] = `
+"import { defineConfig } from 'cypress';
+export default defineConfig({
+    baseUrl: 'http://localhost:4400',
+    e2e: {
+        fileServerFolder: '.',
+        fixturesFolder: 'src/fixtures',
+        integrationFolder: 'src/e2e',
+        supportFile: 'src/support/e2e.ts',
+        specPattern: 'src/**/*.cy.{js,ts}',
+        pluginsFile: false,
+        video: true,
+        videosFolder: '../../dist/cypress/apps/test-ui-lib-e2e/videos',
+        screenshotsFolder: '../../dist/cypress/apps/test-ui-lib-e2e/screenshots',
+        chromeWebSecurity: false
+    }
+});
+"
+`;
