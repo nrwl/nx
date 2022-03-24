@@ -57,9 +57,11 @@ It only uses language primitives and immutable objects
 
 ### Utils Interfaces
 
+- [DefaultTasksRunnerOptions](../../nx-devkit/index#defaulttasksrunneroptions)
 - [Hash](../../nx-devkit/index#hash)
 - [JsonParseOptions](../../nx-devkit/index#jsonparseoptions)
 - [JsonSerializeOptions](../../nx-devkit/index#jsonserializeoptions)
+- [RemoteCache](../../nx-devkit/index#remotecache)
 - [StringDeletion](../../nx-devkit/index#stringdeletion)
 - [StringInsertion](../../nx-devkit/index#stringinsertion)
 
@@ -126,6 +128,7 @@ It only uses language primitives and immutable objects
 - [convertNxExecutor](../../nx-devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../nx-devkit/index#convertnxgenerator)
 - [createProjectGraphAsync](../../nx-devkit/index#createprojectgraphasync)
+- [defaultTasksRunner](../../nx-devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../nx-devkit/index#formatfiles)
 - [generateFiles](../../nx-devkit/index#generatefiles)
@@ -307,6 +310,12 @@ A plugin for Nx
 
 ## Utils Interfaces
 
+### DefaultTasksRunnerOptions
+
+• **DefaultTasksRunnerOptions**: `Object`
+
+---
+
 ### Hash
 
 • **Hash**: `Object`
@@ -322,6 +331,12 @@ A plugin for Nx
 ### JsonSerializeOptions
 
 • **JsonSerializeOptions**: `Object`
+
+---
+
+### RemoteCache
+
+• **RemoteCache**: `Object`
 
 ---
 
@@ -853,6 +868,28 @@ stored in the daemon process. To reset both run: `nx reset`.
 #### Returns
 
 `Promise`<[`ProjectGraph`](../../nx-devkit/index#projectgraph)\>
+
+---
+
+### defaultTasksRunner
+
+▸ `Const` **defaultTasksRunner**(`tasks`, `options`, `context?`): `Observable`<`AffectedEvent`\> \| `Promise`<`Object`\>
+
+#### Parameters
+
+| Name                         | Type                                                                                     |
+| :--------------------------- | :--------------------------------------------------------------------------------------- |
+| `tasks`                      | [`Task`](../../nx-devkit/index#task)[]                                                   |
+| `options`                    | [`DefaultTasksRunnerOptions`](../../nx-devkit/index#defaulttasksrunneroptions)           |
+| `context?`                   | `Object`                                                                                 |
+| `context.initiatingProject?` | `string`                                                                                 |
+| `context.nxJson`             | [`NxJsonConfiguration`](../../nx-devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
+| `context.projectGraph`       | [`ProjectGraph`](../../nx-devkit/index#projectgraph)<`any`\>                             |
+| `context.target?`            | `string`                                                                                 |
+
+#### Returns
+
+`Observable`<`AffectedEvent`\> \| `Promise`<`Object`\>
 
 ---
 
