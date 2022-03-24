@@ -1,6 +1,6 @@
 import { webpack } from './index';
 import { join } from 'path';
-import { appRootPath, writeJsonFile } from '@nrwl/devkit';
+
 jest.mock('@nrwl/web/src/utils/web.config', () => {
   return {
     getStylesPartial: () => ({}),
@@ -9,8 +9,6 @@ jest.mock('@nrwl/web/src/utils/web.config', () => {
 
 describe('Storybook webpack config', () => {
   it('should skip type checking', async () => {
-    writeJsonFile(join(appRootPath, 'package.json'), {});
-
     const config = await webpack(
       {
         resolve: {
