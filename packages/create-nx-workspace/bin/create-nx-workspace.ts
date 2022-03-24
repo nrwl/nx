@@ -8,6 +8,7 @@ import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
 import { showNxWarning, unparse } from './shared';
 import { output } from './output';
+import * as chalk from 'chalk';
 import * as ora from 'ora';
 
 import {
@@ -17,6 +18,7 @@ import {
   PackageManager,
 } from './package-manager';
 import { validateNpmPackage } from './validate-npm-package';
+import { deduceDefaultBase } from './default-base';
 
 export enum Preset {
   Apps = 'apps',
@@ -96,6 +98,14 @@ const presetOptions: { name: Preset; message: string }[] = [
   },
 ];
 
+const supportedPackageManagers: PackageManager[] = ['npm', 'yarn', 'pnpm'];
+
+const packageManagerOptions: { name: PackageManager; message: string }[] = [
+  { name: 'npm', message: 'NPM' },
+  { name: 'yarn', message: 'Yarn' },
+  { name: 'pnpm', message: 'PNPM' },
+];
+
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
 const nxVersion = 'NX_VERSION';
@@ -113,10 +123,12 @@ const parsedArgs: any = yargsParser(process.argv.slice(2), {
   ],
   alias: {
     packageManager: 'pm',
+    all: 'a',
   },
-  boolean: ['help', 'interactive', 'nxCloud'],
+  boolean: ['help', 'interactive', 'nxCloud', 'all'],
   default: {
     interactive: false,
+    all: false,
   },
   configuration: {
     'strip-dashed': true,
@@ -130,12 +142,16 @@ if (parsedArgs.help) {
 }
 
 (async function main() {
-  const packageManager: PackageManager =
-    parsedArgs.packageManager || detectInvokedPackageManager();
-
-  const { name, cli, preset, appName, style, nxCloud } = await getConfiguration(
-    parsedArgs
-  );
+  const {
+    name,
+    cli,
+    preset,
+    appName,
+    style,
+    nxCloud,
+    packageManager,
+    defaultBase,
+  } = await getConfiguration(parsedArgs);
 
   output.log({
     title: `Nx is creating your v${cliVersion} workspace.`,
@@ -154,6 +170,7 @@ if (parsedArgs.help) {
     appName,
     style,
     nxCloud,
+    defaultBase,
   });
 
   let nxCloudInstallRes;
@@ -175,37 +192,50 @@ if (parsedArgs.help) {
   throw error;
 });
 
+function stringifyCollection(items: string[]): string {
+  return items.map((item) => `"${item}"`).join(', ');
+}
+
 function showHelp() {
-  const options = Object.values(Preset)
-    .map((preset) => `"${preset}"`)
-    .join(', ');
+  const presets = stringifyCollection(Object.values(Preset));
+  const packageManagers = stringifyCollection(supportedPackageManagers);
 
   console.log(`
-  Usage: create-nx-workspace <name> [options] [new workspace options]
+  ✨ Create a new Nx workspace ✨
 
-  Create a new Nx workspace
+  ${chalk.green('Usage')} create-nx-workspace ${chalk.bold('<name>')} [options]
 
-  Options:
+  ${chalk.green('Basic options')}
+    name               ${chalk.dim('Workspace name (e.g., org name)')}
+    preset             ${chalk.dim(
+      `Customizes the initial content of your workspace (options: ${presets}). To build your own see https://nx.dev/nx-plugin/overview#preset`
+    )}
+    nx-cloud           ${chalk.dim('Use Nx Cloud (boolean)')}
+    all                ${chalk.dim(
+      'Show additional options (alias: "a") (boolean)'
+    )}
 
-    name                      Workspace name (e.g., org name)
+  ${chalk.green('Preset related options')}
+    appName            ${chalk.dim(
+      'The name of the application created by some presets'
+    )}
+    cli                ${chalk.dim(
+      'CLI to power the Nx workspace (options: "nx", "angular")'
+    )}
+    style              ${chalk.dim(
+      'Default style option to be used when a preset with pregenerated app is selected'
+    )}
+                       ${chalk.dim(
+                         'options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js'
+                       )}
+    interactive        ${chalk.dim(
+      'Enable interactive mode when using presets (boolean)'
+    )}
 
-    preset                    Customizes the initial content of your workspace (options: ${options}). To build your own see https://nx.dev/nx-plugin/overview#preset
-
-    appName                   The name of the application created by some presets
-
-    cli                       CLI to power the Nx workspace (options: "nx", "angular")
-
-    style                     Default style option to be used when a non-empty preset is selected
-                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js
-
-    interactive               Enable interactive mode when using presets (boolean)
-
-    packageManager            Package manager to use (alias: "pm")
-                              options: ("npm", "yarn", "pnpm")
-
-    defaultBase               Name of the main branch (default: "main")
-
-    nx-cloud                  Use Nx Cloud (boolean)
+  ${chalk.green('Additional options')}
+    packageManager     ${chalk.dim('Package manager to use (alias: "pm")')}
+                       ${chalk.dim(`options: ${packageManagers}`)}
+    defaultBase        ${chalk.dim('Name of the main branch (default: "main")')}
 `);
 }
 
@@ -223,6 +253,8 @@ async function getConfiguration(parsedArgs) {
     }
 
     const cli = await determineCli(preset, parsedArgs);
+    const packageManager = await determinePackageManager(parsedArgs);
+    const defaultBase = await determineDefaultBase(parsedArgs);
     const nxCloud = await askAboutNxCloud(parsedArgs);
 
     return {
@@ -232,6 +264,8 @@ async function getConfiguration(parsedArgs) {
       style,
       cli,
       nxCloud,
+      packageManager,
+      defaultBase,
     };
   } catch (e) {
     console.error(e);
@@ -268,6 +302,71 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
     });
 }
 
+async function determinePackageManager(
+  parsedArgs: any
+): Promise<PackageManager> {
+  const packageManager: string = parsedArgs.packageManager;
+
+  if (packageManager) {
+    if (supportedPackageManagers.includes(packageManager as PackageManager)) {
+      return Promise.resolve(packageManager as PackageManager);
+    }
+    output.error({
+      title: 'Invalid package manager',
+      bodyLines: [
+        `Package manager must be one of ${stringifyCollection(
+          supportedPackageManagers
+        )}`,
+      ],
+    });
+    process.exit(1);
+  }
+
+  if (parsedArgs.all) {
+    return enquirer
+      .prompt([
+        {
+          name: 'PackageManager',
+          message: `Which package manager to use       `,
+          initial: 'npm' as any,
+          type: 'select',
+          choices: packageManagerOptions,
+        },
+      ])
+      .then((a: { PackageManager }) => a.PackageManager);
+  }
+
+  return Promise.resolve(detectInvokedPackageManager());
+}
+
+async function determineDefaultBase(parsedArgs: any): Promise<string> {
+  if (parsedArgs.defaultBase) {
+    return Promise.resolve(parsedArgs.defaultBase);
+  }
+  if (parsedArgs.all) {
+    return enquirer
+      .prompt([
+        {
+          name: 'DefaultBase',
+          message: `Main branch name                   `,
+          initial: `main`,
+          type: 'input',
+        },
+      ])
+      .then((a: { DefaultBase: string }) => {
+        if (!a.DefaultBase) {
+          output.error({
+            title: 'Invalid branch name',
+            bodyLines: [`Branch name cannot be empty`],
+          });
+          process.exit(1);
+        }
+        return a.DefaultBase;
+      });
+  }
+  return Promise.resolve(deduceDefaultBase());
+}
+
 async function determineThirdPartyPackage({ preset }) {
   if (preset && Object.values(Preset).indexOf(preset) === -1) {
     const packageName = preset.match(/.+@/)
@@ -293,7 +392,7 @@ async function determineThirdPartyPackage({ preset }) {
   }
 }
 
-function determinePreset(parsedArgs: any): Promise<Preset> {
+async function determinePreset(parsedArgs: any): Promise<Preset> {
   if (parsedArgs.preset) {
     if (Object.values(Preset).indexOf(parsedArgs.preset) === -1) {
       output.error({
@@ -323,7 +422,10 @@ function determinePreset(parsedArgs: any): Promise<Preset> {
     .then((a: { Preset: Preset }) => a.Preset);
 }
 
-function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
+async function determineAppName(
+  preset: Preset,
+  parsedArgs: any
+): Promise<string> {
   if (
     preset === Preset.Apps ||
     preset === Preset.Core ||
@@ -358,7 +460,7 @@ function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
     });
 }
 
-function determineCli(
+async function determineCli(
   preset: Preset,
   parsedArgs: any
 ): Promise<'nx' | 'angular'> {
@@ -384,7 +486,7 @@ function determineCli(
   }
 }
 
-function determineStyle(preset: Preset, parsedArgs: any) {
+async function determineStyle(preset: Preset, parsedArgs: any) {
   if (
     preset === Preset.Apps ||
     preset === Preset.Core ||

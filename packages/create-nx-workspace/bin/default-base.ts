@@ -11,12 +11,3 @@ export function deduceDefaultBase(): string {
     return nxDefaultBase;
   }
 }
-
-export function checkGitVersion(): string | null {
-  try {
-    let gitVersionOutput = execSync('git --version').toString().trim();
-    return gitVersionOutput.match(/[0-9]+\.[0-9]+\.+[0-9]+/)[0];
-  } catch {
-    return null;
-  }
-}
