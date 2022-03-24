@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#detoxInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/detox plugin",
+      "description": "Initialize the `@nrwl/detox` plugin.",
       "hidden": true
     },
     "application": {
@@ -14,14 +14,14 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a detox application"
+      "description": "Create a Detox application."
     }
   },
   "generators": {
     "init": {
       "factory": "./src/generators/init/init#detoxInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/detox plugin",
+      "description": "Initialize the `@nrwl/detox` plugin.",
       "hidden": true
     },
     "application": {
@@ -29,7 +29,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a detox application"
+      "description": "Create a Detox application."
     }
   }
 }
