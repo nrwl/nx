@@ -10,7 +10,7 @@ import * as fs from 'fs';
 
 import { withModuleFederation } from './with-module-federation';
 
-xdescribe('withModuleFederation', () => {
+describe('withModuleFederation', () => {
   afterEach(() => jest.clearAllMocks());
   it('should create a host config correctly', async () => {
     // ARRANGE
