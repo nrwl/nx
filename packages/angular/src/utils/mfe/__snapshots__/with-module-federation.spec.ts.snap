@@ -48,7 +48,7 @@ Array [
       },
       "name": "host",
       "remotes": Object {
-        "remote1": "http:/localhost:4201/remoteEntry.mjs",
+        "remote1": "http://localhost:4201/remoteEntry.mjs",
       },
       "shared": Object {
         "@angular/core": Object {

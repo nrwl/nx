@@ -13,7 +13,7 @@ import {
 } from './lib';
 
 export default async function convertToWithMF(tree: Tree, schema: Schema) {
-  const projects = new Set(getMfeProjects(tree));
+  const projects = new Set(getMfeProjects(tree, { legacy: true }));
 
   if (!projects.has(schema.project)) {
     throw new Error(

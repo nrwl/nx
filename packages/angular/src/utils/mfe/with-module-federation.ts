@@ -4,9 +4,8 @@ import {
   shareWorkspaceLibraries,
 } from './mfe-webpack';
 import {
-  appRootPath,
+  workspaceRoot,
   createProjectGraphAsync,
-  joinPathFragments,
   ProjectGraph,
   readCachedProjectGraph,
   Workspaces,
@@ -62,7 +61,9 @@ function recursivelyResolveWorkspaceDependents(
 }
 
 function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { projects } = new Workspaces(appRootPath).readWorkspaceConfiguration();
+  const { projects } = new Workspaces(
+    workspaceRoot
+  ).readWorkspaceConfiguration();
 
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
@@ -150,7 +151,9 @@ function determineRemoteUrl(remote: string) {
       You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
     );
   }
-  return joinPathFragments(publicHost, 'remoteEntry.mjs');
+  return `${
+    publicHost.endsWith('/') ? publicHost.slice(0, -1) : publicHost
+  }/remoteEntry.mjs`;
 }
 
 function mapRemotes(remotes: MFERemotes) {
