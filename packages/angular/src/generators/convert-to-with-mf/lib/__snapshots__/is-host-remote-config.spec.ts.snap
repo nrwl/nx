@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`isHostRemoteConfig should return remote when correct remote config found 1`] = `
+"{
+                        './Module': 'apps/remote1/src/app/remote-entry/entry.module.ts'
+                    }"
+`;
