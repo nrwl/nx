@@ -49,7 +49,10 @@ export function currentCli() {
   return process.env.SELECTED_CLI || 'nx';
 }
 
-export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
+export const e2eRoot = isCI
+  ? dirSync({ prefix: 'nx-e2e-' }).name
+  : '/tmp/nx-e2e';
+
 export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
@@ -524,7 +527,6 @@ export function runCommand(
     }
     return r;
   } catch (e) {
-    console.log('ERROR CAUGHT', e);
     // this is intentional
     // npm ls fails if package is not found
     return e.stdout?.toString() + e.stderr?.toString();
