@@ -3,10 +3,6 @@ import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { storybookVersion } from '@nrwl/storybook';
-import {
-  overrideCollectionResolutionForTesting,
-  wrapAngularDevkitSchematic,
-} from 'nx/src/commands/ngcli-adapter';
 import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
@@ -15,6 +11,10 @@ import { nxVersion } from '../../utils/versions';
 import { storybookConfigurationGenerator } from '../storybook-configuration/storybook-configuration';
 import { angularMigrateStoriesTo62Generator } from './migrate-stories-to-6-2';
 import libraryGenerator from '../library/library';
+import {
+  overrideCollectionResolutionForTesting,
+  wrapAngularDevkitSchematic,
+} from '@nrwl/devkit/ngcli-adapter';
 
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',

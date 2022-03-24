@@ -9,7 +9,7 @@ import {
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,

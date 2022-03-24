@@ -11,14 +11,14 @@ import { NextBuildBuilderOptions } from '../../utils/types';
 import { createPackageJson } from './lib/create-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { checkPublicDirectory } from './lib/check-project';
 import { importConstants } from '../../utils/require-shim';
-import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import { workspaceLayout } from '@nrwl/devkit';
 
 const { PHASE_PRODUCTION_BUILD } = importConstants();
 

@@ -61,9 +61,25 @@ nx migrate --run-migrations=migrations.json
 
 ## Options
 
+### from
+
+Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react:12.0.0,@nrwl/js:12.0.0")
+
 ### help
 
 Show help
+
+### packageAndVersion
+
+The target package and version (e.g, @nrwl/workspace@13.0.0)
+
+### runMigrations
+
+Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)
+
+### to
+
+Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react:12.0.0,@nrwl/js:12.0.0")
 
 ### version
 

@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
+import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { useRef } from 'react';
 import { AppConfig } from '../interfaces';
 

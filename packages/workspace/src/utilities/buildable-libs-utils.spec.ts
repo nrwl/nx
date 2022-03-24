@@ -1,13 +1,9 @@
+import { DependencyType, ProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
   updatePaths,
 } from './buildable-libs-utils';
-import {
-  DependencyType,
-  ProjectGraph,
-  ProjectType,
-} from '../core/project-graph';
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
@@ -43,7 +39,7 @@ describe('calculateProjectDependencies', () => {
     const graph: ProjectGraph = {
       nodes: {
         example: {
-          type: ProjectType.lib,
+          type: 'lib',
           name: 'example',
           data: {
             files: [],
@@ -81,7 +77,7 @@ describe('calculateProjectDependencies', () => {
     );
     expect(results).toMatchObject({
       target: {
-        type: ProjectType.lib,
+        type: 'lib',
         name: 'example',
       },
       dependencies: [{ name: 'formik' }],

@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { useDepGraphService } from '../hooks/use-dep-graph';
 import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';

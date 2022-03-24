@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { output } from '@nrwl/workspace/src/utilities/output';
+import { output } from '@nrwl/devkit';
 
 export function showNxWarning(workspaceName: string) {
   try {

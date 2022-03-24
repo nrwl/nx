@@ -7,7 +7,7 @@ import {
   removeSync,
   chmodSync,
 } from 'fs-extra';
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
 

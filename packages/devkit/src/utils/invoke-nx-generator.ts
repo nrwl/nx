@@ -1,4 +1,4 @@
-import { logger, stripIndent } from 'nx/src/shared/logger';
+import { logger, stripIndent } from 'nx/src/utils/logger';
 import type { FileChange, Tree, TreeWriteOptions } from 'nx/src/shared/tree';
 import {
   Generator,

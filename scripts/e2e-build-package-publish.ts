@@ -159,6 +159,7 @@ function build(nxVersion: string) {
       'react-native',
       'detox',
       'js',
+      'nx',
     ].map((f) => `${f}/src/utils/versions.js`),
     ...[
       'add-nx-to-monorepo',

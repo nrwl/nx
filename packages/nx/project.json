@@ -2,12 +2,14 @@
   "root": "packages/nx",
   "sourceRoot": "packages/nx",
   "projectType": "library",
+  "implicitDependencies": ["dep-graph-client"],
   "targets": {
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "outputPath": "build/packages/nx",
         "tsConfig": "packages/nx/tsconfig.lib.json",
+        "packageJson": "packages/nx/package.json",
         "main": "packages/nx/bin/nx.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
@@ -29,7 +31,7 @@
           },
           {
             "input": "packages/nx",
-            "glob": "**/*.js",
+            "glob": "**/*.{js,css,html,svg}",
             "ignore": ["**/jest.config.js"],
             "output": "/"
           },
@@ -52,6 +54,9 @@
       "outputs": ["build/packages/nx"],
       "options": {
         "commands": [
+          {
+            "command": "node ./scripts/copy-dep-graph.js"
+          },
           {
             "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
           },

@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import type { ProjectGraphDependency } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 

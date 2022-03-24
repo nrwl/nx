@@ -1,5 +1,5 @@
 import { logger } from '@nrwl/devkit';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import * as postcssImport from 'postcss-import';

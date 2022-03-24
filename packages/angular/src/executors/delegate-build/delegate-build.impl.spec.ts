@@ -1,5 +1,5 @@
 jest.mock('@nrwl/devkit');
-jest.mock('@nrwl/workspace/src/core/project-graph');
+jest.mock('@nrwl/devkit');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
 
 import type { ExecutorContext, Target } from '@nrwl/devkit';

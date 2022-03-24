@@ -13,13 +13,13 @@ import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { importConstants } from '../../utils/require-shim';
-import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import { workspaceLayout } from '@nrwl/devkit';
 import nextTrace = require('next/dist/trace');
 
 const { PHASE_EXPORT } = importConstants();

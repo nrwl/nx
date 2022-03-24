@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { tmpProjPath } from './paths';
-import { getPackageManagerCommand } from 'nx/src/shared/package-manager';
+import { getPackageManagerCommand } from '@nrwl/devkit';
 
 /**
  * Run a nx command inside the e2e directory

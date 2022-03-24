@@ -6,14 +6,11 @@ import {
 } from '@nrwl/workspace';
 import { callRule, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runMigration } from '../../utils/testing';
-import {
-  DependencyType,
-  ProjectGraph,
-} from '@nrwl/workspace/src/core/project-graph';
+import { DependencyType, ProjectGraph } from '@nrwl/devkit';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
-  ...jest.requireActual<any>('@nrwl/workspace/src/core/project-graph'),
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),

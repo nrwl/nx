@@ -4,8 +4,8 @@ import { createBabelrcForWorkspaceLibs } from './create-babelrc-for-workspace-li
 import type { ProjectGraph, Tree } from '@nrwl/devkit';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
-  ...jest.requireActual<any>('@nrwl/workspace/src/core/project-graph'),
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),

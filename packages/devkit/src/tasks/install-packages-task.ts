@@ -4,9 +4,9 @@ import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerCommand,
-} from 'nx/src/shared/package-manager';
-import type { PackageManager } from 'nx/src/shared/package-manager';
-import { joinPathFragments } from '../utils/path';
+} from 'nx/src/utils/package-manager';
+import type { PackageManager } from 'nx/src/utils/package-manager';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 let storedPackageJsonValue: string;
 

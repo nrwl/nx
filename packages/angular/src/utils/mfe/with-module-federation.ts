@@ -4,19 +4,20 @@ import {
   shareWorkspaceLibraries,
 } from './mfe-webpack';
 import {
+  appRootPath,
   createProjectGraphAsync,
+  joinPathFragments,
+  ProjectGraph,
   readCachedProjectGraph,
-} from '@nrwl/workspace/src/core/project-graph';
-import { readWorkspaceJson } from '@nrwl/workspace/src/core/file-utils';
-import { joinPathFragments, ProjectGraph } from '@nrwl/devkit';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
-import { Workspaces } from 'nx/src/shared/workspace';
-import { appRootPath } from 'nx/src/utils/app-root';
+  Workspaces,
+} from '@nrwl/devkit';
 import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
+import { readWorkspaceJson } from 'nx/src/core/file-utils';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
 
@@ -62,6 +63,7 @@ function recursivelyResolveWorkspaceDependents(
 
 function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
   const { projects } = new Workspaces(appRootPath).readWorkspaceConfiguration();
+
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
 

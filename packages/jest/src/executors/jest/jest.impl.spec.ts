@@ -1,5 +1,3 @@
-import { ExecutorContext } from 'nx/src/shared/workspace';
-
 let runCLI = jest.fn();
 let readConfig = jest.fn(() =>
   Promise.resolve({
@@ -17,6 +15,7 @@ jest.mock('jest-config', () => ({
   readConfig,
 }));
 
+import { ExecutorContext } from '@nrwl/devkit';
 import { jestExecutor } from './jest.impl';
 import { JestExecutorOptions } from './schema';
 

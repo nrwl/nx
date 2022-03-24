@@ -36,17 +36,23 @@
       "cli": "nx",
       "implementation": "./src/migrations/update-13-6-0/remove-old-task-runner-options"
     },
-    "13-9-0-update-decorate-cli": {
-      "version": "13.9.0-beta.0",
-      "description": "Update the decorate-angular-cli script to require nx instead of @nrwl/cli",
-      "cli": "nx",
-      "implementation": "./src/migrations/update-13-9-0/update-decorate-cli"
-    },
     "13-9-0-replace-tao-with-nx": {
       "version": "13.9.0-beta.0",
       "description": "Replace @nrwl/tao with nx",
       "cli": "nx",
       "implementation": "./src/migrations/update-13-9-0/replace-tao-with-nx"
+    },
+    "13-10-0-update-decorate-cli": {
+      "version": "13.10.0-beta.0",
+      "description": "Update the decorate-angular-cli script to require nx instead of @nrwl/cli",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-10-0/update-decorate-cli"
+    },
+    "13-10-0-update-tasks-runner": {
+      "version": "13.10.0-beta.0",
+      "description": "Update the tasks runner property to import it from the nx package instead of @nrwl/worksapce",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-10-0/update-tasks-runner"
     }
   },
   "packageJsonUpdates": {

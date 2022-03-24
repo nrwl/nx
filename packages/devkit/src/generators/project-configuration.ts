@@ -15,10 +15,10 @@ import {
   getWorkspacePath,
 } from '../utils/get-workspace-layout';
 import { readJson, updateJson, writeJson } from '../utils/json';
-import { joinPathFragments } from '../utils/path';
 
 import type { Tree } from 'nx/src/shared/tree';
 import type { NxJsonConfiguration } from 'nx/src/shared/nx';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,

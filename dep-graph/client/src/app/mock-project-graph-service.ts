@@ -1,9 +1,10 @@
+// nx-ignore-next-line
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
 // nx-ignore-next-line
-import type { DepGraphClientResponse } from '@nrwl/workspace/src/command-line/dep-graph';
+import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { ProjectGraphService } from '../app/interfaces';
 
 export class MockProjectGraphService implements ProjectGraphService {

@@ -10,7 +10,7 @@ import {
 } from './utils';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 
-import { examples } from '../../packages/workspace/src/command-line/examples';
+import { examples } from '../../packages/nx/src/command-line/examples';
 
 const importFresh = require('import-fresh');
 
@@ -53,7 +53,7 @@ export async function generateCLIDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 
   const { commandsObject } = importFresh(
-    '../../packages/workspace/src/command-line/nx-commands'
+    '../../packages/nx/src/command-line/nx-commands'
   );
 
   const commandsOutputDirectory = join(
@@ -168,6 +168,7 @@ nx ${command.name}
   await Promise.all(
     Object.keys(nxCommands)
       .filter((name) => !sharedCommands.includes(name))
+      .filter((name) => nxCommands[name].description)
       .map((name) => parseCommandInstance(name, nxCommands[name]))
       .map(async (command) => generateMarkdown(await command))
       .map(async (templateObject) =>

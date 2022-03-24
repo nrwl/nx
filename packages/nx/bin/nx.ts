@@ -1,17 +1,16 @@
 #!/usr/bin/env node
-import { findWorkspaceRoot } from '../src/cli/find-workspace-root';
+import {
+  findWorkspaceRoot,
+  WorkspaceTypeAndRoot,
+} from '../src/utils/find-workspace-root';
 import * as chalk from 'chalk';
-import { initLocal } from '../src/cli/init-local';
-import { output } from '../src/cli/output';
-import { detectPackageManager } from '../src/shared/package-manager';
-import { Workspace } from '../src/cli/workspace';
+import { initLocal } from './init-local';
+import { detectPackageManager } from '../src/utils/package-manager';
+import { output } from 'nx/src/utils/output';
 
-if (
-  process.argv[2] === 'new' ||
-  process.argv[2] === '_migrate' ||
-  process.argv[2] === 'migrate'
-) {
-  require('../src/cli/index');
+// new is a special case because there is no local workspace to load
+if (process.argv[2] === 'new' || process.argv[2] === '_migrate') {
+  require('nx/src/command-line/nx-commands').commandsObject.argv;
 } else {
   const workspace = findWorkspaceRoot(process.cwd());
   if (workspace && workspace.type === 'nx') {
@@ -49,6 +48,7 @@ if (
     process.exit(1);
   }
 
+  // this file is already in the local workspace
   if (localNx === resolveNx(null)) {
     initLocal(workspace);
   } else {
@@ -75,7 +75,7 @@ if (
   }
 }
 
-function resolveNx(workspace: Workspace | null) {
+function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   try {
     return require.resolve('nx/bin/nx.js', {
       paths: workspace ? [workspace.dir] : undefined,

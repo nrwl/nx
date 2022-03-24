@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import { ProjectGraphDependency } from '@nrwl/devkit';
 
 export function trimBackSlash(value: string): string {

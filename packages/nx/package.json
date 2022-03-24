@@ -7,6 +7,9 @@
     "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/nx"
   },
+  "scripts": {
+    "postinstall": "node ./bin/init"
+  },
   "keywords": [
     "Monorepo",
     "Angular",
@@ -30,19 +33,31 @@
   "dependencies": {
     "@swc/core": "^1.2.152",
     "@swc-node/register": "^1.4.2",
-    "chalk": "4.1.0",
-    "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",
-    "fs-extra": "^9.1.0",
-    "ignore": "^5.0.4",
     "jsonc-parser": "3.0.0",
     "rxjs-for-await": "0.0.2",
+    "tsconfig-paths": "^3.9.0",
+    "v8-compile-cache": "2.3.0",
+    "@parcel/watcher": "2.0.4",
+    "chokidar": "^3.5.1",
+    "cli-cursor": "3.1.0",
+    "cli-spinners": "2.6.1",
+    "fs-extra": "^9.1.0",
+    "dotenv": "~10.0.0",
+    "figures": "3.2.0",
+    "glob": "7.1.4",
+    "ignore": "^5.0.4",
+    "npm-run-path": "^4.0.1",
+    "open": "^8.4.0",
     "rxjs": "^6.5.4",
     "semver": "7.3.4",
     "tmp": "~0.2.1",
-    "tslib": "^2.3.0",
-    "tsconfig-paths": "^3.9.0",
+    "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
-    "v8-compile-cache": "2.3.0"
+    "chalk": "4.1.0",
+    "flat": "^5.0.2",
+    "minimatch": "3.0.4",
+    "enquirer": "~2.3.6",
+    "tslib": "^2.3.0"
   }
 }

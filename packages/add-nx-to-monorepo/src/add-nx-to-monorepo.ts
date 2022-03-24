@@ -4,12 +4,12 @@ import * as stripJsonComments from 'strip-json-comments';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as cp from 'child_process';
-import { output } from '@nrwl/workspace/src/utils/output';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
 
 import { execSync } from 'child_process';
+import { output } from '@nrwl/devkit';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ignore = require('ignore');
 const parsedArgs = yargsParser(process.argv, {
@@ -194,7 +194,7 @@ function createNxJsonFile(repoRoot: string) {
     npmScope: scope,
     tasksRunnerOptions: {
       default: {
-        runner: '@nrwl/workspace/tasks-runners/default',
+        runner: 'nx/tasks-runners/default',
         options: {
           cacheableOperations: ['build', 'test', 'lint', 'package', 'prepare'],
         },

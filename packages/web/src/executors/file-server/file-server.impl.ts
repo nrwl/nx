@@ -1,10 +1,13 @@
 import { execFile, execFileSync } from 'child_process';
-import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
+import {
+  ExecutorContext,
+  joinPathFragments,
+  workspaceLayout,
+} from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 import { Schema } from './schema';
 import { watch } from 'chokidar';
-import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 import { platform } from 'os';
 
 // platform specific command name

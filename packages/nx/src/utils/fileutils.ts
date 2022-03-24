@@ -3,6 +3,8 @@ import type { JsonParseOptions, JsonSerializeOptions } from './json';
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';
+import { mkdirSync, statSync } from 'fs';
+import { resolve as pathResolve } from 'path';
 
 export interface JsonReadOptions extends JsonParseOptions {
   /**
@@ -61,4 +63,39 @@ export function writeJsonFile<T extends object = object>(
     ? `${serializedJson}\n`
     : serializedJson;
   writeFileSync(path, content, { encoding: 'utf-8' });
+}
+
+export function directoryExists(name) {
+  try {
+    return statSync(name).isDirectory();
+  } catch (e) {
+    return false;
+  }
+}
+
+export function fileExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch (err) {
+    return false;
+  }
+}
+
+export function createDirectory(directoryPath: string) {
+  const parentPath = pathResolve(directoryPath, '..');
+  if (!directoryExists(parentPath)) {
+    createDirectory(parentPath);
+  }
+  if (!directoryExists(directoryPath)) {
+    mkdirSync(directoryPath);
+  }
+}
+
+export function isRelativePath(path: string): boolean {
+  return (
+    path === '.' ||
+    path === '..' ||
+    path.startsWith('./') ||
+    path.startsWith('../')
+  );
 }

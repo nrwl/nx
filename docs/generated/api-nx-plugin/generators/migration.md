@@ -37,6 +37,14 @@ nx g migration my-migration --project=my-plugin --version=1.0.0
 
 ## Options
 
+### packageVersion (_**required**_)
+
+Alias(es): v
+
+Type: `string`
+
+Version to use for the migration
+
 ### project (_**required**_)
 
 Alias(es): p
@@ -44,14 +52,6 @@ Alias(es): p
 Type: `string`
 
 The name of the project.
-
-### version (_**required**_)
-
-Alias(es): v
-
-Type: `string`
-
-Version to use for the migration
 
 ### description
 
