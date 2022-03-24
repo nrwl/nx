@@ -9,6 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import { toNewFormat } from 'nx/src/shared/workspace';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -75,29 +76,29 @@ describe('lib', () => {
     });
   });
 
-  // describe('workspace v1', () => {
-  //   beforeEach(() => {
-  //     tree = createTreeWithEmptyWorkspace(1);
-  //   });
-  //
-  //   it('should default to inline project for first project', async () => {
-  //     await runLibraryGeneratorWithOpts({
-  //       standaloneConfig: false,
-  //     });
-  //     const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
-  //       .projects['my-lib'];
-  //     const projectConfig = readProjectConfiguration(tree, 'my-lib');
-  //     expect(projectConfig.root).toEqual('libs/my-lib');
-  //     expect(projectConfig).toMatchObject(workspaceJsonEntry);
-  //   });
-  //
-  //   it('should throw for standaloneConfig === true', async () => {
-  //     const promise = runLibraryGeneratorWithOpts({
-  //       standaloneConfig: true,
-  //     });
-  //     await expect(promise).rejects.toThrow();
-  //   });
-  // });
+  describe('workspace v1', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace(1);
+    });
+
+    it('should default to inline project for first project', async () => {
+      await runLibraryGeneratorWithOpts({
+        standaloneConfig: false,
+      });
+      const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
+        .projects['my-lib'];
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.root).toEqual('libs/my-lib');
+      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+    });
+
+    it('should throw for standaloneConfig === true', async () => {
+      const promise = runLibraryGeneratorWithOpts({
+        standaloneConfig: true,
+      });
+      await expect(promise).rejects.toThrow();
+    });
+  });
 
   describe('not nested', () => {
     it('should update ng-package.json', async () => {
