@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/js",
   "version": "0.0.1",
-  "description": "JavaScript Plugin for Nx",
+  "description": "The Nx plugin that provides the best experience for developing JavaScript and TypeScript projects.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
