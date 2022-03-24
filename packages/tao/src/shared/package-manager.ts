@@ -1,1 +1,1 @@
-export * from 'nx/src/shared/package-manager';
+export * from 'nx/src/utils/package-manager';

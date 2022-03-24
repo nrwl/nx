@@ -5,7 +5,7 @@ import {
   parseTargetString,
   runExecutor,
 } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { ChildProcess, fork } from 'child_process';
 import * as treeKill from 'tree-kill';

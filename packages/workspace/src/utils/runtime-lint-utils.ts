@@ -1,5 +1,4 @@
 import * as path from 'path';
-import { FileData, readFileIfExisting } from '../core/file-utils';
 import {
   ProjectGraph,
   ProjectGraphDependency,
@@ -9,12 +8,14 @@ import {
   parseJson,
   ProjectGraphExternalNode,
   joinPathFragments,
+  FileData,
 } from '@nrwl/devkit';
-import { TargetProjectLocator } from '../core/target-project-locator';
 import { join } from 'path';
 import { appRootPath } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
+import { readFileIfExisting } from 'nx/src/core/file-utils';
+import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
 
 export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
   data: {
@@ -305,7 +306,7 @@ export function mapProjectGraphFiles<T>(
 }
 
 const ESLINT_REGEX = /node_modules.*\/eslint$/;
-const NRWL_CLI_REGEX = /@nrwl\/cli\/lib\/run-cli\.js$/;
+const NRWL_CLI_REGEX = /nxl\/bin\/run-executor\.js$/;
 
 export function isTerminalRun(): boolean {
   return (

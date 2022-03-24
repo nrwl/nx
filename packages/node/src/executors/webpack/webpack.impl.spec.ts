@@ -1,7 +1,7 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { of } from 'rxjs';
-import * as projectGraph from '@nrwl/workspace/src/core/project-graph';
-import type { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import * as projectGraph from '@nrwl/devkit';
+import type { ProjectGraph } from '@nrwl/devkit';
 import webpackExecutor from './webpack.impl';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 

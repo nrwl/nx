@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from 'nx/src/commands/ngcli-adapter';
 import type { NestSchematic, NormalizedOptions } from './types';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export async function runNestSchematic(
   tree: Tree,

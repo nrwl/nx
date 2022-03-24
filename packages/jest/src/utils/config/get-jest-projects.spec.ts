@@ -1,5 +1,5 @@
 import { getJestProjects } from './get-jest-projects';
-import * as Workspace from '@nrwl/workspace/src/core/file-utils';
+import * as Workspace from 'nx/src/core/file-utils';
 import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
 
 describe('getJestProjects', () => {

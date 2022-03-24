@@ -9,7 +9,6 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
-import { toNewFormat } from 'nx/src/shared/workspace';
 
 describe('lib', () => {
   let tree: Tree;
@@ -59,28 +58,28 @@ describe('lib', () => {
     });
   });
 
-  describe('workspace v1', () => {
-    beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(1);
-    });
-
-    it('should default to inline project for first project', async () => {
-      await libraryGenerator(tree, { ...defaultOptions, name: 'my-lib' });
-      const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
-        .projects['my-lib'];
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(projectConfig).toMatchObject(workspaceJsonEntry);
-    });
-
-    it('should throw for standaloneConfig === true', async () => {
-      const promise = libraryGenerator(tree, {
-        standaloneConfig: true,
-        name: 'my-lib',
-      });
-      await expect(promise).rejects.toThrow();
-    });
-  });
+  // describe('workspace v1', () => {
+  //   beforeEach(() => {
+  //     tree = createTreeWithEmptyWorkspace(1);
+  //   });
+  //
+  //   it('should default to inline project for first project', async () => {
+  //     await libraryGenerator(tree, { ...defaultOptions, name: 'my-lib' });
+  //     const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
+  //       .projects['my-lib'];
+  //     const projectConfig = readProjectConfiguration(tree, 'my-lib');
+  //     expect(projectConfig.root).toEqual('libs/my-lib');
+  //     expect(projectConfig).toMatchObject(workspaceJsonEntry);
+  //   });
+  //
+  //   it('should throw for standaloneConfig === true', async () => {
+  //     const promise = libraryGenerator(tree, {
+  //       standaloneConfig: true,
+  //       name: 'my-lib',
+  //     });
+  //     await expect(promise).rejects.toThrow();
+  //   });
+  // });
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {

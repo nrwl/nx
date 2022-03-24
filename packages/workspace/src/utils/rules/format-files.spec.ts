@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as nxWorkspace from 'nx/src/shared/workspace';
 
 import { formatFiles } from './format-files';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 
 describe('formatFiles', () => {
   let tree: Tree;

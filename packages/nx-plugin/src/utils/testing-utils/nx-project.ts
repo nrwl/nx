@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   readJsonFile,

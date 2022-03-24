@@ -13,16 +13,14 @@ export {
 } from './src/utilities/prettier';
 
 export { output } from './src/utilities/output';
-export { commandsObject } from './src/command-line/nx-commands';
-export { supportedNxCommands } from './src/command-line/supported-nx-commands';
 
 export {
   readWorkspaceJson,
   readNxJson,
   readWorkspaceConfig,
   readPackageJson,
-} from './src/core/file-utils';
-export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
+} from 'nx/src/core/file-utils';
+export { ProjectGraphCache } from 'nx/src/core/nx-deps/nx-deps-cache';
 export {
   readJsonInTree,
   updateJsonInTree,
@@ -58,7 +56,7 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
-export { unparse } from './src/tasks-runner/utils';
+export { unparse } from 'nx/src/tasks-runner/utils';
 
 export {
   getWorkspace,

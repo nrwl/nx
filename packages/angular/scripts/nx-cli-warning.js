@@ -6,7 +6,7 @@ try {
   if (path.basename(root) === 'workspace.json') {
     const workspaceJson = JSON.parse(fs.readFileSync(root));
     if (Object.keys(workspaceJson.projects).length === 0) {
-      const output = require('@nrwl/workspace/src/utilities/output').output;
+      const output = require('nx/src/utils/output').output;
       output.warn({
         title: '@nrwl/angular added to a Nx workspace powered by the Nx CLI.',
         bodyLines: [

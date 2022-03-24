@@ -80,7 +80,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -141,7 +141,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -197,7 +197,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -219,7 +219,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -251,7 +251,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -287,7 +287,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }
@@ -323,7 +323,7 @@ Object {
           "e2e",
         ],
       },
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
     },
   },
 }

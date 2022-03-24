@@ -1,4 +1,3 @@
-import { isNpmProject, ProjectType } from '../core/project-graph';
 import { dirname, join, relative, resolve } from 'path';
 import { directoryExists } from './fileutils';
 import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
@@ -7,11 +6,12 @@ import {
   readJsonFile,
   stripIndents,
   writeJsonFile,
+  getOutputsForTargetAndConfiguration,
 } from '@nrwl/devkit';
-import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
+import { isNpmProject } from 'nx/src/core/project-graph/operators';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -48,7 +48,7 @@ export function calculateProjectDependencies(
     .map(({ name: dep, isTopLevel }) => {
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
-      if (depNode.type === ProjectType.lib) {
+      if (depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
           const libPackageJson = readJsonFile(
             join(root, depNode.data.root, 'package.json')
@@ -231,7 +231,7 @@ export function findMissingBuildDependencies(
 
   // verify whether all dependent libraries have been built
   projectDependencies.forEach((dep) => {
-    if (dep.node.type !== ProjectType.lib) {
+    if (dep.node.type !== 'lib') {
       return;
     }
 
@@ -316,7 +316,7 @@ export function updateBuildableProjectPackageJsonDependencies(
     ) {
       try {
         let depVersion;
-        if (entry.node.type === ProjectType.lib) {
+        if (entry.node.type === 'lib') {
           const outputs = getOutputsForTargetAndConfiguration(
             {
               overrides: {},

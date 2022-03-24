@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
 import { logger } from '@nrwl/devkit';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 
 function tryReadBaseJson() {
   try {

@@ -2,7 +2,6 @@
   "root": "packages/workspace",
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
-  "implicitDependencies": ["dep-graph-client"],
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
@@ -33,13 +32,13 @@
           },
           {
             "input": "packages/workspace",
-            "glob": "**/**/decorate-angular-cli.js__tmpl__",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
             "input": "packages/workspace",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "glob": "**/**/decorate-angular-cli.js__tmpl__",
             "output": "/"
           },
           {

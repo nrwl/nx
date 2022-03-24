@@ -1,6 +1,6 @@
 import { watch } from 'chokidar';
 import { execSync } from 'child_process';
-import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
+import { workspaceLayout } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';

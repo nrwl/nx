@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import { join } from 'path';
 
 export const WORKSPACE_PLUGIN_DIR = join(appRootPath, 'tools/eslint-rules');

@@ -1,5 +1,5 @@
 import { getPackageManagerCommand, readJsonFile } from '@nrwl/devkit';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import * as chalk from 'chalk';
 import { dirname, join } from 'path';
 import { output } from '../output';

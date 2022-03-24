@@ -1,5 +1,5 @@
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { appRootPath } from '@nrwl/devkit';
 import * as path from 'path';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';

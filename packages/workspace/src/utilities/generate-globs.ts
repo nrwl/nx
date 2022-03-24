@@ -1,11 +1,11 @@
 import { joinPathFragments } from '@nrwl/devkit';
 import { appRootPath } from 'nx/src/utils/app-root';
 import { relative, resolve } from 'path';
-import { readCachedProjectGraph } from '../core/project-graph';
+import { readCachedProjectGraph } from 'nx/src/core/project-graph/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
-} from './project-graph-utils';
+} from 'nx/src/utils/project-graph-utils';
 
 /**
  * Generates a set of glob patterns based off the source root of the app and its dependencies

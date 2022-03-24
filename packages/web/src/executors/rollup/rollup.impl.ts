@@ -6,16 +6,11 @@ import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
-import type {
-  ExecutorContext,
-  ProjectGraphExternalNode,
-  ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
 import { logger, names, readJsonFile, writeJsonFile } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,

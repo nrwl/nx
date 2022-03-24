@@ -1,4 +1,4 @@
-import { output } from '@nrwl/workspace/src/utilities/output';
+import { output } from '@nrwl/devkit';
 import { determineMigration, migrateWorkspace } from './migration';
 import { initNxCloud, promptForNxCloud } from './nx-cloud';
 import { installDependencies } from './package-manager';

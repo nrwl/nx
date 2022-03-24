@@ -1,4 +1,4 @@
-import { PackageManager } from './package-manager';
+import { PackageManager } from '../utils/package-manager';
 import { TargetDependencyConfig } from './workspace';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
@@ -87,6 +87,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   cli?: {
     packageManager?: PackageManager;
     defaultCollection?: string;
+    defaultProjectName?: string;
   };
   /**
    * Plugins for extending the project graph

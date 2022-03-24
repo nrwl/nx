@@ -10,7 +10,6 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import * as ts from 'typescript';
-import { names } from '@nrwl/devkit';
 
 describe('Linter', () => {
   describe('linting errors', () => {

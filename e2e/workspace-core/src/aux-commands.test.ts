@@ -606,8 +606,8 @@ describe('remove project', () => {
    */
   it('should work', () => {
     newProject();
-    const lib1 = uniq('mylib');
-    const lib2 = uniq('mylib');
+    const lib1 = uniq('myliba');
+    const lib2 = uniq('mylibb');
 
     runCLI(`generate @nrwl/workspace:lib ${lib1}`);
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
@@ -628,7 +628,7 @@ describe('remove project', () => {
 
     let error;
     try {
-      runCLI(`generate @nrwl/workspace:remove --project ${lib1}`);
+      console.log(runCLI(`generate @nrwl/workspace:remove --project ${lib1}`));
     } catch (e) {
       error = e;
     }
