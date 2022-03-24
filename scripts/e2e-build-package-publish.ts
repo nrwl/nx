@@ -20,8 +20,8 @@ async function buildPackagePublishAndCleanPorts() {
     }
     await Promise.all([
       remove('./build'),
-      remove('./tmp/nx/proj-backup'),
-      remove('./tmp/angular/proj-backup'),
+      remove('/tmp/nx-e2e/nx/proj-backup'),
+      remove('/tmp/nx-e2e/angular/proj-backup'),
       remove('./tmp/local-registry'),
     ]);
   }
