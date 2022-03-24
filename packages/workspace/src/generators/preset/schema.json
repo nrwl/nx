@@ -3,6 +3,7 @@
   "$id": "NxWorkspacePreset",
   "cli": "nx",
   "title": "Creates applications in a new workspace",
+  "description": "Creates applications in a new workspace.",
   "type": "object",
   "properties": {
     "preset": {
@@ -52,7 +53,7 @@
       }
     },
     "standaloneConfig": {
-      "description": "Split the project configurations into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
     "packageManager": {

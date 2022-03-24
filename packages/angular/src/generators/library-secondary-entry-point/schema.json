@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxAngularLibrarySecondaryEntryPoint",
   "title": "Creates a secondary entry point for a library",
+  "description": "Creates a secondary entry point for an Angular publishable library.",
   "type": "object",
   "cli": "nx",
   "properties": {

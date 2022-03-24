@@ -1,0 +1,9 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "nx",
+  "description": "Smart, Fast and Extensible Build System",
+  "root": "/packages/nx",
+  "source": "/packages/nx/src",
+  "generators": [],
+  "executors": []
+}

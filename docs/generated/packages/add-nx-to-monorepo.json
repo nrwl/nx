@@ -1,0 +1,9 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "add-nx-to-monorepo",
+  "description": "Make any monorepo faster by adding Nx to it",
+  "root": "/packages/add-nx-to-monorepo",
+  "source": "/packages/add-nx-to-monorepo/src",
+  "generators": [],
+  "executors": []
+}

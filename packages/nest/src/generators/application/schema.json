@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestApplicationGenerator",
   "title": "Nx Application Options Schema",
+  "description": "Nx Application Options Schema",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -24,7 +25,7 @@
       "default": false
     },
     "skipPackageJson": {
-      "description": "Do not add dependencies to package.json.",
+      "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false
     },
@@ -49,12 +50,12 @@
       "type": "string"
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json.",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

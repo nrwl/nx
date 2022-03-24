@@ -3,23 +3,23 @@
   "$id": "NxWorkspaceRemove",
   "cli": "nx",
   "title": "Nx Remove",
-  "description": "Remove a project from the workspace",
+  "description": "Remove a project from the workspace.",
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/workspace:remove my-feature-lib",
-      "description": "Remove my-feature-lib from the workspace"
+      "command": "nx g @nrwl/workspace:remove my-feature-lib",
+      "description": "Remove `my-feature-lib` from the workspace"
     },
     {
-      "command": "g @nrwl/workspace:remove my-feature-lib --forceRemove",
-      "description": "Force removal of my-feature-lib from the workspace"
+      "command": "nx g @nrwl/workspace:remove my-feature-lib --forceRemove",
+      "description": "Force removal of `my-feature-lib` from the workspace"
     }
   ],
   "properties": {
     "projectName": {
       "type": "string",
       "alias": "project",
-      "description": "The name of the project to remove",
+      "description": "The name of the project to remove.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -28,7 +28,7 @@
     "forceRemove": {
       "type": "boolean",
       "aliases": ["force-remove"],
-      "description": "When true, forces removal even if the project is still in use.",
+      "description": "When `true`, forces removal even if the project is still in use.",
       "default": false
     },
     "skipFormat": {

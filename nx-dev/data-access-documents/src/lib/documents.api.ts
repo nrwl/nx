@@ -1,7 +1,7 @@
+import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import { readFileSync } from 'fs';
 import matter from 'gray-matter';
 import { join } from 'path';
-import { DocumentData, DocumentMetadata } from './documents.models';
 import { extractTitle } from './documents.utils';
 
 export interface StaticDocumentPaths {
@@ -40,7 +40,7 @@ export class DocumentsApi {
     };
   }
 
-  getDocuments() {
+  getDocuments(): DocumentMetadata {
     const docs = this.options.documents;
     if (docs) return docs;
     throw new Error(`Cannot find any documents`);
@@ -55,6 +55,14 @@ export class DocumentsApi {
           recur(ii, [...acc, curr.id]);
         });
       } else {
+        /*
+         * Do not try to get paths for Packages (done by the PackagesApi).
+         * This should be removed when the packages/schemas menu is inferred directly from PackagesApi.
+         * TODO@ben: Remove this when packages schemas menu is auto-generated.
+         */
+        if (!!curr['path'] && curr['path'].startsWith('/packages/'))
+          return void 0; // Do nothing
+
         paths.push({
           params: {
             segments: [...acc, curr.id],

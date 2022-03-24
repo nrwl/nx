@@ -2,11 +2,13 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactNativeStorybookStories",
+  "title": "React native Storybook stories",
+  "description": "React native Storybook stories.",
   "type": "object",
   "properties": {
     "project": {
       "type": "string",
-      "description": "Library or application name",
+      "description": "Library or application name.",
       "$default": {
         "$source": "projectName",
         "index": 0

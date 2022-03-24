@@ -142,3 +142,34 @@ iframe[src*='youtube'] {
     transform: translate3d(calc(-192px * 18), 0, 0);
   }
 }
+
+/**
+ * Tooltips
+ */
+[data-tooltip] {
+  cursor: help;
+  position: relative;
+}
+
+[data-tooltip]:before {
+  background-color: hsla(214, 61%, 11%, 1);
+  border-radius: 0.375rem;
+  color: hsla(0, 0%, 95%, 1);
+  content: attr(data-tooltip);
+  left: 0;
+  opacity: 0;
+  padding: 0.25rem 0.5rem;
+  position: absolute;
+  text-align: center;
+  text-transform: capitalize;
+  top: 120%;
+  transition: opacity 150ms ease-out;
+  visibility: hidden;
+  z-index: 1;
+  width: max-content;
+}
+
+[data-tooltip]:hover:before {
+  opacity: 1;
+  visibility: visible;
+}

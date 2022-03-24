@@ -2,6 +2,8 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "redux",
+  "title": "Create Redux state",
+  "description": "Create a Redux state slice for a React project.",
   "type": "object",
   "properties": {
     "name": {

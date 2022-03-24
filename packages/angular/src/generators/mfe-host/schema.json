@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/angular:mfe-host appName --remotes=remote1",
+      "command": "nx g @nrwl/angular:mfe-host appName --remotes=remote1",
       "description": "Create an Angular app with configuration in place for MFE. If remotes is provided, attach the remote app to this app's configuration."
     }
   ],

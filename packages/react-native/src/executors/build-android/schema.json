@@ -3,16 +3,16 @@
   "$id": "NxReactNativeBuildAndroid",
   "$schema": "http://json-schema.org/schema",
   "title": "Release Build for Android",
-  "description": "Build target options",
+  "description": "Build target options for Android.",
   "type": "object",
   "properties": {
     "apk": {
       "type": "boolean",
-      "description": "Generate apk file(s) rather than a bundle (.aab)."
+      "description": "Generate apk file(s) rather than a bundle (`.aab`)."
     },
     "debug": {
       "type": "boolean",
-      "description": "Generate a debug build instead of a release build"
+      "description": "Generate a debug build instead of a release build."
     }
   },
   "required": []

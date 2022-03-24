@@ -2,18 +2,19 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxTypescriptLibrary",
   "cli": "nx",
-  "title": "Convert a tsc library to swc",
+  "title": "Convert a TSC library to SWC",
+  "description": "Convert a TSC library to SWC.",
   "type": "object",
   "examples": [
     {
-      "command": "g swc mylib",
-      "description": "Convert libs/myapp/mylib to swc"
+      "command": "nx g swc mylib",
+      "description": "Convert `libs/myapp/mylib` to SWC."
     }
   ],
   "properties": {
     "project": {
       "type": "string",
-      "description": "Library name",
+      "description": "Library name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -23,10 +24,10 @@
     },
     "targets": {
       "type": "array",
-      "description": "List of targets to convert",
+      "description": "List of targets to convert.",
       "items": {
         "type": "string",
-        "description": "Target to convert"
+        "description": "Target to convert."
       },
       "default": ["build"]
     }

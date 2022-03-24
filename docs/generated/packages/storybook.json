@@ -1,0 +1,495 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "storybook",
+  "description": "Storybook plugin for Nx",
+  "root": "/packages/storybook",
+  "source": "/packages/storybook/src",
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init",
+      "schema": {
+        "cli": "nx",
+        "title": "Add Storybook Configuration to the workspace",
+        "description": "Add Storybook Configuration to the workspace.",
+        "$id": "init-storybook-plugin",
+        "type": "object",
+        "properties": {
+          "uiFramework": {
+            "type": "string",
+            "description": "Storybook UI Framework to use.",
+            "enum": [
+              "@storybook/angular",
+              "@storybook/react",
+              "@storybook/html",
+              "@storybook/web-components",
+              "@storybook/vue",
+              "@storybook/vue3",
+              "@storybook/svelte",
+              "@storybook/react-native"
+            ],
+            "x-prompt": "What UI framework plugin should storybook use?"
+          }
+        },
+        "presets": []
+      },
+      "description": "Add storybook configuration to the workspace",
+      "aliases": ["ng-add"],
+      "hidden": true,
+      "implementation": "/packages/storybook/src/generators/init/init.ts",
+      "path": "/packages/storybook/src/generators/init/schema.json"
+    },
+    {
+      "name": "configuration",
+      "factory": "./src/generators/configuration/configuration",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxStorybookConfigure",
+        "title": "Storybook Configuration",
+        "description": "Add Storybook configuration to a UI library or an application.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Library or application name.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "uiFramework": {
+            "type": "string",
+            "description": "Storybook UI Framework to use.",
+            "enum": ["@storybook/angular", "@storybook/react"],
+            "x-prompt": "What UI framework plugin should storybook use?"
+          },
+          "configureCypress": {
+            "type": "boolean",
+            "description": "Run the cypress-configure generator.",
+            "x-prompt": "Configure a cypress e2e app to run against the storybook instance?"
+          },
+          "cypressDirectory": {
+            "type": "string",
+            "description": "A directory where the Cypress project will be placed. Added at root by default."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint", "none"],
+            "default": "eslint"
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Add storybook configuration to a ui library or an application",
+      "hidden": false,
+      "implementation": "/packages/storybook/src/generators/configuration/configuration.ts",
+      "aliases": [],
+      "path": "/packages/storybook/src/generators/configuration/schema.json"
+    },
+    {
+      "name": "cypress-project",
+      "factory": "./src/generators/cypress-project/cypress-project",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "cypress-configure",
+        "title": "Cypress Configuration",
+        "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Library or application name.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the project is placed."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint", "none"],
+            "default": "eslint"
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Add cypress e2e app to test a ui library that is set up for storybook",
+      "hidden": false,
+      "implementation": "/packages/storybook/src/generators/cypress-project/cypress-project.ts",
+      "aliases": [],
+      "path": "/packages/storybook/src/generators/cypress-project/schema.json"
+    },
+    {
+      "name": "migrate-defaults-5-to-6",
+      "factory": "./src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "migrate-defaults-5-to-6",
+        "title": "Migrate defaults 5 to 6",
+        "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "boolean",
+            "description": "Generate new Storybook configurations for all Storybook instances across all apps and libs.",
+            "default": true
+          },
+          "keepOld": {
+            "type": "boolean",
+            "description": "Keep the old configuration files - put them in a folder called `.old_storybook`.",
+            "default": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration. Library or application name for which you want to generate the new Storybook configuration.",
+            "$default": { "$source": "argv", "index": 0 }
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false,
+      "implementation": "/packages/storybook/src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6.ts",
+      "aliases": [],
+      "path": "/packages/storybook/src/generators/migrate-defaults-5-to-6/schema.json"
+    },
+    {
+      "name": "migrate-stories-to-6-2",
+      "factory": "./src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "migrate-stories-to-6-2",
+        "title": "Migrate stories to 6.2",
+        "description": "Migrate stories syntax to `6.2`.",
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "presets": []
+      },
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false,
+      "implementation": "/packages/storybook/src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2.ts",
+      "aliases": [],
+      "path": "/packages/storybook/src/generators/migrate-stories-to-6-2/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "storybook",
+      "implementation": "/packages/storybook/src/executors/storybook/storybook.impl.ts",
+      "schema": {
+        "title": "Storybook Dev Builder",
+        "cli": "nx",
+        "description": "Serve up storybook in development mode.",
+        "type": "object",
+        "properties": {
+          "uiFramework": {
+            "type": "string",
+            "description": "Storybook framework npm package",
+            "enum": [
+              "@storybook/angular",
+              "@storybook/react",
+              "@storybook/html",
+              "@storybook/web-components",
+              "@storybook/vue",
+              "@storybook/vue3",
+              "@storybook/svelte"
+            ],
+            "default": "@storybook/angular",
+            "hidden": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 9009
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          },
+          "https": {
+            "type": "boolean",
+            "description": "Serve using HTTPS.",
+            "default": false
+          },
+          "sslKey": {
+            "type": "string",
+            "description": "SSL key to use for serving HTTPS."
+          },
+          "sslCert": {
+            "type": "string",
+            "description": "SSL certificate to use for serving HTTPS."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Watches for changes and rebuilds application",
+            "default": true
+          },
+          "staticDir": {
+            "type": "array",
+            "description": "Directory where to load static files from, array of strings",
+            "items": { "type": "string" },
+            "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+          },
+          "projectBuildConfig": {
+            "type": "string",
+            "description": "Workspace project where Storybook reads the Webpack config from"
+          },
+          "styles": {
+            "type": "array",
+            "description": "Global styles to be included in the build. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                      "description": "The file to include."
+                    },
+                    "bundleName": {
+                      "type": "string",
+                      "pattern": "^[\\w\\-.]*$",
+                      "description": "The bundle name for this extra entry point."
+                    },
+                    "inject": {
+                      "type": "boolean",
+                      "description": "If the bundle will be referenced in the HTML file.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["input"]
+                },
+                { "type": "string", "description": "The file to include." }
+              ]
+            }
+          },
+          "stylePreprocessorOptions.includePaths": {
+            "description": "Options to pass to style preprocessors. The paths to include. Paths will be resolved to workspace root. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "config": {
+            "type": "object",
+            "description": ".storybook configuration",
+            "properties": {
+              "configFolder": {
+                "type": "string",
+                "description": "Directory where to load Storybook configurations from"
+              },
+              "pluginPath": {
+                "type": "string",
+                "description": "Path to storybook plugin.js file."
+              },
+              "configPath": {
+                "type": "string",
+                "description": "Path to storybook preview.js file."
+              },
+              "srcRoot": {
+                "type": "string",
+                "description": "Project source path."
+              }
+            }
+          },
+          "docsMode": {
+            "type": "boolean",
+            "description": "Build a documentation-only site using addon-docs.",
+            "default": false
+          },
+          "quiet": {
+            "type": "boolean",
+            "description": "Suppress verbose build output.",
+            "default": true
+          }
+        },
+        "definitions": {
+          "extraEntryPoint": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string",
+                    "description": "The file to include."
+                  },
+                  "bundleName": {
+                    "type": "string",
+                    "pattern": "^[\\w\\-.]*$",
+                    "description": "The bundle name for this extra entry point."
+                  },
+                  "inject": {
+                    "type": "boolean",
+                    "description": "If the bundle will be referenced in the HTML file.",
+                    "default": true
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["input"]
+              },
+              { "type": "string", "description": "The file to include." }
+            ]
+          }
+        },
+        "required": ["uiFramework", "config"],
+        "presets": []
+      },
+      "description": "Serve Storybook",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/storybook/src/executors/storybook/schema.json"
+    },
+    {
+      "name": "build",
+      "implementation": "/packages/storybook/src/executors/build-storybook/build-storybook.impl.ts",
+      "schema": {
+        "title": "Storybook Builder",
+        "cli": "nx",
+        "description": "Build storybook in production mode.",
+        "type": "object",
+        "properties": {
+          "uiFramework": {
+            "type": "string",
+            "description": "Storybook framework npm package.",
+            "default": "@storybook/angular",
+            "hidden": true
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "The output path of the generated files."
+          },
+          "projectBuildConfig": {
+            "type": "string",
+            "description": "Workspace project where Storybook reads the Webpack config from."
+          },
+          "styles": {
+            "type": "array",
+            "description": "Global styles to be included in the build. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                      "description": "The file to include."
+                    },
+                    "bundleName": {
+                      "type": "string",
+                      "pattern": "^[\\w\\-.]*$",
+                      "description": "The bundle name for this extra entry point."
+                    },
+                    "inject": {
+                      "type": "boolean",
+                      "description": "If the bundle will be referenced in the HTML file.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["input"]
+                },
+                { "type": "string", "description": "The file to include." }
+              ]
+            }
+          },
+          "stylePreprocessorOptions.includePaths": {
+            "description": "Options to pass to style preprocessors. The paths to include. Paths will be resolved to workspace root. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "config": {
+            "type": "object",
+            "description": "`.storybook` file configuration",
+            "properties": {
+              "configFolder": {
+                "type": "string",
+                "description": "Directory where to load Storybook configurations from"
+              },
+              "pluginPath": {
+                "type": "string",
+                "description": "Path to storybook `plugin.js` file."
+              },
+              "configPath": {
+                "type": "string",
+                "description": "Path to storybook `preview.js` file."
+              },
+              "srcRoot": {
+                "type": "string",
+                "description": "Project source path."
+              }
+            }
+          },
+          "docsMode": {
+            "type": "boolean",
+            "description": "Build a documentation-only site using addon-docs.",
+            "default": false
+          },
+          "quiet": {
+            "type": "boolean",
+            "description": "Suppress verbose build output.",
+            "default": true
+          }
+        },
+        "definitions": {
+          "extraEntryPoint": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string",
+                    "description": "The file to include."
+                  },
+                  "bundleName": {
+                    "type": "string",
+                    "pattern": "^[\\w\\-.]*$",
+                    "description": "The bundle name for this extra entry point."
+                  },
+                  "inject": {
+                    "type": "boolean",
+                    "description": "If the bundle will be referenced in the HTML file.",
+                    "default": true
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["input"]
+              },
+              { "type": "string", "description": "The file to include." }
+            ]
+          }
+        },
+        "required": ["uiFramework", "config"],
+        "presets": []
+      },
+      "description": "Build Storybook",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/storybook/src/executors/build-storybook/schema.json"
+    }
+  ]
+}

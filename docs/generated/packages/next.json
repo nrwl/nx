@@ -1,0 +1,705 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "next",
+  "description": "Next.js Plugin for Nx",
+  "root": "/packages/next",
+  "source": "/packages/next/src",
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init#nextInitGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxNextNgInit",
+        "title": "Init Next Plugin",
+        "description": "Init Next Plugin.",
+        "type": "object",
+        "properties": {
+          "unitTestRunner": {
+            "description": "Adds the specified unit test runner.",
+            "type": "string",
+            "enum": ["jest", "none"],
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "description": "Adds the specified e2e test runner.",
+            "type": "string",
+            "enum": ["cypress", "none"],
+            "default": "cypress"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Initialize the @nrwl/next plugin",
+      "hidden": true,
+      "implementation": "/packages/next/src/generators/init/init#nextInitGenerator.ts",
+      "aliases": [],
+      "path": "/packages/next/src/generators/init/schema.json"
+    },
+    {
+      "name": "application",
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxNextApp",
+        "title": "Create a Next.js Application for Nx",
+        "examples": [
+          {
+            "command": "nx g app myapp --directory=myorg",
+            "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the application.",
+            "type": "string",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the application?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "description": "The directory of the new application.",
+            "type": "string",
+            "alias": "d"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "alias": "s",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org            ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh            ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                }
+              ]
+            }
+          },
+          "server": {
+            "description": "The server script path to be used with next.",
+            "type": "string"
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipWorkspaceJson": {
+            "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. `babel`, `style`).",
+            "type": "boolean",
+            "default": false
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["cypress", "none"],
+            "description": "Test runner to use for end to end (E2E) tests.",
+            "default": "cypress"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the application (used for linting).",
+            "alias": "t"
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
+            "type": "boolean"
+          },
+          "swc": {
+            "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application",
+      "implementation": "/packages/next/src/generators/application/application#applicationGenerator.ts",
+      "hidden": false,
+      "path": "/packages/next/src/generators/application/schema.json"
+    },
+    {
+      "name": "page",
+      "factory": "./src/generators/page/page#pageGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxNextReactPage",
+        "title": "Create a Page for Next",
+        "description": "Create a Page for Next.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g page my-new-page --project=my-app",
+            "description": "Generate a page in the my-app application"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for this component?"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the component.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the component?"
+          },
+          "directory": {
+            "type": "string",
+            "description": "Create the page under this directory (can be nested). Will be created under `pages/`.",
+            "alias": "dir"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "alias": "s",
+            "default": "css",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org            ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh            ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                },
+                { "value": "none", "label": "None" }
+              ]
+            }
+          },
+          "withTests": {
+            "type": "boolean",
+            "description": "When true, creates a `spec.ts` test file for the new page.",
+            "default": false
+          },
+          "export": {
+            "type": "boolean",
+            "description": "When true, the component is exported from the project `index.ts` (if it exists).",
+            "alias": "e",
+            "default": false
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create component at the source root rather than its own directory.",
+            "default": false
+          }
+        },
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Create a page",
+      "implementation": "/packages/next/src/generators/page/page#pageGenerator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/generators/page/schema.json"
+    },
+    {
+      "name": "component",
+      "factory": "./src/generators/component/component#componentGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxNextReactComponent",
+        "title": "Create a React Component for Next",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g component my-component --project=mylib",
+            "description": "Generate a component in the `mylib` library"
+          },
+          {
+            "command": "nx g component my-component --project=mylib --classComponent",
+            "description": "Generate a class component in the `mylib` library"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for this component?"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the component.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the component?"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "alias": "s",
+            "default": "css",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org            ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh            ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                }
+              ]
+            }
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "When true, does not create `spec.ts` test files for the new component.",
+            "default": false
+          },
+          "directory": {
+            "type": "string",
+            "description": "Create the component under this directory (can be nested).",
+            "alias": "dir"
+          },
+          "export": {
+            "type": "boolean",
+            "description": "When true, the component is exported from the project index.ts (if it exists).",
+            "alias": "e",
+            "default": false
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create component at the source root rather than its own directory.",
+            "default": false
+          }
+        },
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Create a component",
+      "implementation": "/packages/next/src/generators/component/component#componentGenerator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/generators/component/schema.json"
+    },
+    {
+      "name": "library",
+      "factory": "./src/generators/library/library#libraryGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactLibrary",
+        "title": "Create a React Library for Nx",
+        "description": "Create a React Library for an Nx workspace.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g lib mylib --directory=myapp",
+            "description": "Generate `libs/myapp/mylib`"
+          },
+          {
+            "command": "nx g lib mylib --appProject=myapp",
+            "description": "Generate a library with routes and add them to `myapp`"
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Library name",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the library?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the lib is placed.",
+            "alias": "dir"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "alias": "s",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org            ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh            ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                },
+                { "value": "none", "label": "None" }
+              ]
+            }
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the library (used for linting).",
+            "alias": "t"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipTsConfig": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not update tsconfig.json for development experience."
+          },
+          "pascalCaseFiles": {
+            "type": "boolean",
+            "description": "Use pascal case component file name (e.g. `App.tsx`).",
+            "alias": "P",
+            "default": false
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "Generate library with routes."
+          },
+          "appProject": {
+            "type": "string",
+            "description": "The application project to add the library route to.",
+            "alias": "a"
+          },
+          "publishable": {
+            "type": "boolean",
+            "description": "Create a publishable library."
+          },
+          "buildable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Generate a buildable library."
+          },
+          "importPath": {
+            "type": "string",
+            "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+          },
+          "component": {
+            "type": "boolean",
+            "description": "Generate a default component.",
+            "default": true
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "globalCss": {
+            "type": "boolean",
+            "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is `*.css` rather than `*.module.css`).",
+            "default": false
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "Whether to enable tsconfig strict mode or not.",
+            "default": true
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
+            "type": "boolean"
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library",
+      "implementation": "/packages/next/src/generators/library/library#libraryGenerator.ts",
+      "hidden": false,
+      "path": "/packages/next/src/generators/library/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "build",
+      "implementation": "/packages/next/src/executors/build/build.impl.ts",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "title": "Next Build",
+        "description": "Build a Next.js app",
+        "type": "object",
+        "properties": {
+          "root": { "description": "The source root", "type": "string" },
+          "outputPath": {
+            "type": "string",
+            "description": "The output path of the generated files."
+          },
+          "fileReplacements": {
+            "description": "Replace files with other files in the build.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "replace": {
+                  "type": "string",
+                  "description": "The file to be replaced."
+                },
+                "with": {
+                  "type": "string",
+                  "description": "The file to replace with."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["replace", "with"]
+            },
+            "default": []
+          },
+          "nextConfig": {
+            "description": "Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. `next.config.js`).",
+            "type": "string"
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately.",
+            "default": true
+          }
+        },
+        "required": ["root", "outputPath"],
+        "presets": []
+      },
+      "description": "Build a Next.js app",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/executors/build/schema.json"
+    },
+    {
+      "name": "server",
+      "implementation": "/packages/next/src/executors/server/server.impl.ts",
+      "schema": {
+        "cli": "nx",
+        "title": "Next Serve",
+        "description": "Serve a Next.js app",
+        "type": "object",
+        "properties": {
+          "dev": {
+            "type": "boolean",
+            "description": "Serve the application in the dev mode.",
+            "default": true
+          },
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application."
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 4200
+          },
+          "staticMarkup": {
+            "type": "boolean",
+            "description": "Static markup.",
+            "default": false
+          },
+          "quiet": {
+            "type": "boolean",
+            "description": "Hide error messages containing server information.",
+            "default": false
+          },
+          "customServerPath": {
+            "type": "string",
+            "description": "Use a custom server script."
+          },
+          "hostname": {
+            "type": "string",
+            "description": "Hostname on which the application is served."
+          },
+          "proxyConfig": {
+            "type": "string",
+            "description": "Path to the proxy configuration file."
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately.",
+            "default": true
+          }
+        },
+        "required": ["buildTarget"],
+        "presets": []
+      },
+      "description": "Serve a Next.js app",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/executors/server/schema.json"
+    },
+    {
+      "name": "export",
+      "implementation": "/packages/next/src/executors/export/export.impl.ts",
+      "schema": {
+        "cli": "nx",
+        "title": "Next Export",
+        "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+        "type": "object",
+        "properties": {
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application"
+          },
+          "silent": {
+            "type": "boolean",
+            "description": "Hide progress or not (default is `false`)",
+            "default": false
+          },
+          "threads": {
+            "type": "number",
+            "description": "Number of worker threads to utilize (defaults to the number of CPUs)"
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately.",
+            "default": true
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Export a Next.js app. The exported application is located at dist/$outputPath/exported.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/executors/export/schema.json"
+    }
+  ]
+}

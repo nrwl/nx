@@ -6,12 +6,12 @@
   "properties": {
     "dev": {
       "type": "boolean",
-      "description": "Serve the application in the dev mode",
+      "description": "Serve the application in the dev mode.",
       "default": true
     },
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application"
+      "description": "Target which builds the application."
     },
     "port": {
       "type": "number",
@@ -30,7 +30,7 @@
     },
     "customServerPath": {
       "type": "string",
-      "description": "Use a custom server script"
+      "description": "Use a custom server script."
     },
     "hostname": {
       "type": "string",

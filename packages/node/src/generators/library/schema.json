@@ -3,11 +3,12 @@
   "cli": "nx",
   "$id": "NxNodeLibrary",
   "title": "Create a Node Library for Nx",
+  "description": "Create a Node Library for an Nx workspace.",
   "type": "object",
   "examples": [
     {
-      "command": "g lib mylib --directory=myapp",
-      "description": "Generate libs/myapp/mylib"
+      "command": "nx g lib mylib --directory=myapp",
+      "description": "Generate `libs/myapp/mylib`"
     }
   ],
   "properties": {
@@ -26,7 +27,7 @@
       "alias": "dir"
     },
     "simpleModuleName": {
-      "description": "Keep the module name simple (when using --directory)",
+      "description": "Keep the module name simple (when using `--directory`).",
       "type": "boolean",
       "default": false
     },
@@ -39,23 +40,23 @@
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests",
+      "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the library (used for linting)",
+      "description": "Add tags to the library (used for linting).",
       "alias": "t"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "skipTsConfig": {
       "type": "boolean",
       "default": false,
-      "description": "Do not update tsconfig.base.json for development experience."
+      "description": "Do not update `tsconfig.base.json` for development experience."
     },
     "publishable": {
       "type": "boolean",
@@ -70,26 +71,26 @@
       "type": "string",
       "enum": ["tsc", "swc"],
       "default": "tsc",
-      "description": "The compiler used by the build and test targets"
+      "description": "The compiler used by the build and test targets."
     },
     "importPath": {
       "type": "string",
-      "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."
+      "description": "The library name used to import it, like `@myorg/my-awesome-lib`. Must be a valid npm name."
     },
     "rootDir": {
       "type": "string",
       "alias": "srcRootForCompilationRoot",
-      "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined."
+      "description": "Sets the `rootDir` for TypeScript compilation. When not defined, it uses the project's root property, or `srcRootForCompilationRoot` if it is defined."
     },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
-      "description": "The test environment to use if unitTestRunner is set to jest",
+      "description": "The test environment to use if `unitTestRunner` is set to `jest`.",
       "default": "jsdom"
     },
     "babelJest": {
       "type": "boolean",
-      "description": "Use babel instead ts-jest",
+      "description": "Use `babel` instead of `ts-jest`.",
       "default": false
     },
     "pascalCaseFiles": {
@@ -109,12 +110,12 @@
       "default": false
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project`. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

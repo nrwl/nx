@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestModuleGenerator",
-  "title": "Nest Module Options Schema.",
+  "title": "Nest Module Options Schema",
+  "description": "Nest Module Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

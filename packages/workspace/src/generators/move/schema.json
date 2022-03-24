@@ -3,23 +3,23 @@
   "$id": "NxWorkspaceMove",
   "cli": "nx",
   "title": "Nx Move",
-  "description": "Move a project to another folder in the workspace",
+  "description": "Move a project to another folder in the workspace.",
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/workspace:move --project my-feature-lib shared/my-feature-lib",
-      "description": "Move libs/my-feature-lib to libs/shared/my-feature-lib"
+      "command": "nx g @nrwl/workspace:move --project my-feature-lib shared/my-feature-lib",
+      "description": "Move `libs/my-feature-lib` to `libs/shared/my-feature-lib`"
     }
   ],
   "properties": {
     "projectName": {
       "type": "string",
       "alias": "project",
-      "description": "The name of the project to move"
+      "description": "The name of the project to move."
     },
     "destination": {
       "type": "string",
-      "description": "The folder to move the project into",
+      "description": "The folder to move the project into.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -27,7 +27,7 @@
     },
     "importPath": {
       "type": "string",
-      "description": "The new import path to use in the tsconfig.base.json"
+      "description": "The new import path to use in the `tsconfig.base.json`."
     },
     "updateImportPath": {
       "type": "boolean",

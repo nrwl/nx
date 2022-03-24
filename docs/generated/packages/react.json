@@ -1,0 +1,872 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "react",
+  "description": "React Plugin for Nx",
+  "root": "/packages/react",
+  "source": "/packages/react/src",
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init#reactInitGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxReactNgInit",
+        "title": "Init React Plugin",
+        "description": "Initialize a React Plugin",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "unitTestRunner": {
+            "description": "Adds the specified unit test runner.",
+            "type": "string",
+            "enum": ["jest", "none"],
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "description": "Adds the specified e2e test runner.",
+            "type": "string",
+            "enum": ["cypress", "none"],
+            "default": "cypress"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Initialize the @nrwl/react plugin",
+      "aliases": ["ng-add"],
+      "hidden": true,
+      "implementation": "/packages/react/src/generators/init/init#reactInitGenerator.ts",
+      "path": "/packages/react/src/generators/init/schema.json"
+    },
+    {
+      "name": "application",
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactApp",
+        "title": "Create a React Application",
+        "description": "Create a React application for Nx.",
+        "examples": [
+          {
+            "command": "nx g app myapp --directory=myorg",
+            "description": "Generate apps/myorg/myapp and apps/myorg/myapp-e2e"
+          },
+          {
+            "command": "nx g app myapp --classComponent",
+            "description": "Use class components instead of functional components"
+          },
+          {
+            "command": "nx g app myapp --routing",
+            "description": "Set up React Router"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the application.",
+            "type": "string",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the application?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "description": "The directory of the new application.",
+            "type": "string",
+            "alias": "dir"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "alias": "s",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org                       ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com            ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh                       ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                },
+                { "value": "none", "label": "None" }
+              ]
+            }
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "Generate application with routes.",
+            "x-prompt": "Would you like to add React Router to this application?",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipWorkspaceJson": {
+            "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. babel, style).",
+            "type": "boolean",
+            "default": false
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["cypress", "none"],
+            "description": "Test runner to use for end to end (E2E) tests.",
+            "default": "cypress"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the application (used for linting).",
+            "alias": "t"
+          },
+          "pascalCaseFiles": {
+            "type": "boolean",
+            "description": "Use pascal case component file name (e.g. `App.tsx`).",
+            "alias": "P",
+            "default": false
+          },
+          "classComponent": {
+            "type": "boolean",
+            "description": "Use class components instead of functional component.",
+            "alias": "C",
+            "default": false
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "globalCss": {
+            "type": "boolean",
+            "description": "Default is `false`. When `true`, the component is generated with `*.css`/`*.scss` instead of `*.module.css`/`*.module.scss`.",
+            "default": false
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "Creates an application with strict mode and strict type checking.",
+            "default": true
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          },
+          "compiler": {
+            "type": "string",
+            "description": "The compiler to use.",
+            "enum": ["babel", "swc"],
+            "default": "babel"
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create a React application",
+      "implementation": "/packages/react/src/generators/application/application#applicationGenerator.ts",
+      "hidden": false,
+      "path": "/packages/react/src/generators/application/schema.json"
+    },
+    {
+      "name": "library",
+      "factory": "./src/generators/library/library#libraryGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactLibrary",
+        "title": "Create a React Library",
+        "description": "Create a React Library for an Nx workspace",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g lib mylib --directory=myapp",
+            "description": "Generate libs/myapp/mylib"
+          },
+          {
+            "command": "nx g lib mylib --appProject=myapp",
+            "description": "Generate a library with routes and add them to myapp"
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Library name",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the library?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the lib is placed.",
+            "alias": "dir"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "alias": "s",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org            ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh            ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                },
+                { "value": "none", "label": "None" }
+              ]
+            }
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests.",
+            "default": "jest"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the library (used for linting).",
+            "alias": "t"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipTsConfig": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not update `tsconfig.json` for development experience."
+          },
+          "pascalCaseFiles": {
+            "type": "boolean",
+            "description": "Use pascal case component file name (e.g. `App.tsx`).",
+            "alias": "P",
+            "default": false
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "Generate library with routes."
+          },
+          "appProject": {
+            "type": "string",
+            "description": "The application project to add the library route to.",
+            "alias": "a"
+          },
+          "publishable": {
+            "type": "boolean",
+            "description": "Create a publishable library."
+          },
+          "buildable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Generate a buildable library."
+          },
+          "importPath": {
+            "type": "string",
+            "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+          },
+          "component": {
+            "type": "boolean",
+            "description": "Generate a default component.",
+            "default": true
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "globalCss": {
+            "type": "boolean",
+            "description": "When `true`, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is `*.css` rather than `*.module.css`).",
+            "default": false
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "Whether to enable tsconfig strict mode or not.",
+            "default": true
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          },
+          "compiler": {
+            "type": "string",
+            "enum": ["babel", "swc"],
+            "default": "babel",
+            "description": "Which compiler to use."
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a React library",
+      "implementation": "/packages/react/src/generators/library/library#libraryGenerator.ts",
+      "hidden": false,
+      "path": "/packages/react/src/generators/library/schema.json"
+    },
+    {
+      "name": "component",
+      "factory": "./src/generators/component/component#componentGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactComponent",
+        "title": "Create a React Component",
+        "description": "Create a React Component for Nx.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g component my-component --project=mylib",
+            "description": "Generate a component in the mylib library"
+          },
+          {
+            "command": "nx g component my-component --project=mylib --classComponent",
+            "description": "Generate a class component in the mylib library"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for this component?"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the component.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the component?"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "alias": "s",
+            "default": "css",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS              [ http://lesscss.org            ]"
+                },
+                {
+                  "value": "styled-components",
+                  "label": "styled-components [ https://styled-components.com ]"
+                },
+                {
+                  "value": "@emotion/styled",
+                  "label": "emotion           [ https://emotion.sh            ]"
+                },
+                {
+                  "value": "styled-jsx",
+                  "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+                },
+                { "value": "none", "label": "None" }
+              ]
+            }
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "When true, does not create `spec.ts` test files for the new component.",
+            "default": false
+          },
+          "directory": {
+            "type": "string",
+            "description": "Create the component under this directory (can be nested).",
+            "alias": "dir"
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create component at the source root rather than its own directory.",
+            "default": false
+          },
+          "export": {
+            "type": "boolean",
+            "description": "When true, the component is exported from the project `index.ts` (if it exists).",
+            "alias": "e",
+            "default": false,
+            "x-prompt": "Should this component be exported in the project?"
+          },
+          "pascalCaseFiles": {
+            "type": "boolean",
+            "description": "Use pascal case component file name (e.g. `App.tsx`).",
+            "alias": "P",
+            "default": false
+          },
+          "pascalCaseDirectory": {
+            "type": "boolean",
+            "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
+            "alias": "R",
+            "default": false
+          },
+          "classComponent": {
+            "type": "boolean",
+            "alias": "C",
+            "description": "Use class components instead of functional component.",
+            "default": false
+          },
+          "routing": {
+            "type": "boolean",
+            "description": "Generate a library with routes."
+          },
+          "globalCss": {
+            "type": "boolean",
+            "description": "Default is `false`. When `true`, the component is generated with `*.css`/`*.scss` instead of `*.module.css`/`*.module.scss`.",
+            "default": false
+          },
+          "fileName": {
+            "type": "string",
+            "description": "Create a component with this file name."
+          }
+        },
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Create a React component",
+      "aliases": "c",
+      "implementation": "/packages/react/src/generators/component/component#componentGenerator.ts",
+      "hidden": false,
+      "path": "/packages/react/src/generators/component/schema.json"
+    },
+    {
+      "name": "redux",
+      "factory": "./src/generators/redux/redux#reduxGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "redux",
+        "title": "Create Redux state",
+        "description": "Create a Redux state slice for a React project.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Redux slice name.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add the slice to. If it is an application, then the store configuration will be updated too.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for this slice?"
+          },
+          "directory": {
+            "type": "string",
+            "alias": "dir",
+            "default": "",
+            "description": "The name of the folder used to contain/group the generated Redux files."
+          },
+          "appProject": {
+            "type": "string",
+            "description": "The application project to add the slice to.",
+            "alias": "a"
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Create a redux slice for a project",
+      "aliases": ["slice"],
+      "implementation": "/packages/react/src/generators/redux/redux#reduxGenerator.ts",
+      "hidden": false,
+      "path": "/packages/react/src/generators/redux/schema.json"
+    },
+    {
+      "name": "storybook-configuration",
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactStorybookConfigure",
+        "title": "React Storybook Configure",
+        "description": "Set up Storybook for a React app or library.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Project name",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "configureCypress": {
+            "type": "boolean",
+            "description": "Run the cypress-configure generator.",
+            "x-prompt": "Configure a cypress e2e app to run against the storybook instance?",
+            "default": true
+          },
+          "generateStories": {
+            "type": "boolean",
+            "description": "Automatically generate `*.stories.ts` files for components declared in this project?",
+            "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
+            "default": true
+          },
+          "generateCypressSpecs": {
+            "type": "boolean",
+            "description": "Automatically generate `*.spec.ts` files in the Cypress E2E app generated by the `cypress-configure` generator.",
+            "x-prompt": "Automatically generate *.spec.ts files in the Cypress E2E app generated by the cypress-configure generator?",
+            "default": true
+          },
+          "cypressDirectory": {
+            "type": "string",
+            "description": "A directory where the Cypress project will be placed. Placed at the root by default."
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Set up storybook for a react app or library",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/storybook-configuration/configuration#storybookConfigurationGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/storybook-configuration/schema.json"
+    },
+    {
+      "name": "storybook-migrate-defaults-5-to-6",
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Generator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "storybook-migrate-defaults-5-to-6",
+        "title": "Storybook migrate defaults 5 to 6",
+        "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "boolean",
+            "description": "Generate new Storybook configurations for all Storybook instances across all apps and libs.",
+            "default": true
+          },
+          "keepOld": {
+            "type": "boolean",
+            "description": "Keep the old configuration files - put them in a folder called `.old_storybook`.",
+            "default": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration. Library or application name for which you want to generate the new Storybook configuration.",
+            "$default": { "$source": "argv", "index": 0 }
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Generator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/storybook-migrate-defaults-5-to-6/schema.json"
+    },
+    {
+      "name": "component-story",
+      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactComponentStory",
+        "title": "Create component story",
+        "description": "Generate storybook story for a react component.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The project name where to add the components.",
+            "examples": ["shared-ui-component"],
+            "$default": { "$source": "projectName", "index": 0 },
+            "x-prompt": "What's name of the project where the component lives?"
+          },
+          "componentPath": {
+            "type": "string",
+            "description": "Relative path to the component file from the library root.",
+            "examples": ["lib/components"],
+            "x-prompt": "What's path of the component relative to the project's lib root?"
+          }
+        },
+        "required": ["project", "componentPath"],
+        "presets": []
+      },
+      "description": "Generate storybook story for a react component",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/component-story/component-story#componentStoryGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/component-story/schema.json"
+    },
+    {
+      "name": "stories",
+      "factory": "./src/generators/stories/stories#storiesGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactStorybookStories",
+        "title": "Create React Storybook stories",
+        "description": "Create stories/specs for all components declared in an app or a library.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "Library or application name.",
+            "$default": { "$source": "projectName", "index": 0 },
+            "x-prompt": "What's name of the project for which you want to generate stories?"
+          },
+          "generateCypressSpecs": {
+            "type": "boolean",
+            "description": "Automatically generate `*.spec.ts` files in the cypress e2e app generated by the cypress-configure generator.",
+            "x-prompt": "Do you want to generate Cypress specs as well?"
+          },
+          "cypressProject": {
+            "type": "string",
+            "description": "The Cypress project to generate the stories under. This is inferred from `project` by default."
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Create stories/specs for all components declared in an app or library",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/stories/stories#storiesGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/stories/schema.json"
+    },
+    {
+      "name": "component-cypress-spec",
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactComponentCypressSpec",
+        "title": "Create component Cypress spec",
+        "description": "Create a Cypress spec for a UI component that has a story.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The project name for which to generate tests.",
+            "examples": ["shared-ui-component"],
+            "$default": { "$source": "projectName", "index": 0 },
+            "x-prompt": "What's name of the project for which to generate tests?"
+          },
+          "componentPath": {
+            "type": "string",
+            "description": "Relative path to the component file from the library root?",
+            "examples": ["lib/components"],
+            "x-prompt": "What's path of the component relative to the project's lib root for which to generate a test?"
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "cypressProject": {
+            "type": "string",
+            "description": "The Cypress project to generate the stories under. By default, inferred from `project`."
+          }
+        },
+        "required": ["project", "componentPath"],
+        "presets": []
+      },
+      "description": "Create a cypress spec for a ui component that has a story",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/component-cypress-spec/schema.json"
+    },
+    {
+      "name": "hook",
+      "factory": "./src/generators/hook/hook#hookGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactHook",
+        "title": "Create a React Hook for Nx",
+        "description": "Create a React component using Hooks in a dedicated React project.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g hook my-hook --project=mylib",
+            "description": "Generate a hook in the mylib library"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What is the name of the project for this hook?"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the hook.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the hook?"
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "default": false
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "When true, does not create `spec.ts` test files for the new hook.",
+            "default": false
+          },
+          "directory": {
+            "type": "string",
+            "description": "Create the hook under this directory (can be nested).",
+            "alias": "d"
+          },
+          "flat": {
+            "type": "boolean",
+            "description": "Create hook at the source root rather than its own directory.",
+            "default": false
+          },
+          "export": {
+            "type": "boolean",
+            "description": "When true, the hook is exported from the project `index.ts` (if it exists).",
+            "alias": "e",
+            "default": false,
+            "x-prompt": "Should this hook be exported in the project?"
+          },
+          "pascalCaseFiles": {
+            "type": "boolean",
+            "description": "Use pascal case hook file name (e.g. `useHook.ts`).",
+            "alias": "P",
+            "default": false
+          },
+          "pascalCaseDirectory": {
+            "type": "boolean",
+            "description": "Use pascal case directory name (e.g. `useHook/useHook.ts`).",
+            "alias": "R",
+            "default": false
+          }
+        },
+        "required": ["name", "project"],
+        "presets": []
+      },
+      "description": "Create a hook",
+      "aliases": "c",
+      "implementation": "/packages/react/src/generators/hook/hook#hookGenerator.ts",
+      "hidden": false,
+      "path": "/packages/react/src/generators/hook/schema.json"
+    }
+  ],
+  "executors": []
+}

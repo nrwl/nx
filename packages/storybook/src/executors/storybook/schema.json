@@ -1,7 +1,7 @@
 {
   "title": "Storybook Dev Builder",
   "cli": "nx",
-  "description": "Serve up storybook in development mode",
+  "description": "Serve up storybook in development mode.",
   "type": "object",
   "properties": {
     "uiFramework": {

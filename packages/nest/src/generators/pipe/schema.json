@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestPipeGenerator",
-  "title": "Nest Pipe Options Schema.",
+  "title": "Nest Pipe Options Schema",
+  "description": "Nest Pipe Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

@@ -1,12 +1,18 @@
 {
   "title": "Run detox test",
-  "description": "Run detox test options",
+  "description": "Run detox test options.",
   "type": "object",
   "cli": "nx",
+  "presets": [
+    {
+      "name": "Run tests",
+      "keys": ["detoxConfiguration", "loglevel", "reuse"]
+    }
+  ],
   "properties": {
     "detoxConfiguration": {
       "type": "string",
-      "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it",
+      "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it.",
       "alias": "C",
       "examples": [
         "ios.sim.debug",
@@ -17,16 +23,16 @@
     },
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application"
+      "description": "Target which builds the application."
     },
     "configPath": {
       "type": "string",
-      "description": "Specify Detox config file path. If not supplied, detox searches for .detoxrc[.js] or \"detox\" section in package.json",
+      "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in package.json.",
       "alias": "cp"
     },
     "runnerConfig": {
       "type": "string",
-      "description": "Test runner config file, defaults to 'e2e/mocha.opts' for mocha and 'e2e/config.json' for jest.",
+      "description": "Test runner config file, defaults to `e2e/mocha.opts` for mocha and `e2e/config.json` for Jest.",
       "alias": "o"
     },
     "deviceName": {
@@ -37,7 +43,7 @@
     "loglevel": {
       "type": "string",
       "enum": ["fatal", "error", "warn", "info", "verbose", "trace"],
-      "description": "Log level: fatal, error, warn, info, verbose, trace",
+      "description": "Log level: `fatal`, `error`, `warn`, `info`, `verbose`, `trace`.",
       "alias": "l"
     },
     "debugSynchronization": {
@@ -53,17 +59,17 @@
     "recordLogs": {
       "type": "string",
       "enum": ["failing", "all", "none"],
-      "description": "Save logs during each test to artifacts directory. Pass \"failing\" to save logs of failing tests only."
+      "description": "Save logs during each test to artifacts directory. Pass `failing` to save logs of failing tests only."
     },
     "takeScreenshots": {
       "type": "string",
       "enum": ["manual", "failing", "all", "none"],
-      "description": "Save screenshots before and after each test to artifacts directory. Pass \"failing\" to save screenshots of failing tests only. "
+      "description": "Save screenshots before and after each test to artifacts directory. Pass `failing` to save screenshots of failing tests only. "
     },
     "recordVideos": {
       "type": "string",
       "enum": ["failing", "all", "none"],
-      "description": "Save screen recordings of each test to artifacts directory. Pass \"failing\" to save recordings of failing tests only."
+      "description": "Save screen recordings of each test to artifacts directory. Pass `failing` to save recordings of failing tests only."
     },
     "recordPerformance": {
       "type": "string",
@@ -73,16 +79,16 @@
     "recordTimeline": {
       "type": "string",
       "enum": ["all", "none"],
-      "description": "[Jest Only] Record tests and events timeline, for visual display on the chrome://tracing tool."
+      "description": "[Jest Only] Record tests and events timeline, for visual display on the `chrome://tracing` tool."
     },
     "captureViewHierarchy": {
       "type": "string",
       "enum": ["enabled", "disabled"],
-      "description": "[iOS Only] Capture *.uihierarchy snapshots on view action errors and device.captureViewHierarchy() calls."
+      "description": "[iOS Only] Capture `*.uihierarchy` snapshots on view action errors and `device.captureViewHierarchy()` calls."
     },
     "retries": {
       "type": "number",
-      "description": "[Jest Circus Only] Re-spawn the test runner for individual failing suite files until they pass, or <N> times at least."
+      "description": "[Jest Circus Only] Re-spawn the test runner for individual failing suite files until they pass, or `<N>` times at least."
     },
     "reuse": {
       "type": "boolean",
@@ -106,7 +112,7 @@
     },
     "gpu": {
       "type": "boolean",
-      "description": "[Android Only] Launch Emulator with the specific -gpu [gpu mode] parameter."
+      "description": "[Android Only] Launch Emulator with the specific `-gpu [gpu mode]` parameter."
     },
     "deviceLaunchArgs": {
       "type": "string",
@@ -122,15 +128,15 @@
     },
     "useCustomLogger": {
       "type": "boolean",
-      "description": "Use Detox' custom console-logging implementation, for logging Detox (non-device) logs. Disabling will fallback to node.js / test-runner's implementation (e.g. Jest / Mocha)."
+      "description": "Use Detox' custom console-logging implementation, for logging Detox (non-device) logs. Disabling will fallback to Node.js / test-runner's implementation (e.g. Jest / Mocha)."
     },
     "forceAdbInstall": {
       "type": "boolean",
-      "description": "Due to problems with the adb install command on Android, Detox resorts to a different scheme for install APK's. Setting true will disable that and force usage of adb install, instead."
+      "description": "Due to problems with the adb install command on Android, Detox resorts to a different scheme for install APK's. Setting true will disable that and force usage of `adb install`, instead."
     },
     "inspectBrk": {
       "type": "boolean",
-      "description": "Uses node's --inspect-brk flag to let users debug the jest/mocha test runner"
+      "description": "Uses node's `--inspect-brk` flag to let users debug the jest/mocha test runner"
     }
   },
   "required": ["detoxConfiguration"]

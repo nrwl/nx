@@ -31,12 +31,12 @@
     },
     "skipTests": {
       "type": "boolean",
-      "description": "Do not create \"spec.ts\" test files for the new directive.",
+      "description": "Do not create `spec.ts` test files for the new directive.",
       "default": false
     },
     "inlineScam": {
       "type": "boolean",
-      "description": "Create the NgModule in the same file as the Directive.",
+      "description": "Create the `NgModule` in the same file as the Directive.",
       "default": true
     },
     "flat": {
@@ -47,7 +47,7 @@
     "selector": {
       "type": "string",
       "format": "html-selector",
-      "description": "The HTML selector to use for this directive."
+      "description": "The `HTML` selector to use for this directive."
     },
     "prefix": {
       "type": "string",

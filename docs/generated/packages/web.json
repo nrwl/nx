@@ -1,0 +1,938 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "web",
+  "description": "Web Plugin for Nx",
+  "root": "/packages/web",
+  "source": "/packages/web/src",
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init#webInitGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxWebInit",
+        "cli": "nx",
+        "title": "Init Web Plugin",
+        "type": "object",
+        "properties": {
+          "unitTestRunner": {
+            "description": "Adds the specified unit test runner",
+            "type": "string",
+            "enum": ["jest", "none"],
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "description": "Adds the specified e2e test runner",
+            "type": "string",
+            "enum": ["cypress", "none"],
+            "default": "cypress"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "description": "Add @nrwl/web to a project",
+      "hidden": true,
+      "implementation": "/packages/web/src/generators/init/init#webInitGenerator.ts",
+      "aliases": [],
+      "path": "/packages/web/src/generators/init/schema.json"
+    },
+    {
+      "name": "application",
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxWebApp",
+        "title": "Create a Web Application for Nx",
+        "description": "Create a web application using `swc` or `babel` as compiler.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the application.",
+            "type": "string",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the application?",
+            "pattern": "^[a-zA-Z].*$"
+          },
+          "directory": {
+            "description": "The directory of the new application.",
+            "type": "string"
+          },
+          "style": {
+            "description": "The file extension to be used for style files.",
+            "type": "string",
+            "default": "css",
+            "x-prompt": {
+              "message": "Which stylesheet format would you like to use?",
+              "type": "list",
+              "items": [
+                { "value": "css", "label": "CSS" },
+                {
+                  "value": "scss",
+                  "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+                },
+                {
+                  "value": "styl",
+                  "label": "Stylus(.styl)[ http://stylus-lang.com ]"
+                },
+                {
+                  "value": "less",
+                  "label": "LESS         [ http://lesscss.org     ]"
+                }
+              ]
+            }
+          },
+          "compiler": {
+            "type": "string",
+            "description": "The compiler to use",
+            "enum": ["babel", "swc"],
+            "default": "babel"
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint"],
+            "default": "eslint"
+          },
+          "skipFormat": {
+            "description": "Skip formatting files",
+            "type": "boolean",
+            "default": false
+          },
+          "unitTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for unit tests",
+            "default": "jest"
+          },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["cypress", "none"],
+            "description": "Test runner to use for end to end (e2e) tests",
+            "default": "cypress"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Add tags to the application (used for linting)"
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json",
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "presets": []
+      },
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application",
+      "implementation": "/packages/web/src/generators/application/application#applicationGenerator.ts",
+      "hidden": false,
+      "path": "/packages/web/src/generators/application/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "webpack",
+      "implementation": "/packages/web/src/executors/webpack/webpack.impl.ts",
+      "schema": {
+        "title": "Webpack Executor",
+        "description": "Builds web applications using webpack",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "crossOrigin": {
+            "type": "string",
+            "description": "The `crossorigin` attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'."
+          },
+          "main": {
+            "type": "string",
+            "description": "The name of the main entry-point file."
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The name of the Typescript configuration file."
+          },
+          "compiler": {
+            "type": "string",
+            "description": "The compiler to use.",
+            "enum": ["babel", "swc"],
+            "default": "babel"
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "The output path of the generated files."
+          },
+          "deleteOutputPath": {
+            "type": "boolean",
+            "description": "Delete the output path before building.",
+            "default": true
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Enable re-building when files change.",
+            "default": false
+          },
+          "baseHref": {
+            "type": "string",
+            "description": "Base url for the application being built."
+          },
+          "deployUrl": {
+            "type": "string",
+            "description": "URL where the application will be deployed."
+          },
+          "vendorChunk": {
+            "type": "boolean",
+            "description": "Use a separate bundle containing only vendor libraries.",
+            "default": true
+          },
+          "commonChunk": {
+            "type": "boolean",
+            "description": "Use a separate bundle containing code used across multiple bundles.",
+            "default": true
+          },
+          "runtimeChunk": {
+            "type": "boolean",
+            "description": "Use a separate bundle containing the runtime.",
+            "default": true
+          },
+          "sourceMap": {
+            "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+            "default": true,
+            "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+          },
+          "progress": {
+            "type": "boolean",
+            "description": "Log progress to the console while building.",
+            "default": false
+          },
+          "assets": {
+            "type": "array",
+            "description": "List of static application assets.",
+            "default": [],
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "glob": {
+                      "type": "string",
+                      "description": "The pattern to match."
+                    },
+                    "input": {
+                      "type": "string",
+                      "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                    },
+                    "ignore": {
+                      "description": "An array of globs to ignore.",
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "output": {
+                      "type": "string",
+                      "description": "Absolute path within the output."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["glob", "input", "output"]
+                },
+                { "type": "string" }
+              ]
+            }
+          },
+          "index": {
+            "type": "string",
+            "description": "HTML File which will be contain the application."
+          },
+          "scripts": {
+            "type": "array",
+            "description": "External Scripts which will be included before the main application entry.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                      "description": "The file to include."
+                    },
+                    "bundleName": {
+                      "type": "string",
+                      "description": "The bundle name for this extra entry point."
+                    },
+                    "inject": {
+                      "type": "boolean",
+                      "description": "If the bundle will be referenced in the HTML file.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["input"]
+                },
+                { "type": "string", "description": "The file to include." }
+              ]
+            },
+            "default": []
+          },
+          "styles": {
+            "type": "array",
+            "description": "External Styles which will be included with the application",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                      "description": "The file to include."
+                    },
+                    "bundleName": {
+                      "type": "string",
+                      "description": "The bundle name for this extra entry point."
+                    },
+                    "inject": {
+                      "type": "boolean",
+                      "description": "If the bundle will be referenced in the HTML file.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["input"]
+                },
+                { "type": "string", "description": "The file to include." }
+              ]
+            },
+            "default": []
+          },
+          "budgets": {
+            "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "The type of budget.",
+                  "enum": [
+                    "all",
+                    "allScript",
+                    "any",
+                    "anyScript",
+                    "bundle",
+                    "initial"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the bundle."
+                },
+                "baseline": {
+                  "type": "string",
+                  "description": "The baseline size for comparison."
+                },
+                "maximumWarning": {
+                  "type": "string",
+                  "description": "The maximum threshold for warning relative to the baseline."
+                },
+                "maximumError": {
+                  "type": "string",
+                  "description": "The maximum threshold for error relative to the baseline."
+                },
+                "minimumWarning": {
+                  "type": "string",
+                  "description": "The minimum threshold for warning relative to the baseline."
+                },
+                "minimumError": {
+                  "type": "string",
+                  "description": "The minimum threshold for error relative to the baseline."
+                },
+                "warning": {
+                  "type": "string",
+                  "description": "The threshold for warning relative to the baseline (min & max)."
+                },
+                "error": {
+                  "type": "string",
+                  "description": "The threshold for error relative to the baseline (min & max)."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["type"]
+            },
+            "default": []
+          },
+          "namedChunks": {
+            "type": "boolean",
+            "description": "Names the produced bundles according to their entry file.",
+            "default": true
+          },
+          "outputHashing": {
+            "type": "string",
+            "description": "Define the output filename cache-busting hashing mode.",
+            "default": "none",
+            "enum": ["none", "all", "media", "bundles"]
+          },
+          "stylePreprocessorOptions": {
+            "description": "Options to pass to style preprocessors.",
+            "type": "object",
+            "properties": {
+              "includePaths": {
+                "description": "Paths to include. Paths will be resolved to project root.",
+                "type": "array",
+                "items": { "type": "string" },
+                "default": []
+              }
+            },
+            "additionalProperties": false
+          },
+          "optimization": {
+            "description": "Enables optimization of the build output.",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "scripts": {
+                    "type": "boolean",
+                    "description": "Enables optimization of the scripts output.",
+                    "default": true
+                  },
+                  "styles": {
+                    "type": "boolean",
+                    "description": "Enables optimization of the styles output.",
+                    "default": true
+                  }
+                },
+                "additionalProperties": false
+              },
+              { "type": "boolean" }
+            ]
+          },
+          "extractCss": {
+            "type": "boolean",
+            "description": "Extract CSS into a `.css` file.",
+            "default": false
+          },
+          "es2015Polyfills": {
+            "description": "Conditional polyfills loaded in browsers which do not support `ES2015`.",
+            "type": "string"
+          },
+          "subresourceIntegrity": {
+            "type": "boolean",
+            "description": "Enables the use of subresource integrity validation.",
+            "default": false
+          },
+          "polyfills": {
+            "type": "string",
+            "description": "Polyfills to load before application"
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Emits verbose output",
+            "default": false
+          },
+          "statsJson": {
+            "type": "boolean",
+            "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`.",
+            "default": false
+          },
+          "extractLicenses": {
+            "type": "boolean",
+            "description": "Extract all licenses in a separate file, in the case of production builds only.",
+            "default": false
+          },
+          "memoryLimit": {
+            "type": "number",
+            "description": "Memory limit for type checking service process in `MB`.",
+            "default": 2048
+          },
+          "maxWorkers": {
+            "type": "number",
+            "description": "Number of workers to use for type checking.",
+            "default": 2
+          },
+          "fileReplacements": {
+            "description": "Replace files with other files in the build.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "replace": {
+                  "type": "string",
+                  "description": "The file to be replaced."
+                },
+                "with": {
+                  "type": "string",
+                  "description": "The file to replace with."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["replace", "with"]
+            },
+            "default": []
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately.",
+            "default": true
+          },
+          "generateIndexHtml": {
+            "type": "boolean",
+            "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`.",
+            "default": true
+          },
+          "postcssConfig": {
+            "type": "string",
+            "description": "Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each `app`/`lib` directory."
+          },
+          "webpackConfig": {
+            "type": "string",
+            "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config."
+          }
+        },
+        "required": ["tsConfig", "main", "index"],
+        "definitions": {
+          "assetPattern": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "glob": {
+                    "type": "string",
+                    "description": "The pattern to match."
+                  },
+                  "input": {
+                    "type": "string",
+                    "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                  },
+                  "ignore": {
+                    "description": "An array of globs to ignore.",
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "output": {
+                    "type": "string",
+                    "description": "Absolute path within the output."
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["glob", "input", "output"]
+              },
+              { "type": "string" }
+            ]
+          },
+          "budget": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of budget.",
+                "enum": [
+                  "all",
+                  "allScript",
+                  "any",
+                  "anyScript",
+                  "bundle",
+                  "initial"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the bundle."
+              },
+              "baseline": {
+                "type": "string",
+                "description": "The baseline size for comparison."
+              },
+              "maximumWarning": {
+                "type": "string",
+                "description": "The maximum threshold for warning relative to the baseline."
+              },
+              "maximumError": {
+                "type": "string",
+                "description": "The maximum threshold for error relative to the baseline."
+              },
+              "minimumWarning": {
+                "type": "string",
+                "description": "The minimum threshold for warning relative to the baseline."
+              },
+              "minimumError": {
+                "type": "string",
+                "description": "The minimum threshold for error relative to the baseline."
+              },
+              "warning": {
+                "type": "string",
+                "description": "The threshold for warning relative to the baseline (min & max)."
+              },
+              "error": {
+                "type": "string",
+                "description": "The threshold for error relative to the baseline (min & max)."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["type"]
+          },
+          "extraEntryPoint": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string",
+                    "description": "The file to include."
+                  },
+                  "bundleName": {
+                    "type": "string",
+                    "description": "The bundle name for this extra entry point."
+                  },
+                  "inject": {
+                    "type": "boolean",
+                    "description": "If the bundle will be referenced in the HTML file.",
+                    "default": true
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["input"]
+              },
+              { "type": "string", "description": "The file to include." }
+            ]
+          }
+        },
+        "presets": []
+      },
+      "description": "Build an application using webpack",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/web/src/executors/webpack/schema.json"
+    },
+    {
+      "name": "rollup",
+      "implementation": "/packages/web/src/executors/rollup/rollup.impl.ts",
+      "schema": {
+        "title": "Web Library Rollup Target (Experimental)",
+        "description": "Packages a library for different web usages (`UMD`, `ESM`, `CJS`).",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The path to package.json file."
+          },
+          "entryFile": {
+            "type": "string",
+            "description": "The path to the entry file, relative to project."
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "The output path of the generated files."
+          },
+          "deleteOutputPath": {
+            "type": "boolean",
+            "description": "Delete the output path before building.",
+            "default": true
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The path to tsconfig file."
+          },
+          "format": {
+            "type": "array",
+            "description": "Only build the specified comma-separated formats (`esm,umd,cjs`)",
+            "alias": "f",
+            "items": { "type": "string", "enum": ["esm", "umd", "cjs"] },
+            "default": ["esm", "umd"]
+          },
+          "external": {
+            "type": "array",
+            "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
+            "items": { "type": "string" }
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Enable re-building when files change.",
+            "default": false
+          },
+          "updateBuildableProjectDepsInPackageJson": {
+            "type": "boolean",
+            "description": "Update buildable project dependencies in `package.json`.",
+            "default": true
+          },
+          "buildableProjectDepsInPackageJsonType": {
+            "type": "string",
+            "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+            "enum": ["dependencies", "peerDependencies"],
+            "default": "peerDependencies"
+          },
+          "rollupConfig": {
+            "oneOf": [
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "string" }
+            ],
+            "description": "Path to a function which takes a rollup config and returns an updated rollup config."
+          },
+          "umdName": {
+            "type": "string",
+            "description": "The name of your module in `UMD` format. Defaulted to your project name."
+          },
+          "globals": {
+            "description": "A mapping of node modules to their `UMD` global names. Used by the `UMD` bundle.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "moduleId": {
+                  "type": "string",
+                  "description": "The node module to map from (e.g. `react-dom`)."
+                },
+                "global": {
+                  "type": "string",
+                  "description": "The global name to map to (e.g. `ReactDOM`)."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["moduleId", "global"]
+            },
+            "default": []
+          },
+          "extractCss": {
+            "type": "boolean",
+            "description": "CSS files will be extracted to the output folder.",
+            "default": true
+          },
+          "assets": {
+            "type": "array",
+            "description": "List of static assets.",
+            "default": [],
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "glob": {
+                      "type": "string",
+                      "description": "The pattern to match."
+                    },
+                    "input": {
+                      "type": "string",
+                      "description": "The input directory path in which to apply `glob`. Defaults to the project root."
+                    },
+                    "output": {
+                      "type": "string",
+                      "description": "Relative path within the output folder."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["glob", "input", "output"]
+                },
+                { "type": "string" }
+              ]
+            }
+          },
+          "compiler": {
+            "type": "string",
+            "enum": ["babel", "swc"],
+            "default": "babel",
+            "description": "Which compiler to use."
+          }
+        },
+        "required": ["tsConfig", "project", "entryFile", "outputPath"],
+        "definitions": {
+          "assetPattern": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "glob": {
+                    "type": "string",
+                    "description": "The pattern to match."
+                  },
+                  "input": {
+                    "type": "string",
+                    "description": "The input directory path in which to apply `glob`. Defaults to the project root."
+                  },
+                  "output": {
+                    "type": "string",
+                    "description": "Relative path within the output folder."
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["glob", "input", "output"]
+              },
+              { "type": "string" }
+            ]
+          }
+        },
+        "presets": []
+      },
+      "description": "Package a library using rollup",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/web/src/executors/rollup/schema.json"
+    },
+    {
+      "name": "dev-server",
+      "implementation": "/packages/web/src/executors/dev-server/dev-server.impl.ts",
+      "schema": {
+        "title": "Web Dev Server",
+        "description": "Serve a web application.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application."
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 4200
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          },
+          "ssl": {
+            "type": "boolean",
+            "description": "Serve using `HTTPS`.",
+            "default": false
+          },
+          "sslKey": {
+            "type": "string",
+            "description": "SSL key to use for serving `HTTPS`."
+          },
+          "sslCert": {
+            "type": "string",
+            "description": "SSL certificate to use for serving `HTTPS`."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Watches for changes and rebuilds application.",
+            "default": true
+          },
+          "liveReload": {
+            "type": "boolean",
+            "description": "Whether to reload the page on change, using live-reload.",
+            "default": true
+          },
+          "hmr": {
+            "type": "boolean",
+            "description": "Enable hot module replacement.",
+            "default": false
+          },
+          "publicHost": {
+            "type": "string",
+            "description": "Public URL where the application will be served."
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Open the application in the browser.",
+            "default": false
+          },
+          "allowedHosts": {
+            "type": "string",
+            "description": "This option allows you to whitelist services that are allowed to access the dev server."
+          },
+          "memoryLimit": {
+            "type": "number",
+            "description": "Memory limit for type checking service process in `MB`."
+          },
+          "maxWorkers": {
+            "type": "number",
+            "description": "Number of workers to use for type checking."
+          },
+          "baseHref": {
+            "type": "string",
+            "description": "Base url for the application being built."
+          }
+        },
+        "presets": []
+      },
+      "description": "Serve a web application",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/web/src/executors/dev-server/schema.json"
+    },
+    {
+      "name": "file-server",
+      "implementation": "/packages/web/src/executors/file-server/file-server.impl.ts",
+      "schema": {
+        "title": "File Server",
+        "description": "Serve a web application from a folder.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application."
+          },
+          "withDeps": {
+            "type": "boolean",
+            "description": "Build the target and all its deps",
+            "default": false,
+            "x-deprecated": "\"withDeps\" is deprecated and it will be removed in `v14`. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Build the target in parallel.",
+            "default": true
+          },
+          "maxParallel": {
+            "type": "number",
+            "description": "Max number of parallel jobs."
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 4200
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          },
+          "ssl": {
+            "type": "boolean",
+            "description": "Serve using `HTTPS`.",
+            "default": false
+          },
+          "sslKey": {
+            "type": "string",
+            "description": "SSL key to use for serving `HTTPS`."
+          },
+          "sslCert": {
+            "type": "string",
+            "description": "SSL certificate to use for serving `HTTPS`."
+          },
+          "proxyUrl": {
+            "type": "string",
+            "description": "URL to proxy unhandled requests to."
+          },
+          "proxyOptions": {
+            "type": "object",
+            "description": "Options for the proxy used by `http-server`.",
+            "default": {},
+            "properties": { "secure": { "type": "boolean", "default": false } },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false,
+        "required": ["buildTarget"],
+        "presets": []
+      },
+      "description": "Serve a web application from a folder",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/web/src/executors/file-server/schema.json"
+    }
+  ]
+}

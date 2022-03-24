@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestFilterGenerator",
-  "title": "Nest Filter Options Schema.",
+  "title": "Nest Filter Options Schema",
+  "description": "Nest Filter Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {
