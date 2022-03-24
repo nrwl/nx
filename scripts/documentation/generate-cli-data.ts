@@ -33,6 +33,7 @@ interface ParsedCommandOption {
 
 interface ParsedCommand {
   name: string;
+  commandString: string;
   description: string;
   options?: Array<ParsedCommandOption>;
 }
@@ -80,7 +81,11 @@ export async function generateCLIDocumentation() {
         command.builder.apply
       )
     ) {
-      return { name, description: command.description };
+      return {
+        name,
+        commandString: command.original,
+        description: command.description,
+      };
     }
     // Show all the options we can get from yargs
     const builder = await command.builder(
@@ -92,6 +97,7 @@ export async function generateCLIDocumentation() {
     return {
       name,
       description: command.description,
+      commandString: command.original,
       options:
         Object.keys(builderDescriptions).map((key) => ({
           name: key,
@@ -117,7 +123,7 @@ ${command.description}
 ## Usage
 
 \`\`\`bash
-nx ${command.name}
+nx ${command.commandString}
 \`\`\`
 
 [Install \`nx\` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpx nx\`.\n`;

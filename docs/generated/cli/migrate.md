@@ -16,7 +16,7 @@ Creates a migrations file or runs migrations from the migrations file.
 ## Usage
 
 ```bash
-nx migrate
+nx migrate [packageAndVersion]
 ```
 
 [Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
