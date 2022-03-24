@@ -2,8 +2,16 @@ import { Schema } from './params';
 import * as chalk from 'chalk';
 import { logger, stripIndent } from './logger';
 
-function formatOption(name: string, description: string) {
-  return `  --${`${name}                     `.substr(0, 22)}${description}`;
+function formatOption(
+  name: string,
+  description: string,
+  maxPropertyNameLength: number
+) {
+  const lengthOfKey = Math.max(maxPropertyNameLength + 4, 22);
+  return `  --${`${name}                                                 `.substr(
+    0,
+    lengthOfKey
+  )}${description}`;
 }
 
 export function printHelp(
@@ -18,18 +26,33 @@ export function printHelp(
     return p['$default'] && p['$default']['$source'] === 'argv';
   });
   const positional = allPositional.length > 0 ? ` [${allPositional[0]}]` : '';
+  const maxPropertyNameLength = Object.keys(schema.properties)
+    .map((n) => n.length)
+    .reduce((a, b) => Math.max(a, b), 0);
   const args = Object.keys(schema.properties)
     .map((name) => {
       const d = schema.properties[name];
       const def = d.default ? ` (default: ${d.default})` : '';
-      return formatOption(name, `${d.description}${def}`);
+      return formatOption(
+        name,
+        `${d.description}${def}`,
+        maxPropertyNameLength
+      );
     })
     .join('\n');
 
   const missingFlags =
     meta.mode === 'generate'
-      ? formatOption('dry-run', 'Preview the changes without updating files')
-      : formatOption('skip-nx-cache', 'Skip the use of Nx cache.');
+      ? formatOption(
+          'dry-run',
+          'Preview the changes without updating files',
+          maxPropertyNameLength
+        )
+      : formatOption(
+          'skip-nx-cache',
+          'Skip the use of Nx cache.',
+          maxPropertyNameLength
+        );
 
   let linkDescription = null;
   // we need to generalize link generation so it works for non-party-class plugins as well
