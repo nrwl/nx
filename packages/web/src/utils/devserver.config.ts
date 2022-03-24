@@ -56,7 +56,7 @@ export function getDevServerConfig(
     })
   );
 
-  return webpackConfig;
+  return webpackConfig as any;
 }
 
 function getDevServerPartial(
