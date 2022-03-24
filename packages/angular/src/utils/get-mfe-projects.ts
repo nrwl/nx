@@ -19,7 +19,7 @@ export function getMfeProjects(tree: Tree) {
       const ast = tsquery.ast(webpackConfig);
       const moduleFederationWebpackConfig = tsquery(
         ast,
-        'Identifier[name=ModuleFederationPlugin]',
+        'Identifier[name=withModuleFederation]',
         {
           visitAllChildren: true,
         }

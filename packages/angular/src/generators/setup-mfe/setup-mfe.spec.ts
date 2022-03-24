@@ -1,5 +1,5 @@
 import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { readJson, readProjectConfiguration } from '@nrwl/devkit';
+import { readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { setupMfe } from './setup-mfe';
@@ -40,35 +40,6 @@ describe('Init MFE', () => {
         'utf-8'
       );
       expect(webpackContetnts).toMatchSnapshot();
-    }
-  );
-
-  test.each([
-    ['app1', 'host'],
-    ['remote1', 'remote'],
-  ])(
-    'should support a root tsconfig.json instead of tsconfig.base.json',
-    async (app, type: 'host' | 'remote') => {
-      // ARRANGE
-      host.rename('tsconfig.base.json', 'tsconfig.json');
-
-      // ACT
-      await setupMfe(host, {
-        appName: app,
-        mfeType: type,
-      });
-
-      // ASSERT
-      expect(host.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
-      expect(host.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
-
-      const webpackContents = host.read(
-        `apps/${app}/webpack.config.js`,
-        'utf-8'
-      );
-      expect(webpackContents).toContain(
-        "const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.json');"
-      );
     }
   );
 
@@ -147,27 +118,6 @@ describe('Init MFE', () => {
     }
   );
 
-  test.each([
-    ['app1', 'host'],
-    ['remote1', 'remote'],
-  ])(
-    'should install @angular-architects/module-federation in the monorepo',
-    async (app, type: 'host' | 'remote') => {
-      // ACT
-      await setupMfe(host, {
-        appName: app,
-        mfeType: type,
-      });
-
-      // ASSERT
-      const { dependencies } = readJson(host, 'package.json');
-
-      expect(
-        dependencies['@angular-architects/module-federation']
-      ).toBeTruthy();
-    }
-  );
-
   it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(host, {
@@ -179,9 +129,7 @@ describe('Init MFE', () => {
     // ASSERT
     const webpackContents = host.read(`apps/app1/webpack.config.js`, 'utf-8');
 
-    expect(webpackContents).toContain(
-      '"remote1": "http://localhost:4200/remoteEntry.js"'
-    );
+    expect(webpackContents).toContain(`'remote1'`);
   });
   it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
     // ACT
