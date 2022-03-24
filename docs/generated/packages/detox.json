@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "detox",
-  "description": "The Nx Plugin for Detox contains executors and generators allowing your workspace to use the powerful Detox integration testing capabilities.",
+  "description": "The Nx Plugin for Detox that contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
   "root": "/packages/detox",
   "source": "/packages/detox/src",
   "generators": [
