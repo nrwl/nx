@@ -3,11 +3,11 @@
 [Webpack 5](https://webpack.js.org/blog/2020-10-10-webpack-5-release/) introduced a [Module Federation Plugin](https://webpack.js.org/concepts/module-federation/#modulefederationplugin-high-level) enabling multiple, independently built and deployed bundles of code to form a single application. This is the foundation of Micro Frontend Architecture and the Module Federation Plugin makes implementing such an architecture much simpler.  
 With Angular 12 adding support for Webpack 5 it increases the viability of scaffolding a Micro Frontend architecture with Angular.
 
-We have added some generators to aid in the scaffolding of Module Federation configuration required for setting up a Micro Frontend Architecture.
+We have added some generators to aid in the scaffolding of the Module Federation configuration required for setting up a Micro Frontend Architecture.
 
 Therefore, using Nx, it can be fairly straightforward to scaffold and build a Micro Frontend Architecture from a monorepo with all the additional benefits of Nx.
 
-In this guide, we'll show you to how setup a Micro Frontend Architecture with Nx and Angular.
+In this guide, we'll show you to how to set up a Micro Frontend Architecture with Nx and Angular.
 
 > **NOTE**: When serving Micro-Frontends (_MFEs_) in dev mode locally, there'll be an error output to the console: `import.meta cannot be used outside of a module`, and the script that is coming from is `styles.js`. It's a known error output, but it doesn't actually cause any breakages from as far as our testing has shown. It's because the Angular compiler attaches the `styles.js` file to the `index.html` in a `<script>` tag with `defer`.
 >
@@ -20,11 +20,11 @@ In this guide, we'll show you to how setup a Micro Frontend Architecture with Nx
 ## What we'll build
 
 We will put together a simple Admin Dashboard application that requires a user to log in to view the protected content.  
-To achieve this we will have two apps:
+To achieve this we will have two applications:
 
-- Admin Dashboard app
+- Admin Dashboard application
   - This will contain the layout of the dashboard and the content that can only be viewed by an authenticated and authorized user.
-- Login app
+- Login application
   - This will contain the forms and logic for authenticating and authorizing a user
 
 When the user tries to view a protected page within the Admin Dashboard, if they are not authenticated we will present them with a login form so that they can authenticate and view the contents of the page.
@@ -69,7 +69,7 @@ yarn add -D @nrwl/angular
 
 Simple! You are now able to use Nx Generators to scaffold Angular applications and libraries.
 
-### Creating our apps
+### Creating our applications
 
 We need to generate two applications that support Module Federation.
 
@@ -85,7 +85,7 @@ npx nx g @nrwl/angular:host dashboard
 yarn nx g @nrwl/angular:host dashboard
 ```
 
-The application generator will create and modify the files needed to setup the Angular application.
+The application generator will create and modify the files needed to set up the Angular application.
 
 Now, let's generate the Login application as a remote application.
 
@@ -99,51 +99,58 @@ npx nx g @nrwl/angular:remote login --host=dashboard
 yarn nx g @nrwl/angular:remote login --host=dashboard
 ```
 
-_**Note:** We provided `--host=dashboard` as an option. This tells the generator that this remote app will be consumed by the Dashboard application. The generator will automatically link these two apps together in the `webpack.config.js`_
+_**Note:** We provided `--host=dashboard` as an option. This tells the generator that this remote application will be consumed by the Dashboard application. The generator will automatically link these two applications together in the `mfe.config.js` that gets used in the `webpack.config.js`._
 
-_**Note**: The `RemoteEntryModule` generated will be imported in `app.module.ts` file, however, it is not used in the `AppModule` itself. This it to allow TS to find the Module during compilation, allowing it to be included in the built bundle. This is required for the Module Federation Plugin to expose the Module correctly. You can choose to import the `RemoteEntryModule` in the `AppModule` if you wish, however, it is not necessary._
+_**Note**: The `RemoteEntryModule` generated will be imported in `app.module.ts` file, however, it is not used in the `AppModule` itself. This is to allow TS to find the Module during compilation, allowing it to be included in the built bundle. This is required for the Module Federation Plugin to expose the Module correctly. You can choose to import the `RemoteEntryModule` in the `AppModule` if you wish, however, it is not necessary._
 
 ## What was generated?
 
 Let's take a closer after generating each application.
 
-For both apps, the generator did the following:
+For both applications, the generator did the following:
 
 - Created the standard Angular application files
+- Added a `mfe.config.js` file
 - Added a `webpack.config.js` and `webpack.prod.config.js`
 - Added a `bootstrap.ts` file
 - Moved the code that is normally in `main.ts` to `bootstrap.ts`
 - Changed `main.ts` to dynamically import `bootstrap.ts` _(this is required for the Module Federation to correct load versions of shared libraries)_
-- Updated the `build` target in the `project.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom webpack configuration to the Angular compiler)_
-- Updated the `serve` target to use `@nrwl/angular:webpack-server`. _(this is required as we first need webpack to build the app with our custom webpack config)_
+- Updated the `build` target in the `project.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom Webpack configuration to the Angular compiler)_
+- Updated the `serve` target to use `@nrwl/angular:webpack-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
 
-The key differences reside within the configuration of the Module Federation Plugin within each app's `webpack.config.js`.
+The key differences reside within the configuration of the Module Federation Plugin within each application's `mfe.config.js`.
 
-We see the following within Login's webpack configuration:
+We see the following within Login's micro frontend configuration:
 
 ```js
-const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
+module.exports = {
   name: 'login',
   exposes: {
     './Module': 'apps/login/src/app/remote-entry/entry.module.ts',
   },
-});
+};
 ```
 
 Taking a look at each property of the configuration in turn:
 
-- `name` is the name that Webpack assigns to the remote appliction. It **must** match the name of the application.
+- `name` is the name that Webpack assigns to the remote application. It **must** match the name of the application.
 - `exposes` is the list of source files that the remote application provides consuming shell applications for their own use.
 
-We can see the following in Dashboard's webpack configuration:
+This config is then used in the `webpack.config.js` file:
 
 ```js
 const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);
+```
+
+We can see the following in Dashboard's micro frontend configuration:
+
+```js
+module.exports = {
   name: 'dashboard',
   remotes: ['login'],
-});
+};
 ```
 
 The key difference to note with the Dashboard's configuration is the `remotes` array. This is where you list the remote applications you want to consume in your host application.
@@ -154,7 +161,7 @@ Now that we have our applications generated, let's move on to building out some 
 
 ## Adding Functionality
 
-We'll start by building the Login app, which will consist of a login form and some very basic and insecure authorization logic.
+We'll start by building the Login application, which will consist of a login form and some very basic and insecure authorization logic.
 
 ### User Library
 
@@ -314,7 +321,7 @@ nx run login:serve
 
 We can see if we navigate a browser to `http://localhost:4201` that we see the login form rendered:
 
-![Login App](/shared/guides/login-app.png)
+![Login Application](/shared/guides/login-app.png)
 
 If we type in the correct username and password _(demo, demo)_, then we can also see the user gets authenticated!
 
@@ -324,12 +331,12 @@ Perfect! Our login application is complete.
 
 Now let's create the Dashboard application where we'll hide some content if the user is not authenticated. If the user is not authenticated, we will present them with the Login application where they can log in.
 
-For this to work, the state within `UserService` must be shared across both applications. Usually with Module Federation in webpack, you have to specifiy the packages to share between all the apps in your Micro Frontend solution.  
+For this to work, the state within `UserService` must be shared across both applications. Usually, with Module Federation in Webpack, you have to specify the packages to share between all the applications in your Micro Frontend solution.  
 However, by taking advantage of Nx's project graph, Nx will automatically find and share the dependencies of your applications.
 
 _**Note:** This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy)_
 
-Now, let's delete the `app.component.html` and `app.component.css` files in the Dashboard app. They will not be needed for this tutorial.
+Now, let's delete the `app.component.html` and `app.component.css` files in the Dashboard application. They will not be needed for this tutorial.
 
 Finally, let's add our logic to `app.component.ts`. Change it to match the following:
 
@@ -370,7 +377,7 @@ export class AppComponent implements OnInit {
 }
 ```
 
-We can run both the dashboard app and the login app and you can try it out using:
+We can run both the dashboard application and the login application and you can try it out using:
 
 ```bash
 nx run dashboard:serve-mfe
