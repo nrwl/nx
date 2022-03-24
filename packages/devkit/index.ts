@@ -292,6 +292,15 @@ export { getOutputsForTargetAndConfiguration } from 'nx/src/tasks-runner/utils';
 /**
  * @category Utils
  */
+export {
+  defaultTasksRunner,
+  DefaultTasksRunnerOptions,
+  RemoteCache,
+} from 'nx/src/tasks-runner/default-tasks-runner';
+
+/**
+ * @category Utils
+ */
 export { Hash, Hasher } from 'nx/src/core/hasher/hasher';
 
 /**

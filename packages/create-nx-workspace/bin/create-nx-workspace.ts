@@ -662,7 +662,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/getting-started/nx-core`],
+        bodyLines: [`https://nx.dev/core-tutorial/01-create-blog`],
       });
       break;
 
