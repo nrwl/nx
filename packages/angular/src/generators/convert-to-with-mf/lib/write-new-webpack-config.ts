@@ -10,38 +10,42 @@ export function writeNewWebpackConfig(
   mfType: IsHostRemoteConfigResult,
   projectName: string
 ) {
-  let webpackConfig = '';
+  const webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
+  const config = require('./mfe.config');
+  module.exports = withModuleFederation(config);`;
+
+  let mfeConfig = '';
   if (!mfType) {
-    webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
-        module.exports = withModuleFederation({
+    mfeConfig = `
+        module.exports = {
           name: '${projectName}',
-        });`;
+        };`;
   } else if (mfType === 'host') {
     const remotes = hostRemotesToString(ast);
-    webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
-        module.exports = withModuleFederation({
+    mfeConfig = `
+        module.exports = {
           name: '${projectName}',
           remotes: ${remotes},
-        });`;
+        };`;
   } else if (mfType === 'remote') {
     const exposedModules = getExposedModulesFromRemote(ast);
-    webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
-        module.exports = withModuleFederation({
+    mfeConfig = `
+        module.exports = {
           name: '${projectName}',
           exposes: ${exposedModules},
-        });`;
+        };`;
   } else if (mfType === 'both') {
     const remotes = hostRemotesToString(ast);
     const exposedModules = getExposedModulesFromRemote(ast);
-    webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
-    module.exports = withModuleFederation({
+    mfeConfig = `
+    module.exports = {
       name: '${projectName}',
       remotes: ${remotes},
       exposes: ${exposedModules},
-    });`;
+    };`;
   }
 
-  return webpackConfig;
+  return [webpackConfig, mfeConfig];
 }
 
 function hostRemotesToString(ast: SourceFile) {

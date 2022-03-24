@@ -1,8 +1,3 @@
 const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: '<%= name %>',<% if(type === 'host') { %>
-  remotes: [<% remotes.forEach(function(remote) { %>'<%= remote.remoteName %>',<% }); %>]<% } %><% if(type === 'remote') { %>
-  exposes: {
-    './Module': '<%= projectRoot %>/src/app/remote-entry/entry.module.ts',
-  },<% } %>
-});
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);

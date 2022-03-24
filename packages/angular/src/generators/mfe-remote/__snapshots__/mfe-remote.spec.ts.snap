@@ -2,28 +2,18 @@
 
 exports[`MFE Remote App Generator should generate a remote mfe app with a host 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'host',
-  remotes: ['test',]
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`MFE Remote App Generator should generate a remote mfe app with a host 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'test',
-  exposes: {
-    './Module': 'apps/test/src/app/remote-entry/entry.module.ts',
-  },
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`MFE Remote App Generator should generate a remote mfe app with no host 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'test',
-  exposes: {
-    './Module': 'apps/test/src/app/remote-entry/entry.module.ts',
-  },
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
