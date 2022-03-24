@@ -92,7 +92,6 @@ export function Content({
             </div>
           </div>
           <div className="relative z-0 inline-flex flex-shrink-0 rounded-md shadow-sm">
-            {/* TODO@ben: update to package schemas list link when available */}
             <Link href={schemaViewModel.packageUrl}>
               <a
                 aria-hidden="true"
@@ -142,17 +141,16 @@ export function Content({
           <div className="mt-8">
             <Heading2 title="Options playground" />
             <p className="my-6">
-              This is an example of what the properties looks like and their
-              values. Go ahead and try, test your configuration this is a
-              live-edit window, you can interact directly and get intellisense
-              on property's values.
+              Try out this interactive editor of the configuration object.
+              Values are validated as you type and hovering over labels will
+              give you more information.
             </p>
             {!!schemaViewModel.currentSchema.presets.length && (
               <>
                 <Heading3 title="Examples" />
                 <p className="my-4">
-                  Here are some examples to tinker with specific usages that
-                  could be useful:
+                  These buttons show the config object for specific common
+                  tasks.
                 </p>
                 <div className="mb-4 flex flex-wrap gap-4">
                   {schemaViewModel.currentSchema.presets.map((p) => (
