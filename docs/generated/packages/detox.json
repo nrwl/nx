@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "detox",
-  "description": "Detox Plugin for Nx",
+  "description": "The Nx Plugin for Detox contains executors and generators allowing your workspace to use the powerful Detox integration testing capabilities.",
   "root": "/packages/detox",
   "source": "/packages/detox/src",
   "generators": [
@@ -23,7 +23,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Initialize the @nrwl/detox plugin",
+      "description": "Initialize the `@nrwl/detox` plugin.",
       "hidden": true,
       "implementation": "/packages/detox/src/generators/init/init#detoxInitGenerator.ts",
       "aliases": [],
@@ -81,7 +81,7 @@
       },
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a detox application",
+      "description": "Create a Detox application.",
       "implementation": "/packages/detox/src/generators/application/application#detoxApplicationGenerator.ts",
       "hidden": false,
       "path": "/packages/detox/src/generators/application/schema.json"
