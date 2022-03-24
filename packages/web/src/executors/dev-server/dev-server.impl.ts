@@ -90,7 +90,7 @@ export default async function* devServerExecutor(
   return yield* eachValueFrom(
     runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
-        console.info(stats.toString(webpackConfig.stats));
+        console.info(stats.toString((webpackConfig as any).stats));
       }),
       map(({ baseUrl, stats }) => {
         return {
