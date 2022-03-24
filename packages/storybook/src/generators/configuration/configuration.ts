@@ -250,7 +250,7 @@ function configureTsSolutionConfig(
 
   if (
     !tsConfigContent.references
-      .map((reference) => reference.path)
+      ?.map((reference) => reference.path)
       .includes('./.storybook/tsconfig.json')
   ) {
     tsConfigContent.references = [

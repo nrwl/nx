@@ -9,5 +9,4 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   cypressDirectory?: string;
   standaloneConfig?: boolean;
-  rootPath?: string;
 }

@@ -57,6 +57,12 @@
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library"
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a Next.js project",
+      "hidden": false
     }
   }
 }
