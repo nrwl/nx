@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "js",
-  "description": "JavaScript Plugin for Nx",
+  "description": "The Nx plugin that provides the best experience for developing JavaScript and TypeScript projects.",
   "root": "/packages/js",
   "source": "/packages/js/src",
   "generators": [
@@ -164,7 +164,7 @@
       },
       "aliases": ["swc"],
       "x-type": "library",
-      "description": "Convert a tsc library to swc",
+      "description": "Convert a TypeScript library to compile with SWC.",
       "implementation": "/packages/js/src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator.ts",
       "hidden": false,
       "path": "/packages/js/src/generators/convert-to-swc/schema.json"
@@ -441,7 +441,7 @@
         },
         "presets": []
       },
-      "description": "Build a project using SWC",
+      "description": "Build a project using SWC.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/js/src/executors/swc/schema.json"
