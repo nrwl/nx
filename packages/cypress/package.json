@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/cypress",
   "version": "0.0.1",
-  "description": "Cypress plugin for Nx",
+  "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
