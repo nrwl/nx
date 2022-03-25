@@ -11,6 +11,12 @@
       "version": "13.8.5-beta.1",
       "description": "Adjust .swcrc to .lib.swcrc",
       "factory": "./src/migrations/update-13-8-5/update-swcrc"
+    },
+    "update-swcrc-exclude": {
+      "cli": "nx",
+      "version": "13.10.1-beta.1",
+      "description": "Update .lib.swcrc to exclude missing test files",
+      "factory": "./src/migrations/update-13-10-1/update-lib-swcrc-exclude"
     }
   },
   "packageJsonUpdates": {}
