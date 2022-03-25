@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/react-native",
   "version": "0.0.1",
-  "description": "React Native Plugin for Nx",
+  "description": "React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "keywords": [
     "Monorepo",
     "React",
