@@ -23,7 +23,7 @@ describe('Init MFE', () => {
     ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
-    'should create webpack configs correctly',
+    'should create webpack and mfe configs correctly',
     async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
@@ -32,14 +32,18 @@ describe('Init MFE', () => {
       });
 
       // ASSERT
+      expect(host.exists(`apps/${app}/mfe.config.js`)).toBeTruthy();
       expect(host.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
       expect(host.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
 
-      const webpackContetnts = host.read(
+      const webpackContents = host.read(
         `apps/${app}/webpack.config.js`,
         'utf-8'
       );
-      expect(webpackContetnts).toMatchSnapshot();
+      expect(webpackContents).toMatchSnapshot();
+
+      const mfeConfigContents = host.read(`apps/${app}/mfe.config.js`, 'utf-8');
+      expect(mfeConfigContents).toMatchSnapshot();
     }
   );
 
@@ -127,9 +131,9 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const webpackContents = host.read(`apps/app1/webpack.config.js`, 'utf-8');
+    const mfeConfigContents = host.read(`apps/app1/mfe.config.js`, 'utf-8');
 
-    expect(webpackContents).toContain(`'remote1'`);
+    expect(mfeConfigContents).toContain(`'remote1'`);
   });
   it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
     // ACT
@@ -163,8 +167,8 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
-    expect(hostWebpackConfig).toMatchSnapshot();
+    const hostMfeConfig = host.read('apps/app1/mfe.config.js', 'utf-8');
+    expect(hostMfeConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
@@ -194,8 +198,8 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
-    expect(hostWebpackConfig).toMatchSnapshot();
+    const hostMfeConfig = host.read('apps/app1/mfe.config.js', 'utf-8');
+    expect(hostMfeConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications router config', async () => {

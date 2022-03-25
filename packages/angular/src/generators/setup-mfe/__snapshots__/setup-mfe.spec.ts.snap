@@ -31,35 +31,43 @@ export class AppModule { }
 `;
 
 exports[`Init MFE should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
+"module.exports = {
   name: 'app1',
   remotes: ['remote1','remote2',]
-});"
+}"
 `;
 
 exports[`Init MFE should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
+"module.exports = {
   name: 'app1',
   remotes: ['remote1',]
-});"
+}"
 `;
 
-exports[`Init MFE should create webpack configs correctly 1`] = `
+exports[`Init MFE should create webpack and mfe configs correctly 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
+`;
+
+exports[`Init MFE should create webpack and mfe configs correctly 2`] = `
+"module.exports = {
   name: 'app1',
   remotes: []
-});"
+}"
 `;
 
-exports[`Init MFE should create webpack configs correctly 2`] = `
+exports[`Init MFE should create webpack and mfe configs correctly 3`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
+`;
+
+exports[`Init MFE should create webpack and mfe configs correctly 4`] = `
+"module.exports = {
   name: 'remote1',
   exposes: {
     './Module': 'apps/remote1/src/app/remote-entry/entry.module.ts',
   },
-});"
+}"
 `;
