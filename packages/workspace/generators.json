@@ -5,14 +5,14 @@
     "workspace": {
       "factory": "./src/generators/workspace/workspace#workspaceSchematic",
       "schema": "./src/generators/workspace/schema.json",
-      "description": "Create an empty workspace",
+      "description": "Create an empty workspace.",
       "hidden": true
     },
 
     "preset": {
       "factory": "./src/generators/preset/preset#presetSchematic",
       "schema": "./src/generators/preset/schema.json",
-      "description": "Create application in an empty workspace",
+      "description": "Create application in an empty workspace.",
       "hidden": true
     },
 
@@ -20,20 +20,20 @@
       "factory": "./src/generators/move/move#moveSchematic",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Move an application or library to another folder"
+      "description": "Move an application or library to another folder."
     },
 
     "remove": {
       "factory": "./src/generators/remove/remove#removeSchematic",
       "schema": "./src/generators/remove/schema.json",
       "aliases": ["rm"],
-      "description": "Remove an application or library"
+      "description": "Remove an application or library."
     },
 
     "new": {
       "factory": "./src/generators/new/new#newSchematic",
       "schema": "./src/generators/new/schema.json",
-      "description": "Create a workspace",
+      "description": "Create a workspace.",
       "hidden": true
     },
 
@@ -42,33 +42,33 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a library."
     },
 
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",
       "schema": "./src/generators/workspace-generator/schema.json",
       "aliases": ["workspace-schematic"],
-      "description": "Generates a workspace generator"
+      "description": "Generates a workspace generator."
     },
 
     "run-commands": {
       "factory": "./src/generators/run-commands/run-commands#runCommandsSchematic",
       "schema": "./src/generators/run-commands/schema.json",
       "aliases": ["run-command", "target"],
-      "description": "Generates a target to run any command in the terminal"
+      "description": "Generates a target to run any command in the terminal."
     },
 
     "convert-to-nx-project": {
       "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectSchematic",
       "schema": "./src/generators/convert-to-nx-project/schema.json",
-      "description": "Moves a project's configuration outside of workspace.json"
+      "description": "Moves a project's configuration outside of `workspace.json`."
     },
 
     "npm-package": {
       "factory": "./src/generators/npm-package/npm-package#npmPackageSchematic",
       "schema": "./src/generators/npm-package/schema.json",
-      "description": "Create a minimal npm package",
+      "description": "Create a minimal NPM package.",
       "x-type": "library"
     }
   },
@@ -76,14 +76,14 @@
     "workspace": {
       "factory": "./src/generators/workspace/workspace#workspaceGenerator",
       "schema": "./src/generators/workspace/schema.json",
-      "description": "Create an empty workspace",
+      "description": "Create an empty workspace.",
       "hidden": true
     },
 
     "preset": {
       "factory": "./src/generators/preset/preset#presetGenerator",
       "schema": "./src/generators/preset/schema.json",
-      "description": "Create application in an empty workspace",
+      "description": "Create application in an empty workspace.",
       "hidden": true
     },
 
@@ -91,20 +91,20 @@
       "factory": "./src/generators/move/move#moveGenerator",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Move an application or library to another folder"
+      "description": "Move an application or library to another folder."
     },
 
     "remove": {
       "factory": "./src/generators/remove/remove#removeGenerator",
       "schema": "./src/generators/remove/schema.json",
       "aliases": ["rm"],
-      "description": "Remove an application or library"
+      "description": "Remove an application or library."
     },
 
     "new": {
       "factory": "./src/generators/new/new#newGenerator",
       "schema": "./src/generators/new/schema.json",
-      "description": "Create a workspace",
+      "description": "Create a workspace.",
       "hidden": true
     },
 
@@ -113,33 +113,33 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a library."
     },
 
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",
       "schema": "./src/generators/workspace-generator/schema.json",
       "aliases": ["workspace-schematic"],
-      "description": "Generates a workspace generator"
+      "description": "Generates a workspace generator."
     },
 
     "run-commands": {
       "factory": "./src/generators/run-commands/run-commands#runCommandsGenerator",
       "schema": "./src/generators/run-commands/schema.json",
       "aliases": ["run-command", "target"],
-      "description": "Generates a target to run any command in the terminal"
+      "description": "Generates a target to run any command in the terminal."
     },
 
     "convert-to-nx-project": {
       "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator",
       "schema": "./src/generators/convert-to-nx-project/schema.json",
-      "description": "Moves a project's configuration outside of workspace.json"
+      "description": "Moves a project's configuration outside of `workspace.json`."
     },
 
     "npm-package": {
       "factory": "./src/generators/npm-package/npm-package#npmPackageGenerator",
       "schema": "./src/generators/npm-package/schema.json",
-      "description": "Create a minimal npm package",
+      "description": "Create a minimal NPM package.",
       "x-type": "library"
     }
   }
