@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "web",
-  "description": "Web Plugin for Nx",
+  "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "root": "/packages/web",
   "source": "/packages/web/src",
   "generators": [
@@ -36,7 +36,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Add @nrwl/web to a project",
+      "description": "Add `@nrwl/web` to a project.",
       "hidden": true,
       "implementation": "/packages/web/src/generators/init/init#webInitGenerator.ts",
       "aliases": [],
@@ -136,7 +136,7 @@
       },
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application",
+      "description": "Create an web application.",
       "implementation": "/packages/web/src/generators/application/application#applicationGenerator.ts",
       "hidden": false,
       "path": "/packages/web/src/generators/application/schema.json"
@@ -609,7 +609,7 @@
         },
         "presets": []
       },
-      "description": "Build an application using webpack",
+      "description": "Build an application using Webpack.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/web/src/executors/webpack/schema.json"
@@ -773,7 +773,7 @@
         },
         "presets": []
       },
-      "description": "Package a library using rollup",
+      "description": "Package a library using Rollup.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/web/src/executors/rollup/schema.json"
@@ -857,7 +857,7 @@
         },
         "presets": []
       },
-      "description": "Serve a web application",
+      "description": "Serve a web application.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/web/src/executors/dev-server/schema.json"
@@ -929,7 +929,7 @@
         "required": ["buildTarget"],
         "presets": []
       },
-      "description": "Serve a web application from a folder",
+      "description": "Serve a web application from a folder.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/web/src/executors/file-server/schema.json"
