@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "workspace",
-  "description": "Smart, Fast and Extensible Build System",
+  "description": "Smart, Fast and Extensible Build System.",
   "root": "/packages/workspace",
   "source": "/packages/workspace/src",
   "generators": [
@@ -105,7 +105,7 @@
         },
         "presets": []
       },
-      "description": "Create an empty workspace",
+      "description": "Create an empty workspace.",
       "hidden": true,
       "implementation": "/packages/workspace/src/generators/workspace/workspace#workspaceGenerator.ts",
       "aliases": [],
@@ -180,7 +180,7 @@
         },
         "presets": []
       },
-      "description": "Create application in an empty workspace",
+      "description": "Create application in an empty workspace.",
       "hidden": true,
       "implementation": "/packages/workspace/src/generators/preset/preset#presetGenerator.ts",
       "aliases": [],
@@ -233,7 +233,7 @@
         "presets": []
       },
       "aliases": ["mv"],
-      "description": "Move an application or library to another folder",
+      "description": "Move an application or library to another folder.",
       "implementation": "/packages/workspace/src/generators/move/move#moveGenerator.ts",
       "hidden": false,
       "path": "/packages/workspace/src/generators/move/schema.json"
@@ -282,7 +282,7 @@
         "presets": []
       },
       "aliases": ["rm"],
-      "description": "Remove an application or library",
+      "description": "Remove an application or library.",
       "implementation": "/packages/workspace/src/generators/remove/remove#removeGenerator.ts",
       "hidden": false,
       "path": "/packages/workspace/src/generators/remove/schema.json"
@@ -375,7 +375,7 @@
         "additionalProperties": true,
         "presets": []
       },
-      "description": "Create a workspace",
+      "description": "Create a workspace.",
       "hidden": true,
       "implementation": "/packages/workspace/src/generators/new/new#newGenerator.ts",
       "aliases": [],
@@ -491,7 +491,7 @@
       },
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library",
+      "description": "Create a library.",
       "implementation": "/packages/workspace/src/generators/library/library#libraryGenerator.ts",
       "hidden": false,
       "path": "/packages/workspace/src/generators/library/schema.json"
@@ -522,7 +522,7 @@
         "presets": []
       },
       "aliases": ["workspace-schematic"],
-      "description": "Generates a workspace generator",
+      "description": "Generates a workspace generator.",
       "implementation": "/packages/workspace/src/generators/workspace-generator/workspace-generator.ts",
       "hidden": false,
       "path": "/packages/workspace/src/generators/workspace-generator/schema.json"
@@ -577,7 +577,7 @@
         "presets": []
       },
       "aliases": ["run-command", "target"],
-      "description": "Generates a target to run any command in the terminal",
+      "description": "Generates a target to run any command in the terminal.",
       "implementation": "/packages/workspace/src/generators/run-commands/run-commands#runCommandsGenerator.ts",
       "hidden": false,
       "path": "/packages/workspace/src/generators/run-commands/schema.json"
@@ -616,7 +616,7 @@
         },
         "presets": []
       },
-      "description": "Moves a project's configuration outside of workspace.json",
+      "description": "Moves a project's configuration outside of `workspace.json`.",
       "implementation": "/packages/workspace/src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator.ts",
       "aliases": [],
       "hidden": false,
@@ -644,7 +644,7 @@
         "required": ["name"],
         "presets": []
       },
-      "description": "Create a minimal npm package",
+      "description": "Create a minimal NPM package.",
       "x-type": "library",
       "implementation": "/packages/workspace/src/generators/npm-package/npm-package#npmPackageGenerator.ts",
       "aliases": [],
@@ -741,7 +741,7 @@
         "required": [],
         "examplesFile": "`workspace.json`:\n\n```json\n//...\n\"frontend\": {\n    \"targets\": {\n        //...\n        \"ls-project-root\": {\n            \"executor\": \"@nrwl/workspace:run-commands\",\n            \"options\": {\n                \"command\": \"ls apps/frontend/src\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:ls-project-root\n```\n\n##### Chaining commands, interpolating args and setting the cwd\n\nLet's say each of our workspace projects has some custom bash scripts in a `scripts` folder.\nWe want a simple way to create empty bash script files for a given project, that have the execute permissions already set.\n\nGiven that Nx knows our workspace structure, we should be able to give it a project and the name of our script, and it should take care of the rest.\n\nThe `commands` option accepts as many commands as you want. By default, they all run in parallel.\nYou can run them sequentially by setting `parallel: false`:\n\n```json\n\"create-script\": {\n    \"executor\": \"@nrwl/workspace:run-commands\",\n    \"options\": {\n        \"commands\": [\n          \"mkdir -p scripts\",\n          \"touch scripts/{args.name}.sh\",\n          \"chmod +x scripts/{args.name}.sh\"\n        ],\n        \"cwd\": \"apps/frontend\",\n        \"parallel\": false\n    }\n}\n```\n\nBy setting the `cwd` option, each command will run in the `apps/frontend` folder.\n\nWe run the above with:\n\n```bash\nnx run frontend:create-script --args=\"--name=example\"\n```\n\nor simply with:\n\n```bash\nnx run frontend:create-script --name=example\n```\n\n##### Arguments forwarding\n\nWhen interpolation is not present in the command, all arguments are forwarded to the command by default.\n\nThis is useful when you need to pass raw argument strings to your command.\n\nFor example, when you run:\n\nnx run frontend:webpack --args=\"--config=example.config.js\"\n\n```json\n\"webpack\": {\n    \"executor\": \"@nrwl/workspace:run-commands\",\n    \"options\": {\n        \"command\": \"webpack\"\n    }\n}\n```\n\nThe above command will execute: `webpack --config=example.config.js`\n\nThis functionality can be disabled by using `commands` and expanding each `command` into an object\nthat sets the `forwardAllArgs` option to `false` as shown below:\n\n```json\n\"webpack\": {\n    \"executor\": \"@nrwl/workspace:run-commands\",\n    \"options\": {\n        \"commands\": [\n            {\n                \"command\": \"webpack\",\n                \"forwardAllArgs\": false\n            }\n        ]\n    }\n}\n```\n\n##### Custom **done** conditions\n\nNormally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:\n\n```json\n\"finish-when-ready\": {\n    \"executor\": \"@nrwl/workspace:run-commands\",\n    \"options\": {\n        \"commands\": [\n            \"sleep 5 && echo 'FINISHED'\",\n            \"echo 'READY'\"\n        ],\n        \"readyWhen\": \"READY\",\n        \"parallel\": true\n    }\n}\n```\n\n```bash\nnx run frontend:finish-when-ready\n```\n\nThe above commands will finish immediately, instead of waiting for 5 seconds.\n\n##### Nx Affected\n\nThe true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your project graph. So you can run **custom commands** only for the projects that have been affected by a change.\n\nWe can create some configurations to generate docs, and if run using `nx affected`, it will only generate documentation for the projects that have been changed:\n\n```bash\nnx affected --target=generate-docs\n```\n\n```json\n//...\n\"frontend\": {\n    \"targets\": {\n        //...\n        \"generate-docs\": {\n            \"executor\": \"@nrwl/workspace:run-commands\",\n            \"options\": {\n                \"command\": \"npx compodoc -p apps/frontend/tsconfig.app.json\"\n            }\n        }\n    }\n},\n\"api\": {\n    \"targets\": {\n        //...\n        \"generate-docs\": {\n            \"executor\": \"@nrwl/workspace:run-commands\",\n            \"options\": {\n                \"command\":  \"npx compodoc -p apps/api/tsconfig.app.json\"\n            }\n        }\n    }\n}\n```\n"
       },
-      "description": "Run any custom commands with Nx",
+      "description": "Run any custom commands with Nx.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/workspace/src/executors/run-commands/schema.json"
@@ -764,7 +764,7 @@
         "required": ["to"],
         "presets": []
       },
-      "description": "A dummy executor useful for e2e tests",
+      "description": "A dummy executor useful for E2E tests.",
       "hidden": true,
       "aliases": [],
       "path": "/packages/workspace/src/executors/counter/schema.json"
@@ -789,7 +789,7 @@
         "examplesFile": "`workspace.json`:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"@nrwl/workspace:run-script\",\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:build\n```\n\nThe `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.\n\n#### Caching Artifacts\n\nBy default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/dist`, `packages/frontend/build`, `packages/frontend/public`. If your npm script writes files to other places, you can override the list of cached outputs as follows:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"@nrwl/workspace:run-script\",\n            \"outputs\": [\"packages/frontend/dist\", \"packaged/frontend/docs\"],\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n",
         "presets": []
       },
-      "description": "Run an npm script using Nx",
+      "description": "Run an NPM script using Nx.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/workspace/src/executors/run-script/schema.json"
